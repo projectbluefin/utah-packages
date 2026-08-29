@@ -41,7 +41,7 @@ jobs:
       stage3: ${{ steps.matrix.outputs.stage3 }}
       stage4: ${{ steps.matrix.outputs.stage4 }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Reject a build script that closes its own quoting
         run: python3 tools/check_workflow_quoting.py
       - id: matrix
@@ -72,7 +72,7 @@ jobs:
     runs-on: ubuntu-24.04
     continue-on-error: true
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Resolve every recipe's BuildRequires against Fedora 44 + Hummingbird
         env:
           FACTORY_REPO: ${{ vars.FACTORY_REPO }}
@@ -152,7 +152,7 @@ jobs:
         package: ${{ fromJSON(needs.prepare.outputs.stage0) }}
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Fetch and verify direct upstream source
         env:
           PACKAGE: ${{ matrix.package }}
@@ -341,7 +341,7 @@ jobs:
         package: ${{ fromJSON(needs.prepare.outputs.stage1) }}
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Collect RPMs built by earlier stages
         uses: actions/download-artifact@v4
         with:
@@ -537,7 +537,7 @@ jobs:
         package: ${{ fromJSON(needs.prepare.outputs.stage2) }}
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Collect RPMs built by earlier stages
         uses: actions/download-artifact@v4
         with:
@@ -733,7 +733,7 @@ jobs:
         package: ${{ fromJSON(needs.prepare.outputs.stage3) }}
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Collect RPMs built by earlier stages
         uses: actions/download-artifact@v4
         with:
@@ -929,7 +929,7 @@ jobs:
         package: ${{ fromJSON(needs.prepare.outputs.stage4) }}
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Collect RPMs built by earlier stages
         uses: actions/download-artifact@v4
         with:
@@ -1130,7 +1130,7 @@ jobs:
     if: ${{ !cancelled() && needs.prepare.outputs.stage0 != '[]' }}
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: actions/download-artifact@v4
         with:
           pattern: rpm-*
