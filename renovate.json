@@ -21,7 +21,9 @@
     {
       "customType": "regex",
       "description": "Every factory RPM source is tracked at its actual upstream, rather than Fedora Rawhide or dist-git.",
-      "fileMatch": ["^config/upstream-sources\\.json$"],
+      "managerFilePatterns": [
+        "/^config/upstream-sources\\.json$/"
+      ],
       "matchStrings": [
         "\\\"name\\\":\\s*\\\"[^\\\"]+\\\"\\s*,\\s*\\\"version\\\":\\s*\\\"(?<currentValue>[^\\\"]+)\\\"(?:.|\\n)*?\\\"datasource\\\":\\s*\\\"(?<datasource>[^\\\"]+)\\\"\\s*,\\s*\\\"depName\\\":\\s*\\\"(?<depName>[^\\\"]+)\\\""
       ],
