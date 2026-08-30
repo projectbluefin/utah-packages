@@ -43,11 +43,11 @@ jobs:
             --image-packages reports/hummingbird-image-packages.txt \
             --repo-packages reports/hummingbird-repo-packages.txt \
             --image "$HUMMINGBIRD_IMAGE"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: hummingbird-gap-report
           path: reports/hummingbird-*-packages.txt
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: hummingbird-gap-summary
           path: reports/hummingbird-gap.json
