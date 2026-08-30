@@ -41,7 +41,7 @@ jobs:
       stage3: ${{ steps.matrix.outputs.stage3 }}
       stage4: ${{ steps.matrix.outputs.stage4 }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Reject a build script that closes its own quoting
         run: python3 tools/check_workflow_quoting.py
       - id: matrix
@@ -72,7 +72,7 @@ jobs:
     runs-on: ubuntu-24.04
     continue-on-error: true
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Resolve every recipe's BuildRequires against Fedora 44 + Hummingbird
         env:
           FACTORY_REPO: ${{ vars.FACTORY_REPO }}
@@ -138,7 +138,7 @@ jobs:
               echo "=== recipes with unresolved BuildRequires ==="
               cat /work/reports/preflight.txt
             '
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: preflight-buildrequires
           path: work/reports/preflight.txt
@@ -152,7 +152,7 @@ jobs:
         package: ${{ fromJSON(needs.prepare.outputs.stage0) }}
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Fetch and verify direct upstream source
         env:
           PACKAGE: ${{ matrix.package }}
@@ -324,7 +324,7 @@ jobs:
               # reports success while shipping no packages at all.
               test -n "$(find /work/result -name "*.rpm" -type f -print -quit)"
             '
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: rpm-s0-${{ matrix.package }}
           path: |
@@ -341,9 +341,9 @@ jobs:
         package: ${{ fromJSON(needs.prepare.outputs.stage1) }}
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Collect RPMs built by earlier stages
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           pattern: rpm-*
           path: work/prior
@@ -520,7 +520,7 @@ jobs:
               # reports success while shipping no packages at all.
               test -n "$(find /work/result -name "*.rpm" -type f -print -quit)"
             '
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: rpm-s1-${{ matrix.package }}
           path: |
@@ -537,9 +537,9 @@ jobs:
         package: ${{ fromJSON(needs.prepare.outputs.stage2) }}
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Collect RPMs built by earlier stages
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           pattern: rpm-*
           path: work/prior
@@ -716,7 +716,7 @@ jobs:
               # reports success while shipping no packages at all.
               test -n "$(find /work/result -name "*.rpm" -type f -print -quit)"
             '
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: rpm-s2-${{ matrix.package }}
           path: |
@@ -733,9 +733,9 @@ jobs:
         package: ${{ fromJSON(needs.prepare.outputs.stage3) }}
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Collect RPMs built by earlier stages
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           pattern: rpm-*
           path: work/prior
@@ -912,7 +912,7 @@ jobs:
               # reports success while shipping no packages at all.
               test -n "$(find /work/result -name "*.rpm" -type f -print -quit)"
             '
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: rpm-s3-${{ matrix.package }}
           path: |
@@ -929,9 +929,9 @@ jobs:
         package: ${{ fromJSON(needs.prepare.outputs.stage4) }}
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Collect RPMs built by earlier stages
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           pattern: rpm-*
           path: work/prior
@@ -1108,7 +1108,7 @@ jobs:
               # reports success while shipping no packages at all.
               test -n "$(find /work/result -name "*.rpm" -type f -print -quit)"
             '
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: rpm-s4-${{ matrix.package }}
           path: |
@@ -1130,8 +1130,8 @@ jobs:
     if: ${{ !cancelled() && needs.prepare.outputs.stage0 != '[]' }}
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           pattern: rpm-*
           path: built
@@ -1228,7 +1228,7 @@ jobs:
       ref: ${{ steps.oci.outputs.ref }}
       digest: ${{ steps.oci.outputs.digest }}
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           pattern: rpm-*
           path: repository
@@ -1313,7 +1313,7 @@ jobs:
       # push never depends on the github-pages environment. That environment
       # usually carries a deployment branch rule, and inheriting it would have
       # blocked this job on exactly the branches the OCI push exists to serve.
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: repository
           path: repository
@@ -1330,12 +1330,12 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: repository
           path: repository
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
         with:
           path: repository
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4

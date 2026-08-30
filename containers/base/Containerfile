@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=quay.io/fedora/fedora-bootc:rawhide
+ARG BASE_IMAGE=quay.io/fedora/fedora-bootc:rawhide@sha256:4c075242b4a5e72c0206d87836d357a0689ff59b12b3f232e7dc904f64a23cfa
 FROM ${BASE_IMAGE}
 
 ARG REPOSITORY_URL

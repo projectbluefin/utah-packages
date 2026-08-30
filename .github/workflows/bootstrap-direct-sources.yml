@@ -22,7 +22,7 @@ jobs:
     if: "github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'ci: bootstrap direct sources'"
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           ref: main
           fetch-depth: 0
