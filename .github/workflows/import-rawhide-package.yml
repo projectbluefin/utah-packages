@@ -28,7 +28,7 @@ jobs:
             "${{ inputs.package }}" \
             --branch "${{ inputs.branch }}"
       - name: Open reviewable update
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8
         with:
           branch: import/rawhide-${{ inputs.package }}
           delete-branch: true
