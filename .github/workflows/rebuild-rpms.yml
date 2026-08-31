@@ -374,6 +374,11 @@ jobs:
               # Unconditional: stage 0 has no prior RPMs, so the block above
               # never ran and EXCLUDE would otherwise be empty here.
               HB_EXCLUDE="ruby-default-gems,ruby3.3-default-gems,ruby3.4-default-gems,libicu,icu,gpgme,qt6-qtbase"
+              # The Hummingbird overlay currently exposes default gems for
+              # Ruby 3.3, 3.4, and 4.0. Older versions conflict by file name
+              # when a recipe merely needs the Ruby toolchain; exclude the
+              # older overlay packages globally so Ruby 4 remains selectable.
+              HB_GLOBAL_EXCLUDE="--exclude=ruby3.3-default-gems --exclude=ruby3.4-default-gems"
               EXCLUDE="${HB_EXCLUDE}${EXCLUDE:+,}${EXCLUDE}"
               echo "hummingbird exclusions: $HB_EXCLUDE"
               if [ -n "${FACTORY_REPO:-}" ]; then
@@ -604,6 +609,11 @@ jobs:
               # Unconditional: stage 0 has no prior RPMs, so the block above
               # never ran and EXCLUDE would otherwise be empty here.
               HB_EXCLUDE="ruby-default-gems,ruby3.3-default-gems,ruby3.4-default-gems,libicu,icu,gpgme,qt6-qtbase"
+              # The Hummingbird overlay currently exposes default gems for
+              # Ruby 3.3, 3.4, and 4.0. Older versions conflict by file name
+              # when a recipe merely needs the Ruby toolchain; exclude the
+              # older overlay packages globally so Ruby 4 remains selectable.
+              HB_GLOBAL_EXCLUDE="--exclude=ruby3.3-default-gems --exclude=ruby3.4-default-gems"
               EXCLUDE="${HB_EXCLUDE}${EXCLUDE:+,}${EXCLUDE}"
               echo "hummingbird exclusions: $HB_EXCLUDE"
               if [ -n "${FACTORY_REPO:-}" ]; then
@@ -834,6 +844,11 @@ jobs:
               # Unconditional: stage 0 has no prior RPMs, so the block above
               # never ran and EXCLUDE would otherwise be empty here.
               HB_EXCLUDE="ruby-default-gems,ruby3.3-default-gems,ruby3.4-default-gems,libicu,icu,gpgme,qt6-qtbase"
+              # The Hummingbird overlay currently exposes default gems for
+              # Ruby 3.3, 3.4, and 4.0. Older versions conflict by file name
+              # when a recipe merely needs the Ruby toolchain; exclude the
+              # older overlay packages globally so Ruby 4 remains selectable.
+              HB_GLOBAL_EXCLUDE="--exclude=ruby3.3-default-gems --exclude=ruby3.4-default-gems"
               EXCLUDE="${HB_EXCLUDE}${EXCLUDE:+,}${EXCLUDE}"
               echo "hummingbird exclusions: $HB_EXCLUDE"
               if [ -n "${FACTORY_REPO:-}" ]; then
@@ -1064,6 +1079,11 @@ jobs:
               # Unconditional: stage 0 has no prior RPMs, so the block above
               # never ran and EXCLUDE would otherwise be empty here.
               HB_EXCLUDE="ruby-default-gems,ruby3.3-default-gems,ruby3.4-default-gems,libicu,icu,gpgme,qt6-qtbase"
+              # The Hummingbird overlay currently exposes default gems for
+              # Ruby 3.3, 3.4, and 4.0. Older versions conflict by file name
+              # when a recipe merely needs the Ruby toolchain; exclude the
+              # older overlay packages globally so Ruby 4 remains selectable.
+              HB_GLOBAL_EXCLUDE="--exclude=ruby3.3-default-gems --exclude=ruby3.4-default-gems"
               EXCLUDE="${HB_EXCLUDE}${EXCLUDE:+,}${EXCLUDE}"
               echo "hummingbird exclusions: $HB_EXCLUDE"
               if [ -n "${FACTORY_REPO:-}" ]; then
@@ -1294,6 +1314,11 @@ jobs:
               # Unconditional: stage 0 has no prior RPMs, so the block above
               # never ran and EXCLUDE would otherwise be empty here.
               HB_EXCLUDE="ruby-default-gems,ruby3.3-default-gems,ruby3.4-default-gems,libicu,icu,gpgme,qt6-qtbase"
+              # The Hummingbird overlay currently exposes default gems for
+              # Ruby 3.3, 3.4, and 4.0. Older versions conflict by file name
+              # when a recipe merely needs the Ruby toolchain; exclude the
+              # older overlay packages globally so Ruby 4 remains selectable.
+              HB_GLOBAL_EXCLUDE="--exclude=ruby3.3-default-gems --exclude=ruby3.4-default-gems"
               EXCLUDE="${HB_EXCLUDE}${EXCLUDE:+,}${EXCLUDE}"
               echo "hummingbird exclusions: $HB_EXCLUDE"
               if [ -n "${FACTORY_REPO:-}" ]; then

@@ -6,7 +6,7 @@
 %bcond extras %{defined fedora}
 # Utah does not ship the optional OpenCV plugin; Fedora's opencv stack pulls
 # Qt6, which is not part of the GNOME desktop closure.
-%bcond_without opencv
+%bcond_with opencv
 %bcond openh264 %{defined fedora}
 %bcond svtav1 %{defined fedora}
 # requires new webrtc-audio-processing-1/-2
@@ -21,7 +21,7 @@
 %ifnarch %{ix86} riscv64 s390x
 # ONNX is an optional plugin and its Fedora build is tied to the old abseil
 # ABI. Keep the multimedia closure Hummingbird-compatible.
-%bcond_without onnx
+%bcond_with onnx
 %endif
 # VPL runtimes (intel-mediasdk/intel-vpl-gpu-rt) are x86_64 only
 %ifarch x86_64
