@@ -60,6 +60,26 @@ jobs:
           python3 -m unittest discover -s tests -v
       - name: Install zstandard
         run: pip install --quiet zstandard
+      - name: Seed skip-list from the building accumulator
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          owner=$(echo "${{ github.repository_owner }}" | tr "[:upper:]" "[:lower:]")
+          mkdir -p /tmp/accumulator
+          echo "${GITHUB_TOKEN}" | podman login ghcr.io -u "${{ github.actor }}" --password-stdin 2>/dev/null || true
+          for image in "ghcr.io/${owner}/utah-packages:building" "ghcr.io/${owner}/utah-packages:latest"; do
+            if podman pull "$image" 2>/dev/null; then
+              container=$(podman create "$image")
+              podman cp "$container:/repository/." /tmp/accumulator/ || true
+              podman rm "$container"
+              echo "seeded from $image"
+              break
+            fi
+          done
+          # Serve the local accumulator for FACTORY_REPO later in this run.
+          # The prepare job is only computing the matrix here; the actual
+          # serving happens via the FACTORY_REPO default below.
       - id: matrix
         env:
           FULL: ${{ github.event_name == 'workflow_dispatch' && inputs.full == true && '1' || '0' }}
@@ -83,29 +103,50 @@ jobs:
               }
               print(f"changed package recipes: {', '.join(sorted(changed)) or 'none'}")
 
-          # Fetch the currently published repo so we only rebuild what is new
-          # or changed. Matching is name + normalized version: Fedora's spec
-          # Version rewrites the tarball's '.' to '~' (gnome-shell 51.beta ->
-          # 51~beta), so normalize '~' to '.' on both sides. A mismatch just
-          # rebuilds a package we could have skipped -- safe, only slower.
+          # Read the currently built set so we only rebuild what is new or
+          # changed. Prefer the local :building accumulator seeded above (it
+          # carries every success across waves, including waves that never
+          # reached `publish`); fall back to the published Pages repo. Matching
+          # is name + normalized version: Fedora's spec Version rewrites the
+          # tarball's '.' to '~' (gnome-shell 51.beta -> 51~beta), so normalize
+          # '~' to '.' on both sides. A mismatch just rebuilds a package we
+          # could have skipped -- safe, only slower.
           published = {}
+
+          def harvest(primary_bytes):
+              for m in re.finditer(rb'<package[^>]*>.*?<name>([^<]+)</name>.*?<version[^>]*ver="([^"]+)"', primary_bytes, re.S):
+                  published[m.group(1).decode()] = m.group(2).decode()
+
+          def read_local_repo(root):
+              repomd = Path(root) / "repodata" / "repomd.xml"
+              if not repomd.is_file():
+                  return False
+              href = re.search(r'<location href="([^"]*primary[^"]*)"', repomd.read_text()).group(1)
+              raw = (Path(root) / href).read_bytes()
+              if href.endswith('.zst'):
+                  import zstandard
+                  harvest(zstandard.ZstdDecompressor().stream_reader(io.BytesIO(raw)).read())
+              else:
+                  harvest(gzip.GzipFile(fileobj=io.BytesIO(raw)).read())
+              return True
+
           if not full:
               try:
-                  base = "https://projectbluefin.github.io/utah-packages/"
-                  repomd = urllib.request.urlopen(base + "repodata/repomd.xml", timeout=60).read().decode()
-                  href = re.search(r'<location href="([^"]*primary[^"]*)"', repomd).group(1)
-                  raw = urllib.request.urlopen(base + href, timeout=120).read()
-                  if href.endswith('.zst'):
-                      import zstandard
-                      stream = zstandard.ZstdDecompressor().stream_reader(io.BytesIO(raw))
+                  if read_local_repo("/tmp/accumulator"):
+                      print(f"accumulator has {len(published)} packages")
                   else:
-                      stream = gzip.GzipFile(fileobj=io.BytesIO(raw))
-                  text = stream.read()
-                  for m in re.finditer(rb'<package[^>]*>.*?<name>([^<]+)</name>.*?<version[^>]*ver="([^"]+)"', text, re.S):
-                      published[m.group(1).decode()] = m.group(2).decode()
-                  print(f"published repo has {len(published)} packages")
+                      base = "https://projectbluefin.github.io/utah-packages/"
+                      repomd = urllib.request.urlopen(base + "repodata/repomd.xml", timeout=60).read().decode()
+                      href = re.search(r'<location href="([^"]*primary[^"]*)"', repomd).group(1)
+                      raw = urllib.request.urlopen(base + href, timeout=120).read()
+                      if href.endswith('.zst'):
+                          import zstandard
+                          harvest(zstandard.ZstdDecompressor().stream_reader(io.BytesIO(raw)).read())
+                      else:
+                          harvest(gzip.GzipFile(fileobj=io.BytesIO(raw)).read())
+                      print(f"published repo has {len(published)} packages")
               except Exception as error:
-                  print(f"WARNING: could not read published repo, rebuilding all: {error}", file=sys.stderr)
+                  print(f"WARNING: could not read prior repo, rebuilding all: {error}", file=sys.stderr)
 
           def norm(version: str) -> str:
               return version.replace('~', '.')
@@ -1568,3 +1609,93 @@ jobs:
           path: repository
       - id: deployment
         uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5
+
+  # Persist every RPM this run built, even when some package in the matrix
+  # failed or the run was cancelled downstream. `publish` only fires when every
+  # stage is green, so before this job a wave that built 200 packages and
+  # failed on the 201st published nothing and the next wave rebuilt all 200.
+  #
+  # This job is the build cache, not the consumer tag. It seeds from the same
+  # accumulator it pushes to, merges whatever RPMs the matrix produced this run
+  # (a failed matrix job uploads no RPM, so only successes are added), and
+  # pushes to ghcr.io/<owner>/utah-packages:building. It does NOT sign or run
+  # the Hummingbird-only consumer contract: `:building` may be incoherent (a
+  # package built against a dependency a later wave changed, or two versions
+  # across waves) and must never be installed by a consumer. `:latest` remains
+  # the atomic, contract-gated tag `publish` produces.
+  #
+  # `prepare` reads this accumulator for its skip list and FACTORY_REPO points
+  # at it, so a success persists across waves regardless of whether the wave it
+  # was built in ever reached `publish`.
+  accumulate:
+    if: >-
+      ${{ !cancelled()
+          && needs.prepare.outputs.build_list != '[]'
+          && (github.event_name != 'pull_request'
+              || github.event.pull_request.head.repo.full_name == github.repository) }}
+    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4]
+    # Serialise cache writers per ref so two overlapping waves cannot clobber
+    # each other's createrepo metadata. Do not cancel: a late writer still
+    # carries RPMs worth keeping.
+    concurrency:
+      group: utah-packages-accumulate-${{ github.ref }}
+      cancel-in-progress: false
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Seed cache from the building accumulator
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          owner=$(echo "${{ github.repository_owner }}" | tr "[:upper:]" "[:lower:]")
+          mkdir -p repository
+          echo "${GITHUB_TOKEN}" | podman login ghcr.io -u "${{ github.actor }}" --password-stdin
+          # Prefer the running accumulator; fall back to the coherent consumer
+          # tag on first ever run, then to an empty repository.
+          for image in "ghcr.io/${owner}/utah-packages:building" "ghcr.io/${owner}/utah-packages:latest"; do
+            if podman pull "$image"; then
+              container=$(podman create "$image")
+              podman cp "$container:/repository/." repository/ || true
+              podman rm "$container"
+              echo "seeded from $image"
+              break
+            fi
+          done
+          echo "No accumulator or consumer image yet; starting empty" >&2 || true
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          pattern: rpm-*
+          path: repository
+          merge-multiple: true
+      - name: Rebuild cache metadata
+        run: |
+          set -euo pipefail
+          sudo apt-get update && sudo apt-get install -y createrepo-c
+          # The malcontent bootstrap RPM must never persist: it ships no
+          # parental-controls UI and exists only to break a build cycle within a
+          # single run. Drop it from the cache exactly as `publish` does.
+          find repository -name '*-0.bootstrap.*.rpm' -print -delete
+          test -n "$(find repository -name '*.rpm' -type f -print -quit)" || {
+            echo "No RPMs to accumulate; nothing to push" >&2
+            exit 0
+          }
+          createrepo_c --update repository
+      - name: Push the building accumulator
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          test -d repository/repodata || { echo "no repodata; skipping push"; exit 0; }
+          owner=$(echo "${{ github.repository_owner }}" | tr "[:upper:]" "[:lower:]")
+          image="ghcr.io/${owner}/utah-packages:building"
+          printf "FROM scratch\nCOPY repository /repository\n" > Containerfile.building
+          echo "${GITHUB_TOKEN}" | podman login ghcr.io -u "${{ github.actor }}" --password-stdin
+          podman build --tag "$image" --file Containerfile.building .
+          podman push "$image"
+          count=$(find repository -name '*.rpm' -type f | wc -l)
+          echo "accumulated $count RPMs into $image"
+          {
+            echo "### Build cache updated"
+            echo
+            echo "\`$image\` now carries $count RPMs (all successful builds across waves)."
+          } >> "$GITHUB_STEP_SUMMARY"
