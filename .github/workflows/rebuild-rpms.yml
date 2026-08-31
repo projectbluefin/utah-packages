@@ -435,7 +435,7 @@ jobs:
               export LOGNAME="${LOGNAME:-$USER}"
               spec=$(find "/packages/$PACKAGE" -maxdepth 1 -name "*.spec" -print -quit)
               test -n "$spec"
-              dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
+              dnf -y $disable $HB_GLOBAL_EXCLUDE ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
                 ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$spec"
               # An imported spec keeps its dist-git PatchN and auxiliary SourceN
               # files next to itself, while the verified upstream archive lands in
@@ -458,7 +458,7 @@ jobs:
                      --define "dist $DISTTAG"; then break; fi
                 generated=$(ls /root/rpmbuild/SRPMS/*.buildreqs.nosrc.rpm 2>/dev/null | head -1)
                 test -n "$generated"
-                dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
+                dnf -y $disable $HB_GLOBAL_EXCLUDE ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
                   ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$generated"
               done
               rpmbuild -ba "$spec" \
@@ -665,7 +665,7 @@ jobs:
               export LOGNAME="${LOGNAME:-$USER}"
               spec=$(find "/packages/$PACKAGE" -maxdepth 1 -name "*.spec" -print -quit)
               test -n "$spec"
-              dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
+              dnf -y $disable $HB_GLOBAL_EXCLUDE ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
                 ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$spec"
               # An imported spec keeps its dist-git PatchN and auxiliary SourceN
               # files next to itself, while the verified upstream archive lands in
@@ -688,7 +688,7 @@ jobs:
                      --define "dist $DISTTAG"; then break; fi
                 generated=$(ls /root/rpmbuild/SRPMS/*.buildreqs.nosrc.rpm 2>/dev/null | head -1)
                 test -n "$generated"
-                dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
+                dnf -y $disable $HB_GLOBAL_EXCLUDE ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
                   ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$generated"
               done
               rpmbuild -ba "$spec" \
@@ -895,7 +895,7 @@ jobs:
               export LOGNAME="${LOGNAME:-$USER}"
               spec=$(find "/packages/$PACKAGE" -maxdepth 1 -name "*.spec" -print -quit)
               test -n "$spec"
-              dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
+              dnf -y $disable $HB_GLOBAL_EXCLUDE ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
                 ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$spec"
               # An imported spec keeps its dist-git PatchN and auxiliary SourceN
               # files next to itself, while the verified upstream archive lands in
@@ -918,7 +918,7 @@ jobs:
                      --define "dist $DISTTAG"; then break; fi
                 generated=$(ls /root/rpmbuild/SRPMS/*.buildreqs.nosrc.rpm 2>/dev/null | head -1)
                 test -n "$generated"
-                dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
+                dnf -y $disable $HB_GLOBAL_EXCLUDE ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
                   ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$generated"
               done
               rpmbuild -ba "$spec" \
@@ -1125,7 +1125,7 @@ jobs:
               export LOGNAME="${LOGNAME:-$USER}"
               spec=$(find "/packages/$PACKAGE" -maxdepth 1 -name "*.spec" -print -quit)
               test -n "$spec"
-              dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
+              dnf -y $disable $HB_GLOBAL_EXCLUDE ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
                 ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$spec"
               # An imported spec keeps its dist-git PatchN and auxiliary SourceN
               # files next to itself, while the verified upstream archive lands in
@@ -1148,7 +1148,7 @@ jobs:
                      --define "dist $DISTTAG"; then break; fi
                 generated=$(ls /root/rpmbuild/SRPMS/*.buildreqs.nosrc.rpm 2>/dev/null | head -1)
                 test -n "$generated"
-                dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
+                dnf -y $disable $HB_GLOBAL_EXCLUDE ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
                   ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$generated"
               done
               rpmbuild -ba "$spec" \
@@ -1355,7 +1355,7 @@ jobs:
               export LOGNAME="${LOGNAME:-$USER}"
               spec=$(find "/packages/$PACKAGE" -maxdepth 1 -name "*.spec" -print -quit)
               test -n "$spec"
-              dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
+              dnf -y $disable $HB_GLOBAL_EXCLUDE ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
                 ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$spec"
               # An imported spec keeps its dist-git PatchN and auxiliary SourceN
               # files next to itself, while the verified upstream archive lands in
@@ -1378,7 +1378,7 @@ jobs:
                      --define "dist $DISTTAG"; then break; fi
                 generated=$(ls /root/rpmbuild/SRPMS/*.buildreqs.nosrc.rpm 2>/dev/null | head -1)
                 test -n "$generated"
-                dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
+                dnf -y $disable $HB_GLOBAL_EXCLUDE ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
                   ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$generated"
               done
               rpmbuild -ba "$spec" \
