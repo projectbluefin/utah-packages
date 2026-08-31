@@ -1,0 +1,8 @@
+{
+  "package": "libphonenumber",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libphonenumber.git",
+  "commit": "e0bcfbe3173d5c9c9e21a6f5b756bd2df97ed8dd",
+  "tree": "4d32c867c15011b265f15d10620fe09c9eff4aa3",
+  "imported_at": "2026-08-31T07:01:30.390942+00:00"
+}

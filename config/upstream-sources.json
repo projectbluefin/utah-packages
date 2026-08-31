@@ -1292,6 +1292,46 @@
       "filename": "firefox-140.13.0esr.source.tar.xz",
       "sha512": "937a4103d71c5e1e4bf051821729f6ea70b5c18d444930a487695cc23d74712a0134047248f6ac02305e01becb705426a55b9d89739f02a01eda01ecf5bc27f1",
       "stage": 1
+    },
+    {
+      "name": "re2",
+      "version": "20251105",
+      "url": "https://github.com/google/re2/archive/2025-11-05/re2-2025-11-05.tar.gz",
+      "filename": "re2-2025-11-05.tar.gz",
+      "sha512": "d47f2507500ca7e004db49e30318f8713164cc3b8f28b0bdf5cdd6028985e7da4c9d0133c19fcd8f800bc666b86feb80a5c56e11fa962db72d561fb627272670",
+      "stage": 1
+    },
+    {
+      "name": "webrtc-audio-processing",
+      "version": "2.1",
+      "url": "https://freedesktop.org/software/pulseaudio/webrtc-audio-processing/webrtc-audio-processing-2.1.tar.xz",
+      "filename": "webrtc-audio-processing-2.1.tar.xz",
+      "sha512": "534af17db1082e900ebd964042679685f26e8452c2e08c6f29660d0484bd5b079c804104600e972281d1ddcbca7762c63cc58b561b175b73447d069dd00f1a61",
+      "stage": 1
+    },
+    {
+      "name": "libphonenumber",
+      "version": "8.13.55",
+      "url": "https://github.com/google/libphonenumber/archive/v8.13.55/libphonenumber-8.13.55.tar.gz",
+      "filename": "libphonenumber-8.13.55.tar.gz",
+      "sha512": "8cc5be5aaaf832288ac011131b41026a44dba702b96a4dbdafcd55e43c870130a089e96187fa4fb8df75e5065185a2eb9af25ece4a7d5b1fcc459b875dceb662",
+      "stage": 1
+    },
+    {
+      "name": "libtalloc",
+      "version": "2.5.0",
+      "url": "https://www.samba.org/ftp/talloc/talloc-2.5.0.tar.gz",
+      "filename": "talloc-2.5.0.tar.gz",
+      "sha512": "4503e753ddc3bc4c4279a8a1c6a3c623a228bc1991b35f4d25658602dd9688fc6297d0d535ffd193dcb04a83ce9ac8dc35a8accd35fac329b139f59ceba6891f",
+      "stage": 0
+    },
+    {
+      "name": "libtevent",
+      "version": "0.17.2",
+      "url": "https://www.samba.org/ftp/tevent/tevent-0.17.2.tar.gz",
+      "filename": "tevent-0.17.2.tar.gz",
+      "sha512": "23b8a8e4251d3a88e9bbb78134787280047e631393ab668fa34ab69986be72046506f9766b6b82f7ff6ce38412d7198665120312f98b9fe5428a662efc16b59b",
+      "stage": 0
     }
   ]
 }

@@ -1,0 +1,8 @@
+# Not real spelling errors:
+addFilter(r" spelling-error \('([Bb]ackreference|[Gg]ettable)s?',")
+addFilter(r" spelling-error \('(str)',")
+# This package provides python3-re2, but it would be inaccurate for it to
+# provide python3-fb-re2.
+addFilter(r" obsolete-not-provided python3-fb-re2$")
+# Upstream does not provide any documentation specific to the Python extension.
+addFilter(r"python3-google-re2\.\w+: W: no-documentation")
