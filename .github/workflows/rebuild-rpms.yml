@@ -499,6 +499,27 @@ jobs:
           path: work/prior
           merge-multiple: true
         continue-on-error: true
+      - name: Seed prior RPMs from the building accumulator
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
+        run: |
+          set -uo pipefail
+          owner=$(echo "${{ github.repository_owner }}" | tr "[:upper:]" "[:lower:]")
+          mkdir -p work/prior
+          echo "${GITHUB_TOKEN}" | podman login ghcr.io -u "${{ github.actor }}" --password-stdin 2>/dev/null || true
+          # The :building accumulator carries every success across waves. Fold
+          # its RPMs into work/prior so [stages] resolves against packages an
+          # earlier wave built even when no wave has reached publish (which is
+          # what keeps :latest/Pages current). This is what advances the
+          # bootstrap ladder: a same-stage consumer that missed a package this
+          # run picks it up from the accumulator on the next.
+          if podman pull "ghcr.io/${owner}/utah-packages:building" 2>/dev/null; then
+            container=$(podman create "ghcr.io/${owner}/utah-packages:building")
+            podman cp "$container:/repository/." work/prior/ 2>/dev/null || true
+            podman rm "$container" >/dev/null 2>&1 || true
+            echo "seeded work/prior from :building accumulator"
+          fi
       - name: Fetch and verify direct upstream source
         env:
           PACKAGE: ${{ matrix.package }}
@@ -708,6 +729,27 @@ jobs:
           path: work/prior
           merge-multiple: true
         continue-on-error: true
+      - name: Seed prior RPMs from the building accumulator
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
+        run: |
+          set -uo pipefail
+          owner=$(echo "${{ github.repository_owner }}" | tr "[:upper:]" "[:lower:]")
+          mkdir -p work/prior
+          echo "${GITHUB_TOKEN}" | podman login ghcr.io -u "${{ github.actor }}" --password-stdin 2>/dev/null || true
+          # The :building accumulator carries every success across waves. Fold
+          # its RPMs into work/prior so [stages] resolves against packages an
+          # earlier wave built even when no wave has reached publish (which is
+          # what keeps :latest/Pages current). This is what advances the
+          # bootstrap ladder: a same-stage consumer that missed a package this
+          # run picks it up from the accumulator on the next.
+          if podman pull "ghcr.io/${owner}/utah-packages:building" 2>/dev/null; then
+            container=$(podman create "ghcr.io/${owner}/utah-packages:building")
+            podman cp "$container:/repository/." work/prior/ 2>/dev/null || true
+            podman rm "$container" >/dev/null 2>&1 || true
+            echo "seeded work/prior from :building accumulator"
+          fi
       - name: Fetch and verify direct upstream source
         env:
           PACKAGE: ${{ matrix.package }}
@@ -917,6 +959,27 @@ jobs:
           path: work/prior
           merge-multiple: true
         continue-on-error: true
+      - name: Seed prior RPMs from the building accumulator
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
+        run: |
+          set -uo pipefail
+          owner=$(echo "${{ github.repository_owner }}" | tr "[:upper:]" "[:lower:]")
+          mkdir -p work/prior
+          echo "${GITHUB_TOKEN}" | podman login ghcr.io -u "${{ github.actor }}" --password-stdin 2>/dev/null || true
+          # The :building accumulator carries every success across waves. Fold
+          # its RPMs into work/prior so [stages] resolves against packages an
+          # earlier wave built even when no wave has reached publish (which is
+          # what keeps :latest/Pages current). This is what advances the
+          # bootstrap ladder: a same-stage consumer that missed a package this
+          # run picks it up from the accumulator on the next.
+          if podman pull "ghcr.io/${owner}/utah-packages:building" 2>/dev/null; then
+            container=$(podman create "ghcr.io/${owner}/utah-packages:building")
+            podman cp "$container:/repository/." work/prior/ 2>/dev/null || true
+            podman rm "$container" >/dev/null 2>&1 || true
+            echo "seeded work/prior from :building accumulator"
+          fi
       - name: Fetch and verify direct upstream source
         env:
           PACKAGE: ${{ matrix.package }}
@@ -1126,6 +1189,27 @@ jobs:
           path: work/prior
           merge-multiple: true
         continue-on-error: true
+      - name: Seed prior RPMs from the building accumulator
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
+        run: |
+          set -uo pipefail
+          owner=$(echo "${{ github.repository_owner }}" | tr "[:upper:]" "[:lower:]")
+          mkdir -p work/prior
+          echo "${GITHUB_TOKEN}" | podman login ghcr.io -u "${{ github.actor }}" --password-stdin 2>/dev/null || true
+          # The :building accumulator carries every success across waves. Fold
+          # its RPMs into work/prior so [stages] resolves against packages an
+          # earlier wave built even when no wave has reached publish (which is
+          # what keeps :latest/Pages current). This is what advances the
+          # bootstrap ladder: a same-stage consumer that missed a package this
+          # run picks it up from the accumulator on the next.
+          if podman pull "ghcr.io/${owner}/utah-packages:building" 2>/dev/null; then
+            container=$(podman create "ghcr.io/${owner}/utah-packages:building")
+            podman cp "$container:/repository/." work/prior/ 2>/dev/null || true
+            podman rm "$container" >/dev/null 2>&1 || true
+            echo "seeded work/prior from :building accumulator"
+          fi
       - name: Fetch and verify direct upstream source
         env:
           PACKAGE: ${{ matrix.package }}
