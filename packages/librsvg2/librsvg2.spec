@@ -149,8 +149,10 @@ sed -i 's/, "--locked"//g' meson/cargo_wrapper.py
 %check
 # The release-mode Rust integration tests take more than Meson's default
 # 3-minute timeout on hosted runners; keep the complete suite enabled while
-# allowing the reference tests to finish compiling and running.
-%meson_test --timeout-multiplier 2
+# allowing the reference tests to finish compiling and running. The tests
+# also reconfigure process-global Fontconfig/Pango state, so serialize the
+# harness to avoid a hosted-runner race while retaining every test case.
+RUST_TEST_THREADS=1 %meson_test --timeout-multiplier 2
 %endif
 
 %files
