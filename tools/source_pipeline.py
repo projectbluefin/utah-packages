@@ -5,6 +5,8 @@ The configuration intentionally uses JSON so the standard Python runtime on
 GitHub-hosted runners is sufficient.  A package entry has ``name``, ``url``,
 and a required ``sha512``.  An optional ``sha256_url`` points at an upstream
 checksum manifest; the downloaded archive must appear in that manifest.
+An optional ``gpg_key`` and ``signature_url`` enable GPG signature verification;
+packages without a configured signature are reported as checksum-only exceptions.
 """
 
 from __future__ import annotations
@@ -84,12 +86,19 @@ def fetch_with_fallbacks(urls: list[str], destination: Path) -> str:
     raise RuntimeError("all source URLs failed: " + "; ".join(errors))
 
 
-def verify_signature(package: dict, target: Path, directory: Path) -> None:
+def verify_signature(package: dict, target: Path, directory: Path) -> bool | None:
+    """Verify the GPG signature of *target*.
+
+    Returns ``True`` when a signature is present and verifies, ``False`` when
+    verification was attempted but failed.  Returns ``None`` when no signature
+    is configured -- the package is checksum-only and should be reported as
+    such by the caller.
+    """
     key, signature_url = package.get("gpg_key"), package.get("signature_url")
     if bool(key) != bool(signature_url):
         raise ValueError("gpg_key and signature_url must be configured together")
     if not key:
-        return
+        return None
     signature = directory / f"{target.name}.asc"
     fetch(signature_url, signature)
     key_path = Path(key)
@@ -99,6 +108,7 @@ def verify_signature(package: dict, target: Path, directory: Path) -> None:
         environment = {"GNUPGHOME": home}
         subprocess.run(["gpg", "--batch", "--import", str(key_path)], check=True, env=environment, capture_output=True)
         subprocess.run(["gpg", "--batch", "--verify", str(signature), str(target)], check=True, env=environment, capture_output=True)
+    return True
 
 
 LOOKASIDE = "https://src.fedoraproject.org/repo/pkgs/rpms/{pkg}/{name}/sha512/{hash}/{name}"
@@ -162,6 +172,7 @@ def main() -> int:
     args = parser.parse_args()
     config = json.loads(args.config.read_text())
     succeeded = True
+    checksum_only: list[str] = []
     for package in selected(config, args.package):
         missing = {"name", "sha512"} - package.keys()
         if missing:
@@ -186,7 +197,10 @@ def main() -> int:
             actual = digest(candidate, "sha512")
             if actual != expected:
                 raise ValueError(f"SHA-512 mismatch: expected {expected}, got {actual}")
-            verify_signature(package, candidate, target_dir)
+            signature_result = verify_signature(package, candidate, target_dir)
+            report["signature_verified"] = signature_result
+            if signature_result is None:
+                checksum_only.append(name)
             if checksum_url := package.get("sha256_url"):
                 checksum_file = target_dir / "upstream.sha256"
                 fetch(checksum_url, checksum_file)
@@ -206,6 +220,18 @@ def main() -> int:
         args.report_dir.mkdir(parents=True, exist_ok=True)
         (args.report_dir / f"{name}.json").write_text(json.dumps(report, indent=2, sort_keys=True) + "\n")
         print(json.dumps(report, sort_keys=True))
+
+    if args.package is None and succeeded:
+        summary = {
+            "checksum_only": sorted(checksum_only),
+            "signature_verified_count": len(config["packages"]) - len(checksum_only),
+        }
+        summary_path = args.report_dir / "signature-report.json"
+        summary_path.parent.mkdir(parents=True, exist_ok=True)
+        summary_path.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n")
+        if checksum_only:
+            print(f"checksum-only packages (no GPG signature configured): {', '.join(sorted(checksum_only))}",
+                  file=sys.stderr)
     return 0 if succeeded else 1
 
 

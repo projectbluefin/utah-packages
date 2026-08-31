@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "image": {
+    "reference": "quay.io/fedora/fedora:44",
+    "pinned": "quay.io/fedora/fedora:44@sha256:629e314a46769025e2e0252a0f212b8efe4cc8adb6691cd5604cd6a3934bd18f"
+  },
+  "release": "44",
+  "repositories": {
+    "fedora_base": "fedora-44",
+    "fedora_updates": "fedora-44-updates",
+    "hummingbird": "config/hummingbird.repo"
+  },
+  "measured_at": "2026-08-31T05:41:57Z"
+}

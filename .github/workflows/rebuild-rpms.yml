@@ -15,6 +15,8 @@ on:
       - packages/**
       - tools/source_pipeline.py
       - tools/runtime_contract.py
+      - tools/lock_buildroot.py
+      - tools/capture_buildroot.py
       - tests/**
       - .github/workflows/rebuild-rpms.yml
   pull_request:
@@ -23,6 +25,8 @@ on:
       - packages/**
       - tools/source_pipeline.py
       - tools/runtime_contract.py
+      - tools/lock_buildroot.py
+      - tools/capture_buildroot.py
       - tests/**
       - .github/workflows/rebuild-rpms.yml
   schedule:
@@ -48,6 +52,7 @@ jobs:
       stage3: ${{ steps.matrix.outputs.stage3 }}
       stage4: ${{ steps.matrix.outputs.stage4 }}
       build_list: ${{ steps.matrix.outputs.build_list }}
+      buildroot_image: ${{ steps.lock.outputs.pinned }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -57,7 +62,14 @@ jobs:
           python3 tools/check_workflow_quoting.py
           python3 tools/runtime_contract.py \
             config/bluefin-packages.toml config/runtime-contract.toml --check
+          python3 tools/validate.py
           python3 -m unittest discover -s tests -v
+      - name: Read pinned buildroot image from lock file
+        id: lock
+        run: |
+          pinned=$(python3 tools/lock_buildroot.py)
+          echo "pinned=${pinned}" >> "$GITHUB_OUTPUT"
+          echo "buildroot image pinned to ${pinned}"
       - name: Install zstandard
         run: pip install --quiet zstandard
       - id: matrix
@@ -151,14 +163,16 @@ jobs:
         env:
           FACTORY_REPO: ${{ vars.FACTORY_REPO }}
           BUILD_LIST: ${{ needs.prepare.outputs.build_list }}
+          BUILDROOT_IMAGE: ${{ needs.prepare.outputs.buildroot_image }}
         run: |
-          mkdir -p work/reports
+          mkdir -p work/reports work/tools
+          cp tools/capture_buildroot.py work/tools/capture_buildroot.py
           docker run --rm \
-            -e FACTORY_REPO -e BUILD_LIST \
+            -e FACTORY_REPO -e BUILD_LIST -e BUILDROOT_IMAGE \
             -v "$PWD/work:/work:Z" \
             -v "$PWD/packages:/packages:ro,Z" \
             -v "$PWD/config:/repos:ro,Z" \
-            quay.io/fedora/fedora:44 bash -exc '
+            ${{ needs.prepare.outputs.buildroot_image }} bash -exc '
               disable=--disablerepo=fedora-cisco-openh264
               # The Fedora container images set tsflags=nodocs, so every %doc file is
               # dropped at install time. rand_core ships its crate docs that way and
@@ -174,6 +188,7 @@ jobs:
               fi
               dnf -y $disable install dnf-plugins-core rpm-build @buildsys-build
               rpm -q --qf "buildroot openssl: %{VERSION}-%{RELEASE}\n" openssl-libs || true
+              python3 /work/tools/capture_buildroot.py --buildroot /work/reports/buildroot-lock-preflight.json --image-ref "${BUILDROOT_IMAGE}"
               : > /work/reports/preflight.txt
               # Only resolve BuildRequires for packages this run will actually
               # build (the incremental matrix), not the whole tree.
@@ -221,7 +236,9 @@ jobs:
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: preflight-buildrequires
-          path: work/reports/preflight.txt
+          path: |
+            work/reports/preflight.txt
+            work/reports/buildroot-lock-preflight.json
           if-no-files-found: warn
   rebuild0:
     needs: prepare
@@ -258,19 +275,21 @@ jobs:
         env:
           PACKAGE: ${{ matrix.package }}
           FACTORY_REPO: ${{ vars.FACTORY_REPO }}
+          BUILDROOT_IMAGE: ${{ needs.prepare.outputs.buildroot_image }}
         run: |
           test -d "packages/$PACKAGE"
-          mkdir -p work/result
+          mkdir -p work/result work/tools
+          cp tools/capture_buildroot.py work/tools/capture_buildroot.py
           # Per-package, so it is resolved out here rather than inside the
           # container, which only sees config/ and packages/.
           DIST_BUMP="$(python3 tools/dist_bump.py "$PACKAGE")"
           export DIST_BUMP
           docker run --rm --privileged \
-            -e PACKAGE -e FACTORY_REPO -e DIST_BUMP \
+            -e PACKAGE -e FACTORY_REPO -e DIST_BUMP -e BUILDROOT_IMAGE \
             -v "$PWD/work:/work:Z" \
             -v "$PWD/packages:/packages:ro,Z" \
             -v "$PWD/config:/repos:ro,Z" \
-            quay.io/fedora/fedora:44 bash -exc '
+            ${{ needs.prepare.outputs.buildroot_image }} bash -exc '
               # The fedora:rawhide image ships fedora-cisco-openh264 enabled, but
               # its packages are signed with Cisco key, which the image does not
               # trust -- so any builddep graph reaching gstreamer/pipewire dies on
@@ -420,10 +439,13 @@ jobs:
                 dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
                   ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$generated"
               done
+              python3 /work/tools/capture_buildroot.py \
+                --buildroot /work/reports/buildroot-${PACKAGE}.json \
+                --image-ref "${BUILDROOT_IMAGE}"
               rpmbuild -ba "$spec" \
-                --define "_sourcedir $staged" \
-                --define "dist $DISTTAG" \
-                --define "_rpmdir /work/result"
+                 --define "_sourcedir $staged" \
+                 --define "dist $DISTTAG" \
+                 --define "_rpmdir /work/result"
               find /work/result -name "*.rpm" -type f -print0 | \
                 xargs -0 -r rpm -qp --qf "%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n"
               # A build that produced no RPM must fail here. if-no-files-found on
@@ -467,19 +489,21 @@ jobs:
         env:
           PACKAGE: ${{ matrix.package }}
           FACTORY_REPO: ${{ vars.FACTORY_REPO }}
+          BUILDROOT_IMAGE: ${{ needs.prepare.outputs.buildroot_image }}
         run: |
           test -d "packages/$PACKAGE"
-          mkdir -p work/result
+          mkdir -p work/result work/tools
+          cp tools/capture_buildroot.py work/tools/capture_buildroot.py
           # Per-package, so it is resolved out here rather than inside the
           # container, which only sees config/ and packages/.
           DIST_BUMP="$(python3 tools/dist_bump.py "$PACKAGE")"
           export DIST_BUMP
           docker run --rm --privileged \
-            -e PACKAGE -e FACTORY_REPO -e DIST_BUMP \
+            -e PACKAGE -e FACTORY_REPO -e DIST_BUMP -e BUILDROOT_IMAGE \
             -v "$PWD/work:/work:Z" \
             -v "$PWD/packages:/packages:ro,Z" \
             -v "$PWD/config:/repos:ro,Z" \
-            quay.io/fedora/fedora:44 bash -exc '
+            ${{ needs.prepare.outputs.buildroot_image }} bash -exc '
               # The fedora:rawhide image ships fedora-cisco-openh264 enabled, but
               # its packages are signed with Cisco key, which the image does not
               # trust -- so any builddep graph reaching gstreamer/pipewire dies on
@@ -629,10 +653,13 @@ jobs:
                 dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
                   ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$generated"
               done
+              python3 /work/tools/capture_buildroot.py \
+                --buildroot /work/reports/buildroot-${PACKAGE}.json \
+                --image-ref "${BUILDROOT_IMAGE}"
               rpmbuild -ba "$spec" \
-                --define "_sourcedir $staged" \
-                --define "dist $DISTTAG" \
-                --define "_rpmdir /work/result"
+                 --define "_sourcedir $staged" \
+                 --define "dist $DISTTAG" \
+                 --define "_rpmdir /work/result"
               find /work/result -name "*.rpm" -type f -print0 | \
                 xargs -0 -r rpm -qp --qf "%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n"
               # A build that produced no RPM must fail here. if-no-files-found on
@@ -676,19 +703,21 @@ jobs:
         env:
           PACKAGE: ${{ matrix.package }}
           FACTORY_REPO: ${{ vars.FACTORY_REPO }}
+          BUILDROOT_IMAGE: ${{ needs.prepare.outputs.buildroot_image }}
         run: |
           test -d "packages/$PACKAGE"
-          mkdir -p work/result
+          mkdir -p work/result work/tools
+          cp tools/capture_buildroot.py work/tools/capture_buildroot.py
           # Per-package, so it is resolved out here rather than inside the
           # container, which only sees config/ and packages/.
           DIST_BUMP="$(python3 tools/dist_bump.py "$PACKAGE")"
           export DIST_BUMP
           docker run --rm --privileged \
-            -e PACKAGE -e FACTORY_REPO -e DIST_BUMP \
+            -e PACKAGE -e FACTORY_REPO -e DIST_BUMP -e BUILDROOT_IMAGE \
             -v "$PWD/work:/work:Z" \
             -v "$PWD/packages:/packages:ro,Z" \
             -v "$PWD/config:/repos:ro,Z" \
-            quay.io/fedora/fedora:44 bash -exc '
+            ${{ needs.prepare.outputs.buildroot_image }} bash -exc '
               # The fedora:rawhide image ships fedora-cisco-openh264 enabled, but
               # its packages are signed with Cisco key, which the image does not
               # trust -- so any builddep graph reaching gstreamer/pipewire dies on
@@ -838,10 +867,13 @@ jobs:
                 dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
                   ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$generated"
               done
+              python3 /work/tools/capture_buildroot.py \
+                --buildroot /work/reports/buildroot-${PACKAGE}.json \
+                --image-ref "${BUILDROOT_IMAGE}"
               rpmbuild -ba "$spec" \
-                --define "_sourcedir $staged" \
-                --define "dist $DISTTAG" \
-                --define "_rpmdir /work/result"
+                 --define "_sourcedir $staged" \
+                 --define "dist $DISTTAG" \
+                 --define "_rpmdir /work/result"
               find /work/result -name "*.rpm" -type f -print0 | \
                 xargs -0 -r rpm -qp --qf "%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n"
               # A build that produced no RPM must fail here. if-no-files-found on
@@ -885,19 +917,21 @@ jobs:
         env:
           PACKAGE: ${{ matrix.package }}
           FACTORY_REPO: ${{ vars.FACTORY_REPO }}
+          BUILDROOT_IMAGE: ${{ needs.prepare.outputs.buildroot_image }}
         run: |
           test -d "packages/$PACKAGE"
-          mkdir -p work/result
+          mkdir -p work/result work/tools
+          cp tools/capture_buildroot.py work/tools/capture_buildroot.py
           # Per-package, so it is resolved out here rather than inside the
           # container, which only sees config/ and packages/.
           DIST_BUMP="$(python3 tools/dist_bump.py "$PACKAGE")"
           export DIST_BUMP
           docker run --rm --privileged \
-            -e PACKAGE -e FACTORY_REPO -e DIST_BUMP \
+            -e PACKAGE -e FACTORY_REPO -e DIST_BUMP -e BUILDROOT_IMAGE \
             -v "$PWD/work:/work:Z" \
             -v "$PWD/packages:/packages:ro,Z" \
             -v "$PWD/config:/repos:ro,Z" \
-            quay.io/fedora/fedora:44 bash -exc '
+            ${{ needs.prepare.outputs.buildroot_image }} bash -exc '
               # The fedora:rawhide image ships fedora-cisco-openh264 enabled, but
               # its packages are signed with Cisco key, which the image does not
               # trust -- so any builddep graph reaching gstreamer/pipewire dies on
@@ -1047,10 +1081,13 @@ jobs:
                 dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
                   ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$generated"
               done
+              python3 /work/tools/capture_buildroot.py \
+                --buildroot /work/reports/buildroot-${PACKAGE}.json \
+                --image-ref "${BUILDROOT_IMAGE}"
               rpmbuild -ba "$spec" \
-                --define "_sourcedir $staged" \
-                --define "dist $DISTTAG" \
-                --define "_rpmdir /work/result"
+                 --define "_sourcedir $staged" \
+                 --define "dist $DISTTAG" \
+                 --define "_rpmdir /work/result"
               find /work/result -name "*.rpm" -type f -print0 | \
                 xargs -0 -r rpm -qp --qf "%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n"
               # A build that produced no RPM must fail here. if-no-files-found on
@@ -1094,19 +1131,21 @@ jobs:
         env:
           PACKAGE: ${{ matrix.package }}
           FACTORY_REPO: ${{ vars.FACTORY_REPO }}
+          BUILDROOT_IMAGE: ${{ needs.prepare.outputs.buildroot_image }}
         run: |
           test -d "packages/$PACKAGE"
-          mkdir -p work/result
+          mkdir -p work/result work/tools
+          cp tools/capture_buildroot.py work/tools/capture_buildroot.py
           # Per-package, so it is resolved out here rather than inside the
           # container, which only sees config/ and packages/.
           DIST_BUMP="$(python3 tools/dist_bump.py "$PACKAGE")"
           export DIST_BUMP
           docker run --rm --privileged \
-            -e PACKAGE -e FACTORY_REPO -e DIST_BUMP \
+            -e PACKAGE -e FACTORY_REPO -e DIST_BUMP -e BUILDROOT_IMAGE \
             -v "$PWD/work:/work:Z" \
             -v "$PWD/packages:/packages:ro,Z" \
             -v "$PWD/config:/repos:ro,Z" \
-            quay.io/fedora/fedora:44 bash -exc '
+            ${{ needs.prepare.outputs.buildroot_image }} bash -exc '
               # The fedora:rawhide image ships fedora-cisco-openh264 enabled, but
               # its packages are signed with Cisco key, which the image does not
               # trust -- so any builddep graph reaching gstreamer/pipewire dies on
@@ -1256,10 +1295,13 @@ jobs:
                 dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
                   ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$generated"
               done
+              python3 /work/tools/capture_buildroot.py \
+                --buildroot /work/reports/buildroot-${PACKAGE}.json \
+                --image-ref "${BUILDROOT_IMAGE}"
               rpmbuild -ba "$spec" \
-                --define "_sourcedir $staged" \
-                --define "dist $DISTTAG" \
-                --define "_rpmdir /work/result"
+                 --define "_sourcedir $staged" \
+                 --define "dist $DISTTAG" \
+                 --define "_rpmdir /work/result"
               find /work/result -name "*.rpm" -type f -print0 | \
                 xargs -0 -r rpm -qp --qf "%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n"
               # A build that produced no RPM must fail here. if-no-files-found on
@@ -1401,28 +1443,33 @@ jobs:
     outputs:
       ref: ${{ steps.oci.outputs.ref }}
       digest: ${{ steps.oci.outputs.digest }}
-    steps:
-      - name: Seed repository from the last published factory image
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
-          owner=$(echo "${{ github.repository_owner }}" | tr "[:upper:]" "[:lower:]")
-          image="ghcr.io/${owner}/utah-packages:latest"
-          mkdir -p repository
-          echo "${GITHUB_TOKEN}" | podman login ghcr.io -u "${{ github.actor }}" --password-stdin
-          if podman pull "$image"; then
-            container=$(podman create "$image")
-            podman cp "$container:/repository/." repository/
-            podman rm "$container"
-          else
-            echo "No prior factory image; publishing a new repository"
-          fi
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
-        with:
-          pattern: rpm-*
-          path: repository
-          merge-multiple: true
+     steps:
+       - name: Seed repository from the last published factory image
+         env:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+         run: |
+           set -euo pipefail
+           owner=$(echo "${{ github.repository_owner }}" | tr "[:upper:]" "[:lower:]")
+           image="ghcr.io/${owner}/utah-packages:latest"
+           mkdir -p repository
+           echo "${GITHUB_TOKEN}" | podman login ghcr.io -u "${{ github.actor }}" --password-stdin
+           if podman pull "$image"; then
+             container=$(podman create "$image")
+             podman cp "$container:/repository/." repository/
+             podman rm "$container"
+           else
+             echo "No prior factory image; publishing a new repository"
+           fi
+       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+         with:
+           name: preflight-buildrequires
+           path: repository
+           if-no-files-found: ignore
+       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+         with:
+           pattern: rpm-*
+           path: repository
+           merge-multiple: true
       - name: Create and keylessly sign repository metadata
         run: |
           sudo apt-get update && sudo apt-get install -y createrepo-c
@@ -1475,6 +1522,14 @@ jobs:
               fi
               echo "Hummingbird-only consumer transaction resolves ${#packages[@]} packages"
             '
+      - name: Emit preliminary build manifest for OCI image
+        run: |
+          python3 tools/emit_manifest.py \
+            --buildroot-lock config/buildroot-lock.json \
+            --package-dir repository \
+            --report-dir repository \
+            --oci-digest "" \
+            --output repository/manifest.json
       # The repository as an OCI image, which is how everything else in this
       # ecosystem ships build output: Utah Containerfile already pulls
       # projectbluefin/common and ublue-os/brew this way, pinned by digest.
@@ -1538,6 +1593,24 @@ jobs:
         run: |
           owner=$(echo "${{ github.repository_owner }}" | tr "[:upper:]" "[:lower:]")
           cosign sign "ghcr.io/${owner}/utah-packages@${{ steps.oci.outputs.digest }}"
+      - name: Emit complete build manifest with the OCI digest
+        run: |
+          mkdir -p manifest
+          python3 tools/emit_manifest.py \
+            --buildroot-lock config/buildroot-lock.json \
+            --package-dir repository \
+            --report-dir repository \
+            --oci-digest "${{ steps.oci.outputs.digest }}" \
+            --output manifest/manifest.json
+          cp manifest/manifest.json repository/manifest.json
+          {
+            echo "### Build manifest published"
+            echo
+            echo '```'
+            echo "OCI digest: ${{ steps.oci.outputs.digest }}"
+            echo "Manifest: manifest/manifest.json"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
       # Handed to the Pages job rather than deployed here, so that the registry
       # push never depends on the github-pages environment. That environment
       # usually carries a deployment branch rule, and inheriting it would have
@@ -1546,6 +1619,11 @@ jobs:
         with:
           name: repository
           path: repository
+          retention-days: 1
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: build-manifest
+          path: manifest/manifest.json
           retention-days: 1
 
   # A convenience mirror for anything wanting a plain HTTP repository. Pages can
