@@ -152,7 +152,9 @@ sed -i 's/, "--locked"//g' meson/cargo_wrapper.py
 # allowing the reference tests to finish compiling and running. The tests
 # also reconfigure process-global Fontconfig/Pango state, so serialize the
 # harness to avoid a hosted-runner race while retaining every test case.
-RUST_TEST_THREADS=1 %meson_test --timeout-multiplier 2
+# Keep failures uncaptured so a process-startup failure is diagnosable in CI.
+RUST_TEST_THREADS=1 RUST_TEST_NOCAPTURE=1 RUST_BACKTRACE=1 \
+    %meson_test --timeout-multiplier 2
 %endif
 
 %files
