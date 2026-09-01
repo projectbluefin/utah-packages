@@ -123,8 +123,10 @@ This package provides extra utilities based on the librsvg library.
 
 # Ensure we build without --locked, as %%cargo_prep removes
 # the lock file (Cargo.lock), allowing more wiggle room when
-# providing Rust dependencies.
-sed -i 's/, "--locked"//g' meson/cargo_wrapper.py
+# providing Rust dependencies. Cargo also launches the individual test
+# binaries concurrently; serialize them to keep the complete release-mode
+# suite within hosted-runner memory limits.
+sed -i 's/, "--locked"//g; s/"--no-fail-fast",/"--no-fail-fast", "--jobs=1",/' meson/cargo_wrapper.py
 
 %if ! 0%{?bundled_rust_deps}
 %generate_buildrequires
