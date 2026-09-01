@@ -52,7 +52,9 @@ permissions:
 # package identities let the queued run reuse completed work rather than
 # launching a duplicate multi-hour matrix.
 concurrency:
-  group: utah-packages-factory-${{ github.event.pull_request.number || github.ref }}
+  # A selected-package recovery run may proceed beside the normal PR run;
+  # package-level concurrency still prevents two copies of the same lane/package.
+  group: utah-packages-factory-${{ github.event.pull_request.number || github.ref }}-${{ inputs.packages != '' && 'recovery' || 'normal' }}
   cancel-in-progress: false
 
 # Build waves may run concurrently.  They use run-scoped artifacts and each
