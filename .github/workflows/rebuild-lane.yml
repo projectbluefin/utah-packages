@@ -133,14 +133,29 @@ jobs:
                 # before the factory moved to 78, say. Left in [stages] it is
                 # preferred by priority and drags the excluded ICU 77 back in,
                 # so every buildroot that reaches libsmbclient fails to resolve.
-                # Drop any prior RPM that still requires the retired ICU 77
-                # soname; the current run rebuilds a coherent replacement.
+                # A source build ships many subpackages that depend on each
+                # other by exact NEVR, so dropping only the ICU-linked one
+                # leaves its siblings with unmet private-library deps. Identify
+                # the stale source packages by ICU 77 soname, then drop every
+                # RPM built from those same sources; the current run rebuilds a
+                # coherent replacement set with matching filenames.
+                stale_sources=""
                 while IFS= read -r -d "" rpm; do
                   if rpm -qpR "$rpm" 2>/dev/null | grep -q "libicuuc.so.77\|libicui18n.so.77"; then
-                    echo "dropping stale ICU 77 artifact from accumulator: $rpm"
-                    rm -f "$rpm"
+                    src=$(rpm -qp --qf "%{SOURCERPM}\n" "$rpm" 2>/dev/null)
+                    [ -n "$src" ] && stale_sources="${stale_sources}${src}\n"
                   fi
                 done < <(find /work/prior -name "*.rpm" -type f -print0)
+                stale_sources=$(printf "%b" "$stale_sources" | sort -u | sed "/^$/d")
+                if [ -n "$stale_sources" ]; then
+                  while IFS= read -r -d "" rpm; do
+                    src=$(rpm -qp --qf "%{SOURCERPM}\n" "$rpm" 2>/dev/null)
+                    if printf "%s\n" "$stale_sources" | grep -qxF "$src"; then
+                      echo "dropping stale artifact from accumulator: $rpm (src $src)"
+                      rm -f "$rpm"
+                    fi
+                  done < <(find /work/prior -name "*.rpm" -type f -print0)
+                fi
                 createrepo_c /work/prior
                 printf "[stages]\nname=stages\nbaseurl=file:///work/prior\nenabled=1\ngpgcheck=0\npriority=1\n" \
                   > /etc/yum.repos.d/stages.repo
