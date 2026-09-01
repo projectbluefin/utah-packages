@@ -55,7 +55,11 @@
 %bcond_with onnx
 %else
 %bcond_without ffado
-%bcond_without onnx
+# Fedora's optional ONNX plugin pulls onnxruntime-devel from Fedora, whose
+# abseil ABI is filtered in a Hummingbird-targeted buildroot. The core PipeWire
+# multimedia stack remains enabled; this optional filter-chain module is not
+# part of the Bluefin runtime contract.
+%bcond_with onnx
 %endif
 %endif
 
