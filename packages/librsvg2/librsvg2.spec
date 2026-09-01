@@ -153,8 +153,11 @@ sed -i 's/, "--locked"//g' meson/cargo_wrapper.py
 # also reconfigure process-global Fontconfig/Pango state, so serialize the
 # harness to avoid a hosted-runner race while retaining every test case.
 # Keep failures uncaptured so a process-startup failure is diagnosable in CI.
+# Meson otherwise starts each Cargo test binary concurrently; that multiplies
+# the release-mode Rust memory pressure on hosted runners even when each
+# harness is single-threaded.
 RUST_TEST_THREADS=1 RUST_TEST_NOCAPTURE=1 RUST_BACKTRACE=1 \
-    %meson_test --timeout-multiplier 2
+    %meson_test --timeout-multiplier 2 --num-processes 1
 %endif
 
 %files
