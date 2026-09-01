@@ -2,6 +2,9 @@
 # Packages not listed here remain in their numeric stage. A late lane may only
 # consume outputs from the preceding fast lane(s) named in the workflow.
 
+[stage0_late]
+packages = ["pipewire"]
+
 [stage1_heavy]
 packages = ["mozjs140", "webkitgtk"]
 
