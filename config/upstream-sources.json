@@ -446,7 +446,8 @@
       "version": "1.61.91",
       "url": "https://download.gnome.org/sources/gvfs/1.61/gvfs-1.61.91.tar.xz",
       "filename": "gvfs-1.61.91.tar.xz",
-      "sha512": "6873df98a1589a9b7216e2e0abc7b0391478a38561eebf3970e6a05baa6f4e842fc43eb2c243ae5ea9a000e941601e01f39507fb6f1fae23fc5a11bff42e0b98"
+      "sha512": "6873df98a1589a9b7216e2e0abc7b0391478a38561eebf3970e6a05baa6f4e842fc43eb2c243ae5ea9a000e941601e01f39507fb6f1fae23fc5a11bff42e0b98",
+      "stage": 2
     },
     {
       "name": "hicolor-icon-theme",
