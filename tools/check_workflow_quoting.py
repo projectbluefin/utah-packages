@@ -18,27 +18,37 @@ This does.
 import sys
 from pathlib import Path
 
-workflow = Path(__file__).resolve().parent.parent / ".github" / "workflows" / "rebuild-rpms.yml"
-lines = workflow.read_text().splitlines()
+workflows_dir = Path(__file__).resolve().parent.parent / ".github" / "workflows"
+targets = [
+    workflows_dir / "rebuild-rpms.yml",
+    workflows_dir / "rebuild-lane.yml",
+    workflows_dir / "checkpoint.yml",
+]
 
 offenders = []
-start = None
-for number, line in enumerate(lines, start=1):
-    if "bash -exc '" in line:
-        start = number
-    elif start is not None and line.strip() == "'":
-        for offset, body in enumerate(lines[start:number - 1], start=start + 1):
-            if "'" in body:
-                offenders.append((offset, body.strip()))
-        start = None
+checked = []
+for workflow in targets:
+    if not workflow.is_file():
+        continue
+    checked.append(workflow.name)
+    lines = workflow.read_text().splitlines()
+    start = None
+    for number, line in enumerate(lines, start=1):
+        if "bash -exc '" in line:
+            start = number
+        elif start is not None and line.strip() == "'":
+            for offset, body in enumerate(lines[start:number - 1], start=start + 1):
+                if "'" in body:
+                    offenders.append((workflow.name, offset, body.strip()))
+            start = None
 
 if offenders:
     print("A single quote inside a bash -exc script closes it. These lines do that:",
           file=sys.stderr)
-    for number, text in offenders:
-        print(f"  {workflow.name}:{number}: {text}", file=sys.stderr)
+    for name, number, text in offenders:
+        print(f"  {name}:{number}: {text}", file=sys.stderr)
     print("\nRephrase to avoid the apostrophe, as the surrounding comments do.",
           file=sys.stderr)
     raise SystemExit(1)
 
-print(f"checked {workflow.name}: no build script contains a quote that would close it")
+print(f"checked {', '.join(checked)}: no build script contains a quote that would close it")
