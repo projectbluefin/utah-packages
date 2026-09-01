@@ -144,7 +144,12 @@ This is the MinGW build of libsoup3
 %autosetup -p1 -n libsoup-%{version}
 
 %build
-%meson -Ddocs=disabled -Dautobahn=disabled
+# NTLM is a legacy Windows authentication scheme not needed on a GNOME desktop,
+# and enabling it makes meson require /usr/bin/ntlm_auth, which lives in Fedora
+# samba-winbind-clients and drags an ICU-77 samba into the buildroot -- a
+# conflict with the factory libicu 78. Utah already disables the NTLM test
+# suite below, so turn the feature off rather than pull that closure in.
+%meson -Ddocs=disabled -Dautobahn=disabled -Dntlm=disabled
 %meson_build
 
 %if %{with_mingw}
