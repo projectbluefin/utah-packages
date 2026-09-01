@@ -85,7 +85,11 @@ dist-bump package:
     python3 tools/dist_bump.py "{{ package }}"
 
 # Dispatch and inspect the authoritative GitHub Actions factory pipeline.
-ci-rebuild full="false":
+ci-smoke package="python-argcomplete":
+    gh workflow run smoke-lane.yml --repo "{{ repo_owner }}/{{ repo_name }}" \
+      --ref "${FACTORY_REF:-$(git branch --show-current)}" --field "package={{ package }}"
+
+ci-rebuild full="false" packages="":
     #!/usr/bin/env bash
     set -euo pipefail
     case "{{ full }}" in
@@ -95,7 +99,7 @@ ci-rebuild full="false":
     ref="${FACTORY_REF:-$(git branch --show-current)}"
     test -n "$ref"
     gh workflow run rebuild-rpms.yml --repo "{{ repo_owner }}/{{ repo_name }}" \
-      --ref "$ref" --field "full={{ full }}"
+      --ref "$ref" --field "full={{ full }}" --field "packages={{ packages }}"
 
 ci-runs limit="10":
     gh run list --repo "{{ repo_owner }}/{{ repo_name }}" \

@@ -1,0 +1,83 @@
+name: Checkpoint package factory outputs
+
+on:
+  workflow_call:
+    inputs:
+      lane:
+        description: Completed factory lane being checkpointed
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  checkpoint:
+    runs-on: ubuntu-24.04
+    concurrency:
+      # The accumulator is currently a shared recovery pool. Serialize all
+      # refs, not only one ref, so main and pull requests cannot overwrite a
+      # newer partial candidate while both push the mutable tag.
+      group: utah-packages-accumulate-global
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Seed the current partial candidate
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          owner=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          mkdir -p repository
+          echo "${GITHUB_TOKEN}" | podman login ghcr.io -u "${{ github.actor }}" --password-stdin
+          for image in "ghcr.io/${owner}/utah-packages:building" "ghcr.io/${owner}/utah-packages:latest"; do
+            if podman pull "$image"; then
+              container=$(podman create "$image")
+              podman cp "$container:/repository/." repository/ || true
+              podman rm "$container"
+              echo "seeded from $image"
+              break
+            fi
+          done
+
+      - name: Collect successful package artifacts
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          pattern: rpm-*
+          path: repository
+          merge-multiple: true
+        continue-on-error: true
+
+      - name: Record exact package identities in the candidate
+        run: python3 tools/build_manifest.py repository
+
+      - name: Rebuild checkpoint repository metadata
+        env:
+          LANE: ${{ inputs.lane }}
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y createrepo-c
+          find repository -name '*-0.bootstrap.*.rpm' -print -delete
+          test -n "$(find repository -name '*.rpm' -type f -print -quit)" || {
+            echo "No RPMs to checkpoint for ${LANE}"
+            exit 0
+          }
+          createrepo_c --update repository
+          printf '%s\n' "${LANE}" > repository/.last-checkpoint
+
+      - name: Push partial candidate
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          test -d repository/repodata || exit 0
+          owner=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          image="ghcr.io/${owner}/utah-packages:building"
+          printf 'FROM scratch\nCOPY repository /repository\n' > Containerfile.checkpoint
+          echo "${GITHUB_TOKEN}" | podman login ghcr.io -u "${{ github.actor }}" --password-stdin
+          podman build --tag "$image" --file Containerfile.checkpoint .
+          podman push "$image"
+          count=$(find repository -name '*.rpm' -type f | wc -l)
+          echo "checkpointed ${count} RPMs after ${LANE}"

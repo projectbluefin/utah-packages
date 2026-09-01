@@ -91,6 +91,36 @@ dedicated, narrowly scoped repository-creation credential.
 
 See [architecture](docs/architecture.md) and [contributing](docs/contributing.md).
 
+## Long builds and recovery
+
+The rebuild workflow separates the long WebKitGTK and mozjs140 closures from
+packages that do not need them. Fast stage-2 packages can proceed while the
+heavy stage-1 lane is still compiling; `gjs` waits for mozjs140, and the
+WebKit/GNOME-shell consumers wait for WebKitGTK. The final precedence and
+Hummingbird-only transaction gates still require every selected lane to pass
+before `latest` moves.
+
+Every completed lane checkpoints successful RPM artifacts into the internal
+`:building` recovery candidate. That tag is never a consumer input. Package
+results carry an exact source/recipe/buildroot identity and are reusable only
+when that identity and recorded RPM outputs match. A failed or timed-out heavy
+package therefore does not require rebuilding completed lanes.
+
+Use the local Justfile for the supported operations:
+
+```sh
+just check
+just source-one webkitgtk
+just ci-smoke
+just ci-rebuild packages=webkitgtk,mozjs140
+just ci-status RUN_ID
+just ci-failed-log RUN_ID
+```
+
+Set the `UTAH_HEAVY_RUNNER` repository variable to an enabled larger
+GitHub-hosted runner label when available; otherwise heavy jobs fall back to
+`ubuntu-24.04` with a six-hour timeout.
+
 ## Hummingbird availability measurement
 
 `Recalculate Hummingbird package gaps` runs every six hours. It pulls the

@@ -303,12 +303,21 @@ files for developing applications that use JavaScript engine from webkit2gtk-4.1
 %global optflags %(echo %{optflags} | sed 's/-mbranch-protection=standard /-mbranch-protection=pac-ret /')
 %endif
 
+# The source is built twice for the GTK 4 and GTK 3 ports. Cache compile
+# actions across both configurations when the factory provides its pinned
+# sccache client; links remain local and the cache is only an optimization.
+cmake_launcher_args=""
+if test -x /work/tools/sccache; then
+  cmake_launcher_args="-DCMAKE_C_COMPILER_LAUNCHER=/work/tools/sccache -DCMAKE_CXX_COMPILER_LAUNCHER=/work/tools/sccache"
+fi
+
 mkdir webkitgtk-6.0
 pushd webkitgtk-6.0
 %cmake -S .. \
   -GNinja \
   -DPORT=GTK \
   -DCMAKE_BUILD_TYPE=Release \
+  $cmake_launcher_args \
   -DUSE_GTK4=ON \
   -DUSE_LIBBACKTRACE=OFF \
 %if %{without docs}
@@ -323,6 +332,7 @@ pushd webkit2gtk-4.1
   -GNinja \
   -DPORT=GTK \
   -DCMAKE_BUILD_TYPE=Release \
+  $cmake_launcher_args \
   -DUSE_GTK4=OFF \
   -DUSE_LIBBACKTRACE=OFF \
   -DENABLE_WEBDRIVER=OFF \
@@ -350,6 +360,10 @@ popd
 pushd webkit2gtk-4.1
 %cmake_install
 popd
+
+if test -x /work/tools/sccache; then
+  /work/tools/sccache --show-stats || :
+fi
 
 %find_lang WebKitGTK-6.0
 %find_lang WebKitGTK-4.1

@@ -1,0 +1,55 @@
+name: Smoke-test one package lane
+
+on:
+  workflow_dispatch:
+    inputs:
+      package:
+        description: Small configured package to build through the lane
+        required: false
+        default: python-argcomplete
+        type: string
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  build:
+    uses: ./.github/workflows/rebuild-lane.yml
+    with:
+      lane: smoke
+      packages: '["${{ inputs.package }}"]'
+      runner: ubuntu-24.04
+      timeout: '20'
+    secrets: inherit
+
+  verify:
+    needs: build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Download smoke result
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          pattern: rpm-smoke-*
+          path: result
+          merge-multiple: true
+      - name: Verify RPM and exact build identity
+        env:
+          PACKAGE: ${{ inputs.package }}
+        run: |
+          set -euo pipefail
+          test -n "$(find result -name '*.rpm' -type f -print -quit)"
+          identity="$(find result -name "${PACKAGE}.build-key.json" -type f -print -quit)"
+          test -n "$identity"
+          python3 - "$identity" <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+
+          data = json.loads(Path(sys.argv[1]).read_text())
+          assert data['package']
+          assert data['build_key'].startswith('sha256:')
+          assert data['outputs'], 'smoke build produced no recorded RPM outputs'
+          print(f"verified {data['package']} {data['build_key']}")
+          PY
