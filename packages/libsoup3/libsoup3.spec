@@ -40,7 +40,11 @@ BuildRequires: pkgconfig(libzstd)
 BuildRequires: pkgconfig(libpsl)
 BuildRequires: pkgconfig(sqlite3)
 BuildRequires: pkgconfig(sysprof-capture-4)
-BuildRequires: /usr/bin/ntlm_auth
+# The NTLM test suite is disabled below (it needs GLib HMAC, which Hummingbird
+# FIPS policy makes fatal), so /usr/bin/ntlm_auth is never used at build or
+# test time. Requiring it only dragged Fedora samba-winbind-clients -- and its
+# ICU 77 samba-core-libs -- into the buildroot, conflicting with the factory
+# libicu 78. Dropped; nothing in this recipe consumes it.
 
 Requires: glib-networking%{?_isa} >= %{glib2_version}
 
