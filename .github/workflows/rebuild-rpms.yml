@@ -688,6 +688,7 @@ jobs:
     if: >-
       ${{ !cancelled()
           && needs.prepare.outputs.build_list != '[]'
+          && inputs.packages == ''
           && needs.precedence.result == 'success'
           && (needs.rebuild0.result == 'success' || needs.rebuild0.result == 'skipped')
           && (needs.rebuild1.result == 'success' || needs.rebuild1.result == 'skipped')

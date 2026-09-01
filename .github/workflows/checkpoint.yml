@@ -70,6 +70,7 @@ jobs:
       - name: Push partial candidate
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LANE: ${{ inputs.lane }}
         run: |
           set -euo pipefail
           test -d repository/repodata || exit 0
