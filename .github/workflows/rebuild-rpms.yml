@@ -495,7 +495,7 @@ jobs:
     secrets: inherit
 
   checkpoint0-late:
-    needs: [prepare, rebuild0, rebuild0_late]
+    needs: [prepare, rebuild0, rebuild0_late, checkpoint0]
     if: >-
       ${{ always() && !cancelled() && needs.prepare.outputs.build_list != '[]'
           && (github.event_name != 'pull_request'
@@ -506,7 +506,7 @@ jobs:
     secrets: inherit
 
   checkpoint1-fast:
-    needs: [prepare, rebuild0, rebuild0_late, rebuild1]
+    needs: [prepare, rebuild0, rebuild0_late, rebuild1, checkpoint0-late]
     if: >-
       ${{ always() && !cancelled() && needs.prepare.outputs.build_list != '[]'
           && (github.event_name != 'pull_request'
@@ -517,7 +517,7 @@ jobs:
     secrets: inherit
 
   checkpoint1-heavy:
-    needs: [prepare, rebuild0, rebuild0_late, rebuild1, rebuild1_heavy]
+    needs: [prepare, rebuild0, rebuild0_late, rebuild1, rebuild1_heavy, checkpoint1-fast]
     if: >-
       ${{ always() && !cancelled() && needs.prepare.outputs.build_list != '[]'
           && (github.event_name != 'pull_request'
@@ -528,7 +528,7 @@ jobs:
     secrets: inherit
 
   checkpoint2-fast:
-    needs: [prepare, rebuild0, rebuild0_late, rebuild1, rebuild2]
+    needs: [prepare, rebuild0, rebuild0_late, rebuild1, rebuild2, checkpoint1-heavy]
     if: >-
       ${{ always() && !cancelled() && needs.prepare.outputs.build_list != '[]'
           && (github.event_name != 'pull_request'
@@ -539,7 +539,7 @@ jobs:
     secrets: inherit
 
   checkpoint2-late:
-    needs: [prepare, rebuild0, rebuild0_late, rebuild1, rebuild1_heavy, rebuild2, rebuild2_late]
+    needs: [prepare, rebuild0, rebuild0_late, rebuild1, rebuild1_heavy, rebuild2, rebuild2_late, checkpoint2-fast]
     if: >-
       ${{ always() && !cancelled() && needs.prepare.outputs.build_list != '[]'
           && (github.event_name != 'pull_request'
@@ -550,7 +550,7 @@ jobs:
     secrets: inherit
 
   checkpoint3-fast:
-    needs: [prepare, rebuild0, rebuild0_late, rebuild1, rebuild2, rebuild3]
+    needs: [prepare, rebuild0, rebuild0_late, rebuild1, rebuild2, rebuild3, checkpoint2-late]
     if: >-
       ${{ always() && !cancelled() && needs.prepare.outputs.build_list != '[]'
           && (github.event_name != 'pull_request'
@@ -561,7 +561,7 @@ jobs:
     secrets: inherit
 
   checkpoint3-late:
-    needs: [prepare, rebuild0, rebuild0_late, rebuild1, rebuild1_heavy, rebuild2, rebuild2_late, rebuild3, rebuild3_late]
+    needs: [prepare, rebuild0, rebuild0_late, rebuild1, rebuild1_heavy, rebuild2, rebuild2_late, rebuild3, rebuild3_late, checkpoint3-fast]
     if: >-
       ${{ always() && !cancelled() && needs.prepare.outputs.build_list != '[]'
           && (github.event_name != 'pull_request'
@@ -572,7 +572,7 @@ jobs:
     secrets: inherit
 
   checkpoint4:
-    needs: [prepare, rebuild0, rebuild0_late, rebuild1, rebuild1_heavy, rebuild2, rebuild2_late, rebuild3, rebuild3_late, rebuild4]
+    needs: [prepare, rebuild0, rebuild0_late, rebuild1, rebuild1_heavy, rebuild2, rebuild2_late, rebuild3, rebuild3_late, rebuild4, checkpoint3-late]
     if: >-
       ${{ always() && !cancelled() && needs.prepare.outputs.build_list != '[]'
           && (github.event_name != 'pull_request'
