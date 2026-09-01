@@ -26,7 +26,7 @@ jobs:
     # Never run two copies of an expensive package build concurrently. A newer
     # run waits for the current one and can reuse its checkpointed result.
     concurrency:
-      group: utah-package-${{ matrix.package }}
+      group: utah-package-${{ inputs.lane }}-${{ matrix.package }}
       cancel-in-progress: false
     strategy:
       fail-fast: false
