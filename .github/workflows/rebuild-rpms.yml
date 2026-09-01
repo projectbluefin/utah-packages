@@ -47,6 +47,14 @@ permissions:
   packages: write
   pages: write
 
+# Do not cancel an active WebKitGTK/mozjs/Mesa build when a newer commit lands.
+# Queue one factory run per PR or branch instead; its checkpoints and exact
+# package identities let the queued run reuse completed work rather than
+# launching a duplicate multi-hour matrix.
+concurrency:
+  group: utah-packages-factory-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+
 # Build waves may run concurrently.  They use run-scoped artifacts and each
 # publication re-seeds from the then-current repository, so concurrent work
 # cannot lose RPMs.  The consumer tag itself remains serialized at `publish`.
