@@ -63,7 +63,11 @@
 %endif
 
 # Build vfs_ceph module and ctdb cepth mutex helper by default on 64bit Fedora
-%if 0%{?fedora}
+# Utah targets a Hummingbird desktop, not a Ceph storage server. Fedora's
+# librgw-devel/libcephfs-devel drag libicuuc.so.77 into the buildroot, which
+# conflicts with the factory's libicu 78; the Ceph VFS modules are not in the
+# Bluefin desktop contract, so disable them and keep the ICU 78 closure clean.
+%if 0%{?fedora} && 0%{?utah_ceph}
 
 %ifarch aarch64 ppc64le s390x x86_64 riscv64 loongarch64
 %bcond vfs_cephfs 1
