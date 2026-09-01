@@ -8,6 +8,13 @@ on:
         required: false
         default: python-argcomplete
         type: string
+  pull_request:
+    paths:
+      - config/**
+      - packages/**
+      - tools/build_identity.py
+      - .github/workflows/rebuild-lane.yml
+      - .github/workflows/smoke-lane.yml
 
 permissions:
   contents: read
@@ -18,7 +25,7 @@ jobs:
     uses: ./.github/workflows/rebuild-lane.yml
     with:
       lane: smoke
-      packages: '["${{ inputs.package }}"]'
+      packages: ${{ format('["{0}"]', inputs.package || 'python-argcomplete') }}
       runner: ubuntu-24.04
       timeout: '20'
     secrets: inherit
@@ -36,7 +43,7 @@ jobs:
           merge-multiple: true
       - name: Verify RPM and exact build identity
         env:
-          PACKAGE: ${{ inputs.package }}
+          PACKAGE: ${{ inputs.package || 'python-argcomplete' }}
         run: |
           set -euo pipefail
           test -n "$(find result -name '*.rpm' -type f -print -quit)"
