@@ -60,10 +60,40 @@ def digest(path: Path) -> str:
     return value.hexdigest()
 
 
+def collisions(packages: dict[str, dict]) -> list[str]:
+    """Report RPM filenames two packages claim with different contents.
+
+    A repository is one flat set of files, so two lanes that produce the same
+    filename leave whichever landed last and silently discard the other. It
+    surfaces downstream as a checksum mismatch on the package that lost, which
+    names the victim rather than the fault, so name the fault here.
+    """
+    claims: dict[str, dict[str, str]] = {}
+    for name, record in sorted(packages.items()):
+        if not isinstance(record, dict):
+            continue
+        for output in record.get("outputs") or []:
+            if not isinstance(output, dict) or not isinstance(output.get("file"), str):
+                continue
+            sha = output.get("sha256")
+            if isinstance(sha, str):
+                claims.setdefault(Path(output["file"]).name, {})[name] = sha
+
+    problems = []
+    for filename, by_package in sorted(claims.items()):
+        if len(by_package) > 1 and len(set(by_package.values())) > 1:
+            owners = ", ".join(sorted(by_package))
+            problems.append(
+                f"{filename} is built with different contents by {owners}; "
+                "only one of them can survive in a single repository"
+            )
+    return problems
+
+
 def check(repository: Path, config_path: Path, verify_digests: bool = True) -> list[str]:
     """Return the reasons this repository may not be published, empty if none."""
-    problems: list[str] = []
     packages = manifest_packages(repository)
+    problems: list[str] = collisions(packages)
     # One index of the tree, so a repository of thousands of RPMs is walked
     # once rather than once per recorded output.
     on_disk: dict[str, Path] = {}
@@ -113,17 +143,19 @@ def main() -> int:
         return 1
     if problems:
         print(
-            f"The candidate repository is missing {len(problems)} thing(s) the factory promises:",
+            f"The candidate repository does not match what the factory promises "
+            f"({len(problems)} problem(s)):",
             file=sys.stderr,
         )
         for problem in problems:
             print(f"  {problem}", file=sys.stderr)
         print(
             "\nPublishing it would ship a repository that does not contain what its\n"
-            "manifest says it contains. Rebuild the named packages -- a full run\n"
-            "(workflow_dispatch with full=true) rebuilds every one of them -- or\n"
-            "correct config/upstream-sources.json if the factory no longer builds\n"
-            "them.",
+            "manifest says it contains. If a package is missing, rebuild it -- a full\n"
+            "run (workflow_dispatch with full=true) rebuilds every one of them -- or\n"
+            "correct config/upstream-sources.json if the factory no longer builds it.\n"
+            "If two packages build the same filename, that is a recipe fault: they\n"
+            "must not both claim it.",
             file=sys.stderr,
         )
         return 1

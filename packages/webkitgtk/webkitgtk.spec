@@ -20,13 +20,6 @@
 %bcond_without gtk4
 %bcond_without gtk3
 
-# One source package, built twice, would yield two -debugsource RPMs of the
-# same name and different contents. The GTK 4 shard carries it; the GTK 3
-# shard ships its -debuginfo packages without one.
-%if %{without gtk4}
-%global _debugsource_packages 0
-%endif
-
 # Clang is preferred: https://skia.org/docs/user/build/#supported-and-preferred-compilers
 %global toolchain clang
 
@@ -35,7 +28,21 @@
 %global _lto_cflags %{nil}
 %endif
 
+# The debug packages are named after the source package, so one recipe built
+# twice would emit two webkitgtk-debuginfo and two webkitgtk-debugsource RPMs:
+# same NEVR, different contents, one silently overwriting the other when the
+# lanes' artifacts merge into one repository. Nothing else here depends on this
+# name -- every binary package is declared with `%%package -n`, there is no bare
+# %%files section so no package named after it is ever produced, and Source0 and
+# %%autosetup spell the tarball out literally -- so giving the GTK 3 shard its
+# own source name is enough to give it its own debug namespace. Not webkit2gtk4.1,
+# which is already a subpackage below. With neither bcond given, as on a plain
+# rpmbuild, this is webkitgtk exactly as Fedora ships it.
+%if %{without gtk4}
+Name:           webkitgtk4.1
+%else
 Name:           webkitgtk
+%endif
 Version:        2.53.91
 Release:        %autorelease
 Summary:        GTK web content engine library

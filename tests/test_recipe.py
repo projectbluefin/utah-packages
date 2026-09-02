@@ -62,8 +62,13 @@ class RecipeTests(unittest.TestCase):
         spec = (ROOT / "packages/webkitgtk/webkitgtk.spec").read_text()
         self.assertIn("%bcond_without gtk4", spec)
         self.assertIn("%bcond_without gtk3", spec)
-        # Only one shard may ship the debugsource package.
-        self.assertIn("%global _debugsource_packages 0", spec)
+        # The debug packages are named after the source package, so the shards
+        # must not share one: two webkitgtk-debuginfo RPMs of the same NEVR and
+        # different contents cannot both survive in one repository.
+        self.assertIn("Name:           webkitgtk4.1", spec)
+        self.assertIn("Name:           webkitgtk\n", spec)
+        # ...and the shard name must not collide with a subpackage either.
+        self.assertNotIn("Name:           webkit2gtk4.1", spec)
 
 
 if __name__ == "__main__":
