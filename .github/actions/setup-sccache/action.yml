@@ -62,7 +62,10 @@ runs:
           # server in them, losing its statistics and its warm state.
           printf 'export SCCACHE_IDLE_TIMEOUT=%q\n' 0
         } > "$GITHUB_WORKSPACE/work/tools/sccache.env"
-        echo "SCCACHE_DIR=$cache_dir" >> "$GITHUB_ENV"
+        # Deliberately not exported to the job environment. The cache is for
+        # the compiles inside the container; a host-side client pointed at the
+        # same directory would start a second server, report its own empty
+        # counters, and make a broken cache look like a working one.
         if [ -z "$PACKAGE" ] || [ -z "$CACHE_REF" ]; then
           echo "No compiler cache requested for this job"
           exit 0
