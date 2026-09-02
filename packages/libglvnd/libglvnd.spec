@@ -7,8 +7,11 @@
 %elif 0%{?rhel}
 %global x11_tests 1
 %else
-%global compositor weston
-%global x11_tests 1
+# Utah builds in a hermetic container without a Wayland compositor or X server.
+# Fedora pulls weston + mesa-dri-drivers here only to run the GLVND test suite,
+# and weston drags the pipewire/webrtc/abseil closure into a stage-0 buildroot.
+# The library build does not need a compositor; disable the compositor/X tests.
+%global x11_tests 0
 %endif
 
 Name:           libglvnd
