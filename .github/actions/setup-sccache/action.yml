@@ -1,15 +1,19 @@
 name: Setup pinned sccache
-description: Download a SHA-256-locked sccache client and expose GitHub Actions cache credentials.
+description: Install a SHA-256-locked sccache client and restore its durable compiler cache.
+inputs:
+  package:
+    description: >-
+      Package whose compiler cache should be restored. Empty installs the
+      client without a cache, which is all a short build needs.
+    required: false
+    default: ""
+  cache_ref:
+    description: GHCR repository holding the per-package compiler caches.
+    required: false
+    default: ""
 runs:
   using: composite
   steps:
-    - name: Expose GitHub Actions cache credentials
-      uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
-      with:
-        script: |
-          core.exportVariable('ACTIONS_RESULTS_URL', process.env.ACTIONS_RESULTS_URL || '');
-          core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
-          core.exportVariable('ACTIONS_CACHE_SERVICE_V2', 'on');
     - name: Download and verify sccache
       shell: bash
       run: |
@@ -25,11 +29,52 @@ runs:
         test -x "$binary"
         mkdir -p "$GITHUB_WORKSPACE/work/tools"
         install -m 0755 "$binary" "$GITHUB_WORKSPACE/work/tools/sccache"
+
+    # The cache lives under the /work mount the build container already has, so
+    # objects written inside the container land on the runner disk and can be
+    # published afterwards. The previous arrangement used sccache's GitHub
+    # Actions backend, which never applied: the recipes run inside the
+    # container and nothing there sourced the credentials, so every compile
+    # fell back to a local directory inside the container and was discarded
+    # with it. WebKitGTK compiled 8955 objects that way, twice, every run.
+    #
+    # A directory cache published to GHCR has neither problem. It is not
+    # capped at the 10 GB the Actions cache allows, which two ports of WebKit
+    # would evict each other out of, and it does not expire after a week.
+    - name: Restore the compiler cache
+      shell: bash
+      env:
+        PACKAGE: ${{ inputs.package }}
+        CACHE_REF: ${{ inputs.cache_ref }}
+      run: |
+        set -uo pipefail
+        cache_dir="$GITHUB_WORKSPACE/work/sccache"
+        mkdir -p "$cache_dir"
         {
-          printf "export SCCACHE_GHA_ENABLED=%q\\n" true
-          printf "export ACTIONS_CACHE_SERVICE_V2=%q\\n" "${ACTIONS_CACHE_SERVICE_V2:?}"
-          printf "export ACTIONS_RESULTS_URL=%q\\n" "${ACTIONS_RESULTS_URL:?}"
-          printf "export ACTIONS_RUNTIME_TOKEN=%q\\n" "${ACTIONS_RUNTIME_TOKEN:?}"
+          # Sourced by the recipes that drive their compiler through sccache.
+          # SCCACHE_DIR must be the in-container path of the same directory.
+          printf 'export SCCACHE_DIR=%q\n' /work/sccache
+          # Bounded so the published cache stays a few minutes of transfer.
+          # sccache evicts least-recently-used entries at this ceiling.
+          printf 'export SCCACHE_CACHE_SIZE=%q\n' "${SCCACHE_CACHE_SIZE:-6G}"
+          # A build has long gaps between compile phases -- configure, link,
+          # debuginfo -- and the default ten-minute idle timeout ends the
+          # server in them, losing its statistics and its warm state.
+          printf 'export SCCACHE_IDLE_TIMEOUT=%q\n' 0
         } > "$GITHUB_WORKSPACE/work/tools/sccache.env"
-        echo "SCCACHE_PATH=$GITHUB_WORKSPACE/work/tools/sccache" >> "$GITHUB_ENV"
-        echo "SCCACHE_GHA_ENABLED=true" >> "$GITHUB_ENV"
+        echo "SCCACHE_DIR=$cache_dir" >> "$GITHUB_ENV"
+        if [ -z "$PACKAGE" ] || [ -z "$CACHE_REF" ]; then
+          echo "No compiler cache requested for this job"
+          exit 0
+        fi
+        ref="${CACHE_REF}:$(printf '%s' "$PACKAGE" | tr -c 'a-zA-Z0-9_.-' '-')"
+        echo "Restoring compiler cache from $ref"
+        if ! podman pull -q "$ref" >/dev/null 2>&1; then
+          echo "No published cache yet; this build fills it"
+          exit 0
+        fi
+        container="$(podman create "$ref")"
+        podman cp "$container:/sccache/." "$cache_dir/" 2>/dev/null || true
+        podman rm "$container" >/dev/null 2>&1 || true
+        podman rmi "$ref" >/dev/null 2>&1 || true
+        echo "Restored $(du -sh "$cache_dir" | cut -f1) of cached compiler output"

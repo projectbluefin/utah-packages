@@ -36,7 +36,27 @@ jobs:
     timeout-minutes: ${{ fromJSON(inputs.timeout) }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Resolve the compiler cache policy
+        id: cache_policy
+        env:
+          PACKAGE: ${{ matrix.package }}
+        run: |
+          set -euo pipefail
+          owner=$(echo "${{ github.repository_owner }}" | tr "[:upper:]" "[:lower:]")
+          if [ "$(python3 tools/recipe.py "$PACKAGE" cache)" = true ]; then
+            echo "ref=ghcr.io/${owner}/utah-packages-ccache" >> "$GITHUB_OUTPUT"
+          else
+            echo "ref=" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Log in to GHCR for the compiler cache
+        if: steps.cache_policy.outputs.ref != ''
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: echo "${GITHUB_TOKEN}" | podman login ghcr.io -u "${{ github.actor }}" --password-stdin
       - uses: ./.github/actions/setup-sccache
+        with:
+          package: ${{ matrix.package }}
+          cache_ref: ${{ steps.cache_policy.outputs.ref }}
       - name: Collect RPMs built by earlier lanes
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
@@ -317,9 +337,31 @@ jobs:
               # reports success while shipping no packages at all.
               test -n "$(find /work/result -name "*.rpm" -type f -print -quit)"
             '
+      # SCCACHE_DIR is exported by the setup action, so this reads the same
+      # cache the container wrote rather than starting a server of its own.
       - name: Show compiler cache statistics
         if: always()
         run: test -x work/tools/sccache && work/tools/sccache --show-stats || true
+
+      # Published even when the build failed: sccache entries are keyed by the
+      # hash of the preprocessed source and the compiler flags, so a partial
+      # compile still contributes objects a later run can reuse, and a wrong
+      # entry cannot be looked up by a build that would not have produced it.
+      - name: Publish the compiler cache
+        if: always() && steps.cache_policy.outputs.ref != ''
+        env:
+          PACKAGE: ${{ matrix.package }}
+          CACHE_REF: ${{ steps.cache_policy.outputs.ref }}
+        run: |
+          set -uo pipefail
+          test -d work/sccache || exit 0
+          test -n "$(find work/sccache -type f -print -quit)" || exit 0
+          tag="$(printf '%s' "$PACKAGE" | tr -c 'a-zA-Z0-9_.-' '-')"
+          ref="${CACHE_REF}:${tag}"
+          printf 'FROM scratch\nCOPY work/sccache /sccache\n' > Containerfile.ccache
+          echo "Publishing $(du -sh work/sccache | cut -f1) of compiler cache to $ref"
+          podman build --tag "$ref" --file Containerfile.ccache . || exit 0
+          podman push "$ref" || echo "cache push failed; the next build recompiles"
       - name: Record exact package build identity
         env:
           PACKAGE: ${{ matrix.package }}

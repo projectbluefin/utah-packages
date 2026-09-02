@@ -100,6 +100,26 @@ the WebKit/GNOME-shell consumers wait for WebKitGTK. The final precedence and
 Hummingbird-only transaction gates still require every selected lane to pass
 before `latest` moves.
 
+### The compiler cache
+
+`webkitgtk`, `webkit2gtk4.1` and `mozjs140` carry `"compiler_cache": true` in
+the source manifest. Their lane restores an sccache directory from
+`ghcr.io/<owner>/utah-packages-ccache:<package>` before the build and publishes
+it afterwards, so a rebuild of an unchanged source recompiles only what
+actually moved. Nothing else opts in: restoring and publishing several
+gigabytes costs minutes, which a three-minute package would pay for nothing.
+
+The recipe has to source `/work/tools/sccache.env`, as mozjs140 and webkitgtk
+do. That is what points `SCCACHE_DIR` at the `/work` mount. Measured on run
+33582351064, WebKitGTK routed all 8955 of its compile actions through sccache
+and cached none of them, because nothing in the container had set that
+variable and sccache defaulted to a directory that died with the container.
+
+The cache is not part of a package build identity. Every entry is addressed by
+the hash of the preprocessed source and the compiler flags, so it can change
+how long a build takes but not what it produces; hashing it into the identity
+meant tuning the cache invalidated all 178 packages at once.
+
 WebKitGTK is the one build that does not fit a runner: its two GTK ports are
 each a full WebKit compile, about two and a half hours on four cores, and back
 to back they measured five hours against a six-hour job limit. The recipe is

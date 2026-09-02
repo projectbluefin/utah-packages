@@ -65,7 +65,12 @@ def identity(package: str, root: Path = Path("."), rpm_dir: Path | None = None) 
             # result instead of risking reuse against a changed closure.
             "source_manifest": hashlib.sha256(config_path.read_bytes()).hexdigest(),
             "build_workflow": hashlib.sha256((root / ".github" / "workflows" / "rebuild-lane.yml").read_bytes()).hexdigest(),
-            "cache_action": hashlib.sha256((root / ".github" / "actions" / "setup-sccache" / "action.yml").read_bytes()).hexdigest(),
+            # The compiler cache action is deliberately absent. Every entry it
+            # can serve is addressed by the hash of the preprocessed source and
+            # the compiler flags, so it cannot change what a build produces --
+            # only how long it takes. Hashing it meant that tuning the cache
+            # invalidated all 178 packages and rebuilt the factory from
+            # scratch, which is the opposite of what a cache is for.
         },
     }
     encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()

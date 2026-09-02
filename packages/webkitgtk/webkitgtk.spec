@@ -340,11 +340,17 @@ files for developing applications that use JavaScript engine from webkit2gtk-4.1
 %global optflags %(echo %{optflags} | sed 's/-mbranch-protection=standard /-mbranch-protection=pac-ret /')
 %endif
 
-# The source is built twice for the GTK 4 and GTK 3 ports. Cache compile
-# actions across both configurations when the factory provides its pinned
-# sccache client; links remain local and the cache is only an optimization.
+# Route every compile through the factory sccache client when it is mounted.
+# Sourcing sccache.env is what makes the cache outlive the container: it sets
+# SCCACHE_DIR to a directory on the /work mount, which the lane publishes to
+# GHCR afterwards. Without it sccache falls back to a directory inside the
+# container, and 8955 objects per port are compiled and then thrown away on
+# every run, which is exactly what happened before.
 cmake_launcher_args=""
 if test -x /work/tools/sccache; then
+  if test -r /work/tools/sccache.env; then
+    . /work/tools/sccache.env
+  fi
   cmake_launcher_args="-DCMAKE_C_COMPILER_LAUNCHER=/work/tools/sccache -DCMAKE_CXX_COMPILER_LAUNCHER=/work/tools/sccache"
 fi
 

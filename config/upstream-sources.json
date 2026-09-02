@@ -1185,7 +1185,8 @@
       "stage": 1,
       "rpm_defines": [
         "_without_gtk3 1"
-      ]
+      ],
+      "compiler_cache": true
     },
     {
       "name": "webkit2gtk4.1",
@@ -1197,7 +1198,8 @@
       "rpm_defines": [
         "_without_gtk4 1"
       ],
-      "recipe": "webkitgtk"
+      "recipe": "webkitgtk",
+      "compiler_cache": true
     },
     {
       "name": "wireguard-tools",
@@ -1292,7 +1294,8 @@
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/mozjs140/firefox-140.13.0esr.source.tar.xz/sha512/937a4103d71c5e1e4bf051821729f6ea70b5c18d444930a487695cc23d74712a0134047248f6ac02305e01becb705426a55b9d89739f02a01eda01ecf5bc27f1/firefox-140.13.0esr.source.tar.xz",
       "filename": "firefox-140.13.0esr.source.tar.xz",
       "sha512": "937a4103d71c5e1e4bf051821729f6ea70b5c18d444930a487695cc23d74712a0134047248f6ac02305e01becb705426a55b9d89739f02a01eda01ecf5bc27f1",
-      "stage": 1
+      "stage": 1,
+      "compiler_cache": true
     },
     {
       "name": "re2",

@@ -38,6 +38,26 @@ class RecipeTests(unittest.TestCase):
         self.assertEqual(recipe.rpm_defines(gtk4), ["_without_gtk3 1"])
         self.assertEqual(recipe.rpm_defines(gtk3), ["_without_gtk4 1"])
 
+    def test_compiler_cache_is_opt_in_and_boolean(self):
+        self.assertFalse(recipe.compiler_cache({"name": "demo"}))
+        self.assertTrue(recipe.compiler_cache({"name": "demo", "compiler_cache": True}))
+        with self.assertRaises(ValueError):
+            recipe.compiler_cache({"name": "demo", "compiler_cache": "yes"})
+
+    def test_only_the_long_compiles_keep_a_compiler_cache(self):
+        manifest = json.loads((ROOT / "config/upstream-sources.json").read_text())
+        opted = {
+            item["name"]
+            for item in manifest["packages"]
+            if recipe.compiler_cache(item)
+        }
+        self.assertEqual(opted, {"webkitgtk", "webkit2gtk4.1", "mozjs140"})
+
+    def test_webkitgtk_recipe_reads_the_cache_environment(self):
+        spec = (ROOT / "packages/webkitgtk/webkitgtk.spec").read_text()
+        # Without this the cache lands inside the container and is discarded.
+        self.assertIn(". /work/tools/sccache.env", spec)
+
     def test_webkitgtk_recipe_gates_both_ports(self):
         spec = (ROOT / "packages/webkitgtk/webkitgtk.spec").read_text()
         self.assertIn("%bcond_without gtk4", spec)
