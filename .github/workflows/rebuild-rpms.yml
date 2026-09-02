@@ -75,9 +75,6 @@ jobs:
       stage2_late: ${{ steps.matrix.outputs.stage2_late }}
       stage3_late: ${{ steps.matrix.outputs.stage3_late }}
       build_list: ${{ steps.matrix.outputs.build_list }}
-      # A full/selected dispatch rebuilds coherently; ignore the :building
-      # accumulator so a stale artifact from a prior run cannot poison a lane.
-      fresh: ${{ (github.event_name == 'workflow_dispatch' && (inputs.full == true || inputs.packages != '')) && 'true' || 'false' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -394,7 +391,6 @@ jobs:
       packages: ${{ needs.prepare.outputs.stage0 }}
       runner: ubuntu-24.04
       timeout: '180'
-      fresh: ${{ needs.prepare.outputs.fresh == 'true' }}
     secrets: inherit
 
   rebuild0_late:
@@ -406,7 +402,6 @@ jobs:
       packages: ${{ needs.prepare.outputs.stage0_late }}
       runner: ubuntu-24.04
       timeout: '180'
-      fresh: ${{ needs.prepare.outputs.fresh == 'true' }}
     secrets: inherit
 
   rebuild1:
@@ -418,7 +413,6 @@ jobs:
       packages: ${{ needs.prepare.outputs.stage1 }}
       runner: ubuntu-24.04
       timeout: '180'
-      fresh: ${{ needs.prepare.outputs.fresh == 'true' }}
     secrets: inherit
 
   rebuild1_heavy:
@@ -430,7 +424,6 @@ jobs:
       packages: ${{ needs.prepare.outputs.stage1_heavy }}
       runner: ${{ vars.UTAH_HEAVY_RUNNER || 'ubuntu-24.04' }}
       timeout: '360'
-      fresh: ${{ needs.prepare.outputs.fresh == 'true' }}
     secrets: inherit
 
   rebuild2:
@@ -442,7 +435,6 @@ jobs:
       packages: ${{ needs.prepare.outputs.stage2 }}
       runner: ubuntu-24.04
       timeout: '180'
-      fresh: ${{ needs.prepare.outputs.fresh == 'true' }}
     secrets: inherit
 
   rebuild2_late:
@@ -454,7 +446,6 @@ jobs:
       packages: ${{ needs.prepare.outputs.stage2_late }}
       runner: ubuntu-24.04
       timeout: '240'
-      fresh: ${{ needs.prepare.outputs.fresh == 'true' }}
     secrets: inherit
 
   rebuild3:
@@ -466,7 +457,6 @@ jobs:
       packages: ${{ needs.prepare.outputs.stage3 }}
       runner: ubuntu-24.04
       timeout: '180'
-      fresh: ${{ needs.prepare.outputs.fresh == 'true' }}
     secrets: inherit
 
   rebuild3_late:
@@ -478,7 +468,6 @@ jobs:
       packages: ${{ needs.prepare.outputs.stage3_late }}
       runner: ubuntu-24.04
       timeout: '240'
-      fresh: ${{ needs.prepare.outputs.fresh == 'true' }}
     secrets: inherit
 
   rebuild4:
@@ -490,7 +479,6 @@ jobs:
       packages: ${{ needs.prepare.outputs.stage4 }}
       runner: ubuntu-24.04
       timeout: '180'
-      fresh: ${{ needs.prepare.outputs.fresh == 'true' }}
     secrets: inherit
 
   # Persist completed stages before later stages finish. These checkpoints are
