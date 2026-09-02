@@ -12,15 +12,16 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import sys
 import tomllib
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import recipe  # noqa: E402
+
 
 def package_entry(config: dict, package: str) -> dict:
-    matches = [item for item in config.get("packages", []) if item.get("name") == package]
-    if len(matches) != 1:
-        raise ValueError(f"package is not uniquely configured: {package}")
-    return matches[0]
+    return recipe.entry(package, config)
 
 
 def file_digest(root: Path) -> str:
@@ -50,7 +51,10 @@ def identity(package: str, root: Path = Path("."), rpm_dir: Path | None = None) 
     payload = {
         "package": package,
         "source": entry,
-        "recipe_sha256": file_digest(root / "packages" / package),
+        # An entry may build a recipe directory of another name (see
+        # tools/recipe.py); the entry itself, defines included, is already in
+        # the payload above, so two shards of one recipe get distinct keys.
+        "recipe_sha256": file_digest(root / "packages" / recipe.recipe_name(entry)),
         "base_image": base,
         "factory_files": {
             "hummingbird_repo": hashlib.sha256((root / "config" / "hummingbird.repo").read_bytes()).hexdigest(),

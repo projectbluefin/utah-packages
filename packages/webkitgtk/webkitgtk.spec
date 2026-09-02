@@ -10,6 +10,23 @@
 # any warning during WebKit docs build is fatal!
 %bcond_without docs
 
+# The two GTK ports share nothing but the tarball, and each is a full WebKit
+# compile: about two and a half hours on a four-core hosted runner, five for
+# both back to back, against a six-hour job limit. The factory therefore
+# builds this recipe twice on two runners, `--without gtk3` for the GTK 4 port
+# and `--without gtk4` for the GTK 3 port (config/upstream-sources.json,
+# entries webkitgtk and webkit2gtk4.1). With neither define given, as on a
+# plain rpmbuild, both ports build exactly as Fedora does.
+%bcond_without gtk4
+%bcond_without gtk3
+
+# One source package, built twice, would yield two -debugsource RPMs of the
+# same name and different contents. The GTK 4 shard carries it; the GTK 3
+# shard ships its -debuginfo packages without one.
+%if %{without gtk4}
+%global _debugsource_packages 0
+%endif
+
 # Clang is preferred: https://skia.org/docs/user/build/#supported-and-preferred-compilers
 %global toolchain clang
 
@@ -136,6 +153,7 @@ BuildRequires:  pkgconfig(xt)
 WebKitGTK is the port of the WebKit web rendering engine to the
 GTK platform.
 
+%if %{with gtk4}
 %package -n     webkitgtk6.0
 Summary:        WebKitGTK for GTK 4
 Requires:       javascriptcoregtk6.0%{?_isa} = %{version}-%{release}
@@ -155,7 +173,9 @@ Obsoletes:      webkit2gtk5.0 < %{version}-%{release}
 %description -n webkitgtk6.0
 WebKitGTK is the port of the WebKit web rendering engine to the
 GTK platform. This package contains WebKitGTK for GTK 4.
+%endif
 
+%if %{with gtk3}
 %package -n     webkit2gtk4.1
 Summary:        WebKitGTK for GTK 3 and libsoup 3
 Requires:       javascriptcoregtk4.1%{?_isa} = %{version}-%{release}
@@ -174,7 +194,9 @@ Provides:       bundled(xdgmime)
 %description -n webkit2gtk4.1
 WebKitGTK is the port of the WebKit web rendering engine to the
 GTK platform. This package contains WebKitGTK for GTK 3 and libsoup 3.
+%endif
 
+%if %{with gtk4}
 %package -n     webkitgtk6.0-devel
 Summary:        Development files for webkitgtk6.0
 Requires:       webkitgtk6.0%{?_isa} = %{version}-%{release}
@@ -185,7 +207,9 @@ Obsoletes:      webkit2gtk5.0-devel < %{version}-%{release}
 %description -n webkitgtk6.0-devel
 The webkitgtk6.0-devel package contains libraries, build data, and header
 files for developing applications that use webkitgtk6.0.
+%endif
 
+%if %{with gtk3}
 %package -n     webkit2gtk4.1-devel
 Summary:        Development files for webkit2gtk4.1
 Requires:       webkit2gtk4.1%{?_isa} = %{version}-%{release}
@@ -195,8 +219,10 @@ Requires:       javascriptcoregtk4.1-devel%{?_isa} = %{version}-%{release}
 %description -n webkit2gtk4.1-devel
 The webkit2gtk4.1-devel package contains libraries, build data, and header
 files for developing applications that use webkit2gtk4.1.
+%endif
 
 %if %{with docs}
+%if %{with gtk4}
 %package -n     webkitgtk6.0-doc
 Summary:        Documentation files for webkit2gtk5.0
 BuildArch:      noarch
@@ -215,7 +241,9 @@ License:        MIT AND LGPL-2.1-only AND BSD-3-Clause AND (Apache-2.0 OR GPL-3.
 
 %description -n webkitgtk6.0-doc
 This package contains developer documentation for webkitgtk6.0.
+%endif
 
+%if %{with gtk3}
 %package -n     webkit2gtk4.1-doc
 Summary:        Documentation files for webkit2gtk4.1
 BuildArch:      noarch
@@ -234,7 +262,9 @@ License:        MIT AND LGPL-2.1-only AND BSD-3-Clause AND (Apache-2.0 OR GPL-3.
 %description -n webkit2gtk4.1-doc
 This package contains developer documentation for webkit2gtk4.1.
 %endif
+%endif
 
+%if %{with gtk4}
 %package -n     javascriptcoregtk6.0
 Summary:        JavaScript engine from webkitgtk6.0
 Provides:       bundled(simde)
@@ -243,7 +273,9 @@ Obsoletes:      javascriptcoregtk5.0 < %{version}-%{release}
 
 %description -n javascriptcoregtk6.0
 This package contains the JavaScript engine from webkitgtk6.0.
+%endif
 
+%if %{with gtk3}
 %package -n     javascriptcoregtk4.1
 Summary:        JavaScript engine from webkit2gtk4.1
 Provides:       bundled(simde)
@@ -252,7 +284,9 @@ Obsoletes:      webkit2gtk4.1-jsc < %{version}-%{release}
 
 %description -n javascriptcoregtk4.1
 This package contains the JavaScript engine from webkit2gtk4.1.
+%endif
 
+%if %{with gtk4}
 %package -n     javascriptcoregtk6.0-devel
 Summary:        Development files for JavaScript engine from webkitgtk6.0
 Requires:       javascriptcoregtk6.0%{?_isa} = %{version}-%{release}
@@ -261,7 +295,9 @@ Obsoletes:      javascriptcoregtk5.0-devel < %{version}-%{release}
 %description -n javascriptcoregtk6.0-devel
 The javascriptcoregtk6.0-devel package contains libraries, build data, and header
 files for developing applications that use JavaScript engine from webkitgtk-6.0.
+%endif
 
+%if %{with gtk3}
 %package -n     javascriptcoregtk4.1-devel
 Summary:        Development files for JavaScript engine from webkit2gtk4.1
 Requires:       javascriptcoregtk4.1%{?_isa} = %{version}-%{release}
@@ -270,6 +306,7 @@ Obsoletes:      webkit2gtk4.1-jsc-devel < %{version}-%{release}
 %description -n javascriptcoregtk4.1-devel
 The javascriptcoregtk4.1-devel package contains libraries, build data, and header
 files for developing applications that use JavaScript engine from webkit2gtk-4.1.
+%endif
 
 %prep
 %{gpgverify} --keyring='%{SOURCE2}' --signature='%{SOURCE1}' --data='%{SOURCE0}'
@@ -311,6 +348,7 @@ if test -x /work/tools/sccache; then
   cmake_launcher_args="-DCMAKE_C_COMPILER_LAUNCHER=/work/tools/sccache -DCMAKE_CXX_COMPILER_LAUNCHER=/work/tools/sccache"
 fi
 
+%if %{with gtk4}
 mkdir webkitgtk-6.0
 pushd webkitgtk-6.0
 %cmake -S .. \
@@ -325,7 +363,9 @@ pushd webkitgtk-6.0
 %endif
   %{nil}
 popd
+%endif
 
+%if %{with gtk3}
 mkdir webkit2gtk-4.1
 pushd webkit2gtk-4.1
 %cmake -S .. \
@@ -341,32 +381,45 @@ pushd webkit2gtk-4.1
 %endif
   %{nil}
 popd
+%endif
 
+%if %{with gtk4}
 pushd webkitgtk-6.0
 export NINJA_STATUS="[1/2][%f/%t %es] "
 %cmake_build %limit_build -m 3072
 popd
+%endif
 
+%if %{with gtk3}
 pushd webkit2gtk-4.1
 export NINJA_STATUS="[2/2][%f/%t %es] "
 %cmake_build %limit_build -m 3072
 popd
+%endif
 
 %install
+%if %{with gtk4}
 pushd webkitgtk-6.0
 %cmake_install
 popd
+%endif
 
+%if %{with gtk3}
 pushd webkit2gtk-4.1
 %cmake_install
 popd
+%endif
 
 if test -x /work/tools/sccache; then
   /work/tools/sccache --show-stats || :
 fi
 
+%if %{with gtk4}
 %find_lang WebKitGTK-6.0
+%endif
+%if %{with gtk3}
 %find_lang WebKitGTK-4.1
+%endif
 
 # Finally, copy over and rename various files for %%license inclusion
 %add_to_license_files Source/JavaScriptCore/COPYING.LIB
@@ -382,6 +435,7 @@ fi
 %add_to_license_files Source/WTF/wtf/dtoa/COPYING
 %add_to_license_files Source/WTF/wtf/dtoa/LICENSE
 
+%if %{with gtk4}
 %files -n webkitgtk6.0 -f WebKitGTK-6.0.lang
 %license _license_files/*ThirdParty*
 %license _license_files/*WebCore*
@@ -396,7 +450,9 @@ fi
 %exclude %{_libexecdir}/webkitgtk-6.0/MiniBrowser
 %exclude %{_libexecdir}/webkitgtk-6.0/jsc
 %{_bindir}/WebKitWebDriver
+%endif
 
+%if %{with gtk3}
 %files -n webkit2gtk4.1 -f WebKitGTK-4.1.lang
 %license _license_files/*ThirdParty*
 %license _license_files/*WebCore*
@@ -410,7 +466,9 @@ fi
 %{_libexecdir}/webkit2gtk-4.1/
 %exclude %{_libexecdir}/webkit2gtk-4.1/MiniBrowser
 %exclude %{_libexecdir}/webkit2gtk-4.1/jsc
+%endif
 
+%if %{with gtk4}
 %files -n webkitgtk6.0-devel
 %{_libexecdir}/webkitgtk-6.0/MiniBrowser
 %{_includedir}/webkitgtk-6.0/
@@ -421,7 +479,9 @@ fi
 %dir %{_datadir}/gir-1.0
 %{_datadir}/gir-1.0/WebKit-6.0.gir
 %{_datadir}/gir-1.0/WebKitWebProcessExtension-6.0.gir
+%endif
 
+%if %{with gtk3}
 %files -n webkit2gtk4.1-devel
 %{_libexecdir}/webkit2gtk-4.1/MiniBrowser
 %{_includedir}/webkitgtk-4.1/
@@ -433,19 +493,25 @@ fi
 %dir %{_datadir}/gir-1.0
 %{_datadir}/gir-1.0/WebKit2-4.1.gir
 %{_datadir}/gir-1.0/WebKit2WebExtension-4.1.gir
+%endif
 
+%if %{with gtk4}
 %files -n javascriptcoregtk6.0
 %license _license_files/*JavaScriptCore*
 %{_libdir}/libjavascriptcoregtk-6.0.so.1*
 %dir %{_libdir}/girepository-1.0
 %{_libdir}/girepository-1.0/JavaScriptCore-6.0.typelib
+%endif
 
+%if %{with gtk3}
 %files -n javascriptcoregtk4.1
 %license _license_files/*JavaScriptCore*
 %{_libdir}/libjavascriptcoregtk-4.1.so.0*
 %dir %{_libdir}/girepository-1.0
 %{_libdir}/girepository-1.0/JavaScriptCore-4.1.typelib
+%endif
 
+%if %{with gtk4}
 %files -n javascriptcoregtk6.0-devel
 %{_libexecdir}/webkitgtk-6.0/jsc
 %dir %{_includedir}/webkitgtk-6.0
@@ -454,7 +520,9 @@ fi
 %{_libdir}/pkgconfig/javascriptcoregtk-6.0.pc
 %dir %{_datadir}/gir-1.0
 %{_datadir}/gir-1.0/JavaScriptCore-6.0.gir
+%endif
 
+%if %{with gtk3}
 %files -n javascriptcoregtk4.1-devel
 %{_libexecdir}/webkit2gtk-4.1/jsc
 %dir %{_includedir}/webkitgtk-4.1
@@ -464,19 +532,24 @@ fi
 %{_libdir}/pkgconfig/javascriptcoregtk-4.1.pc
 %dir %{_datadir}/gir-1.0
 %{_datadir}/gir-1.0/JavaScriptCore-4.1.gir
+%endif
 
 %if %{with docs}
+%if %{with gtk4}
 %files -n webkitgtk6.0-doc
 %dir %{_datadir}/doc
 %{_datadir}/doc/javascriptcoregtk-6.0/
 %{_datadir}/doc/webkitgtk-6.0/
 %{_datadir}/doc/webkitgtk-web-process-extension-6.0/
+%endif
 
+%if %{with gtk3}
 %files -n webkit2gtk4.1-doc
 %dir %{_datadir}/doc
 %{_datadir}/doc/javascriptcoregtk-4.1/
 %{_datadir}/doc/webkit2gtk-4.1/
 %{_datadir}/doc/webkit2gtk-web-extension-4.1/
+%endif
 %endif
 
 %changelog
