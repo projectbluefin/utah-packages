@@ -1,0 +1,4 @@
+/results_*
+/*.src.rpm
+/libcloudproviders-*.tar.xz
+/libcloudproviders-*-build

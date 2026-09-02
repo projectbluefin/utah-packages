@@ -1344,6 +1344,49 @@
       "filename": "tevent-0.17.2.tar.gz",
       "sha512": "23b8a8e4251d3a88e9bbb78134787280047e631393ab668fa34ab69986be72046506f9766b6b82f7ff6ce38412d7198665120312f98b9fe5428a662efc16b59b",
       "stage": 1
+    },
+    {
+      "name": "shared-mime-info",
+      "version": "2.5.1",
+      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/shared-mime-info/shared-mime-info-2.5.1.tar.bz2/sha512/042b8e6e54d93b19e34624b30d2ba2808e068bf68d9138103f41f077e805e0de1cfb7a519b643adbe329818ee685506239e918bce169565a0809cf01ccc68ddf/shared-mime-info-2.5.1.tar.bz2",
+      "filename": "shared-mime-info-2.5.1.tar.bz2",
+      "sha512": "042b8e6e54d93b19e34624b30d2ba2808e068bf68d9138103f41f077e805e0de1cfb7a519b643adbe329818ee685506239e918bce169565a0809cf01ccc68ddf",
+      "stage": 0
+    },
+    {
+      "name": "libXxf86vm",
+      "version": "1.1.6",
+      "url": "https://www.x.org/archive/individual/lib/libXxf86vm-1.1.6.tar.xz",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libXxf86vm/libXxf86vm-1.1.6.tar.xz/sha512/7fb3ac4302eea43b70d5106f6c7a113e28e2807da22d2bb7f040e0c4afd322cad4b7f258a5bd6da3940b6b6b39065e1acb218a6dc0ba06b9dd86ea3849231266/libXxf86vm-1.1.6.tar.xz"
+      ],
+      "filename": "libXxf86vm-1.1.6.tar.xz",
+      "sha512": "7fb3ac4302eea43b70d5106f6c7a113e28e2807da22d2bb7f040e0c4afd322cad4b7f258a5bd6da3940b6b6b39065e1acb218a6dc0ba06b9dd86ea3849231266",
+      "stage": 0
+    },
+    {
+      "name": "libcloudproviders",
+      "version": "0.4.1",
+      "url": "https://download.gnome.org/sources/libcloudproviders/0.4/libcloudproviders-0.4.1.tar.xz",
+      "filename": "libcloudproviders-0.4.1.tar.xz",
+      "sha512": "02a51c5c37d36efedcfe5cd303e5933bcfd588445d24025cecc6822778e857af52474df24f3fd258bb476170b54ad48eb60213a61c44c9b331e54f9779004bc4",
+      "stage": 0
+    },
+    {
+      "name": "libcdio",
+      "version": "2.3.0",
+      "url": "https://github.com/libcdio/libcdio/releases/download/2.3.0/libcdio-2.3.0.tar.bz2",
+      "filename": "libcdio-2.3.0.tar.bz2",
+      "sha512": "42e1659df57b558f5bfc81badf137682793070d1301fdf4926d221eca1fffc8d1b912d23ebe0a2e84a9bbd832f257033ef854b5349cf80fc8184bce759800d6c",
+      "stage": 0
+    },
+    {
+      "name": "libcdio-paranoia",
+      "version": "10.2+2.0.2",
+      "url": "https://github.com/libcdio/libcdio-paranoia/releases/download/release-10.2+2.0.2/libcdio-paranoia-10.2+2.0.2.tar.bz2",
+      "filename": "libcdio-paranoia-10.2+2.0.2.tar.bz2",
+      "sha512": "ad199c14e77a097e3e9adda222eb42bea880fdf5d08fa3ae08df27e4685508a85d54d8b0c1a35fb043d550bf735890322efb4e0502b3507d6f9563151e3a36c0",
+      "stage": 1
     }
   ]
 }

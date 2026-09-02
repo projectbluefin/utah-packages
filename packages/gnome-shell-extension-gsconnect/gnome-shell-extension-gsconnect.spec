@@ -33,7 +33,12 @@ Requires:       openssh
 # Needed for ssh-add
 Requires:       openssh-clients
 Requires:       openssl
-Requires:       /usr/bin/ffmpeg
+# ffmpeg powers only GSConnect's optional screen-record/share feature, and it
+# is an RPMFusion package Utah does not carry (no non-free multimedia repos).
+# Demote to Recommends so the extension installs and works without it, rather
+# than making the whole desktop closure depend on a package the factory and
+# Hummingbird do not provide.
+Recommends:     /usr/bin/ffmpeg
 Requires(post): firewalld-filesystem
 Recommends:     evolution-data-server
 Recommends:     (gsound or libcanberra-gtk3)
