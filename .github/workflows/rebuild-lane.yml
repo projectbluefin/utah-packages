@@ -89,6 +89,7 @@ jobs:
         env:
           PACKAGE: ${{ matrix.package }}
           FACTORY_REPO: ${{ vars.FACTORY_REPO || 'https://projectbluefin.github.io/utah-packages/' }}
+          FRESH: ${{ inputs.fresh }}
         run: |
           # An entry may build another entry's recipe directory with extra rpm
           # defines: that is how one long recipe is split into shards that run
@@ -105,7 +106,7 @@ jobs:
           DIST_BUMP="$(python3 tools/dist_bump.py "$PACKAGE")"
           export DIST_BUMP
           docker run --rm --privileged \
-            -e PACKAGE -e RECIPE -e RPM_DEFINES -e FACTORY_REPO -e DIST_BUMP \
+            -e PACKAGE -e RECIPE -e RPM_DEFINES -e FACTORY_REPO -e FRESH -e DIST_BUMP \
             -v "$PWD/work:/work:Z" \
             -v "$PWD/packages:/packages:ro,Z" \
             -v "$PWD/config:/repos:ro,Z" \
@@ -187,7 +188,13 @@ jobs:
               HB_GLOBAL_EXCLUDE="--exclude=ruby3.3-default-gems --exclude=ruby3.4-default-gems"
               EXCLUDE="${HB_EXCLUDE}${EXCLUDE:+,}${EXCLUDE}"
               echo "hummingbird exclusions: $HB_EXCLUDE"
-              if [ -n "${FACTORY_REPO:-}" ]; then
+              # A fresh full rebuild uses only this run own staged output plus
+              # Hummingbird; the published FACTORY_REPO is a prior run repo and
+              # may be incoherent with what this run is producing (a factory
+              # mutter that needs a pipewire this run has not published yet drags
+              # the whole stale closure into an unrelated stage-0 buildroot). Skip
+              # it when FRESH is set.
+              if [ -n "${FACTORY_REPO:-}" ] && [ "${FRESH:-false}" != "true" ]; then
                 printf "[factory]\nname=factory\nbaseurl=%s\nenabled=1\ngpgcheck=0\npriority=5\n" \
                   "$FACTORY_REPO" > /etc/yum.repos.d/factory.repo
               fi
