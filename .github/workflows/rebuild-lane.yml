@@ -199,14 +199,15 @@ jobs:
               # when a recipe merely needs the Ruby toolchain; exclude the
               # older overlay packages globally so Ruby 4 remains selectable.
               #
-              # ICU is deliberately NOT force-excluded here. Hummingbird ships
-              # both libicu 77 and 78, and the factory builds icu 78. A blanket
-              # ICU 77 exclusion breaks Fedora buildroot deps that legitimately
-              # link 77 (raptor2, reached by gstreamer-bad). The real failure
-              # was a stale ICU-77 factory samba in the accumulator, removed by
-              # the whole-source purge above; fresh factory packages link 78
-              # consistently and dnf resolves ICU per transaction on its own.
-              HB_GLOBAL_EXCLUDE="--exclude=ruby3.3-default-gems --exclude=ruby3.4-default-gems"
+              # ICU comes entirely from Hummingbird now: its newest libicu is
+              # 78.3, the same major the desktop stack needs, so the factory no
+              # longer builds a competing icu. Hummingbird still also ships the
+              # older libicu-77, and nothing must link it -- a build that picked
+              # 77 (localsearch, samba) produced RPMs the Hummingbird-only
+              # runtime could not install. Exclude the exact older Hummingbird
+              # NEVR globally so only libicu 78 is selectable; Fedora build-only
+              # consumers that want 77 are rare and not part of the runtime.
+              HB_GLOBAL_EXCLUDE="--exclude=ruby3.3-default-gems --exclude=ruby3.4-default-gems --exclude=libicu-77.*hum1 --exclude=libicu-devel-77.*hum1"
               EXCLUDE="${HB_EXCLUDE}${EXCLUDE:+,}${EXCLUDE}"
               echo "hummingbird exclusions: $HB_EXCLUDE"
               if [ -n "${FACTORY_REPO:-}" ]; then
