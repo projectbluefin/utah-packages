@@ -73,7 +73,12 @@ jobs:
           mkdir -p work/prior
           echo "${GITHUB_TOKEN}" | podman login ghcr.io -u "${{ github.actor }}" --password-stdin 2>/dev/null || true
           if podman pull "ghcr.io/${owner}/utah-packages:building" 2>/dev/null; then
-            container=$(podman create "ghcr.io/${owner}/utah-packages:building")
+            # podman 5 refuses to create a container from an image that declares
+            # no command, and every one of these is FROM scratch plus a COPY. The
+            # command is never run -- the container exists only for podman cp --
+            # but it has to be there or create exits 125 with
+            #   no command or entrypoint provided, and no CMD or ENTRYPOINT from image
+            container=$(podman create "ghcr.io/${owner}/utah-packages:building" /bin/true)
             podman cp "$container:/repository/." work/prior/ 2>/dev/null || true
             podman rm "$container" >/dev/null 2>&1 || true
             echo "seeded work/prior from :building accumulator"

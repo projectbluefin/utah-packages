@@ -76,7 +76,9 @@ runs:
           echo "No published cache yet; this build fills it"
           exit 0
         fi
-        container="$(podman create "$ref")"
+        # A scratch image declares no command and podman 5 will not create a
+        # container from one without being given it. Never run, only copied out.
+        container="$(podman create "$ref" /bin/true)"
         podman cp "$container:/sccache/." "$cache_dir/" 2>/dev/null || true
         podman rm "$container" >/dev/null 2>&1 || true
         podman rmi "$ref" >/dev/null 2>&1 || true

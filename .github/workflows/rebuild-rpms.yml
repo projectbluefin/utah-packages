@@ -97,7 +97,12 @@ jobs:
           echo "${GITHUB_TOKEN}" | podman login ghcr.io -u "${{ github.actor }}" --password-stdin 2>/dev/null || true
           for image in "ghcr.io/${owner}/utah-packages:building" "ghcr.io/${owner}/utah-packages:latest"; do
             if podman pull "$image" 2>/dev/null; then
-              container=$(podman create "$image")
+              # podman 5 refuses to create a container from an image that declares
+              # no command, and every one of these is FROM scratch plus a COPY. The
+              # command is never run -- the container exists only for podman cp --
+              # but it has to be there or create exits 125 with
+              #   no command or entrypoint provided, and no CMD or ENTRYPOINT from image
+              container=$(podman create "$image" /bin/true)
               podman cp "$container:/repository/." /tmp/accumulator/ || true
               podman rm "$container"
               echo "seeded from $image"
@@ -726,7 +731,12 @@ jobs:
           mkdir -p repository
           echo "${GITHUB_TOKEN}" | podman login ghcr.io -u "${{ github.actor }}" --password-stdin
           if podman pull "$image"; then
-            container=$(podman create "$image")
+            # podman 5 refuses to create a container from an image that declares
+            # no command, and every one of these is FROM scratch plus a COPY. The
+            # command is never run -- the container exists only for podman cp --
+            # but it has to be there or create exits 125 with
+            #   no command or entrypoint provided, and no CMD or ENTRYPOINT from image
+            container=$(podman create "$image" /bin/true)
             podman cp "$container:/repository/." repository/
             podman rm "$container"
           else
@@ -942,7 +952,12 @@ jobs:
           # tag on first ever run, then to an empty repository.
           for image in "ghcr.io/${owner}/utah-packages:building" "ghcr.io/${owner}/utah-packages:latest"; do
             if podman pull "$image"; then
-              container=$(podman create "$image")
+              # podman 5 refuses to create a container from an image that declares
+              # no command, and every one of these is FROM scratch plus a COPY. The
+              # command is never run -- the container exists only for podman cp --
+              # but it has to be there or create exits 125 with
+              #   no command or entrypoint provided, and no CMD or ENTRYPOINT from image
+              container=$(podman create "$image" /bin/true)
               podman cp "$container:/repository/." repository/ || true
               podman rm "$container"
               echo "seeded from $image"
