@@ -91,6 +91,21 @@ dedicated, narrowly scoped repository-creation credential.
 
 See [architecture](docs/architecture.md) and [contributing](docs/contributing.md).
 
+## What publication promises
+
+`:latest` and the Pages repository move only when the candidate carries every
+package `config/upstream-sources.json` says the factory builds, with each RPM
+its build manifest names present and matching the checksum recorded when it was
+built (`tools/repository_contract.py`, run in `publish`).
+
+That gate exists because the others cannot see it. `precedence` ranks only what
+the current run built. The Hummingbird-only consumer transaction enables the
+base OS repository beside the candidate, as it must, so a package the factory
+failed to provide can resolve from Hummingbird and still pass. And `prepare`
+treats a package found in the `:building` accumulator as published while
+`publish` seeds from `:latest`, so a package can be skipped by the build and
+missing from the repository in the same run.
+
 ## Long builds and recovery
 
 The rebuild workflow separates the long WebKitGTK closure from packages that

@@ -739,6 +739,16 @@ jobs:
           merge-multiple: true
       - name: Record exact package identities in the final candidate
         run: python3 tools/build_manifest.py repository
+      # Nothing else looks at the repository as a whole. precedence ranks only
+      # what this run built, and the consumer transaction below enables
+      # Hummingbird beside the candidate -- as it must, since the base OS
+      # supplies part of the closure -- so a package the factory failed to
+      # provide can resolve from there and still pass. Meanwhile prepare skips
+      # a package it finds in the :building accumulator while publish seeds
+      # from :latest, so a package can be skipped by the build and absent from
+      # the repository at the same time. Assert the promise directly.
+      - name: Assert the candidate carries every package the factory promises
+        run: python3 tools/repository_contract.py repository
       - name: Create and keylessly sign repository metadata
         run: |
           sudo apt-get update && sudo apt-get install -y createrepo-c
