@@ -84,14 +84,22 @@ jobs:
           PACKAGE: ${{ matrix.package }}
           FACTORY_REPO: ${{ vars.FACTORY_REPO || 'https://projectbluefin.github.io/utah-packages/' }}
         run: |
-          test -d "packages/$PACKAGE"
+          # An entry may build another entry's recipe directory with extra rpm
+          # defines: that is how one long recipe is split into shards that run
+          # on separate runners (tools/recipe.py). RECIPE is the directory
+          # under packages/; RPM_DEFINES is one "MACRO VALUE" per line.
+          RECIPE="$(python3 tools/recipe.py "$PACKAGE" dir)"
+          RECIPE="${RECIPE#packages/}"
+          RPM_DEFINES="$(python3 tools/recipe.py "$PACKAGE" defines)"
+          export RECIPE RPM_DEFINES
+          test -d "packages/$RECIPE"
           mkdir -p work/result
           # Per-package, so it is resolved out here rather than inside the
           # container, which only sees config/ and packages/.
           DIST_BUMP="$(python3 tools/dist_bump.py "$PACKAGE")"
           export DIST_BUMP
           docker run --rm --privileged \
-            -e PACKAGE -e FACTORY_REPO -e DIST_BUMP \
+            -e PACKAGE -e RECIPE -e RPM_DEFINES -e FACTORY_REPO -e DIST_BUMP \
             -v "$PWD/work:/work:Z" \
             -v "$PWD/packages:/packages:ro,Z" \
             -v "$PWD/config:/repos:ro,Z" \
@@ -258,10 +266,19 @@ jobs:
               # build root has rather than disable the test.
               export USER="${USER:-root}"
               export LOGNAME="${LOGNAME:-$USER}"
-              spec=$(find "/packages/$PACKAGE" -maxdepth 1 -name "*.spec" -print -quit)
+              spec=$(find "/packages/$RECIPE" -maxdepth 1 -name "*.spec" -print -quit)
               test -n "$spec"
+              # The defines a shard builds with, applied to every rpm-aware
+              # step: builddep must resolve the same conditional BuildRequires
+              # that rpmbuild will evaluate, or a shard installs the other
+              # port toolchain and resolves what it will never compile.
+              define_args=()
+              while IFS= read -r define; do
+                [ -n "$define" ] && define_args+=(-D "$define")
+              done <<< "$RPM_DEFINES"
+              echo "rpm defines: ${RPM_DEFINES:-none}"
               dnf -y $disable $HB_GLOBAL_EXCLUDE ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
-                ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$spec"
+                ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} builddep -D "_sourcedir /packages/$RECIPE" "${define_args[@]}" "$spec"
               # An imported spec keeps its dist-git PatchN and auxiliary SourceN
               # files next to itself, while the verified upstream archive lands in
               # /work/sources. rpmbuild takes a single _sourcedir, so stage both:
@@ -270,7 +287,7 @@ jobs:
               staged=/work/staged/$PACKAGE
               rm -rf "$staged"
               mkdir -p "$staged"
-              cp -a "/packages/$PACKAGE/." "$staged/"
+              cp -a "/packages/$RECIPE/." "$staged/"
               cp -a "/work/sources/$PACKAGE/." "$staged/"
               # Packages with %generate_buildrequires -- every Rust one -- compute
               # their real BuildRequires during the build, so the spec alone does not
@@ -280,16 +297,17 @@ jobs:
               for _ in 1 2 3 4 5; do
                 rm -f /root/rpmbuild/SRPMS/*.buildreqs.nosrc.rpm
                 if rpmbuild -br "$spec" --define "_sourcedir $staged" \
-                     --define "dist $DISTTAG"; then break; fi
+                     --define "dist $DISTTAG" "${define_args[@]}"; then break; fi
                 generated=$(ls /root/rpmbuild/SRPMS/*.buildreqs.nosrc.rpm 2>/dev/null | head -1)
                 test -n "$generated"
                 dnf -y $disable $HB_GLOBAL_EXCLUDE ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
-                  ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$generated"
+                  ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} builddep -D "_sourcedir /packages/$RECIPE" "${define_args[@]}" "$generated"
               done
               rpmbuild -ba "$spec" \
                 --define "_sourcedir $staged" \
                 --define "dist $DISTTAG" \
-                --define "_rpmdir /work/result"
+                --define "_rpmdir /work/result" \
+                "${define_args[@]}"
               find /work/result -name "*.rpm" -type f -print0 | \
                 xargs -0 -r rpm -qp --qf "%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n"
               # A build that produced no RPM must fail here. if-no-files-found on

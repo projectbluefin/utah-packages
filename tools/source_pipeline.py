@@ -23,6 +23,9 @@ import urllib.request
 from datetime import UTC, datetime
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from recipe import lookaside_name  # noqa: E402
+
 
 def digest(path: Path, algorithm: str) -> str:
     value = hashlib.new(algorithm)
@@ -118,7 +121,7 @@ def bundled_sources(package: dict, target_dir: Path, already: str) -> list[str]:
     lookaside is addressed by that hash, so the URL is only satisfiable by the
     exact bytes recorded here.
     """
-    manifest = Path("packages") / package.get("dist_git_name", package["name"]) / "sources"
+    manifest = Path("packages") / lookaside_name(package) / "sources"
     if not manifest.is_file():
         return []
     fetched = []
@@ -129,7 +132,7 @@ def bundled_sources(package: dict, target_dir: Path, already: str) -> list[str]:
         filename, expected = match.groups()
         if filename == already:  # Source0 comes from upstream, with its own checks.
             continue
-        url = LOOKASIDE.format(pkg=package.get("dist_git_name", package["name"]),
+        url = LOOKASIDE.format(pkg=lookaside_name(package),
                                name=filename, hash=expected)
         candidate = target_dir / f"{filename}.candidate"
         fetch(url, candidate)

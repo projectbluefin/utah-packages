@@ -2,7 +2,11 @@
 """Validate package-factory configuration."""
 from pathlib import Path
 import json
+import sys
 import tomllib
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import recipe  # noqa: E402
 
 packages = [
     raw.strip()
@@ -40,10 +44,23 @@ if any(" " in package or "/" in package for package in packages):
 
 manifest = json.loads(Path("config/upstream-sources.json").read_text())
 manifest_names = {item["name"] for item in manifest.get("packages", [])}
+if len(manifest_names) != len(manifest.get("packages", [])):
+    raise SystemExit("source manifest contains duplicate package names")
 for item in manifest.get("packages", []):
     stage = item.get("stage", 0)
     if not isinstance(stage, int) or not 0 <= stage <= 4:
         raise SystemExit(f"unsupported factory stage for {item.get('name')}: {stage!r}")
+    # A shard builds another entry's recipe with extra rpm defines; the
+    # directory must exist and the defines must be what rpmbuild -D takes.
+    recipe_dir = Path("packages") / recipe.recipe_name(item)
+    if not recipe_dir.is_dir():
+        raise SystemExit(f"{item.get('name')} builds from {recipe_dir}, which does not exist")
+    try:
+        recipe.rpm_defines(item)
+    except ValueError as error:
+        raise SystemExit(str(error))
+    if "recipe" in item and item["recipe"] == item["name"]:
+        raise SystemExit(f"{item['name']}: recipe is redundant when it equals the name")
 
 lane_config = tomllib.loads(Path("config/build-lanes.toml").read_text())
 lane_names = []

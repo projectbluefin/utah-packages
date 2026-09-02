@@ -5,8 +5,12 @@
 [stage0_late]
 packages = ["pipewire"]
 
+# WebKitGTK is built as two shards of one recipe, one GTK port each, so the
+# two compiles that used to run back to back on one runner (five hours) run
+# side by side on two. mozjs140 is eighteen minutes and stays in the ordinary
+# stage-1 lane, where gjs no longer has to wait behind WebKitGTK for it.
 [stage1_heavy]
-packages = ["mozjs140", "webkitgtk"]
+packages = ["webkitgtk", "webkit2gtk4.1"]
 
 [stage2_late]
 packages = ["gjs"]

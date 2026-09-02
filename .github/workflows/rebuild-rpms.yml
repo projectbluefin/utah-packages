@@ -117,6 +117,7 @@ jobs:
           import hashlib, json, os, re, subprocess, urllib.request, gzip, io, sys, tomllib
           from pathlib import Path
           from tools.build_identity import identity
+          from tools.recipe import recipe_name
 
           config = json.loads(Path('config/upstream-sources.json').read_text())
           full = os.environ.get('FULL') == '1'
@@ -233,7 +234,9 @@ jobs:
               else:
                   should_build = (
                       full
-                      or name in changed
+                      # A shard shares its recipe directory with another
+                      # entry; an edit there is a change to both.
+                      or recipe_name(package) in changed
                       or name not in published
                       or norm(published[name]) != norm(version)
                       or not identity_matches

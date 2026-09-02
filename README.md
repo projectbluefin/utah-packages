@@ -93,12 +93,21 @@ See [architecture](docs/architecture.md) and [contributing](docs/contributing.md
 
 ## Long builds and recovery
 
-The rebuild workflow separates the long WebKitGTK and mozjs140 closures from
-packages that do not need them. Fast stage-2 packages can proceed while the
-heavy stage-1 lane is still compiling; `gjs` waits for mozjs140, and the
-WebKit/GNOME-shell consumers wait for WebKitGTK. The final precedence and
+The rebuild workflow separates the long WebKitGTK closure from packages that
+do not need it. Fast stage-2 packages can proceed while the heavy stage-1 lane
+is still compiling; `gjs` waits for mozjs140 in the ordinary stage-1 lane, and
+the WebKit/GNOME-shell consumers wait for WebKitGTK. The final precedence and
 Hummingbird-only transaction gates still require every selected lane to pass
 before `latest` moves.
+
+WebKitGTK is the one build that does not fit a runner: its two GTK ports are
+each a full WebKit compile, about two and a half hours on four cores, and back
+to back they measured five hours against a six-hour job limit. The recipe is
+therefore built as two shards on two runners, `webkitgtk` for the GTK 4 port
+and `webkit2gtk4.1` for the GTK 3 port. A shard is an ordinary source-manifest
+entry that names another entry's recipe directory and the rpm defines to build
+it with (`tools/recipe.py`); the spec gates each port behind a bcond, so a
+plain `rpmbuild` with no defines still builds both, as Fedora does.
 
 Every completed lane checkpoints successful RPM artifacts into the internal
 `:building` recovery candidate. That tag is never a consumer input. Package

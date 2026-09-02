@@ -1190,7 +1190,22 @@
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/webkitgtk/webkitgtk-2.53.91.tar.xz/sha512/0bb5ec4c75cf0dcd4ccc46b7cf8595722d447385b75ed6ec79333b56203f681077fa355600210edb4fe6344e4af2943c7fb5b1bff6e35a7ec1ea456d891a1951/webkitgtk-2.53.91.tar.xz",
       "filename": "webkitgtk-2.53.91.tar.xz",
       "sha512": "0bb5ec4c75cf0dcd4ccc46b7cf8595722d447385b75ed6ec79333b56203f681077fa355600210edb4fe6344e4af2943c7fb5b1bff6e35a7ec1ea456d891a1951",
-      "stage": 1
+      "stage": 1,
+      "rpm_defines": [
+        "_without_gtk3 1"
+      ]
+    },
+    {
+      "name": "webkit2gtk4.1",
+      "version": "2.53.91",
+      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/webkitgtk/webkitgtk-2.53.91.tar.xz/sha512/0bb5ec4c75cf0dcd4ccc46b7cf8595722d447385b75ed6ec79333b56203f681077fa355600210edb4fe6344e4af2943c7fb5b1bff6e35a7ec1ea456d891a1951/webkitgtk-2.53.91.tar.xz",
+      "filename": "webkitgtk-2.53.91.tar.xz",
+      "sha512": "0bb5ec4c75cf0dcd4ccc46b7cf8595722d447385b75ed6ec79333b56203f681077fa355600210edb4fe6344e4af2943c7fb5b1bff6e35a7ec1ea456d891a1951",
+      "stage": 1,
+      "rpm_defines": [
+        "_without_gtk4 1"
+      ],
+      "recipe": "webkitgtk"
     },
     {
       "name": "wireguard-tools",
