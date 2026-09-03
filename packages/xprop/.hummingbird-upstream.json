@@ -1,0 +1,8 @@
+{
+  "package": "xprop",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/xprop.git",
+  "commit": "5b44b378c09b0f6f381352098c9a94ec818fbe4f",
+  "tree": "9c646a8389ac23ec6f910456fcdf080aef90b05a",
+  "imported_at": "2026-09-03T19:42:57.258778+00:00"
+}

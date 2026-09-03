@@ -1201,6 +1201,13 @@
       "stage": 0
     },
     {
+      "name": "snowball",
+      "version": "3.1.1",
+      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/snowball/main.zip/sha512/1ca88959b6958133d97c07b9688781ff58cef5a4c5c9d30f9ab99e583579f955082c6428743fbb5dd3ee0c958a92f72a470ef28482f52af19ab476ebdd504b1d/main.zip",
+      "filename": "main.zip",
+      "sha512": "1ca88959b6958133d97c07b9688781ff58cef5a4c5c9d30f9ab99e583579f955082c6428743fbb5dd3ee0c958a92f72a470ef28482f52af19ab476ebdd504b1d"
+    },
+    {
       "name": "spirv-tools",
       "version": "2026.2",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/spirv-tools/SPIRV-Tools-sdk-1.4.350.0.tar.gz/sha512/765c71b082c77450b0823d9b04cdcfe8990ff83c9c12ab7d2318c1d7c3caf5d0db175ee8618472544c7ef9e18637d679ce07b6b43b2d6040cdb0435a59dd780b/SPIRV-Tools-sdk-1.4.350.0.tar.gz",
@@ -1370,6 +1377,13 @@
       "sha512": "b7bbfbc3dd96952b389b28d68440e9e265ea08f8af0e700f40305c8f4277ffd4d49bacb2b41af41c9bce5451d16be56edb5eecaf62add3692181778dd119d315"
     },
     {
+      "name": "xdg-user-dirs",
+      "version": "0.20",
+      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/xdg-user-dirs/xdg-user-dirs-0.20.tar.xz/sha512/4793fa246bc846cf5c28c0715c112cfd077dd2036ae3e27163949b711dcb6f65582a29c1e8993472538f92825cbff1c8537015ddaac8798aa6f2d6de64dcb47d/xdg-user-dirs-0.20.tar.xz",
+      "filename": "xdg-user-dirs-0.20.tar.xz",
+      "sha512": "4793fa246bc846cf5c28c0715c112cfd077dd2036ae3e27163949b711dcb6f65582a29c1e8993472538f92825cbff1c8537015ddaac8798aa6f2d6de64dcb47d"
+    },
+    {
       "name": "xdg-user-dirs-gtk",
       "version": "0.16",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/xdg-user-dirs-gtk/xdg-user-dirs-gtk-0.16.tar.xz/sha512/e491931b53480fcf067eb4077a1c547b196f27bf37d3ab56cf6849345c24b66af1d2d58c0b4818c144ad062cab47cbff951f547f27b5b574fde19c0d1eacfd19/xdg-user-dirs-gtk-0.16.tar.xz",
@@ -1382,6 +1396,13 @@
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/xmlrpc-c/xmlrpc-c-1.60.04.tgz/sha512/68407053eec1e3f32187169f5bb976e9f043f1576dd9fb7a9076ed00414dd0293cfdf72527a314c244dd48986402af3c9cc33d110ed3b382a13190eb8dddb734/xmlrpc-c-1.60.04.tgz",
       "filename": "xmlrpc-c-1.60.04.tgz",
       "sha512": "68407053eec1e3f32187169f5bb976e9f043f1576dd9fb7a9076ed00414dd0293cfdf72527a314c244dd48986402af3c9cc33d110ed3b382a13190eb8dddb734"
+    },
+    {
+      "name": "xprop",
+      "version": "1.2.8",
+      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/xprop/xprop-1.2.8.tar.xz/sha512/bdd9b02c4ee738bb4661c3acc901330e635b9967de5efb1615297f6b0ff3cdbd0eab6f63f80a605539090e8d62c611bb603da17477e16e3c0b26ff4314d0b664/xprop-1.2.8.tar.xz",
+      "filename": "xprop-1.2.8.tar.xz",
+      "sha512": "bdd9b02c4ee738bb4661c3acc901330e635b9967de5efb1615297f6b0ff3cdbd0eab6f63f80a605539090e8d62c611bb603da17477e16e3c0b26ff4314d0b664"
     },
     {
       "name": "xrefresh",
