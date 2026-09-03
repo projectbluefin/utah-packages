@@ -1,0 +1,8 @@
+{
+  "package": "libXv",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libXv.git",
+  "commit": "956307eddd52ca9873165d7c967bfeef8eba1d3d",
+  "tree": "9a71d28eb4b4074f47d0d6b6b07ce5bd603a870e",
+  "imported_at": "2026-09-03T22:53:13.278630+00:00"
+}

@@ -1,0 +1,8 @@
+{
+  "package": "libogg",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libogg.git",
+  "commit": "6c1f5a45eca69d1200f6d3ce7058aee98a8e4e92",
+  "tree": "2db056ddcde1a117eccb1daaab3799830338549f",
+  "imported_at": "2026-09-03T22:53:15.861641+00:00"
+}

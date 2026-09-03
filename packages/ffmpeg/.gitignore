@@ -1,0 +1,6 @@
+ffmpeg-*.asc
+ffmpeg-*.rpm
+ffmpeg-*.tar.xz
+/ffmpeg.keyring
+/results_*
+/*.rpm

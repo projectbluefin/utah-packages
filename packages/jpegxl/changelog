@@ -1,0 +1,22 @@
+* Thu Jul 22 2021 Fedora Release Engineering <releng@fedoraproject.org> - 0.3.7-4
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_35_Mass_Rebuild
+
+* Tue Jun 15 2021 Adam Williamson <awilliam@redhat.com> - 0.3.7-3
+- libs: drop Recommends: gimp-jxl-plugin to avoid pulling GIMP into Workstation
+
+* Mon May 31 21:07:22 CEST 2021 Robert-André Mauchin <zebob.m@gmail.com> - 0.3.7-2
+- Use Clang instead of GCC due to vector conversion strictness of GCC
+- Disable LTO on arm due to Clang 12.0.0 bug
+- Close: rhbz#1922638
+
+* Mon May 17 20:49:39 CEST 2021 Robert-André Mauchin <zebob.m@gmail.com> - 0.3.7-1
+- Update to 0.3.7
+
+* Sat Jan 30 17:10:24 CET 2021 Robert-André Mauchin <zebob.m@gmail.com> - 0.3-1
+- Update to 0.3
+
+* Sat Dec 12 03:45:24 CET 2020 Robert-André Mauchin <zebob.m@gmail.com> - 0.1.1-1
+- Update to 0.1.1
+
+* Wed Jul 15 17:00:49 CEST 2020 Robert-André Mauchin <zebob.m@gmail.com> - 0.0.1-0.1.20200715git0a46d01c
+- Initial RPM

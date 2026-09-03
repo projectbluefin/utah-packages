@@ -1,0 +1,13 @@
+#===========================================================================
+#
+# Description:
+#   Make sure tools are not using any library that is linked to /usr
+#
+# Bugs related:
+#
+# Author(s):
+#   Bruno Goncalves
+#   <bgoncalv@redhat.com>
+#
+#===========================================================================
+# EndFile

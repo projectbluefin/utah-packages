@@ -1,0 +1,49 @@
+diff -rupN libvorbis-1.3.7/lib/CMakeLists.txt libvorbis-1.3.7-new/lib/CMakeLists.txt
+--- libvorbis-1.3.7/lib/CMakeLists.txt	2026-05-15 20:57:45.019504429 +0200
++++ libvorbis-1.3.7-new/lib/CMakeLists.txt	2026-05-15 23:00:05.868835312 +0200
+@@ -83,11 +83,11 @@ if (NOT BUILD_FRAMEWORK)
+     add_library(Vorbis::vorbisfile ALIAS vorbisfile)
+ 
+     get_lib_versions(VORBIS_VERSION VORBIS_SOVERSION "V_LIB_CURRENT" "V_LIB_AGE" "V_LIB_REVISION")
+-    set_target_properties(vorbis PROPERTIES VERSION ${VORBIS_VERSION} SOVERSION ${VORBIS_SOVERSION})
++    set_target_properties(vorbis PROPERTIES VERSION ${VORBIS_VERSION} SOVERSION ${VORBIS_SOVERSION} DLL_NAME_WITH_SOVERSION ON)
+     get_lib_versions(VORBISENC_VERSION VORBISENC_SOVERSION "VE_LIB_CURRENT" "VE_LIB_AGE" "VE_LIB_REVISION")
+-    set_target_properties(vorbisenc PROPERTIES VERSION ${VORBISENC_VERSION} SOVERSION ${VORBISENC_SOVERSION})
++    set_target_properties(vorbisenc PROPERTIES VERSION ${VORBISENC_VERSION} SOVERSION ${VORBISENC_SOVERSION} DLL_NAME_WITH_SOVERSION ON )
+     get_lib_versions(VORBISFILE_VERSION VORBISFILE_SOVERSION "VF_LIB_CURRENT" "VF_LIB_AGE" "VF_LIB_REVISION")
+-    set_target_properties(vorbisfile PROPERTIES VERSION ${VORBISFILE_VERSION} SOVERSION ${VORBISFILE_SOVERSION})
++    set_target_properties(vorbisfile PROPERTIES VERSION ${VORBISFILE_VERSION} SOVERSION ${VORBISFILE_SOVERSION} DLL_NAME_WITH_SOVERSION ON)
+ 
+     target_include_directories(vorbis
+         PUBLIC
+diff -rupN libvorbis-1.3.7/win32/vorbis.def libvorbis-1.3.7-new/win32/vorbis.def
+--- libvorbis-1.3.7/win32/vorbis.def	2026-05-15 20:57:44.982093578 +0200
++++ libvorbis-1.3.7-new/win32/vorbis.def	2026-05-15 23:10:05.587139904 +0200
+@@ -1,6 +1,5 @@
+ ; vorbis.def
+ ; 
+-LIBRARY vorbis
+ EXPORTS
+ _floor_P
+ _mapping_P
+diff -rupN libvorbis-1.3.7/win32/vorbisenc.def libvorbis-1.3.7-new/win32/vorbisenc.def
+--- libvorbis-1.3.7/win32/vorbisenc.def	2026-05-15 20:57:44.982368676 +0200
++++ libvorbis-1.3.7-new/win32/vorbisenc.def	2026-05-15 23:10:01.442667789 +0200
+@@ -1,7 +1,5 @@
+ ; vorbisenc.def
+ ;
+-LIBRARY vorbisenc
+-
+ EXPORTS
+ vorbis_encode_init
+ vorbis_encode_setup_managed
+diff -rupN libvorbis-1.3.7/win32/vorbisfile.def libvorbis-1.3.7-new/win32/vorbisfile.def
+--- libvorbis-1.3.7/win32/vorbisfile.def	2026-05-15 20:57:44.982543829 +0200
++++ libvorbis-1.3.7-new/win32/vorbisfile.def	2026-05-15 23:09:57.353676493 +0200
+@@ -1,6 +1,5 @@
+ ; vorbisfile.def
+ ;
+-LIBRARY vorbisfile
+ EXPORTS
+ ov_clear
+ ov_open

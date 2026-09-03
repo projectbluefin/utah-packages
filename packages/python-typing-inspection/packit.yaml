@@ -1,0 +1,9 @@
+upstream_project_url: https://github.com/pydantic/typing-inspection
+copy_upstream_release_description: false
+upstream_tag_template: v{version}
+
+jobs:
+  - job: pull_from_upstream
+    trigger: release
+    dist_git_branches:
+      - fedora-rawhide

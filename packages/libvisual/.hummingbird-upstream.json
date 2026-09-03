@@ -1,0 +1,8 @@
+{
+  "package": "libvisual",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libvisual.git",
+  "commit": "ac34b4b7caed8a79f9855cb0507a68953133251c",
+  "tree": "a560ed3a71cd56845dbd0db5bd6c00ccc3d1b305",
+  "imported_at": "2026-09-03T22:53:16.104857+00:00"
+}

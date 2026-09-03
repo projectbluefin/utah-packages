@@ -1,0 +1,8 @@
+{
+  "package": "libgusb",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libgusb.git",
+  "commit": "c3392b159ecac514cc6454cf27140fc4edf3d155",
+  "tree": "3c16ec485f8e2caa0373fbcd8e8bd4aeb0f52552",
+  "imported_at": "2026-09-03T22:53:14.201055+00:00"
+}
