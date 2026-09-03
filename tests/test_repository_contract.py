@@ -159,3 +159,63 @@ class CollisionTests(unittest.TestCase):
                 repo, config_for(root, ["webkitgtk", "webkit2gtk4.1"])
             )
             self.assertTrue(any("only one of them can survive" in p for p in problems))
+
+
+class BootstrapTests(unittest.TestCase):
+    """The malcontent bootstrap pass is built, promised, and never shipped."""
+
+    def test_package_with_only_bootstrap_outputs_is_not_demanded(self):
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            repo = root / "repository"
+            repo.mkdir()
+            write_candidate(
+                repo,
+                manifest={
+                    "packages": {
+                        "malcontent-bootstrap": {
+                            "outputs": [
+                                {
+                                    "file": "x86_64/malcontent-libs-0.13-0.bootstrap.hum1.x86_64.rpm",
+                                    "sha256": "0" * 64,
+                                }
+                            ]
+                        }
+                    }
+                },
+                files={},
+            )
+            problems = repository_contract.check(
+                repo, config_for(root, ["malcontent-bootstrap"])
+            )
+            self.assertEqual(problems, [])
+
+    def test_non_bootstrap_output_is_still_demanded(self):
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            repo = root / "repository"
+            repo.mkdir()
+            write_candidate(
+                repo,
+                manifest={
+                    "packages": {
+                        "malcontent": {
+                            "outputs": [
+                                {"file": "x86_64/malcontent-0.13-1.hum1.x86_64.rpm",
+                                 "sha256": "0" * 64}
+                            ]
+                        }
+                    }
+                },
+                files={},
+            )
+            problems = repository_contract.check(repo, config_for(root, ["malcontent"]))
+            self.assertEqual(len(problems), 1)
+            self.assertIn("missing from the repository", problems[0])
+
+    def test_bootstrap_files_do_not_count_as_a_collision(self):
+        packages = {
+            "a": {"outputs": [{"file": "x86_64/m-0.bootstrap.x86_64.rpm", "sha256": "aaa"}]},
+            "b": {"outputs": [{"file": "x86_64/m-0.bootstrap.x86_64.rpm", "sha256": "bbb"}]},
+        }
+        self.assertEqual(repository_contract.collisions(packages), [])

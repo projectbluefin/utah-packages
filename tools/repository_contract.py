@@ -6,11 +6,13 @@ Fedora and Hummingbird offer, and that a consumer transaction resolves. Neither
 proves the repository is complete, and it can be incomplete in a way nothing
 else notices:
 
-  * `prepare` skips a package it considers already published, and it reads that
-    from the `:building` accumulator as well as from `:latest`. `publish` seeds
-    the candidate from `:latest` alone. A package that only ever reached the
-    accumulator is therefore skipped by the build and absent from the
-    repository, and no later step looks for it.
+  * `prepare` skips a package it considers already published, reading that from
+    the `:building` accumulator as well as from `:latest`. If the candidate is
+    seeded from a narrower set than that, a package skipped by the build is
+    absent from the repository and no later step looks for it. `publish` now
+    seeds from both tags for exactly this reason, and this gate is what makes
+    seeding from the accumulator safe: a half-finished one fails here rather
+    than publishing short.
   * The consumer transaction enables the Hummingbird repository beside the
     candidate, as it must -- the base OS legitimately supplies part of the
     closure. So a contract package the factory failed to provide can resolve
@@ -52,6 +54,18 @@ def manifest_packages(repository: Path) -> dict[str, dict]:
     return packages
 
 
+# publish deletes these from the candidate before shipping it: the malcontent
+# bootstrap pass exists only to break a build cycle within one run and must
+# never reach a consumer. The factory genuinely builds the package, so it is
+# promised and stays in the source manifest, but its RPMs are deliberately not
+# carried and demanding them would fail every incremental run.
+BOOTSTRAP_SUFFIX = "-0.bootstrap."
+
+
+def is_bootstrap(filename: str) -> bool:
+    return BOOTSTRAP_SUFFIX in filename
+
+
 def digest(path: Path) -> str:
     value = hashlib.sha256()
     with path.open("rb") as handle:
@@ -75,9 +89,12 @@ def collisions(packages: dict[str, dict]) -> list[str]:
         for output in record.get("outputs") or []:
             if not isinstance(output, dict) or not isinstance(output.get("file"), str):
                 continue
+            filename = Path(output["file"]).name
+            if is_bootstrap(filename):
+                continue
             sha = output.get("sha256")
             if isinstance(sha, str):
-                claims.setdefault(Path(output["file"]).name, {})[name] = sha
+                claims.setdefault(filename, {})[name] = sha
 
     problems = []
     for filename, by_package in sorted(claims.items()):
@@ -115,6 +132,8 @@ def check(repository: Path, config_path: Path, verify_digests: bool = True) -> l
                 problems.append(f"{name}: malformed output record")
                 continue
             filename = Path(output["file"]).name
+            if is_bootstrap(filename):
+                continue
             found = on_disk.get(filename)
             if found is None:
                 problems.append(f"{name}: {filename} is recorded but missing from the repository")

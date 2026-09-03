@@ -721,24 +721,46 @@ jobs:
       digest: ${{ steps.oci.outputs.digest }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - name: Seed repository from the last published factory image
+      # Seeded from BOTH tags, because `prepare` skips against both. It reads
+      # its skip list from the `:building` accumulator as well as `:latest`, so
+      # a package that only ever reached the accumulator is not rebuilt; if the
+      # candidate were seeded from `:latest` alone that package would be in
+      # neither, and the repository would publish without it. That is not
+      # hypothetical -- it is why run 33682968939 could not publish: `:latest`
+      # predates the build manifest entirely, so an incremental run carried two
+      # packages and the accumulator's other 185 were simply gone.
+      #
+      # Order is lowest precedence first: `:latest` is the last contract-gated
+      # repository, `:building` accumulates every wave since and so is at least
+      # as new, and this run's artifacts land last and outrank both. Seeding
+      # from the accumulator is only safe because of what follows it -- the
+      # contract gate below refuses a candidate that does not carry every
+      # promised package, so a half-finished accumulator fails to publish
+      # instead of publishing short.
+      - name: Seed repository from the published factory image and the accumulator
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           owner=$(echo "${{ github.repository_owner }}" | tr "[:upper:]" "[:lower:]")
-          image="ghcr.io/${owner}/utah-packages:latest"
           mkdir -p repository
           echo "${GITHUB_TOKEN}" | podman login ghcr.io -u "${{ github.actor }}" --password-stdin
-          if podman pull "$image"; then
-            # podman 5 refuses to create a container from an image that declares
-            # no command, and every one of these is FROM scratch plus a COPY. The
-            # command is never run -- the container exists only for podman cp --
-            # but it has to be there or create exits 125 with
-            #   no command or entrypoint provided, and no CMD or ENTRYPOINT from image
-            container=$(podman create "$image" /bin/true)
-            podman cp "$container:/repository/." repository/
-            podman rm "$container"
+          seeded=""
+          for image in "ghcr.io/${owner}/utah-packages:latest" "ghcr.io/${owner}/utah-packages:building"; do
+            if podman pull "$image"; then
+              # podman 5 refuses to create a container from an image that declares
+              # no command, and every one of these is FROM scratch plus a COPY. The
+              # command is never run -- the container exists only for podman cp --
+              # but it has to be there or create exits 125 with
+              #   no command or entrypoint provided, and no CMD or ENTRYPOINT from image
+              container=$(podman create "$image" /bin/true)
+              podman cp "$container:/repository/." repository/
+              podman rm "$container"
+              seeded="${seeded} ${image}"
+            fi
+          done
+          if test -n "$seeded"; then
+            echo "seeded from:${seeded}"
           else
             echo "No prior factory image; publishing a new repository"
           fi
@@ -757,17 +779,23 @@ jobs:
       # a package it finds in the :building accumulator while publish seeds
       # from :latest, so a package can be skipped by the build and absent from
       # the repository at the same time. Assert the promise directly.
-      - name: Assert the candidate carries every package the factory promises
-        run: python3 tools/repository_contract.py repository
-      - name: Create and keylessly sign repository metadata
+      # Ahead of the contract gate, so the gate inspects the repository that
+      # actually ships rather than one still carrying a file publish is about
+      # to remove.
+      - name: Drop the malcontent bootstrap pass from the candidate
         run: |
-          sudo apt-get update && sudo apt-get install -y createrepo-c
+          set -euo pipefail
           # The malcontent bootstrap pass exists only to give the next stage a
           # malcontent-libs linked against accountsservice 26, breaking the
           # flatpak-libs -> libmalcontent-0.so.0 cycle. It has no parental
           # controls UI, so it must not reach anyone's system. Its release is
           # 0.bootstrap, below the real build, so this is belt and braces.
           find repository -name '*-0.bootstrap.*.rpm' -print -delete
+      - name: Assert the candidate carries every package the factory promises
+        run: python3 tools/repository_contract.py repository
+      - name: Create and keylessly sign repository metadata
+        run: |
+          sudo apt-get update && sudo apt-get install -y createrepo-c
           createrepo_c --update repository
           curl -fsSL https://github.com/sigstore/cosign/releases/download/v2.4.1/cosign-linux-amd64 -o cosign
           install -m 0755 cosign /usr/local/bin/cosign
