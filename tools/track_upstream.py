@@ -177,7 +177,11 @@ def main() -> int:
             entry["sha512"] = proposed["sha512"]
             entry["url"] = proposed["url"]
             entry.pop("fallback_urls", None)
-        args.config.write_text(json.dumps(config, indent=2, sort_keys=True) + "\n")
+        # Keys and package order are preserved as written: json.load keeps
+        # insertion order, so dumping without sort_keys leaves every untouched
+        # entry byte-identical. Sorting here would rewrite all 190 entries and
+        # bury a one-line source change in a whole-file diff.
+        args.config.write_text(json.dumps(config, indent=2) + "\n")
         print(f"applied {len(gated)} update(s) to {args.config}", file=sys.stderr)
     return 0
 

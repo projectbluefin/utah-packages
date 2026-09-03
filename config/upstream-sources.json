@@ -1328,7 +1328,7 @@
     {
       "name": "wireguard-tools",
       "version": "1.0.20260223",
-      "url": "https://git.zx2c4.com/wireguard-tools/snapshot/wireguard-tools-1.0.20260223.tar.xz",
+      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/wireguard-tools/wireguard-tools-1.0.20260223.tar.xz/sha512/ab56199345fdc385e62e414ec200c10777c985fb2bde767f9c76e049f47bc6d2ae83ed12d60dc1ebe0e66f22f7a7e554c13ab13837fb8cb2fbd5481149b07654/wireguard-tools-1.0.20260223.tar.xz",
       "filename": "wireguard-tools-1.0.20260223.tar.xz",
       "sha512": "ab56199345fdc385e62e414ec200c10777c985fb2bde767f9c76e049f47bc6d2ae83ed12d60dc1ebe0e66f22f7a7e554c13ab13837fb8cb2fbd5481149b07654"
     },
