@@ -237,15 +237,43 @@ jobs:
               if selected:
                   should_build = name in selected
               else:
-                  should_build = (
-                      full
-                      # A shard shares its recipe directory with another
-                      # entry; an edit there is a change to both.
-                      or recipe_name(package) in changed
-                      or name not in published
-                      or norm(published[name]) != norm(version)
-                      or not identity_matches
-                  )
+                  # `published` is harvested from repodata, which lists BINARY
+                  # package names, while `name` is the SOURCE package name. For
+                  # a source that ships no binary of the same name -- grub2,
+                  # mesa, wayland, pycairo, rust-just, webkitgtk and about
+                  # twenty others -- `name not in published` is permanently
+                  # true, so they were rebuilt on every single run no matter
+                  # what had already been built. That is where the wall clock
+                  # went: it included both WebKitGTK shards.
+                  #
+                  # The identity check does not have that flaw. It is keyed on
+                  # the source name, and it is strictly stronger than the name
+                  # and version comparison: the build key covers the recipe,
+                  # the source lock, factory policy and the Hummingbird base,
+                  # and outputs_match then requires every RPM it recorded to be
+                  # present with the checksum it was built with. When it holds,
+                  # nothing the repodata heuristic could add is informative, so
+                  # it decides alone.
+                  #
+                  # Without a manifest entry there is nothing to check against
+                  # and the old heuristic still applies, which is the case when
+                  # reading the published Pages repository rather than the
+                  # accumulator.
+                  if name in published_keys:
+                      should_build = (
+                          full
+                          # A shard shares its recipe directory with another
+                          # entry; an edit there is a change to both.
+                          or recipe_name(package) in changed
+                          or not identity_matches
+                      )
+                  else:
+                      should_build = (
+                          full
+                          or recipe_name(package) in changed
+                          or name not in published
+                          or norm(published[name]) != norm(version)
+                      )
               if should_build:
                   build.append(package)
               else:
