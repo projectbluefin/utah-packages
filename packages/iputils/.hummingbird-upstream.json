@@ -1,0 +1,8 @@
+{
+  "package": "iputils",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/iputils.git",
+  "commit": "77cde9e8aee33396878770570daf2673aa84dd62",
+  "tree": "32c3b404a029aa62d7e74d7c57c92ba0a84e8464",
+  "imported_at": "2026-09-04T21:16:58.590454+00:00"
+}

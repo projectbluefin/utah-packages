@@ -1,0 +1,8 @@
+{
+  "package": "python-bugzilla",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/python-bugzilla.git",
+  "commit": "2cb52bd61c4dbec8a4cd6675f033af2836aea126",
+  "tree": "be1dbec544bc8a129b69b1ac217704b5a88ca6b2",
+  "imported_at": "2026-09-04T21:17:00.831268+00:00"
+}
