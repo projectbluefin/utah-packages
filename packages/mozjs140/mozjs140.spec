@@ -57,6 +57,11 @@ Patch16:        D261512.1755672843.diff
 # TODO: Check with mozilla for cause of these fails and re-enable spidermonkey compile time checks if needed
 Patch20:        spidermonkey_checks_disable.patch
 
+# rust 1.98 added the *-oe-linux-gnu targets, which leaves moz.configure unable
+# to narrow x86_64-redhat-linux-gnu down to one rust target. Not in rawhide,
+# which has not rebuilt this package since that rust landed.
+Patch21:        rust-target-vendor-narrowing.patch
+
 BuildRequires:  cargo
 %if "%{toolchain}" == "clang"
 BuildRequires:  clang
