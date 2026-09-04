@@ -1549,7 +1549,8 @@
       "version": "0.11.2",
       "url": "https://gitlab.freedesktop.org/mstoeckl/waypipe/-/archive/v0.11.2/waypipe-v0.11.2.tar.gz",
       "filename": "waypipe-v0.11.2.tar.gz",
-      "sha512": "e1b475f6c4b41cdc15ac1765a6a0dbb865f1bdc384d7f7393660e39baf38a375a501d7ec7493a82cd8aaeef9faba67422164e26d56f19737949f8578495ca5f1"
+      "sha512": "e1b475f6c4b41cdc15ac1765a6a0dbb865f1bdc384d7f7393660e39baf38a375a501d7ec7493a82cd8aaeef9faba67422164e26d56f19737949f8578495ca5f1",
+      "stage": 1
     },
     {
       "name": "webkit2gtk4.1",
