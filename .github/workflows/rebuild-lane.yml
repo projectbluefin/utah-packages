@@ -279,7 +279,17 @@ jobs:
               # upstream-first is about what ships at runtime. Nothing in the
               # runtime contract carries a Rust toolchain. Version-anchored so
               # rust-1.* cannot match rust-std-static or a rust-<crate>.
-              HB_GLOBAL_EXCLUDE="--exclude=ruby3.3-default-gems --exclude=ruby3.4-default-gems --exclude=libicu-77.*hum1 --exclude=libicu-devel-77.*hum1 --exclude=rust-1.*hum1 --exclude=rustfmt-1.*hum1 --exclude=cargo-1.*hum1 --exclude=clippy-1.*hum1 --exclude=rust-std-static-1.*hum1"
+              HB_GLOBAL_EXCLUDE="--exclude=ruby3.3-default-gems --exclude=ruby3.4-default-gems --exclude=libicu-77.*hum1 --exclude=libicu-devel-77.*hum1"
+              # ...but that NEVR-glob form does not match: mozjs140 still
+              # installed rust-0:1.98.0-1.hum1 with --exclude=rust-1.*hum1 on
+              # the command line. Exclude by NAME from the Hummingbird repo
+              # instead, which is the form already proven to work here -- it is
+              # what puts "filtered out by exclude filtering" in the resolver
+              # output for the Fedora side. Name-scoping is safe for the Rust
+              # toolchain because Fedora is the only other source of it; libicu
+              # cannot use this form, since 77 and 78 share one name and only
+              # the older build is unwanted.
+              HB_GLOBAL_EXCLUDE="${HB_GLOBAL_EXCLUDE} --setopt=public-hummingbird-x86_64-rpms.excludepkgs=rust,rustfmt,cargo,clippy,rust-std-static"
               EXCLUDE="${HB_EXCLUDE}${EXCLUDE:+,}${EXCLUDE}"
               echo "hummingbird exclusions: $HB_EXCLUDE"
               if [ -n "${FACTORY_REPO:-}" ]; then
