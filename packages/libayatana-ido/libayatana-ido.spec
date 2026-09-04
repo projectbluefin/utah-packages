@@ -23,6 +23,11 @@ BuildRequires:  vala
 %if %{with check}
 BuildRequires:  pkgconfig(gtest)
 BuildRequires:  xwayland-run
+# xwfb-run starts a compositor and xwayland-run does not depend on one, so a
+# buildroot that installs only xwayland-run gets "No such file or directory:
+# 'weston'" before a single test runs. Fedora's builders have it for other
+# reasons; ask for it rather than dropping the suite.
+BuildRequires:  weston
 %endif
 
 %global _description %{expand:

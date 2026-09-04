@@ -189,6 +189,12 @@ file services.
 %autosetup -p1
 
 %build
+# -Dbluray=false is unconditional here, where Fedora sets it only on RHEL:
+# libbluray is not in Hummingbird and the factory declines to add it, because
+# rawhide dist-git has moved to 1.5.0 (libbluray.so.4) while the composed
+# repository the buildroot resolves against still ships 1.4.0
+# (libbluray.so.3). Shipping ours would exclude Fedora's and leave Fedora's own
+# libavformat-free with no provider. ffmpeg declines the feature likewise.
 %meson \
        -Dman=true \
 %ifarch s390 s390x
@@ -197,9 +203,9 @@ file services.
        -Dlibusb=false \
        -Dmtp=false \
 %endif
+       -Dbluray=false \
 %if 0%{?rhel}
        -Dnfs=false \
-       -Dbluray=false \
        -Dafc=false \
        -Donedrive=false \
 %endif

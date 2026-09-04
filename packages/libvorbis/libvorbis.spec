@@ -166,4 +166,5 @@ install -D -p -m 0644 ./vorbis.m4 %{buildroot}%{mingw64_datadir}/aclocal/vorbis.
 %{mingw64_datadir}/aclocal/vorbis.m4
 %endif
 
+%changelog
 %autochangelog

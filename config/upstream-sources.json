@@ -729,13 +729,6 @@
       "sha512": "bdc22bd2ec23a6e0fcee9e41d6e4ed05645b7c5413874e6ed8bc0f2ad17d5e671ed966e8697a2a2b65738eb49830ade3c302a93f9facb7542685e544ebe9106a"
     },
     {
-      "name": "libbluray",
-      "version": "1.5.0",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/libbluray/libbluray-1.5.0.tar.xz/sha512/f35d89097ad0c263ffa2102aba0068e7fe9b85afe27b14cf3c34ed6eff5876d1528aa8a62c3941b767353be2e1de4ae765f1402bd44af4544d922ffb69cea354/libbluray-1.5.0.tar.xz",
-      "filename": "libbluray-1.5.0.tar.xz",
-      "sha512": "f35d89097ad0c263ffa2102aba0068e7fe9b85afe27b14cf3c34ed6eff5876d1528aa8a62c3941b767353be2e1de4ae765f1402bd44af4544d922ffb69cea354"
-    },
-    {
       "name": "libburn",
       "version": "1.5.8",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/libburn/libburn-1.5.8.tar.gz/sha512/fa290de9c9e5270eea7752418caaf6d8ac9b9291e71ea043637f78493d91bf1daa3ec23f3c4e7b584d0134b123f3ca279c02cbb44ad3027e7e7d439966512280/libburn-1.5.8.tar.gz",
@@ -1312,7 +1305,10 @@
       "version": "33.5",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/protobuf/protobuf-33.5.tar.gz/sha512/71110cd2cbf9f2e7f1bda4eed346ad6cad84a05ab0214d1e0880afc20a788f43176e2ccc8ac284eab38ec21578db147c2837b58789baf2823e4615d4b3557937/protobuf-33.5.tar.gz",
       "filename": "protobuf-33.5.tar.gz",
-      "sha512": "71110cd2cbf9f2e7f1bda4eed346ad6cad84a05ab0214d1e0880afc20a788f43176e2ccc8ac284eab38ec21578db147c2837b58789baf2823e4615d4b3557937"
+      "sha512": "71110cd2cbf9f2e7f1bda4eed346ad6cad84a05ab0214d1e0880afc20a788f43176e2ccc8ac284eab38ec21578db147c2837b58789baf2823e4615d4b3557937",
+      "rpm_defines": [
+        "_without_java 1"
+      ]
     },
     {
       "name": "pulseaudio",

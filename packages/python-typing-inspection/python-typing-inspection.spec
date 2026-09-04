@@ -14,6 +14,10 @@ BuildOption(install):   --assert-license typing_inspection
 
 BuildArch:      noarch
 
+# %%pyproject_patch_dependency runs in %%prep, before the generated
+# BuildRequires are resolved, and the script behind it imports packaging.
+BuildRequires:  python3-packaging
+
 %global common_description %{expand:
 This module provides tools to inspect type annotations at runtime.}
 

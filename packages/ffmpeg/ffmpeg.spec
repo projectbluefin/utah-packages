@@ -4,6 +4,21 @@
 # Break dependency cycles by disabling certain optional dependencies.
 %bcond bootstrap 0
 
+# Neither of these has a provider the factory can offer.
+#
+# vapoursynth is a frameserver, not a codec, and nothing in the runtime
+# contract links it. Fedora carries it; Hummingbird does not, and importing it
+# would pull zimg and a Python extension in to satisfy a BuildRequires whose
+# output no consumer asks for.
+%bcond vapoursynth 0
+# libbluray is a disc-navigation library for a drive no Utah machine has.
+# Building it would put the factory ahead of the Fedora compose it builds
+# against: rawhide dist-git carries 1.5.0 (libbluray.so.4) while the composed
+# repository still ships 1.4.0 (libbluray.so.3), so shipping ours excludes
+# Fedora's and leaves Fedora's own libavformat-free with no provider. Declining
+# the feature is what keeps one soname in play. gvfs declines it likewise.
+%bcond libbluray 0
+
 # If building with all codecs, then set the pkg_suffix to %%nil.
 # We can't handle this with a conditional, as srpm
 # generation would not take it into account.
@@ -185,7 +200,9 @@ BuildRequires:  pkgconfig(lcms2) >= 2.13
 %endif
 BuildRequires:  pkgconfig(libaribcaption) >= 1.1.1
 BuildRequires:  pkgconfig(libass)
+%if %{with libbluray}
 BuildRequires:  pkgconfig(libbluray)
+%endif
 BuildRequires:  pkgconfig(libbs2b)
 BuildRequires:  pkgconfig(libcdio)
 BuildRequires:  pkgconfig(libcdio_paranoia)
@@ -234,7 +251,9 @@ BuildRequires:  pkgconfig(SvtAv1Enc) >= 0.9.0
 BuildRequires:  pkgconfig(tesseract)
 BuildRequires:  pkgconfig(theora)
 BuildRequires:  pkgconfig(twolame)
+%if %{with vapoursynth}
 BuildRequires:  pkgconfig(vapoursynth) >= 79
+%endif
 BuildRequires:  pkgconfig(vdpau)
 BuildRequires:  pkgconfig(vidstab)
 BuildRequires:  pkgconfig(vorbis)
@@ -747,7 +766,11 @@ cp -a doc/examples/{*.c,Makefile,README} _doc/examples/
     --enable-libaribb24 \
     --enable-libaribcaption \
     --enable-libass \
+%if %{with libbluray}
     --enable-libbluray \
+%else
+    --disable-libbluray \
+%endif
     --enable-libbs2b \
     --enable-libcaca \
     --enable-libcdio \
@@ -874,7 +897,11 @@ cp -a doc/examples/{*.c,Makefile,README} _doc/examples/
     --enable-swscale \
     --enable-v4l2-m2m \
     --enable-vaapi \
+%if %{with vapoursynth}
     --enable-vapoursynth \
+%else
+    --disable-vapoursynth \
+%endif
     --enable-vdpau \
     --enable-vulkan \
     --enable-xlib \
