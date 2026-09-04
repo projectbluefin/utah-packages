@@ -330,6 +330,46 @@ too, and is not a gap.
 Note that `glib2` is **not** a blocker. GNOME 51 asks for 2.86, not the 2.89
 that Rawhide ships; assuming otherwise sent an earlier attempt down a dead end.
 
+## What the factory declines to build
+
+Three decisions worth reading rather than re-deriving, because each one looks
+like an omission from the outside.
+
+**ffmpeg and anaconda-webui are in scope.** Both entered the manifest to close
+the consumer transaction -- `pipewire-libs-extra` links `libavcodec.so.62` and
+Hummingbird ships no libav at all, and `anaconda-live` requires
+`anaconda-webui` -- and both were flagged for a second opinion when they went
+in, because Utah deliberately does not enable `fedora-multimedia` and because
+ISO tooling is not the desktop runtime. Settled: build them. They are part of
+the vanilla Fedora stack, and that is the bar, whether or not Utah ends up
+installing with Anaconda. The recipes are Fedora's, so this builds
+`ffmpeg-free` and `libavcodec-free` -- Fedora's own codec policy, not
+RPMFusion's.
+
+**libbluray is not.** Rawhide dist-git has moved to 1.5.0, which is
+`libbluray.so.4`, while the composed repository the build root resolves
+against still ships 1.4.0 and everything in it -- Fedora's own
+`libavformat-free` included -- links `so.3`. Building 1.5.0 excludes Fedora's
+1.4.0 by name, which is how the factory keeps Fedora from answering for what
+it rebuilds, and then nothing provides `so.3`: `libavformat-free` becomes
+uninstallable and takes every build root that wants it with it. The factory
+cannot rebuild Fedora's compose ahead of Fedora. So gvfs sets `-Dbluray=false`
+unconditionally where Fedora sets it only on RHEL, ffmpeg carries a
+`libbluray` bcond defaulting off, and no entry exists. Blu-ray disc navigation
+is not a feature a Utah machine has a drive for. This is not a version pin:
+when rawhide's compose carries 1.5.0, `tools/track_upstream.py` proposes the
+entry back, and it can be taken then.
+
+**vapoursynth is not**, for a smaller reason: ffmpeg's spec build-requires it,
+Hummingbird has no provider, and satisfying it would pull in zimg and a Python
+extension to serve a `BuildRequires` whose output nothing in the runtime
+contract links. It is a frameserver, not a codec. `%bcond vapoursynth 0`.
+
+The general shape: where the factory and the Fedora compose disagree about a
+soname, the factory declines the feature rather than getting ahead of the
+compose it builds against. Adding the newer library is the move that strands
+Fedora's own packages.
+
 ## Open, and deliberately not asserted
 
 - **Step 3 of the ladder is implemented but only partly proven.**
