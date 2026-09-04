@@ -68,7 +68,17 @@
 %else
 # Break chromaprint dependency cycle (Fedora-only):
 #   ffmpeg (libavcodec-free) → chromaprint → ffmpeg
-%bcond chromaprint %{?with_bootstrap:0}%{!?with_bootstrap:1}
+#
+# Fedora breaks that cycle once, with a bootstrap build, and then rebuilds
+# chromaprint against the new ffmpeg. The factory cannot: it does not build
+# chromaprint, so the Fedora libchromaprint always links the Fedora
+# libavutil.so.60, and promising ffmpeg excludes the Fedora libav by name --
+# leaving libchromaprint-devel uninstallable and ffmpeg unable to configure.
+# The cycle is therefore permanent here, not a bootstrap phase, so the feature
+# is declined rather than bootstrapped. chromaprint is AcoustID audio
+# fingerprinting; nothing in the runtime contract links it. Same call as
+# vapoursynth above and libbluray below.
+%bcond chromaprint 0
 %bcond flite 1
 %endif
 
