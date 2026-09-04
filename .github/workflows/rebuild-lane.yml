@@ -123,8 +123,14 @@ jobs:
           # container, which only sees config/ and packages/.
           DIST_BUMP="$(python3 tools/dist_bump.py "$PACKAGE")"
           export DIST_BUMP
+          # The source names the manifest still promises, for the accumulator
+          # purge below. Computed out here because it reads the whole of
+          # packages/ and config/, while the container is given one recipe.
+          PROMISED_SOURCES="$(python3 tools/promised_sources.py)"
+          export PROMISED_SOURCES
           docker run --rm --privileged \
             -e PACKAGE -e RECIPE -e RPM_DEFINES -e FACTORY_REPO -e DIST_BUMP \
+            -e PROMISED_SOURCES \
             -v "$PWD/work:/work:Z" \
             -v "$PWD/packages:/packages:ro,Z" \
             -v "$PWD/config:/repos:ro,Z" \
@@ -172,6 +178,34 @@ jobs:
                 # the stale source packages by ICU 77 soname, then drop every
                 # RPM built from those same sources; the current run rebuilds a
                 # coherent replacement set with matching filenames.
+                # The accumulator is shared across runs and refs and keeps
+                # whatever any of them built, including packages the manifest
+                # no longer promises. That is not merely stale: the exclusion
+                # list below is derived from these very names, so a removed
+                # entry goes on excluding the Fedora copy of itself and nothing
+                # provides the capability any more. Dropping libbluray from the
+                # manifest left the Fedora libbluray excluded by the run before
+                # it, which stranded the Fedora libavformat-free too and failed
+                # ten stage 0 packages that have nothing to do with Blu-ray.
+                # Match on %{SOURCERPM}, as the ICU purge below does and for
+                # the same reason: subpackages require each other by exact
+                # NEVR, so dropping one and keeping its siblings is worse than
+                # dropping none.
+                if [ -n "${PROMISED_SOURCES:-}" ]; then
+                  promised_file=$(mktemp)
+                  printf "%s\n" "$PROMISED_SOURCES" | sed "/^$/d" > "$promised_file"
+                  while IFS= read -r -d "" rpm; do
+                    src=$(rpm -qp --qf "%{SOURCERPM}\n" "$rpm" 2>/dev/null)
+                    # <name>-<version>-<release>.src.rpm; the name may itself
+                    # contain dashes, so strip the last two fields, not the first.
+                    name=$(printf "%s" "$src" | sed "s/\.src\.rpm$//; s/-[^-]*-[^-]*$//")
+                    if [ -n "$name" ] && ! grep -qxF "$name" "$promised_file"; then
+                      echo "dropping unpromised artifact from accumulator: $rpm (src $name)"
+                      rm -f "$rpm"
+                    fi
+                  done < <(find /work/prior -name "*.rpm" -type f -print0)
+                  rm -f "$promised_file"
+                fi
                 stale_sources=""
                 while IFS= read -r -d "" rpm; do
                   if rpm -qpR "$rpm" 2>/dev/null | grep -q "libicuuc.so.77\|libicui18n.so.77"; then

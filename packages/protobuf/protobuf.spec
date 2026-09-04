@@ -372,11 +372,22 @@ export CXXFLAGS="${CXXFLAGS} -Wno-error=type-limits"
 # I think for now, we just need to package the static bits. :/
 # See: https://github.com/protocolbuffers/protobuf/issues/14958
 
+# protobuf_BUILD_TESTS is off because this factory builds abseil-cpp with
+# ABSL_BUILD_TEST_HELPERS OFF, where Fedora builds it ON: the test-only
+# libraries are an LTO-heavy graph that OOMs the hermetic runner, so the
+# recipe declines them. Fedora excludes its own abseil-cpp here, so protobuf
+# resolves against ours, and configuring its tests then fails with
+#   Target "test_plugin" links to: absl::scoped_mock_log
+#     but the target was not found
+# for four test targets. %%bcond_with check means the suite never runs, so
+# configuring it was only ever wasted work. If abseil-cpp ever restores the
+# test helpers, this can go back to matching Fedora.
 %cmake \
     -Dprotobuf_ABSL_PROVIDER=package \
     -Dprotobuf_USE_EXTERNAL_GOOGLETEST:BOOL=ON \
     -Dprotobuf_FIND_GOOGLETEST:BOOL=ON \
     -Dprotobuf_MSVC_STATIC_RUNTIME=OFF \
+    -Dprotobuf_BUILD_TESTS:BOOL=OFF \
     -GNinja
 %cmake_build
 
@@ -388,6 +399,7 @@ export CXXFLAGS="${CXXFLAGS} -Wno-error=type-limits"
     -Dprotobuf_USE_EXTERNAL_GOOGLETEST:BOOL=ON \
     -Dprotobuf_FIND_GOOGLETEST:BOOL=ON \
     -Dprotobuf_MSVC_STATIC_RUNTIME=OFF \
+    -Dprotobuf_BUILD_TESTS:BOOL=OFF \
     -GNinja
 %cmake_build
 %global _vpath_builddir %{original_vpath_builddir}
