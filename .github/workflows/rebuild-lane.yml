@@ -206,39 +206,6 @@ jobs:
                   done < <(find /work/prior -name "*.rpm" -type f -print0)
                   rm -f "$promised_file"
                 fi
-                # The same shape, for the libav ABI. Promising ffmpeg excludes
-                # the Fedora libav by name from every buildroot the moment the
-                # entry exists, but the factory copy only appears once ffmpeg
-                # has actually been built and accumulated -- and ffmpeg is a
-                # stage 0 package, so stage 0 resolves it from the run before.
-                # The accumulator libheif was linked against the Fedora
-                # libavutil.so.60 and could no longer be installed against the
-                # factory ffmpeg 9.x, which took out every stage 0 buildroot
-                # that reaches gdk-pixbuf2, glycin, graphviz or doxygen.
-                # Dropping every libav-linked RPM, ffmpeg subpackages included,
-                # takes those names out of the exclusion list too, so Fedora
-                # answers for libav again until this run rebuilds ours. The
-                # general rule this stands in for: a newly promised source
-                # cannot be excluded from Fedora before the factory has built
-                # it once.
-                av_sources=""
-                while IFS= read -r -d "" rpm; do
-                  if rpm -qpR "$rpm" 2>/dev/null | grep -q "^libav[a-z]*\.so\." \
-                    || [ "$(rpm -qp --qf "%{SOURCERPM}\n" "$rpm" 2>/dev/null | sed "s/\.src\.rpm$//; s/-[^-]*-[^-]*$//")" = "ffmpeg" ]; then
-                    src=$(rpm -qp --qf "%{SOURCERPM}\n" "$rpm" 2>/dev/null)
-                    [ -n "$src" ] && av_sources="${av_sources}${src}\n"
-                  fi
-                done < <(find /work/prior -name "*.rpm" -type f -print0)
-                av_sources=$(printf "%b" "$av_sources" | sort -u | sed "/^$/d")
-                if [ -n "$av_sources" ]; then
-                  while IFS= read -r -d "" rpm; do
-                    src=$(rpm -qp --qf "%{SOURCERPM}\n" "$rpm" 2>/dev/null)
-                    if printf "%s\n" "$av_sources" | grep -qxF "$src"; then
-                      echo "dropping libav-linked artifact from accumulator: $rpm (src $src)"
-                      rm -f "$rpm"
-                    fi
-                  done < <(find /work/prior -name "*.rpm" -type f -print0)
-                fi
                 stale_sources=""
                 while IFS= read -r -d "" rpm; do
                   if rpm -qpR "$rpm" 2>/dev/null | grep -q "libicuuc.so.77\|libicui18n.so.77"; then
