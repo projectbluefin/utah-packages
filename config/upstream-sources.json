@@ -1186,7 +1186,8 @@
       "version": "2.29.5111.102",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/mozc/mozc-2.29.5111.102.tar.xz/sha512/6a9c6abdc600e4e1c7fd9432419fb058adcf6bca45c27749f122e62ad520c8c1e2ce83ff55dd6b7975517924fb1c71d3a6e3a96a661703da627df372c2f5f700/mozc-2.29.5111.102.tar.xz",
       "filename": "mozc-2.29.5111.102.tar.xz",
-      "sha512": "6a9c6abdc600e4e1c7fd9432419fb058adcf6bca45c27749f122e62ad520c8c1e2ce83ff55dd6b7975517924fb1c71d3a6e3a96a661703da627df372c2f5f700"
+      "sha512": "6a9c6abdc600e4e1c7fd9432419fb058adcf6bca45c27749f122e62ad520c8c1e2ce83ff55dd6b7975517924fb1c71d3a6e3a96a661703da627df372c2f5f700",
+      "stage": 1
     },
     {
       "name": "mozjs140",
@@ -1309,6 +1310,13 @@
       "rpm_defines": [
         "_without_java 1"
       ]
+    },
+    {
+      "name": "protobuf3",
+      "version": "3.19.6",
+      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/protobuf3/protobuf-3.19.6-all.tar.gz/sha512/8f92242f2be8e1bbfba41341c87709ad91ad83b8b3e3df88bb430411541d3399295f49291fd52b50e3487b0fce33181cb4d175685fd25aac72adfaee26a612d4/protobuf-3.19.6-all.tar.gz",
+      "filename": "protobuf-3.19.6-all.tar.gz",
+      "sha512": "8f92242f2be8e1bbfba41341c87709ad91ad83b8b3e3df88bb430411541d3399295f49291fd52b50e3487b0fce33181cb4d175685fd25aac72adfaee26a612d4"
     },
     {
       "name": "pulseaudio",

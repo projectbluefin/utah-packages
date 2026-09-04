@@ -266,7 +266,20 @@ jobs:
               # runtime could not install. Exclude the exact older Hummingbird
               # NEVR globally so only libicu 78 is selectable; Fedora build-only
               # consumers that want 77 are rare and not part of the runtime.
-              HB_GLOBAL_EXCLUDE="--exclude=ruby3.3-default-gems --exclude=ruby3.4-default-gems --exclude=libicu-77.*hum1 --exclude=libicu-devel-77.*hum1"
+              #
+              # The Rust toolchain comes from Fedora, not Hummingbird. Fedora
+              # builds rustc with an extra x86_64-redhat-linux-gnu target, and
+              # Mozilla configure looks that host triple up in rustc
+              # --print target-list; Hummingbird builds upstream rust, which
+              # only knows x86_64-unknown-linux-gnu, so mozjs140 stopped with
+              #   ERROR: Don t know how to translate x86_64-redhat-linux-gnu for rustc
+              # against rust-1.98.0-1.hum1. This is the documented division of
+              # labour rather than an exception to it: Fedora 44 is the other
+              # half of the buildroot, the way a compiler is, and Hummingbird
+              # upstream-first is about what ships at runtime. Nothing in the
+              # runtime contract carries a Rust toolchain. Version-anchored so
+              # rust-1.* cannot match rust-std-static or a rust-<crate>.
+              HB_GLOBAL_EXCLUDE="--exclude=ruby3.3-default-gems --exclude=ruby3.4-default-gems --exclude=libicu-77.*hum1 --exclude=libicu-devel-77.*hum1 --exclude=rust-1.*hum1 --exclude=rustfmt-1.*hum1 --exclude=cargo-1.*hum1 --exclude=clippy-1.*hum1 --exclude=rust-std-static-1.*hum1"
               EXCLUDE="${HB_EXCLUDE}${EXCLUDE:+,}${EXCLUDE}"
               echo "hummingbird exclusions: $HB_EXCLUDE"
               if [ -n "${FACTORY_REPO:-}" ]; then
