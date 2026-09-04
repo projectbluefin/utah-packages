@@ -9,8 +9,12 @@ packages = ["pipewire"]
 # two compiles that used to run back to back on one runner (five hours) run
 # side by side on two. mozjs140 is eighteen minutes and stays in the ordinary
 # stage-1 lane, where gjs no longer has to wait behind WebKitGTK for it.
+# firefox joins them: anaconda-webui's browser dependency resolves to firefox
+# on anything without a spin identity package, and nothing else can answer it
+# in a Hummingbird-only transaction. It is a WebKit-scale compile, so it wants
+# a runner to itself rather than a slot in the ordinary stage-1 lane.
 [stage1_heavy]
-packages = ["webkitgtk", "webkit2gtk4.1"]
+packages = ["webkitgtk", "webkit2gtk4.1", "firefox"]
 
 [stage2_late]
 packages = ["gjs"]

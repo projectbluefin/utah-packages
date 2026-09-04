@@ -1,0 +1,8 @@
+{
+  "package": "firefox",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/firefox.git",
+  "commit": "dbd00ed2f1fa4946eaebb15674d10182c94f07b7",
+  "tree": "2daa2776d4f2263bb6af864f6dfdd93481fa251f",
+  "imported_at": "2026-09-04T23:25:40.113593+00:00"
+}

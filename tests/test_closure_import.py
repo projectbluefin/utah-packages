@@ -33,6 +33,13 @@ class Source0SelectionTests(unittest.TestCase):
             "iputils-20250605.tar.gz",
         )
 
+    def test_an_undefined_conditional_macro_expands_to_nothing(self):
+        """firefox spells Source0 with %{?pre_version}, unset on a release."""
+        self.assertEqual(
+            closure.read_source0_basename("firefox", ROOT / "packages", "155.0"),
+            "firefox-155.0.source.tar.xz",
+        )
+
     def test_a_recipe_with_one_source_is_unaffected(self):
         self.assertEqual(
             closure.read_source0_basename("libICE", ROOT / "packages", "1.1.2"),

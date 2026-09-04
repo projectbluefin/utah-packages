@@ -213,6 +213,15 @@
       "sha512": "be8cdfca64886f2ec5cd2359f8db6a998ee759d105b10ade9b2a7b640356ad56ab0ff50218fce7b6312462f15f98d90ac9d197a3b02a23771754d2714fec628d"
     },
     {
+      "name": "firefox",
+      "version": "155.0",
+      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/firefox/firefox-155.0.source.tar.xz/sha512/24292681924edb9f0494eb77a7b19994039abbc3a8c0ba304f0e472b49a943838565723de983bc8ef08e019971e02a3014c8d241bb88c645a06a625c8ace0d6a/firefox-155.0.source.tar.xz",
+      "filename": "firefox-155.0.source.tar.xz",
+      "sha512": "24292681924edb9f0494eb77a7b19994039abbc3a8c0ba304f0e472b49a943838565723de983bc8ef08e019971e02a3014c8d241bb88c645a06a625c8ace0d6a",
+      "stage": 1,
+      "compiler_cache": true
+    },
+    {
       "name": "flatpak-xdg-utils",
       "version": "1.0.6",
       "url": "https://github.com/flatpak/flatpak-xdg-utils/releases/download/1.0.6/flatpak-xdg-utils-1.0.6.tar.xz",

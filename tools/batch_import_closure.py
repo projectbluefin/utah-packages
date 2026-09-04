@@ -88,6 +88,11 @@ def read_source0_basename(name: str, destination: Path, version: str) -> str | N
             continue
         value = line.split(":", 1)[1].strip()
         value = value.replace("%{name}", name).replace("%{version}", version)
+        # A conditional macro that nothing defines expands to nothing, and a
+        # Source0 line is where they cluster: firefox spells its tarball
+        # firefox-%{version}%{?pre_version}.source.tar.xz, which is a plain
+        # release name on every build that is not a pre-release.
+        value = re.sub(r"%\{\?[^}]*\}", "", value)
         return value.rsplit("/", 1)[-1]
     return None
 

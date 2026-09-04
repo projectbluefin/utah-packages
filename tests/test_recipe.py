@@ -51,7 +51,27 @@ class RecipeTests(unittest.TestCase):
             for item in manifest["packages"]
             if recipe.compiler_cache(item)
         }
-        self.assertEqual(opted, {"webkitgtk", "webkit2gtk4.1", "mozjs140"})
+        self.assertEqual(opted, {"webkitgtk", "webkit2gtk4.1", "mozjs140", "firefox"})
+
+    def test_every_cached_recipe_reads_the_cache_environment(self):
+        """The flag mounts the client; the recipe still has to use it.
+
+        firefox is why this exists as a rule rather than one assertion: opting
+        a package in and leaving its %build alone gives a silently uncached
+        build, which on a WebKit-scale compile is the difference between
+        fitting the runner and not.
+        """
+        manifest = json.loads((ROOT / "config/upstream-sources.json").read_text())
+        for item in manifest["packages"]:
+            if not recipe.compiler_cache(item):
+                continue
+            directory = ROOT / "packages" / recipe.recipe_name(item)
+            specs = sorted(directory.glob("*.spec"))
+            self.assertTrue(specs, item["name"])
+            for spec in specs:
+                self.assertIn(
+                    ". /work/tools/sccache.env", spec.read_text(), str(spec)
+                )
 
     def test_webkitgtk_recipe_reads_the_cache_environment(self):
         spec = (ROOT / "packages/webkitgtk/webkitgtk.spec").read_text()

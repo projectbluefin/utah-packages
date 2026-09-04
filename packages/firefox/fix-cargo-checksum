@@ -1,0 +1,21 @@
+#!/bin/bash
+if [ -z $1 ]; then
+  echo "Fixes .cargo-checksum.json by removing deleted files and recompute sha256sum"
+  echo "Usage: $0 .cargo-checksum.json"
+  exit
+fi
+
+FILE=$1
+#set -x
+cp $FILE $1.backup
+for i in $(cat .cargo-checksum.json|jq -r '.files| keys[]'); do
+if [ ! -f $i ]; then
+  #echo $i non exist
+  sed -ie "s|\"$i\":\"[^\"]*\",||" $FILE
+else
+  SHA=`sha256sum $i | cut -d " " -f1`
+  sed -ie "s|\"$i\":\"[^\"]*\"|\"$i\":\"$SHA\"|" $FILE
+fi
+
+#echo $i
+done
