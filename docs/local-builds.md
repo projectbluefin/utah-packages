@@ -63,3 +63,22 @@ Hummingbird's authoritative guides describe
 [preserving and debugging local build environments](https://hummingbird-project.io/docs/operating/debugging-build-failures/)
 and [ordering the buildroot and toolchain](https://hummingbird-project.io/docs/operating/rebasing-buildroot-to-new-fedora/).
 Read those and the commit history before changing recipes or staging.
+
+## Compose Utah locally
+
+After a package build or a recovered candidate is available locally, compose
+Utah before requesting a long CI run:
+
+```sh
+# In utah-packages: merge the stable factory baseline and current candidate.
+just local-repo
+
+# In the sibling utah checkout: run the complete main-flavor transaction.
+just build-local local-test localhost/utah-packages:local-merged
+```
+
+`build-local` executes Utah's production Containerfile and its RPM contract;
+it changes only the source of the copied package repository to an image in
+local containers-storage. The result is `localhost/utah:local-test`. A failure
+at the package transaction is therefore actionable factory closure evidence,
+not a CI environment difference.

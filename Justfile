@@ -66,6 +66,14 @@ build package:
 build-deps package:
     bash tools/build-package.sh "{{ package }}" --deps-only
 
+# Make a local Utah input repository from the published baseline and the
+# in-progress candidate. The candidate is allowed to add newer RPMs, while the
+# published image supplies packages it has not rebuilt yet.
+local-repo output="localhost/utah-packages:local-merged":
+    bash tools/compose-local-repository.sh "{{ output }}" \
+      ghcr.io/projectbluefin/utah-packages:latest \
+      ghcr.io/projectbluefin/utah-packages:building
+
 clean-work:
     rm -rf -- "{{ work_dir }}"
 
