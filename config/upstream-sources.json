@@ -1836,6 +1836,13 @@
       "sha512": "7836d855c755c8ac6cbbb251ca0cbd2f4df9b573f31b1ea1cab480e47896d36b4cb0d479b2469b0bf0b5c700068361a18874b4a087f73020cdcb4e04a2d7dbe7"
     },
     {
+      "name": "python-distro",
+      "version": "1.9.0",
+      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/python-distro/distro-1.9.0.tar.gz/sha512/9ed033e9fb0a5a531a93d85d8d3c0afb67ec009b851146c76f819617cc13b28a6e6dc412899690baec2aa57d57389a347968c649eb99fefa6f782340166f83c4/distro-1.9.0.tar.gz",
+      "filename": "distro-1.9.0.tar.gz",
+      "sha512": "9ed033e9fb0a5a531a93d85d8d3c0afb67ec009b851146c76f819617cc13b28a6e6dc412899690baec2aa57d57389a347968c649eb99fefa6f782340166f83c4"
+    },
+    {
       "name": "python-evdev",
       "version": "1.9.3",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/python-evdev/v1.9.3.tar.gz/sha512/3f78fc21da5afcea7651a36c13fdb3e7c5cfac0327c0a365e2d825c849f4a19664defba07a5ada45665864888301b5b38478b4e7716014877951872ae912bee8/v1.9.3.tar.gz",
