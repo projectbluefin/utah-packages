@@ -14,9 +14,10 @@ SOURCE_CONFIG = ROOT / "config" / "upstream-sources.json"
 
 class PackitSrpmTests(unittest.TestCase):
     def test_workflow_stages_verified_sources_for_every_configured_package(self) -> None:
+        package_config = PACKIT_CONFIG.read_text().split("packages:\n", 1)[1]
         config_packages = {
             match.group(1)
-            for line in PACKIT_CONFIG.read_text().splitlines()
+            for line in package_config.splitlines()
             if (match := re.fullmatch(r"  ([a-z0-9][a-z0-9+.-]*):", line))
         }
         workflow = PACKIT_WORKFLOW.read_text()
@@ -33,8 +34,11 @@ class PackitSrpmTests(unittest.TestCase):
             <= matrix_packages
         )
         self.assertIn("--stage-into packages", workflow)
+        self.assertIn("--verify-staged packages", workflow)
         self.assertIn("packit srpm --preserve-spec", workflow)
         self.assertRegex(workflow, r"(?m)^  push:\n    branches: \[main\]$")
+        self.assertIn("create-archive:", PACKIT_CONFIG.read_text())
+        self.assertIn("tools/packit_source0.py", PACKIT_CONFIG.read_text())
 
 
 if __name__ == "__main__":

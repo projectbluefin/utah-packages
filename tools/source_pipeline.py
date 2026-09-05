@@ -104,6 +104,19 @@ def verify_signature(package: dict, target: Path, directory: Path) -> None:
 LOOKASIDE = "https://src.fedoraproject.org/repo/pkgs/rpms/{pkg}/{name}/sha512/{hash}/{name}"
 
 
+def source_manifest(package: dict) -> list[tuple[str, str]]:
+    """Return the Fedora lookaside filenames and SHA-512 digests."""
+    manifest = Path("packages") / package.get("dist_git_name", package["name"]) / "sources"
+    if not manifest.is_file():
+        return []
+    entries = []
+    for line in manifest.read_text().splitlines():
+        match = re.fullmatch(r"SHA512 \((\S+)\) = ([0-9a-f]{128})", line.strip())
+        if match:
+            entries.append(match.groups())
+    return entries
+
+
 def bundled_sources(package: dict, target_dir: Path, already: str) -> list[str]:
     """Fetch the sources a spec carries that upstream does not publish.
 
@@ -118,15 +131,8 @@ def bundled_sources(package: dict, target_dir: Path, already: str) -> list[str]:
     lookaside is addressed by that hash, so the URL is only satisfiable by the
     exact bytes recorded here.
     """
-    manifest = Path("packages") / package.get("dist_git_name", package["name"]) / "sources"
-    if not manifest.is_file():
-        return []
     fetched = []
-    for line in manifest.read_text().splitlines():
-        match = re.fullmatch(r"SHA512 \((\S+)\) = ([0-9a-f]{128})", line.strip())
-        if not match:
-            continue
-        filename, expected = match.groups()
+    for filename, expected in source_manifest(package):
         if filename == already:  # Source0 comes from upstream, with its own checks.
             continue
         url = LOOKASIDE.format(pkg=package.get("dist_git_name", package["name"]),
@@ -140,6 +146,29 @@ def bundled_sources(package: dict, target_dir: Path, already: str) -> list[str]:
         candidate.replace(target_dir / filename)
         fetched.append(filename)
     return fetched
+
+
+def verify_staged_sources(package: dict, package_root: Path) -> list[str]:
+    """Fail if Packit changed any source after the verification gate."""
+    package_dir = package_root / package.get("dist_git_name", package["name"])
+    expected_sources = {
+        package.get("filename", ""): package["sha512"].lower(),
+        **dict(source_manifest(package)),
+    }
+    verified = []
+    for filename, expected in expected_sources.items():
+        if not filename:
+            continue
+        source = package_dir / filename
+        if not source.is_file():
+            raise ValueError(f"staged source does not exist: {source}")
+        actual = digest(source, "sha512")
+        if actual != expected:
+            raise ValueError(
+                f"SHA-512 mismatch for {source}: expected {expected}, got {actual}"
+            )
+        verified.append(str(source))
+    return verified
 
 
 def stage_for_packit(package: dict, sources: list[Path], package_root: Path) -> list[str]:
@@ -178,8 +207,18 @@ def main() -> int:
         type=Path,
         help="copy accepted source files beside each package spec for Packit",
     )
+    parser.add_argument(
+        "--verify-staged",
+        type=Path,
+        help="verify that Packit did not change sources staged beside the spec",
+    )
     args = parser.parse_args()
     config = json.loads(args.config.read_text())
+    if args.verify_staged:
+        for package in selected(config, args.package):
+            verified = verify_staged_sources(package, args.verify_staged)
+            print(json.dumps({"package": package["name"], "verified": verified}, sort_keys=True))
+        return 0
     succeeded = True
     for package in selected(config, args.package):
         missing = {"name", "sha512"} - package.keys()

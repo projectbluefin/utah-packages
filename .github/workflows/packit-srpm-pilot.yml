@@ -122,6 +122,7 @@ jobs:
             quay.io/packit/packit@sha256:149e6e06d3e5fb2f10d19760c8a0031c7d8825e7bb91a5f4a7ab9b927c947494 bash -exc '
               git config --global --add safe.directory "*"
               packit srpm --preserve-spec --output "/out/$PACKAGE.src.rpm" -p "$PACKAGE"
+              python3 tools/source_pipeline.py "$PACKAGE" --verify-staged packages
               rpm -qp --qf "%{NAME}-%{VERSION}-%{RELEASE}\n" "/out/$PACKAGE.src.rpm"
             '
           # A build that produced no SRPM must fail here, matching the same

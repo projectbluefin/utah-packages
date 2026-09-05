@@ -8,6 +8,13 @@
 # shipped inside packages/*/ -- those are unmodified, unused Fedora
 # dist-git imports, left in place on purpose (see the design doc).
 #
+# Packit defaults to creating a Git archive and can overwrite a verified
+# Source0 with the same filename. Always return the archive staged by the
+# factory source-verification gate instead.
+actions:
+  create-archive:
+    - bash -c 'python3 "$(git rev-parse --show-toplevel)/tools/packit_source0.py"'
+
 # All 54 packages that carry a leftover .packit.yaml are listed below.
 # The workflow runs the factory's verified-source pipeline before Packit,
 # staging the locked upstream archive and any Fedora lookaside sources

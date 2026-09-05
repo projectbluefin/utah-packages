@@ -41,8 +41,11 @@ verified-source pipeline and then `packit srpm --preserve-spec` against all 54
 packages that carry a leftover, inherited Fedora `.packit.yaml`, using a
 root-level `.packit.yaml` monorepo config. The locked upstream archive and any
 Fedora lookaside sources are staged beside the spec before Packit runs, and the
-resulting SRPMs are uploaded as build artifacts. It is a verification-only lane
-— it does not feed Mock, the RPM overlay, or the published repository, and it
-does not touch `rebuild-rpms.yml`. See
+root config's `create-archive` action makes Packit reuse the staged Source0
+instead of replacing it with a Git archive. The workflow verifies every staged
+source again after Packit runs, then uploads the resulting SRPMs as build
+artifacts. It is a verification-only lane — it does not feed Mock, the RPM
+overlay, or the published repository, and it does not touch
+`rebuild-rpms.yml`. See
 [`docs/superpowers/specs/2026-09-05-packit-srpm-pilot-design.md`](superpowers/specs/2026-09-05-packit-srpm-pilot-design.md)
 for the original pilot scope and what a full migration would still need.

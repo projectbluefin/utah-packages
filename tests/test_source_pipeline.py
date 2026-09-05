@@ -9,7 +9,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from tools.source_pipeline import fetch_with_fallbacks
+from tools.source_pipeline import fetch_with_fallbacks, verify_staged_sources
 
 
 SOURCE_PIPELINE = Path(__file__).resolve().parent.parent / "tools" / "source_pipeline.py"
@@ -86,6 +86,22 @@ class SourcePipelineTests(unittest.TestCase):
 
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertEqual((package_dir / source.name).read_bytes(), b"verified source")
+
+    def test_rejects_source_overwritten_after_staging(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            package_dir = root / "packages" / "demo"
+            package_dir.mkdir(parents=True)
+            source = package_dir / "demo-1.0.tar.gz"
+            source.write_bytes(b"packit generated archive")
+            package = {
+                "name": "demo",
+                "filename": source.name,
+                "sha512": hashlib.sha512(b"verified upstream archive").hexdigest(),
+            }
+
+            with self.assertRaisesRegex(ValueError, "SHA-512 mismatch"):
+                verify_staged_sources(package, root / "packages")
 
 
 if __name__ == "__main__":
