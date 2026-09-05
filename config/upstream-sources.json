@@ -630,6 +630,13 @@
       "sha512": "0d6c6f43e478c426eaf9d14e963508880d3eacc7f40dea5677c2afa9bbe28b9fc8ebe3db67bbfcc1635c1396fa9474d2c7c775d3be00381cafeb2655215ee336"
     },
     {
+      "name": "hunspell-en",
+      "version": "0.20260225",
+      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/hunspell-en/rel-2026.02.25.tar.gz/sha512/5d5c1b09f2c3ba2f7188c519863502229839a7a5bfab573c46c68328339f5a9781b96628d4dc51949f9f1c7ea6b4dfecb228e3da213410459f6228706e06fc86/rel-2026.02.25.tar.gz",
+      "filename": "rel-2026.02.25.tar.gz",
+      "sha512": "5d5c1b09f2c3ba2f7188c519863502229839a7a5bfab573c46c68328339f5a9781b96628d4dc51949f9f1c7ea6b4dfecb228e3da213410459f6228706e06fc86"
+    },
+    {
       "name": "hwdata",
       "version": "0.410",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/hwdata/v0.410.tar.gz/sha512/b0032c74e31847b0985563e95746b4f34247be3ad00c4a7348d5f23d860cb28b73b2625950456c50e254c8a4472ff6027687a5c5e3be56b0a20022a4737c3327/v0.410.tar.gz",
