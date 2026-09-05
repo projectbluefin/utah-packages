@@ -1,0 +1,8 @@
+{
+  "package": "libtalloc",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libtalloc.git",
+  "commit": "74d64e90b63bc500bd0a6208305698f2b5e88dca",
+  "tree": "997b0c8a7429adb21bf781e17924bb703cb3eb54",
+  "imported_at": "2026-08-31T07:22:20.172185+00:00"
+}

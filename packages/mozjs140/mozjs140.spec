@@ -133,8 +133,14 @@ if test -x /work/tools/sccache && test -r /work/tools/sccache.env; then
   case "$-" in *x*) sccache_restore_xtrace=1; set +x ;; *) sccache_restore_xtrace=0 ;; esac
   . /work/tools/sccache.env
   if test "$sccache_restore_xtrace" = 1; then set -x; fi
-  export CC="/work/tools/sccache gcc"
-  export CXX="/work/tools/sccache g++"
+  # The recipe declares "%%global toolchain clang", so rpm injects the clang
+  # hardened-ld config (redhat-hardened-clang-ld.cfg) into the link flags that
+  # Rust's cargo-linker forwards to $CC. Driving that link through gcc failed
+  # with "gcc: error: unrecognized command-line option '--config=.../
+  # redhat-hardened-clang-ld.cfg'". Keep the sccache wrapper on clang so the
+  # compiler driver matches the hardening config the toolchain selected.
+  export CC="/work/tools/sccache clang"
+  export CXX="/work/tools/sccache clang++"
 fi
 %configure \
   --with-system-icu \

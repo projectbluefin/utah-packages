@@ -40,7 +40,11 @@ BuildRequires: pkgconfig(libzstd)
 BuildRequires: pkgconfig(libpsl)
 BuildRequires: pkgconfig(sqlite3)
 BuildRequires: pkgconfig(sysprof-capture-4)
-BuildRequires: /usr/bin/ntlm_auth
+# The NTLM test suite is disabled below (it needs GLib HMAC, which Hummingbird
+# FIPS policy makes fatal), so /usr/bin/ntlm_auth is never used at build or
+# test time. Requiring it only dragged Fedora samba-winbind-clients -- and its
+# ICU 77 samba-core-libs -- into the buildroot, conflicting with the factory
+# libicu 78. Dropped; nothing in this recipe consumes it.
 
 Requires: glib-networking%{?_isa} >= %{glib2_version}
 
@@ -140,7 +144,12 @@ This is the MinGW build of libsoup3
 %autosetup -p1 -n libsoup-%{version}
 
 %build
-%meson -Ddocs=disabled -Dautobahn=disabled
+# NTLM is a legacy Windows authentication scheme not needed on a GNOME desktop,
+# and enabling it makes meson require /usr/bin/ntlm_auth, which lives in Fedora
+# samba-winbind-clients and drags an ICU-77 samba into the buildroot -- a
+# conflict with the factory libicu 78. Utah already disables the NTLM test
+# suite below, so turn the feature off rather than pull that closure in.
+%meson -Ddocs=disabled -Dautobahn=disabled -Dntlm=disabled
 %meson_build
 
 %if %{with_mingw}

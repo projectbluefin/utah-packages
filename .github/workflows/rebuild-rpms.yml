@@ -8,23 +8,36 @@ on:
         required: false
         default: false
         type: boolean
+      packages:
+        description: Optional comma-separated package names to rebuild only
+        required: false
+        default: ''
+        type: string
   push:
     branches: [main]
     paths:
       - config/**
       - packages/**
       - tools/source_pipeline.py
+      - tools/build_identity.py
+      - tools/build_manifest.py
       - tools/runtime_contract.py
       - tests/**
       - .github/workflows/rebuild-rpms.yml
+      - .github/workflows/rebuild-lane.yml
+      - .github/workflows/checkpoint.yml
   pull_request:
     paths:
       - config/**
       - packages/**
       - tools/source_pipeline.py
+      - tools/build_identity.py
+      - tools/build_manifest.py
       - tools/runtime_contract.py
       - tests/**
       - .github/workflows/rebuild-rpms.yml
+      - .github/workflows/rebuild-lane.yml
+      - .github/workflows/checkpoint.yml
   schedule:
     - cron: '41 6 * * *'
 
@@ -33,6 +46,16 @@ permissions:
   id-token: write
   packages: write
   pages: write
+
+# Do not cancel an active WebKitGTK/mozjs/Mesa build when a newer commit lands.
+# Queue one factory run per PR or branch instead; its checkpoints and exact
+# package identities let the queued run reuse completed work rather than
+# launching a duplicate multi-hour matrix.
+concurrency:
+  # A selected-package recovery run may proceed beside the normal PR run;
+  # package-level concurrency still prevents two copies of the same lane/package.
+  group: utah-packages-factory-${{ github.event.pull_request.number || github.ref }}-${{ inputs.packages != '' && 'recovery' || 'normal' }}
+  cancel-in-progress: false
 
 # Build waves may run concurrently.  They use run-scoped artifacts and each
 # publication re-seeds from the then-current repository, so concurrent work
@@ -47,6 +70,10 @@ jobs:
       stage2: ${{ steps.matrix.outputs.stage2 }}
       stage3: ${{ steps.matrix.outputs.stage3 }}
       stage4: ${{ steps.matrix.outputs.stage4 }}
+      stage0_late: ${{ steps.matrix.outputs.stage0_late }}
+      stage1_heavy: ${{ steps.matrix.outputs.stage1_heavy }}
+      stage2_late: ${{ steps.matrix.outputs.stage2_late }}
+      stage3_late: ${{ steps.matrix.outputs.stage3_late }}
       build_list: ${{ steps.matrix.outputs.build_list }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -60,17 +87,46 @@ jobs:
           python3 -m unittest discover -s tests -v
       - name: Install zstandard
         run: pip install --quiet zstandard
+      - name: Seed skip-list from the building accumulator
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          owner=$(echo "${{ github.repository_owner }}" | tr "[:upper:]" "[:lower:]")
+          mkdir -p /tmp/accumulator
+          echo "${GITHUB_TOKEN}" | podman login ghcr.io -u "${{ github.actor }}" --password-stdin 2>/dev/null || true
+          for image in "ghcr.io/${owner}/utah-packages:building" "ghcr.io/${owner}/utah-packages:latest"; do
+            if podman pull "$image" 2>/dev/null; then
+              container=$(podman create "$image")
+              podman cp "$container:/repository/." /tmp/accumulator/ || true
+              podman rm "$container"
+              echo "seeded from $image"
+              break
+            fi
+          done
+          # Serve the local accumulator for FACTORY_REPO later in this run.
+          # The prepare job is only computing the matrix here; the actual
+          # serving happens via the FACTORY_REPO default below.
       - id: matrix
         env:
           FULL: ${{ github.event_name == 'workflow_dispatch' && inputs.full == true && '1' || '0' }}
+          SELECTED_PACKAGES: ${{ github.event_name == 'workflow_dispatch' && inputs.packages || '' }}
           BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
         run: |
           python3 - <<'PY'
-          import json, os, re, subprocess, urllib.request, gzip, io, sys
+          import hashlib, json, os, re, subprocess, urllib.request, gzip, io, sys, tomllib
           from pathlib import Path
+          from tools.build_identity import identity
+          from tools.recipe import recipe_name
 
           config = json.loads(Path('config/upstream-sources.json').read_text())
           full = os.environ.get('FULL') == '1'
+          selected_raw = os.environ.get('SELECTED_PACKAGES', '')
+          selected = {item.strip() for item in selected_raw.split(',') if item.strip()}
+          known = {item['name'] for item in config['packages']}
+          unknown = selected - known
+          if unknown:
+              raise SystemExit(f"unknown selected packages: {', '.join(sorted(unknown))}")
           changed = set()
           base = os.environ.get('BASE_SHA', '')
           if not full and re.fullmatch(r'[0-9a-f]{40}', base or '') and set(base) != {'0'}:
@@ -83,29 +139,81 @@ jobs:
               }
               print(f"changed package recipes: {', '.join(sorted(changed)) or 'none'}")
 
-          # Fetch the currently published repo so we only rebuild what is new
-          # or changed. Matching is name + normalized version: Fedora's spec
-          # Version rewrites the tarball's '.' to '~' (gnome-shell 51.beta ->
-          # 51~beta), so normalize '~' to '.' on both sides. A mismatch just
-          # rebuilds a package we could have skipped -- safe, only slower.
+          # Read the currently built set so we only rebuild what is new or
+          # changed. Prefer the local :building accumulator seeded above (it
+          # carries every success across waves, including waves that never
+          # reached `publish`); fall back to the published Pages repo. Version
+          # matching alone is unsafe: a recipe, source lock, factory policy, or
+          # Hummingbird base can change without changing Version. Check the
+          # exact build identity when a checkpoint manifest is available.
           published = {}
+          published_keys = {}
+          published_outputs = {}
+          accumulator_root = None
+
+          def harvest(primary_bytes):
+              for m in re.finditer(rb'<package[^>]*>.*?<name>([^<]+)</name>.*?<version[^>]*ver="([^"]+)"', primary_bytes, re.S):
+                  published[m.group(1).decode()] = m.group(2).decode()
+
+          def read_local_repo(root):
+              global accumulator_root
+              manifest = Path(root) / 'factory-build-manifest.json'
+              if manifest.is_file():
+                  try:
+                      data = json.loads(manifest.read_text())
+                      for name, value in data.get('packages', {}).items():
+                          if not isinstance(value, dict) or not isinstance(value.get('build_key'), str):
+                              continue
+                          published_keys[name] = value['build_key']
+                          published_outputs[name] = value.get('outputs', [])
+                  except (OSError, ValueError, TypeError, AttributeError):
+                      print('WARNING: ignoring invalid factory build manifest', file=sys.stderr)
+              repomd = Path(root) / "repodata" / "repomd.xml"
+              if not repomd.is_file():
+                  return False
+              href = re.search(r'<location href="([^"]*primary[^"]*)"', repomd.read_text()).group(1)
+              raw = (Path(root) / href).read_bytes()
+              if href.endswith('.zst'):
+                  import zstandard
+                  harvest(zstandard.ZstdDecompressor().stream_reader(io.BytesIO(raw)).read())
+              else:
+                  harvest(gzip.GzipFile(fileobj=io.BytesIO(raw)).read())
+              accumulator_root = Path(root)
+              return True
+
+          def outputs_match(name):
+              records = published_outputs.get(name, [])
+              if not records or accumulator_root is None:
+                  return False
+              for record in records:
+                  if not isinstance(record, dict) or not isinstance(record.get('file'), str) or not isinstance(record.get('sha256'), str):
+                      return False
+                  candidates = list(accumulator_root.rglob(Path(record['file']).name))
+                  if not any(
+                      candidate.is_file()
+                      and hashlib.sha256(candidate.read_bytes()).hexdigest() == record['sha256']
+                      for candidate in candidates
+                  ):
+                      return False
+              return True
+
           if not full:
               try:
-                  base = "https://projectbluefin.github.io/utah-packages/"
-                  repomd = urllib.request.urlopen(base + "repodata/repomd.xml", timeout=60).read().decode()
-                  href = re.search(r'<location href="([^"]*primary[^"]*)"', repomd).group(1)
-                  raw = urllib.request.urlopen(base + href, timeout=120).read()
-                  if href.endswith('.zst'):
-                      import zstandard
-                      stream = zstandard.ZstdDecompressor().stream_reader(io.BytesIO(raw))
+                  if read_local_repo("/tmp/accumulator"):
+                      print(f"accumulator has {len(published)} packages")
                   else:
-                      stream = gzip.GzipFile(fileobj=io.BytesIO(raw))
-                  text = stream.read()
-                  for m in re.finditer(rb'<package[^>]*>.*?<name>([^<]+)</name>.*?<version[^>]*ver="([^"]+)"', text, re.S):
-                      published[m.group(1).decode()] = m.group(2).decode()
-                  print(f"published repo has {len(published)} packages")
+                      base = "https://projectbluefin.github.io/utah-packages/"
+                      repomd = urllib.request.urlopen(base + "repodata/repomd.xml", timeout=60).read().decode()
+                      href = re.search(r'<location href="([^"]*primary[^"]*)"', repomd).group(1)
+                      raw = urllib.request.urlopen(base + href, timeout=120).read()
+                      if href.endswith('.zst'):
+                          import zstandard
+                          harvest(zstandard.ZstdDecompressor().stream_reader(io.BytesIO(raw)).read())
+                      else:
+                          harvest(gzip.GzipFile(fileobj=io.BytesIO(raw)).read())
+                      print(f"published repo has {len(published)} packages")
               except Exception as error:
-                  print(f"WARNING: could not read published repo, rebuilding all: {error}", file=sys.stderr)
+                  print(f"WARNING: could not read prior repo, rebuilding all: {error}", file=sys.stderr)
 
           def norm(version: str) -> str:
               return version.replace('~', '.')
@@ -114,15 +222,66 @@ jobs:
           for package in config['packages']:
               name = package['name']
               version = package.get('version', '')
-              if full or name in changed or name not in published or norm(published[name]) != norm(version):
+              expected_key = identity(name)['build_key']
+              identity_matches = (
+                  published_keys.get(name) == expected_key
+                  and outputs_match(name)
+              )
+              # A selected recovery package is intentionally forced through
+              # the build even when a stale result with the same version exists.
+              if selected:
+                  should_build = name in selected
+              else:
+                  should_build = (
+                      full
+                      # A shard shares its recipe directory with another
+                      # entry; an edit there is a change to both.
+                      or recipe_name(package) in changed
+                      or name not in published
+                      or norm(published[name]) != norm(version)
+                      or not identity_matches
+                  )
+              if should_build:
                   build.append(package)
               else:
                   print(f"skip {name} {version}: already published")
 
+          # Numeric stages remain the conservative repository-ordering
+          # boundary. Within them, these explicitly reviewed late closures may
+          # proceed independently: WebKitGTK/mozjs140, then gjs, then the
+          # WebKit/GNOME shell consumers. Everything else stays in its normal
+          # stage and cannot outrun an unclassified dependency.
+          invalid_stages = [
+              p['name'] for p in build
+              if not isinstance(p.get('stage', 0), int) or not 0 <= p.get('stage', 0) <= 4
+          ]
+          if invalid_stages:
+              raise SystemExit(f"unsupported stage for packages: {', '.join(sorted(invalid_stages))}")
+          lane_config = tomllib.loads(Path('config/build-lanes.toml').read_text())
+          late0 = set(lane_config.get('stage0_late', {}).get('packages', []))
+          heavy1 = set(lane_config.get('stage1_heavy', {}).get('packages', []))
+          late2 = set(lane_config.get('stage2_late', {}).get('packages', []))
+          late3 = set(lane_config.get('stage3_late', {}).get('packages', []))
+          configured = late0 | heavy1 | late2 | late3
+          if not configured <= {p['name'] for p in config['packages']}:
+              raise SystemExit('build lane config names packages absent from source manifest')
           outputs = {'build_list': json.dumps([p['name'] for p in build])}
-          for n in range(5):
-              outputs[f'stage{n}'] = json.dumps(
-                  [p['name'] for p in build if (p.get('stage') or 0) == n])
+          lanes = {
+              'stage0': [p['name'] for p in build if (p.get('stage') or 0) == 0 and p['name'] not in late0],
+              'stage0_late': [p['name'] for p in build if (p.get('stage') or 0) == 0 and p['name'] in late0],
+              'stage1': [p['name'] for p in build if (p.get('stage') or 0) == 1 and p['name'] not in heavy1],
+              'stage1_heavy': [p['name'] for p in build if (p.get('stage') or 0) == 1 and p['name'] in heavy1],
+              'stage2': [p['name'] for p in build if (p.get('stage') or 0) == 2 and p['name'] not in late2],
+              'stage2_late': [p['name'] for p in build if (p.get('stage') or 0) == 2 and p['name'] in late2],
+              'stage3': [p['name'] for p in build if (p.get('stage') or 0) == 3 and p['name'] not in late3],
+              'stage3_late': [p['name'] for p in build if (p.get('stage') or 0) == 3 and p['name'] in late3],
+              'stage4': [p['name'] for p in build if (p.get('stage') or 0) == 4],
+          }
+          assigned = set().union(*(set(items) for items in lanes.values()))
+          if assigned != {p['name'] for p in build}:
+              raise SystemExit('lane assignment does not cover build_list exactly')
+          for name, packages in lanes.items():
+              outputs[name] = json.dumps(packages)
           with open(os.environ['GITHUB_OUTPUT'], 'a') as handle:
               for key, value in outputs.items():
                   handle.write(f'{key}={value}\n')
@@ -149,7 +308,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Resolve BuildRequires for packages being built
         env:
-          FACTORY_REPO: ${{ vars.FACTORY_REPO }}
+          FACTORY_REPO: ${{ vars.FACTORY_REPO || 'https://projectbluefin.github.io/utah-packages/' }}
           BUILD_LIST: ${{ needs.prepare.outputs.build_list }}
         run: |
           mkdir -p work/reports
@@ -226,1055 +385,205 @@ jobs:
   rebuild0:
     needs: prepare
     if: needs.prepare.outputs.stage0 != '[]'
-    strategy:
-      fail-fast: false
-      matrix:
-        package: ${{ fromJSON(needs.prepare.outputs.stage0) }}
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - uses: ./.github/actions/setup-sccache
-      - name: Add best-effort swap for Firefox PGO/LTO
-        if: matrix.package == 'firefox'
-        run: |
-          set -euo pipefail
-          available_gib=$(df --output=avail -BG "$RUNNER_TEMP" | tail -n1 | tr -dc 0-9)
-          if [ "$available_gib" -lt 20 ]; then
-            echo "Only ${available_gib} GiB free; skipping extra swap to preserve build disk" >&2
-            exit 0
-          fi
-          swapfile="$RUNNER_TEMP/firefox-pgo.swap"
-          sudo fallocate -l 12G "$swapfile"
-          sudo chmod 600 "$swapfile"
-          sudo mkswap "$swapfile"
-          sudo swapon "$swapfile" || { echo "Host does not permit extra swap" >&2; exit 0; }
-          free -h
-      - name: Fetch and verify direct upstream source
-        env:
-          PACKAGE: ${{ matrix.package }}
-        run: |
-          python3 tools/source_pipeline.py "$PACKAGE" --output work/sources --report-dir work/reports
-      - name: Build the verified source with its RPM recipe
-        env:
-          PACKAGE: ${{ matrix.package }}
-          FACTORY_REPO: ${{ vars.FACTORY_REPO }}
-        run: |
-          test -d "packages/$PACKAGE"
-          mkdir -p work/result
-          # Per-package, so it is resolved out here rather than inside the
-          # container, which only sees config/ and packages/.
-          DIST_BUMP="$(python3 tools/dist_bump.py "$PACKAGE")"
-          export DIST_BUMP
-          docker run --rm --privileged \
-            -e PACKAGE -e FACTORY_REPO -e DIST_BUMP \
-            -v "$PWD/work:/work:Z" \
-            -v "$PWD/packages:/packages:ro,Z" \
-            -v "$PWD/config:/repos:ro,Z" \
-            quay.io/fedora/fedora:44 bash -exc '
-              # The fedora:rawhide image ships fedora-cisco-openh264 enabled, but
-              # its packages are signed with Cisco key, which the image does not
-              # trust -- so any builddep graph reaching gstreamer/pipewire dies on
-              # "Import of the key did not help, wrong key?". openh264 is a runtime
-              # codec, never a build requirement, and Fedora own noopenh264 provides
-              # the same libopenh264.so.8 soname, so disabling the repo resolves.
-              disable=--disablerepo=fedora-cisco-openh264
-              # The Fedora container images set tsflags=nodocs, so every %doc file is
-              # dropped at install time. rand_core ships its crate docs that way and
-              # its lib.rs does #![doc = include_str!("../README.md")], so rust-just
-              # failed to compile: rustc could not read ../README.md. Nothing was wrong
-              # with the Fedora package: mock installs docs into a build root, and
-              # this container was not. Restore that.
-              sed -i "/^tsflags=nodocs/d" /etc/dnf/dnf.conf
-              # Fedora 44 plus Hummingbird, mirroring Hummingbird mock.cfg:
-              # Fedora release repos with its own Pulp repos shadowing them by
-              # priority. Proven correct by this job own diagnostic below --
-              # openssl 3.5.7 means libcrypto.so.3, the ABI Hummingbird has.
-              # A Rawhide root produced RPMs needing libcrypto.so.4 instead.
-              cp /repos/hummingbird.repo /etc/yum.repos.d/
-              # RPMs from earlier stages become a local repo, so a later stage
-              # can satisfy a BuildRequires on something this run just built.
-              # The guard must recurse: upload-artifact takes the common parent
-              # of its path globs as the artifact root, so an artifact declaring
-              # work/result/*.rpm and work/reports/*.json unpacks as
-              # prior/result/*.rpm, not prior/*.rpm. A non-recursive glob matched
-              # nothing, this block was silently skipped in every stage, and
-              # mutter resolved gsettings-desktop-schemas to Fedora 50.1 instead
-              # of the 51.beta stage 0 had just built. createrepo_c itself walks
-              # the tree, so only the test needed fixing.
-              if [ -n "$(find /work/prior -name "*.rpm" -print -quit 2>/dev/null)" ]; then
-                dnf -y $disable install createrepo_c
-                createrepo_c /work/prior
-                printf "[stages]\nname=stages\nbaseurl=file:///work/prior\nenabled=1\ngpgcheck=0\npriority=1\n" \
-                  > /etc/yum.repos.d/stages.repo
-                # priority alone does not keep Fedora out. gnome-control-center
-                # pulled Fedora accountsservice 23.13.9 even though stage 0 had
-                # built 26.27.3 and [stages] was priority 1: the Fedora main
-                # package entered the transaction and pinned accountsservice-libs
-                # to its exact NEVR, so our libs could not be installed and our
-                # devel, which needs them, was dropped --
-                #   cannot install both accountsservice-libs-26.27.3 from stages
-                #                   and accountsservice-libs-23.13.9-16.fc44 from fedora
-                # Excluding by name is what settles it: whatever an earlier stage
-                # built, Fedora must not answer for. Names come from rpm rather
-                # than from parsing filenames, which stops working the moment a
-                # disttag changes.
-                EXCLUDE=$(find /work/prior -name "*.rpm" -type f -print0 \
-                  | xargs -0 -r rpm -qp --qf "%{NAME}\n" 2>/dev/null \
-                  | sort -u | paste -sd, -)
-                echo "excluding from Fedora: $EXCLUDE"
-              fi
-              # Hummingbird ships newer versions of some names than Fedora 44
-              # does, and the two must never mix in one transaction. The
-              # conflicts this prevents are real: libicu 78.3 (hum) vs 77.1
-              # (fc44) broke samba and evolution-data-server, and Fedora ruby
-              # 3.3/3.4-default-gems vs Hummingbird ruby4.0-default-gems broke
-              # webkitgtk, colord, libnotify and zsh. Always prefer the
-              # Hummingbird copy by excluding these names from Fedora.
-              # Unconditional: stage 0 has no prior RPMs, so the block above
-              # never ran and EXCLUDE would otherwise be empty here.
-              HB_EXCLUDE="ruby-default-gems,ruby3.3-default-gems,ruby3.4-default-gems,libicu,icu,gpgme,qt6-qtbase"
-              EXCLUDE="${HB_EXCLUDE}${EXCLUDE:+,}${EXCLUDE}"
-              echo "hummingbird exclusions: $HB_EXCLUDE"
-              if [ -n "${FACTORY_REPO:-}" ]; then
-                printf "[factory]\nname=factory\nbaseurl=%s\nenabled=1\ngpgcheck=0\npriority=5\n" \
-                  "$FACTORY_REPO" > /etc/yum.repos.d/factory.repo
-              fi
-              # The plain fedora image is not a build root: it lacks the group mock
-              # installs, so /usr/bin/echo and friends are missing. Most packages pull
-              # them in transitively; squashfs-tools calls echo directly from its
-              # manpage installer and fails without it.
-              dnf -y $disable install dnf-plugins-core mock rpm-build @buildsys-build
-              rpm -q --qf "buildroot openssl: %{VERSION}-%{RELEASE}\n" openssl-libs || true
-              # NO APOSTROPHES IN THIS SCRIPT. It is the body of bash -exc
-              # a single-quoted string, so one closes it and everything after
-              # is reparsed. That is what the stilted "Fedora own
-              # noopenh264" and "this job own diagnostic" above are avoiding.
-              # Three apostrophes in this very comment took out all 36 stage 0
-              # jobs at once, in under two minutes, with no clue in the log.
-              #
-              # The AlmaLinux convention, one distro over. They keep the vendor
-              # release and dist and append to it -- their dnf is
-              # 4.14.0-34.el9_8.alma.1 against 34.el9_8 from Red Hat, and both
-              # .alma and .alma.N appear in their repositories.
-              #
-              # The vendor here is Hummingbird, not Fedora. These packages are
-              # built for Hummingbird and installed on Hummingbird; Fedora 44 is
-              # only the other half of the buildroot, the way a compiler is. An
-              # earlier version of this tagged them .fc44.bfin, which named the
-              # distribution they are not for.
-              #
-              # The tag is read from the Hummingbird packages present in the
-              # buildroot rather than hardcoded, so a move to hum2 carries
-              # itself. A buildroot containing none of them is a repository
-              # misconfiguration -- the exact failure this factory exists to
-              # avoid -- so it stops rather than quietly tagging something else.
-              HUM_TAG="$(rpm -qa --qf "%{RELEASE}\n" | grep -oE "hum[0-9]+$" | sort -u | head -n1)"
-              if [ -z "$HUM_TAG" ]; then
-                echo "No Hummingbird package in the buildroot; cannot derive a disttag" >&2
-                rpm -qa --qf "%{NAME} %{RELEASE}\n" | sort | head -20 >&2
-                exit 1
-              fi
-              DISTTAG=".${HUM_TAG}.bfin${DIST_BUMP:-}"
-              echo "disttag: $DISTTAG"
-              # libratbag %check starts ratbagd, which calls
-              # Gio.bus_get_sync(Gio.BusType.SYSTEM) and dies with "Could not
-              # connect: No such file or directory" -- a plain container has no
-              # system bus socket. Seven of its ten suites already pass and the
-              # failing one is a real test, so give the build root a bus rather
-              # than disabling the test. Non-fatal: no other package needs it.
-              dnf -y $disable install dbus-daemon || true
-              mkdir -p /run/dbus
-              dbus-daemon --system --fork || true
-              # mock defines USER in its build root; a bare container does not.
-              # just 1.57.0 tests/functions.rs:88 calls env::var("USER").unwrap()
-              # and panicked with NotPresent -- 1823 tests passed, that one did
-              # not. Same shape as the missing system bus: supply what a real
-              # build root has rather than disable the test.
-              export USER="${USER:-root}"
-              export LOGNAME="${LOGNAME:-$USER}"
-              spec=$(find "/packages/$PACKAGE" -maxdepth 1 -name "*.spec" -print -quit)
-              test -n "$spec"
-              dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
-                ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$spec"
-              # An imported spec keeps its dist-git PatchN and auxiliary SourceN
-              # files next to itself, while the verified upstream archive lands in
-              # /work/sources. rpmbuild takes a single _sourcedir, so stage both:
-              # recipe files first, then the verified archive, which therefore wins
-              # over anything of the same name carried in the import.
-              staged=/work/staged/$PACKAGE
-              rm -rf "$staged"
-              mkdir -p "$staged"
-              cp -a "/packages/$PACKAGE/." "$staged/"
-              cp -a "/work/sources/$PACKAGE/." "$staged/"
-              # Packages with %generate_buildrequires -- every Rust one -- compute
-              # their real BuildRequires during the build, so the spec alone does not
-              # list them and rpmbuild exits 11 asking to be re-run. Install what the
-              # generated source RPM declares and retry, bounded so an unsatisfiable
-              # requirement fails instead of looping.
-              for _ in 1 2 3 4 5; do
-                rm -f /root/rpmbuild/SRPMS/*.buildreqs.nosrc.rpm
-                if rpmbuild -br "$spec" --define "_sourcedir $staged" \
-                     --define "dist $DISTTAG"; then break; fi
-                generated=$(ls /root/rpmbuild/SRPMS/*.buildreqs.nosrc.rpm 2>/dev/null | head -1)
-                test -n "$generated"
-                dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
-                  ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$generated"
-              done
-              rpmbuild -ba "$spec" \
-                --define "_sourcedir $staged" \
-                --define "dist $DISTTAG" \
-                --define "_rpmdir /work/result"
-              find /work/result -name "*.rpm" -type f -print0 | \
-                xargs -0 -r rpm -qp --qf "%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n"
-              # A build that produced no RPM must fail here. if-no-files-found on
-              # the upload cannot catch it: the artifact also carries
-              # work/reports/*.json, so one file always matches and the upload
-              # reports success while shipping no packages at all.
-              test -n "$(find /work/result -name "*.rpm" -type f -print -quit)"
-            '
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        with:
-          name: rpm-s0-${{ matrix.package }}
-          path: |
-            work/result/**/*.rpm
-            work/reports/*.json
-          if-no-files-found: error
+    uses: ./.github/workflows/rebuild-lane.yml
+    with:
+      lane: s0
+      packages: ${{ needs.prepare.outputs.stage0 }}
+      runner: ubuntu-24.04
+      timeout: '180'
+    secrets: inherit
+
+  rebuild0_late:
+    needs: [prepare, rebuild0]
+    if: ${{ always() && !cancelled() && needs.prepare.outputs.stage0_late != '[]' }}
+    uses: ./.github/workflows/rebuild-lane.yml
+    with:
+      lane: s0-late
+      packages: ${{ needs.prepare.outputs.stage0_late }}
+      runner: ubuntu-24.04
+      timeout: '180'
+    secrets: inherit
 
   rebuild1:
-    needs: [prepare, rebuild0]
+    needs: [prepare, rebuild0, rebuild0_late]
     if: ${{ !cancelled() && needs.prepare.outputs.stage1 != '[]' }}
-    strategy:
-      fail-fast: false
-      matrix:
-        package: ${{ fromJSON(needs.prepare.outputs.stage1) }}
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - uses: ./.github/actions/setup-sccache
-      - name: Collect RPMs built by earlier stages
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
-        with:
-          pattern: rpm-*
-          path: work/prior
-          merge-multiple: true
-        continue-on-error: true
-      - name: Fetch and verify direct upstream source
-        env:
-          PACKAGE: ${{ matrix.package }}
-        run: |
-          python3 tools/source_pipeline.py "$PACKAGE" --output work/sources --report-dir work/reports
-      - name: Build the verified source with its RPM recipe
-        env:
-          PACKAGE: ${{ matrix.package }}
-          FACTORY_REPO: ${{ vars.FACTORY_REPO }}
-        run: |
-          test -d "packages/$PACKAGE"
-          mkdir -p work/result
-          # Per-package, so it is resolved out here rather than inside the
-          # container, which only sees config/ and packages/.
-          DIST_BUMP="$(python3 tools/dist_bump.py "$PACKAGE")"
-          export DIST_BUMP
-          docker run --rm --privileged \
-            -e PACKAGE -e FACTORY_REPO -e DIST_BUMP \
-            -v "$PWD/work:/work:Z" \
-            -v "$PWD/packages:/packages:ro,Z" \
-            -v "$PWD/config:/repos:ro,Z" \
-            quay.io/fedora/fedora:44 bash -exc '
-              # The fedora:rawhide image ships fedora-cisco-openh264 enabled, but
-              # its packages are signed with Cisco key, which the image does not
-              # trust -- so any builddep graph reaching gstreamer/pipewire dies on
-              # "Import of the key did not help, wrong key?". openh264 is a runtime
-              # codec, never a build requirement, and Fedora own noopenh264 provides
-              # the same libopenh264.so.8 soname, so disabling the repo resolves.
-              disable=--disablerepo=fedora-cisco-openh264
-              # The Fedora container images set tsflags=nodocs, so every %doc file is
-              # dropped at install time. rand_core ships its crate docs that way and
-              # its lib.rs does #![doc = include_str!("../README.md")], so rust-just
-              # failed to compile: rustc could not read ../README.md. Nothing was wrong
-              # with the Fedora package: mock installs docs into a build root, and
-              # this container was not. Restore that.
-              sed -i "/^tsflags=nodocs/d" /etc/dnf/dnf.conf
-              # Fedora 44 plus Hummingbird, mirroring Hummingbird mock.cfg:
-              # Fedora release repos with its own Pulp repos shadowing them by
-              # priority. Proven correct by this job own diagnostic below --
-              # openssl 3.5.7 means libcrypto.so.3, the ABI Hummingbird has.
-              # A Rawhide root produced RPMs needing libcrypto.so.4 instead.
-              cp /repos/hummingbird.repo /etc/yum.repos.d/
-              # RPMs from earlier stages become a local repo, so a later stage
-              # can satisfy a BuildRequires on something this run just built.
-              # The guard must recurse: upload-artifact takes the common parent
-              # of its path globs as the artifact root, so an artifact declaring
-              # work/result/*.rpm and work/reports/*.json unpacks as
-              # prior/result/*.rpm, not prior/*.rpm. A non-recursive glob matched
-              # nothing, this block was silently skipped in every stage, and
-              # mutter resolved gsettings-desktop-schemas to Fedora 50.1 instead
-              # of the 51.beta stage 0 had just built. createrepo_c itself walks
-              # the tree, so only the test needed fixing.
-              if [ -n "$(find /work/prior -name "*.rpm" -print -quit 2>/dev/null)" ]; then
-                dnf -y $disable install createrepo_c
-                createrepo_c /work/prior
-                printf "[stages]\nname=stages\nbaseurl=file:///work/prior\nenabled=1\ngpgcheck=0\npriority=1\n" \
-                  > /etc/yum.repos.d/stages.repo
-                # priority alone does not keep Fedora out. gnome-control-center
-                # pulled Fedora accountsservice 23.13.9 even though stage 0 had
-                # built 26.27.3 and [stages] was priority 1: the Fedora main
-                # package entered the transaction and pinned accountsservice-libs
-                # to its exact NEVR, so our libs could not be installed and our
-                # devel, which needs them, was dropped --
-                #   cannot install both accountsservice-libs-26.27.3 from stages
-                #                   and accountsservice-libs-23.13.9-16.fc44 from fedora
-                # Excluding by name is what settles it: whatever an earlier stage
-                # built, Fedora must not answer for. Names come from rpm rather
-                # than from parsing filenames, which stops working the moment a
-                # disttag changes.
-                EXCLUDE=$(find /work/prior -name "*.rpm" -type f -print0 \
-                  | xargs -0 -r rpm -qp --qf "%{NAME}\n" 2>/dev/null \
-                  | sort -u | paste -sd, -)
-                echo "excluding from Fedora: $EXCLUDE"
-              fi
-              # Hummingbird ships newer versions of some names than Fedora 44
-              # does, and the two must never mix in one transaction. The
-              # conflicts this prevents are real: libicu 78.3 (hum) vs 77.1
-              # (fc44) broke samba and evolution-data-server, and Fedora ruby
-              # 3.3/3.4-default-gems vs Hummingbird ruby4.0-default-gems broke
-              # webkitgtk, colord, libnotify and zsh. Always prefer the
-              # Hummingbird copy by excluding these names from Fedora.
-              # Unconditional: stage 0 has no prior RPMs, so the block above
-              # never ran and EXCLUDE would otherwise be empty here.
-              HB_EXCLUDE="ruby-default-gems,ruby3.3-default-gems,ruby3.4-default-gems,libicu,icu,gpgme,qt6-qtbase"
-              EXCLUDE="${HB_EXCLUDE}${EXCLUDE:+,}${EXCLUDE}"
-              echo "hummingbird exclusions: $HB_EXCLUDE"
-              if [ -n "${FACTORY_REPO:-}" ]; then
-                printf "[factory]\nname=factory\nbaseurl=%s\nenabled=1\ngpgcheck=0\npriority=5\n" \
-                  "$FACTORY_REPO" > /etc/yum.repos.d/factory.repo
-              fi
-              # The plain fedora image is not a build root: it lacks the group mock
-              # installs, so /usr/bin/echo and friends are missing. Most packages pull
-              # them in transitively; squashfs-tools calls echo directly from its
-              # manpage installer and fails without it.
-              dnf -y $disable install dnf-plugins-core mock rpm-build @buildsys-build
-              rpm -q --qf "buildroot openssl: %{VERSION}-%{RELEASE}\n" openssl-libs || true
-              # NO APOSTROPHES IN THIS SCRIPT. It is the body of bash -exc
-              # a single-quoted string, so one closes it and everything after
-              # is reparsed. That is what the stilted "Fedora own
-              # noopenh264" and "this job own diagnostic" above are avoiding.
-              # Three apostrophes in this very comment took out all 36 stage 0
-              # jobs at once, in under two minutes, with no clue in the log.
-              #
-              # The AlmaLinux convention, one distro over. They keep the vendor
-              # release and dist and append to it -- their dnf is
-              # 4.14.0-34.el9_8.alma.1 against 34.el9_8 from Red Hat, and both
-              # .alma and .alma.N appear in their repositories.
-              #
-              # The vendor here is Hummingbird, not Fedora. These packages are
-              # built for Hummingbird and installed on Hummingbird; Fedora 44 is
-              # only the other half of the buildroot, the way a compiler is. An
-              # earlier version of this tagged them .fc44.bfin, which named the
-              # distribution they are not for.
-              #
-              # The tag is read from the Hummingbird packages present in the
-              # buildroot rather than hardcoded, so a move to hum2 carries
-              # itself. A buildroot containing none of them is a repository
-              # misconfiguration -- the exact failure this factory exists to
-              # avoid -- so it stops rather than quietly tagging something else.
-              HUM_TAG="$(rpm -qa --qf "%{RELEASE}\n" | grep -oE "hum[0-9]+$" | sort -u | head -n1)"
-              if [ -z "$HUM_TAG" ]; then
-                echo "No Hummingbird package in the buildroot; cannot derive a disttag" >&2
-                rpm -qa --qf "%{NAME} %{RELEASE}\n" | sort | head -20 >&2
-                exit 1
-              fi
-              DISTTAG=".${HUM_TAG}.bfin${DIST_BUMP:-}"
-              echo "disttag: $DISTTAG"
-              # libratbag %check starts ratbagd, which calls
-              # Gio.bus_get_sync(Gio.BusType.SYSTEM) and dies with "Could not
-              # connect: No such file or directory" -- a plain container has no
-              # system bus socket. Seven of its ten suites already pass and the
-              # failing one is a real test, so give the build root a bus rather
-              # than disabling the test. Non-fatal: no other package needs it.
-              dnf -y $disable install dbus-daemon || true
-              mkdir -p /run/dbus
-              dbus-daemon --system --fork || true
-              # mock defines USER in its build root; a bare container does not.
-              # just 1.57.0 tests/functions.rs:88 calls env::var("USER").unwrap()
-              # and panicked with NotPresent -- 1823 tests passed, that one did
-              # not. Same shape as the missing system bus: supply what a real
-              # build root has rather than disable the test.
-              export USER="${USER:-root}"
-              export LOGNAME="${LOGNAME:-$USER}"
-              spec=$(find "/packages/$PACKAGE" -maxdepth 1 -name "*.spec" -print -quit)
-              test -n "$spec"
-              dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
-                ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$spec"
-              # An imported spec keeps its dist-git PatchN and auxiliary SourceN
-              # files next to itself, while the verified upstream archive lands in
-              # /work/sources. rpmbuild takes a single _sourcedir, so stage both:
-              # recipe files first, then the verified archive, which therefore wins
-              # over anything of the same name carried in the import.
-              staged=/work/staged/$PACKAGE
-              rm -rf "$staged"
-              mkdir -p "$staged"
-              cp -a "/packages/$PACKAGE/." "$staged/"
-              cp -a "/work/sources/$PACKAGE/." "$staged/"
-              # Packages with %generate_buildrequires -- every Rust one -- compute
-              # their real BuildRequires during the build, so the spec alone does not
-              # list them and rpmbuild exits 11 asking to be re-run. Install what the
-              # generated source RPM declares and retry, bounded so an unsatisfiable
-              # requirement fails instead of looping.
-              for _ in 1 2 3 4 5; do
-                rm -f /root/rpmbuild/SRPMS/*.buildreqs.nosrc.rpm
-                if rpmbuild -br "$spec" --define "_sourcedir $staged" \
-                     --define "dist $DISTTAG"; then break; fi
-                generated=$(ls /root/rpmbuild/SRPMS/*.buildreqs.nosrc.rpm 2>/dev/null | head -1)
-                test -n "$generated"
-                dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
-                  ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$generated"
-              done
-              rpmbuild -ba "$spec" \
-                --define "_sourcedir $staged" \
-                --define "dist $DISTTAG" \
-                --define "_rpmdir /work/result"
-              find /work/result -name "*.rpm" -type f -print0 | \
-                xargs -0 -r rpm -qp --qf "%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n"
-              # A build that produced no RPM must fail here. if-no-files-found on
-              # the upload cannot catch it: the artifact also carries
-              # work/reports/*.json, so one file always matches and the upload
-              # reports success while shipping no packages at all.
-              test -n "$(find /work/result -name "*.rpm" -type f -print -quit)"
-            '
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        with:
-          name: rpm-s1-${{ matrix.package }}
-          path: |
-            work/result/**/*.rpm
-            work/reports/*.json
-          if-no-files-found: error
+    uses: ./.github/workflows/rebuild-lane.yml
+    with:
+      lane: s1-fast
+      packages: ${{ needs.prepare.outputs.stage1 }}
+      runner: ubuntu-24.04
+      timeout: '180'
+    secrets: inherit
+
+  rebuild1_heavy:
+    needs: [prepare, rebuild0, rebuild0_late, rebuild1]
+    if: ${{ always() && !cancelled() && needs.prepare.outputs.stage1_heavy != '[]' }}
+    uses: ./.github/workflows/rebuild-lane.yml
+    with:
+      lane: s1-heavy
+      packages: ${{ needs.prepare.outputs.stage1_heavy }}
+      runner: ${{ vars.UTAH_HEAVY_RUNNER || 'ubuntu-24.04' }}
+      timeout: '360'
+    secrets: inherit
 
   rebuild2:
-    needs: [prepare, rebuild0, rebuild1]
+    needs: [prepare, rebuild0, rebuild0_late, rebuild1]
     if: ${{ !cancelled() && needs.prepare.outputs.stage2 != '[]' }}
-    strategy:
-      fail-fast: false
-      matrix:
-        package: ${{ fromJSON(needs.prepare.outputs.stage2) }}
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - uses: ./.github/actions/setup-sccache
-      - name: Collect RPMs built by earlier stages
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
-        with:
-          pattern: rpm-*
-          path: work/prior
-          merge-multiple: true
-        continue-on-error: true
-      - name: Fetch and verify direct upstream source
-        env:
-          PACKAGE: ${{ matrix.package }}
-        run: |
-          python3 tools/source_pipeline.py "$PACKAGE" --output work/sources --report-dir work/reports
-      - name: Build the verified source with its RPM recipe
-        env:
-          PACKAGE: ${{ matrix.package }}
-          FACTORY_REPO: ${{ vars.FACTORY_REPO }}
-        run: |
-          test -d "packages/$PACKAGE"
-          mkdir -p work/result
-          # Per-package, so it is resolved out here rather than inside the
-          # container, which only sees config/ and packages/.
-          DIST_BUMP="$(python3 tools/dist_bump.py "$PACKAGE")"
-          export DIST_BUMP
-          docker run --rm --privileged \
-            -e PACKAGE -e FACTORY_REPO -e DIST_BUMP \
-            -v "$PWD/work:/work:Z" \
-            -v "$PWD/packages:/packages:ro,Z" \
-            -v "$PWD/config:/repos:ro,Z" \
-            quay.io/fedora/fedora:44 bash -exc '
-              # The fedora:rawhide image ships fedora-cisco-openh264 enabled, but
-              # its packages are signed with Cisco key, which the image does not
-              # trust -- so any builddep graph reaching gstreamer/pipewire dies on
-              # "Import of the key did not help, wrong key?". openh264 is a runtime
-              # codec, never a build requirement, and Fedora own noopenh264 provides
-              # the same libopenh264.so.8 soname, so disabling the repo resolves.
-              disable=--disablerepo=fedora-cisco-openh264
-              # The Fedora container images set tsflags=nodocs, so every %doc file is
-              # dropped at install time. rand_core ships its crate docs that way and
-              # its lib.rs does #![doc = include_str!("../README.md")], so rust-just
-              # failed to compile: rustc could not read ../README.md. Nothing was wrong
-              # with the Fedora package: mock installs docs into a build root, and
-              # this container was not. Restore that.
-              sed -i "/^tsflags=nodocs/d" /etc/dnf/dnf.conf
-              # Fedora 44 plus Hummingbird, mirroring Hummingbird mock.cfg:
-              # Fedora release repos with its own Pulp repos shadowing them by
-              # priority. Proven correct by this job own diagnostic below --
-              # openssl 3.5.7 means libcrypto.so.3, the ABI Hummingbird has.
-              # A Rawhide root produced RPMs needing libcrypto.so.4 instead.
-              cp /repos/hummingbird.repo /etc/yum.repos.d/
-              # RPMs from earlier stages become a local repo, so a later stage
-              # can satisfy a BuildRequires on something this run just built.
-              # The guard must recurse: upload-artifact takes the common parent
-              # of its path globs as the artifact root, so an artifact declaring
-              # work/result/*.rpm and work/reports/*.json unpacks as
-              # prior/result/*.rpm, not prior/*.rpm. A non-recursive glob matched
-              # nothing, this block was silently skipped in every stage, and
-              # mutter resolved gsettings-desktop-schemas to Fedora 50.1 instead
-              # of the 51.beta stage 0 had just built. createrepo_c itself walks
-              # the tree, so only the test needed fixing.
-              if [ -n "$(find /work/prior -name "*.rpm" -print -quit 2>/dev/null)" ]; then
-                dnf -y $disable install createrepo_c
-                createrepo_c /work/prior
-                printf "[stages]\nname=stages\nbaseurl=file:///work/prior\nenabled=1\ngpgcheck=0\npriority=1\n" \
-                  > /etc/yum.repos.d/stages.repo
-                # priority alone does not keep Fedora out. gnome-control-center
-                # pulled Fedora accountsservice 23.13.9 even though stage 0 had
-                # built 26.27.3 and [stages] was priority 1: the Fedora main
-                # package entered the transaction and pinned accountsservice-libs
-                # to its exact NEVR, so our libs could not be installed and our
-                # devel, which needs them, was dropped --
-                #   cannot install both accountsservice-libs-26.27.3 from stages
-                #                   and accountsservice-libs-23.13.9-16.fc44 from fedora
-                # Excluding by name is what settles it: whatever an earlier stage
-                # built, Fedora must not answer for. Names come from rpm rather
-                # than from parsing filenames, which stops working the moment a
-                # disttag changes.
-                EXCLUDE=$(find /work/prior -name "*.rpm" -type f -print0 \
-                  | xargs -0 -r rpm -qp --qf "%{NAME}\n" 2>/dev/null \
-                  | sort -u | paste -sd, -)
-                echo "excluding from Fedora: $EXCLUDE"
-              fi
-              # Hummingbird ships newer versions of some names than Fedora 44
-              # does, and the two must never mix in one transaction. The
-              # conflicts this prevents are real: libicu 78.3 (hum) vs 77.1
-              # (fc44) broke samba and evolution-data-server, and Fedora ruby
-              # 3.3/3.4-default-gems vs Hummingbird ruby4.0-default-gems broke
-              # webkitgtk, colord, libnotify and zsh. Always prefer the
-              # Hummingbird copy by excluding these names from Fedora.
-              # Unconditional: stage 0 has no prior RPMs, so the block above
-              # never ran and EXCLUDE would otherwise be empty here.
-              HB_EXCLUDE="ruby-default-gems,ruby3.3-default-gems,ruby3.4-default-gems,libicu,icu,gpgme,qt6-qtbase"
-              EXCLUDE="${HB_EXCLUDE}${EXCLUDE:+,}${EXCLUDE}"
-              echo "hummingbird exclusions: $HB_EXCLUDE"
-              if [ -n "${FACTORY_REPO:-}" ]; then
-                printf "[factory]\nname=factory\nbaseurl=%s\nenabled=1\ngpgcheck=0\npriority=5\n" \
-                  "$FACTORY_REPO" > /etc/yum.repos.d/factory.repo
-              fi
-              # The plain fedora image is not a build root: it lacks the group mock
-              # installs, so /usr/bin/echo and friends are missing. Most packages pull
-              # them in transitively; squashfs-tools calls echo directly from its
-              # manpage installer and fails without it.
-              dnf -y $disable install dnf-plugins-core mock rpm-build @buildsys-build
-              rpm -q --qf "buildroot openssl: %{VERSION}-%{RELEASE}\n" openssl-libs || true
-              # NO APOSTROPHES IN THIS SCRIPT. It is the body of bash -exc
-              # a single-quoted string, so one closes it and everything after
-              # is reparsed. That is what the stilted "Fedora own
-              # noopenh264" and "this job own diagnostic" above are avoiding.
-              # Three apostrophes in this very comment took out all 36 stage 0
-              # jobs at once, in under two minutes, with no clue in the log.
-              #
-              # The AlmaLinux convention, one distro over. They keep the vendor
-              # release and dist and append to it -- their dnf is
-              # 4.14.0-34.el9_8.alma.1 against 34.el9_8 from Red Hat, and both
-              # .alma and .alma.N appear in their repositories.
-              #
-              # The vendor here is Hummingbird, not Fedora. These packages are
-              # built for Hummingbird and installed on Hummingbird; Fedora 44 is
-              # only the other half of the buildroot, the way a compiler is. An
-              # earlier version of this tagged them .fc44.bfin, which named the
-              # distribution they are not for.
-              #
-              # The tag is read from the Hummingbird packages present in the
-              # buildroot rather than hardcoded, so a move to hum2 carries
-              # itself. A buildroot containing none of them is a repository
-              # misconfiguration -- the exact failure this factory exists to
-              # avoid -- so it stops rather than quietly tagging something else.
-              HUM_TAG="$(rpm -qa --qf "%{RELEASE}\n" | grep -oE "hum[0-9]+$" | sort -u | head -n1)"
-              if [ -z "$HUM_TAG" ]; then
-                echo "No Hummingbird package in the buildroot; cannot derive a disttag" >&2
-                rpm -qa --qf "%{NAME} %{RELEASE}\n" | sort | head -20 >&2
-                exit 1
-              fi
-              DISTTAG=".${HUM_TAG}.bfin${DIST_BUMP:-}"
-              echo "disttag: $DISTTAG"
-              # libratbag %check starts ratbagd, which calls
-              # Gio.bus_get_sync(Gio.BusType.SYSTEM) and dies with "Could not
-              # connect: No such file or directory" -- a plain container has no
-              # system bus socket. Seven of its ten suites already pass and the
-              # failing one is a real test, so give the build root a bus rather
-              # than disabling the test. Non-fatal: no other package needs it.
-              dnf -y $disable install dbus-daemon || true
-              mkdir -p /run/dbus
-              dbus-daemon --system --fork || true
-              # mock defines USER in its build root; a bare container does not.
-              # just 1.57.0 tests/functions.rs:88 calls env::var("USER").unwrap()
-              # and panicked with NotPresent -- 1823 tests passed, that one did
-              # not. Same shape as the missing system bus: supply what a real
-              # build root has rather than disable the test.
-              export USER="${USER:-root}"
-              export LOGNAME="${LOGNAME:-$USER}"
-              spec=$(find "/packages/$PACKAGE" -maxdepth 1 -name "*.spec" -print -quit)
-              test -n "$spec"
-              dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
-                ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$spec"
-              # An imported spec keeps its dist-git PatchN and auxiliary SourceN
-              # files next to itself, while the verified upstream archive lands in
-              # /work/sources. rpmbuild takes a single _sourcedir, so stage both:
-              # recipe files first, then the verified archive, which therefore wins
-              # over anything of the same name carried in the import.
-              staged=/work/staged/$PACKAGE
-              rm -rf "$staged"
-              mkdir -p "$staged"
-              cp -a "/packages/$PACKAGE/." "$staged/"
-              cp -a "/work/sources/$PACKAGE/." "$staged/"
-              # Packages with %generate_buildrequires -- every Rust one -- compute
-              # their real BuildRequires during the build, so the spec alone does not
-              # list them and rpmbuild exits 11 asking to be re-run. Install what the
-              # generated source RPM declares and retry, bounded so an unsatisfiable
-              # requirement fails instead of looping.
-              for _ in 1 2 3 4 5; do
-                rm -f /root/rpmbuild/SRPMS/*.buildreqs.nosrc.rpm
-                if rpmbuild -br "$spec" --define "_sourcedir $staged" \
-                     --define "dist $DISTTAG"; then break; fi
-                generated=$(ls /root/rpmbuild/SRPMS/*.buildreqs.nosrc.rpm 2>/dev/null | head -1)
-                test -n "$generated"
-                dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
-                  ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$generated"
-              done
-              rpmbuild -ba "$spec" \
-                --define "_sourcedir $staged" \
-                --define "dist $DISTTAG" \
-                --define "_rpmdir /work/result"
-              find /work/result -name "*.rpm" -type f -print0 | \
-                xargs -0 -r rpm -qp --qf "%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n"
-              # A build that produced no RPM must fail here. if-no-files-found on
-              # the upload cannot catch it: the artifact also carries
-              # work/reports/*.json, so one file always matches and the upload
-              # reports success while shipping no packages at all.
-              test -n "$(find /work/result -name "*.rpm" -type f -print -quit)"
-            '
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        with:
-          name: rpm-s2-${{ matrix.package }}
-          path: |
-            work/result/**/*.rpm
-            work/reports/*.json
-          if-no-files-found: error
+    uses: ./.github/workflows/rebuild-lane.yml
+    with:
+      lane: s2-fast
+      packages: ${{ needs.prepare.outputs.stage2 }}
+      runner: ubuntu-24.04
+      timeout: '180'
+    secrets: inherit
+
+  rebuild2_late:
+    needs: [prepare, rebuild0, rebuild0_late, rebuild1, rebuild1_heavy, rebuild2]
+    if: ${{ always() && !cancelled() && needs.prepare.outputs.stage2_late != '[]' }}
+    uses: ./.github/workflows/rebuild-lane.yml
+    with:
+      lane: s2-late
+      packages: ${{ needs.prepare.outputs.stage2_late }}
+      runner: ubuntu-24.04
+      timeout: '240'
+    secrets: inherit
 
   rebuild3:
-    needs: [prepare, rebuild0, rebuild1, rebuild2]
+    needs: [prepare, rebuild0, rebuild0_late, rebuild1, rebuild2]
     if: ${{ !cancelled() && needs.prepare.outputs.stage3 != '[]' }}
-    strategy:
-      fail-fast: false
-      matrix:
-        package: ${{ fromJSON(needs.prepare.outputs.stage3) }}
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - uses: ./.github/actions/setup-sccache
-      - name: Collect RPMs built by earlier stages
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
-        with:
-          pattern: rpm-*
-          path: work/prior
-          merge-multiple: true
-        continue-on-error: true
-      - name: Fetch and verify direct upstream source
-        env:
-          PACKAGE: ${{ matrix.package }}
-        run: |
-          python3 tools/source_pipeline.py "$PACKAGE" --output work/sources --report-dir work/reports
-      - name: Build the verified source with its RPM recipe
-        env:
-          PACKAGE: ${{ matrix.package }}
-          FACTORY_REPO: ${{ vars.FACTORY_REPO }}
-        run: |
-          test -d "packages/$PACKAGE"
-          mkdir -p work/result
-          # Per-package, so it is resolved out here rather than inside the
-          # container, which only sees config/ and packages/.
-          DIST_BUMP="$(python3 tools/dist_bump.py "$PACKAGE")"
-          export DIST_BUMP
-          docker run --rm --privileged \
-            -e PACKAGE -e FACTORY_REPO -e DIST_BUMP \
-            -v "$PWD/work:/work:Z" \
-            -v "$PWD/packages:/packages:ro,Z" \
-            -v "$PWD/config:/repos:ro,Z" \
-            quay.io/fedora/fedora:44 bash -exc '
-              # The fedora:rawhide image ships fedora-cisco-openh264 enabled, but
-              # its packages are signed with Cisco key, which the image does not
-              # trust -- so any builddep graph reaching gstreamer/pipewire dies on
-              # "Import of the key did not help, wrong key?". openh264 is a runtime
-              # codec, never a build requirement, and Fedora own noopenh264 provides
-              # the same libopenh264.so.8 soname, so disabling the repo resolves.
-              disable=--disablerepo=fedora-cisco-openh264
-              # The Fedora container images set tsflags=nodocs, so every %doc file is
-              # dropped at install time. rand_core ships its crate docs that way and
-              # its lib.rs does #![doc = include_str!("../README.md")], so rust-just
-              # failed to compile: rustc could not read ../README.md. Nothing was wrong
-              # with the Fedora package: mock installs docs into a build root, and
-              # this container was not. Restore that.
-              sed -i "/^tsflags=nodocs/d" /etc/dnf/dnf.conf
-              # Fedora 44 plus Hummingbird, mirroring Hummingbird mock.cfg:
-              # Fedora release repos with its own Pulp repos shadowing them by
-              # priority. Proven correct by this job own diagnostic below --
-              # openssl 3.5.7 means libcrypto.so.3, the ABI Hummingbird has.
-              # A Rawhide root produced RPMs needing libcrypto.so.4 instead.
-              cp /repos/hummingbird.repo /etc/yum.repos.d/
-              # RPMs from earlier stages become a local repo, so a later stage
-              # can satisfy a BuildRequires on something this run just built.
-              # The guard must recurse: upload-artifact takes the common parent
-              # of its path globs as the artifact root, so an artifact declaring
-              # work/result/*.rpm and work/reports/*.json unpacks as
-              # prior/result/*.rpm, not prior/*.rpm. A non-recursive glob matched
-              # nothing, this block was silently skipped in every stage, and
-              # mutter resolved gsettings-desktop-schemas to Fedora 50.1 instead
-              # of the 51.beta stage 0 had just built. createrepo_c itself walks
-              # the tree, so only the test needed fixing.
-              if [ -n "$(find /work/prior -name "*.rpm" -print -quit 2>/dev/null)" ]; then
-                dnf -y $disable install createrepo_c
-                createrepo_c /work/prior
-                printf "[stages]\nname=stages\nbaseurl=file:///work/prior\nenabled=1\ngpgcheck=0\npriority=1\n" \
-                  > /etc/yum.repos.d/stages.repo
-                # priority alone does not keep Fedora out. gnome-control-center
-                # pulled Fedora accountsservice 23.13.9 even though stage 0 had
-                # built 26.27.3 and [stages] was priority 1: the Fedora main
-                # package entered the transaction and pinned accountsservice-libs
-                # to its exact NEVR, so our libs could not be installed and our
-                # devel, which needs them, was dropped --
-                #   cannot install both accountsservice-libs-26.27.3 from stages
-                #                   and accountsservice-libs-23.13.9-16.fc44 from fedora
-                # Excluding by name is what settles it: whatever an earlier stage
-                # built, Fedora must not answer for. Names come from rpm rather
-                # than from parsing filenames, which stops working the moment a
-                # disttag changes.
-                EXCLUDE=$(find /work/prior -name "*.rpm" -type f -print0 \
-                  | xargs -0 -r rpm -qp --qf "%{NAME}\n" 2>/dev/null \
-                  | sort -u | paste -sd, -)
-                echo "excluding from Fedora: $EXCLUDE"
-              fi
-              # Hummingbird ships newer versions of some names than Fedora 44
-              # does, and the two must never mix in one transaction. The
-              # conflicts this prevents are real: libicu 78.3 (hum) vs 77.1
-              # (fc44) broke samba and evolution-data-server, and Fedora ruby
-              # 3.3/3.4-default-gems vs Hummingbird ruby4.0-default-gems broke
-              # webkitgtk, colord, libnotify and zsh. Always prefer the
-              # Hummingbird copy by excluding these names from Fedora.
-              # Unconditional: stage 0 has no prior RPMs, so the block above
-              # never ran and EXCLUDE would otherwise be empty here.
-              HB_EXCLUDE="ruby-default-gems,ruby3.3-default-gems,ruby3.4-default-gems,libicu,icu,gpgme,qt6-qtbase"
-              EXCLUDE="${HB_EXCLUDE}${EXCLUDE:+,}${EXCLUDE}"
-              echo "hummingbird exclusions: $HB_EXCLUDE"
-              if [ -n "${FACTORY_REPO:-}" ]; then
-                printf "[factory]\nname=factory\nbaseurl=%s\nenabled=1\ngpgcheck=0\npriority=5\n" \
-                  "$FACTORY_REPO" > /etc/yum.repos.d/factory.repo
-              fi
-              # The plain fedora image is not a build root: it lacks the group mock
-              # installs, so /usr/bin/echo and friends are missing. Most packages pull
-              # them in transitively; squashfs-tools calls echo directly from its
-              # manpage installer and fails without it.
-              dnf -y $disable install dnf-plugins-core mock rpm-build @buildsys-build
-              rpm -q --qf "buildroot openssl: %{VERSION}-%{RELEASE}\n" openssl-libs || true
-              # NO APOSTROPHES IN THIS SCRIPT. It is the body of bash -exc
-              # a single-quoted string, so one closes it and everything after
-              # is reparsed. That is what the stilted "Fedora own
-              # noopenh264" and "this job own diagnostic" above are avoiding.
-              # Three apostrophes in this very comment took out all 36 stage 0
-              # jobs at once, in under two minutes, with no clue in the log.
-              #
-              # The AlmaLinux convention, one distro over. They keep the vendor
-              # release and dist and append to it -- their dnf is
-              # 4.14.0-34.el9_8.alma.1 against 34.el9_8 from Red Hat, and both
-              # .alma and .alma.N appear in their repositories.
-              #
-              # The vendor here is Hummingbird, not Fedora. These packages are
-              # built for Hummingbird and installed on Hummingbird; Fedora 44 is
-              # only the other half of the buildroot, the way a compiler is. An
-              # earlier version of this tagged them .fc44.bfin, which named the
-              # distribution they are not for.
-              #
-              # The tag is read from the Hummingbird packages present in the
-              # buildroot rather than hardcoded, so a move to hum2 carries
-              # itself. A buildroot containing none of them is a repository
-              # misconfiguration -- the exact failure this factory exists to
-              # avoid -- so it stops rather than quietly tagging something else.
-              HUM_TAG="$(rpm -qa --qf "%{RELEASE}\n" | grep -oE "hum[0-9]+$" | sort -u | head -n1)"
-              if [ -z "$HUM_TAG" ]; then
-                echo "No Hummingbird package in the buildroot; cannot derive a disttag" >&2
-                rpm -qa --qf "%{NAME} %{RELEASE}\n" | sort | head -20 >&2
-                exit 1
-              fi
-              DISTTAG=".${HUM_TAG}.bfin${DIST_BUMP:-}"
-              echo "disttag: $DISTTAG"
-              # libratbag %check starts ratbagd, which calls
-              # Gio.bus_get_sync(Gio.BusType.SYSTEM) and dies with "Could not
-              # connect: No such file or directory" -- a plain container has no
-              # system bus socket. Seven of its ten suites already pass and the
-              # failing one is a real test, so give the build root a bus rather
-              # than disabling the test. Non-fatal: no other package needs it.
-              dnf -y $disable install dbus-daemon || true
-              mkdir -p /run/dbus
-              dbus-daemon --system --fork || true
-              # mock defines USER in its build root; a bare container does not.
-              # just 1.57.0 tests/functions.rs:88 calls env::var("USER").unwrap()
-              # and panicked with NotPresent -- 1823 tests passed, that one did
-              # not. Same shape as the missing system bus: supply what a real
-              # build root has rather than disable the test.
-              export USER="${USER:-root}"
-              export LOGNAME="${LOGNAME:-$USER}"
-              spec=$(find "/packages/$PACKAGE" -maxdepth 1 -name "*.spec" -print -quit)
-              test -n "$spec"
-              dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
-                ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$spec"
-              # An imported spec keeps its dist-git PatchN and auxiliary SourceN
-              # files next to itself, while the verified upstream archive lands in
-              # /work/sources. rpmbuild takes a single _sourcedir, so stage both:
-              # recipe files first, then the verified archive, which therefore wins
-              # over anything of the same name carried in the import.
-              staged=/work/staged/$PACKAGE
-              rm -rf "$staged"
-              mkdir -p "$staged"
-              cp -a "/packages/$PACKAGE/." "$staged/"
-              cp -a "/work/sources/$PACKAGE/." "$staged/"
-              # Packages with %generate_buildrequires -- every Rust one -- compute
-              # their real BuildRequires during the build, so the spec alone does not
-              # list them and rpmbuild exits 11 asking to be re-run. Install what the
-              # generated source RPM declares and retry, bounded so an unsatisfiable
-              # requirement fails instead of looping.
-              for _ in 1 2 3 4 5; do
-                rm -f /root/rpmbuild/SRPMS/*.buildreqs.nosrc.rpm
-                if rpmbuild -br "$spec" --define "_sourcedir $staged" \
-                     --define "dist $DISTTAG"; then break; fi
-                generated=$(ls /root/rpmbuild/SRPMS/*.buildreqs.nosrc.rpm 2>/dev/null | head -1)
-                test -n "$generated"
-                dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
-                  ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$generated"
-              done
-              rpmbuild -ba "$spec" \
-                --define "_sourcedir $staged" \
-                --define "dist $DISTTAG" \
-                --define "_rpmdir /work/result"
-              find /work/result -name "*.rpm" -type f -print0 | \
-                xargs -0 -r rpm -qp --qf "%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n"
-              # A build that produced no RPM must fail here. if-no-files-found on
-              # the upload cannot catch it: the artifact also carries
-              # work/reports/*.json, so one file always matches and the upload
-              # reports success while shipping no packages at all.
-              test -n "$(find /work/result -name "*.rpm" -type f -print -quit)"
-            '
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        with:
-          name: rpm-s3-${{ matrix.package }}
-          path: |
-            work/result/**/*.rpm
-            work/reports/*.json
-          if-no-files-found: error
+    uses: ./.github/workflows/rebuild-lane.yml
+    with:
+      lane: s3-fast
+      packages: ${{ needs.prepare.outputs.stage3 }}
+      runner: ubuntu-24.04
+      timeout: '180'
+    secrets: inherit
+
+  rebuild3_late:
+    needs: [prepare, rebuild0, rebuild0_late, rebuild1, rebuild1_heavy, rebuild2, rebuild2_late, rebuild3]
+    if: ${{ always() && !cancelled() && needs.prepare.outputs.stage3_late != '[]' }}
+    uses: ./.github/workflows/rebuild-lane.yml
+    with:
+      lane: s3-late
+      packages: ${{ needs.prepare.outputs.stage3_late }}
+      runner: ubuntu-24.04
+      timeout: '240'
+    secrets: inherit
 
   rebuild4:
-    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3]
-    if: ${{ !cancelled() && needs.prepare.outputs.stage4 != '[]' }}
-    strategy:
-      fail-fast: false
-      matrix:
-        package: ${{ fromJSON(needs.prepare.outputs.stage4) }}
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - uses: ./.github/actions/setup-sccache
-      - name: Collect RPMs built by earlier stages
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
-        with:
-          pattern: rpm-*
-          path: work/prior
-          merge-multiple: true
-        continue-on-error: true
-      - name: Fetch and verify direct upstream source
-        env:
-          PACKAGE: ${{ matrix.package }}
-        run: |
-          python3 tools/source_pipeline.py "$PACKAGE" --output work/sources --report-dir work/reports
-      - name: Build the verified source with its RPM recipe
-        env:
-          PACKAGE: ${{ matrix.package }}
-          FACTORY_REPO: ${{ vars.FACTORY_REPO }}
-        run: |
-          test -d "packages/$PACKAGE"
-          mkdir -p work/result
-          # Per-package, so it is resolved out here rather than inside the
-          # container, which only sees config/ and packages/.
-          DIST_BUMP="$(python3 tools/dist_bump.py "$PACKAGE")"
-          export DIST_BUMP
-          docker run --rm --privileged \
-            -e PACKAGE -e FACTORY_REPO -e DIST_BUMP \
-            -v "$PWD/work:/work:Z" \
-            -v "$PWD/packages:/packages:ro,Z" \
-            -v "$PWD/config:/repos:ro,Z" \
-            quay.io/fedora/fedora:44 bash -exc '
-              # The fedora:rawhide image ships fedora-cisco-openh264 enabled, but
-              # its packages are signed with Cisco key, which the image does not
-              # trust -- so any builddep graph reaching gstreamer/pipewire dies on
-              # "Import of the key did not help, wrong key?". openh264 is a runtime
-              # codec, never a build requirement, and Fedora own noopenh264 provides
-              # the same libopenh264.so.8 soname, so disabling the repo resolves.
-              disable=--disablerepo=fedora-cisco-openh264
-              # The Fedora container images set tsflags=nodocs, so every %doc file is
-              # dropped at install time. rand_core ships its crate docs that way and
-              # its lib.rs does #![doc = include_str!("../README.md")], so rust-just
-              # failed to compile: rustc could not read ../README.md. Nothing was wrong
-              # with the Fedora package: mock installs docs into a build root, and
-              # this container was not. Restore that.
-              sed -i "/^tsflags=nodocs/d" /etc/dnf/dnf.conf
-              # Fedora 44 plus Hummingbird, mirroring Hummingbird mock.cfg:
-              # Fedora release repos with its own Pulp repos shadowing them by
-              # priority. Proven correct by this job own diagnostic below --
-              # openssl 3.5.7 means libcrypto.so.3, the ABI Hummingbird has.
-              # A Rawhide root produced RPMs needing libcrypto.so.4 instead.
-              cp /repos/hummingbird.repo /etc/yum.repos.d/
-              # RPMs from earlier stages become a local repo, so a later stage
-              # can satisfy a BuildRequires on something this run just built.
-              # The guard must recurse: upload-artifact takes the common parent
-              # of its path globs as the artifact root, so an artifact declaring
-              # work/result/*.rpm and work/reports/*.json unpacks as
-              # prior/result/*.rpm, not prior/*.rpm. A non-recursive glob matched
-              # nothing, this block was silently skipped in every stage, and
-              # mutter resolved gsettings-desktop-schemas to Fedora 50.1 instead
-              # of the 51.beta stage 0 had just built. createrepo_c itself walks
-              # the tree, so only the test needed fixing.
-              if [ -n "$(find /work/prior -name "*.rpm" -print -quit 2>/dev/null)" ]; then
-                dnf -y $disable install createrepo_c
-                createrepo_c /work/prior
-                printf "[stages]\nname=stages\nbaseurl=file:///work/prior\nenabled=1\ngpgcheck=0\npriority=1\n" \
-                  > /etc/yum.repos.d/stages.repo
-                # priority alone does not keep Fedora out. gnome-control-center
-                # pulled Fedora accountsservice 23.13.9 even though stage 0 had
-                # built 26.27.3 and [stages] was priority 1: the Fedora main
-                # package entered the transaction and pinned accountsservice-libs
-                # to its exact NEVR, so our libs could not be installed and our
-                # devel, which needs them, was dropped --
-                #   cannot install both accountsservice-libs-26.27.3 from stages
-                #                   and accountsservice-libs-23.13.9-16.fc44 from fedora
-                # Excluding by name is what settles it: whatever an earlier stage
-                # built, Fedora must not answer for. Names come from rpm rather
-                # than from parsing filenames, which stops working the moment a
-                # disttag changes.
-                EXCLUDE=$(find /work/prior -name "*.rpm" -type f -print0 \
-                  | xargs -0 -r rpm -qp --qf "%{NAME}\n" 2>/dev/null \
-                  | sort -u | paste -sd, -)
-                echo "excluding from Fedora: $EXCLUDE"
-              fi
-              # Hummingbird ships newer versions of some names than Fedora 44
-              # does, and the two must never mix in one transaction. The
-              # conflicts this prevents are real: libicu 78.3 (hum) vs 77.1
-              # (fc44) broke samba and evolution-data-server, and Fedora ruby
-              # 3.3/3.4-default-gems vs Hummingbird ruby4.0-default-gems broke
-              # webkitgtk, colord, libnotify and zsh. Always prefer the
-              # Hummingbird copy by excluding these names from Fedora.
-              # Unconditional: stage 0 has no prior RPMs, so the block above
-              # never ran and EXCLUDE would otherwise be empty here.
-              HB_EXCLUDE="ruby-default-gems,ruby3.3-default-gems,ruby3.4-default-gems,libicu,icu,gpgme,qt6-qtbase"
-              EXCLUDE="${HB_EXCLUDE}${EXCLUDE:+,}${EXCLUDE}"
-              echo "hummingbird exclusions: $HB_EXCLUDE"
-              if [ -n "${FACTORY_REPO:-}" ]; then
-                printf "[factory]\nname=factory\nbaseurl=%s\nenabled=1\ngpgcheck=0\npriority=5\n" \
-                  "$FACTORY_REPO" > /etc/yum.repos.d/factory.repo
-              fi
-              # The plain fedora image is not a build root: it lacks the group mock
-              # installs, so /usr/bin/echo and friends are missing. Most packages pull
-              # them in transitively; squashfs-tools calls echo directly from its
-              # manpage installer and fails without it.
-              dnf -y $disable install dnf-plugins-core mock rpm-build @buildsys-build
-              rpm -q --qf "buildroot openssl: %{VERSION}-%{RELEASE}\n" openssl-libs || true
-              # NO APOSTROPHES IN THIS SCRIPT. It is the body of bash -exc
-              # a single-quoted string, so one closes it and everything after
-              # is reparsed. That is what the stilted "Fedora own
-              # noopenh264" and "this job own diagnostic" above are avoiding.
-              # Three apostrophes in this very comment took out all 36 stage 0
-              # jobs at once, in under two minutes, with no clue in the log.
-              #
-              # The AlmaLinux convention, one distro over. They keep the vendor
-              # release and dist and append to it -- their dnf is
-              # 4.14.0-34.el9_8.alma.1 against 34.el9_8 from Red Hat, and both
-              # .alma and .alma.N appear in their repositories.
-              #
-              # The vendor here is Hummingbird, not Fedora. These packages are
-              # built for Hummingbird and installed on Hummingbird; Fedora 44 is
-              # only the other half of the buildroot, the way a compiler is. An
-              # earlier version of this tagged them .fc44.bfin, which named the
-              # distribution they are not for.
-              #
-              # The tag is read from the Hummingbird packages present in the
-              # buildroot rather than hardcoded, so a move to hum2 carries
-              # itself. A buildroot containing none of them is a repository
-              # misconfiguration -- the exact failure this factory exists to
-              # avoid -- so it stops rather than quietly tagging something else.
-              HUM_TAG="$(rpm -qa --qf "%{RELEASE}\n" | grep -oE "hum[0-9]+$" | sort -u | head -n1)"
-              if [ -z "$HUM_TAG" ]; then
-                echo "No Hummingbird package in the buildroot; cannot derive a disttag" >&2
-                rpm -qa --qf "%{NAME} %{RELEASE}\n" | sort | head -20 >&2
-                exit 1
-              fi
-              DISTTAG=".${HUM_TAG}.bfin${DIST_BUMP:-}"
-              echo "disttag: $DISTTAG"
-              # libratbag %check starts ratbagd, which calls
-              # Gio.bus_get_sync(Gio.BusType.SYSTEM) and dies with "Could not
-              # connect: No such file or directory" -- a plain container has no
-              # system bus socket. Seven of its ten suites already pass and the
-              # failing one is a real test, so give the build root a bus rather
-              # than disabling the test. Non-fatal: no other package needs it.
-              dnf -y $disable install dbus-daemon || true
-              mkdir -p /run/dbus
-              dbus-daemon --system --fork || true
-              # mock defines USER in its build root; a bare container does not.
-              # just 1.57.0 tests/functions.rs:88 calls env::var("USER").unwrap()
-              # and panicked with NotPresent -- 1823 tests passed, that one did
-              # not. Same shape as the missing system bus: supply what a real
-              # build root has rather than disable the test.
-              export USER="${USER:-root}"
-              export LOGNAME="${LOGNAME:-$USER}"
-              spec=$(find "/packages/$PACKAGE" -maxdepth 1 -name "*.spec" -print -quit)
-              test -n "$spec"
-              dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
-                ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$spec"
-              # An imported spec keeps its dist-git PatchN and auxiliary SourceN
-              # files next to itself, while the verified upstream archive lands in
-              # /work/sources. rpmbuild takes a single _sourcedir, so stage both:
-              # recipe files first, then the verified archive, which therefore wins
-              # over anything of the same name carried in the import.
-              staged=/work/staged/$PACKAGE
-              rm -rf "$staged"
-              mkdir -p "$staged"
-              cp -a "/packages/$PACKAGE/." "$staged/"
-              cp -a "/work/sources/$PACKAGE/." "$staged/"
-              # Packages with %generate_buildrequires -- every Rust one -- compute
-              # their real BuildRequires during the build, so the spec alone does not
-              # list them and rpmbuild exits 11 asking to be re-run. Install what the
-              # generated source RPM declares and retry, bounded so an unsatisfiable
-              # requirement fails instead of looping.
-              for _ in 1 2 3 4 5; do
-                rm -f /root/rpmbuild/SRPMS/*.buildreqs.nosrc.rpm
-                if rpmbuild -br "$spec" --define "_sourcedir $staged" \
-                     --define "dist $DISTTAG"; then break; fi
-                generated=$(ls /root/rpmbuild/SRPMS/*.buildreqs.nosrc.rpm 2>/dev/null | head -1)
-                test -n "$generated"
-                dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
-                  ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$generated"
-              done
-              rpmbuild -ba "$spec" \
-                --define "_sourcedir $staged" \
-                --define "dist $DISTTAG" \
-                --define "_rpmdir /work/result"
-              find /work/result -name "*.rpm" -type f -print0 | \
-                xargs -0 -r rpm -qp --qf "%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n"
-              # A build that produced no RPM must fail here. if-no-files-found on
-              # the upload cannot catch it: the artifact also carries
-              # work/reports/*.json, so one file always matches and the upload
-              # reports success while shipping no packages at all.
-              test -n "$(find /work/result -name "*.rpm" -type f -print -quit)"
-            '
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        with:
-          name: rpm-s4-${{ matrix.package }}
-          path: |
-            work/result/**/*.rpm
-            work/reports/*.json
-          if-no-files-found: error
+    needs: [prepare, rebuild0, rebuild0_late, rebuild1, rebuild1_heavy, rebuild2, rebuild2_late, rebuild3, rebuild3_late]
+    if: ${{ always() && !cancelled() && needs.prepare.outputs.stage4 != '[]' }}
+    uses: ./.github/workflows/rebuild-lane.yml
+    with:
+      lane: s4
+      packages: ${{ needs.prepare.outputs.stage4 }}
+      runner: ubuntu-24.04
+      timeout: '180'
+    secrets: inherit
+
+  # Persist completed stages before later stages finish. These checkpoints are
+  # deliberately separate from `latest`: the building tag may be incoherent
+  # and is only a recovery/build input. Each job downloads every successful
+  # package artifact available in this run, merges it with the prior partial
+  # candidate, and serializes the push through the same accumulator lock.
+  checkpoint0:
+    needs: [prepare, rebuild0]
+    if: >-
+      ${{ always() && !cancelled() && needs.prepare.outputs.build_list != '[]'
+          && (github.event_name != 'pull_request'
+              || github.event.pull_request.head.repo.full_name == github.repository) }}
+    uses: ./.github/workflows/checkpoint.yml
+    with:
+      lane: stage0
+    secrets: inherit
+
+  checkpoint0-late:
+    needs: [prepare, rebuild0, rebuild0_late, checkpoint0]
+    if: >-
+      ${{ always() && !cancelled() && needs.prepare.outputs.build_list != '[]'
+          && (github.event_name != 'pull_request'
+              || github.event.pull_request.head.repo.full_name == github.repository) }}
+    uses: ./.github/workflows/checkpoint.yml
+    with:
+      lane: stage0-late
+    secrets: inherit
+
+  checkpoint1-fast:
+    needs: [prepare, rebuild0, rebuild0_late, rebuild1, checkpoint0-late]
+    if: >-
+      ${{ always() && !cancelled() && needs.prepare.outputs.build_list != '[]'
+          && (github.event_name != 'pull_request'
+              || github.event.pull_request.head.repo.full_name == github.repository) }}
+    uses: ./.github/workflows/checkpoint.yml
+    with:
+      lane: stage1-fast
+    secrets: inherit
+
+  checkpoint1-heavy:
+    needs: [prepare, rebuild0, rebuild0_late, rebuild1, rebuild1_heavy, checkpoint1-fast]
+    if: >-
+      ${{ always() && !cancelled() && needs.prepare.outputs.build_list != '[]'
+          && (github.event_name != 'pull_request'
+              || github.event.pull_request.head.repo.full_name == github.repository) }}
+    uses: ./.github/workflows/checkpoint.yml
+    with:
+      lane: stage1-heavy
+    secrets: inherit
+
+  checkpoint2-fast:
+    needs: [prepare, rebuild0, rebuild0_late, rebuild1, rebuild2, checkpoint1-heavy]
+    if: >-
+      ${{ always() && !cancelled() && needs.prepare.outputs.build_list != '[]'
+          && (github.event_name != 'pull_request'
+              || github.event.pull_request.head.repo.full_name == github.repository) }}
+    uses: ./.github/workflows/checkpoint.yml
+    with:
+      lane: stage2-fast
+    secrets: inherit
+
+  checkpoint2-late:
+    needs: [prepare, rebuild0, rebuild0_late, rebuild1, rebuild1_heavy, rebuild2, rebuild2_late, checkpoint2-fast]
+    if: >-
+      ${{ always() && !cancelled() && needs.prepare.outputs.build_list != '[]'
+          && (github.event_name != 'pull_request'
+              || github.event.pull_request.head.repo.full_name == github.repository) }}
+    uses: ./.github/workflows/checkpoint.yml
+    with:
+      lane: stage2-late
+    secrets: inherit
+
+  checkpoint3-fast:
+    needs: [prepare, rebuild0, rebuild0_late, rebuild1, rebuild2, rebuild3, checkpoint2-late]
+    if: >-
+      ${{ always() && !cancelled() && needs.prepare.outputs.build_list != '[]'
+          && (github.event_name != 'pull_request'
+              || github.event.pull_request.head.repo.full_name == github.repository) }}
+    uses: ./.github/workflows/checkpoint.yml
+    with:
+      lane: stage3-fast
+    secrets: inherit
+
+  checkpoint3-late:
+    needs: [prepare, rebuild0, rebuild0_late, rebuild1, rebuild1_heavy, rebuild2, rebuild2_late, rebuild3, rebuild3_late, checkpoint3-fast]
+    if: >-
+      ${{ always() && !cancelled() && needs.prepare.outputs.build_list != '[]'
+          && (github.event_name != 'pull_request'
+              || github.event.pull_request.head.repo.full_name == github.repository) }}
+    uses: ./.github/workflows/checkpoint.yml
+    with:
+      lane: stage3-late
+    secrets: inherit
+
+  checkpoint4:
+    needs: [prepare, rebuild0, rebuild0_late, rebuild1, rebuild1_heavy, rebuild2, rebuild2_late, rebuild3, rebuild3_late, rebuild4, checkpoint3-late]
+    if: >-
+      ${{ always() && !cancelled() && needs.prepare.outputs.build_list != '[]'
+          && (github.event_name != 'pull_request'
+              || github.event.pull_request.head.repo.full_name == github.repository) }}
+    uses: ./.github/workflows/checkpoint.yml
+    with:
+      lane: stage4
+    secrets: inherit
 
   # A disttag is a convention, not a guarantee. What actually has to be true is
   # that every RPM we publish outranks whatever Fedora 44 and Hummingbird offer
@@ -1286,7 +595,7 @@ jobs:
   # in the picture, and compares. It reports every offender before failing, so
   # one run yields the whole worklist instead of one entry at a time.
   precedence:
-    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4]
+    needs: [prepare, rebuild0, rebuild0_late, rebuild1, rebuild1_heavy, rebuild2, rebuild2_late, rebuild3, rebuild3_late, rebuild4]
     if: ${{ !cancelled() && needs.prepare.outputs.build_list != '[]' }}
     runs-on: ubuntu-24.04
     steps:
@@ -1382,15 +691,19 @@ jobs:
     if: >-
       ${{ !cancelled()
           && needs.prepare.outputs.build_list != '[]'
+          && inputs.packages == ''
           && needs.precedence.result == 'success'
           && (needs.rebuild0.result == 'success' || needs.rebuild0.result == 'skipped')
           && (needs.rebuild1.result == 'success' || needs.rebuild1.result == 'skipped')
+          && (needs.rebuild1_heavy.result == 'success' || needs.rebuild1_heavy.result == 'skipped')
           && (needs.rebuild2.result == 'success' || needs.rebuild2.result == 'skipped')
+          && (needs.rebuild2_late.result == 'success' || needs.rebuild2_late.result == 'skipped')
           && (needs.rebuild3.result == 'success' || needs.rebuild3.result == 'skipped')
+          && (needs.rebuild3_late.result == 'success' || needs.rebuild3_late.result == 'skipped')
           && (needs.rebuild4.result == 'success' || needs.rebuild4.result == 'skipped')
           && (github.event_name != 'pull_request'
               || github.event.pull_request.head.repo.full_name == github.repository) }}
-    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, precedence]
+    needs: [prepare, rebuild0, rebuild0_late, rebuild1, rebuild1_heavy, rebuild2, rebuild2_late, rebuild3, rebuild3_late, rebuild4, precedence]
     # Build waves can overlap, but `:latest` is an atomic consumer input. Queue
     # only this critical section per ref; the later publisher re-seeds from the
     # repository that its predecessor just made current.
@@ -1402,6 +715,7 @@ jobs:
       ref: ${{ steps.oci.outputs.ref }}
       digest: ${{ steps.oci.outputs.digest }}
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Seed repository from the last published factory image
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -1423,6 +737,8 @@ jobs:
           pattern: rpm-*
           path: repository
           merge-multiple: true
+      - name: Record exact package identities in the final candidate
+        run: python3 tools/build_manifest.py repository
       - name: Create and keylessly sign repository metadata
         run: |
           sudo apt-get update && sudo apt-get install -y createrepo-c
@@ -1568,3 +884,98 @@ jobs:
           path: repository
       - id: deployment
         uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5
+
+  # Persist every RPM this run built, even when some package in the matrix
+  # failed or the run was cancelled downstream. `publish` only fires when every
+  # stage is green, so before this job a wave that built 200 packages and
+  # failed on the 201st published nothing and the next wave rebuilt all 200.
+  #
+  # This job is the build cache, not the consumer tag. It seeds from the same
+  # accumulator it pushes to, merges whatever RPMs the matrix produced this run
+  # (a failed matrix job uploads no RPM, so only successes are added), and
+  # pushes to ghcr.io/<owner>/utah-packages:building. It does NOT sign or run
+  # the Hummingbird-only consumer contract: `:building` may be incoherent (a
+  # package built against a dependency a later wave changed, or two versions
+  # across waves) and must never be installed by a consumer. `:latest` remains
+  # the atomic, contract-gated tag `publish` produces.
+  #
+  # `prepare` reads this accumulator for its skip list and FACTORY_REPO points
+  # at it, so a success persists across waves regardless of whether the wave it
+  # was built in ever reached `publish`.
+  accumulate:
+    if: >-
+      ${{ always() && !cancelled()
+          && needs.prepare.outputs.build_list != '[]'
+          && (github.event_name != 'pull_request'
+              || github.event.pull_request.head.repo.full_name == github.repository) }}
+    needs: [prepare, rebuild0, rebuild0_late, rebuild1, rebuild1_heavy, rebuild2, rebuild2_late, rebuild3, rebuild3_late, rebuild4]
+    # Serialise all cache writers so overlapping refs cannot clobber each
+    # other's createrepo metadata. Do not cancel: a late writer still
+    # carries RPMs worth keeping.
+    concurrency:
+      # `:building` is a shared recovery pool. Serialize all refs so a main
+      # run and a pull request cannot overwrite each other's partial results.
+      group: utah-packages-accumulate-global
+      cancel-in-progress: false
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Seed cache from the building accumulator
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          owner=$(echo "${{ github.repository_owner }}" | tr "[:upper:]" "[:lower:]")
+          mkdir -p repository
+          echo "${GITHUB_TOKEN}" | podman login ghcr.io -u "${{ github.actor }}" --password-stdin
+          # Prefer the running accumulator; fall back to the coherent consumer
+          # tag on first ever run, then to an empty repository.
+          for image in "ghcr.io/${owner}/utah-packages:building" "ghcr.io/${owner}/utah-packages:latest"; do
+            if podman pull "$image"; then
+              container=$(podman create "$image")
+              podman cp "$container:/repository/." repository/ || true
+              podman rm "$container"
+              echo "seeded from $image"
+              break
+            fi
+          done
+          echo "No accumulator or consumer image yet; starting empty" >&2 || true
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          pattern: rpm-*
+          path: repository
+          merge-multiple: true
+      - name: Record exact package identities in the cache
+        run: python3 tools/build_manifest.py repository
+      - name: Rebuild cache metadata
+        run: |
+          set -euo pipefail
+          sudo apt-get update && sudo apt-get install -y createrepo-c
+          # The malcontent bootstrap RPM must never persist: it ships no
+          # parental-controls UI and exists only to break a build cycle within a
+          # single run. Drop it from the cache exactly as `publish` does.
+          find repository -name '*-0.bootstrap.*.rpm' -print -delete
+          test -n "$(find repository -name '*.rpm' -type f -print -quit)" || {
+            echo "No RPMs to accumulate; nothing to push" >&2
+            exit 0
+          }
+          createrepo_c --update repository
+      - name: Push the building accumulator
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          test -d repository/repodata || { echo "no repodata; skipping push"; exit 0; }
+          owner=$(echo "${{ github.repository_owner }}" | tr "[:upper:]" "[:lower:]")
+          image="ghcr.io/${owner}/utah-packages:building"
+          printf "FROM scratch\nCOPY repository /repository\n" > Containerfile.building
+          echo "${GITHUB_TOKEN}" | podman login ghcr.io -u "${{ github.actor }}" --password-stdin
+          podman build --tag "$image" --file Containerfile.building .
+          podman push "$image"
+          count=$(find repository -name '*.rpm' -type f | wc -l)
+          echo "accumulated $count RPMs into $image"
+          {
+            echo "### Build cache updated"
+            echo
+            echo "\`$image\` now carries $count RPMs (all successful builds across waves)."
+          } >> "$GITHUB_STEP_SUMMARY"
