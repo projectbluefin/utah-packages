@@ -373,12 +373,34 @@ exception already said.
 The factory still builds `anaconda-webui`, as a vanilla Fedora package. The
 exception says only that Utah's runtime does not install it.
 
-**This is a finding against Hummingbird, not a decision about it.** Every
-`GHmac` consumer on that platform is affected, not just cockpit: libsoup's
-digest authentication, evolution-data-server, gvfs and gnome-online-accounts
-all reach for it. It is worth reporting upstream, with the binary evidence
-above, and revisiting here the moment Hummingbird's glib2 gains a working
-backend.
+**This is a finding against Hummingbird, not a decision about it**, and the
+blast radius is narrower than it first looks. An earlier draft of this section
+asserted that libsoup's digest authentication, evolution-data-server, gvfs and
+gnome-online-accounts were all affected. That was wrong, and measuring it says
+otherwise:
+
+- All 163 runtime RPMs the factory currently publishes were unpacked and
+  scanned for references to `g_hmac_new`, `g_hmac_update` and the
+  `g_compute_hmac_for_*` family. Zero hits. The scanner was validated against
+  Hummingbird's own glib2, which does contain them.
+- Of the desktop packages this branch adds but has not published yet, taken
+  from Fedora's rawhide builds of the same sources: `libsoup3` 3.7.2 does
+  reference `g_hmac_new` and `g_compute_hmac_for_data`, while
+  `evolution-data-server` 3.61.2, `gnome-online-accounts` 3.58.1,
+  `glib-networking` 2.90~alpha, `gvfs` 1.61.91 and `gnome-shell` 51~beta do
+  not.
+- libsoup's single use is `soup-auth-ntlm.c`, which calls
+  `g_compute_hmac_for_data (G_CHECKSUM_MD5, ...)` for NTLMv2. Digest
+  authentication does not touch `GHmac` at all.
+
+So the concrete exposure on this platform is cockpit's authentication, which
+is why cockpit is out, and NTLMv2 in libsoup -- a feature a Utah desktop is
+unlikely to reach for, and one that MD5 policy would refuse under real FIPS
+anyway. The reason to report it upstream is not the current damage but that
+the disablement is unconditional and silent: `g_hmac_new` returns NULL on a
+machine that is not in FIPS mode, and callers that do not check get a crash or
+a wrong answer rather than a policy error. Revisit here the moment
+Hummingbird's glib2 gains a working backend.
 
 **libbluray is not.** Rawhide dist-git has moved to 1.5.0, which is
 `libbluray.so.4`, while the composed repository the build root resolves
