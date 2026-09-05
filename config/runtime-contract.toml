@@ -43,6 +43,15 @@ packages = [
   # Bluefin carries this as an installer web-engine dependency. Utah uses the
   # bootc-installer live path, not Anaconda WebUI or Slitherer.
   "slitherer",
+  # The same path, one level up. anaconda-live pulls anaconda-webui, which
+  # pulls cockpit-bridge, cockpit-ws, cockpit-networkmanager and
+  # cockpit-storaged, and cockpit cannot be delivered on this platform:
+  # Hummingbird's glib2 disables GHmac unconditionally, which is the
+  # authentication primitive cockpit-ws uses. See the GHmac entry in
+  # docs/targeting-hummingbird.md. The factory still builds anaconda-webui
+  # and anaconda-live, as vanilla Fedora packages; this says only that
+  # Utah's runtime does not install them.
+  "anaconda-live",
   "evolution-ews-core",
   "fish",
   "tailscale",

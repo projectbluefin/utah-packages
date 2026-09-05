@@ -346,6 +346,40 @@ installing with Anaconda. The recipes are Fedora's, so this builds
 `ffmpeg-free` and `libavcodec-free` -- Fedora's own codec policy, not
 RPMFusion's.
 
+**cockpit is not, and anaconda-live leaves the runtime contract with it.**
+Cockpit's own `test-auth` fails on `/auth/userpass-header-check` with
+
+    GLib-FATAL-WARNING: g_hmac_new: GLib HMAC is disabled for FIPS compliance
+
+which is not a property of the build container. Unpacking
+`glib2-2.89.3-1.hum1` from Hummingbird's own repository and reading
+`libglib-2.0.so.0.8903.0` shows that string present, `gnutls` absent from the
+binary entirely, and no `fips_enabled` anywhere: the disablement is
+unconditional, compiled in, and applies at runtime on every Hummingbird
+system regardless of whether FIPS is actually enabled. Fedora's glib2 carries
+`gnutls-hmac.patch` and routes `GHmac` through GnuTLS precisely so it keeps
+working; Hummingbird builds without that backend, and the fallback is a stub
+that warns and returns NULL.
+
+`cockpit-ws` uses `GHmac` on its authentication path, so a cockpit built here
+would install and fail to authenticate. Skipping the test would have shipped
+exactly that. So `anaconda-live` joins `slitherer` in the `[unavailable]` list
+in `config/runtime-contract.toml` -- it pulls `anaconda-webui`, which pulls
+four cockpit subpackages -- and `cockpit`, `python-bugzilla` and `firefox`,
+which entered the manifest only to serve that chain, come back out. Utah
+installs through the bootc-installer live path, which is what the `slitherer`
+exception already said.
+
+The factory still builds `anaconda-webui`, as a vanilla Fedora package. The
+exception says only that Utah's runtime does not install it.
+
+**This is a finding against Hummingbird, not a decision about it.** Every
+`GHmac` consumer on that platform is affected, not just cockpit: libsoup's
+digest authentication, evolution-data-server, gvfs and gnome-online-accounts
+all reach for it. It is worth reporting upstream, with the binary evidence
+above, and revisiting here the moment Hummingbird's glib2 gains a working
+backend.
+
 **libbluray is not.** Rawhide dist-git has moved to 1.5.0, which is
 `libbluray.so.4`, while the composed repository the build root resolves
 against still ships 1.4.0 and everything in it -- Fedora's own

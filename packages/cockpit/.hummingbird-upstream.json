@@ -1,8 +1,0 @@
-{
-  "package": "cockpit",
-  "branch": "rawhide",
-  "remote": "https://src.fedoraproject.org/rpms/cockpit.git",
-  "commit": "fd8b13f8237599215f3f58c9a71151932188f79d",
-  "tree": "c2494ede7f05c9cd486939f7495cf54f2b9cbac5",
-  "imported_at": "2026-09-04T21:16:59.827428+00:00"
-}

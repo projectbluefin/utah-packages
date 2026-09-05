@@ -107,13 +107,6 @@
       "sha512": "4ab0a0f5ef44d56c1af72d1fc1035566a1a89c4eeddb9e8baea675fe51c06138d913342afc8bed167d9fa55672fa25a2763ce21f7e24c1232e4739aff20733a7"
     },
     {
-      "name": "cockpit",
-      "version": "367",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/cockpit/cockpit-367.tar.xz/sha512/1f7202d025ee5536e77c15011f10627df3a1ae145648f0f3909f197f355205a5b93e24c7bd700b28cce3ed6766803b76e630e7c0b48d03b7fee761ec19aade5a/cockpit-367.tar.xz",
-      "filename": "cockpit-367.tar.xz",
-      "sha512": "1f7202d025ee5536e77c15011f10627df3a1ae145648f0f3909f197f355205a5b93e24c7bd700b28cce3ed6766803b76e630e7c0b48d03b7fee761ec19aade5a"
-    },
-    {
       "name": "colord",
       "version": "1.4.8",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/colord/colord-1.4.8.tar.xz/sha512/5e9a3b9ee93ca86a0467630905190cf9659f659ae6e7917c75df307793b8a78e80f598ee873e5b1070ead1c683780bb22b82410746aff41f50f801aa10e71018/colord-1.4.8.tar.xz",
@@ -211,15 +204,6 @@
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/ffmpeg/ffmpeg-9.0.1.tar.xz/sha512/be8cdfca64886f2ec5cd2359f8db6a998ee759d105b10ade9b2a7b640356ad56ab0ff50218fce7b6312462f15f98d90ac9d197a3b02a23771754d2714fec628d/ffmpeg-9.0.1.tar.xz",
       "filename": "ffmpeg-9.0.1.tar.xz",
       "sha512": "be8cdfca64886f2ec5cd2359f8db6a998ee759d105b10ade9b2a7b640356ad56ab0ff50218fce7b6312462f15f98d90ac9d197a3b02a23771754d2714fec628d"
-    },
-    {
-      "name": "firefox",
-      "version": "155.0",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/firefox/firefox-155.0.source.tar.xz/sha512/24292681924edb9f0494eb77a7b19994039abbc3a8c0ba304f0e472b49a943838565723de983bc8ef08e019971e02a3014c8d241bb88c645a06a625c8ace0d6a/firefox-155.0.source.tar.xz",
-      "filename": "firefox-155.0.source.tar.xz",
-      "sha512": "24292681924edb9f0494eb77a7b19994039abbc3a8c0ba304f0e472b49a943838565723de983bc8ef08e019971e02a3014c8d241bb88c645a06a625c8ace0d6a",
-      "stage": 1,
-      "compiler_cache": true
     },
     {
       "name": "flatpak-xdg-utils",
@@ -1459,13 +1443,6 @@
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/python-argcomplete/argcomplete-3.6.3.tar.gz/sha512/d07756a8439fd8f30ea2823bbbe35b102c6822af907eed5d43649a378a703d8c20394127a842c9d6ce0af50d333518450d15c29fc3471e178c681ad95fa43a0a/argcomplete-3.6.3.tar.gz",
       "filename": "argcomplete-3.6.3.tar.gz",
       "sha512": "d07756a8439fd8f30ea2823bbbe35b102c6822af907eed5d43649a378a703d8c20394127a842c9d6ce0af50d333518450d15c29fc3471e178c681ad95fa43a0a"
-    },
-    {
-      "name": "python-bugzilla",
-      "version": "3.3.0",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/python-bugzilla/python-bugzilla-3.3.0.tar.gz/sha512/39a9a7a9713b6ced12cdceda601a730955ba62524eae0fedaa450fd9981066c674c471dfe5c917f03edb4bb830480b2d82b6c7548afdaa7cc1ff08389e3d36bc/python-bugzilla-3.3.0.tar.gz",
-      "filename": "python-bugzilla-3.3.0.tar.gz",
-      "sha512": "39a9a7a9713b6ced12cdceda601a730955ba62524eae0fedaa450fd9981066c674c471dfe5c917f03edb4bb830480b2d82b6c7548afdaa7cc1ff08389e3d36bc"
     },
     {
       "name": "python-dasbus",

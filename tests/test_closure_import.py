@@ -34,11 +34,28 @@ class Source0SelectionTests(unittest.TestCase):
         )
 
     def test_an_undefined_conditional_macro_expands_to_nothing(self):
-        """firefox spells Source0 with %{?pre_version}, unset on a release."""
-        self.assertEqual(
-            closure.read_source0_basename("firefox", ROOT / "packages", "155.0"),
-            "firefox-155.0.source.tar.xz",
-        )
+        """A Source0 may carry a macro that only a pre-release defines.
+
+        firefox spelled it firefox-%{version}%{?pre_version}.source.tar.xz.
+        Left unexpanded, that basename matches nothing in the sources file and
+        the importer falls back to whatever line comes first. The tree no
+        longer carries firefox, so the shape is pinned with a fixture.
+        """
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "demo").mkdir()
+            (root / "demo" / "demo.spec").write_text(
+                "Name: demo\n"
+                "Version: 155.0\n"
+                "Source0: https://example.invalid/%{version}%{?pre_version}/"
+                "%{name}-%{version}%{?pre_version}.source.tar.xz\n"
+            )
+            self.assertEqual(
+                closure.read_source0_basename("demo", root, "155.0"),
+                "demo-155.0.source.tar.xz",
+            )
 
     def test_a_recipe_with_one_source_is_unaffected(self):
         self.assertEqual(
