@@ -1,0 +1,8 @@
+{
+  "package": "libXmu",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libXmu.git",
+  "commit": "2a60f0aeb0d330ac4339f3112b71fef44fa9714f",
+  "tree": "e7097dc7c6f41f3625ccb37d51e68e980455ac77",
+  "imported_at": "2026-09-05T16:39:41.010824+00:00"
+}
