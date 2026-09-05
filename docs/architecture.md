@@ -26,3 +26,12 @@ the factory has published that RPM, later Hummingbird builds use the factory
 repository as a gap-filler for cross-package dependencies. Rawhide is never
 consulted for an RPM's source archive and is never enabled in the consumer
 image.
+
+## Tooling
+
+Where Packit CLI functionality (SRPM generation, spec-version-bump logic) is
+useful in this factory's own automation, consume the upstream-published
+`quay.io/packit/packit` image directly (it already ships `packit`, `mock`, and
+`createrepo_c`, rebuilt daily by the Packit project) rather than maintaining a
+local rebuild of it. Pin by digest. Do not reinvent an image upstream already
+publishes and maintains.
