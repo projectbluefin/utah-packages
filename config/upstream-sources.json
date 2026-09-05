@@ -121,6 +121,11 @@
       "sha512": "a44e6eb3ec60b81e4dfefaa733c4f8a40c5e2e90454e964b14fbce896edd0877e32d917ce878a619d7e7e544c670231d7d0c9cd35659be6989fd18d474443489"
     },
     {
+      "name": "color-filesystem",
+      "version": "1",
+      "no_upstream_source": true
+    },
+    {
       "name": "colord",
       "version": "1.4.8",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/colord/colord-1.4.8.tar.xz/sha512/5e9a3b9ee93ca86a0467630905190cf9659f659ae6e7917c75df307793b8a78e80f598ee873e5b1070ead1c683780bb22b82410746aff41f50f801aa10e71018/colord-1.4.8.tar.xz",
@@ -1903,6 +1908,7 @@
     },
     {
       "name": "v4l-utils",
+      "rpm_defines": ["_without_qt 1"],
       "version": "1.32.0",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/v4l-utils/v4l-utils-1.32.0.tar.xz/sha512/5bf24c28ec66a7ac1a0c9ee976521d825d4c2f8abbbeb59c7ac55e89db10dde6ebb643d238d217d636d79fda363244558fee1effe8c5e8c573c1a3e957fe391f/v4l-utils-1.32.0.tar.xz",
       "filename": "v4l-utils-1.32.0.tar.xz",
