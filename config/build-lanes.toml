@@ -2,8 +2,17 @@
 # Packages not listed here remain in their numeric stage. A late lane may only
 # consume outputs from the preceding fast lane(s) named in the workflow.
 
+# ffmpeg and gstreamer1-plugins-good join pipewire because the codec libraries
+# they link are now built here too, and two of those move soname between the
+# Fedora the build root resolves against and the rawhide the factory imports:
+# libvpx goes so.9 -> so.12 and openapv liboapv.so.2 -> so.3. Building them in
+# the same fast lane would leave ffmpeg linked to the Fedora sonames while only
+# the rawhide ones reach the repository, which is the consumer transaction
+# failing for a whole extra cycle. Nothing outside the factory consumes either
+# old soname -- checked against Hummingbird and against every Fedora package in
+# the runtime contract -- so rebuilding the consumers is the whole fix.
 [stage0_late]
-packages = ["pipewire"]
+packages = ["pipewire", "ffmpeg", "gstreamer1-plugins-good"]
 
 # WebKitGTK is built as two shards of one recipe, one GTK port each, so the
 # two compiles that used to run back to back on one runner (five hours) run
