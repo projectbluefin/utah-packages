@@ -1,8 +1,0 @@
-{
-  "package": "anaconda-webui",
-  "branch": "rawhide",
-  "remote": "https://src.fedoraproject.org/rpms/anaconda-webui.git",
-  "commit": "e88b1edfe1be0e9309f4e7cabdefdc6e06a18ec6",
-  "tree": "c36e078f0786dd2a2d9b2b394ad67ff3a4c5e2c3",
-  "imported_at": "2026-09-03T22:53:12.057843+00:00"
-}

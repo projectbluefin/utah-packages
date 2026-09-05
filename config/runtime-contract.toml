@@ -48,9 +48,9 @@ packages = [
   # cockpit-storaged, and cockpit cannot be delivered on this platform:
   # Hummingbird's glib2 disables GHmac unconditionally, which is the
   # authentication primitive cockpit-ws uses. See the GHmac entry in
-  # docs/targeting-hummingbird.md. The factory still builds anaconda-webui
-  # and anaconda-live, as vanilla Fedora packages; this says only that
-  # Utah's runtime does not install them.
+  # docs/targeting-hummingbird.md. The whole Anaconda branch is out of the
+  # factory now, anaconda-webui included, so nothing here answers for
+  # anaconda-live and this keeps the transaction from asking.
   "anaconda-live",
   "evolution-ews-core",
   "fish",

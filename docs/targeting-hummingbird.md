@@ -335,18 +335,18 @@ that Rawhide ships; assuming otherwise sent an earlier attempt down a dead end.
 Three decisions worth reading rather than re-deriving, because each one looks
 like an omission from the outside.
 
-**ffmpeg and anaconda-webui are in scope.** Both entered the manifest to close
-the consumer transaction -- `pipewire-libs-extra` links `libavcodec.so.62` and
-Hummingbird ships no libav at all, and `anaconda-live` requires
-`anaconda-webui` -- and both were flagged for a second opinion when they went
-in, because Utah deliberately does not enable `fedora-multimedia` and because
-ISO tooling is not the desktop runtime. Settled: build them. They are part of
-the vanilla Fedora stack, and that is the bar, whether or not Utah ends up
-installing with Anaconda. The recipes are Fedora's, so this builds
-`ffmpeg-free` and `libavcodec-free` -- Fedora's own codec policy, not
-RPMFusion's.
+**ffmpeg is in scope.** It entered the manifest to close the consumer
+transaction -- `pipewire-libs-extra` links `libavcodec.so.62` and Hummingbird
+ships no libav at all -- and was flagged for a second opinion when it went in,
+because Utah deliberately does not enable `fedora-multimedia`. Settled: build
+it. It is part of the vanilla Fedora stack, and that is the bar. The recipe is
+Fedora's, so this builds `ffmpeg-free` and `libavcodec-free` -- Fedora's own
+codec policy, not RPMFusion's.
 
-**cockpit is not, and anaconda-live leaves the runtime contract with it.**
+`anaconda-webui` was in scope on the same reasoning and is not any more; see
+the Anaconda entry below.
+
+**The whole Anaconda branch is not, cockpit included.**
 Cockpit's own `test-auth` fails on `/auth/userpass-header-check` with
 
     GLib-FATAL-WARNING: g_hmac_new: GLib HMAC is disabled for FIPS compliance
@@ -365,13 +365,23 @@ that warns and returns NULL.
 would install and fail to authenticate. Skipping the test would have shipped
 exactly that. So `anaconda-live` joins `slitherer` in the `[unavailable]` list
 in `config/runtime-contract.toml` -- it pulls `anaconda-webui`, which pulls
-four cockpit subpackages -- and `cockpit`, `python-bugzilla` and `firefox`,
-which entered the manifest only to serve that chain, come back out. Utah
-installs through the bootc-installer live path, which is what the `slitherer`
-exception already said.
+four cockpit subpackages -- and `cockpit`, `python-bugzilla`, `firefox` and
+`anaconda-webui` itself all leave the manifest. Utah installs through the
+bootc-installer live path, which is what the `slitherer` exception already
+said, so none of it has a consumer here.
 
-The factory still builds `anaconda-webui`, as a vanilla Fedora package. The
-exception says only that Utah's runtime does not install it.
+There is a workaround, recorded in case the calculus changes. Cockpit's only
+use of `GHmac` is one function, `cockpit_auth_nonce` in
+`src/ws/cockpitauth.c`, which calls
+`g_compute_hmac_for_data (G_CHECKSUM_SHA256, ...)` to mint unguessable CSRF
+and session tokens -- a PRF, not a protocol-mandated MAC. Cockpit already
+carries `PKG_CHECK_MODULES(gnutls, [gnutls >= 3.6.0])` in `configure.ac`,
+linked today only into `src/tls`, so a downstream patch could add
+`$(gnutls_CFLAGS)`/`$(gnutls_LIBS)` to `libcockpit_ws_a` and swap that one
+call for `gnutls_hmac_fast (GNUTLS_MAC_SHA256, ...)` with hex encoding. No new
+dependency, same semantics, and the same move Fedora makes for GLib itself.
+It was not taken because reviving cockpit revives the whole chain behind it,
+firefox included, for an installer Utah does not use.
 
 **This is a finding against Hummingbird, not a decision about it**, and the
 blast radius is narrower than it first looks. An earlier draft of this section

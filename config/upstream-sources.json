@@ -72,13 +72,6 @@
       "sha512": "b2354fcaccfa316df7847438ad6b4ca3702be4ca88c46878c198a52ca6c659263b61759d4898e7a73acf64dd0e3004c103fa67a1cbdb2e53212f13368173be23"
     },
     {
-      "name": "anaconda-webui",
-      "version": "82",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/anaconda-webui/anaconda-webui-82.tar.xz/sha512/84902f6eb54ac7570fddf8c6e8c9ce5fc3997dad87b1e11fd13d623e431b861f61c234fea23f4f573f25ff551e0894a0de2530affb466d1f9b4912943901a16a/anaconda-webui-82.tar.xz",
-      "filename": "anaconda-webui-82.tar.xz",
-      "sha512": "84902f6eb54ac7570fddf8c6e8c9ce5fc3997dad87b1e11fd13d623e431b861f61c234fea23f4f573f25ff551e0894a0de2530affb466d1f9b4912943901a16a"
-    },
-    {
       "name": "at-spi2-core",
       "version": "2.61.1",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/at-spi2-core/at-spi2-core-2.61.1.tar.xz/sha512/201e7ed8bef8ddcdd0ff5c96aaf166edea95fb3d839c3bed9e5ef4778f6772aeaff62768c3fe05d4eb145583c63ff8a55bf9c504fa818a4d12abb7b3facaf7dc/at-spi2-core-2.61.1.tar.xz",
