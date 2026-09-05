@@ -104,6 +104,38 @@ def verify_signature(package: dict, target: Path, directory: Path) -> None:
 LOOKASIDE = "https://src.fedoraproject.org/repo/pkgs/rpms/{pkg}/{name}/sha512/{hash}/{name}"
 
 
+def generate_source(package: dict, target_dir: Path) -> Path:
+    """Rebuild a generated Source0 from its pinned first-party input.
+
+    Some recipes consume an archive no upstream publishes verbatim (a VCS
+    snapshot, a stripped repack, a vendored bundle). Their lock entries carry
+    a ``generate`` block naming the factory script instead of a ``url``; the
+    script fetches pinned upstream input and deterministically produces the
+    archive, which is then hash-verified below exactly like a downloaded one.
+    Fedora's lookaside never supplies the primary payload.
+    """
+    name = package["name"]
+    script = Path(package["generate"]["script"])
+    if not script.is_file():
+        raise ValueError(f"generation script does not exist: {script}")
+    if not package.get("filename"):
+        raise ValueError(f"generated source entry for {name} requires a filename")
+    package_dir = Path("packages") / package.get("dist_git_name", name)
+    if not package_dir.is_dir():
+        raise ValueError(f"package recipe directory does not exist: {package_dir}")
+    scratch = target_dir / ".generate"
+    shutil.rmtree(scratch, ignore_errors=True)
+    scratch.mkdir(parents=True)
+    subprocess.run(
+        [sys.executable, str(script), name, str(package_dir), str(scratch)],
+        check=True,
+    )
+    produced = scratch / package["filename"]
+    if not produced.is_file():
+        raise ValueError(f"generation did not produce {package['filename']}")
+    return produced
+
+
 def source_manifest(package: dict) -> list[tuple[str, str]]:
     """Return the Fedora lookaside filenames and SHA-512 digests."""
     manifest = Path("packages") / package.get("dist_git_name", package["name"]) / "sources"
@@ -224,7 +256,17 @@ def main() -> int:
         missing = {"name", "sha512"} - package.keys()
         if missing:
             raise SystemExit(f"invalid direct-source entry: missing {', '.join(sorted(missing))}")
-        if "url" in package:
+        generate = package.get("generate")
+        if generate is not None:
+            if "url" in package or "url_template" in package or package.get("fallback_urls"):
+                raise SystemExit(
+                    f"invalid generated-source entry for {package['name']}: "
+                    "must not carry url/url_template/fallback_urls"
+                )
+            if not package.get("filename"):
+                raise SystemExit("invalid generated-source entry: require filename")
+            url = None
+        elif "url" in package:
             url = package["url"]
         elif "url_template" in package and "version" in package:
             url = package["url_template"].format(version=package["version"])
@@ -236,11 +278,20 @@ def main() -> int:
         filename = package.get("filename") or Path(urllib.parse.urlparse(url).path).name or f"{name}.source"
         candidate = target_dir / f"{filename}.candidate"
         fallback_urls = package.get("fallback_urls", [])
-        if not isinstance(fallback_urls, list) or not all(isinstance(item, str) and item for item in fallback_urls):
+        if generate is None and (
+            not isinstance(fallback_urls, list) or not all(isinstance(item, str) and item for item in fallback_urls)
+        ):
             raise SystemExit("invalid direct-source entry: fallback_urls must be a list of non-empty URLs")
-        report: dict[str, object] = {"package": name, "url": url, "checked_at": datetime.now(UTC).isoformat()}
+        report: dict[str, object] = {"package": name, "checked_at": datetime.now(UTC).isoformat()}
+        if url is not None:
+            report["url"] = url
         try:
-            resolved_url = fetch_with_fallbacks([url, *fallback_urls], candidate)
+            if generate is not None:
+                produced = generate_source(package, target_dir)
+                produced.replace(candidate)
+                resolved_url = f"generated:{generate['script']}"
+            else:
+                resolved_url = fetch_with_fallbacks([url, *fallback_urls], candidate)
             actual = digest(candidate, "sha512")
             if actual != expected:
                 raise ValueError(f"SHA-512 mismatch: expected {expected}, got {actual}")

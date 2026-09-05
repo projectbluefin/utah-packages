@@ -14,14 +14,18 @@ import hashlib
 import json
 import re
 import subprocess
+import sys
+import tempfile
 import urllib.parse
 import urllib.request
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from tools import generated_sources
+
 
 FEDORA_HOSTS = ("fedoraproject.org", "src.fedoraproject.org", "kojipkgs.fedoraproject.org")
-
-LOOKASIDE = "https://src.fedoraproject.org/repo/pkgs/rpms/{pkg}/{name}/sha512/{hash}/{name}"
 
 
 def manifest_pins(package_dir: Path) -> dict[str, str]:
@@ -36,108 +40,51 @@ def manifest_pins(package_dir: Path) -> dict[str, str]:
     return pins
 
 
-def recipe_macros(text: str) -> dict[str, str]:
-    """Collect the tag/%global values a generated Source0 filename expands from.
-
-    rpmspec is the macro authority for direct downloads, but the generated
-    Source0 recipes must stay resolvable without an RPM toolchain, and their
-    filenames only ever draw on literal tags and %global definitions.
-    """
-    macros = dict(re.findall(r"^%global\s+(\w+)\s+(\S+)", text, flags=re.MULTILINE))
-    for tag in ("Name", "Version"):
-        match = re.search(rf"^{tag}:\s*(\S+)", text, flags=re.MULTILINE)
-        if match:
-            macros[tag.lower()] = match.group(1)
-    return macros
-
-
-def expand_macros(value: str, macros: dict[str, str]) -> str:
-    for _ in range(5):
-        expanded = re.sub(r"%\{(\w+)\}", lambda m: macros.get(m.group(1), m.group(0)), value)
-        if expanded == value:
-            break
-        value = expanded
-    if "%{" in value:
-        raise ValueError(f"unresolved macros in {value}")
-    return value
-
-
-def _generated_lock(package_dir: Path, generated: dict[str, str]) -> dict:
-    """Pin a generated Source0 to its exact manifest-recorded bytes.
-
-    The spec consumes an archive that no upstream publishes verbatim (a VCS
-    snapshot, a stripped repack, a vendored bundle), so the lock fetches the
-    content-addressed lookaside artifact -- immutable by construction -- and
-    the caller re-hashes the download against the manifest pin. The
-    first-party transformation that produced the bytes stays explicit in the
-    entry rather than hidden behind a fallback.
-    """
-    specs = list(package_dir.glob("*.spec"))
-    if len(specs) != 1:
-        raise ValueError(f"expected one spec, found {len(specs)}")
-    text = specs[0].read_text()
-    macros = recipe_macros(text)
-    source0 = re.search(r"^Source0:\s*(\S+)", text, flags=re.MULTILINE)
-    if not source0:
-        raise ValueError(f"no Source0 in {specs[0]}")
-    filename = expand_macros(source0.group(1), macros)
-    version = expand_macros(macros["version"], macros)
-    pins = manifest_pins(package_dir)
-    if filename not in pins:
-        raise ValueError(f"{filename} is not pinned in {package_dir}/sources")
-    digest = pins[filename]
-    return {
-        "name": package_dir.name,
-        "version": version,
-        "url": LOOKASIDE.format(pkg=package_dir.name, name=filename, hash=digest),
-        "filename": filename,
-        "sha512": digest,
-        "generated": {key: expand_macros(value, macros) for key, value in generated.items()},
-    }
-
-
-def _gcc_generated(package_dir: Path) -> dict:
-    text = (package_dir / "gcc.spec").read_text()
-    macros = recipe_macros(text)
-    revision = macros["gitrev"]
-    version = macros["gcc_version"]
-    prefix = f"gcc-{version}-{macros['DATE']}"
-    return _generated_lock(package_dir, {
-        "input": f"https://gcc.gnu.org/git/gcc.git revision {revision} (vendors/redhat/heads/gcc-{macros['gcc_major']}-branch)",
-        "method": f"git archive --prefix={prefix}/ {revision} | xz -9e",
-        "script": "packages/gcc/update-gcc.sh",
-    })
-
-
-def _intel_media_driver_free_generated(package_dir: Path) -> dict:
-    return _generated_lock(package_dir, {
-        "input": "https://github.com/intel/media-driver/archive/intel-media-%{version}.tar.gz",
-        "method": "remove non-free EU kernel files from the extracted tag archive and repack as intel-media-%{version}-free.tar.gz",
-        "script": "packages/intel-media-driver-free/strip.py",
-    })
-
-
-def _tailscale_generated(package_dir: Path) -> dict:
-    return _generated_lock(package_dir, {
-        "input": "https://github.com/tailscale/tailscale tag v%{version}",
-        "method": "go mod tidy && go mod vendor, drop unused cmd trees/k8s-operator/tstest, XZ_OPT='-e -9 -T0' tar -cJf",
-        "script": "packages/tailscale/create-vendor-tarball.sh",
-    })
-
-
-GENERATED_SOURCES = {
-    "gcc": _gcc_generated,
-    "intel-media-driver-free": _intel_media_driver_free_generated,
-    "tailscale": _tailscale_generated,
-}
+GENERATED_SOURCES = generated_sources.GENERATORS
 
 
 def generated_candidate(package_dir: Path) -> dict:
-    """Build the source lock for a recipe whose Source0 is generated, not published."""
-    resolver = GENERATED_SOURCES.get(package_dir.name)
-    if resolver is None:
-        raise ValueError(f"no generated source resolver for {package_dir.name}")
-    return resolver(package_dir)
+    """Build the source-lock metadata for a recipe whose Source0 is generated.
+
+    The returned entry has no ``sha512`` yet; :func:`prove_generated` fills it
+    with the digest of an actual generation run.
+    """
+    return generated_sources.metadata_for(package_dir.name, package_dir)
+
+
+def prove_generated(candidate: dict, package_dir: Path) -> str:
+    """Generate the archive twice and return the digest only if both agree.
+
+    A source lock is only as strong as the transformation's determinism, so a
+    single run is never accepted. When the package manifest already pins the
+    filename, the generated bytes must match that pin -- drift means the
+    manifest records Fedora's payload, not ours, and must be repinned first.
+    """
+    script = Path(__file__).resolve().parent / "generated_sources.py"
+    digests = []
+    for _ in range(2):
+        with tempfile.TemporaryDirectory(prefix="generated-source-") as work:
+            subprocess.run(
+                [sys.executable, str(script), candidate["name"], str(package_dir), work],
+                check=True,
+            )
+            artifact = Path(work) / candidate["filename"]
+            if not artifact.is_file():
+                raise ValueError(f"generation did not produce {candidate['filename']}")
+            digests.append(generated_sources.sha512_path(artifact))
+    if digests[0] != digests[1]:
+        raise ValueError(
+            f"non-deterministic generation for {candidate['name']}: "
+            f"{digests[0]} != {digests[1]}"
+        )
+    pinned = manifest_pins(package_dir).get(candidate["filename"])
+    if pinned and pinned != digests[0]:
+        raise ValueError(
+            f"generated bytes do not match the manifest pin for {candidate['filename']}: "
+            f"manifest has {pinned}, generation produced {digests[0]}; "
+            f"repin packages/{candidate['name']}/sources to the generated digest first"
+        )
+    return digests[0]
 
 
 def merge_candidates(existing: dict, candidates: list[dict]) -> dict:
@@ -245,15 +192,17 @@ def main() -> int:
         spec = specs[0]
         try:
             if package.name in GENERATED_SOURCES:
-                candidate = generated_candidate(package)
-                # The lock records the manifest pin; prove the served bytes
-                # are those exact bytes before accepting the entry.
-                digest, filename = sha512(candidate["url"])
-                if digest != candidate["sha512"] or filename != candidate["filename"]:
-                    raise ValueError(
-                        f"lookaside artifact mismatch for {candidate['filename']}: "
-                        f"expected {candidate['sha512']}, got {digest}"
-                    )
+                if not args.package:
+                    raise ValueError("generated Source0 requires an explicit --package selection")
+                metadata = generated_candidate(package)
+                digest = prove_generated(metadata, package)
+                candidate = {
+                    "name": metadata["name"],
+                    "version": metadata["version"],
+                    "filename": metadata["filename"],
+                    "sha512": digest,
+                    "generate": metadata["generate"],
+                }
                 candidates.append(candidate)
                 continue
             name, version = rpm_value(spec, "%{NAME}"), rpm_value(spec, "%{VERSION}")
