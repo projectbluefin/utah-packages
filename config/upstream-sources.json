@@ -1306,6 +1306,112 @@
       "filename": "firefox-140.13.0esr.source.tar.xz",
       "sha512": "937a4103d71c5e1e4bf051821729f6ea70b5c18d444930a487695cc23d74712a0134047248f6ac02305e01becb705426a55b9d89739f02a01eda01ecf5bc27f1",
       "stage": 1
+    },
+    {
+      "name": "dracut",
+      "version": "111",
+      "url": "https://github.com/dracut-ng/dracut/archive/refs/tags/111.tar.gz",
+      "filename": "111.tar.gz",
+      "sha512": "4c8a3e1e82bfc1dbe155241564bc93bedc2b321566002ccc643697b50173b8e564d03b1bbff4f49602e0cb7abbee21dfb14aadc453ac9703a846c160d070b4bc"
+    },
+    {
+      "name": "evolution-ews",
+      "version": "3.61.3",
+      "url": "http://download.gnome.org/sources/evolution-ews/3.61/evolution-ews-3.61.3.tar.xz",
+      "filename": "evolution-ews-3.61.3.tar.xz",
+      "sha512": "617369f907a62ebba88fc83dc21047d7b8fa126a40f85de807a7f561a4d682aea2f9e0e1e9920eb539696675290093fd78a657dfbd521f2e6783f82db55cf813"
+    },
+    {
+      "name": "firewalld",
+      "version": "2.5.1",
+      "url": "https://github.com/firewalld/firewalld/releases/download/v2.5.1/firewalld-2.5.1.tar.bz2",
+      "filename": "firewalld-2.5.1.tar.bz2",
+      "sha512": "9b7d61cef7dc016e55ea3493c2566cb516f40446029a1d74805411e1a91d15848d69740d5d2182ea5448118ec59ebc20c78c941fdb4c003628769cb0f0976114"
+    },
+    {
+      "name": "fish",
+      "version": "4.6.0",
+      "url": "https://github.com/fish-shell/fish-shell/releases/download/4.6.0/fish-4.6.0.tar.xz",
+      "filename": "fish-4.6.0.tar.xz",
+      "sha512": "2acc6453f102b570f0f2765739a020f63051b7ee2a7f49d086459287c9e5a8658294b0081904b4897315195c6510a7e53794da9937f6f64aa53c65eb448d68b5"
+    },
+    {
+      "name": "gcc",
+      "version": "16.2.1",
+      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/gcc/gcc-16.2.1-20260819.tar.xz/sha512/6583ec486ab104dbb46aed2adb27d0e77c02e60ecd275c7bc9f0da51f865a61432b3b6d37d57381fde0d7c097ec231b197f6c9ab1b6787511f425aac9bcc037a/gcc-16.2.1-20260819.tar.xz",
+      "filename": "gcc-16.2.1-20260819.tar.xz",
+      "sha512": "6583ec486ab104dbb46aed2adb27d0e77c02e60ecd275c7bc9f0da51f865a61432b3b6d37d57381fde0d7c097ec231b197f6c9ab1b6787511f425aac9bcc037a",
+      "generated": {
+        "input": "https://gcc.gnu.org/git/gcc.git revision 95ef1679dd68f27b3d056a497318089d85aa0d55 (vendors/redhat/heads/gcc-16-branch)",
+        "method": "git archive --prefix=gcc-16.2.1-20260819/ 95ef1679dd68f27b3d056a497318089d85aa0d55 | xz -9e",
+        "script": "packages/gcc/update-gcc.sh"
+      }
+    },
+    {
+      "name": "git",
+      "version": "2.55.0",
+      "url": "https://www.kernel.org/pub/software/scm/git/git-2.55.0.tar.xz",
+      "filename": "git-2.55.0.tar.xz",
+      "sha512": "73a53e5e79e9c357884512ad9fe5788ce48c33fd7ebb49f7c68f63c872beb5c5766f4fd1a9d9a2d8c89c192dc801ac7339422e9eec644ada56215fe9803af741"
+    },
+    {
+      "name": "intel-media-driver-free",
+      "version": "26.2.4",
+      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/intel-media-driver-free/intel-media-26.2.4-free.tar.gz/sha512/a8a496174f8c16ed4ee3975d65fb81b3e3b1a10ebe9e9978e02b593779813df10e81b511eb3155c31a85f428fe9f1ecacc04c33423c3d216f0058d7ae0674bad/intel-media-26.2.4-free.tar.gz",
+      "filename": "intel-media-26.2.4-free.tar.gz",
+      "sha512": "a8a496174f8c16ed4ee3975d65fb81b3e3b1a10ebe9e9978e02b593779813df10e81b511eb3155c31a85f428fe9f1ecacc04c33423c3d216f0058d7ae0674bad",
+      "generated": {
+        "input": "https://github.com/intel/media-driver/archive/intel-media-26.2.4.tar.gz",
+        "method": "remove non-free EU kernel files from the extracted tag archive and repack as intel-media-26.2.4-free.tar.gz",
+        "script": "packages/intel-media-driver-free/strip.py"
+      }
+    },
+    {
+      "name": "ntfs-3g",
+      "version": "2026.7.7",
+      "url": "http://tuxera.com/opensource/ntfs-3g_ntfsprogs-2026.7.7.tgz",
+      "filename": "ntfs-3g_ntfsprogs-2026.7.7.tgz",
+      "sha512": "5b0a866c3c556f97b1c712fd09b148ecfd194429620e1b45f0630f6b4dee6a087496ff9bbe36bfa1a3e7c58483c43d45bb1e03956e0386aebe8b66522d90cdc2"
+    },
+    {
+      "name": "openssh",
+      "version": "10.5p1",
+      "url": "https://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-10.5p1.tar.gz",
+      "filename": "openssh-10.5p1.tar.gz",
+      "sha512": "5336c1945527b29ed59cc500fa8bfbd918f5ba97e85512daad9ab7241418929bf7152d300e5f3c5f9a8c8d699dfde5a64c5faa4fc33b2758ab52dd04040d6284"
+    },
+    {
+      "name": "rust-bootupd",
+      "version": "0.2.36",
+      "url": "https://crates.io/api/v1/crates/bootupd/0.2.36/download#/bootupd-0.2.36.crate",
+      "filename": "bootupd-0.2.36.crate",
+      "sha512": "2ee451f486ef35a1978731657fcbbd964f525e29b73a603b72250f84518bfc1afb13acb0ef9b2ae96ac4be4efb586c516d4c7f88605c990ed241b57c1edd6d7e"
+    },
+    {
+      "name": "shared-mime-info",
+      "version": "2.5.1",
+      "url": "https://gitlab.freedesktop.org/xdg/shared-mime-info/-/archive/2.5.1/shared-mime-info-2.5.1.tar.bz2",
+      "filename": "shared-mime-info-2.5.1.tar.bz2",
+      "sha512": "042b8e6e54d93b19e34624b30d2ba2808e068bf68d9138103f41f077e805e0de1cfb7a519b643adbe329818ee685506239e918bce169565a0809cf01ccc68ddf"
+    },
+    {
+      "name": "tailscale",
+      "version": "1.98.8",
+      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/tailscale/tailscale-1.98.8-vendored.tar.xz/sha512/aae219551bd7308fd40067c7b5492ccb4884c9cba0fecef6f230af44d52b2c9dcff541fd0e6d4a8db9297a5245a17ce8613e29f7bf18c1f5b2316eccd553171c/tailscale-1.98.8-vendored.tar.xz",
+      "filename": "tailscale-1.98.8-vendored.tar.xz",
+      "sha512": "aae219551bd7308fd40067c7b5492ccb4884c9cba0fecef6f230af44d52b2c9dcff541fd0e6d4a8db9297a5245a17ce8613e29f7bf18c1f5b2316eccd553171c",
+      "generated": {
+        "input": "https://github.com/tailscale/tailscale tag v1.98.8",
+        "method": "go mod tidy && go mod vendor, drop unused cmd trees/k8s-operator/tstest, XZ_OPT='-e -9 -T0' tar -cJf",
+        "script": "packages/tailscale/create-vendor-tarball.sh"
+      }
+    },
+    {
+      "name": "zsh",
+      "version": "5.9.2",
+      "url": "https://downloads.sourceforge.net/zsh/zsh-5.9.2.tar.xz",
+      "filename": "zsh-5.9.2.tar.xz",
+      "sha512": "40bb5eb2cf217e6bcff342fcc9314f082a5d8975abcb56897e86eba5839ddf0ec1ac3feed1e797d4c68cea22228197342916f14bb87309bbcc026a87622bc015"
     }
   ]
 }
