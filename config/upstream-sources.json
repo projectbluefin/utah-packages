@@ -65,6 +65,13 @@
       "sha512": "041f54744fe30fa94781968c89c77ab9073fc9a828014d07a0f7e0f11c4185ace6846d5d2a313fcca6e9cda6e4837fd6f62e883b0fdb0a4e30a8c18ba7b2e05d"
     },
     {
+      "name": "alsa-sof-firmware",
+      "version": "2025.12.2",
+      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/alsa-sof-firmware/sof-bin-2025.12.2.tar.gz/sha512/5eb64665c2cb87967ff2aa81f7d39397dc6e813abea531e89c12bb5c0a15821e7cbfd8c485af196e37984c1cdf9ac72c93f9feea1205d9d71736d163f5af0084/sof-bin-2025.12.2.tar.gz",
+      "filename": "sof-bin-2025.12.2.tar.gz",
+      "sha512": "5eb64665c2cb87967ff2aa81f7d39397dc6e813abea531e89c12bb5c0a15821e7cbfd8c485af196e37984c1cdf9ac72c93f9feea1205d9d71736d163f5af0084"
+    },
+    {
       "name": "alsa-tools",
       "version": "1.2.15",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/alsa-tools/alsa-tools-1.2.15.tar.bz2/sha512/b2354fcaccfa316df7847438ad6b4ca3702be4ca88c46878c198a52ca6c659263b61759d4898e7a73acf64dd0e3004c103fa67a1cbdb2e53212f13368173be23/alsa-tools-1.2.15.tar.bz2",
