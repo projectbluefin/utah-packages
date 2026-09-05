@@ -58,6 +58,14 @@ source-one package:
 source-all:
     @just source
 
+# Same build script as CI; downloads, compiler cache and logs survive retries.
+build package:
+    bash tools/build-package.sh "{{ package }}"
+
+# Resolve static/dynamic BuildRequires and prepare sources without compiling.
+build-deps package:
+    bash tools/build-package.sh "{{ package }}" --deps-only
+
 clean-work:
     rm -rf -- "{{ work_dir }}"
 

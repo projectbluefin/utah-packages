@@ -13,6 +13,8 @@ on:
       - config/**
       - packages/**
       - tools/build_identity.py
+      - tools/build-package.sh
+      - tools/build-rpm.sh
       - .github/workflows/rebuild-lane.yml
       - .github/workflows/smoke-lane.yml
 

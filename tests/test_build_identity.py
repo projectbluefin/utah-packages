@@ -17,6 +17,9 @@ class BuildIdentityTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             (root / "config").mkdir()
+            (root / "tools").mkdir()
+            (root / "tools" / "build-rpm.sh").write_text("build\n")
+            (root / "tools" / "build-package.sh").write_text("driver\n")
             (root / "packages" / "demo").mkdir(parents=True)
             (root / "config" / "upstream-sources.json").write_text(
                 json.dumps({"packages": [{"name": "demo", "version": "1", "sha512": "a"}]})
@@ -35,6 +38,9 @@ class BuildIdentityTests(unittest.TestCase):
             recipe.write_text("Version: 2\n")
             second = identity("demo", root)
             self.assertNotEqual(first["build_key"], second["build_key"])
+            (root / "tools" / "build-rpm.sh").write_text("changed build user\n")
+            third = identity("demo", root)
+            self.assertNotEqual(second["build_key"], third["build_key"])
 
 
 if __name__ == "__main__":
