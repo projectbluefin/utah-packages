@@ -819,11 +819,25 @@
       "sha512": "624dcefa1c79064569df952892f7f1351dc19ad338ce73d1a57041e406cb3e18abe531bab352b93d1f0f5c9b5c6b2652cc84a8f1fbfcbba648343812695a8acb"
     },
     {
+      "name": "libXdmcp",
+      "version": "1.1.5",
+      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/libXdmcp/libXdmcp-1.1.5.tar.xz/sha512/d7a1d70a58b7d34ddd01a91d3ccbc086a36626b7081cfcbb150d24288c6adad612b042ba7ea63a218595afb2ee04384c0f8ba84ee3c6bd29913724b54e898d83/libXdmcp-1.1.5.tar.xz",
+      "filename": "libXdmcp-1.1.5.tar.xz",
+      "sha512": "d7a1d70a58b7d34ddd01a91d3ccbc086a36626b7081cfcbb150d24288c6adad612b042ba7ea63a218595afb2ee04384c0f8ba84ee3c6bd29913724b54e898d83"
+    },
+    {
       "name": "libXfixes",
       "version": "6.0.1",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/libXfixes/libXfixes-6.0.1.tar.xz/sha512/b46deffb30cd73ec8a127390d99f2ba2f3ab78f334fdba227f1f461441644a0c169b0d13ffa47576fa458780e7a6db664ff8b93e9195fb217262efd8128f1ffe/libXfixes-6.0.1.tar.xz",
       "filename": "libXfixes-6.0.1.tar.xz",
       "sha512": "b46deffb30cd73ec8a127390d99f2ba2f3ab78f334fdba227f1f461441644a0c169b0d13ffa47576fa458780e7a6db664ff8b93e9195fb217262efd8128f1ffe"
+    },
+    {
+      "name": "libXfont2",
+      "version": "2.0.9",
+      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/libXfont2/libXfont2-2.0.9.tar.xz/sha512/ccd6d6abf6aa814a940d137813dba638f8259c3672abf00808d82df033c1026ae29d40c9068da4f112637338ad0d0fc15818a4afa9369a626c8f17e466b4fa72/libXfont2-2.0.9.tar.xz",
+      "filename": "libXfont2-2.0.9.tar.xz",
+      "sha512": "ccd6d6abf6aa814a940d137813dba638f8259c3672abf00808d82df033c1026ae29d40c9068da4f112637338ad0d0fc15818a4afa9369a626c8f17e466b4fa72"
     },
     {
       "name": "libXinerama",
@@ -1398,6 +1412,13 @@
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/libx86emu/libx86emu-3.7.tar.gz/sha512/e93db0f32d9e83f7f5f87753f1afb70add90bc033bc71e92fbe551608153a8ae7f1fe5c2900523445cb473ea7c1e26a8296f11a8cf248a816f3c5bf450a7b99c/libx86emu-3.7.tar.gz",
       "filename": "libx86emu-3.7.tar.gz",
       "sha512": "e93db0f32d9e83f7f5f87753f1afb70add90bc033bc71e92fbe551608153a8ae7f1fe5c2900523445cb473ea7c1e26a8296f11a8cf248a816f3c5bf450a7b99c"
+    },
+    {
+      "name": "libxcvt",
+      "version": "0.1.2",
+      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/libxcvt/libxcvt-0.1.2.tar.xz/sha512/3f6b2baca712a4608780686932f8881255c07bb74b1a788f9b07d4e22975c038d75111cd6b452257882a0b2bad57eebb2002f80a3e435d2e2d16936597f039b0/libxcvt-0.1.2.tar.xz",
+      "filename": "libxcvt-0.1.2.tar.xz",
+      "sha512": "3f6b2baca712a4608780686932f8881255c07bb74b1a788f9b07d4e22975c038d75111cd6b452257882a0b2bad57eebb2002f80a3e435d2e2d16936597f039b0"
     },
     {
       "name": "libxmlb",
@@ -2226,6 +2247,13 @@
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/xhost/xhost-1.0.10.tar.xz/sha512/65467b0a096455dae681f8397f5b8b0490a2f80db5cb9f92757cfff8d7822b43833202a275eed8467c6a6aaf3b02e0a7b1a069c5d587d32e56b1893297903051/xhost-1.0.10.tar.xz",
       "filename": "xhost-1.0.10.tar.xz",
       "sha512": "65467b0a096455dae681f8397f5b8b0490a2f80db5cb9f92757cfff8d7822b43833202a275eed8467c6a6aaf3b02e0a7b1a069c5d587d32e56b1893297903051"
+    },
+    {
+      "name": "xkbcomp",
+      "version": "1.5.0",
+      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/xkbcomp/xkbcomp-1.5.0.tar.xz/sha512/d8ef4906261251e2600b3650660fbe88ed99a44694f1e59b433e0811f1ab5234c4f2f0b3647fa5372fb0f46b56eac60c0219a762bf1af0ab06226b63e4a6b081/xkbcomp-1.5.0.tar.xz",
+      "filename": "xkbcomp-1.5.0.tar.xz",
+      "sha512": "d8ef4906261251e2600b3650660fbe88ed99a44694f1e59b433e0811f1ab5234c4f2f0b3647fa5372fb0f46b56eac60c0219a762bf1af0ab06226b63e4a6b081"
     },
     {
       "name": "xmlrpc-c",
