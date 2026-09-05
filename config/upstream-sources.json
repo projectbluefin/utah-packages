@@ -295,6 +295,13 @@
       "sha512": "f84724e0e9850c6150ec93430a0c3a714f4b4376df2fd3fd68340463acf04d89de236510b40bab4f3dc8fd82a2e8dc98b53c2684df07fdb9a6a3528ed35652d1"
     },
     {
+      "name": "gcr3",
+      "version": "3.41.1",
+      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/gcr3/gcr-3.41.1.tar.xz/sha512/dd70d41636ede863d05824b26823a8f572902f7a9b6f09b0c70586ef0d4c046864e6956130b9231850a515a9fbfcd56faf20354c1cf8f697f005827c048a2325/gcr-3.41.1.tar.xz",
+      "filename": "gcr-3.41.1.tar.xz",
+      "sha512": "dd70d41636ede863d05824b26823a8f572902f7a9b6f09b0c70586ef0d4c046864e6956130b9231850a515a9fbfcd56faf20354c1cf8f697f005827c048a2325"
+    },
+    {
       "name": "gdk-pixbuf2",
       "version": "2.44.8",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/gdk-pixbuf2/gdk-pixbuf-2.44.8.tar.xz/sha512/5fa8066abbfc29d7d9f07d95af2cfa2668e90381ecf1055ea449d35661b997d55e84e64ae1dedc14cf13d66912d05b1398075c560ce1aeeea7ae60a7d73c873a/gdk-pixbuf-2.44.8.tar.xz",
