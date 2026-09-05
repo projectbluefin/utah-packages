@@ -36,6 +36,8 @@ class PackitSrpmTests(unittest.TestCase):
         self.assertIn("--stage-into packages", workflow)
         self.assertIn("--verify-staged packages", workflow)
         self.assertIn("packit srpm --preserve-spec", workflow)
+        self.assertIn("- tools/packit_source0.py", workflow)
+        self.assertIn("- tools/packit_workflow.py", workflow)
         self.assertRegex(workflow, r"(?m)^  push:\n    branches: \[main\]$")
         self.assertIn("create-archive:", PACKIT_CONFIG.read_text())
         self.assertIn("tools/packit_source0.py", PACKIT_CONFIG.read_text())

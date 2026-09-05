@@ -22,14 +22,18 @@ on:
       - config/upstream-sources.json
       - packages/**/*.spec
       - .github/workflows/packit-srpm-pilot.yml
+      - tools/packit_source0.py
       - tools/source_pipeline.py
+      - tools/packit_workflow.py
   pull_request:
     paths:
       - .packit.yaml
       - config/upstream-sources.json
       - packages/**/*.spec
       - .github/workflows/packit-srpm-pilot.yml
+      - tools/packit_source0.py
       - tools/source_pipeline.py
+      - tools/packit_workflow.py
 
 permissions:
   contents: read
