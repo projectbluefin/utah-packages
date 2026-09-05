@@ -275,6 +275,10 @@ desktop-file-validate $RPM_BUILD_ROOT%{_datadir}/applications/qvidcap.desktop
 %files -n rc-tools
 %dir %{_sysconfdir}/rc_keymaps
 %config(noreplace) %{_sysconfdir}/rc_maps.cfg
+# 1.32.0 added a udevd drop-in that raises the service's memory limit so
+# ir-keytable can load a keymap. Fedora's spec does not package it, so the
+# build stops on an unpackaged file; it belongs with the tool that needs it.
+%{_prefix}/lib/systemd/system/systemd-udevd.service.d/50-rc_keymap.conf
 %{_udevrulesdir}/70-infrared.rules
 %{_udevrulesdir}/../rc_keymaps/*
 %{_bindir}/ir-ctl

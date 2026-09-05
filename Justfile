@@ -93,6 +93,13 @@ local-repo-with-builds output="localhost/utah-packages:local-merged":
     done
     bash tools/compose-local-repository.sh "{{ output }}" "${inputs[@]}"
 
+# Give a local build the earlier-stage RPMs its CI lane would have had. Needed
+# for any package whose dependencies the factory rebuilds with a new soname:
+# without it, `just build` links Fedora's copy and produces an RPM the runtime
+# cannot install. Compose the repository first.
+seed-prior package input="localhost/utah-packages:local-merged":
+    bash tools/seed-build-prior.sh "{{ package }}" "{{ input }}"
+
 clean-work:
     rm -rf -- "{{ work_dir }}"
 
