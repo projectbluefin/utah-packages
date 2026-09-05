@@ -23,8 +23,20 @@
 # published libheif asks for libopenjph.so.0.25 and nothing will ever answer.
 # glycin build-requires libheif and stays in the fast lane, which is correct:
 # libheif's own soname does not move, only the openjph it links.
+#
+# Xwayland is late for a version floor rather than a soname: 26.0.99.901
+# build-requires wayland >= 1.26.0, and the build root offers 1.25.0. The
+# factory builds 1.26.0 in the fast lane, so this is the first place that can
+# see it -- in the fast lane beside it, meson stops at
+#   Dependency lookup for wayland-client ... found '1.25.0'
 [stage0_late]
-packages = ["ffmpeg", "gstreamer1-plugins-good", "libheif", "webrtc-audio-processing"]
+packages = [
+  "ffmpeg",
+  "gstreamer1-plugins-good",
+  "libheif",
+  "webrtc-audio-processing",
+  "xorg-x11-server-Xwayland",
+]
 
 # WebKitGTK is built as two shards of one recipe, one GTK port each, so the
 # two compiles that used to run back to back on one runner (five hours) run

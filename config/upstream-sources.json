@@ -2228,6 +2228,13 @@
       "sha512": "2319f1b7eee54d650930c9e16c06e8db5a0c19eaef1902d6196d666bcab8bc288baaea65d3b561e117fc98b918cbcd9c2660c91c556f3fa08e0f57a8f0d38f82"
     },
     {
+      "name": "xorg-x11-server-Xwayland",
+      "version": "26.0.99.901",
+      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/xorg-x11-server-Xwayland/xwayland-26.0.99.901.tar.xz/sha512/384647c4577ac961037c8a450ca1e4fb681b42dfdb4abc26105021fe79c90a62bb0f648faf00d948f884007690a3fc6fbc9f28b58cd25f786c03749f01ccd466/xwayland-26.0.99.901.tar.xz",
+      "filename": "xwayland-26.0.99.901.tar.xz",
+      "sha512": "384647c4577ac961037c8a450ca1e4fb681b42dfdb4abc26105021fe79c90a62bb0f648faf00d948f884007690a3fc6fbc9f28b58cd25f786c03749f01ccd466"
+    },
+    {
       "name": "xorg-x11-xauth",
       "version": "1.1.5",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/xorg-x11-xauth/xauth-1.1.5.tar.xz/sha512/df94b59de49ced2490351b7ab42d56d3ef92077891b8ba7a73c53b6babb1facd250d934b82f36ee1ddc355dffefb8f52914d30893c9d578711264f82e9bf3cb9/xauth-1.1.5.tar.xz",
