@@ -9,12 +9,20 @@ name: Packit SRPM pilot
 #
 # This job is additive and does not touch rebuild-rpms.yml: it does not feed
 # the produced SRPM into Mock, the RPM overlay, or the published repository.
-# The 117 packages without a root-level packit config entry, and every
-# per-package .packit.yaml/README.packit leftover from the original Fedora
-# dist-git import, are untouched.
+# Packages without a root-level packit config entry, and every per-package
+# .packit.yaml/README.packit leftover from the original Fedora dist-git import,
+# are untouched.
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .packit.yaml
+      - config/upstream-sources.json
+      - packages/**/*.spec
+      - .github/workflows/packit-srpm-pilot.yml
+      - tools/source_pipeline.py
   pull_request:
     paths:
       - .packit.yaml

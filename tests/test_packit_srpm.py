@@ -34,6 +34,7 @@ class PackitSrpmTests(unittest.TestCase):
         )
         self.assertIn("--stage-into packages", workflow)
         self.assertIn("packit srpm --preserve-spec", workflow)
+        self.assertRegex(workflow, r"(?m)^  push:\n    branches: \[main\]$")
 
 
 if __name__ == "__main__":
