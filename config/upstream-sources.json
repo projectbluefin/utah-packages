@@ -79,6 +79,13 @@
       "sha512": "b2354fcaccfa316df7847438ad6b4ca3702be4ca88c46878c198a52ca6c659263b61759d4898e7a73acf64dd0e3004c103fa67a1cbdb2e53212f13368173be23"
     },
     {
+      "name": "appstream",
+      "version": "1.1.3",
+      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/appstream/AppStream-1.1.3.tar.xz/sha512/f0fdce1e4c43818a41c31fcb2531725fe5e1c1e9b47b028c0f2810860866d8058c5dada0500f2cee0ae5a36e1498abb7304e570179e95fdc834127e1746c5225/AppStream-1.1.3.tar.xz",
+      "filename": "AppStream-1.1.3.tar.xz",
+      "sha512": "f0fdce1e4c43818a41c31fcb2531725fe5e1c1e9b47b028c0f2810860866d8058c5dada0500f2cee0ae5a36e1498abb7304e570179e95fdc834127e1746c5225"
+    },
+    {
       "name": "aribb24",
       "version": "1.0.3^20160216git5e9be27",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/aribb24/aribb24-5e9be27.tar.gz/sha512/9dd0be0759482d10839c5cb9fe116b2e1aadb784f77e9206b5444e88e5f8d21ddabe79721bf343c41b8fc96c6e733873bc03930bd5bfeedd90d62f3617d75bfd/aribb24-5e9be27.tar.gz",
@@ -244,6 +251,14 @@
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/flac/flac-1.5.0.tar.xz/sha512/34c9193b804e990b0828a5759e4d7ef1d1859174262d3b305d03e65285edb35c7f429e8071d9dd2c6da0c16e842b40b439bf215704636ae15dd5886151f0d17a/flac-1.5.0.tar.xz",
       "filename": "flac-1.5.0.tar.xz",
       "sha512": "34c9193b804e990b0828a5759e4d7ef1d1859174262d3b305d03e65285edb35c7f429e8071d9dd2c6da0c16e842b40b439bf215704636ae15dd5886151f0d17a"
+    },
+    {
+      "name": "flatpak",
+      "stage": 1,
+      "version": "1.19.0",
+      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/flatpak/flatpak-1.19.0.tar.xz/sha512/686b6152705e6168d74093d44370d308093fa98d6c4e693f00804e540ee8f135b5994efa72f783a081b98d9c1b41ecdb4664f4fe05c78418cb5c6fbc5691f501/flatpak-1.19.0.tar.xz",
+      "filename": "flatpak-1.19.0.tar.xz",
+      "sha512": "686b6152705e6168d74093d44370d308093fa98d6c4e693f00804e540ee8f135b5994efa72f783a081b98d9c1b41ecdb4664f4fe05c78418cb5c6fbc5691f501"
     },
     {
       "name": "flatpak-xdg-utils",
@@ -1131,7 +1146,9 @@
     },
     {
       "name": "libheif",
-      "rpm_defines": ["_with_bootstrap 1"],
+      "rpm_defines": [
+        "_with_bootstrap 1"
+      ],
       "version": "1.23.1",
       "url": "https://github.com/strukturag/libheif/archive/v1.23.1/libheif-1.23.1.tar.gz",
       "filename": "libheif-1.23.1.tar.gz",
