@@ -168,6 +168,13 @@
       "sha512": "119db19d4ca95ffcd50a0d40aebde15f346fbd745b5c84e9d58d8895a51acba52040540b1a325bd61f2c791a525c556526536df1e24c684cfd3b7c7ebfa2e589"
     },
     {
+      "name": "desktop-file-utils",
+      "version": "0.28",
+      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/desktop-file-utils/desktop-file-utils-0.28.tar.xz/sha512/1024172fcd37ace0660fd58195c0562b47f1ef8ed37f662b88048c295a388d1458d01f86799b34ec9e8b27a7ea441f98665f0d641c29cb5ecc3abd7da41230f0/desktop-file-utils-0.28.tar.xz",
+      "filename": "desktop-file-utils-0.28.tar.xz",
+      "sha512": "1024172fcd37ace0660fd58195c0562b47f1ef8ed37f662b88048c295a388d1458d01f86799b34ec9e8b27a7ea441f98665f0d641c29cb5ecc3abd7da41230f0"
+    },
+    {
       "name": "device-mapper-persistent-data",
       "version": "1.3.3",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/device-mapper-persistent-data/v1.3.3.tar.gz/sha512/0bba8f851fdfd65751564ca65d48c3ebca7c5839258db1401003c6cf58bb6a4c79f291135a96b4151ba1118fb1c6d083f49a0a9adc1362e06264253d7180ecd2/v1.3.3.tar.gz",
