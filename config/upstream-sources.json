@@ -1110,6 +1110,13 @@
       "stage": 0
     },
     {
+      "name": "libfyaml",
+      "version": "0.8",
+      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/libfyaml/libfyaml-0.8.tar.gz/sha512/7c9dd4e0d39a8dec71fa6e9518e81e4c1c5998e3de1db9ab7db58ebd4f99efaa41b071bf9575de88400a4aeff597cf36361d01f568122a6e1214a92fb1efd507/libfyaml-0.8.tar.gz",
+      "filename": "libfyaml-0.8.tar.gz",
+      "sha512": "7c9dd4e0d39a8dec71fa6e9518e81e4c1c5998e3de1db9ab7db58ebd4f99efaa41b071bf9575de88400a4aeff597cf36361d01f568122a6e1214a92fb1efd507"
+    },
+    {
       "name": "libglvnd",
       "version": "1.7.0",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/libglvnd/libglvnd-1.7.0.tar.gz/sha512/8ad2e64d5fc2c70918383170a8e335e63e5de151855bcc7140321e08f1ea91cc464a643edf060e2d4289e59011cd42e0edadb268c0067d5515141071825ce747/libglvnd-1.7.0.tar.gz",
