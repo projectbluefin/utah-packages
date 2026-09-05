@@ -74,6 +74,25 @@ local-repo output="localhost/utah-packages:local-merged":
       ghcr.io/projectbluefin/utah-packages:latest \
       ghcr.io/projectbluefin/utah-packages:building
 
+# Same repository, plus every RPM `just build` has produced in this checkout.
+# Local results come last, so a package rebuilt here wins over the published
+# copy and a composition test measures the working tree, not the last release.
+local-repo-with-builds output="localhost/utah-packages:local-merged":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    inputs=(
+      ghcr.io/projectbluefin/utah-packages:latest
+      ghcr.io/projectbluefin/utah-packages:building
+    )
+    # Only result/, never prior/ or a previous.* directory: those hold RPMs
+    # from earlier builds that this checkout no longer claims to produce.
+    for result in "{{ work_dir }}"/local/*/result; do
+      [ -d "$result" ] || continue
+      [ -n "$(find "$result" -name '*.rpm' -type f -print -quit)" ] || continue
+      inputs+=("$result")
+    done
+    bash tools/compose-local-repository.sh "{{ output }}" "${inputs[@]}"
+
 clean-work:
     rm -rf -- "{{ work_dir }}"
 

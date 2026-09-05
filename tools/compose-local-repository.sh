@@ -3,7 +3,9 @@
 set -euo pipefail
 
 usage() {
-  echo "Usage: $0 OUTPUT_IMAGE INPUT_IMAGE [INPUT_IMAGE ...]" >&2
+  echo "Usage: $0 OUTPUT_IMAGE INPUT [INPUT ...]" >&2
+  echo "An INPUT is either a repository image reference or a local" >&2
+  echo "directory of RPMs, such as one package's work/local/*/result." >&2
 }
 
 output=${1:-}
@@ -15,13 +17,30 @@ trap 'rm -rf -- "$workspace"' EXIT
 repository="$workspace/repository"
 mkdir -p "$repository"
 
-for image in "$@"; do
-  if ! podman image exists "$image"; then
-    podman pull "$image"
+index=0
+for source in "$@"; do
+  input="$workspace/input-$index"
+  mkdir -p "$input"
+  if [[ -d $source ]]; then
+    # A locally built package's output directory, so a rebuild can be tested
+    # against the published baseline without publishing it first.
+    cp -R -- "$source/." "$input/"
+  else
+    if ! podman image exists "$source"; then
+      podman pull "$source"
+    fi
+    container=$(podman create "$source" /bin/true)
+    podman cp "$container:/repository/." "$input/"
+    podman rm "$container" >/dev/null
   fi
-  container=$(podman create "$image" /bin/true)
-  podman cp "$container:/repository/." "$repository/"
-  podman rm "$container" >/dev/null
+
+  # Repository images may arrange RPMs in different subdirectories. Flatten
+  # them so an identical NEVRA has one unambiguous copy, with later inputs
+  # intentionally replacing earlier ones (base image first, overlays last).
+  while IFS= read -r -d '' rpm; do
+    cp -f -- "$rpm" "$repository/$(basename "$rpm")"
+  done < <(find "$input" -name '*.rpm' -type f -print0 | sort -z)
+  index=$((index + 1))
 done
 
 test -n "$(find "$repository" -name '*.rpm' -type f -print -quit)" || {
