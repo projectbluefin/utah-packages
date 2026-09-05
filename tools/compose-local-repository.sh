@@ -12,7 +12,10 @@ output=${1:-}
 shift || true
 [[ -n $output && $# -gt 0 ]] || { usage; exit 2; }
 
-workspace=$(mktemp -d "${TMPDIR:-/var/tmp}/utah-local-repository.XXXXXX")
+# Deliberately not $TMPDIR: this stages several gigabytes of RPMs, and /tmp is
+# a tmpfs on the machines this runs on, so honouring it fills memory and the
+# compose dies half way through with ENOSPC.
+workspace=$(mktemp -d "${FACTORY_TMPDIR:-/var/tmp}/utah-local-repository.XXXXXX")
 trap 'rm -rf -- "$workspace"' EXIT
 repository="$workspace/repository"
 mkdir -p "$repository"
