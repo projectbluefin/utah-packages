@@ -875,6 +875,13 @@
       "sha512": "f7c0b083943e11b4cc3c97e10e2cbbc3920fe0c9c5031ef86fca2eb5df413d767caf53dca266abf65395eb10e55354c8fe59ed6b3265402ffccb919a813bc781"
     },
     {
+      "name": "libXt",
+      "version": "1.3.1",
+      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/libXt/libXt-1.3.1.tar.xz/sha512/c220292f60b0f53134cf9364831a32bbaa9fa6bbb3a7143e917920957b7a48c616e946042747089f29ea9d8a18ecd64de620bcaf56d82462e7107de906f5db38/libXt-1.3.1.tar.xz",
+      "filename": "libXt-1.3.1.tar.xz",
+      "sha512": "c220292f60b0f53134cf9364831a32bbaa9fa6bbb3a7143e917920957b7a48c616e946042747089f29ea9d8a18ecd64de620bcaf56d82462e7107de906f5db38"
+    },
+    {
       "name": "libXv",
       "version": "1.0.13",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/libXv/libXv-1.0.13.tar.xz/sha512/80d7a11e6415fbe0fc50c3c2a1abf8f0f2ec38446c9c8d88ff48875cd94b8949cb1028f2ab37476c4b25cbd7eac34dde9132dd998c4e04ea576b95ae411ba946/libXv-1.0.13.tar.xz",
