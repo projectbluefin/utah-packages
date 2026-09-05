@@ -1088,6 +1088,13 @@
       "sha512": "b71ad9ce9c79e13e5b0e39f451770399bf71837581ab4a5e5c695f3c33511b45df79e8ad58d71bde28a97c3f032b64669e078e6d1417f3db006f4afd74c48c89"
     },
     {
+      "name": "libimobiledevice-glue",
+      "version": "1.3.2",
+      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/libimobiledevice-glue/libimobiledevice-glue-1.3.2.tar.bz2/sha512/d12b853dedec39a28c34c19dc1a2d26e81d9aba0e64d9c7ed03aa921feee5613598a30e9c51bd79d9ec840399a97091525fc5e4c5ac4b20d68ea8c96a35fc7d1/libimobiledevice-glue-1.3.2.tar.bz2",
+      "filename": "libimobiledevice-glue-1.3.2.tar.bz2",
+      "sha512": "d12b853dedec39a28c34c19dc1a2d26e81d9aba0e64d9c7ed03aa921feee5613598a30e9c51bd79d9ec840399a97091525fc5e4c5ac4b20d68ea8c96a35fc7d1"
+    },
+    {
       "name": "libinput",
       "version": "1.31.3",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/libinput/libinput-1.31.3.tar.bz2/sha512/758b9e8402685a1222946df5d7dfb416c5351f6d7493f15c6760fdbe0824d2cd8e46b64715dbf779f35ed19d50fa7fb09c23b10a48ced5c9ffafec46035116a9/libinput-1.31.3.tar.bz2",
@@ -1302,6 +1309,13 @@
       "sha512": "032fb60f10ac0074ec87d5f8c586702309edc50dc0d2842d2f9b9c46ebd1500acc399e9309f858f318fff5b8fbe953234db3afb54ed74a03d0f2c6ee8c3ed481"
     },
     {
+      "name": "libusbmuxd",
+      "version": "2.1.1",
+      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/libusbmuxd/libusbmuxd-2.1.1.tar.bz2/sha512/f1327a64e0a1dc0f08d2e2355271feb34194753de1d622a0259e23fc751d2720af9b4a06555e0d5f7e86d00765e7400cdc246727cceb0715bf991a278c0dedb9/libusbmuxd-2.1.1.tar.bz2",
+      "filename": "libusbmuxd-2.1.1.tar.bz2",
+      "sha512": "f1327a64e0a1dc0f08d2e2355271feb34194753de1d622a0259e23fc751d2720af9b4a06555e0d5f7e86d00765e7400cdc246727cceb0715bf991a278c0dedb9"
+    },
+    {
       "name": "libva",
       "version": "2.24.1",
       "url": "https://github.com/intel/libva/archive/2.24.1/libva-2.24.1.tar.gz",
@@ -1314,6 +1328,13 @@
       "url": "https://github.com/intel/libva-utils/archive/2.24.0/libva-utils-2.24.0.tar.gz",
       "filename": "libva-utils-2.24.0.tar.gz",
       "sha512": "299add13d11354d443422dfe7538d29290339ac3368849c544248b542da442f3a8b6fb50c0beb9b2d5c7f947510e1c480ec0bd99ce869c2ea80a45c3bb800f06"
+    },
+    {
+      "name": "libvdpau",
+      "version": "1.5",
+      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/libvdpau/libvdpau-1.5.tar.bz2/sha512/7affb14874431eba1be6e8634fcbb6247cbf6956fb88116e06e60de30a7852a407e8598176a369c2ba4bfaef4be58727e51d4bc390f705991ac83d660f611ff5/libvdpau-1.5.tar.bz2",
+      "filename": "libvdpau-1.5.tar.bz2",
+      "sha512": "7affb14874431eba1be6e8634fcbb6247cbf6956fb88116e06e60de30a7852a407e8598176a369c2ba4bfaef4be58727e51d4bc390f705991ac83d660f611ff5"
     },
     {
       "name": "libvisual",
@@ -1440,6 +1461,7 @@
     },
     {
       "name": "mdadm",
+      "rpm_defines": ["_without_abrt 1"],
       "version": "4.6",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/mdadm/mdadm-4.6.tar.gz/sha512/d11eefdffedefecea0786f7ec034305339b7d93d75916eb9501726de0a296dc668c8d0091d1c130805a5d47122ad6d944e46bd723430c15414a360c35d8b06be/mdadm-4.6.tar.gz",
       "filename": "mdadm-4.6.tar.gz",
@@ -1819,6 +1841,13 @@
       "sha512": "141d7f329d069ba6861de1cdc2e6c428156b26b614ff5b665d73b078c973d7c6c4b53764228db4e6dfc26907d23b0b6880cc3317080117daf216bac22579bb96"
     },
     {
+      "name": "setxkbmap",
+      "version": "1.3.5",
+      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/setxkbmap/setxkbmap-1.3.5.tar.xz/sha512/57a7e4c0331f81e6e61240f0da69d536e0838c46191f789b7b2ca3a6a5a3d0169a28b71e108bbcf8d24d10068c63a7f65eb9196a3774dbd8a00db9ecc0df46a0/setxkbmap-1.3.5.tar.xz",
+      "filename": "setxkbmap-1.3.5.tar.xz",
+      "sha512": "57a7e4c0331f81e6e61240f0da69d536e0838c46191f789b7b2ca3a6a5a3d0169a28b71e108bbcf8d24d10068c63a7f65eb9196a3774dbd8a00db9ecc0df46a0"
+    },
+    {
       "name": "shared-mime-info",
       "version": "2.5.1",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/shared-mime-info/shared-mime-info-2.5.1.tar.bz2/sha512/042b8e6e54d93b19e34624b30d2ba2808e068bf68d9138103f41f077e805e0de1cfb7a519b643adbe329818ee685506239e918bce169565a0809cf01ccc68ddf/shared-mime-info-2.5.1.tar.bz2",
@@ -2169,11 +2198,32 @@
       "sha512": "62c64c0b8e5a1ad830dbec8d974079122734e20e65fd6cba2736639b7bd90f358c992e58d6cfe708e0d5efeaa3f675b2ba44c2dfa31dc762d06c002d59b14e33"
     },
     {
+      "name": "xhost",
+      "version": "1.0.10",
+      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/xhost/xhost-1.0.10.tar.xz/sha512/65467b0a096455dae681f8397f5b8b0490a2f80db5cb9f92757cfff8d7822b43833202a275eed8467c6a6aaf3b02e0a7b1a069c5d587d32e56b1893297903051/xhost-1.0.10.tar.xz",
+      "filename": "xhost-1.0.10.tar.xz",
+      "sha512": "65467b0a096455dae681f8397f5b8b0490a2f80db5cb9f92757cfff8d7822b43833202a275eed8467c6a6aaf3b02e0a7b1a069c5d587d32e56b1893297903051"
+    },
+    {
       "name": "xmlrpc-c",
       "version": "1.60.04",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/xmlrpc-c/xmlrpc-c-1.60.04.tgz/sha512/68407053eec1e3f32187169f5bb976e9f043f1576dd9fb7a9076ed00414dd0293cfdf72527a314c244dd48986402af3c9cc33d110ed3b382a13190eb8dddb734/xmlrpc-c-1.60.04.tgz",
       "filename": "xmlrpc-c-1.60.04.tgz",
       "sha512": "68407053eec1e3f32187169f5bb976e9f043f1576dd9fb7a9076ed00414dd0293cfdf72527a314c244dd48986402af3c9cc33d110ed3b382a13190eb8dddb734"
+    },
+    {
+      "name": "xmodmap",
+      "version": "1.0.12",
+      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/xmodmap/xmodmap-1.0.12.tar.xz/sha512/2319f1b7eee54d650930c9e16c06e8db5a0c19eaef1902d6196d666bcab8bc288baaea65d3b561e117fc98b918cbcd9c2660c91c556f3fa08e0f57a8f0d38f82/xmodmap-1.0.12.tar.xz",
+      "filename": "xmodmap-1.0.12.tar.xz",
+      "sha512": "2319f1b7eee54d650930c9e16c06e8db5a0c19eaef1902d6196d666bcab8bc288baaea65d3b561e117fc98b918cbcd9c2660c91c556f3fa08e0f57a8f0d38f82"
+    },
+    {
+      "name": "xorg-x11-xauth",
+      "version": "1.1.5",
+      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/xorg-x11-xauth/xauth-1.1.5.tar.xz/sha512/df94b59de49ced2490351b7ab42d56d3ef92077891b8ba7a73c53b6babb1facd250d934b82f36ee1ddc355dffefb8f52914d30893c9d578711264f82e9bf3cb9/xauth-1.1.5.tar.xz",
+      "filename": "xauth-1.1.5.tar.xz",
+      "sha512": "df94b59de49ced2490351b7ab42d56d3ef92077891b8ba7a73c53b6babb1facd250d934b82f36ee1ddc355dffefb8f52914d30893c9d578711264f82e9bf3cb9"
     },
     {
       "name": "xorg-x11-xinit",
@@ -2188,6 +2238,13 @@
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/xprop/xprop-1.2.8.tar.xz/sha512/bdd9b02c4ee738bb4661c3acc901330e635b9967de5efb1615297f6b0ff3cdbd0eab6f63f80a605539090e8d62c611bb603da17477e16e3c0b26ff4314d0b664/xprop-1.2.8.tar.xz",
       "filename": "xprop-1.2.8.tar.xz",
       "sha512": "bdd9b02c4ee738bb4661c3acc901330e635b9967de5efb1615297f6b0ff3cdbd0eab6f63f80a605539090e8d62c611bb603da17477e16e3c0b26ff4314d0b664"
+    },
+    {
+      "name": "xrdb",
+      "version": "1.2.3",
+      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/xrdb/xrdb-1.2.3.tar.xz/sha512/4dbbfd38afc9c795de3671a37e377247dc598b9c1352f6f07158fb716437f0465fb5db4eee22d74ebee93dff4a3ef1c1e4268f333cea0d8f02d1fa10104ac748/xrdb-1.2.3.tar.xz",
+      "filename": "xrdb-1.2.3.tar.xz",
+      "sha512": "4dbbfd38afc9c795de3671a37e377247dc598b9c1352f6f07158fb716437f0465fb5db4eee22d74ebee93dff4a3ef1c1e4268f333cea0d8f02d1fa10104ac748"
     },
     {
       "name": "xrefresh",

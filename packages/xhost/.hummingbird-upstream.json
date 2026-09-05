@@ -1,0 +1,8 @@
+{
+  "package": "xhost",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/xhost.git",
+  "commit": "283c659255b8f8a0e1741f350cae23f7a672d2b5",
+  "tree": "679bd3892d54dee8bd196a2bbef757795c3ca0fc",
+  "imported_at": "2026-09-05T15:35:33.766472+00:00"
+}

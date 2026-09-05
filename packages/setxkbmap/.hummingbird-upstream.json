@@ -1,0 +1,8 @@
+{
+  "package": "setxkbmap",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/setxkbmap.git",
+  "commit": "976b5d5836130e9e66333548696a6027e6803845",
+  "tree": "acadf1d3358b529ce961f2bd3767412187423e42",
+  "imported_at": "2026-09-05T15:35:31.551960+00:00"
+}
