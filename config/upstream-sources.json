@@ -381,6 +381,13 @@
       "sha256_url": "https://download.gnome.org/sources/gnome-desktop/51/gnome-desktop-51.alpha.sha256sum"
     },
     {
+      "name": "gnome-keyring",
+      "version": "50.0",
+      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/gnome-keyring/gnome-keyring-50.0.tar.xz/sha512/20786486655c2188d8d0eae129d1c14a61d995d55a2339b166aa914287cf5ddd29b67d6a2fbc9d4b3d73705459cd3d17c696369500e4a0f0d12087aac78a8c15/gnome-keyring-50.0.tar.xz",
+      "filename": "gnome-keyring-50.0.tar.xz",
+      "sha512": "20786486655c2188d8d0eae129d1c14a61d995d55a2339b166aa914287cf5ddd29b67d6a2fbc9d4b3d73705459cd3d17c696369500e4a0f0d12087aac78a8c15"
+    },
+    {
       "name": "gnome-online-accounts",
       "version": "3.58.1",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/gnome-online-accounts/gnome-online-accounts-3.58.1.tar.xz/sha512/4d466a14086ec199b5693727c29e8c159e85eef9949c2b30f5680c25b791653b1c468aedfd3176662dc934927d35df5f1e0c2ae8d6ec37d7d9515bbb8ca2ea15/gnome-online-accounts-3.58.1.tar.xz",
@@ -1491,6 +1498,13 @@
       "sha512": "83d8fca128b1fd39e336e6052837b16951360d6f1a47919e00d4b7285717ee7cd4dd56c24bd873316ba6969081fe619cda93ebb20771aed052c6e9d07657f2ab"
     },
     {
+      "name": "msgraph",
+      "version": "0.3.5",
+      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/msgraph/msgraph-0.3.5.tar.xz/sha512/23f8f83df26709263e00a314cd399bd574b06436b46de10fc37a0b9364946d2896db8ddfeed520734b4552394b8f7e29dc0ec6fdf39966c92f492a608b585773/msgraph-0.3.5.tar.xz",
+      "filename": "msgraph-0.3.5.tar.xz",
+      "sha512": "23f8f83df26709263e00a314cd399bd574b06436b46de10fc37a0b9364946d2896db8ddfeed520734b4552394b8f7e29dc0ec6fdf39966c92f492a608b585773"
+    },
+    {
       "name": "mtdev",
       "version": "1.1.6",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/mtdev/mtdev-1.1.6.tar.bz2/sha512/859fb0803f330ecaae69f80713ff5a5235c0cb00de6d5ac2717ad82cea856a92b866f0c272ecfe743186abcf925f95585149ba4828b4c91555cfeb2f2a1c98f1/mtdev-1.1.6.tar.bz2",
@@ -1703,6 +1717,13 @@
       "sha512": "3f78fc21da5afcea7651a36c13fdb3e7c5cfac0327c0a365e2d825c849f4a19664defba07a5ada45665864888301b5b38478b4e7716014877951872ae912bee8"
     },
     {
+      "name": "python-pam",
+      "version": "2.0.2",
+      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/python-pam/python-pam-2.0.2.tar.gz/sha512/a33279d47de07b32c5c5cadb0f666ea18b407de061cb80e0b1d6cd7370fd70ff14af8d2802a2e4dbdaaf102efd6cac83c4f2c5673615b3d174edca20a4f8b00a/python-pam-2.0.2.tar.gz",
+      "filename": "python-pam-2.0.2.tar.gz",
+      "sha512": "a33279d47de07b32c5c5cadb0f666ea18b407de061cb80e0b1d6cd7370fd70ff14af8d2802a2e4dbdaaf102efd6cac83c4f2c5673615b3d174edca20a4f8b00a"
+    },
+    {
       "name": "python-psutil",
       "version": "7.2.2",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/python-psutil/psutil-7.2.2.tar.gz/sha512/69e5a689ffba4b7a6c345d1228f2ec5c58ba3aeed5cfaebca949e541d73509f3c63cfc9df0230b11a2df84758de5edc449dfb29f0635b36fa57025441cf9cfa6/psutil-7.2.2.tar.gz",
@@ -1820,6 +1841,13 @@
       "sha512": "f08e0414443f3a47bc433a69a7226d2b9383bc7c64e0711e8a605bd761ac69ea052a6db7f0037d88fbf0900efddaae6466ca96391eb71295ee1d0edbd0364621"
     },
     {
+      "name": "soxr",
+      "version": "0.1.3",
+      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/soxr/soxr-0.1.3-Source.tar.xz/sha512/f4883ed298d5650399283238aac3dbe78d605b988246bea51fa343d4a8ce5ce97c6e143f6c3f50a3ff81795d9c19e7a07217c586d4020f6ced102aceac46aaa8/soxr-0.1.3-Source.tar.xz",
+      "filename": "soxr-0.1.3-Source.tar.xz",
+      "sha512": "f4883ed298d5650399283238aac3dbe78d605b988246bea51fa343d4a8ce5ce97c6e143f6c3f50a3ff81795d9c19e7a07217c586d4020f6ced102aceac46aaa8"
+    },
+    {
       "name": "spandsp",
       "version": "0.0.6",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/spandsp/spandsp-0.0.6-clean.tar.gz/sha512/e7f33c72eee83fb426aac1f23f01e776aca053483005b8783234fb9c53af168837150925e941060c752e6edabbe6705b8ad49fd68e440c9b44b9f4edfb2de2ae/spandsp-0.0.6-clean.tar.gz",
@@ -1908,7 +1936,9 @@
     },
     {
       "name": "v4l-utils",
-      "rpm_defines": ["_without_qt 1"],
+      "rpm_defines": [
+        "_without_qt 1"
+      ],
       "version": "1.32.0",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/v4l-utils/v4l-utils-1.32.0.tar.xz/sha512/5bf24c28ec66a7ac1a0c9ee976521d825d4c2f8abbbeb59c7ac55e89db10dde6ebb643d238d217d636d79fda363244558fee1effe8c5e8c573c1a3e957fe391f/v4l-utils-1.32.0.tar.xz",
       "filename": "v4l-utils-1.32.0.tar.xz",
@@ -1920,6 +1950,13 @@
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/vo-amrwbenc/vo-amrwbenc-0.1.3.tar.gz/sha512/5f132f798f00ec2c0619700ab1ce456897792b45631af4b538c866636af9c9de5600af5f79040c41c3dc69c17cf4be7032139a9518a46a4276431e091f3dd6a9/vo-amrwbenc-0.1.3.tar.gz",
       "filename": "vo-amrwbenc-0.1.3.tar.gz",
       "sha512": "5f132f798f00ec2c0619700ab1ce456897792b45631af4b538c866636af9c9de5600af5f79040c41c3dc69c17cf4be7032139a9518a46a4276431e091f3dd6a9"
+    },
+    {
+      "name": "volume_key",
+      "version": "0.3.12",
+      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/volume_key/volume_key-0.3.12.tar.xz/sha512/d056154c9b9d23e4eb661946dd59ed97e116903a3afcff9d9e29258408082f33dcbb69958724143f6bf191a3da488a03b6c02af287790990ed6459e29d66553c/volume_key-0.3.12.tar.xz",
+      "filename": "volume_key-0.3.12.tar.xz",
+      "sha512": "d056154c9b9d23e4eb661946dd59ed97e116903a3afcff9d9e29258408082f33dcbb69958724143f6bf191a3da488a03b6c02af287790990ed6459e29d66553c"
     },
     {
       "name": "vulkan-headers",
@@ -2137,6 +2174,13 @@
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/xmlrpc-c/xmlrpc-c-1.60.04.tgz/sha512/68407053eec1e3f32187169f5bb976e9f043f1576dd9fb7a9076ed00414dd0293cfdf72527a314c244dd48986402af3c9cc33d110ed3b382a13190eb8dddb734/xmlrpc-c-1.60.04.tgz",
       "filename": "xmlrpc-c-1.60.04.tgz",
       "sha512": "68407053eec1e3f32187169f5bb976e9f043f1576dd9fb7a9076ed00414dd0293cfdf72527a314c244dd48986402af3c9cc33d110ed3b382a13190eb8dddb734"
+    },
+    {
+      "name": "xorg-x11-xinit",
+      "version": "1.4.3",
+      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/xorg-x11-xinit/xinit-1.4.3.tar.xz/sha512/ff754567d2224d1ff5023b302cae3a435950a6f24a773e214ea108b96d18b722d4cc86d0e25a7d92edea1307e3037248b4da004c1b392f73ba7bc1e04a94b77b/xinit-1.4.3.tar.xz",
+      "filename": "xinit-1.4.3.tar.xz",
+      "sha512": "ff754567d2224d1ff5023b302cae3a435950a6f24a773e214ea108b96d18b722d4cc86d0e25a7d92edea1307e3037248b4da004c1b392f73ba7bc1e04a94b77b"
     },
     {
       "name": "xprop",
