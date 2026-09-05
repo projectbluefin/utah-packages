@@ -35,3 +35,13 @@ useful in this factory's own automation, consume the upstream-published
 `createrepo_c`, rebuilt daily by the Packit project) rather than maintaining a
 local rebuild of it. Pin by digest. Do not reinvent an image upstream already
 publishes and maintains.
+
+`.github/workflows/packit-srpm-pilot.yml` proves this end-to-end: it runs
+`packit srpm` against 49 real packages (of the 54 that carry a leftover,
+inherited Fedora `.packit.yaml`) using a root-level `.packit.yaml` monorepo
+config, and uploads the resulting SRPMs as build artifacts. It is a
+verification-only lane — it does not feed Mock, the RPM overlay, or the
+published repository, and it does not touch `rebuild-rpms.yml`. See
+[`docs/superpowers/specs/2026-09-05-packit-srpm-pilot-design.md`](superpowers/specs/2026-09-05-packit-srpm-pilot-design.md)
+for the scope decision, the 5 packages excluded (and why), and what a full
+migration would still need.

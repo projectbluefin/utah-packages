@@ -1,0 +1,121 @@
+name: Packit SRPM pilot
+
+# Verification-only pilot: proves `packit srpm` works end-to-end against real
+# packages in this monorepo, using the pinned upstream `quay.io/packit/packit`
+# image (see docs/architecture.md and docs/packit-reuse-research.md -- this
+# repo deliberately does not build its own Packit image, PRs #36-#40).
+#
+# Scope and rationale: docs/superpowers/specs/2026-09-05-packit-srpm-pilot-design.md
+#
+# This job is additive and does not touch rebuild-rpms.yml: it does not feed
+# the produced SRPM into Mock, the RPM overlay, or the published repository.
+# The 117 packages without a root-level packit config entry, and every
+# per-package .packit.yaml/README.packit leftover from the original Fedora
+# dist-git import, are untouched.
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .packit.yaml
+      - packages/**/*.spec
+      - .github/workflows/packit-srpm-pilot.yml
+
+permissions:
+  contents: read
+
+jobs:
+  srpm:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        # 49 of the 54 packages that carry a leftover .packit.yaml. The other
+        # 5 (adw-gtk3-theme, bootc, igt-gpu-tools, mesa, runc) are excluded:
+        # their specs declare SourceN/PatchN files that this factory's own
+        # verified-source pipeline stages in only at actual rpmbuild time
+        # (see rebuild-rpms.yml's `staged=/work/staged/$PACKAGE` step), so
+        # `packit srpm` fails on them with "Bad file: ... No such file or
+        # directory". Verified locally -- see the design doc's results
+        # section. This list must match packages: in the root .packit.yaml.
+        package:
+          - adwaita-fonts
+          - adwaita-icon-theme
+          - at-spi2-core
+          - dconf
+          - distrobox
+          - fzf
+          - gcr
+          - gdk-pixbuf2
+          - gdm
+          - geocode-glib
+          - gjs
+          - gnome-autoar
+          - gnome-bluetooth
+          - gnome-control-center
+          - gnome-online-accounts
+          - gnome-session
+          - gnome-settings-daemon
+          - gnome-shell
+          - gobject-introspection
+          - gsettings-desktop-schemas
+          - gsound
+          - gtk3
+          - gtk4
+          - gvfs
+          - json-glib
+          - libadwaita
+          - libblockdev
+          - libbytesize
+          - libdrm
+          - libgtop2
+          - libgweather
+          - libheif
+          - libnotify
+          - libsecret
+          - libsoup3
+          - libxcrypt
+          - localsearch
+          - mutter
+          - nautilus
+          - nautilus-python
+          - openrgb
+          - pango
+          - python-argcomplete
+          - tecla
+          - vulkan-headers
+          - vulkan-loader
+          - xdg-desktop-portal-gnome
+          - xrefresh
+          - zenity
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+      - name: packit srpm
+        env:
+          PACKAGE: ${{ matrix.package }}
+        run: |
+          mkdir -p work/srpm
+          docker run --rm \
+            -e PACKAGE \
+            -v "$PWD:/repo:Z" \
+            -v "$PWD/work/srpm:/out:Z" \
+            -w /repo \
+            quay.io/packit/packit@sha256:149e6e06d3e5fb2f10d19760c8a0031c7d8825e7bb91a5f4a7ab9b927c947494 bash -exc '
+              git config --global --add safe.directory "*"
+              packit srpm --output "/out/$PACKAGE.src.rpm" -p "$PACKAGE"
+              rpm -qp --qf "%{NAME}-%{VERSION}-%{RELEASE}\n" "/out/$PACKAGE.src.rpm"
+            '
+          # A build that produced no SRPM must fail here, matching the same
+          # empty-artifact failure mode rebuild-rpms.yml already guards
+          # against: an upload with no matching file cannot be trusted to
+          # fail the job on its own. The ubuntu-24.04 runner has no rpm
+          # command, so the rpm -qp check above runs inside the container;
+          # this is just the file-presence guard for the upload step below.
+          test -s "work/srpm/$PACKAGE.src.rpm"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: packit-srpm-${{ matrix.package }}
+          path: work/srpm/${{ matrix.package }}.src.rpm
+          if-no-files-found: error
