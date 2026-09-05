@@ -8,18 +8,17 @@
 # shipped inside packages/*/ -- those are unmodified, unused Fedora
 # dist-git imports, left in place on purpose (see the design doc).
 #
-# 49 of the 54 packages that carry a leftover .packit.yaml are listed
-# below. The other 5 (adw-gtk3-theme, bootc, igt-gpu-tools, mesa, runc)
-# are deliberately excluded: their specs declare SourceN/PatchN entries
-# (vendor tarballs, upstream README/LICENSE mirrors, license-clarification
-# emails) that this factory's own verified-source pipeline stages into
-# _sourcedir only at actual rpmbuild time -- see rebuild-rpms.yml's
-# 'staged=/work/staged/$PACKAGE' step. `packit srpm` has no equivalent
-# staging step, so it fails on these five with 'Bad file: ... No such
-# file or directory'. Verified locally; see the design doc's results
-# section. Feeding staged sources into packit is future work, not this
-# pilot.
+# All 54 packages that carry a leftover .packit.yaml are listed below.
+# The workflow runs the factory's verified-source pipeline before Packit,
+# staging the locked upstream archive and any Fedora lookaside sources
+# beside each spec.
 packages:
+  adw-gtk3-theme:
+    specfile_path: adw-gtk3-theme.spec
+    upstream_package_name: adw-gtk3-theme
+    downstream_package_name: adw-gtk3-theme
+    paths:
+      - packages/adw-gtk3-theme
   adwaita-fonts:
     specfile_path: adwaita-fonts.spec
     upstream_package_name: adwaita-fonts
@@ -38,6 +37,12 @@ packages:
     downstream_package_name: at-spi2-core
     paths:
       - packages/at-spi2-core
+  bootc:
+    specfile_path: bootc.spec
+    upstream_package_name: bootc
+    downstream_package_name: bootc
+    paths:
+      - packages/bootc
   dconf:
     specfile_path: dconf.spec
     upstream_package_name: dconf
@@ -164,6 +169,12 @@ packages:
     downstream_package_name: gvfs
     paths:
       - packages/gvfs
+  igt-gpu-tools:
+    specfile_path: igt-gpu-tools.spec
+    upstream_package_name: igt-gpu-tools
+    downstream_package_name: igt-gpu-tools
+    paths:
+      - packages/igt-gpu-tools
   json-glib:
     specfile_path: json-glib.spec
     upstream_package_name: json-glib
@@ -242,6 +253,12 @@ packages:
     downstream_package_name: localsearch
     paths:
       - packages/localsearch
+  mesa:
+    specfile_path: mesa.spec
+    upstream_package_name: mesa
+    downstream_package_name: mesa
+    paths:
+      - packages/mesa
   mutter:
     specfile_path: mutter.spec
     upstream_package_name: mutter
@@ -278,6 +295,12 @@ packages:
     downstream_package_name: python-argcomplete
     paths:
       - packages/python-argcomplete
+  runc:
+    specfile_path: runc.spec
+    upstream_package_name: runc
+    downstream_package_name: runc
+    paths:
+      - packages/runc
   tecla:
     specfile_path: tecla.spec
     upstream_package_name: tecla

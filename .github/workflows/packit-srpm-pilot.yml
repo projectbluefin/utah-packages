@@ -18,8 +18,10 @@ on:
   pull_request:
     paths:
       - .packit.yaml
+      - config/upstream-sources.json
       - packages/**/*.spec
       - .github/workflows/packit-srpm-pilot.yml
+      - tools/source_pipeline.py
 
 permissions:
   contents: read
@@ -30,18 +32,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # 49 of the 54 packages that carry a leftover .packit.yaml. The other
-        # 5 (adw-gtk3-theme, bootc, igt-gpu-tools, mesa, runc) are excluded:
-        # their specs declare SourceN/PatchN files that this factory's own
-        # verified-source pipeline stages in only at actual rpmbuild time
-        # (see rebuild-rpms.yml's `staged=/work/staged/$PACKAGE` step), so
-        # `packit srpm` fails on them with "Bad file: ... No such file or
-        # directory". Verified locally -- see the design doc's results
-        # section. This list must match packages: in the root .packit.yaml.
+        # All 54 packages that carry a leftover .packit.yaml. This list must
+        # match packages: in the root .packit.yaml.
         package:
+          - adw-gtk3-theme
           - adwaita-fonts
           - adwaita-icon-theme
           - at-spi2-core
+          - bootc
           - dconf
           - distrobox
           - fzf
@@ -63,6 +61,7 @@ jobs:
           - gtk3
           - gtk4
           - gvfs
+          - igt-gpu-tools
           - json-glib
           - libadwaita
           - libblockdev
@@ -76,12 +75,14 @@ jobs:
           - libsoup3
           - libxcrypt
           - localsearch
+          - mesa
           - mutter
           - nautilus
           - nautilus-python
           - openrgb
           - pango
           - python-argcomplete
+          - runc
           - tecla
           - vulkan-headers
           - vulkan-loader
@@ -92,6 +93,14 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
+      - name: Fetch and stage verified sources
+        env:
+          PACKAGE: ${{ matrix.package }}
+        run: |
+          python3 tools/source_pipeline.py "$PACKAGE" \
+            --output work/sources \
+            --report-dir work/reports \
+            --stage-into packages
       - name: packit srpm
         env:
           PACKAGE: ${{ matrix.package }}
@@ -104,7 +113,7 @@ jobs:
             -w /repo \
             quay.io/packit/packit@sha256:149e6e06d3e5fb2f10d19760c8a0031c7d8825e7bb91a5f4a7ab9b927c947494 bash -exc '
               git config --global --add safe.directory "*"
-              packit srpm --output "/out/$PACKAGE.src.rpm" -p "$PACKAGE"
+              packit srpm --preserve-spec --output "/out/$PACKAGE.src.rpm" -p "$PACKAGE"
               rpm -qp --qf "%{NAME}-%{VERSION}-%{RELEASE}\n" "/out/$PACKAGE.src.rpm"
             '
           # A build that produced no SRPM must fail here, matching the same

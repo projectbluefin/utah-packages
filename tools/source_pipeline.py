@@ -142,6 +142,20 @@ def bundled_sources(package: dict, target_dir: Path, already: str) -> list[str]:
     return fetched
 
 
+def stage_for_packit(package: dict, sources: list[Path], package_root: Path) -> list[str]:
+    """Copy verified sources beside the package spec for `packit srpm`."""
+    package_name = package.get("dist_git_name", package["name"])
+    package_dir = package_root / package_name
+    if not package_dir.is_dir():
+        raise ValueError(f"package recipe directory does not exist: {package_dir}")
+    staged = []
+    for source in sources:
+        destination = package_dir / source.name
+        shutil.copy2(source, destination)
+        staged.append(str(destination))
+    return staged
+
+
 
 def selected(config: dict, name: str | None) -> list[dict]:
     packages = config.get("packages", [])
@@ -159,6 +173,11 @@ def main() -> int:
     parser.add_argument("--config", type=Path, default=Path("config/upstream-sources.json"))
     parser.add_argument("--output", type=Path, default=Path("sources"))
     parser.add_argument("--report-dir", type=Path, default=Path("reports/source-pipeline"))
+    parser.add_argument(
+        "--stage-into",
+        type=Path,
+        help="copy accepted source files beside each package spec for Packit",
+    )
     args = parser.parse_args()
     config = json.loads(args.config.read_text())
     succeeded = True
@@ -199,6 +218,9 @@ def main() -> int:
             report.update({"result": "accepted", "sha512": actual, "file": str(final), "resolved_url": resolved_url})
             if bundled:
                 report["bundled"] = bundled
+            if args.stage_into:
+                source_files = [final, *(target_dir / item for item in bundled)]
+                report["staged"] = stage_for_packit(package, source_files, args.stage_into)
         except Exception as error:  # Do not replace an accepted source.
             candidate.unlink(missing_ok=True)
             succeeded = False

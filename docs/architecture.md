@@ -36,12 +36,13 @@ useful in this factory's own automation, consume the upstream-published
 local rebuild of it. Pin by digest. Do not reinvent an image upstream already
 publishes and maintains.
 
-`.github/workflows/packit-srpm-pilot.yml` proves this end-to-end: it runs
-`packit srpm` against 49 real packages (of the 54 that carry a leftover,
-inherited Fedora `.packit.yaml`) using a root-level `.packit.yaml` monorepo
-config, and uploads the resulting SRPMs as build artifacts. It is a
-verification-only lane — it does not feed Mock, the RPM overlay, or the
-published repository, and it does not touch `rebuild-rpms.yml`. See
+`.github/workflows/packit-srpm-pilot.yml` proves this end-to-end: it runs the
+verified-source pipeline and then `packit srpm --preserve-spec` against all 54
+packages that carry a leftover, inherited Fedora `.packit.yaml`, using a
+root-level `.packit.yaml` monorepo config. The locked upstream archive and any
+Fedora lookaside sources are staged beside the spec before Packit runs, and the
+resulting SRPMs are uploaded as build artifacts. It is a verification-only lane
+— it does not feed Mock, the RPM overlay, or the published repository, and it
+does not touch `rebuild-rpms.yml`. See
 [`docs/superpowers/specs/2026-09-05-packit-srpm-pilot-design.md`](superpowers/specs/2026-09-05-packit-srpm-pilot-design.md)
-for the scope decision, the 5 packages excluded (and why), and what a full
-migration would still need.
+for the original pilot scope and what a full migration would still need.

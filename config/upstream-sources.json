@@ -65,6 +65,13 @@
       "sha512": "201e7ed8bef8ddcdd0ff5c96aaf166edea95fb3d839c3bed9e5ef4778f6772aeaff62768c3fe05d4eb145583c63ff8a55bf9c504fa818a4d12abb7b3facaf7dc"
     },
     {
+      "name": "bootc",
+      "version": "1.16.10",
+      "url": "https://github.com/bootc-dev/bootc/releases/download/v1.16.10/bootc-1.16.10.tar.zstd",
+      "filename": "bootc-1.16.10.tar.zstd",
+      "sha512": "9ede03ec8d24d359a69a2522cf0658eefb4273a2b611558c5d672a235bce49cdadf9c0908fda79c756ccf6e6ef37dff9a758a03e75fdc8a9528120e437cbb522"
+    },
+    {
       "name": "cairo",
       "version": "1.18.4",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/cairo/cairo-1.18.4.tar.xz/sha512/863679f817ed67dc2c916c035d740916e27e7e69c04fca63936e37d274e7f4c79848d16c8f7c481798864602e8847c489f698df89b785cbc576c925dbd513316/cairo-1.18.4.tar.xz",
@@ -852,6 +859,13 @@
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/libsoup3/libsoup-3.7.2.tar.xz/sha512/89642fe052557754e151f0d705fa6bca135bc01b1f5e3d2b1f8da67b708a9ffba4b40f923b6a1019a6e2fa28fedb7dc30bed64f98613e4b7139e98dc197fca49/libsoup-3.7.2.tar.xz",
       "filename": "libsoup-3.7.2.tar.xz",
       "sha512": "89642fe052557754e151f0d705fa6bca135bc01b1f5e3d2b1f8da67b708a9ffba4b40f923b6a1019a6e2fa28fedb7dc30bed64f98613e4b7139e98dc197fca49"
+    },
+    {
+      "name": "libxcrypt",
+      "version": "4.5.2",
+      "url": "https://github.com/besser82/libxcrypt/releases/download/v4.5.2/libxcrypt-4.5.2.tar.xz",
+      "filename": "libxcrypt-4.5.2.tar.xz",
+      "sha512": "87b363e2bdc03ea993a9d154eb59a75ef77edd0490a9b58d443de4e1b4eec5196408a1eb9b739718fd92f565fe5157469c1ea3d336a4a54ac0947750b16c44c1"
     },
     {
       "name": "libthai",

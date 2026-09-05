@@ -7,6 +7,13 @@ interactive confirmation because the user was unavailable mid-session — see
 instructions to keep moving rather than block; the user should still review
 the scope call after the fact and redirect if it's wrong.
 
+Follow-up: the pilot now covers all 54 packages that carry an inherited
+`.packit.yaml`. The factory's verified-source pipeline stages the locked
+upstream archive and Fedora lookaside files beside each spec, and
+`packit srpm --preserve-spec` keeps Packit on that locked version. This closes
+the five-package gap described below without expanding the pilot to the other
+packages in the repository.
+
 ## Context
 
 - PRs #36–#40 already decided the Packit question for this repo: don't build
@@ -229,10 +236,10 @@ carry a leftover `.packit.yaml`. Findings that changed the plan above:
 
 ## Out of scope / future work (not this spec)
 
-- Full migration of all 193 packages' SRPM generation to `packit srpm`.
+- Full migration of every package's SRPM generation to `packit srpm`.
 - `packit build in-mock` wired to the real Hummingbird buildroot.
-- Retiring the 117 packages' need for hand-authored `.packit.yaml` if/when
-  migration proceeds.
+- Adding Packit configuration for the remaining packages if migration
+  proceeds.
 - Removing the hand-rolled `rpmbuild -br`/`-ba` block from
   `rebuild0`..`rebuild4` — explicitly *not* touched by this pilot ("leave
   the old artifacts in place").
