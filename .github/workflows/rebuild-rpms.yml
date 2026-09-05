@@ -318,10 +318,10 @@ jobs:
                 # built, Fedora must not answer for. Names come from rpm rather
                 # than from parsing filenames, which stops working the moment a
                 # disttag changes.
-                EXCLUDE=$(find /work/prior -name "*.rpm" -type f -print0 \
+                STAGE_EXCLUDE=$(find /work/prior -name "*.rpm" -type f -print0 \
                   | xargs -0 -r rpm -qp --qf "%{NAME}\n" 2>/dev/null \
                   | sort -u | paste -sd, -)
-                echo "excluding from Fedora: $EXCLUDE"
+                echo "excluding from Fedora: $STAGE_EXCLUDE"
               fi
               # Hummingbird ships newer versions of some names than Fedora 44
               # does, and the two must never mix in one transaction. The
@@ -333,7 +333,7 @@ jobs:
               # Unconditional: stage 0 has no prior RPMs, so the block above
               # never ran and EXCLUDE would otherwise be empty here.
               HB_EXCLUDE="ruby-default-gems,ruby3.3-default-gems,ruby3.4-default-gems,libicu,icu,gpgme,qt6-qtbase"
-              EXCLUDE="${HB_EXCLUDE}${EXCLUDE:+,}${EXCLUDE}"
+              EXCLUDE="${HB_EXCLUDE}${STAGE_EXCLUDE:+,}${STAGE_EXCLUDE}"
               echo "hummingbird exclusions: $HB_EXCLUDE"
               if [ -n "${FACTORY_REPO:-}" ]; then
                 printf "[factory]\nname=factory\nbaseurl=%s\nenabled=1\ngpgcheck=0\npriority=5\n" \
@@ -395,7 +395,8 @@ jobs:
               spec=$(find "/packages/$PACKAGE" -maxdepth 1 -name "*.spec" -print -quit)
               test -n "$spec"
               dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
-                ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$spec"
+                ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} \
+                ${STAGE_EXCLUDE:+--setopt=public-hummingbird-x86_64-rpms.excludepkgs="$STAGE_EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$spec"
               # An imported spec keeps its dist-git PatchN and auxiliary SourceN
               # files next to itself, while the verified upstream archive lands in
               # /work/sources. rpmbuild takes a single _sourcedir, so stage both:
@@ -418,7 +419,8 @@ jobs:
                 generated=$(ls /root/rpmbuild/SRPMS/*.buildreqs.nosrc.rpm 2>/dev/null | head -1)
                 test -n "$generated"
                 dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
-                  ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$generated"
+                  ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} \
+                ${STAGE_EXCLUDE:+--setopt=public-hummingbird-x86_64-rpms.excludepkgs="$STAGE_EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$generated"
               done
               rpmbuild -ba "$spec" \
                 --define "_sourcedir $staged" \
@@ -527,10 +529,10 @@ jobs:
                 # built, Fedora must not answer for. Names come from rpm rather
                 # than from parsing filenames, which stops working the moment a
                 # disttag changes.
-                EXCLUDE=$(find /work/prior -name "*.rpm" -type f -print0 \
+                STAGE_EXCLUDE=$(find /work/prior -name "*.rpm" -type f -print0 \
                   | xargs -0 -r rpm -qp --qf "%{NAME}\n" 2>/dev/null \
                   | sort -u | paste -sd, -)
-                echo "excluding from Fedora: $EXCLUDE"
+                echo "excluding from Fedora: $STAGE_EXCLUDE"
               fi
               # Hummingbird ships newer versions of some names than Fedora 44
               # does, and the two must never mix in one transaction. The
@@ -542,7 +544,7 @@ jobs:
               # Unconditional: stage 0 has no prior RPMs, so the block above
               # never ran and EXCLUDE would otherwise be empty here.
               HB_EXCLUDE="ruby-default-gems,ruby3.3-default-gems,ruby3.4-default-gems,libicu,icu,gpgme,qt6-qtbase"
-              EXCLUDE="${HB_EXCLUDE}${EXCLUDE:+,}${EXCLUDE}"
+              EXCLUDE="${HB_EXCLUDE}${STAGE_EXCLUDE:+,}${STAGE_EXCLUDE}"
               echo "hummingbird exclusions: $HB_EXCLUDE"
               if [ -n "${FACTORY_REPO:-}" ]; then
                 printf "[factory]\nname=factory\nbaseurl=%s\nenabled=1\ngpgcheck=0\npriority=5\n" \
@@ -604,7 +606,8 @@ jobs:
               spec=$(find "/packages/$PACKAGE" -maxdepth 1 -name "*.spec" -print -quit)
               test -n "$spec"
               dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
-                ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$spec"
+                ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} \
+                ${STAGE_EXCLUDE:+--setopt=public-hummingbird-x86_64-rpms.excludepkgs="$STAGE_EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$spec"
               # An imported spec keeps its dist-git PatchN and auxiliary SourceN
               # files next to itself, while the verified upstream archive lands in
               # /work/sources. rpmbuild takes a single _sourcedir, so stage both:
@@ -627,7 +630,8 @@ jobs:
                 generated=$(ls /root/rpmbuild/SRPMS/*.buildreqs.nosrc.rpm 2>/dev/null | head -1)
                 test -n "$generated"
                 dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
-                  ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$generated"
+                  ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} \
+                ${STAGE_EXCLUDE:+--setopt=public-hummingbird-x86_64-rpms.excludepkgs="$STAGE_EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$generated"
               done
               rpmbuild -ba "$spec" \
                 --define "_sourcedir $staged" \
@@ -736,10 +740,10 @@ jobs:
                 # built, Fedora must not answer for. Names come from rpm rather
                 # than from parsing filenames, which stops working the moment a
                 # disttag changes.
-                EXCLUDE=$(find /work/prior -name "*.rpm" -type f -print0 \
+                STAGE_EXCLUDE=$(find /work/prior -name "*.rpm" -type f -print0 \
                   | xargs -0 -r rpm -qp --qf "%{NAME}\n" 2>/dev/null \
                   | sort -u | paste -sd, -)
-                echo "excluding from Fedora: $EXCLUDE"
+                echo "excluding from Fedora: $STAGE_EXCLUDE"
               fi
               # Hummingbird ships newer versions of some names than Fedora 44
               # does, and the two must never mix in one transaction. The
@@ -751,7 +755,7 @@ jobs:
               # Unconditional: stage 0 has no prior RPMs, so the block above
               # never ran and EXCLUDE would otherwise be empty here.
               HB_EXCLUDE="ruby-default-gems,ruby3.3-default-gems,ruby3.4-default-gems,libicu,icu,gpgme,qt6-qtbase"
-              EXCLUDE="${HB_EXCLUDE}${EXCLUDE:+,}${EXCLUDE}"
+              EXCLUDE="${HB_EXCLUDE}${STAGE_EXCLUDE:+,}${STAGE_EXCLUDE}"
               echo "hummingbird exclusions: $HB_EXCLUDE"
               if [ -n "${FACTORY_REPO:-}" ]; then
                 printf "[factory]\nname=factory\nbaseurl=%s\nenabled=1\ngpgcheck=0\npriority=5\n" \
@@ -813,7 +817,8 @@ jobs:
               spec=$(find "/packages/$PACKAGE" -maxdepth 1 -name "*.spec" -print -quit)
               test -n "$spec"
               dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
-                ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$spec"
+                ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} \
+                ${STAGE_EXCLUDE:+--setopt=public-hummingbird-x86_64-rpms.excludepkgs="$STAGE_EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$spec"
               # An imported spec keeps its dist-git PatchN and auxiliary SourceN
               # files next to itself, while the verified upstream archive lands in
               # /work/sources. rpmbuild takes a single _sourcedir, so stage both:
@@ -836,7 +841,8 @@ jobs:
                 generated=$(ls /root/rpmbuild/SRPMS/*.buildreqs.nosrc.rpm 2>/dev/null | head -1)
                 test -n "$generated"
                 dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
-                  ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$generated"
+                  ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} \
+                ${STAGE_EXCLUDE:+--setopt=public-hummingbird-x86_64-rpms.excludepkgs="$STAGE_EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$generated"
               done
               rpmbuild -ba "$spec" \
                 --define "_sourcedir $staged" \
@@ -945,10 +951,10 @@ jobs:
                 # built, Fedora must not answer for. Names come from rpm rather
                 # than from parsing filenames, which stops working the moment a
                 # disttag changes.
-                EXCLUDE=$(find /work/prior -name "*.rpm" -type f -print0 \
+                STAGE_EXCLUDE=$(find /work/prior -name "*.rpm" -type f -print0 \
                   | xargs -0 -r rpm -qp --qf "%{NAME}\n" 2>/dev/null \
                   | sort -u | paste -sd, -)
-                echo "excluding from Fedora: $EXCLUDE"
+                echo "excluding from Fedora: $STAGE_EXCLUDE"
               fi
               # Hummingbird ships newer versions of some names than Fedora 44
               # does, and the two must never mix in one transaction. The
@@ -960,7 +966,7 @@ jobs:
               # Unconditional: stage 0 has no prior RPMs, so the block above
               # never ran and EXCLUDE would otherwise be empty here.
               HB_EXCLUDE="ruby-default-gems,ruby3.3-default-gems,ruby3.4-default-gems,libicu,icu,gpgme,qt6-qtbase"
-              EXCLUDE="${HB_EXCLUDE}${EXCLUDE:+,}${EXCLUDE}"
+              EXCLUDE="${HB_EXCLUDE}${STAGE_EXCLUDE:+,}${STAGE_EXCLUDE}"
               echo "hummingbird exclusions: $HB_EXCLUDE"
               if [ -n "${FACTORY_REPO:-}" ]; then
                 printf "[factory]\nname=factory\nbaseurl=%s\nenabled=1\ngpgcheck=0\npriority=5\n" \
@@ -1022,7 +1028,8 @@ jobs:
               spec=$(find "/packages/$PACKAGE" -maxdepth 1 -name "*.spec" -print -quit)
               test -n "$spec"
               dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
-                ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$spec"
+                ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} \
+                ${STAGE_EXCLUDE:+--setopt=public-hummingbird-x86_64-rpms.excludepkgs="$STAGE_EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$spec"
               # An imported spec keeps its dist-git PatchN and auxiliary SourceN
               # files next to itself, while the verified upstream archive lands in
               # /work/sources. rpmbuild takes a single _sourcedir, so stage both:
@@ -1045,7 +1052,8 @@ jobs:
                 generated=$(ls /root/rpmbuild/SRPMS/*.buildreqs.nosrc.rpm 2>/dev/null | head -1)
                 test -n "$generated"
                 dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
-                  ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$generated"
+                  ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} \
+                ${STAGE_EXCLUDE:+--setopt=public-hummingbird-x86_64-rpms.excludepkgs="$STAGE_EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$generated"
               done
               rpmbuild -ba "$spec" \
                 --define "_sourcedir $staged" \
@@ -1154,10 +1162,10 @@ jobs:
                 # built, Fedora must not answer for. Names come from rpm rather
                 # than from parsing filenames, which stops working the moment a
                 # disttag changes.
-                EXCLUDE=$(find /work/prior -name "*.rpm" -type f -print0 \
+                STAGE_EXCLUDE=$(find /work/prior -name "*.rpm" -type f -print0 \
                   | xargs -0 -r rpm -qp --qf "%{NAME}\n" 2>/dev/null \
                   | sort -u | paste -sd, -)
-                echo "excluding from Fedora: $EXCLUDE"
+                echo "excluding from Fedora: $STAGE_EXCLUDE"
               fi
               # Hummingbird ships newer versions of some names than Fedora 44
               # does, and the two must never mix in one transaction. The
@@ -1169,7 +1177,7 @@ jobs:
               # Unconditional: stage 0 has no prior RPMs, so the block above
               # never ran and EXCLUDE would otherwise be empty here.
               HB_EXCLUDE="ruby-default-gems,ruby3.3-default-gems,ruby3.4-default-gems,libicu,icu,gpgme,qt6-qtbase"
-              EXCLUDE="${HB_EXCLUDE}${EXCLUDE:+,}${EXCLUDE}"
+              EXCLUDE="${HB_EXCLUDE}${STAGE_EXCLUDE:+,}${STAGE_EXCLUDE}"
               echo "hummingbird exclusions: $HB_EXCLUDE"
               if [ -n "${FACTORY_REPO:-}" ]; then
                 printf "[factory]\nname=factory\nbaseurl=%s\nenabled=1\ngpgcheck=0\npriority=5\n" \
@@ -1231,7 +1239,8 @@ jobs:
               spec=$(find "/packages/$PACKAGE" -maxdepth 1 -name "*.spec" -print -quit)
               test -n "$spec"
               dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
-                ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$spec"
+                ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} \
+                ${STAGE_EXCLUDE:+--setopt=public-hummingbird-x86_64-rpms.excludepkgs="$STAGE_EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$spec"
               # An imported spec keeps its dist-git PatchN and auxiliary SourceN
               # files next to itself, while the verified upstream archive lands in
               # /work/sources. rpmbuild takes a single _sourcedir, so stage both:
@@ -1254,7 +1263,8 @@ jobs:
                 generated=$(ls /root/rpmbuild/SRPMS/*.buildreqs.nosrc.rpm 2>/dev/null | head -1)
                 test -n "$generated"
                 dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
-                  ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$generated"
+                  ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} \
+                ${STAGE_EXCLUDE:+--setopt=public-hummingbird-x86_64-rpms.excludepkgs="$STAGE_EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$generated"
               done
               rpmbuild -ba "$spec" \
                 --define "_sourcedir $staged" \
