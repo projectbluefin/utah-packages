@@ -30,6 +30,28 @@ class BuildLaneTests(unittest.TestCase):
         self.assertIn("gjs-1.0", requirements["gnome-shell"])
         self.assertIn("libedataserver-1.2", requirements["gnome-shell"])
 
+    def test_the_webrtc_chain_builds_one_wave_at_a_time(self):
+        """abseil -> webrtc-audio-processing -> pipewire -> xdg-desktop-portal.
+
+        Every link is a BuildRequires, and each one used to sit in the same
+        wave as the thing it links, so it resolved against the build root's
+        copy instead of the one the factory had just rebuilt.
+        """
+        manifest = json.loads((ROOT / "config/upstream-sources.json").read_text())
+        stages = {item["name"]: item.get("stage", 0) for item in manifest["packages"]}
+        lanes = tomllib.loads((ROOT / "config/build-lanes.toml").read_text())
+        late = lanes["stage0_late"]["packages"]
+
+        # abseil-cpp is rebuilt in the stage-0 fast lane, so its one consumer
+        # here has to be in the late lane rather than beside it.
+        self.assertEqual(stages["abseil-cpp"], 0)
+        self.assertNotIn("abseil-cpp", late)
+        self.assertEqual(stages["webrtc-audio-processing"], 0)
+        self.assertIn("webrtc-audio-processing", late)
+
+        self.assertLess(stages["webrtc-audio-processing"], stages["pipewire"])
+        self.assertLess(stages["pipewire"], stages["xdg-desktop-portal"])
+
 
 if __name__ == "__main__":
     unittest.main()
