@@ -24,6 +24,15 @@
 # glycin build-requires libheif and stays in the fast lane, which is correct:
 # libheif's own soname does not move, only the openjph it links.
 #
+# libheif also builds with its own %bcond bootstrap set, permanently. Its
+# spec documents the cycle: libheif build-requires sdl2 -> SDL3 -> libdecor
+# -> gtk3 -> gdk-pixbuf2 -> glycin-libs -> glycin-loaders -> libheif. Fedora
+# never trips it because its repository is self-consistent; this factory's
+# accumulator is not, and the moment openjph moved 0.25 -> 0.31 the
+# accumulator's own libheif became uninstallable and took its whole buildroot
+# with it. bootstrap costs exactly one binary, the heif-view example; the
+# encoders and every library stay.
+#
 # Xwayland is late for a version floor rather than a soname: 26.0.99.901
 # build-requires wayland >= 1.26.0, and the build root offers 1.25.0. The
 # factory builds 1.26.0 in the fast lane, so this is the first place that can

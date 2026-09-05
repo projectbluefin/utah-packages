@@ -1131,6 +1131,7 @@
     },
     {
       "name": "libheif",
+      "rpm_defines": ["_with_bootstrap 1"],
       "version": "1.23.1",
       "url": "https://github.com/strukturag/libheif/archive/v1.23.1/libheif-1.23.1.tar.gz",
       "filename": "libheif-1.23.1.tar.gz",
