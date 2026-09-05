@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 """Validate package-factory configuration."""
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from tools.package_inventory import inventory
 
 packages = [
     raw.strip()
@@ -35,4 +40,13 @@ if len(packages) != len(set(packages)):
     raise SystemExit("bootstrap package set contains duplicates")
 if any(" " in package or "/" in package for package in packages):
     raise SystemExit("package names must be source RPM names, one per line")
+records = inventory(Path("."))
+missing_locks = sorted(record.name for record in records if not record.source_locked)
+missing_packit = sorted(record.name for record in records if not record.packit_configured)
+if missing_locks or missing_packit:
+    if missing_locks:
+        print(f"packages missing source locks: {', '.join(missing_locks)}")
+    if missing_packit:
+        print(f"packages missing Packit config: {', '.join(missing_packit)}")
+    raise SystemExit(1)
 print(f"validated {len(packages)} source RPMs")
