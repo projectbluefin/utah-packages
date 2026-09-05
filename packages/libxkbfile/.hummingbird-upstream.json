@@ -1,0 +1,8 @@
+{
+  "package": "libxkbfile",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libxkbfile.git",
+  "commit": "81b3b98d4e63e84c1c190cd7b4c1416aca4206f6",
+  "tree": "dcebc967a2c8ac3bb6834afc4d8d8d6d70281ef6",
+  "imported_at": "2026-09-05T16:57:54.628215+00:00"
+}
