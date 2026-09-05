@@ -45,7 +45,6 @@ permissions:
   contents: read
   id-token: write
   packages: write
-  pages: write
 
 # Do not cancel an active WebKitGTK/mozjs/Mesa build when a newer commit lands.
 # Queue one factory run per PR or branch instead; its checkpoints and exact
@@ -109,9 +108,6 @@ jobs:
               break
             fi
           done
-          # Serve the local accumulator for FACTORY_REPO later in this run.
-          # The prepare job is only computing the matrix here; the actual
-          # serving happens via the FACTORY_REPO default below.
       - id: matrix
         env:
           FULL: ${{ github.event_name == 'workflow_dispatch' && inputs.full == true && '1' || '0' }}
@@ -207,16 +203,12 @@ jobs:
                   if read_local_repo("/tmp/accumulator"):
                       print(f"accumulator has {len(published)} packages")
                   else:
-                      base = "https://projectbluefin.github.io/utah-packages/"
-                      repomd = urllib.request.urlopen(base + "repodata/repomd.xml", timeout=60).read().decode()
-                      href = re.search(r'<location href="([^"]*primary[^"]*)"', repomd).group(1)
-                      raw = urllib.request.urlopen(base + href, timeout=120).read()
-                      if href.endswith('.zst'):
-                          import zstandard
-                          harvest(zstandard.ZstdDecompressor().stream_reader(io.BytesIO(raw)).read())
-                      else:
-                          harvest(gzip.GzipFile(fileobj=io.BytesIO(raw)).read())
-                      print(f"published repo has {len(published)} packages")
+                      # The accumulator is seeded above from :building, then
+                      # :latest. Neither existing means a cold registry, and a
+                      # cold start is a full rebuild -- there is no second
+                      # source to fall back to now that the factory publishes
+                      # to the registry alone.
+                      print("no accumulator in the registry, rebuilding all")
               except Exception as error:
                   print(f"WARNING: could not read prior repo, rebuilding all: {error}", file=sys.stderr)
 
@@ -341,12 +333,11 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Resolve BuildRequires for packages being built
         env:
-          FACTORY_REPO: ${{ vars.FACTORY_REPO || 'https://projectbluefin.github.io/utah-packages/' }}
           BUILD_LIST: ${{ needs.prepare.outputs.build_list }}
         run: |
           mkdir -p work/reports
           docker run --rm \
-            -e FACTORY_REPO -e BUILD_LIST \
+            -e BUILD_LIST \
             -v "$PWD/work:/work:Z" \
             -v "$PWD/packages:/packages:ro,Z" \
             -v "$PWD/config:/repos:ro,Z" \
@@ -360,10 +351,6 @@ jobs:
               # this container was not. Restore that.
               sed -i "/^tsflags=nodocs/d" /etc/dnf/dnf.conf
               cp /repos/hummingbird.repo /etc/yum.repos.d/
-              if [ -n "${FACTORY_REPO:-}" ]; then
-                printf "[factory]\nname=factory\nbaseurl=%s\nenabled=1\ngpgcheck=0\npriority=5\n" \
-                  "$FACTORY_REPO" > /etc/yum.repos.d/factory.repo
-              fi
               dnf -y $disable install dnf-plugins-core rpm-build @buildsys-build
               rpm -q --qf "buildroot openssl: %{VERSION}-%{RELEASE}\n" openssl-libs || true
               : > /work/reports/preflight.txt
@@ -893,7 +880,13 @@ jobs:
           else
             tag=$(echo "${{ github.ref_name }}" | tr "/" "-" | tr -cd "[:alnum:]._-" | cut -c1-96)
           fi
-          printf "FROM scratch\nCOPY repository /repository\n" > Containerfile.repo
+          # repodata goes in its own layer, first and small, with the full
+          # tree after it. Anything that only wants to know what the repository
+          # contains -- Utah's preflight, which used to read the Pages mirror
+          # -- can pull a few megabytes instead of the whole gigabyte of RPMs.
+          # The second COPY repeats repodata, which costs those few megabytes
+          # again and keeps the final filesystem identical to a single COPY.
+          printf "FROM scratch\nCOPY repository/repodata /repository/repodata\nCOPY repository /repository\n" > Containerfile.repo
           # cosign signs by pushing to the same registry, but it reads the
           # Docker config rather than podman own auth file, so the login has to
           # land somewhere both of them look. DOCKER_CONFIG is set on this step
@@ -930,36 +923,6 @@ jobs:
         run: |
           owner=$(echo "${{ github.repository_owner }}" | tr "[:upper:]" "[:lower:]")
           cosign sign "ghcr.io/${owner}/utah-packages@${{ steps.oci.outputs.digest }}"
-      # Handed to the Pages job rather than deployed here, so that the registry
-      # push never depends on the github-pages environment. That environment
-      # usually carries a deployment branch rule, and inheriting it would have
-      # blocked this job on exactly the branches the OCI push exists to serve.
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        with:
-          name: repository
-          path: repository
-          retention-days: 1
-
-  # A convenience mirror for anything wanting a plain HTTP repository. Pages can
-  # only deploy from the default branch, which is why it is no longer the thing
-  # consumers depend on.
-  publish_pages:
-    if: ${{ !cancelled() && github.ref == 'refs/heads/main' && needs.publish.result == 'success' }}
-    needs: publish
-    runs-on: ubuntu-24.04
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
-        with:
-          name: repository
-          path: repository
-      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
-        with:
-          path: repository
-      - id: deployment
-        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5
 
   # Persist every RPM this run built, even when some package in the matrix
   # failed or the run was cancelled downstream. `publish` only fires when every
@@ -975,7 +938,7 @@ jobs:
   # across waves) and must never be installed by a consumer. `:latest` remains
   # the atomic, contract-gated tag `publish` produces.
   #
-  # `prepare` reads this accumulator for its skip list and FACTORY_REPO points
+  # `prepare` reads this accumulator for its skip list, and the lane's
   # at it, so a success persists across waves regardless of whether the wave it
   # was built in ever reached `publish`.
   accumulate:

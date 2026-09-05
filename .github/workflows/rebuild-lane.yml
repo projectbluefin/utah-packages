@@ -107,7 +107,6 @@ jobs:
       - name: Build the verified source with its RPM recipe
         env:
           PACKAGE: ${{ matrix.package }}
-          FACTORY_REPO: ${{ vars.FACTORY_REPO || 'https://projectbluefin.github.io/utah-packages/' }}
         run: |
           # An entry may build another entry's recipe directory with extra rpm
           # defines: that is how one long recipe is split into shards that run
@@ -129,7 +128,7 @@ jobs:
           PROMISED_SOURCES="$(python3 tools/promised_sources.py)"
           export PROMISED_SOURCES
           docker run --rm --privileged \
-            -e PACKAGE -e RECIPE -e RPM_DEFINES -e FACTORY_REPO -e DIST_BUMP \
+            -e PACKAGE -e RECIPE -e RPM_DEFINES -e DIST_BUMP \
             -e PROMISED_SOURCES \
             -v "$PWD/work:/work:Z" \
             -v "$PWD/packages:/packages:ro,Z" \
@@ -292,10 +291,6 @@ jobs:
               HB_GLOBAL_EXCLUDE="${HB_GLOBAL_EXCLUDE} --setopt=public-hummingbird-x86_64-rpms.excludepkgs=rust,rustfmt,cargo,clippy,rust-std-static"
               EXCLUDE="${HB_EXCLUDE}${EXCLUDE:+,}${EXCLUDE}"
               echo "hummingbird exclusions: $HB_EXCLUDE"
-              if [ -n "${FACTORY_REPO:-}" ]; then
-                printf "[factory]\nname=factory\nbaseurl=%s\nenabled=1\ngpgcheck=0\npriority=5\n" \
-                  "$FACTORY_REPO" > /etc/yum.repos.d/factory.repo
-              fi
               # The plain fedora image is not a build root: it lacks the group mock
               # installs, so /usr/bin/echo and friends are missing. Most packages pull
               # them in transitively; squashfs-tools calls echo directly from its
