@@ -62,6 +62,16 @@ for item in manifest.get("packages", []):
         raise SystemExit(str(error))
     if "recipe" in item and item["recipe"] == item["name"]:
         raise SystemExit(f"{item['name']}: recipe is redundant when it equals the name")
+    # A no_upstream_source entry claims its recipe downloads nothing. Hold it
+    # to that claim: a spec with a Source line whose archive nobody fetches
+    # fails in %prep, a long way from the entry that caused it.
+    if item.get("no_upstream_source"):
+        for spec in sorted(recipe_dir.glob("*.spec")):
+            for line in spec.read_text().splitlines():
+                if line.startswith("Source") and ":" in line:
+                    raise SystemExit(
+                        f"{item['name']}: declared no_upstream_source but {spec} has {line.split(':', 1)[0]}"
+                    )
 
 lane_config = tomllib.loads(Path("config/build-lanes.toml").read_text())
 lane_names = []
