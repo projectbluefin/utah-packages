@@ -1825,6 +1825,13 @@
       "sha512": "f2b3df3f0254a13f2e046269b612f90d15c4f6ce22f9e6463b156a03de271d30519fed9002f7faae76ca84a5e6001550d8003901d5a228694375ae56a640ad61"
     },
     {
+      "name": "tailscale",
+      "version": "1.98.8",
+      "url": "https://pkgs.tailscale.com/stable/tailscale_1.98.8_amd64.tgz",
+      "filename": "tailscale_1.98.8_amd64.tgz",
+      "sha512": "1b25df28eadf4b63c93c09aa31063ee7112f2bd7b2819e326e3614bf8a9aa62923ffaef3178c8eaf43d61d9326cd0f2fac0f5768c383ec65b72ab2e800884c7c"
+    },
+    {
       "name": "tecla",
       "version": "51~beta",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/tecla/tecla-51.beta.tar.xz/sha512/56c58e3b439deac0f3d46ed206f6d7a92a36c59714ea58c5649f6ba88a5c20d61ca0b289e5cedb02309701dba62e8eaa6097039fd2b2ed32956abc377fb64c65/tecla-51.beta.tar.xz",
