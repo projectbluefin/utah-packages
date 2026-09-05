@@ -1,0 +1,6 @@
+require:
+- python3-enchant
+- hunspell-en-GB
+test: python3 test_suggest_words-en_GB.py
+framework: shell
+

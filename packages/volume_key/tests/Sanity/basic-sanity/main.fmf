@@ -1,0 +1,16 @@
+---
+component: volume_key
+summary: basic sanity test for volume_key utility
+contact:
+  - Jan Blazek <jblazek@redhat.com>
+  - Jiri Kucera <jkucera@redhat.com>
+description: basic sanity test for volume_key utility
+require:
+  - volume_key
+  - cryptsetup
+  - nss-tools
+  - expect
+  - tcllib
+framework: beakerlib
+test: ./runtest.sh
+duration: 10m

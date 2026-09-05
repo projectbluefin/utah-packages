@@ -1,0 +1,143 @@
+#!/usr/bin/expect -f
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+#   File:   ./tests/utils/volume_key.exp
+#   Author: Jiri Kucera <jkucera@redhat.com>
+#   Brief:  Expect wrapper around volume_key
+#
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+#   Copyright (c) 2020 Red Hat, Inc.
+#
+#   This program is free software: you can redistribute it and/or
+#   modify it under the terms of the GNU General Public License as
+#   published by the Free Software Foundation, either version 2 of
+#   the License, or (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be
+#   useful, but WITHOUT ANY WARRANTY; without even the implied
+#   warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+#   PURPOSE.  See the GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program. If not, see http://www.gnu.org/licenses/.
+#
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+package require cmdline
+
+source [file join [file dirname [info script]] "common.tcl"]
+
+set options {
+  {certpass.arg "" "Password for certificate"}
+  {lukspass.arg "" "Password for LUKS encryption/decryption"}
+  {packetpass.arg "" "Password for escrow packet encryption/decryption"}
+  {newpacketpass.arg "" "New password for escrow packet reencryption"}
+  {pinentry "gpg-agent may ask for password via pinentry"}
+}
+
+set usage "\[options\] -- volume_key_options\noptions:"
+
+if {[catch {
+  array set params [::cmdline::getoptions argv $options $usage]
+} result]} {
+  if {$::errorCode eq {CMDLINE USAGE}} {
+    puts $result
+    exit 0
+  }
+  puts $::errorCode
+  puts $::errorInfo
+  exit 1
+}
+
+set certpass $params(certpass)
+set lukspass $params(lukspass)
+set packetpass $params(packetpass)
+set newpacketpass $params(newpacketpass)
+set pinentry $params(pinentry)
+
+proc prompt_cert_password {password} {
+  verify_password $password
+  expect -re "Enter password for.*"
+  sleep 1
+  send -- "$password\r"
+}
+
+proc prompt_luks_password {password} {
+  verify_password $password
+  expect -re "Passphrase for.*"
+  sleep 1
+  send -- "$password\r"
+}
+
+proc prompt_new_luks_password {password} {
+  verify_password $password
+  expect -re "New passphrase for.*"
+  sleep 1
+  send -- "$password\r"
+  expect -re "Repeat new passphrase for.*"
+  sleep 1
+  send -- "$password\r"
+}
+
+proc prompt_packet_password {password pinentry} {
+  verify_password $password
+  expect -re "Escrow packet passphrase.*"
+  sleep 1
+  send -- "$password\r"
+  if {$pinentry} {
+    expect -re ".*Passphrase.*"
+    sleep 1
+    send -- "$password\r"
+  }
+}
+
+proc prompt_new_packet_password {password pinentry} {
+  verify_password $password
+  expect -re "New packet passphrase.*"
+  sleep 1
+  send -- "$password\r"
+  expect -re "Repeat new packet passphrase.*"
+  sleep 1
+  send -- "$password\r"
+  if {$pinentry} {
+    expect -re ".*Passphrase.*"
+    sleep 1
+    send -- "$password\r"
+    expect -re ".*Passphrase.*"
+    sleep 1
+    send -- "$password\r"
+  }
+}
+
+eval spawn volume_key $::argv
+if {"--reencrypt" in $::argv} {
+  if {"-d" in $::argv} {
+    prompt_cert_password $certpass
+  } else {
+    prompt_packet_password $packetpass $pinentry
+  }
+  prompt_new_packet_password $newpacketpass $pinentry
+  expect eof
+} elseif {"--restore" in $::argv} {
+  if {"-d" in $::argv} {
+    prompt_cert_password $certpass
+  } else {
+    prompt_packet_password $packetpass $pinentry
+  }
+  prompt_new_luks_password $lukspass
+  expect eof
+} elseif {"--save" in $::argv} {
+  prompt_luks_password $lukspass
+  if {"-c" ni $::argv} {
+    prompt_new_packet_password $packetpass $pinentry
+  }
+  expect eof
+} elseif {[oneof {"--dump" "--secrets" "--setup-volume"} $::argv]} {
+  if {"-d" in $::argv} {
+    prompt_cert_password $certpass
+  } else {
+    prompt_packet_password $packetpass $pinentry
+  }
+  expect eof
+}

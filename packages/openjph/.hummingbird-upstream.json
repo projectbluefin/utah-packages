@@ -1,0 +1,8 @@
+{
+  "package": "openjph",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/openjph.git",
+  "commit": "c0b26cf3eb1be7a13e09936e1dccec7b9decacf8",
+  "tree": "2a26ce1fe9d64e336ef674a993664824f5708f2a",
+  "imported_at": "2026-09-05T14:33:26.067444+00:00"
+}

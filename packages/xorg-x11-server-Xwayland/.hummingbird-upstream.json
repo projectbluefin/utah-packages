@@ -1,0 +1,8 @@
+{
+  "package": "xorg-x11-server-Xwayland",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/xorg-x11-server-Xwayland.git",
+  "commit": "f03b8b32b731c2fcc72c330b6c9eff7190a32c64",
+  "tree": "db57945b29b8eeb726f96799fd5334eca9cb6f57",
+  "imported_at": "2026-09-05T16:03:08.636369+00:00"
+}

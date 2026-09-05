@@ -1,0 +1,8 @@
+{
+  "package": "libimobiledevice-glue",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libimobiledevice-glue.git",
+  "commit": "20039d6d294bca5e832bf4351db30aea86b462d2",
+  "tree": "e9df087f93f2a8227e4a6f77f1403f778eb2642b",
+  "imported_at": "2026-09-05T15:35:31.551718+00:00"
+}

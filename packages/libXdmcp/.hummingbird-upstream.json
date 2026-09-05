@@ -1,0 +1,8 @@
+{
+  "package": "libXdmcp",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libXdmcp.git",
+  "commit": "c17f8837d3a11c24b1dd6e693a30ddf0de452549",
+  "tree": "20ba571dcc056b727b8b293f63eb1facc07bccb9",
+  "imported_at": "2026-09-05T16:46:34.538515+00:00"
+}

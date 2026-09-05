@@ -1,0 +1,8 @@
+.build*
+clog
+*.src.rpm
+*/
+/mdadm-4.*.tar.xz
+/mdadm-4.3.tar.sign
+/mdadm-4.6.tar.gz
+/mdadm-4.6.tar.asc
