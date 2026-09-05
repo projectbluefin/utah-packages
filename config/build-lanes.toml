@@ -17,8 +17,14 @@
 # pipewire links webrtc-audio-processing, so pipewire cannot share this one.
 # pipewire therefore moves out to stage 1, which is the first wave that sees
 # every stage-0 lane.
+#
+# libheif is here for the same reason as ffmpeg, one library later: the
+# factory now builds openjph, and Fedora's 0.25 became rawhide's 0.31, so the
+# published libheif asks for libopenjph.so.0.25 and nothing will ever answer.
+# glycin build-requires libheif and stays in the fast lane, which is correct:
+# libheif's own soname does not move, only the openjph it links.
 [stage0_late]
-packages = ["ffmpeg", "gstreamer1-plugins-good", "webrtc-audio-processing"]
+packages = ["ffmpeg", "gstreamer1-plugins-good", "libheif", "webrtc-audio-processing"]
 
 # WebKitGTK is built as two shards of one recipe, one GTK port each, so the
 # two compiles that used to run back to back on one runner (five hours) run

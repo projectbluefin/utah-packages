@@ -1,0 +1,8 @@
+{
+  "package": "v4l-utils",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/v4l-utils.git",
+  "commit": "40199e4eba1f1872092cce4390c6dbd5db892515",
+  "tree": "abd2874256eff5fd64135d3c28afb962d15c201e",
+  "imported_at": "2026-09-05T14:33:21.497742+00:00"
+}

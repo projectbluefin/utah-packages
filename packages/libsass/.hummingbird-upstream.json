@@ -1,0 +1,8 @@
+{
+  "package": "libsass",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libsass.git",
+  "commit": "fbeacfff463dff16e5e31e7d9bbbea3f9a03bfb3",
+  "tree": "7deb0c1069503f6ecbdf366fd7300f49dcd4b72f",
+  "imported_at": "2026-09-05T14:33:12.873512+00:00"
+}
