@@ -40,8 +40,8 @@ class PackitSource0Tests(unittest.TestCase):
                 clear=True,
             ):
                 self.assertEqual(
-                    verified_source0(root),
-                    "packages/demo/demo-1.0.tar.gz",
+                    verified_source0(root, package_dir),
+                    "demo-1.0.tar.gz",
                 )
 
 

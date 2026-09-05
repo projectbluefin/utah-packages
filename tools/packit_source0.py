@@ -10,7 +10,7 @@ import subprocess
 import sys
 
 
-def verified_source0(root: Path) -> str:
+def verified_source0(root: Path, working_directory: Path | None = None) -> str:
     spec_path = os.environ.get("PACKIT_SPECFILE_PATH")
     if not spec_path:
         raise ValueError("PACKIT_SPECFILE_PATH is not set")
@@ -40,7 +40,11 @@ def verified_source0(root: Path) -> str:
     archive = candidates[0].parent / matches[0]["filename"]
     if not archive.is_file():
         raise ValueError(f"verified Source0 is not staged: {archive}")
-    return str(archive.relative_to(root))
+    working_directory = (working_directory or Path.cwd()).resolve()
+    try:
+        return str(archive.resolve().relative_to(working_directory))
+    except ValueError:
+        return str(archive.relative_to(root))
 
 
 def main() -> int:
@@ -50,7 +54,7 @@ def main() -> int:
             text=True,
         ).strip()
     )
-    print(verified_source0(root))
+    print(verified_source0(root, Path.cwd()))
     return 0
 
 
