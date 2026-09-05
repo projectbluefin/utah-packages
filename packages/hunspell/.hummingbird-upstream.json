@@ -1,0 +1,8 @@
+{
+  "package": "hunspell",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/hunspell.git",
+  "commit": "7e98f35db6624b48f1a05d8a762560089ecfefa2",
+  "tree": "c3f4b6755c18f427e93b3e6fd0043aca56fe094e",
+  "imported_at": "2026-09-05T16:27:28.996920+00:00"
+}
