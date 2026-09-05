@@ -1,0 +1,57 @@
+name: Build packit-sdk image
+
+on:
+  workflow_dispatch: {}
+  push:
+    branches: [main]
+    paths:
+      - containers/packit-sdk/**
+      - .github/workflows/build-packit-sdk.yml
+  pull_request:
+    paths:
+      - containers/packit-sdk/**
+      - .github/workflows/build-packit-sdk.yml
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build packit-sdk image
+        run: |
+          podman build \
+            --file containers/packit-sdk/Containerfile \
+            --tag localhost/packit-sdk:ci \
+            containers/packit-sdk
+
+      - name: Smoke-test packit-sdk image
+        run: |
+          podman run --rm localhost/packit-sdk:ci --version
+          podman run --rm --entrypoint mock localhost/packit-sdk:ci --version
+          podman run --rm --entrypoint createrepo_c localhost/packit-sdk:ci --version
+
+      - name: Push and sign packit-sdk image
+        if: github.event_name != 'pull_request'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          owner="$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')"
+          image="ghcr.io/${owner}/utah-packages-packit-sdk"
+
+          echo "${GITHUB_TOKEN}" | podman login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+          podman tag localhost/packit-sdk:ci "${image}:latest"
+          podman push "${image}:latest" --digestfile digest.txt
+          digest="$(cat digest.txt)"
+          echo "Published ${image}@${digest}"
+
+          curl -fsSL https://github.com/sigstore/cosign/releases/download/v2.4.1/cosign-linux-amd64 -o cosign
+          install -m 0755 cosign /usr/local/bin/cosign
+          cosign sign --yes "${image}@${digest}"
