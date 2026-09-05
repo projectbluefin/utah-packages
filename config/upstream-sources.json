@@ -1339,6 +1339,13 @@
       "sha512": "e20a6827e370726cf50489a69f4a52b897f1c44e3eba8c72a4e626b08724e877d090770b8016765736d887d5d5eaba1fda9c29066e62d259b4d1e2064bc1626c"
     },
     {
+      "name": "linux-firmware",
+      "version": "20260810",
+      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/linux-firmware/linux-firmware-20260810.tar.xz/sha512/2ef755194eb022e539aa677474ca5c6c8c3616b3302ebc14e1698c62ccb6ba6f8149e507b46c2a0563297c53502defb892ce4d37eb02646d99d955ae899eebe7/linux-firmware-20260810.tar.xz",
+      "filename": "linux-firmware-20260810.tar.xz",
+      "sha512": "2ef755194eb022e539aa677474ca5c6c8c3616b3302ebc14e1698c62ccb6ba6f8149e507b46c2a0563297c53502defb892ce4d37eb02646d99d955ae899eebe7"
+    },
+    {
       "name": "livesys-scripts",
       "version": "0.9.7",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/livesys-scripts/livesys-scripts-0.9.7.tar.gz/sha512/36ec586d7485eea286b32c5ac524080cc389e19affc14a378059d3410d66985da079fae43a1e7695bc58e233b4a87496070f71765fb042569c8939b415da7c57/livesys-scripts-0.9.7.tar.gz",
