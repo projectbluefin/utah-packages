@@ -1,0 +1,79 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: evpobr <evpobr@gmail.com>
+Date: Mon, 26 Oct 2020 10:55:33 +0500
+Subject: [PATCH] Export CMake targets to the build tree
+
+Properly export Vorbis targets when added via `add_subdirectory()`.
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index f377c428..bb99e2cf 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -62,7 +62,9 @@ message(STATUS "Configuring ${PROJECT_NAME} ${PROJECT_VERSION}")
+ check_library_exists(m floor "" HAVE_LIBM)
+ 
+ # Find ogg dependency
+-find_package(Ogg REQUIRED)
++if(NOT TARGET Ogg::ogg)
++    find_package(Ogg REQUIRED)
++endif()
+ 
+ add_subdirectory(lib)
+ 
+diff --git a/cmake/VorbisConfig.cmake.in b/cmake/VorbisConfig.cmake.in
+index 6fc07941..6ed0dd2b 100644
+--- a/cmake/VorbisConfig.cmake.in
++++ b/cmake/VorbisConfig.cmake.in
+@@ -1,7 +1,9 @@
+ @PACKAGE_INIT@
+ 
+ include(CMakeFindDependencyMacro)
+-find_dependency(Ogg REQUIRED)
++if(NOT TARGET Ogg::ogg)
++    find_dependency(Ogg REQUIRED)
++endif()
+ 
+ include(${CMAKE_CURRENT_LIST_DIR}/VorbisTargets.cmake)
+ 
+diff --git a/lib/CMakeLists.txt b/lib/CMakeLists.txt
+index 7cd68e50..daa7d715 100644
+--- a/lib/CMakeLists.txt
++++ b/lib/CMakeLists.txt
+@@ -78,6 +78,10 @@ if (NOT BUILD_FRAMEWORK)
+     add_library(vorbisenc ${VORBISENC_SOURCES})
+     add_library(vorbisfile ${VORBISFILE_SOURCES})
+ 
++    add_library(Vorbis::vorbis ALIAS vorbis)
++    add_library(Vorbis::vorbisenc ALIAS vorbisenc)
++    add_library(Vorbis::vorbisfile ALIAS vorbisfile)
++
+     get_version_info(VORBIS_VERSION_INFO "V_LIB_CURRENT" "V_LIB_AGE" "V_LIB_REVISION")
+     set_target_properties(vorbis PROPERTIES SOVERSION ${VORBIS_VERSION_INFO})
+     get_version_info(VORBISENC_VERSION_INFO "VE_LIB_CURRENT" "VE_LIB_AGE" "VE_LIB_REVISION")
+@@ -121,6 +125,7 @@ if (NOT BUILD_FRAMEWORK)
+         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+         FRAMEWORK DESTINATION ${CMAKE_INSTALL_LIBDIR}
+     )
++    export(EXPORT VorbisTargets NAMESPACE Vorbis:: FILE VorbisTargets.cmake)
+ 
+     if(INSTALL_CMAKE_PACKAGE_MODULE)
+ 
+@@ -134,15 +139,15 @@ if (NOT BUILD_FRAMEWORK)
+ 
+         include(CMakePackageConfigHelpers)
+ 
+-        configure_package_config_file(${PROJECT_SOURCE_DIR}/cmake/VorbisConfig.cmake.in ${PROJECT_BINARY_DIR}/VorbisConfig.cmake
++        configure_package_config_file(${PROJECT_SOURCE_DIR}/cmake/VorbisConfig.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/VorbisConfig.cmake
+             INSTALL_DESTINATION ${CMAKE_INSTALL_CONFIGDIR}
+         )
+ 
+-        write_basic_package_version_file(${PROJECT_BINARY_DIR}/VorbisConfigVersion.cmake
++        write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/VorbisConfigVersion.cmake
+             COMPATIBILITY SameMajorVersion
+         )
+ 
+-        install(FILES ${PROJECT_BINARY_DIR}/VorbisConfig.cmake ${PROJECT_BINARY_DIR}/VorbisConfigVersion.cmake
++        install(FILES ${CMAKE_CURRENT_BINARY_DIR}/VorbisConfig.cmake ${CMAKE_CURRENT_BINARY_DIR}/VorbisConfigVersion.cmake
+             DESTINATION ${CMAKE_INSTALL_CONFIGDIR}
+         )
+ 

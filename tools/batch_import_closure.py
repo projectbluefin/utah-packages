@@ -75,6 +75,28 @@ def read_sources(name: str, destination: Path) -> dict[str, str]:
     return entries
 
 
+def read_source0_basename(name: str, destination: Path, version: str) -> str | None:
+    """The basename of Source0, with the macros a source line usually carries.
+
+    The sources file is in dist-git order, and Source0 is not always first:
+    iputils lists a bundled ifenslave.tar.gz ahead of its own tarball, so
+    taking the first entry recorded the wrong archive as the upstream source.
+    """
+    spec = next((destination / name).glob("*.spec"))
+    for line in spec.read_text().splitlines():
+        if not re.match(r"Source0?:", line):
+            continue
+        value = line.split(":", 1)[1].strip()
+        value = value.replace("%{name}", name).replace("%{version}", version)
+        # A conditional macro that nothing defines expands to nothing, and a
+        # Source0 line is where they cluster: firefox spells its tarball
+        # firefox-%{version}%{?pre_version}.source.tar.xz, which is a plain
+        # release name on every build that is not a pre-release.
+        value = re.sub(r"%\{\?[^}]*\}", "", value)
+        return value.rsplit("/", 1)[-1]
+    return None
+
+
 def read_spec_version(name: str, destination: Path) -> str:
     spec = next((destination / name).glob("*.spec"))
     for line in spec.read_text().splitlines():
@@ -124,7 +146,8 @@ def main() -> int:
             continue
         # Source0 is the primary upstream archive; record it hash-addressed.
         version = read_spec_version(name, args.destination)
-        filename = next(iter(sources))
+        source0 = read_source0_basename(name, args.destination, version)
+        filename = source0 if source0 in sources else next(iter(sources))
         sha512 = sources[filename]
         url = LOOKASIDE.format(pkg=name, name=filename, hash=sha512)
         config["packages"].append({

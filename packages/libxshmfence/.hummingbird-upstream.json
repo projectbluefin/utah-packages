@@ -1,0 +1,8 @@
+{
+  "package": "libxshmfence",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libxshmfence.git",
+  "commit": "128c73a67b2a61cf0239e521d6f0a525baf63133",
+  "tree": "6d01d0e3f0a8896dac23f9d5344a0c08b374b117",
+  "imported_at": "2026-09-03T04:17:54.555302+00:00"
+}

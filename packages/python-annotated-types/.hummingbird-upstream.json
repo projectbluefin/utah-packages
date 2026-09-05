@@ -1,0 +1,8 @@
+{
+  "package": "python-annotated-types",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/python-annotated-types.git",
+  "commit": "6de449a7baa52e30d275394f773fcf5732ba61a3",
+  "tree": "a9b404dcdbcc375a3fa0cabcd14abb733d50db45",
+  "imported_at": "2026-09-03T22:53:17.709454+00:00"
+}

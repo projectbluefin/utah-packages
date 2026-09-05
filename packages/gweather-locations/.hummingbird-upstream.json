@@ -1,0 +1,8 @@
+{
+  "package": "gweather-locations",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/gweather-locations.git",
+  "commit": "a8d7520ab44a5f26b2119cec2ed9b616fbb36c67",
+  "tree": "0073353a1f8c6f442217a183e75eab7e26d2a0da",
+  "imported_at": "2026-09-04T21:16:58.813192+00:00"
+}

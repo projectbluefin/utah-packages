@@ -1,0 +1,8 @@
+{
+  "package": "libburn",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libburn.git",
+  "commit": "403cd3199a13ce6e8b3927f638be06a1a16490e5",
+  "tree": "03fe8b3e6c7a95ffd4450b288b01b5a3e660d255",
+  "imported_at": "2026-09-03T22:53:14.382435+00:00"
+}

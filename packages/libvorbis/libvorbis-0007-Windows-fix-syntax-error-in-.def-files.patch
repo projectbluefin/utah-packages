@@ -1,0 +1,45 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Vincent Torri <vtorri@outlook.fr>
+Date: Mon, 15 Sep 2025 07:53:23 +0200
+Subject: [PATCH] Windows: fix syntax error in .def files
+
+With MSYS2 + mingw-w64, the build of the DLL fails with a syntax
+error in .def files. LIBRARY should be followed with the library
+name.
+
+diff --git a/win32/vorbis.def b/win32/vorbis.def
+index 884f8f02..5e8237e0 100644
+--- a/win32/vorbis.def
++++ b/win32/vorbis.def
+@@ -1,6 +1,6 @@
+ ; vorbis.def
+ ; 
+-LIBRARY
++LIBRARY vorbis
+ EXPORTS
+ _floor_P
+ _mapping_P
+diff --git a/win32/vorbisenc.def b/win32/vorbisenc.def
+index 79af0644..34d7206c 100644
+--- a/win32/vorbisenc.def
++++ b/win32/vorbisenc.def
+@@ -1,6 +1,6 @@
+ ; vorbisenc.def
+ ;
+-LIBRARY
++LIBRARY vorbisenc
+ 
+ EXPORTS
+ vorbis_encode_init
+diff --git a/win32/vorbisfile.def b/win32/vorbisfile.def
+index 4dc55496..3780ada1 100644
+--- a/win32/vorbisfile.def
++++ b/win32/vorbisfile.def
+@@ -1,6 +1,6 @@
+ ; vorbisfile.def
+ ;
+-LIBRARY
++LIBRARY vorbisfile
+ EXPORTS
+ ov_clear
+ ov_open

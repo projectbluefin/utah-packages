@@ -1,0 +1,24 @@
+* Mon Feb 12 2024 Yaakov Selkowitz <yselkowi@redhat.com> - 2.2.0-8
+- Handle %generate_buildrequires differences between dnf and dnf5
+
+* Sat Jan 27 2024 Fedora Release Engineering <releng@fedoraproject.org> - 2.2.0-8
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_40_Mass_Rebuild
+
+* Sat Jul 22 2023 Fedora Release Engineering <releng@fedoraproject.org> - 2.2.0-7
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_39_Mass_Rebuild
+
+* Tue Jun 13 2023 Python Maint <python-maint@redhat.com> - 2.2.0-6
+- Rebuilt for Python 3.12
+
+* Mon Feb 27 2023 Jerry James <loganjerry@gmail.com> - 2.2.0-5
+- Dynamically generate python BuildRequires
+
+* Sat Jan 21 2023 Fedora Release Engineering <releng@fedoraproject.org> - 2.2.0-5
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_38_Mass_Rebuild
+
+* Mon Sep 26 2022 Jerry James <loganjerry@gmail.com> - 2.2.0-4
+- Add BR on javapackages-tools for Java arches
+- Run the Java and python tests
+
+* Wed Sep 21 2022 Jerry James <loganjerry@gmail.com> - 2.2.0-3
+- Initial RPM, from the libstemmer and python-snowballstemmer packages

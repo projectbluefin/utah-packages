@@ -1,0 +1,13 @@
+--- hwinfo-25.5--orig/src/ids/Makefile	2026-07-31 14:25:46.000000000 +0200
++++ hwinfo-25.5/src/ids/Makefile	2026-09-01 11:13:36.444438712 +0200
+@@ -50,9 +50,9 @@
+ $(LIBHD_D): hd_ids.o
+ 	ar r $(LIBHD) $?
+ 
+ check_hd: check_hd.c
+-	$(CC) $(CFLAGS) $< -o $@
++	$(CC) $(CFLAGS) $(LDFLAGS) $< -o $@
+ 
+ hd_ids.c: hd_ids.h hd_ids_tiny.h
+ 
+ hd_ids.h hd.ids: check_hd $(IDFILES)

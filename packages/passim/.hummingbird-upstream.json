@@ -1,0 +1,8 @@
+{
+  "package": "passim",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/passim.git",
+  "commit": "e2c0888655909f731596e9460f9970cb21be004e",
+  "tree": "472c770c0d1fa3474f699ebb875252743fdaacf1",
+  "imported_at": "2026-09-03T22:53:16.727060+00:00"
+}

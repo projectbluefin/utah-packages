@@ -1,0 +1,8 @@
+{
+  "package": "orc",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/orc.git",
+  "commit": "1a199937d809bf2eca668bcd5d0c6bce72b8291d",
+  "tree": "b5f153d53b7c591d2c96d825c4f7747427e91e05",
+  "imported_at": "2026-09-03T22:53:16.946849+00:00"
+}

@@ -4,6 +4,12 @@
 # Only have extras package on fedora
 %bcond aom %{defined fedora}
 %bcond extras %{defined fedora}
+# chromaprint is declined for the same reason ffmpeg declines it: the Fedora
+# libchromaprint links libavutil.so.60, and promising ffmpeg excludes the
+# Fedora libav by name, so libchromaprint-devel cannot be installed here at
+# all. Narrower than turning off %%{extras}, which would also drop assrender,
+# avtp, bs2b, curl, dca, modplug and the rest.
+%bcond chromaprint 0
 # Utah does not ship the optional OpenCV plugin; Fedora's opencv stack pulls
 # Qt6, which is not part of the GNOME desktop closure.
 %bcond_with opencv
@@ -152,7 +158,9 @@ BuildRequires:  pkgconfig(avtp)
 BuildRequires:  pkgconfig(fluidsynth)
 BuildRequires:  pkgconfig(libass)
 BuildRequires:  pkgconfig(libbs2b)
+%if %{with chromaprint}
 BuildRequires:  pkgconfig(libchromaprint)
+%endif
 BuildRequires:  pkgconfig(libcurl)
 BuildRequires:  pkgconfig(libdca)
 BuildRequires:  pkgconfig(libmodplug)
@@ -371,11 +379,13 @@ aren't tested well enough, or the code is not of good enough quality.
 %if %{without webrtc}
     -D webrtcdsp=disabled \
 %endif
+%if %{without chromaprint} || %{without extras}
+    -D chromaprint=disabled \
+%endif
 %if %{without extras}
     -D assrender=disabled \
     -D avtp=disabled \
     -D bs2b=disabled \
-    -D chromaprint=disabled \
     -D curl=disabled -D curl-ssh2=disabled \
     -D d3dvideosink=disabled \
     -D decklink=disabled \
@@ -722,7 +732,9 @@ EOF
 %{_libdir}/gstreamer-%{majorminor}/libgstassrender.so
 %{_libdir}/gstreamer-%{majorminor}/libgstavtp.so
 %{_libdir}/gstreamer-%{majorminor}/libgstbs2b.so
+%if %{with chromaprint}
 %{_libdir}/gstreamer-%{majorminor}/libgstchromaprint.so
+%endif
 %if %{with dc1394}
 %{_libdir}/gstreamer-%{majorminor}/libgstdc1394.so
 %endif

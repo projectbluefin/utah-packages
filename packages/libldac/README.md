@@ -1,0 +1,3 @@
+# libldac
+
+The libldac package

@@ -1,0 +1,8 @@
+/*~
+/*.log
+/*.src.rpm
+/noarch/
+/sof-bin-*/
+/sof-bin-*.tar.gz
+/sof-tplg-*.tar.gz
+/avs-topology_*.tar.gz

@@ -57,6 +57,7 @@ for item in manifest.get("packages", []):
         raise SystemExit(f"{item.get('name')} builds from {recipe_dir}, which does not exist")
     try:
         recipe.rpm_defines(item)
+        recipe.compiler_cache(item)
     except ValueError as error:
         raise SystemExit(str(error))
     if "recipe" in item and item["recipe"] == item["name"]:

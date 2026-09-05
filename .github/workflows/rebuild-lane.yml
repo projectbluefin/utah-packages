@@ -36,7 +36,27 @@ jobs:
     timeout-minutes: ${{ fromJSON(inputs.timeout) }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Resolve the compiler cache policy
+        id: cache_policy
+        env:
+          PACKAGE: ${{ matrix.package }}
+        run: |
+          set -euo pipefail
+          owner=$(echo "${{ github.repository_owner }}" | tr "[:upper:]" "[:lower:]")
+          if [ "$(python3 tools/recipe.py "$PACKAGE" cache)" = true ]; then
+            echo "ref=ghcr.io/${owner}/utah-packages-ccache" >> "$GITHUB_OUTPUT"
+          else
+            echo "ref=" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Log in to GHCR for the compiler cache
+        if: steps.cache_policy.outputs.ref != ''
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: echo "${GITHUB_TOKEN}" | podman login ghcr.io -u "${{ github.actor }}" --password-stdin
       - uses: ./.github/actions/setup-sccache
+        with:
+          package: ${{ matrix.package }}
+          cache_ref: ${{ steps.cache_policy.outputs.ref }}
       - name: Collect RPMs built by earlier lanes
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
@@ -53,7 +73,12 @@ jobs:
           mkdir -p work/prior
           echo "${GITHUB_TOKEN}" | podman login ghcr.io -u "${{ github.actor }}" --password-stdin 2>/dev/null || true
           if podman pull "ghcr.io/${owner}/utah-packages:building" 2>/dev/null; then
-            container=$(podman create "ghcr.io/${owner}/utah-packages:building")
+            # podman 5 refuses to create a container from an image that declares
+            # no command, and every one of these is FROM scratch plus a COPY. The
+            # command is never run -- the container exists only for podman cp --
+            # but it has to be there or create exits 125 with
+            #   no command or entrypoint provided, and no CMD or ENTRYPOINT from image
+            container=$(podman create "ghcr.io/${owner}/utah-packages:building" /bin/true)
             podman cp "$container:/repository/." work/prior/ 2>/dev/null || true
             podman rm "$container" >/dev/null 2>&1 || true
             echo "seeded work/prior from :building accumulator"
@@ -82,7 +107,6 @@ jobs:
       - name: Build the verified source with its RPM recipe
         env:
           PACKAGE: ${{ matrix.package }}
-          FACTORY_REPO: ${{ vars.FACTORY_REPO || 'https://projectbluefin.github.io/utah-packages/' }}
         run: |
           # An entry may build another entry's recipe directory with extra rpm
           # defines: that is how one long recipe is split into shards that run
@@ -98,8 +122,14 @@ jobs:
           # container, which only sees config/ and packages/.
           DIST_BUMP="$(python3 tools/dist_bump.py "$PACKAGE")"
           export DIST_BUMP
+          # The source names the manifest still promises, for the accumulator
+          # purge below. Computed out here because it reads the whole of
+          # packages/ and config/, while the container is given one recipe.
+          PROMISED_SOURCES="$(python3 tools/promised_sources.py)"
+          export PROMISED_SOURCES
           docker run --rm --privileged \
-            -e PACKAGE -e RECIPE -e RPM_DEFINES -e FACTORY_REPO -e DIST_BUMP \
+            -e PACKAGE -e RECIPE -e RPM_DEFINES -e DIST_BUMP \
+            -e PROMISED_SOURCES \
             -v "$PWD/work:/work:Z" \
             -v "$PWD/packages:/packages:ro,Z" \
             -v "$PWD/config:/repos:ro,Z" \
@@ -147,6 +177,34 @@ jobs:
                 # the stale source packages by ICU 77 soname, then drop every
                 # RPM built from those same sources; the current run rebuilds a
                 # coherent replacement set with matching filenames.
+                # The accumulator is shared across runs and refs and keeps
+                # whatever any of them built, including packages the manifest
+                # no longer promises. That is not merely stale: the exclusion
+                # list below is derived from these very names, so a removed
+                # entry goes on excluding the Fedora copy of itself and nothing
+                # provides the capability any more. Dropping libbluray from the
+                # manifest left the Fedora libbluray excluded by the run before
+                # it, which stranded the Fedora libavformat-free too and failed
+                # ten stage 0 packages that have nothing to do with Blu-ray.
+                # Match on %{SOURCERPM}, as the ICU purge below does and for
+                # the same reason: subpackages require each other by exact
+                # NEVR, so dropping one and keeping its siblings is worse than
+                # dropping none.
+                if [ -n "${PROMISED_SOURCES:-}" ]; then
+                  promised_file=$(mktemp)
+                  printf "%s\n" "$PROMISED_SOURCES" | sed "/^$/d" > "$promised_file"
+                  while IFS= read -r -d "" rpm; do
+                    src=$(rpm -qp --qf "%{SOURCERPM}\n" "$rpm" 2>/dev/null)
+                    # <name>-<version>-<release>.src.rpm; the name may itself
+                    # contain dashes, so strip the last two fields, not the first.
+                    name=$(printf "%s" "$src" | sed "s/\.src\.rpm$//; s/-[^-]*-[^-]*$//")
+                    if [ -n "$name" ] && ! grep -qxF "$name" "$promised_file"; then
+                      echo "dropping unpromised artifact from accumulator: $rpm (src $name)"
+                      rm -f "$rpm"
+                    fi
+                  done < <(find /work/prior -name "*.rpm" -type f -print0)
+                  rm -f "$promised_file"
+                fi
                 stale_sources=""
                 while IFS= read -r -d "" rpm; do
                   if rpm -qpR "$rpm" 2>/dev/null | grep -q "libicuuc.so.77\|libicui18n.so.77"; then
@@ -207,13 +265,32 @@ jobs:
               # runtime could not install. Exclude the exact older Hummingbird
               # NEVR globally so only libicu 78 is selectable; Fedora build-only
               # consumers that want 77 are rare and not part of the runtime.
+              #
+              # The Rust toolchain comes from Fedora, not Hummingbird. Fedora
+              # builds rustc with an extra x86_64-redhat-linux-gnu target, and
+              # Mozilla configure looks that host triple up in rustc
+              # --print target-list; Hummingbird builds upstream rust, which
+              # only knows x86_64-unknown-linux-gnu, so mozjs140 stopped with
+              #   ERROR: Don t know how to translate x86_64-redhat-linux-gnu for rustc
+              # against rust-1.98.0-1.hum1. This is the documented division of
+              # labour rather than an exception to it: Fedora 44 is the other
+              # half of the buildroot, the way a compiler is, and Hummingbird
+              # upstream-first is about what ships at runtime. Nothing in the
+              # runtime contract carries a Rust toolchain. Version-anchored so
+              # rust-1.* cannot match rust-std-static or a rust-<crate>.
               HB_GLOBAL_EXCLUDE="--exclude=ruby3.3-default-gems --exclude=ruby3.4-default-gems --exclude=libicu-77.*hum1 --exclude=libicu-devel-77.*hum1"
+              # ...but that NEVR-glob form does not match: mozjs140 still
+              # installed rust-0:1.98.0-1.hum1 with --exclude=rust-1.*hum1 on
+              # the command line. Exclude by NAME from the Hummingbird repo
+              # instead, which is the form already proven to work here -- it is
+              # what puts "filtered out by exclude filtering" in the resolver
+              # output for the Fedora side. Name-scoping is safe for the Rust
+              # toolchain because Fedora is the only other source of it; libicu
+              # cannot use this form, since 77 and 78 share one name and only
+              # the older build is unwanted.
+              HB_GLOBAL_EXCLUDE="${HB_GLOBAL_EXCLUDE} --setopt=public-hummingbird-x86_64-rpms.excludepkgs=rust,rustfmt,cargo,clippy,rust-std-static"
               EXCLUDE="${HB_EXCLUDE}${EXCLUDE:+,}${EXCLUDE}"
               echo "hummingbird exclusions: $HB_EXCLUDE"
-              if [ -n "${FACTORY_REPO:-}" ]; then
-                printf "[factory]\nname=factory\nbaseurl=%s\nenabled=1\ngpgcheck=0\npriority=5\n" \
-                  "$FACTORY_REPO" > /etc/yum.repos.d/factory.repo
-              fi
               # The plain fedora image is not a build root: it lacks the group mock
               # installs, so /usr/bin/echo and friends are missing. Most packages pull
               # them in transitively; squashfs-tools calls echo directly from its
@@ -317,9 +394,36 @@ jobs:
               # reports success while shipping no packages at all.
               test -n "$(find /work/result -name "*.rpm" -type f -print -quit)"
             '
-      - name: Show compiler cache statistics
-        if: always()
-        run: test -x work/tools/sccache && work/tools/sccache --show-stats || true
+      # The recipe prints the statistics that matter from inside the
+      # container, where the compiles happen. Running the client here would
+      # start a second server against the same directory and report its own
+      # empty counters, which is what hid the broken cache until now.
+      - name: Publish the compiler cache
+        if: always() && steps.cache_policy.outputs.ref != ''
+        env:
+          PACKAGE: ${{ matrix.package }}
+          CACHE_REF: ${{ steps.cache_policy.outputs.ref }}
+        run: |
+          set -uo pipefail
+          test -d work/sccache || exit 0
+          # The build container runs as root and sccache creates its shard
+          # directories 0700, so every path under here belongs to root and is
+          # unreadable to the runner user. The first version of this step
+          # tested for content with find, which printed Permission denied to
+          # stderr, nothing to stdout, and skipped the publish without
+          # failing. Take ownership before looking.
+          sudo chown -R "$(id -u):$(id -g)" work/sccache || exit 0
+          test -n "$(find work/sccache -type f -print -quit)" || exit 0
+          tag="$(printf '%s' "$PACKAGE" | tr -c 'a-zA-Z0-9_.-' '-')"
+          ref="${CACHE_REF}:${tag}"
+          # The context is the cache directory alone. Handing podman the
+          # repository root would send the built RPMs and the seeded
+          # accumulator through the build as well.
+          containerfile="$RUNNER_TEMP/Containerfile.ccache"
+          printf 'FROM scratch\nCOPY . /sccache\n' > "$containerfile"
+          echo "Publishing $(du -sh work/sccache | cut -f1) of compiler cache to $ref"
+          podman build --tag "$ref" --file "$containerfile" work/sccache || exit 0
+          podman push "$ref" || echo "cache push failed; the next build recompiles"
       - name: Record exact package build identity
         env:
           PACKAGE: ${{ matrix.package }}

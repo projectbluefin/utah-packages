@@ -16,6 +16,7 @@ mounts it.
 
     recipe.py NAME dir       packages/<recipe> relative to the repository root
     recipe.py NAME defines   one "MACRO VALUE" per line, for rpmbuild -D
+    recipe.py NAME cache     "true" when the entry keeps a compiler cache
 """
 
 from __future__ import annotations
@@ -55,13 +56,28 @@ def rpm_defines(item: dict) -> list[str]:
     return list(defines)
 
 
+def compiler_cache(item: dict) -> bool:
+    """Whether this entry publishes and restores an sccache directory.
+
+    Only worth it where the compile dominates: restoring and publishing a
+    multi-gigabyte cache costs minutes, which a three-minute package would pay
+    for nothing. Opt in per entry with "compiler_cache": true.
+    """
+    value = item.get("compiler_cache", False)
+    if not isinstance(value, bool):
+        raise ValueError(f"compiler_cache for {item.get('name')} must be true or false")
+    return value
+
+
 def main() -> int:
-    if len(sys.argv) != 3 or sys.argv[2] not in ("dir", "defines"):
+    if len(sys.argv) != 3 or sys.argv[2] not in ("dir", "defines", "cache"):
         print(__doc__, file=sys.stderr)
         return 2
     item = entry(sys.argv[1])
     if sys.argv[2] == "dir":
         print(f"packages/{recipe_name(item)}")
+    elif sys.argv[2] == "cache":
+        print("true" if compiler_cache(item) else "false")
     else:
         for define in rpm_defines(item):
             print(define)

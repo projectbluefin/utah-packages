@@ -45,7 +45,6 @@ permissions:
   contents: read
   id-token: write
   packages: write
-  pages: write
 
 # Do not cancel an active WebKitGTK/mozjs/Mesa build when a newer commit lands.
 # Queue one factory run per PR or branch instead; its checkpoints and exact
@@ -97,16 +96,18 @@ jobs:
           echo "${GITHUB_TOKEN}" | podman login ghcr.io -u "${{ github.actor }}" --password-stdin 2>/dev/null || true
           for image in "ghcr.io/${owner}/utah-packages:building" "ghcr.io/${owner}/utah-packages:latest"; do
             if podman pull "$image" 2>/dev/null; then
-              container=$(podman create "$image")
+              # podman 5 refuses to create a container from an image that declares
+              # no command, and every one of these is FROM scratch plus a COPY. The
+              # command is never run -- the container exists only for podman cp --
+              # but it has to be there or create exits 125 with
+              #   no command or entrypoint provided, and no CMD or ENTRYPOINT from image
+              container=$(podman create "$image" /bin/true)
               podman cp "$container:/repository/." /tmp/accumulator/ || true
               podman rm "$container"
               echo "seeded from $image"
               break
             fi
           done
-          # Serve the local accumulator for FACTORY_REPO later in this run.
-          # The prepare job is only computing the matrix here; the actual
-          # serving happens via the FACTORY_REPO default below.
       - id: matrix
         env:
           FULL: ${{ github.event_name == 'workflow_dispatch' && inputs.full == true && '1' || '0' }}
@@ -202,16 +203,12 @@ jobs:
                   if read_local_repo("/tmp/accumulator"):
                       print(f"accumulator has {len(published)} packages")
                   else:
-                      base = "https://projectbluefin.github.io/utah-packages/"
-                      repomd = urllib.request.urlopen(base + "repodata/repomd.xml", timeout=60).read().decode()
-                      href = re.search(r'<location href="([^"]*primary[^"]*)"', repomd).group(1)
-                      raw = urllib.request.urlopen(base + href, timeout=120).read()
-                      if href.endswith('.zst'):
-                          import zstandard
-                          harvest(zstandard.ZstdDecompressor().stream_reader(io.BytesIO(raw)).read())
-                      else:
-                          harvest(gzip.GzipFile(fileobj=io.BytesIO(raw)).read())
-                      print(f"published repo has {len(published)} packages")
+                      # The accumulator is seeded above from :building, then
+                      # :latest. Neither existing means a cold registry, and a
+                      # cold start is a full rebuild -- there is no second
+                      # source to fall back to now that the factory publishes
+                      # to the registry alone.
+                      print("no accumulator in the registry, rebuilding all")
               except Exception as error:
                   print(f"WARNING: could not read prior repo, rebuilding all: {error}", file=sys.stderr)
 
@@ -232,15 +229,43 @@ jobs:
               if selected:
                   should_build = name in selected
               else:
-                  should_build = (
-                      full
-                      # A shard shares its recipe directory with another
-                      # entry; an edit there is a change to both.
-                      or recipe_name(package) in changed
-                      or name not in published
-                      or norm(published[name]) != norm(version)
-                      or not identity_matches
-                  )
+                  # `published` is harvested from repodata, which lists BINARY
+                  # package names, while `name` is the SOURCE package name. For
+                  # a source that ships no binary of the same name -- grub2,
+                  # mesa, wayland, pycairo, rust-just, webkitgtk and about
+                  # twenty others -- `name not in published` is permanently
+                  # true, so they were rebuilt on every single run no matter
+                  # what had already been built. That is where the wall clock
+                  # went: it included both WebKitGTK shards.
+                  #
+                  # The identity check does not have that flaw. It is keyed on
+                  # the source name, and it is strictly stronger than the name
+                  # and version comparison: the build key covers the recipe,
+                  # the source lock, factory policy and the Hummingbird base,
+                  # and outputs_match then requires every RPM it recorded to be
+                  # present with the checksum it was built with. When it holds,
+                  # nothing the repodata heuristic could add is informative, so
+                  # it decides alone.
+                  #
+                  # Without a manifest entry there is nothing to check against
+                  # and the old heuristic still applies, which is the case when
+                  # reading the published Pages repository rather than the
+                  # accumulator.
+                  if name in published_keys:
+                      should_build = (
+                          full
+                          # A shard shares its recipe directory with another
+                          # entry; an edit there is a change to both.
+                          or recipe_name(package) in changed
+                          or not identity_matches
+                      )
+                  else:
+                      should_build = (
+                          full
+                          or recipe_name(package) in changed
+                          or name not in published
+                          or norm(published[name]) != norm(version)
+                      )
               if should_build:
                   build.append(package)
               else:
@@ -308,12 +333,11 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Resolve BuildRequires for packages being built
         env:
-          FACTORY_REPO: ${{ vars.FACTORY_REPO || 'https://projectbluefin.github.io/utah-packages/' }}
           BUILD_LIST: ${{ needs.prepare.outputs.build_list }}
         run: |
           mkdir -p work/reports
           docker run --rm \
-            -e FACTORY_REPO -e BUILD_LIST \
+            -e BUILD_LIST \
             -v "$PWD/work:/work:Z" \
             -v "$PWD/packages:/packages:ro,Z" \
             -v "$PWD/config:/repos:ro,Z" \
@@ -327,10 +351,6 @@ jobs:
               # this container was not. Restore that.
               sed -i "/^tsflags=nodocs/d" /etc/dnf/dnf.conf
               cp /repos/hummingbird.repo /etc/yum.repos.d/
-              if [ -n "${FACTORY_REPO:-}" ]; then
-                printf "[factory]\nname=factory\nbaseurl=%s\nenabled=1\ngpgcheck=0\npriority=5\n" \
-                  "$FACTORY_REPO" > /etc/yum.repos.d/factory.repo
-              fi
               dnf -y $disable install dnf-plugins-core rpm-build @buildsys-build
               rpm -q --qf "buildroot openssl: %{VERSION}-%{RELEASE}\n" openssl-libs || true
               : > /work/reports/preflight.txt
@@ -716,19 +736,46 @@ jobs:
       digest: ${{ steps.oci.outputs.digest }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - name: Seed repository from the last published factory image
+      # Seeded from BOTH tags, because `prepare` skips against both. It reads
+      # its skip list from the `:building` accumulator as well as `:latest`, so
+      # a package that only ever reached the accumulator is not rebuilt; if the
+      # candidate were seeded from `:latest` alone that package would be in
+      # neither, and the repository would publish without it. That is not
+      # hypothetical -- it is why run 33682968939 could not publish: `:latest`
+      # predates the build manifest entirely, so an incremental run carried two
+      # packages and the accumulator's other 185 were simply gone.
+      #
+      # Order is lowest precedence first: `:latest` is the last contract-gated
+      # repository, `:building` accumulates every wave since and so is at least
+      # as new, and this run's artifacts land last and outrank both. Seeding
+      # from the accumulator is only safe because of what follows it -- the
+      # contract gate below refuses a candidate that does not carry every
+      # promised package, so a half-finished accumulator fails to publish
+      # instead of publishing short.
+      - name: Seed repository from the published factory image and the accumulator
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           owner=$(echo "${{ github.repository_owner }}" | tr "[:upper:]" "[:lower:]")
-          image="ghcr.io/${owner}/utah-packages:latest"
           mkdir -p repository
           echo "${GITHUB_TOKEN}" | podman login ghcr.io -u "${{ github.actor }}" --password-stdin
-          if podman pull "$image"; then
-            container=$(podman create "$image")
-            podman cp "$container:/repository/." repository/
-            podman rm "$container"
+          seeded=""
+          for image in "ghcr.io/${owner}/utah-packages:latest" "ghcr.io/${owner}/utah-packages:building"; do
+            if podman pull "$image"; then
+              # podman 5 refuses to create a container from an image that declares
+              # no command, and every one of these is FROM scratch plus a COPY. The
+              # command is never run -- the container exists only for podman cp --
+              # but it has to be there or create exits 125 with
+              #   no command or entrypoint provided, and no CMD or ENTRYPOINT from image
+              container=$(podman create "$image" /bin/true)
+              podman cp "$container:/repository/." repository/
+              podman rm "$container"
+              seeded="${seeded} ${image}"
+            fi
+          done
+          if test -n "$seeded"; then
+            echo "seeded from:${seeded}"
           else
             echo "No prior factory image; publishing a new repository"
           fi
@@ -739,15 +786,31 @@ jobs:
           merge-multiple: true
       - name: Record exact package identities in the final candidate
         run: python3 tools/build_manifest.py repository
-      - name: Create and keylessly sign repository metadata
+      # Nothing else looks at the repository as a whole. precedence ranks only
+      # what this run built, and the consumer transaction below enables
+      # Hummingbird beside the candidate -- as it must, since the base OS
+      # supplies part of the closure -- so a package the factory failed to
+      # provide can resolve from there and still pass. Meanwhile prepare skips
+      # a package it finds in the :building accumulator while publish seeds
+      # from :latest, so a package can be skipped by the build and absent from
+      # the repository at the same time. Assert the promise directly.
+      # Ahead of the contract gate, so the gate inspects the repository that
+      # actually ships rather than one still carrying a file publish is about
+      # to remove.
+      - name: Drop the malcontent bootstrap pass from the candidate
         run: |
-          sudo apt-get update && sudo apt-get install -y createrepo-c
+          set -euo pipefail
           # The malcontent bootstrap pass exists only to give the next stage a
           # malcontent-libs linked against accountsservice 26, breaking the
           # flatpak-libs -> libmalcontent-0.so.0 cycle. It has no parental
           # controls UI, so it must not reach anyone's system. Its release is
           # 0.bootstrap, below the real build, so this is belt and braces.
           find repository -name '*-0.bootstrap.*.rpm' -print -delete
+      - name: Assert the candidate carries every package the factory promises
+        run: python3 tools/repository_contract.py repository
+      - name: Create and keylessly sign repository metadata
+        run: |
+          sudo apt-get update && sudo apt-get install -y createrepo-c
           createrepo_c --update repository
           curl -fsSL https://github.com/sigstore/cosign/releases/download/v2.4.1/cosign-linux-amd64 -o cosign
           install -m 0755 cosign /usr/local/bin/cosign
@@ -817,7 +880,13 @@ jobs:
           else
             tag=$(echo "${{ github.ref_name }}" | tr "/" "-" | tr -cd "[:alnum:]._-" | cut -c1-96)
           fi
-          printf "FROM scratch\nCOPY repository /repository\n" > Containerfile.repo
+          # repodata goes in its own layer, first and small, with the full
+          # tree after it. Anything that only wants to know what the repository
+          # contains -- Utah's preflight, which used to read the Pages mirror
+          # -- can pull a few megabytes instead of the whole gigabyte of RPMs.
+          # The second COPY repeats repodata, which costs those few megabytes
+          # again and keeps the final filesystem identical to a single COPY.
+          printf "FROM scratch\nCOPY repository/repodata /repository/repodata\nCOPY repository /repository\n" > Containerfile.repo
           # cosign signs by pushing to the same registry, but it reads the
           # Docker config rather than podman own auth file, so the login has to
           # land somewhere both of them look. DOCKER_CONFIG is set on this step
@@ -854,36 +923,6 @@ jobs:
         run: |
           owner=$(echo "${{ github.repository_owner }}" | tr "[:upper:]" "[:lower:]")
           cosign sign "ghcr.io/${owner}/utah-packages@${{ steps.oci.outputs.digest }}"
-      # Handed to the Pages job rather than deployed here, so that the registry
-      # push never depends on the github-pages environment. That environment
-      # usually carries a deployment branch rule, and inheriting it would have
-      # blocked this job on exactly the branches the OCI push exists to serve.
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        with:
-          name: repository
-          path: repository
-          retention-days: 1
-
-  # A convenience mirror for anything wanting a plain HTTP repository. Pages can
-  # only deploy from the default branch, which is why it is no longer the thing
-  # consumers depend on.
-  publish_pages:
-    if: ${{ !cancelled() && github.ref == 'refs/heads/main' && needs.publish.result == 'success' }}
-    needs: publish
-    runs-on: ubuntu-24.04
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
-        with:
-          name: repository
-          path: repository
-      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
-        with:
-          path: repository
-      - id: deployment
-        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5
 
   # Persist every RPM this run built, even when some package in the matrix
   # failed or the run was cancelled downstream. `publish` only fires when every
@@ -899,7 +938,7 @@ jobs:
   # across waves) and must never be installed by a consumer. `:latest` remains
   # the atomic, contract-gated tag `publish` produces.
   #
-  # `prepare` reads this accumulator for its skip list and FACTORY_REPO points
+  # `prepare` reads this accumulator for its skip list, and the lane's
   # at it, so a success persists across waves regardless of whether the wave it
   # was built in ever reached `publish`.
   accumulate:
@@ -932,7 +971,12 @@ jobs:
           # tag on first ever run, then to an empty repository.
           for image in "ghcr.io/${owner}/utah-packages:building" "ghcr.io/${owner}/utah-packages:latest"; do
             if podman pull "$image"; then
-              container=$(podman create "$image")
+              # podman 5 refuses to create a container from an image that declares
+              # no command, and every one of these is FROM scratch plus a COPY. The
+              # command is never run -- the container exists only for podman cp --
+              # but it has to be there or create exits 125 with
+              #   no command or entrypoint provided, and no CMD or ENTRYPOINT from image
+              container=$(podman create "$image" /bin/true)
               podman cp "$container:/repository/." repository/ || true
               podman rm "$container"
               echo "seeded from $image"

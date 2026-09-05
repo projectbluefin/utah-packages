@@ -1,0 +1,38 @@
+diff --git protobuf-6.31.1/CMakeLists.txt.system-gtest protobuf-6.31.1/CMakeLists.txt
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -58,6 +58,9 @@ option(protobuf_WITH_ZLIB "Build with zlib support" ${protobuf_WITH_ZLIB_DEFAULT
+ set(protobuf_DEBUG_POSTFIX "d"
+   CACHE STRING "Default debug postfix")
+ mark_as_advanced(protobuf_DEBUG_POSTFIX)
++option(protobuf_USE_EXTERNAL_GOOGLETEST "If ON, protobuf will assume that the targets for GoogleTest are already provided by the including project." OFF)
++cmake_dependent_option(protobuf_FIND_GOOGLETEST "If ON, protobuf will use find_package(GTest) rather than assuming that GoogleTest is already provided by the including project." ON
++  "protobuf_USE_EXTERNAL_GOOGLETEST" OFF)
+ 
+ if(WITH_PROTOC)
+   set(protobuf_PROTOC_EXE protoc)
+@@ -268,7 +271,23 @@ include_directories(
+   ${protobuf_SOURCE_DIR}/src)
+ 
+ if (protobuf_BUILD_TESTS)
+-  include(${protobuf_SOURCE_DIR}/cmake/gtest.cmake)
++  if (protobuf_USE_EXTERNAL_GOOGLETEST)
++    if (protobuf_FIND_GOOGLETEST)
++      find_package(GTest REQUIRED)
++    elseif(NOT TARGET GTest::gtest)
++      if(TARGET gtest)
++        # When Google Test is included directly rather than through find_package, the aliases are missing.
++        add_library(GTest::gtest ALIAS gtest)
++        add_library(GTest::gtest_main ALIAS gtest_main)
++        add_library(GTest::gmock ALIAS gmock)
++        add_library(GTest::gmock_main ALIAS gmock_main)
++      else()
++        message(FATAL_ERROR "protobuf_USE_EXTERNAL_GOOGLETEST is ON and protobuf_FIND_GOOGLETEST is OFF, which means that the top-level project must build the Google Test project. However, the target gtest was not found.")
++      endif()
++    endif()
++  else()
++    include(${protobuf_SOURCE_DIR}/cmake/gtest.cmake)
++  endif()
+ endif (protobuf_BUILD_TESTS)
+ 
+ include(${protobuf_SOURCE_DIR}/cmake/abseil-cpp.cmake)

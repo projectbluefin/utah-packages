@@ -330,7 +330,130 @@ too, and is not a gap.
 Note that `glib2` is **not** a blocker. GNOME 51 asks for 2.86, not the 2.89
 that Rawhide ships; assuming otherwise sent an earlier attempt down a dead end.
 
+## What the factory declines to build
+
+Three decisions worth reading rather than re-deriving, because each one looks
+like an omission from the outside.
+
+**ffmpeg is in scope.** It entered the manifest to close the consumer
+transaction -- `pipewire-libs-extra` links `libavcodec.so.62` and Hummingbird
+ships no libav at all -- and was flagged for a second opinion when it went in,
+because Utah deliberately does not enable `fedora-multimedia`. Settled: build
+it. It is part of the vanilla Fedora stack, and that is the bar. The recipe is
+Fedora's, so this builds `ffmpeg-free` and `libavcodec-free` -- Fedora's own
+codec policy, not RPMFusion's.
+
+`anaconda-webui` was in scope on the same reasoning and is not any more; see
+the Anaconda entry below.
+
+**The whole Anaconda branch is not, cockpit included.**
+Cockpit's own `test-auth` fails on `/auth/userpass-header-check` with
+
+    GLib-FATAL-WARNING: g_hmac_new: GLib HMAC is disabled for FIPS compliance
+
+which is not a property of the build container. Unpacking
+`glib2-2.89.3-1.hum1` from Hummingbird's own repository and reading
+`libglib-2.0.so.0.8903.0` shows that string present, `gnutls` absent from the
+binary entirely, and no `fips_enabled` anywhere: the disablement is
+unconditional, compiled in, and applies at runtime on every Hummingbird
+system regardless of whether FIPS is actually enabled. Fedora's glib2 carries
+`gnutls-hmac.patch` and routes `GHmac` through GnuTLS precisely so it keeps
+working; Hummingbird builds without that backend, and the fallback is a stub
+that warns and returns NULL.
+
+`cockpit-ws` uses `GHmac` on its authentication path, so a cockpit built here
+would install and fail to authenticate. Skipping the test would have shipped
+exactly that. So `anaconda-live` joins `slitherer` in the `[unavailable]` list
+in `config/runtime-contract.toml` -- it pulls `anaconda-webui`, which pulls
+four cockpit subpackages -- and `cockpit`, `python-bugzilla`, `firefox` and
+`anaconda-webui` itself all leave the manifest. Utah installs through the
+bootc-installer live path, which is what the `slitherer` exception already
+said, so none of it has a consumer here.
+
+There is a workaround, recorded in case the calculus changes. Cockpit's only
+use of `GHmac` is one function, `cockpit_auth_nonce` in
+`src/ws/cockpitauth.c`, which calls
+`g_compute_hmac_for_data (G_CHECKSUM_SHA256, ...)` to mint unguessable CSRF
+and session tokens -- a PRF, not a protocol-mandated MAC. Cockpit already
+carries `PKG_CHECK_MODULES(gnutls, [gnutls >= 3.6.0])` in `configure.ac`,
+linked today only into `src/tls`, so a downstream patch could add
+`$(gnutls_CFLAGS)`/`$(gnutls_LIBS)` to `libcockpit_ws_a` and swap that one
+call for `gnutls_hmac_fast (GNUTLS_MAC_SHA256, ...)` with hex encoding. No new
+dependency, same semantics, and the same move Fedora makes for GLib itself.
+It was not taken because reviving cockpit revives the whole chain behind it,
+firefox included, for an installer Utah does not use.
+
+**This is a finding against Hummingbird, not a decision about it**, and the
+blast radius is narrower than it first looks. An earlier draft of this section
+asserted that libsoup's digest authentication, evolution-data-server, gvfs and
+gnome-online-accounts were all affected. That was wrong, and measuring it says
+otherwise:
+
+- All 163 runtime RPMs the factory currently publishes were unpacked and
+  scanned for references to `g_hmac_new`, `g_hmac_update` and the
+  `g_compute_hmac_for_*` family. Zero hits. The scanner was validated against
+  Hummingbird's own glib2, which does contain them.
+- Of the desktop packages this branch adds but has not published yet, taken
+  from Fedora's rawhide builds of the same sources: `libsoup3` 3.7.2 does
+  reference `g_hmac_new` and `g_compute_hmac_for_data`, while
+  `evolution-data-server` 3.61.2, `gnome-online-accounts` 3.58.1,
+  `glib-networking` 2.90~alpha, `gvfs` 1.61.91 and `gnome-shell` 51~beta do
+  not.
+- libsoup's single use is `soup-auth-ntlm.c`, which calls
+  `g_compute_hmac_for_data (G_CHECKSUM_MD5, ...)` for NTLMv2. Digest
+  authentication does not touch `GHmac` at all.
+
+So the concrete exposure on this platform is cockpit's authentication, which
+is why cockpit is out, and NTLMv2 in libsoup -- a feature a Utah desktop is
+unlikely to reach for, and one that MD5 policy would refuse under real FIPS
+anyway. The reason to report it upstream is not the current damage but that
+the disablement is unconditional and silent: `g_hmac_new` returns NULL on a
+machine that is not in FIPS mode, and callers that do not check get a crash or
+a wrong answer rather than a policy error. Revisit here the moment
+Hummingbird's glib2 gains a working backend.
+
+**libbluray is not.** Rawhide dist-git has moved to 1.5.0, which is
+`libbluray.so.4`, while the composed repository the build root resolves
+against still ships 1.4.0 and everything in it -- Fedora's own
+`libavformat-free` included -- links `so.3`. Building 1.5.0 excludes Fedora's
+1.4.0 by name, which is how the factory keeps Fedora from answering for what
+it rebuilds, and then nothing provides `so.3`: `libavformat-free` becomes
+uninstallable and takes every build root that wants it with it. The factory
+cannot rebuild Fedora's compose ahead of Fedora. So gvfs sets `-Dbluray=false`
+unconditionally where Fedora sets it only on RHEL, ffmpeg carries a
+`libbluray` bcond defaulting off, and no entry exists. Blu-ray disc navigation
+is not a feature a Utah machine has a drive for. This is not a version pin:
+when rawhide's compose carries 1.5.0, `tools/track_upstream.py` proposes the
+entry back, and it can be taken then.
+
+**vapoursynth is not**, for a smaller reason: ffmpeg's spec build-requires it,
+Hummingbird has no provider, and satisfying it would pull in zimg and a Python
+extension to serve a `BuildRequires` whose output nothing in the runtime
+contract links. It is a frameserver, not a codec. `%bcond vapoursynth 0`.
+
+The general shape: where the factory and the Fedora compose disagree about a
+soname, the factory declines the feature rather than getting ahead of the
+compose it builds against. Adding the newer library is the move that strands
+Fedora's own packages.
+
 ## Open, and deliberately not asserted
+
+- **libgudev drops one upstream test, and the reason is not fully understood.**
+  `test-gudevdevice` is the only one of its four tests that does not use
+  umockdev; it builds a device out of environment variables and asserts that
+  `udev_device_new_from_environment` accepts them. Against the systemd this
+  factory targets that call returns NULL with EINVAL, so no tags come back and
+  the assertion fails. What the test pins is therefore a libudev contract
+  rather than libgudev behaviour -- `_g_udev_device_new` just propagates the
+  NULL -- and libgudev's own behaviour stays covered by the three umockdev
+  tests, which drive real devices and pass. Fedora does not hit this: rawhide
+  pairs libgudev 238 with systemd 262~rc1 and carries no patches, while the
+  build root here resolves Hummingbird's systemd 261.2. That difference has
+  not been root-caused. The test is dropped by a downstream patch carrying the
+  full reasoning, and this is the one place in the 237 where the factory ships
+  a package whose upstream suite it does not run in full. Revisit when either
+  systemd moves; the hardcoded `UDEV_DATABASE_VERSION 1` in the test looks
+  worth reporting upstream regardless.
 
 - **Step 3 of the ladder is implemented but only partly proven.**
   `rebuild-rpms.yml` now builds in a Fedora 44 container with Hummingbird's

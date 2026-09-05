@@ -1,0 +1,8 @@
+{
+  "package": "libICE",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libICE.git",
+  "commit": "9c58df00621cd95abb48ca1728e9c2dd3a6139f5",
+  "tree": "687701fa53904d67277e2a77a3d542ec95f89f83",
+  "imported_at": "2026-09-04T21:16:58.546034+00:00"
+}

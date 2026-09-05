@@ -31,7 +31,16 @@ jobs:
             '
       - name: Explain update policy
         run: |
-          echo 'Fedora is a compatibility build root, not a source-update feed.'
+          echo 'This reports what the Fedora BUILD ROOT currently offers. It is'
+          echo 'observability: repository metadata never moves a source by itself,'
+          echo 'because a package can appear in rawhide before Koji has completed'
+          echo 'a build of it.'
+          echo
+          echo 'Sources are followed separately, in track-upstream.yml, which'
+          echo 'compares each entry against Fedora dist-git and proposes the move'
+          echo 'as a reviewable pull request once Koji reports that exact NVR'
+          echo 'COMPLETE. Hummingbird is upstream-first: the factory tracks what'
+          echo 'Fedora ships rather than freezing whatever version was imported.'
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: rawhide-availability

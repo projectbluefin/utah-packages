@@ -1,0 +1,20 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Daniel Engberg <daniel.engberg.lists@pyret.net>
+Date: Sun, 9 May 2021 13:34:50 +0200
+Subject: [PATCH] CMake: Link libm to test binaries if available.
+
+If libm is available link it to test binaries which will otherwise
+fail to compile. Tested on FreeBSD 13-STABLE.
+
+Signed-off-by: Daniel Engberg <daniel.engberg.lists@pyret.net>
+Signed-off-by: Ralph Giles <giles@thaumas.net>
+
+diff --git a/test/CMakeLists.txt b/test/CMakeLists.txt
+index 8cc5abe8..2a6a42c5 100644
+--- a/test/CMakeLists.txt
++++ b/test/CMakeLists.txt
+@@ -1,3 +1,3 @@
+ add_executable(vorbis_test util.c util.h write_read.c write_read.h test.c)
+-target_link_libraries(vorbis_test PRIVATE Vorbis::vorbisenc)
++target_link_libraries(vorbis_test PRIVATE Vorbis::vorbisenc $<$<BOOL:${HAVE_LIBM}>:m>)
+ add_test(NAME vorbis_test COMMAND vorbis_test)

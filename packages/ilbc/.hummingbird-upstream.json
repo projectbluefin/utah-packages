@@ -1,0 +1,8 @@
+{
+  "package": "ilbc",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/ilbc.git",
+  "commit": "92988e39c559a47531fc871ab26a42d6dca2f6da",
+  "tree": "a57fb88b06bcb9e8f86f4161b842262b462fede0",
+  "imported_at": "2026-09-05T04:39:14.060576+00:00"
+}

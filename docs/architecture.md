@@ -26,7 +26,8 @@ WebKitGTK lane runs independently after the stage-1 GTK/GStreamer inputs.
 WebKitGTK itself is two shards of one recipe (`webkitgtk` builds the GTK 4
 port, `webkit2gtk4.1` the GTK 3 port, via `rpm_defines` in the source
 manifest and `tools/recipe.py`), so the two compiles that used to run back to
-back on one runner run side by side on two. `gjs` is a late stage-2 lane
+back on one runner run side by side on two. Both shards, and mozjs140, keep
+an sccache directory in GHCR between runs (`"compiler_cache": true`). `gjs` is a late stage-2 lane
 because it consumes mozjs140; evolution-data-server and gnome-shell are late
 stage-3 consumers because they consume WebKitGTK and GJS. Each completed lane checkpoints its successful RPMs
 into the internal `:building` candidate. The candidate is serialized across

@@ -1,0 +1,8 @@
+{
+  "package": "aribb24",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/aribb24.git",
+  "commit": "8dbcd141b895b6b1318dc69554839ccbe7f89aeb",
+  "tree": "890af9b15c900097b8f40062ce5cbc9cece35c17",
+  "imported_at": "2026-09-05T04:39:13.312976+00:00"
+}

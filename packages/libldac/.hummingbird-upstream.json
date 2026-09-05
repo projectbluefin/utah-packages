@@ -1,0 +1,8 @@
+{
+  "package": "libldac",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libldac.git",
+  "commit": "4d534d818d898487fe933e91e76a37e3d9a8b9d0",
+  "tree": "963d74baf9d5cb9a2b5c47d7001d9b8da98e8510",
+  "imported_at": "2026-09-03T22:53:15.173153+00:00"
+}

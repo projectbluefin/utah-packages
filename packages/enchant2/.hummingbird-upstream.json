@@ -1,0 +1,8 @@
+{
+  "package": "enchant2",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/enchant2.git",
+  "commit": "d8763d247c6e1861c6f754d5355951a41e2d75a1",
+  "tree": "13b2913825d869a14750cd8878c8f9ab7ea5f8ab",
+  "imported_at": "2026-09-03T22:53:12.319359+00:00"
+}

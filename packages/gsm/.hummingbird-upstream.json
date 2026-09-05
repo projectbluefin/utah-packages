@@ -1,0 +1,8 @@
+{
+  "package": "gsm",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/gsm.git",
+  "commit": "618ebc6a03ca7393ba7b989e3db8928930cca23c",
+  "tree": "c6d431e31f16f3b32136fc1e0380de109e77b112",
+  "imported_at": "2026-09-05T04:39:13.271138+00:00"
+}

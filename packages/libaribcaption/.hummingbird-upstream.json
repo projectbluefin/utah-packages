@@ -1,0 +1,8 @@
+{
+  "package": "libaribcaption",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libaribcaption.git",
+  "commit": "3a00091c4c2d8e8d48ef7d9e071687d018b61202",
+  "tree": "6dae3f8fda82896e813c357f6e4aed27af7d92d9",
+  "imported_at": "2026-09-05T04:39:15.287462+00:00"
+}

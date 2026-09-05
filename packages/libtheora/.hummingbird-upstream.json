@@ -1,0 +1,8 @@
+{
+  "package": "libtheora",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libtheora.git",
+  "commit": "aaf34ac26d00a0b579e736c12a16e0cd11706624",
+  "tree": "5fb44102ab6e994900b081a06e10aae3d9cce7a8",
+  "imported_at": "2026-09-03T22:53:16.203715+00:00"
+}

@@ -1,0 +1,3 @@
+# libmanette
+
+The libmanette package
