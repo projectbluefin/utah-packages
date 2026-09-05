@@ -1,0 +1,3 @@
+PURPOSE of Sanity/seinfo-consistent-output
+Description: Check whether different 2 or more runs of same seinfo commands produce same output
+Author: Petr Lautrbach <plautrba@redhat.com>

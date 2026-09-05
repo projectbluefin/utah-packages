@@ -1,0 +1,15 @@
+summary: Check whether different 2 or more runs of same seinfo commands produce same
+    output
+description: ''
+contact: Petr Lautrbach <plautrba@redhat.com>
+component:
+  - setools
+test: ./runtest.sh
+framework: beakerlib
+recommend:
+  - setools-console
+duration: 5m
+link:
+  - relates: https://bugzilla.redhat.com/show_bug.cgi?id=2019962
+extra-summary: Sanity/seinfo-consistent-output
+extra-task: Sanity/seinfo-consistent-output

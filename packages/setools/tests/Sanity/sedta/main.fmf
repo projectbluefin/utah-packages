@@ -1,0 +1,30 @@
+summary: Does sedta work as expected? Does it support all features?
+description: ''
+contact: Milos Malik <mmalik@redhat.com>
+component:
+  - setools
+test: ./runtest.sh
+framework: beakerlib
+recommend:
+  - git
+  - policycoreutils
+  - setools-console-analyses
+duration: 1h
+enabled: true
+tag:
+  - CI-Tier-1
+  - NoRHEL4
+  - NoRHEL5
+  - NoRHEL6
+  - NoRHEL7
+  - TIPfail_Security
+  - f32friendly
+  - f33friendly
+  - targeted
+adjust:
+  - enabled: false
+    when: distro == rhel-4, rhel-5, rhel-6, rhel-7
+    continue: false
+extra-nitrate: TC#0604139
+extra-summary: /CoreOS/setools/Sanity/sedta
+extra-task: /CoreOS/setools/Sanity/sedta

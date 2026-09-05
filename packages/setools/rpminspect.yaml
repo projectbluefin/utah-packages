@@ -1,0 +1,3 @@
+emptyrpm:
+    expected_empty:
+        - setools

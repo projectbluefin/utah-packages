@@ -1,0 +1,7 @@
+summary: selinux tests - Tier 1 | policycoreutils | checkpolicy
+discover:
+    how: fmf
+    url: https://src.fedoraproject.org/tests/selinux
+    filter: "tier: 1 | component: policycoreutils | component: checkpolicy"
+execute:
+    how: tmt

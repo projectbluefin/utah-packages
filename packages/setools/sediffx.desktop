@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=SELinux Policy Difference
+GenericName=SELinux Policy Difference tool
+Comment=This tool allows you to compare two policy files
+Exec=/usr/bin/sediffx
+Type=Application
+Terminal=false
+Categories=System;
+X-Desktop-File-Install-Version=0.2
+StartupNotify=true
+Icon=sediffx.png

@@ -1,0 +1,21 @@
+( type xyz_t )
+
+( type first_t )
+( type first_exec_t )
+( type second_t )
+( type second_exec_t )
+( type third_t )
+( type third_exec_t )
+
+( typetransition first_t second_exec_t process second_t )
+( typetransition second_t third_exec_t process third_t )
+
+( allow first_t second_exec_t ( file ( getattr open read execute )))
+( allow first_t second_t ( process ( transition )))
+( allow second_t third_exec_t ( file ( getattr open read execute )))
+( allow second_t third_t ( process ( transition )))
+
+( allow first_t first_exec_t ( file ( entrypoint )))
+( allow second_t second_exec_t ( file ( entrypoint )))
+( allow third_t third_exec_t ( file ( entrypoint )))
+

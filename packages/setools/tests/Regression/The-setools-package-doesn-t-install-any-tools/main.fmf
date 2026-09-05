@@ -1,0 +1,11 @@
+summary: Make sure setools requires setools-console and setools-gui
+contact: Vit Mojzis <vmojzis@redhat.com>
+component:
+  - setools
+test: ./runtest.sh
+framework: beakerlib
+duration: 5m
+link:
+  - relates: https://bugzilla.redhat.com/show_bug.cgi?id=1820078
+extra-summary: /CoreOS/setools/Regression/The-setools-package-doesn-t-install-any-tools
+extra-task: /CoreOS/setools/Regression/The-setools-package-doesn-t-install-any-tools
