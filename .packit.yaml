@@ -1,0 +1,316 @@
+# Root-level Packit monorepo config, consumed only by the
+# packit-srpm-pilot CI job (.github/workflows/packit-srpm-pilot.yml).
+#
+# Scope and rationale:
+# docs/superpowers/specs/2026-09-05-packit-srpm-pilot-design.md
+#
+# This does not replace or read the per-package .packit.yaml files
+# shipped inside packages/*/ -- those are unmodified, unused Fedora
+# dist-git imports, left in place on purpose (see the design doc).
+#
+# 49 of the 54 packages that carry a leftover .packit.yaml are listed
+# below. The other 5 (adw-gtk3-theme, bootc, igt-gpu-tools, mesa, runc)
+# are deliberately excluded: their specs declare SourceN/PatchN entries
+# (vendor tarballs, upstream README/LICENSE mirrors, license-clarification
+# emails) that this factory's own verified-source pipeline stages into
+# _sourcedir only at actual rpmbuild time -- see rebuild-rpms.yml's
+# 'staged=/work/staged/$PACKAGE' step. `packit srpm` has no equivalent
+# staging step, so it fails on these five with 'Bad file: ... No such
+# file or directory'. Verified locally; see the design doc's results
+# section. Feeding staged sources into packit is future work, not this
+# pilot.
+packages:
+  adwaita-fonts:
+    specfile_path: adwaita-fonts.spec
+    upstream_package_name: adwaita-fonts
+    downstream_package_name: adwaita-fonts
+    paths:
+      - packages/adwaita-fonts
+  adwaita-icon-theme:
+    specfile_path: adwaita-icon-theme.spec
+    upstream_package_name: adwaita-icon-theme
+    downstream_package_name: adwaita-icon-theme
+    paths:
+      - packages/adwaita-icon-theme
+  at-spi2-core:
+    specfile_path: at-spi2-core.spec
+    upstream_package_name: at-spi2-core
+    downstream_package_name: at-spi2-core
+    paths:
+      - packages/at-spi2-core
+  dconf:
+    specfile_path: dconf.spec
+    upstream_package_name: dconf
+    downstream_package_name: dconf
+    paths:
+      - packages/dconf
+  distrobox:
+    specfile_path: distrobox.spec
+    upstream_package_name: distrobox
+    downstream_package_name: distrobox
+    paths:
+      - packages/distrobox
+  fzf:
+    specfile_path: fzf.spec
+    upstream_package_name: fzf
+    downstream_package_name: fzf
+    paths:
+      - packages/fzf
+  gcr:
+    specfile_path: gcr.spec
+    upstream_package_name: gcr
+    downstream_package_name: gcr
+    paths:
+      - packages/gcr
+  gdk-pixbuf2:
+    specfile_path: gdk-pixbuf2.spec
+    upstream_package_name: gdk-pixbuf2
+    downstream_package_name: gdk-pixbuf2
+    paths:
+      - packages/gdk-pixbuf2
+  gdm:
+    specfile_path: gdm.spec
+    upstream_package_name: gdm
+    downstream_package_name: gdm
+    paths:
+      - packages/gdm
+  geocode-glib:
+    specfile_path: geocode-glib.spec
+    upstream_package_name: geocode-glib
+    downstream_package_name: geocode-glib
+    paths:
+      - packages/geocode-glib
+  gjs:
+    specfile_path: gjs.spec
+    upstream_package_name: gjs
+    downstream_package_name: gjs
+    paths:
+      - packages/gjs
+  gnome-autoar:
+    specfile_path: gnome-autoar.spec
+    upstream_package_name: gnome-autoar
+    downstream_package_name: gnome-autoar
+    paths:
+      - packages/gnome-autoar
+  gnome-bluetooth:
+    specfile_path: gnome-bluetooth.spec
+    upstream_package_name: gnome-bluetooth
+    downstream_package_name: gnome-bluetooth
+    paths:
+      - packages/gnome-bluetooth
+  gnome-control-center:
+    specfile_path: gnome-control-center.spec
+    upstream_package_name: gnome-control-center
+    downstream_package_name: gnome-control-center
+    paths:
+      - packages/gnome-control-center
+  gnome-online-accounts:
+    specfile_path: gnome-online-accounts.spec
+    upstream_package_name: gnome-online-accounts
+    downstream_package_name: gnome-online-accounts
+    paths:
+      - packages/gnome-online-accounts
+  gnome-session:
+    specfile_path: gnome-session.spec
+    upstream_package_name: gnome-session
+    downstream_package_name: gnome-session
+    paths:
+      - packages/gnome-session
+  gnome-settings-daemon:
+    specfile_path: gnome-settings-daemon.spec
+    upstream_package_name: gnome-settings-daemon
+    downstream_package_name: gnome-settings-daemon
+    paths:
+      - packages/gnome-settings-daemon
+  gnome-shell:
+    specfile_path: gnome-shell.spec
+    upstream_package_name: gnome-shell
+    downstream_package_name: gnome-shell
+    paths:
+      - packages/gnome-shell
+  gobject-introspection:
+    specfile_path: gobject-introspection.spec
+    upstream_package_name: gobject-introspection
+    downstream_package_name: gobject-introspection
+    paths:
+      - packages/gobject-introspection
+  gsettings-desktop-schemas:
+    specfile_path: gsettings-desktop-schemas.spec
+    upstream_package_name: gsettings-desktop-schemas
+    downstream_package_name: gsettings-desktop-schemas
+    paths:
+      - packages/gsettings-desktop-schemas
+  gsound:
+    specfile_path: gsound.spec
+    upstream_package_name: gsound
+    downstream_package_name: gsound
+    paths:
+      - packages/gsound
+  gtk3:
+    specfile_path: gtk3.spec
+    upstream_package_name: gtk3
+    downstream_package_name: gtk3
+    paths:
+      - packages/gtk3
+  gtk4:
+    specfile_path: gtk4.spec
+    upstream_package_name: gtk4
+    downstream_package_name: gtk4
+    paths:
+      - packages/gtk4
+  gvfs:
+    specfile_path: gvfs.spec
+    upstream_package_name: gvfs
+    downstream_package_name: gvfs
+    paths:
+      - packages/gvfs
+  json-glib:
+    specfile_path: json-glib.spec
+    upstream_package_name: json-glib
+    downstream_package_name: json-glib
+    paths:
+      - packages/json-glib
+  libadwaita:
+    specfile_path: libadwaita.spec
+    upstream_package_name: libadwaita
+    downstream_package_name: libadwaita
+    paths:
+      - packages/libadwaita
+  libblockdev:
+    specfile_path: libblockdev.spec
+    upstream_package_name: libblockdev
+    downstream_package_name: libblockdev
+    paths:
+      - packages/libblockdev
+  libbytesize:
+    specfile_path: libbytesize.spec
+    upstream_package_name: libbytesize
+    downstream_package_name: libbytesize
+    paths:
+      - packages/libbytesize
+  libdrm:
+    specfile_path: libdrm.spec
+    upstream_package_name: libdrm
+    downstream_package_name: libdrm
+    paths:
+      - packages/libdrm
+  libgtop2:
+    specfile_path: libgtop2.spec
+    upstream_package_name: libgtop2
+    downstream_package_name: libgtop2
+    paths:
+      - packages/libgtop2
+  libgweather:
+    specfile_path: libgweather.spec
+    upstream_package_name: libgweather
+    downstream_package_name: libgweather
+    paths:
+      - packages/libgweather
+  libheif:
+    specfile_path: libheif.spec
+    upstream_package_name: libheif
+    downstream_package_name: libheif
+    paths:
+      - packages/libheif
+  libnotify:
+    specfile_path: libnotify.spec
+    upstream_package_name: libnotify
+    downstream_package_name: libnotify
+    paths:
+      - packages/libnotify
+  libsecret:
+    specfile_path: libsecret.spec
+    upstream_package_name: libsecret
+    downstream_package_name: libsecret
+    paths:
+      - packages/libsecret
+  libsoup3:
+    specfile_path: libsoup3.spec
+    upstream_package_name: libsoup3
+    downstream_package_name: libsoup3
+    paths:
+      - packages/libsoup3
+  libxcrypt:
+    specfile_path: libxcrypt.spec
+    upstream_package_name: libxcrypt
+    downstream_package_name: libxcrypt
+    paths:
+      - packages/libxcrypt
+  localsearch:
+    specfile_path: localsearch.spec
+    upstream_package_name: localsearch
+    downstream_package_name: localsearch
+    paths:
+      - packages/localsearch
+  mutter:
+    specfile_path: mutter.spec
+    upstream_package_name: mutter
+    downstream_package_name: mutter
+    paths:
+      - packages/mutter
+  nautilus:
+    specfile_path: nautilus.spec
+    upstream_package_name: nautilus
+    downstream_package_name: nautilus
+    paths:
+      - packages/nautilus
+  nautilus-python:
+    specfile_path: nautilus-python.spec
+    upstream_package_name: nautilus-python
+    downstream_package_name: nautilus-python
+    paths:
+      - packages/nautilus-python
+  openrgb:
+    specfile_path: openrgb.spec
+    upstream_package_name: openrgb
+    downstream_package_name: openrgb
+    paths:
+      - packages/openrgb
+  pango:
+    specfile_path: pango.spec
+    upstream_package_name: pango
+    downstream_package_name: pango
+    paths:
+      - packages/pango
+  python-argcomplete:
+    specfile_path: python-argcomplete.spec
+    upstream_package_name: python-argcomplete
+    downstream_package_name: python-argcomplete
+    paths:
+      - packages/python-argcomplete
+  tecla:
+    specfile_path: tecla.spec
+    upstream_package_name: tecla
+    downstream_package_name: tecla
+    paths:
+      - packages/tecla
+  vulkan-headers:
+    specfile_path: vulkan-headers.spec
+    upstream_package_name: vulkan-headers
+    downstream_package_name: vulkan-headers
+    paths:
+      - packages/vulkan-headers
+  vulkan-loader:
+    specfile_path: vulkan-loader.spec
+    upstream_package_name: vulkan-loader
+    downstream_package_name: vulkan-loader
+    paths:
+      - packages/vulkan-loader
+  xdg-desktop-portal-gnome:
+    specfile_path: xdg-desktop-portal-gnome.spec
+    upstream_package_name: xdg-desktop-portal-gnome
+    downstream_package_name: xdg-desktop-portal-gnome
+    paths:
+      - packages/xdg-desktop-portal-gnome
+  xrefresh:
+    specfile_path: xrefresh.spec
+    upstream_package_name: xrefresh
+    downstream_package_name: xrefresh
+    paths:
+      - packages/xrefresh
+  zenity:
+    specfile_path: zenity.spec
+    upstream_package_name: zenity
+    downstream_package_name: zenity
+    paths:
+      - packages/zenity
