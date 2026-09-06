@@ -1,0 +1,34 @@
+From 7fa45d1f3510f0cd0ae2f10922b4538cfad88f0c Mon Sep 17 00:00:00 2001
+From: Adam Williamson <adamwill@fedoraproject.org>
+Date: Wed, 2 Sep 2026 12:35:57 -0700
+Subject: [PATCH] Force xcb platform to work around RHBZ #2483236
+
+Signed-off-by: Adam Williamson <adamwill@fedoraproject.org>
+---
+ main.cpp | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/main.cpp b/main.cpp
+index 6d77f73..4f110f3 100644
+--- a/main.cpp
++++ b/main.cpp
+@@ -24,6 +24,7 @@
+ #include <QtCore/QCommandLineOption>
+ #include <QtCore/QCommandLineParser>
+ #include <QtCore/QUrl>
++#include <QtEnvironmentVariables>
+ #include <QtQml/QQmlContext>
+ #include <QtWebView/QtWebView>
+ 
+@@ -53,6 +54,8 @@ QUrl Utils::fromUserInput(const QString& userInput)
+ int main(int argc, char* argv[])
+ {
+ 	//! [0]
++	// force xcb to workaround https://bugzilla.redhat.com/show_bug.cgi?id=2483236
++	qputenv("QT_QPA_PLATFORM", "xcb");
+ 	QtWebView::initialize();
+ 	QGuiApplication app(argc, argv);
+ 	//! [0]
+-- 
+2.55.0
+

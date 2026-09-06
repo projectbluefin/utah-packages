@@ -1,0 +1,45 @@
+From 8aea1f5c08c0ca1b715f469f951e2b78d4866723 Mon Sep 17 00:00:00 2001
+From: Adam Williamson <awilliam@redhat.com>
+Date: Mon, 8 Jun 2026 15:42:55 -0700
+Subject: [PATCH] python-deps: add _math_integer if math is present
+
+In Python 3.15, the math module requires a _math_integer module,
+but ModuleFinder does not tell us this. We'll just have to
+special-case it.
+
+Resolves: rhbz#2486569
+
+Signed-off-by: Adam Williamson <awilliam@redhat.com>
+---
+ dracut/python-deps | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
+
+diff --git a/dracut/python-deps b/dracut/python-deps
+index 587b44a46f9..fd74a34d5e2 100755
+--- a/dracut/python-deps
++++ b/dracut/python-deps
+@@ -27,7 +27,6 @@ from importlib.util import find_spec
+ from modulefinder import ModuleFinder
+ 
+ # stringprep is needed by the idna encoding, and idna is needed by requests.
+-# The encoding import is implicit so ModuleFinder doesn't find it right.
+ alsoNeeded = {find_spec('requests').origin: find_spec('stringprep').origin}
+ 
+ # A couple helper functions...
+@@ -91,6 +90,16 @@ while scripts:
+         if mod.__file__ in alsoNeeded and alsoNeeded[mod.__file__] not in deps:
+             scripts.append(alsoNeeded[mod.__file__])
+ 
++try:
++    # In Python 3.15+, math requires _math_integer but ModuleFinder does
++    # not report this:
++    # https://bugzilla.redhat.com/show_bug.cgi?id=2486569
++    if find_spec('math').origin in deps and not find_spec("_math_integer").origin in deps:
++        deps.append(find_spec("_math_integer").origin)
++except AttributeError:
++    # In older Pythons _math_integer does not exist, this is fine
++    pass
++
+ # Include some bits that the python install itself needs
+ print(sysconfig.get_makefile_filename())
+ print(sysconfig.get_config_h_filename())

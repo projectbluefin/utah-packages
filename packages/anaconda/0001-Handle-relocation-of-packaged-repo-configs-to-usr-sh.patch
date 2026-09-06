@@ -1,0 +1,51 @@
+From 911a2fbaa5f4f5bfc58f96e98dc8566d73160c39 Mon Sep 17 00:00:00 2001
+From: Adam Williamson <awilliam@redhat.com>
+Date: Wed, 12 Aug 2026 09:58:14 -0700
+Subject: [PATCH] Handle relocation of packaged repo configs to /usr/share/dnf5
+
+In Fedora 45+, packaged repo configs are moved to /usr/share/dnf5:
+https://fedoraproject.org/wiki/Changes/RelocateRpmRepoConfigsToUsr
+This adjusts anaconda appropriately. We drop the use of
+/etc/anaconda.repos.d because it is no longer needed. It was
+originally introduced in c51389518415d9182f01757314c7cfa272534557
+to solve a problem involving upgrades. anaconda has not handled
+upgrades since 2012. Other than that, we add the new directory to
+the DNF_REPO_DIRS constant and make a few minor tweaks in docs,
+docker configs and the like.
+
+Signed-off-by: Adam Williamson <awilliam@redhat.com>
+---
+ data/anaconda_options.txt                                     | 2 +-
+ pyanaconda/modules/payloads/constants.py                      | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/data/anaconda_options.txt b/data/anaconda_options.txt
+index a34826d0e0..bf1f755fc3 100644
+--- a/data/anaconda_options.txt
++++ b/data/anaconda_options.txt
+@@ -79,7 +79,7 @@ it takes precedence over all other methods of finding the install.img. Otherwise
+ to find the install.img first on any existing CD, and then from the location given by repo.
+ If only the stage2 option is given without repo, Anaconda will use whatever repos the installed
+ system would have enabled by default for installation. For instance, an install of a Fedora release
+-will attempt to use the Fedora mirrorlist given by /etc/yum.repos.d/fedora.repo from that release.
++will attempt to use the Fedora mirrorlist given by fedora.repo from that release.
+ 
+ addrepo
+ This option adds additional repositories to the installation. These repositories are used during
+diff --git a/pyanaconda/modules/payloads/constants.py b/pyanaconda/modules/payloads/constants.py
+index 5f790eb9fd..0db00ce68e 100644
+--- a/pyanaconda/modules/payloads/constants.py
++++ b/pyanaconda/modules/payloads/constants.py
+@@ -44,8 +44,8 @@ from pyanaconda.core.constants import (
+ 
+ # Locations of repo files.
+ DNF_REPO_DIRS = [
++    '/usr/share/dnf5/repos.d',
+     '/etc/yum.repos.d',
+-    '/etc/anaconda.repos.d'
+ ]
+ 
+ 
+-- 
+2.55.0
+

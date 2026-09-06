@@ -148,4 +148,4 @@
     }
   ],
   "upstream_manifest": "https://github.com/projectbluefin/bluefin/blob/main/build_files/packages/base.toml"
-}
+}\n
