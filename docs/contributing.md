@@ -48,24 +48,17 @@ Pull request titles follow Conventional Commits (`feat:`, `fix:`, `docs:`,
 
 ## Execution environment
 
-Run package builds, generated-source reproduction, and environment-sensitive
-validation on the lab's remote Argo cluster. Use the existing
-organization-owned FSDK containers for general tooling instead of launching
-one-off local Ubuntu or Fedora containers. The digest-pinned Packit image
-mirrored into the lab's writable Zot is used only for Packit commands.
+Run package builds, generated-source reproduction, reproducibility probes, and
+environment-sensitive validation in GitHub Actions on GitHub-hosted
+`ubuntu-26.04` runners, inside the digest-pinned `quay.io/packit/packit`
+container. The container is the build environment and owns the toolchain.
 
-Do not install missing tools into a workflow container at runtime. If the
-existing FSDK images do not provide a required capability, add that capability
-to `projectbluefin/fsdk-containers` so it is signed, scanned, reproducible, and
-available to subsequent workflows.
+Do not install packages into it at runtime, replace the digest with a mutable
+tag, or substitute a generic distro image. If a required capability is
+missing, change the pinned digest deliberately rather than patching the
+container from a workflow step.
 
-Run package builds, generated-source reproduction, and environment-sensitive
-validation on the lab's remote Argo cluster. Use the existing
-organization-owned FSDK containers for general tooling instead of launching
-one-off local Ubuntu or Fedora containers. The digest-pinned Packit image
-mirrored into the lab's writable Zot is used only for Packit commands.
-
-Do not install missing tools into a workflow container at runtime. If the
-existing FSDK images do not provide a required capability, add that capability
-to `projectbluefin/fsdk-containers` so it is signed, scanned, reproducible, and
-available to subsequent workflows.
+This factory is GitHub Actions' replacement for Copr. Copr,
+Packit-as-a-Service, Koji, Bodhi, Testing Farm, Kubernetes, Argo, a local Zot
+mirror, lab nodes, and self-hosted runners are not dependencies. See
+[`architecture.md`](architecture.md).

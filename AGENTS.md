@@ -165,6 +165,18 @@ tooling arrives; do not copy them as-is.
   substitute a generic distro image.
 - Never skip a test, or push an empty commit, to get a build green.
 
+## Sibling repository
+
+Utahraptor is two repositories.
+[`projectbluefin/utah`](https://github.com/projectbluefin/utah) composes the
+image; this one builds the packages it consumes. The seam is
+`ghcr.io/OWNER/utah-packages`, pinned by digest in Utah's Containerfile — not a
+shared branch and not a shared build.
+
+A change that spans both is two pull requests, this one first, because Utah
+cannot pin a digest that does not exist yet. Do not edit `projectbluefin/utah`
+from a task scoped to this repository.
+
 ## Canonical sources
 
 Local first, then the pinned sidecar. Everything in the second table resolves

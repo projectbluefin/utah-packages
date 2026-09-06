@@ -8,6 +8,20 @@ consume.
 Hummingbird supplies a hardened, fast-moving bootable base and no desktop at
 all. This is where the desktop comes from.
 
+## Related repositories
+
+Utahraptor is two repositories, the same way `common` and `brew` already work:
+
+| Repository | What it does |
+|---|---|
+| [`projectbluefin/utah`](https://github.com/projectbluefin/utah) | Composes the image. |
+| [`projectbluefin/utah-packages`](https://github.com/projectbluefin/utah-packages) | This one. Builds GNOME 51 and the rest of the desktop stack from verified upstream sources, and publishes them as an OCI image. |
+
+The seam between them is a digest, not a branch: this repository publishes
+`ghcr.io/OWNER/utah-packages`, and Utah consumes it with `COPY --from=` pinned
+by digest. Every branch here publishes under its own name, so Utah can be built
+against a package set before either side is merged.
+
 **Experimental pre-alpha**, alongside Utah itself.
 
 It does **not** rebuild Fedora Rawhide. Fedora dist-git seeds the RPM recipes and
