@@ -46,6 +46,27 @@ buildroot openssl: 3.5.7-2.fc44
 `4.x`, the root has regressed to Rawhide and the resulting RPMs will not
 install on Hummingbird, whatever else the log says.
 
+### The build root is not a mock root, despite appearances
+
+`rebuild-rpms.yml` installs `mock` in every stage job and **never invokes it**.
+The build is bare `rpmbuild -br` followed by `rpmbuild -ba` in a container that
+hand-simulates a build root — the comments say so: *"mirroring Hummingbird
+mock.cfg"*, *"mock defines USER in its build root; a bare container does not"*.
+
+Consequences when triaging:
+
+- A failure that looks like a mock configuration problem is not one. There is
+  no `/var/lib/mock`, no clean root per build, and no hermetic mode.
+- The root is not reset between packages in a matrix job, so contamination
+  from an earlier step is possible in a way mock would prevent.
+- Anything upstream documents as "mock sets this" is unset here unless the
+  workflow sets it by hand. `USER` was one such gap and was patched
+  individually; assume there are others rather than that the list is complete.
+
+Moving to real mock is agreed but unbuilt — see *Agreed direction* in
+[`docs/architecture.md`](../../../docs/architecture.md). Until it lands, read
+the workflow, not mock's documentation.
+
 ## Rule 2: check the commit is current
 
 Check-run events arrive for superseded commits. Compare the event's

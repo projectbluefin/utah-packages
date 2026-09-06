@@ -51,9 +51,13 @@ rules and the `precedence` job that enforces them.
 covering the Fedora components that blocked Utah: FUSE, NTFS, device-mapper
 persistent data, UDisks, librsvg, glycin, GVFS, GNOME, Firefox, and Distrobox.
 
-The RPM workflow locks source RPM checksums, rebuilds them in Mock, creates
-repodata, keylessly signs `repomd.xml` using GitHub OIDC/Cosign, and deploys it
-to GitHub Pages. Pull requests never publish RPMs or images.
+The RPM workflow locks source checksums, rebuilds each package in staged
+matrix jobs, creates repodata, keylessly signs `repomd.xml` using GitHub
+OIDC/Cosign, and publishes the result as an OCI image. Pull requests from
+forks never publish RPMs or images.
+
+The build does **not** currently run in Mock, despite installing it. See
+*Agreed direction* in [docs/architecture.md](docs/architecture.md).
 
 ## Hummingbird-compatible freshness model
 

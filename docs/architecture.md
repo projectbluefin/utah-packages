@@ -123,3 +123,44 @@ binary-build gap; the SRPM pilot does not close it.
 `pre-commit run --all-files` adds YAML, JSON, and TOML hygiene plus actionlint
 and the SHA-pinning rule for third-party actions. None of these publish
 anything; publication gates live in the rebuild and compose workflows.
+
+## Agreed direction, not yet built
+
+Recorded from a design review against Hummingbird's own factory. None of this
+is implemented; the sections above describe what the workflows actually do
+today. Each row states the decision and the evidence that motivated it, so a
+later reader can tell a considered choice from an accident.
+
+| Decision | Today | Agreed | Why |
+| --- | --- | --- | --- |
+| **Scope** | "the desktop stack Hummingbird does not ship" | Everything above the base OS that Bluefin's contract needs; never Hummingbird's toolchain | Utah is Bluefin recreated on Hummingbird, and we package it ourselves. Owning an ABI inside a six-hour runner is not a job worth taking from people who do it well. |
+| **Hummingbird overlap** | `precedence` reports any shared package name as a mistake | Allowed, but declared per package in `config/upstream-sources.json` | A general factory legitimately rebuilds things Hummingbird also ships. Undeclared overlap is still a mistake. |
+| **Build engine** | Bare `rpmbuild -br` then `-ba`, in a container that hand-simulates a build root | Mock, hermetic where possible | `rebuild-rpms.yml` installs `mock` five times and never invokes it, then reimplements it: *"mirroring Hummingbird mock.cfg"*, *"mock defines USER in its build root; a bare container does not"*. Hummingbird builds in mock. |
+| **Buildroot** | Solved live against whatever the repos serve at that moment | Resolve once, write `buildroot_lock.json` as a run artifact, build offline from it | Hummingbird's mechanism: `rpmspec --buildrequires` → DNF solve → `buildroot_lock.json` → hermetic repo → `--network=none` (`ci/build_rpms.sh`). Records EVR, arch, repo ID, URL, checksum and source RPM — not names. It is why the ABI question has an answer instead of a log grep. |
+| **Stage assignment** | 31 of 193 packages carry a hand-assigned `stage` | Solve waves from real BuildRequires; config `stage` demotes to an override for cycle-breakers such as `malcontent-bootstrap` | `preflight` already resolves every recipe's BuildRequires and then discards the result. Hand integers are a manual cache of a computed value; two of them were discovered by a build failing. Hummingbird has no stage numbers at all — it is solver-driven plus a reverse-dependency impact scanner. |
+| **Stage jobs** | `rebuild0` through `rebuild4`, five near-identical ~205-line copies | One reusable workflow, called five times | Four lines of substantive difference between stage 0 and stage 1. The firefox swap workaround exists only in stage 0, which is a live bug the moment firefox is solved into another wave. |
+| **Compiler cache** | `sccache` against the Actions cache service, over the network | Mock's `ccache` plugin plus `actions/cache`; delete `.github/actions/setup-sccache` | Hermetic mock is network-isolated. sccache would degrade to a total miss and look like "builds got slower" rather than failing. |
+| **Architecture** | `x86_64` hardcoded in the repo name and the sccache URL | Stay x86_64 only | Deferred deliberately, not overlooked. |
+| **Pages mirror** | `publish_pages`, main-only | Delete | Utah consumes the OCI digest. Pages exists because the registry path did not yet, and it now does. Nothing reads it. |
+| **Provenance** | `cosign sign` on the image and on `repomd.xml` | Add `actions/attest-build-provenance`, ship `buildroot_lock.json` inside the image | Already used in `compose-base.yml`, absent from the path that publishes what Utah installs. |
+| **Fork state** | `.hummingbird-upstream.json` pins a Fedora commit; drift is invisible | Compute drift against the pinned commit in CI; an undeclared diff fails | Hummingbird labels every package `clean`, `modified` or `independent` and requires a reason for `modified`. Computed rather than declared, so it cannot rot the way the stage integers did. |
+| **Release bumping** | `tools/dist_bump.py`, 24 lines, set on 0 of 193 packages | Port Hummingbird's baseline-aware `bump_release()` | It distinguishes "Fedora shipped 3.1" from "we already rebuilt Fedora's 3": `3`/baseline `3` → `3.1`, but `3.1`/baseline `3` → `3.2`. The 24-line version cannot express that. |
+| **Tooling shape** | 14 scripts in `tools/`, plus workflows that hand-edit config | One authoritative CLI | Hummingbird's `ci/dist_git.py` owns import, update, sync, rebuild, rename and metadata. Their single most transferable practice. |
+
+### Open, escalated, not decided
+
+Deleting the SRPM pilot orphans the whole Packit layer: `.packit.yaml`
+(1,164 lines, 193 entries), `tools/render_packit_config.py`,
+`tools/packit_source0.py`, `tools/packit_workflow.py`, and the
+`validate.py` gate that requires Packit configuration for every recipe — a
+gate on a file nothing else reads.
+
+That is roughly 1,445 lines, and it collides with a hard rule: `AGENTS.md`
+mandates `quay.io/packit/packit` as the pinned build container. With Packit
+unused, that container is a Fedora image that happens to carry mock. The rule
+worth keeping is *one digest-pinned container owns the toolchain*; which
+container is an implementation detail, and
+`quay.io/hummingbird-ci/hummingbird-builder` is arguably the more correct pin.
+
+Amending a hard rule in `AGENTS.md` is a human decision. Nothing here acts on
+it.
