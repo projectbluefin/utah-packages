@@ -1,13 +1,33 @@
 # Contributing
 
-Add source RPM names—not binary RPM names—to `config/bootstrap-packages.txt`.
-Keep additions dependency-first. Pull requests validate configuration but cannot
-publish packages, pages content, attestations, or image tags.
+## Adding a package
 
-To bring in an upstream source, use **Actions → Import Rawhide package**. It
-imports Fedora dist-git rather than a binary RPM, records the exact Rawhide
-commit, and proposes the result through a pull request. Do not modify
-`.hummingbird-upstream.json`; re-import when upstream changes.
+Use **Actions → Import Rawhide package**. It runs `tools/import_rawhide.py`,
+which clones Fedora dist-git at a single commit, copies the recipe — spec,
+patches, `sources` — into `packages/<name>/`, records the exact commit and
+tree in `packages/<name>/.hummingbird-upstream.json`, and opens a pull request.
+It imports a recipe, never a binary RPM.
+
+Name the **source** package, not a binary subpackage: `gnome-desktop3`, not
+`gnome-desktop-4`. Fedora's source package name is often not the one you were
+looking for, which is why searching for the binary finds nothing to fork.
+
+Then give it a source. A recipe with no entry in
+`config/upstream-sources.json` is not eligible to build: `tools/validate.py`
+fails, because the recipe alone says nothing about which upstream release its
+payload comes from. `tools/bootstrap_upstream_sources.py` proposes candidates
+by resolving `Source0`, and accepts one only when it is an upstream HTTP(S)
+URL whose bytes download directly — never Fedora's lookaside cache.
+
+If it needs to build after something else this factory builds, give it a
+`stage`. Stage N resolves against everything in stages below N, and there is
+no stage above 4.
+
+Do not hand-edit `.hummingbird-upstream.json`. Re-import instead; it is
+provenance, and editing it makes the recipe claim an origin it does not have.
+
+Pull requests validate configuration. They cannot publish packages,
+attestations, or image tags.
 
 ## Before you commit
 

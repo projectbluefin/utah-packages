@@ -46,11 +46,13 @@ following AlmaLinux's convention. See
 [docs/targeting-hummingbird.md](docs/targeting-hummingbird.md) for the ordering
 rules and the `precedence` job that enforces them.
 
-## Initial scope
+## Scope
 
-`config/bootstrap-packages.txt` is a dependency-first recipe-seeding set
-covering the Fedora components that blocked Utah: FUSE, NTFS, device-mapper
-persistent data, UDisks, librsvg, glycin, GVFS, GNOME, Firefox, and Distrobox.
+`packages/` holds 193 imported recipes and `config/upstream-sources.json`
+holds a verified upstream source for each: the Fedora components that blocked
+Utah — FUSE, NTFS, device-mapper persistent data, UDisks, librsvg, glycin,
+GVFS, Firefox, Distrobox — and the GNOME 51 stack itself. A recipe with no
+source entry cannot build.
 
 The RPM workflow locks source checksums, rebuilds each package in staged
 matrix jobs, creates repodata, keylessly signs `repomd.xml` using GitHub

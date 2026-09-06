@@ -14,6 +14,23 @@ failures are **not** what the last line of the log suggests. This skill exists
 because several wrong conclusions were reached by reading too little of a log
 and then acting on them.
 
+## When to Use
+
+A job in `rebuild-rpms.yml` or `build-stage.yml` failed, someone asks why a
+package did not build, or a failure has to be attributed to this repository,
+to Fedora, or to the build environment.
+
+## When NOT to Use
+
+- The run was **cancelled**. It was superseded by a later push. Nothing broke.
+- The job is `preflight`. It is `continue-on-error` and its output is a
+  worklist, not a gate; a package it flags as unsatisfied may simply be built
+  by a later wave.
+- The failure is `prepare` reporting a stage above 4. That is a configuration
+  error with a one-line fix, not a build failure.
+- Nothing failed and the question is what the factory *should* do. That is
+  `docs/architecture.md`, not this skill.
+
 ## Rule 0: read enough of the log
 
 `get_job_logs` with a short `tail_lines` usually returns only rpm's summary and
@@ -157,3 +174,36 @@ Do not infer a version from what Rawhide ships or from a package name.
 - Skip, disable or quarantine a test to make a build pass.
 - Push an empty commit, or close and reopen, to re-trigger CI.
 - Report a package as fixed without a green job to point at.
+
+## Common Rationalizations
+
+| Thought | Reality |
+| --- | --- |
+| "The last line of the log says what failed." | It usually says what gave up. The cause is 40-70 lines earlier. Rule 0 exists because acting on the last line produced several wrong conclusions. |
+| "The test is flaky, skip it." | Twice it was the build root missing something mock would have supplied — a system bus for libratbag, `USER` for just. Supply what a real build root has. |
+| "It is a mock configuration problem." | There is no mock. It is installed and never invoked; the root is hand-simulated. See Rule 1. |
+| "The artifact uploaded, so the package built." | Every artifact also carries `work/reports/*.json`, so one file always matches and the upload reports success while shipping no RPM. Rule 4. |
+| "This package is missing from Fedora." | Check whether it is one of ours in an earlier wave, and whether you are searching for a binary name that its source package does not use. |
+| "Re-running will fix it." | Only for exit 125 with a sub-kilobyte log, and only once. Anything else re-runs the same failure at the same cost. |
+
+## Red Flags
+
+Signs the triage is going wrong, not the build:
+
+- Reading fewer than 40 lines of log before forming a conclusion.
+- Editing a spec to work around what turns out to be a Fedora packaging bug.
+- Editing a package unrelated to the one that failed to make its build green.
+- Pointing a source lock at a Fedora tarball to unblock a checksum failure.
+- Concluding "flaky" without naming what the build root lacked.
+- Explaining a failure without saying which build root produced it.
+
+## Verification
+
+Before reporting a cause:
+
+- [ ] Read at least 40 lines around the failure, not the tail.
+- [ ] Confirmed the build root: `buildroot openssl` reads `3.5.x`, not `4.x`.
+- [ ] Confirmed the run is for the current head commit, not a superseded push.
+- [ ] Classified the failure against the table above, and it fits a row.
+- [ ] For an ordering failure, named the wave that has to build it first.
+- [ ] For a claimed fix, have a green job to point at.

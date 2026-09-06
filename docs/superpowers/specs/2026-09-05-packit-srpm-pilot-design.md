@@ -1,5 +1,15 @@
 # Wire the pinned Packit container into a real build step (pilot import)
 
+> **Status note, added 2026-09-06.** This design is approved and *unfinished*,
+> not superseded. The binary lane still builds with hand-rolled `rpmbuild` in
+> `quay.io/fedora/fedora:44` rather than Packit-driven Mock in the pinned
+> Packit container, so points requiring Mock and the pinned container remain
+> open. A later design review independently reached "build in mock", which
+> agrees with this document; where the two differ is whether Packit drives it.
+> That difference is the live decision, tracked in
+> [#43](https://github.com/projectbluefin/utah-packages/issues/43). Read this
+> as the approved target, and `docs/architecture.md` for what actually runs.
+
 Status: **implemented and locally verified**. The scoping decision below
 (pilot over 49 packages, not a full 193-package migration) was made without
 interactive confirmation because the user was unavailable mid-session — see
