@@ -16,6 +16,9 @@ Source1:        nautilus-gsconnect.metainfo.xml
 Source2:        nemo-gsconnect.metainfo.xml
 # Fix Firewalld path
 Patch0:         %{name}-42-firewalld.patch
+# Keep the extension loading on GNOME 48+ where GjsPrivate.DBusImplementation
+# is a final GType (see the patch header).
+Patch1:         %{name}-72-clipboard-final-type.patch
 
 BuildRequires:  desktop-file-utils
 BuildRequires:  firewalld-filesystem

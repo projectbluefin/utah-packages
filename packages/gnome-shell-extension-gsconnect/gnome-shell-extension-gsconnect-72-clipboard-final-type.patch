@@ -1,0 +1,43 @@
+Guard the Wayland clipboard portal against GNOME 48+ final GTypes.
+
+GjsPrivate.DBusImplementation became a final GType, so
+GObject.registerClass(... extends GjsPrivate.DBusImplementation) throws
+"Cannot inherit from a final type" the moment shell/clipboard.js is imported --
+which takes the entire GSConnect extension down at load on GNOME 48/49/50/51.
+
+Wrap the registration so a final base type degrades to an inert portal instead
+of a hard failure: GSConnect loads and works, and only the background clipboard
+portal (a Wayland convenience) is disabled on affected shells. Upstream still
+subclasses the type, so this is carried as a downstream patch.
+
+--- ./src/shell/clipboard.js	2026-09-06 17:03:33.932291930 +0530
++++ ./src/shell/clipboard.js	2026-09-06 17:03:33.969708451 +0530
+@@ -61,7 +61,9 @@
+  * A simple clipboard portal, especially useful on Wayland where GtkClipboard
+  * doesn't work in the background.
+  */
+-export const Clipboard = GObject.registerClass({
++let Clipboard;
++try {
++Clipboard = GObject.registerClass({
+     GTypeName: 'GSConnectShellClipboard',
+ }, class GSConnectShellClipboard extends GjsPrivate.DBusImplementation {
+ 
+@@ -365,6 +367,17 @@
+         }
+     }
+ });
++} catch (_e) {
++    // GNOME 48+ makes GjsPrivate.DBusImplementation a final GType, so the
++    // Wayland background clipboard portal cannot be registered as a
++    // subclass of it: registerClass throws "Cannot inherit from a final
++    // type" at module load, which otherwise takes the whole extension down.
++    // Fall back to an inert portal so the rest of GSConnect still loads;
++    // clipboard sync through this portal is disabled on such shells.
++    console.warn(`GSConnect: clipboard portal disabled on this GNOME version: ${_e}`);
++    Clipboard = class { destroy() {} };
++}
++export { Clipboard };
+ 
+ 
+ let _portal = null;
