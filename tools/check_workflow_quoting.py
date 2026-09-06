@@ -18,27 +18,31 @@ This does.
 import sys
 from pathlib import Path
 
-workflow = Path(__file__).resolve().parent.parent / ".github" / "workflows" / "rebuild-rpms.yml"
-lines = workflow.read_text().splitlines()
+# The bash -exc build script used to live only in rebuild-rpms.yml; it now
+# lives in the reusable rebuild-stage.yml too, so check every workflow.
+workflows_dir = Path(__file__).resolve().parent.parent / ".github" / "workflows"
+workflows = sorted(workflows_dir.glob("*.yml"))
 
 offenders = []
-start = None
-for number, line in enumerate(lines, start=1):
-    if "bash -exc '" in line:
-        start = number
-    elif start is not None and line.strip() == "'":
-        for offset, body in enumerate(lines[start:number - 1], start=start + 1):
-            if "'" in body:
-                offenders.append((offset, body.strip()))
-        start = None
+for workflow in workflows:
+    lines = workflow.read_text().splitlines()
+    start = None
+    for number, line in enumerate(lines, start=1):
+        if "bash -exc '" in line:
+            start = number
+        elif start is not None and line.strip() == "'":
+            for offset, body in enumerate(lines[start:number - 1], start=start + 1):
+                if "'" in body:
+                    offenders.append((workflow.name, offset, body.strip()))
+            start = None
 
 if offenders:
     print("A single quote inside a bash -exc script closes it. These lines do that:",
           file=sys.stderr)
-    for number, text in offenders:
-        print(f"  {workflow.name}:{number}: {text}", file=sys.stderr)
+    for name, number, text in offenders:
+        print(f"  {name}:{number}: {text}", file=sys.stderr)
     print("\nRephrase to avoid the apostrophe, as the surrounding comments do.",
           file=sys.stderr)
     raise SystemExit(1)
 
-print(f"checked {workflow.name}: no build script contains a quote that would close it")
+print(f"checked {len(workflows)} workflows: no build script contains a quote that would close it")
