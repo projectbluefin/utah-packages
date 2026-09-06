@@ -23,8 +23,8 @@ way Utah already pulls `projectbluefin/common` and `ublue-os/brew`. `main`
 publishes `:latest`; every other branch publishes under its own name, so an
 image can be built against a package set before either is merged.
 
-A GitHub Pages mirror is also published from `main` for anything that wants a
-plain HTTP repository.
+The registry is the publication and recovery source; the Pages mirror has
+been retired.
 
 Packages are tagged `.hum1.bfin` — the vendor release and dist, then our suffix,
 following AlmaLinux's convention. See
@@ -37,9 +37,10 @@ rules and the `precedence` job that enforces them.
 covering the Fedora components that blocked Utah: FUSE, NTFS, device-mapper
 persistent data, UDisks, librsvg, glycin, GVFS, GNOME, Firefox, and Distrobox.
 
-The RPM workflow locks source RPM checksums, rebuilds them in Mock, creates
-repodata, keylessly signs `repomd.xml` using GitHub OIDC/Cosign, and deploys it
-to GitHub Pages. Pull requests never publish RPMs or images.
+The RPM workflow verifies source checksums, builds with rpmbuild in a Fedora 44
+plus Hummingbird container, creates repodata, and publishes the gated overlay
+to GHCR. Hummingbird itself uses hermetic mock; this factory's current build
+implementation is described in [architecture](docs/architecture.md).
 
 ## Hummingbird-compatible freshness model
 
@@ -90,6 +91,10 @@ an independent GitHub repository is intentionally optional: GitHub Actions'
 dedicated, narrowly scoped repository-creation credential.
 
 See [architecture](docs/architecture.md) and [contributing](docs/contributing.md).
+
+For a fast package-level feedback loop, use `just build PACKAGE` or
+`just build-deps PACKAGE`. See [local builds](docs/local-builds.md) for cache,
+logs, dependency inputs, and failure inspection.
 
 ## What publication promises
 

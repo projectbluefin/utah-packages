@@ -1,0 +1,47 @@
+/tier1-internal:
+  plan:
+    import:
+      url: https://src.fedoraproject.org/tests/libshout.git
+      name: /plans/tier1/internal
+  adjust:
+    enabled: false
+    when: distro == centos-stream, fedora
+    because: They don't have access to internal repos.
+
+/tier1-public:
+  plan:
+    import:
+      url: https://src.fedoraproject.org/tests/libshout.git
+      name: /plans/tier1/public
+
+/tier2-tier3-internal:
+  plan:
+    import:
+      url: https://src.fedoraproject.org/tests/libshout.git
+      name: /plans/tier2-tier3/internal
+  adjust:
+    enabled: false
+    when: distro == centos-stream, fedora
+    because: They don't have access to internal repos.
+
+/tier2-tier3-public:
+  plan:
+    import:
+      url: https://src.fedoraproject.org/tests/libshout.git
+      name: /plans/tier2-tier3/public
+
+/others-internal:
+  plan:
+    import:
+      url: https://src.fedoraproject.org/tests/libshout.git
+      name: /plans/others/internal
+  adjust:
+    enabled: false
+    when: distro == centos-stream, fedora
+    because: They don't have access to internal repos.
+
+/others-public:
+  plan:
+    import:
+      url: https://src.fedoraproject.org/tests/libshout.git
+      name: /plans/others/public

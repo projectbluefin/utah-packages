@@ -2,7 +2,7 @@
 # Packages not listed here remain in their numeric stage. A late lane may only
 # consume outputs from the preceding fast lane(s) named in the workflow.
 
-# ffmpeg and gstreamer1-plugins-good join pipewire because the codec libraries
+# ffmpeg and gstreamer1-plugins-good are late because the codec libraries
 # they link are now built here too, and two of those move soname between the
 # Fedora the build root resolves against and the rawhide the factory imports:
 # libvpx goes so.9 -> so.12 and openapv liboapv.so.2 -> so.3. Building them in
@@ -11,8 +11,41 @@
 # failing for a whole extra cycle. Nothing outside the factory consumes either
 # old soname -- checked against Hummingbird and against every Fedora package in
 # the runtime contract -- so rebuilding the consumers is the whole fix.
+#
+# webrtc-audio-processing takes pipewire's place in this lane. It links
+# abseil-cpp, which the fast lane rebuilds, so it cannot share that lane; and
+# pipewire links webrtc-audio-processing, so pipewire cannot share this one.
+# pipewire therefore moves out to stage 1, which is the first wave that sees
+# every stage-0 lane.
+#
+# libheif is here for the same reason as ffmpeg, one library later: the
+# factory now builds openjph, and Fedora's 0.25 became rawhide's 0.31, so the
+# published libheif asks for libopenjph.so.0.25 and nothing will ever answer.
+# glycin build-requires libheif and stays in the fast lane, which is correct:
+# libheif's own soname does not move, only the openjph it links.
+#
+# libheif also builds with its own %bcond bootstrap set, permanently. Its
+# spec documents the cycle: libheif build-requires sdl2 -> SDL3 -> libdecor
+# -> gtk3 -> gdk-pixbuf2 -> glycin-libs -> glycin-loaders -> libheif. Fedora
+# never trips it because its repository is self-consistent; this factory's
+# accumulator is not, and the moment openjph moved 0.25 -> 0.31 the
+# accumulator's own libheif became uninstallable and took its whole buildroot
+# with it. bootstrap costs exactly one binary, the heif-view example; the
+# encoders and every library stay.
+#
+# Xwayland is late for a version floor rather than a soname: 26.0.99.901
+# build-requires wayland >= 1.26.0, and the build root offers 1.25.0. The
+# factory builds 1.26.0 in the fast lane, so this is the first place that can
+# see it -- in the fast lane beside it, meson stops at
+#   Dependency lookup for wayland-client ... found '1.25.0'
 [stage0_late]
-packages = ["pipewire", "ffmpeg", "gstreamer1-plugins-good"]
+packages = [
+  "ffmpeg",
+  "gstreamer1-plugins-good",
+  "libheif",
+  "webrtc-audio-processing",
+  "xorg-x11-server-Xwayland",
+]
 
 # WebKitGTK is built as two shards of one recipe, one GTK port each, so the
 # two compiles that used to run back to back on one runner (five hours) run

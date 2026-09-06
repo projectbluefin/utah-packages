@@ -1,0 +1,66 @@
+#!/usr/bin/expect -f
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+#   File:   ./tests/utils/cryptsetup.exp
+#   Author: Jiri Kucera <jkucera@redhat.com>
+#   Brief:  Expect wrapper around cryptsetup
+#
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+#   Copyright (c) 2020 Red Hat, Inc.
+#
+#   This program is free software: you can redistribute it and/or
+#   modify it under the terms of the GNU General Public License as
+#   published by the Free Software Foundation, either version 2 of
+#   the License, or (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be
+#   useful, but WITHOUT ANY WARRANTY; without even the implied
+#   warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+#   PURPOSE.  See the GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program. If not, see http://www.gnu.org/licenses/.
+#
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+package require cmdline
+
+source [file join [file dirname [info script]] "common.tcl"]
+
+set options {
+  {password.arg "" "Password required by some cryptsetup actions"}
+}
+
+set usage "\[options\] -- cryptsetup_options\noptions:"
+
+if {[catch {
+  array set params [::cmdline::getoptions argv $options $usage]
+} result]} {
+  if {$::errorCode eq {CMDLINE USAGE}} {
+    puts $result
+    exit 0
+  }
+  puts $::errorCode
+  puts $::errorInfo
+  exit 1
+}
+
+set password $params(password)
+
+eval spawn cryptsetup $::argv
+if {"luksFormat" in $::argv} {
+  verify_password $password
+  expect -re "^Are you sure.*:"
+  send -- "YES\r"
+  expect -re "Enter( LUKS)? passphrase.*"
+  send -- "$password\r"
+  expect -re "Verify passphrase.*"
+  send -- "$password\r"
+  expect eof
+} elseif {"luksOpen" in $::argv} {
+  verify_password $password
+  expect -re "Enter passphrase for.*"
+  send -- "$password\r"
+  expect eof
+}

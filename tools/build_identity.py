@@ -57,6 +57,8 @@ def identity(package: str, root: Path = Path("."), rpm_dir: Path | None = None) 
         "recipe_sha256": file_digest(root / "packages" / recipe.recipe_name(entry)),
         "base_image": base,
         "factory_files": {
+            "build_script": hashlib.sha256((root / "tools" / "build-rpm.sh").read_bytes()).hexdigest(),
+            "build_driver": hashlib.sha256((root / "tools" / "build-package.sh").read_bytes()).hexdigest(),
             "hummingbird_repo": hashlib.sha256((root / "config" / "hummingbird.repo").read_bytes()).hexdigest(),
             "runtime_contract": hashlib.sha256(policy_path.read_bytes()).hexdigest(),
             # Until the dependency planner emits per-consumer provider

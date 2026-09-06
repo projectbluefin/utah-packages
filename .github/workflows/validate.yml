@@ -14,3 +14,6 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - run: python3 tools/validate.py
+      - run: python3 -m unittest discover -s tests -v
+      - run: bash -n tools/build-package.sh tools/build-rpm.sh
+      - run: python3 tools/check_workflow_quoting.py

@@ -98,10 +98,22 @@ def read_source0_basename(name: str, destination: Path, version: str) -> str | N
 
 
 def read_spec_version(name: str, destination: Path) -> str:
+    """The recorded version, with the spec's own %global macros expanded.
+
+    A Version line is not always a literal: hunspell-en spells its as
+    0.%{upstreamid} against a %global two lines above, and recording that
+    verbatim puts an unexpanded macro in the lock file, where the drift
+    check compares it against a real upstream version and never matches.
+    """
     spec = next((destination / name).glob("*.spec"))
-    for line in spec.read_text().splitlines():
+    text = spec.read_text()
+    globals_ = dict(re.findall(r"(?m)^%global\s+(\S+)\s+(\S+)\s*$", text))
+    for line in text.splitlines():
         if line.startswith("Version:"):
-            return line.split(":", 1)[1].strip().lstrip("%{?")
+            version = line.split(":", 1)[1].strip().lstrip("%{?")
+            for key, value in globals_.items():
+                version = version.replace("%%{%s}" % key, value)
+            return version
     raise SystemExit(f"{name}: cannot determine Version from spec")
 
 

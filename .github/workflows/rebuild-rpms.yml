@@ -21,6 +21,8 @@ on:
       - tools/source_pipeline.py
       - tools/build_identity.py
       - tools/build_manifest.py
+      - tools/build-package.sh
+      - tools/build-rpm.sh
       - tools/runtime_contract.py
       - tests/**
       - .github/workflows/rebuild-rpms.yml
@@ -33,6 +35,8 @@ on:
       - tools/source_pipeline.py
       - tools/build_identity.py
       - tools/build_manifest.py
+      - tools/build-package.sh
+      - tools/build-rpm.sh
       - tools/runtime_contract.py
       - tests/**
       - .github/workflows/rebuild-rpms.yml

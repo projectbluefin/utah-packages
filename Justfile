@@ -58,6 +58,48 @@ source-one package:
 source-all:
     @just source
 
+# Same build script as CI; downloads, compiler cache and logs survive retries.
+build package:
+    bash tools/build-package.sh "{{ package }}"
+
+# Resolve static/dynamic BuildRequires and prepare sources without compiling.
+build-deps package:
+    bash tools/build-package.sh "{{ package }}" --deps-only
+
+# Make a local Utah input repository from the published baseline and the
+# in-progress candidate. The candidate is allowed to add newer RPMs, while the
+# published image supplies packages it has not rebuilt yet.
+local-repo output="localhost/utah-packages:local-merged":
+    bash tools/compose-local-repository.sh "{{ output }}" \
+      ghcr.io/projectbluefin/utah-packages:latest \
+      ghcr.io/projectbluefin/utah-packages:building
+
+# Same repository, plus every RPM `just build` has produced in this checkout.
+# Local results come last, so a package rebuilt here wins over the published
+# copy and a composition test measures the working tree, not the last release.
+local-repo-with-builds output="localhost/utah-packages:local-merged":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    inputs=(
+      ghcr.io/projectbluefin/utah-packages:latest
+      ghcr.io/projectbluefin/utah-packages:building
+    )
+    # Only result/, never prior/ or a previous.* directory: those hold RPMs
+    # from earlier builds that this checkout no longer claims to produce.
+    for result in "{{ work_dir }}"/local/*/result; do
+      [ -d "$result" ] || continue
+      [ -n "$(find "$result" -name '*.rpm' -type f -print -quit)" ] || continue
+      inputs+=("$result")
+    done
+    bash tools/compose-local-repository.sh "{{ output }}" "${inputs[@]}"
+
+# Give a local build the earlier-stage RPMs its CI lane would have had. Needed
+# for any package whose dependencies the factory rebuilds with a new soname:
+# without it, `just build` links Fedora's copy and produces an RPM the runtime
+# cannot install. Compose the repository first.
+seed-prior package input="localhost/utah-packages:local-merged":
+    bash tools/seed-build-prior.sh "{{ package }}" "{{ input }}"
+
 clean-work:
     rm -rf -- "{{ work_dir }}"
 

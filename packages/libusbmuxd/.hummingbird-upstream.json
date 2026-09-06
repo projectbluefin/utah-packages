@@ -1,0 +1,8 @@
+{
+  "package": "libusbmuxd",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libusbmuxd.git",
+  "commit": "3871941270155f442c7fe49fa965a1d6b20408fe",
+  "tree": "49f02b47db084407142f15cd253855bc7f41a26a",
+  "imported_at": "2026-09-05T15:35:32.433285+00:00"
+}
