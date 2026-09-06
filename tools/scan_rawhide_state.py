@@ -11,8 +11,13 @@ from __future__ import annotations
 import argparse
 import json
 import subprocess
+import sys
 import tomllib
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from tools.rawhide_sources import import_binaries, source_name
 
 
 def query(package: str) -> dict[str, str] | None:
@@ -28,15 +33,6 @@ def query(package: str) -> dict[str, str] | None:
     return {"name": name, "evr": evr, "arch": arch, "sourcerpm": sourcerpm}
 
 
-def source_name(sourcerpm: str) -> str:
-    # Fedora source RPM versions begin with a digit; package names may contain '-'.
-    import re
-    match = re.match(r"^(.+)-[0-9][^-]*-.*\.src\.rpm$", sourcerpm)
-    if not match:
-        raise ValueError(f"cannot parse source RPM: {sourcerpm}")
-    return match.group(1)
-
-
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--manifest", type=Path, default=Path("config/bluefin-packages.toml"))
@@ -45,9 +41,7 @@ def main() -> int:
     args = parser.parse_args()
 
     manifest = tomllib.loads(args.manifest.read_text())
-    binaries = sorted(set(
-        manifest["fedora"]["packages"] + manifest["multimedia_overrides"]["packages"]
-    ))
+    binaries = import_binaries(manifest)
     state = {package: query(package) for package in binaries}
     state = {package: value for package, value in state.items() if value}
     previous = json.loads(args.state.read_text()) if args.state.exists() else {}

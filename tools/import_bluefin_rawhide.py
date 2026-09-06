@@ -5,26 +5,29 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 import subprocess
 import sys
 import tomllib
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from tools.rawhide_sources import import_binaries, source_name
 
 
 def command(*args: str) -> subprocess.CompletedProcess[str]:
     return subprocess.run(args, text=True, capture_output=True, check=False)
 
 
-def source_name(binary: str) -> tuple[str | None, str | None]:
+def resolve_source(binary: str) -> tuple[str | None, str | None]:
     result = command("dnf", "repoquery", "--latest-limit=1", "--qf", "%{sourcerpm}", binary)
     candidates = sorted({line.strip() for line in result.stdout.splitlines() if line.strip() and line.strip() != "(none)"})
     if not candidates:
         return None, result.stderr.strip() or "no Rawhide candidate"
-    match = re.match(r"^(.+)-[0-9][^-]*-.*\.src\.rpm$", candidates[0])
-    if not match:
+    try:
+        return source_name(candidates[0]), None
+    except ValueError:
         return None, f"cannot derive source package from {candidates[0]}"
-    return match.group(1), None
 
 
 def main() -> int:
@@ -35,15 +38,12 @@ def main() -> int:
     args = parser.parse_args()
 
     manifest = tomllib.loads(args.manifest.read_text())
-    binaries = []
-    for section in ("fedora", "multimedia_overrides"):
-        binaries.extend(manifest.get(section, {}).get("packages", []))
-    binaries = sorted(set(binaries))
+    binaries = import_binaries(manifest)
 
     resolved: dict[str, str] = {}
     unavailable: list[dict[str, str]] = []
     for binary in binaries:
-        source, error = source_name(binary)
+        source, error = resolve_source(binary)
         if source:
             resolved[binary] = source
         else:
