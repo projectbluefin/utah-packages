@@ -217,9 +217,27 @@ hardcoded, so a move to `hum2` carries itself. A buildroot with none of them is 
 repository misconfiguration -- the exact failure this factory exists to catch --
 so the build stops rather than quietly tagging something else.
 
-The `.N` counter is per package, as `"dist_bump": 1` beside the package's source
-entry in `config/upstream-sources.json`. Most never need one; it is for when the
-base we derive from has not moved but our own build of it has to.
+The `.N` counter is per package, beside the package's source entry in
+`config/upstream-sources.json`:
+
+```json
+"dist_bump": {"count": 1, "baseline": "3"}
+```
+
+Most never need one; it is for when the base we derive from has not moved but
+our own build of it has to. `baseline` is the spec's own `Release:` that the
+count was taken against, and it is what stops the counter outliving its
+reason: once Fedora moves to release 4, the leading segment already outranks
+everything published as `3.hum1.bfin.1`, so the counter is spent and
+`tools/dist_bump.py` stops emitting it. Carrying it forward would assert a
+rebuild that never happened.
+
+This is Hummingbird's `bump_release()` translated. They put the counter in
+`Release:` and re-seat it against the new baseline (`3.1` against baseline `3`
+becomes `3.2`); we put it in the disttag, where a moved baseline retires it
+instead. A `Release:` built from macros -- `krb5_release`, nodejs, and
+`kernel-headers`'s `specrelease` -- is refused by both, rather than compared
+as a string that is not a release.
 
 Verified against rpm's ordering rather than assumed -- the comparison was
 reimplemented from rpmvercmp's rules and every row checked, including the ones we

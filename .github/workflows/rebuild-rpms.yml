@@ -343,7 +343,8 @@ jobs:
                 echo "spec on the newer dist-git, which raises ours to match."
                 echo
                 echo "If the release has NOT moved and we simply need to build it again,"
-                echo "add \"dist_bump\" to the package in config/upstream-sources.json"
+                echo "add \"dist_bump\": {\"count\": 1, \"baseline\": \"<Release:>\"}"
+                echo "to the package in config/upstream-sources.json"
                 echo "instead. That appends .N after .bfin, which is what AlmaLinux does"
                 echo "with .alma.1. It cannot help with a release bump, because the"
                 echo "leading segment comes from the spec."
