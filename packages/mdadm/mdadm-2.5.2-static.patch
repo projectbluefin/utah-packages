@@ -1,0 +1,11 @@
+--- mdadm/Makefile.orig	2026-04-05 18:33:34.711787145 +0800
++++ mdadm/Makefile	2026-04-05 18:35:24.390726753 +0800
+@@ -287,7 +287,7 @@
+ install : install-bin install-man install-udev
+ 
+ install-static : mdadm.static install-man
+-	$(INSTALL) -D $(STRIP) -m 755 mdadm.static $(DESTDIR)$(BINDIR)/mdadm
++	$(INSTALL) -D $(STRIP) -m 755 mdadm.static $(DESTDIR)$(BINDIR)/mdadm.static
+ 
+ install-man: mdadm.8 md.4 mdadm.conf.5 mdmon.8
+ 	$(INSTALL) -D -m 644 mdadm.8 $(DESTDIR)$(MAN8DIR)/mdadm.8

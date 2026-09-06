@@ -1,0 +1,8 @@
+{
+  "package": "libplist",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libplist.git",
+  "commit": "de12f6fbc416c4376127fe4547309a2de27cdad4",
+  "tree": "ab98b63260e5a2228c2707531826f6cf0bbe5fe9",
+  "imported_at": "2026-09-03T22:53:15.821897+00:00"
+}

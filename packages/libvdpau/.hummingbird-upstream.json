@@ -1,0 +1,8 @@
+{
+  "package": "libvdpau",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libvdpau.git",
+  "commit": "522d031965784138dbb2703520c3564329155bde",
+  "tree": "c5c34213e44037fd4a74fb096052d0692ec3c64d",
+  "imported_at": "2026-09-05T15:35:31.801981+00:00"
+}

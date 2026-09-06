@@ -1,0 +1,8 @@
+{
+  "package": "rtkit",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/rtkit.git",
+  "commit": "8ca9740a3c7ea29b21663fb4159a56bf630a3a30",
+  "tree": "da897a844f7293bdd747b95f1947b9fcb589938c",
+  "imported_at": "2026-09-04T21:17:01.546029+00:00"
+}

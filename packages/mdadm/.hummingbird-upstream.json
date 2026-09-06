@@ -1,0 +1,8 @@
+{
+  "package": "mdadm",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/mdadm.git",
+  "commit": "d6590f17f03b13d32f4bcac4e75937a6f4e7dacf",
+  "tree": "4871a033c5622804ab4672ca6f210824f7313946",
+  "imported_at": "2026-09-05T14:33:38.384186+00:00"
+}

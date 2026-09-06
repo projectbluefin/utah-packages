@@ -1,0 +1,8 @@
+{
+  "package": "codec2",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/codec2.git",
+  "commit": "5641dd7e109a2bf1d8826205b8d84808878be40b",
+  "tree": "d1193ee7c6dfe1a7f1d296a5456175f2b9c4f825",
+  "imported_at": "2026-09-05T04:39:13.277839+00:00"
+}

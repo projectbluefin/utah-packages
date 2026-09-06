@@ -1,0 +1,8 @@
+{
+  "package": "xdg-dbus-proxy",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/xdg-dbus-proxy.git",
+  "commit": "aa1974ca027c1fce7252928d9c6f3e229b2d10fe",
+  "tree": "9bd178108ac6f5914279e981577c41728cbc6435",
+  "imported_at": "2026-09-03T22:53:18.493172+00:00"
+}

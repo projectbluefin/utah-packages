@@ -1,0 +1,8 @@
+{
+  "package": "lttng-ust",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/lttng-ust.git",
+  "commit": "4a781cf99f3e0c4840d60ce4705bb94ff214bddf",
+  "tree": "6250d2cd14973dd46cec787a09c7847fc842fc90",
+  "imported_at": "2026-09-03T22:53:16.827397+00:00"
+}

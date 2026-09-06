@@ -1,0 +1,33 @@
+From 1cee903f9fd7d13556801f4fdbbf9c82518641e0 Mon Sep 17 00:00:00 2001
+From: Sun Haiyong <sunhaiyong@zdbr.net>
+Date: Wed, 24 Jun 2026 17:31:14 +0800
+Subject: [PATCH] Add preprocessor support for loongarch architectures
+
+__loongarch__ and __loongarch_grlen are defined by
+https://github.com/loongson/la-toolchain-conventions#cc-preprocessor-built-in-macro-definitions
+---
+ rtc_base/system/arch.h | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/rtc_base/system/arch.h b/rtc_base/system/arch.h
+index be2367b85f..d036fe8424 100644
+--- a/rtc_base/system/arch.h
++++ b/rtc_base/system/arch.h
+@@ -73,6 +73,14 @@
+ #elif defined(__riscv) && __riscv_xlen == 32
+ #define WEBRTC_ARCH_32_BITS
+ #define WEBRTC_ARCH_LITTLE_ENDIAN
++#elif defined(__loongarch__) && __loongarch_grlen == 64
++#define WEBRTC_ARCH_LOONGARCH_FAMILY
++#define WEBRTC_ARCH_64_BITS
++#define WEBRTC_ARCH_LITTLE_ENDIAN
++#elif defined(__loongarch__) && __loongarch_grlen == 32
++#define WEBRTC_ARCH_LOONGARCH_FAMILY
++#define WEBRTC_ARCH_32_BITS
++#define WEBRTC_ARCH_LITTLE_ENDIAN
+ #elif defined(__pnacl__)
+ #define WEBRTC_ARCH_32_BITS
+ #define WEBRTC_ARCH_LITTLE_ENDIAN
+-- 
+2.48.1
+
