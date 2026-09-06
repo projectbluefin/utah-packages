@@ -157,14 +157,12 @@ tooling arrives; do not copy them as-is.
   immediately before `%{?dist}` so a rebuild sorts above the Fedora build it
   derives from. **This repository does not do that yet** — its RPMs still carry
   Fedora's disttag.
-- Run package builds, source-generation/reproducibility probes, and other
-  environment-sensitive validation on the lab's remote Argo cluster. Reuse
-  the existing organization-owned FSDK containers; do not launch ad hoc local
-  Ubuntu or Fedora containers. If an FSDK image lacks a required tool, fix the
-  image in `projectbluefin/fsdk-containers` rather than installing packages at
-  runtime or substituting a generic distro image. The digest-pinned Packit
-  image mirrored into local Zot remains the narrow exception for Packit
-  commands themselves.
+- Run package builds, source-generation and reproducibility probes, and other
+  environment-sensitive validation in GitHub Actions on GitHub-hosted
+  `ubuntu-26.04` runners, inside the digest-pinned
+  `quay.io/packit/packit` container. The container owns the toolchain: do not
+  use ad hoc or unpinned containers, install packages into it at runtime, or
+  substitute a generic distro image.
 - Never skip a test, or push an empty commit, to get a build green.
 
 ## Canonical sources

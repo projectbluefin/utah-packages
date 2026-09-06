@@ -2,59 +2,111 @@
 
 ```mermaid
 flowchart TD
-  Fedora["Fedora spec + patches (bootstrap)"] --> Spec["RPM recipe"]
+  Fedora["Fedora spec + patches (recipe)"] --> Spec["RPM recipe"]
   Upstream["Direct upstream release / tag"] --> Verify["Checksum, signature and policy gate"]
   Verify --> Lock["Exact source lock"]
-  Rawhide["Fedora Rawhide buildroot"] --> Mock
-  Spec --> Mock["Mock rebuild matrix"]
-  Lock --> Mock
-  Mock --> Repo["RPM overlay + repodata"]
-  Repo --> Pages["GitHub Pages repository"]
-  Repo --> Bootc["Minimal bootc composition"]
-  Bootc --> GHCR["Signed GHCR image"]
+  GHA["GitHub Actions\nGitHub-hosted runner"] --> Packit["Packit CLI\npinned Packit container"]
+  Spec --> GHA
+  Lock --> GHA
+  Packit --> SRPM["SRPM artifacts"]
+  GHA --> Binary["Current binary lane\nrpmbuild -br / -ba"]
+  Binary --> Stages["Dependency stages 0-4"]
+  Stages --> Repo["RPM overlay + repodata"]
+  SRPM -. full Packit factory .-> Stages
+  Repo --> GHCR["Signed GHCR image"]
+  Repo --> Pages["GitHub Pages mirror"]
 ```
 
-Fedora Rawhide supplies a temporary compatibility build root and initial RPM
-recipes, never an update source or runtime package repository for consumer
-images. Every RPM source payload is fetched from its configured upstream and
-must pass the verification gate before it can reach Mock. The factory builds a
-manifest-defined closure in shards on GitHub-hosted runners.
+This factory is GitHub Actions' replacement for Copr. Packit runs as a CLI
+inside workflow jobs, not as a hosted Packit service or a separate build
+farm. Fedora dist-git supplies the recipe; the upstream release supplies the
+payload; source verification precedes either build path.
 
-Rawhide is also the bootstrap escape hatch for a newly introduced Hummingbird
-gap: its compiler, macros, and BuildRequires can establish the first RPM. Once
-the factory has published that RPM, later Hummingbird builds use the factory
-repository as a gap-filler for cross-package dependencies. Rawhide is never
-consulted for an RPM's source archive and is never enabled in the consumer
-image.
+The previous architecture put execution on a remote Argo cluster with FSDK
+containers and a local registry mirror. That was wrong; the execution model
+is pure GitHub Actions. No external build service, cluster, or self-hosted
+runner is part of this path.
+
+Copr, Packit-as-a-Service, Koji, Bodhi, Testing Farm, Kubernetes, local Zot,
+lab nodes, and self-hosted runners are not dependencies.
 
 ## Tooling
 
-Package builds, generated-source reproduction, and environment-sensitive
-validation run on the lab's remote Argo cluster. Generic workflow steps use
-existing organization-owned FSDK containers instead of ad hoc local Ubuntu or
-Fedora containers. If an FSDK image lacks a required tool, add it in
-`projectbluefin/fsdk-containers`; do not install packages at runtime.
+The target runner is GitHub-hosted `ubuntu-26.04`. The x64 and arm images
+entered public preview on 2026-06-11
+([announcement](https://github.blog/changelog/2026-06-11-new-runner-images-in-public-preview/)
+and [runner image issue](https://github.com/actions/runner-images/issues/14226)).
+For a public repository, the standard x64 runner provides 4 vCPUs, 16 GB of
+RAM, 14 GB of SSD, and a six-hour job limit.
 
-Where Packit CLI functionality (SRPM generation, spec-version-bump logic) is
-useful in this factory's own automation, consume the upstream-published
-`quay.io/packit/packit` image directly (it already ships `packit`, `mock`, and
-`createrepo_c`, rebuilt daily by the Packit project) rather than maintaining a
-local rebuild of it. Pin by digest and mirror it into the lab's writable Zot.
-This is the narrow tool-specific exception to the FSDK-image rule.
+The current workflows still pin `ubuntu-24.04`. The migration to
+`ubuntu-26.04` is outstanding; this document does not claim that it has
+happened.
 
-`.github/workflows/packit-srpm-pilot.yml` proves this end-to-end: it runs the
-verified-source pipeline and then `packit srpm --preserve-spec` against all 54
-packages that carry a leftover, inherited Fedora `.packit.yaml`, using a
-root-level `.packit.yaml` monorepo config. The locked upstream archive and any
-Fedora lookaside sources are staged beside the spec before Packit runs, and the
-root config's `create-archive` action makes Packit reuse the staged Source0
-instead of replacing it with a Git archive. The workflow verifies every staged
-source again after Packit runs, then uploads the resulting SRPMs as build
-artifacts. It is a verification-only lane — it does not feed Mock, the RPM
-overlay, or the published repository, and it does not touch
-`rebuild-rpms.yml`. See
-[`docs/superpowers/specs/2026-09-05-packit-srpm-pilot-design.md`](superpowers/specs/2026-09-05-packit-srpm-pilot-design.md)
-for the original pilot scope and what a full migration would still need.
+Package builds, generated-source reproduction, reproducibility probes, and
+environment-sensitive validation run in GitHub Actions inside the
+digest-pinned `quay.io/packit/packit` container. The container is the build
+environment and owns the toolchain. Do not install packages into it at
+runtime, replace the digest with a mutable tag, or substitute a generic
+distro image. The Packit image is the build container, not an exception to a
+retired container rule.
+
+The current Packit image digest is
+`quay.io/packit/packit@sha256:149e6e06d3e5fb2f10d19760c8a0031c7d8825e7bb91a5f4a7ab9b927c947494`.
+
+`.github/workflows/packit-srpm-pilot.yml` proves the SRPM path but is
+verification-only. Its `discover` job emits the package list from
+`tools/packit_workflow.py packages`. Its per-package `srpm` matrix has
+`fail-fast: false`. The workflow currently runs those jobs on `ubuntu-24.04`.
+Each matrix job uses `tools/source_pipeline.py` to fetch and verify the
+configured sources and stage them beside the spec, then runs
+`packit srpm --preserve-spec` inside the pinned Packit container. It runs a
+post-command `--verify-staged packages` check, guards the output with `test -s`, and
+uploads one SRPM artifact with `if-no-files-found: error`. It does not feed
+Mock, the overlay, or publication.
+
+The old pilot description said that it covered 54 packages with inherited
+Fedora Packit configuration. That was wrong. The root configuration and
+source lock cover all 193 recipes:
+
+| check | result |
+| --- | ---: |
+| `ls -d packages/*/ \| wc -l` | `193` |
+| entries under `.packit.yaml:packages` | `193` |
+| entries under `config/upstream-sources.json:packages` | `193` |
+
+`python3 tools/validate.py` reports:
+
+```text
+validated 193 source RPMs
+```
+
+## Current binary pipeline
+
+`.github/workflows/rebuild-rpms.yml` is the current binary lane. Its
+`prepare`, `preflight`, `rebuild0` through `rebuild4`, `precedence`, and
+`publish` jobs currently all use `ubuntu-24.04`; the runner migration remains
+open.
+
+| job | verified behavior |
+| --- | --- |
+| `prepare` | Selects the packages that are new, changed, or requested by a full rebuild, then emits five stage lists. |
+| `preflight` | Resolves BuildRequires for the selected packages in the real build root and uploads a worklist; it is `continue-on-error`. |
+| `rebuild0` through `rebuild4` | Builds each stage in a `fail-fast: false` package matrix. Each later stage downloads the earlier workflow artifacts, creates a local `[stages]` dnf repository with `createrepo_c`, and resolves against it. |
+| `precedence` | Checks that each produced RPM outranks what Fedora 44 and Hummingbird already offer. |
+| `publish` | Merges the stage artifacts, removes the bootstrap RPM, creates and signs repository metadata, validates the Hummingbird-only transaction, and publishes a signed GHCR OCI image. A main-branch-only `publish_pages` job provides the Pages mirror. |
+
+The five dependency stages pass their output between jobs as workflow
+artifacts. A later stage downloads those artifacts into `work/prior`, creates
+the local `[stages]` repository there, and uses that repository for the
+transaction; the artifact handoff and the dnf repository are both part of
+the dependency mechanism.
+
+The binary build is not Packit yet. Inside the current Fedora 44 container,
+the workflow stages the verified source and runs hand-rolled `rpmbuild -br`
+to resolve generated BuildRequires, followed by `rpmbuild -ba` to produce the
+binary RPMs. Replacing that block with the Packit factory is the remaining
+binary-build gap; the SRPM pilot does not close it.
 
 ## Repository gates
 
