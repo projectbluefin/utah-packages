@@ -9,7 +9,10 @@ import re
 from pathlib import Path
 
 
-PACKAGE_KEY = re.compile(r"^  ([a-zA-Z0-9][a-zA-Z0-9+.-]*):$")
+# Underscores are part of a package name: lm_sensors and volume_key are both
+# real recipes. Without one here they parse as no package at all, and a name
+# this misses is a name the rebuild matrix silently never builds.
+PACKAGE_KEY = re.compile(r"^  ([a-zA-Z0-9][a-zA-Z0-9+._-]*):$")
 
 
 def package_names(config: Path) -> list[str]:
