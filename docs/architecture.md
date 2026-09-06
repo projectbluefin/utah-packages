@@ -13,8 +13,7 @@ flowchart TD
   Binary --> Stages["Dependency stages 0-4"]
   Stages --> Repo["RPM overlay + repodata"]
   SRPM -. full Packit factory .-> Stages
-  Repo --> GHCR["Signed GHCR image"]
-  Repo --> Pages["GitHub Pages mirror"]
+  Repo --> GHCR["Signed, attested GHCR image"]
 ```
 
 This factory is GitHub Actions' replacement for Copr. Packit runs as a CLI
@@ -94,7 +93,7 @@ open.
 | `preflight` | Resolves BuildRequires for the selected packages in the real build root and uploads a worklist; it is `continue-on-error`. |
 | `rebuild0` through `rebuild4` | Each calls the reusable `build-stage.yml` for one wave, in a `fail-fast: false` package matrix. Each later stage downloads the earlier workflow artifacts, creates a local `[stages]` dnf repository with `createrepo_c`, and resolves against it. |
 | `precedence` | Checks that each produced RPM outranks what Fedora 44 and Hummingbird already offer. |
-| `publish` | Merges the stage artifacts, removes the bootstrap RPM, creates and signs repository metadata, validates the Hummingbird-only transaction, and publishes a signed GHCR OCI image. A main-branch-only `publish_pages` job provides the Pages mirror. |
+| `publish` | Merges the stage artifacts, removes the bootstrap RPM, creates and signs repository metadata, validates the Hummingbird-only transaction, and publishes a signed GHCR OCI image with build provenance attested. |
 
 The five dependency stages pass their output between jobs as workflow
 artifacts. A later stage downloads those artifacts into `work/prior`, creates
@@ -141,10 +140,11 @@ later reader can tell a considered choice from an accident.
 | **Stage jobs** | ~~Five near-identical ~205-line copies~~ **Done.** One reusable workflow, called five times | Four lines of substantive difference between stage 0 and stage 1. `rebuild-rpms.yml` fell from 1,570 to 567 lines. The firefox swap workaround had existed only in stage 0, so it would have stopped applying the moment firefox was solved into another wave; it now applies to every wave. `prepare` also silently dropped any package asking for a stage above 4 while leaving it in `build_list`, publishing a repository quietly missing it — that now fails. |
 | **Compiler cache** | `sccache` against the Actions cache service, over the network | Mock's `ccache` plugin plus `actions/cache`; delete `.github/actions/setup-sccache` | Hermetic mock is network-isolated. sccache would degrade to a total miss and look like "builds got slower" rather than failing. |
 | **Architecture** | `x86_64` hardcoded in the repo name and the sccache URL | Stay x86_64 only | Deferred deliberately, not overlooked. |
-| **Pages mirror** | `publish_pages`, main-only | Delete | Utah consumes the OCI digest. Pages exists because the registry path did not yet, and it now does. Nothing reads it. |
-| **Provenance** | `cosign sign` on the image and on `repomd.xml` | Add `actions/attest-build-provenance`, ship `buildroot_lock.json` inside the image | Already used in `compose-base.yml`, absent from the path that publishes what Utah installs. |
+| **Pages mirror** | ~~`publish_pages`, main-only~~ **Done.** Deleted, with the `pages: write` permission and the artifact handoff that fed it | Utah consumes the OCI digest. Pages existed because the registry path did not yet, and it now does. Nothing read it. |
+| **Provenance** | ~~`cosign sign` only~~ **Partly done.** `actions/attest-build-provenance` now runs on the published image, pushed to the registry. Shipping `buildroot_lock.json` inside the image waits on the lockfile | A signature says the image came from here; provenance says what built it, which is the question asked after a bad package ships. The now-deleted `compose-base.yml` attested a base image; the path publishing what Utah installs did not. |
 | **Fork state** | `.hummingbird-upstream.json` pins a Fedora commit; drift is invisible | Compute drift against the pinned commit in CI; an undeclared diff fails | Hummingbird labels every package `clean`, `modified` or `independent` and requires a reason for `modified`. Computed rather than declared, so it cannot rot the way the stage integers did. |
 | **Release bumping** | `tools/dist_bump.py`, 24 lines, set on 0 of 193 packages | Port Hummingbird's baseline-aware `bump_release()` | It distinguishes "Fedora shipped 3.1" from "we already rebuilt Fedora's 3": `3`/baseline `3` → `3.1`, but `3.1`/baseline `3` → `3.2`. The 24-line version cannot express that. |
+| **Dead base lane** | ~~`compose-base.yml` plus `containers/base`~~ **Done.** Deleted | It had never run once. Its `workflow_run` trigger named "Rebuild Rawhide RPMs", a workflow that does not exist; it labelled itself `hanthor/hummingbird-github`; it set `gpgcheck=1` against RPMs this factory does not GPG-sign; it built on a Rawhide bootc base, the ABI this repository documents as wrong; and its only package input was the Pages URL removed above. |
 | **Tooling shape** | 14 scripts in `tools/`, plus workflows that hand-edit config | One authoritative CLI | Hummingbird's `ci/dist_git.py` owns import, update, sync, rebuild, rename and metadata. Their single most transferable practice. |
 
 ### Open, escalated, not decided

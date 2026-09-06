@@ -34,7 +34,7 @@ permissions:
   contents: read
   id-token: write
   packages: write
-  pages: write
+  attestations: write
 
 # Build waves may run concurrently.  They use run-scoped artifacts and each
 # publication re-seeds from the then-current repository, so concurrent work
@@ -364,12 +364,13 @@ jobs:
     # coherent repository Utah consumes. Publication requires every selected
     # stage plus precedence and the Hummingbird-only transaction below.
     #
-    # This is no longer main-only. The repository is published as an OCI image
-    # first and to Pages second, and the OCI push is what consumers actually
-    # read. Pages can only deploy from the default branch, which meant nothing
-    # existed to consume until a merge landed -- so an image could never be
-    # tested against the packages it was meant to use before merging either of
-    # them. A registry has no such rule.
+    # This is not main-only. The repository is published as an OCI image, and
+    # that image is the only thing consumers read. A Pages mirror used to be
+    # published alongside it, but Pages can only deploy from the default
+    # branch, so nothing existed to consume until a merge had already landed
+    # and an image could never be tested against the packages it was meant to
+    # use. A registry has no such rule, so the mirror was a second publication
+    # path that nothing consumed and every change had to be made twice in.
     #
     # A pull request from a fork is the exception, and it has to be stated
     # rather than assumed: GitHub gives those a read-only GITHUB_TOKEN, so the
@@ -510,8 +511,11 @@ jobs:
           podman push "${image}:${tag}" --digestfile /tmp/digest \
             --authfile "${DOCKER_CONFIG}/config.json"
           digest=$(cat /tmp/digest)
-          echo "ref=${image}:${tag}" >> "$GITHUB_OUTPUT"
-          echo "digest=${digest}" >> "$GITHUB_OUTPUT"
+          {
+            echo "ref=${image}:${tag}"
+            echo "image=${image}"
+            echo "digest=${digest}"
+          } >> "$GITHUB_OUTPUT"
           echo "published ${image}:${tag}"
           echo "consume it with: ${image}@${digest}"
           {
@@ -535,33 +539,11 @@ jobs:
         run: |
           owner=$(echo "${{ github.repository_owner }}" | tr "[:upper:]" "[:lower:]")
           cosign sign "ghcr.io/${owner}/utah-packages@${{ steps.oci.outputs.digest }}"
-      # Handed to the Pages job rather than deployed here, so that the registry
-      # push never depends on the github-pages environment. That environment
-      # usually carries a deployment branch rule, and inheriting it would have
-      # blocked this job on exactly the branches the OCI push exists to serve.
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+      # A signature says this image came from here. Provenance says what built
+      # it -- workflow, commit, runner -- which is the question asked after a
+      # bad package ships, and the one a signature alone cannot answer.
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4
         with:
-          name: repository
-          path: repository
-          retention-days: 1
-
-  # A convenience mirror for anything wanting a plain HTTP repository. Pages can
-  # only deploy from the default branch, which is why it is no longer the thing
-  # consumers depend on.
-  publish_pages:
-    if: ${{ !cancelled() && github.ref == 'refs/heads/main' && needs.publish.result == 'success' }}
-    needs: publish
-    runs-on: ubuntu-24.04
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
-        with:
-          name: repository
-          path: repository
-      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
-        with:
-          path: repository
-      - id: deployment
-        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5
+          subject-name: ${{ steps.oci.outputs.image }}
+          subject-digest: ${{ steps.oci.outputs.digest }}
+          push-to-registry: true

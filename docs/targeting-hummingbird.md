@@ -188,10 +188,10 @@ which is the point: GitHub Pages can only deploy from the default branch, so
 until this existed nothing could be consumed until a merge had already happened,
 and an image could never be tested against the packages it was meant to use.
 
-**As a Pages site**, still, for anything that wants a plain HTTP repository.
-That deploy is a separate job so the registry push does not inherit the
-`github-pages` environment, which normally carries a deployment branch rule and
-would have blocked the push on precisely the branches it exists to serve.
+The Pages mirror that used to accompany it has been removed. It was main-only,
+nothing consumed it, and keeping it meant making every publication change
+twice. If something later needs a plain HTTP repository, the `repository`
+directory the OCI image already contains is a day's work to deploy again.
 
 ## Release numbering
 

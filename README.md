@@ -37,8 +37,9 @@ way Utah already pulls `projectbluefin/common` and `ublue-os/brew`. `main`
 publishes `:latest`; every other branch publishes under its own name, so an
 image can be built against a package set before either is merged.
 
-A GitHub Pages mirror is also published from `main` for anything that wants a
-plain HTTP repository.
+A GitHub Pages mirror used to be published alongside it. It was removed: it
+could only deploy from `main`, nothing consumed it, and the OCI image is the
+contract.
 
 Packages are tagged `.hum1.bfin` — the vendor release and dist, then our suffix,
 following AlmaLinux's convention. See
