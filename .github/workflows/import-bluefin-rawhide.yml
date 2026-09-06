@@ -54,4 +54,4 @@ jobs:
         run: |
           gh pr create --base main --head import/bluefin-rawhide \
             --title 'import: Bluefin Rawhide package sources' \
-            --body 'Imports the Rawhide dist-git sources resolved from Bluefin’s current package manifest.' || true
+            --body 'Imports the Rawhide dist-git sources resolved from the Bluefin package manifest.' || true

@@ -9,8 +9,24 @@ permissions:
   contents: read
 
 jobs:
+  factory-contract:
+    name: Factory onboarding contract
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - run: python3 tools/factory_contract.py
+
   validate:
+    name: Package factory configuration
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - run: python3 tools/validate.py
+
+  tests:
+    name: Unit tests
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - run: pip install --disable-pip-version-check pytest==8.3.5
+      - run: python3 -m pytest tests -q

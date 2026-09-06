@@ -55,3 +55,19 @@ overlay, or the published repository, and it does not touch
 `rebuild-rpms.yml`. See
 [`docs/superpowers/specs/2026-09-05-packit-srpm-pilot-design.md`](superpowers/specs/2026-09-05-packit-srpm-pilot-design.md)
 for the original pilot scope and what a full migration would still need.
+
+## Repository gates
+
+`.github/workflows/validate.yml` runs on every pull request and every push to
+`main`, in three independent jobs:
+
+| Job | Command | Gates |
+| --- | --- | --- |
+| Factory onboarding contract | `tools/factory_contract.py` | Skill router coverage, skill front-matter, the `AGENTS.md` self-improvement mandate, the pinned `projectbluefin/common` sidecar, banned changelog and session-notes files, and relative documentation links |
+| Package factory configuration | `tools/validate.py` | Import provenance in `.hummingbird-upstream.json`, source-lock coverage, and Packit configuration for every recipe |
+| Unit tests | `pytest tests` | The tooling in `tools/` |
+
+`just check` runs the first two, `just test` the third, and
+`pre-commit run --all-files` adds YAML, JSON, and TOML hygiene plus actionlint
+and the SHA-pinning rule for third-party actions. None of these publish
+anything; publication gates live in the rebuild and compose workflows.

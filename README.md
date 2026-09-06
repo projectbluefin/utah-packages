@@ -91,6 +91,26 @@ dedicated, narrowly scoped repository-creation credential.
 
 See [architecture](docs/architecture.md) and [contributing](docs/contributing.md).
 
+## Working on this repository
+
+Humans start at [contributing](docs/contributing.md). Agents start at
+[`AGENTS.md`](AGENTS.md), then the skill router at
+[`docs/SKILL.md`](docs/SKILL.md).
+
+This repository is onboarded to the Project Bluefin factory model.
+`projectbluefin/common` supplies the factory-wide contract as a sidecar pinned
+by commit in [`config/factory-contract.json`](config/factory-contract.json);
+`AGENTS.md` remains authoritative for anything local. `just check` enforces the
+parts of that contract the tree can prove: the skill router indexes every
+skill, skills carry front-matter, `AGENTS.md` states the self-improvement
+mandate, no changelog or session-notes file is committed, and every relative
+documentation link resolves.
+
+```sh
+just check   # factory contract + package configuration
+just test    # pytest
+```
+
 ## Hummingbird availability measurement
 
 `Recalculate Hummingbird package gaps` runs every six hours. It pulls the
