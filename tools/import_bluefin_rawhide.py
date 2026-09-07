@@ -33,12 +33,17 @@ def resolve_source(binary: str) -> tuple[str | None, str | None]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--manifest", type=Path, default=Path("config/bluefin-packages.toml"))
+    parser.add_argument("--policy", type=Path, default=Path("config/runtime-contract.toml"))
     parser.add_argument("--destination", type=Path, default=Path("packages"))
     parser.add_argument("--report", type=Path, default=Path("reports/bluefin-rawhide-resolution.json"))
     args = parser.parse_args()
 
     manifest = tomllib.loads(args.manifest.read_text())
     binaries = import_binaries(manifest)
+    if args.policy.exists():
+        policy = tomllib.loads(args.policy.read_text())
+        excluded = set(policy.get("unavailable", {}).get("packages", []))
+        binaries = [binary for binary in binaries if binary not in excluded]
 
     resolved: dict[str, str] = {}
     unavailable: list[dict[str, str]] = []
