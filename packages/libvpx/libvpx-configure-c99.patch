@@ -1,0 +1,17 @@
+Add missing types to the inline keyword check, otherwise the check
+might fail incorrectly with strict C99 compilers which do not support
+implicit int.
+
+diff --git a/build/make/configure.sh b/build/make/configure.sh
+index 79e6f59c2df38d38..4f8dc59b7ee0290b 100644
+--- a/build/make/configure.sh
++++ b/build/make/configure.sh
+@@ -1511,7 +1511,7 @@ EOF
+ 
+     # Try to find which inline keywords are supported
+     check_cc <<EOF && INLINE="inline"
+-static inline function() {}
++static inline void function(void) {}
+ EOF
+ 
+   # Almost every platform uses pthreads.

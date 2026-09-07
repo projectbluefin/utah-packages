@@ -1,4 +1,18 @@
-%bcond glade %[!(0%{?rhel} >= 10)]
+# Fedora enables the Glade catalog everywhere but RHEL 10. The factory cannot:
+# pkgconfig(gladeui-2.0) drags in the Fedora glade-devel, whose webkit2gtk4.1
+# needs libicuuc.so.77, and the lane excludes the older Hummingbird libicu-77
+# globally so that only 78 is selectable -- a build that picked 77 produced
+# RPMs the Hummingbird-only runtime could not install. The lane comment on
+# that exclusion already named this case: "Fedora build-only consumers that
+# want 77 are rare and not part of the runtime." This is one. What it drops is
+# an XML file describing widgets to the Glade designer; nothing in the runtime
+# reads it, and Fedora itself drops it on RHEL 10 through this same bcond.
+#
+# Set here rather than as rpm_defines in the manifest on purpose: build
+# identity hashes the whole source manifest, so a manifest edit invalidates
+# every package and costs a full ~3h rebuild, while a recipe edit invalidates
+# only this one.
+%bcond glade 0
 
 %global glib_version 2.48
 %global gtk_version 3.22

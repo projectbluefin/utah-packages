@@ -12,6 +12,18 @@
 # glycin-loaders -> libheif
 %bcond bootstrap 0
 
+# ffmpeg is a stage 0 package, so anything else in stage 0 that links libav
+# resolves it from the previous run of the accumulator rather than from this
+# one -- and the moment the factory promises ffmpeg, the Fedora libav is
+# excluded by name everywhere. libheif is the only stage 0 package that hit
+# this: its ffmpegdec plugin wanted libavutil.so.60 from Fedora 8.x while the
+# factory ffmpeg 9.x provides a later soname, so the accumulator copy became
+# uninstallable and took every buildroot reaching gdk-pixbuf2, glycin,
+# graphviz and doxygen with it. The aom and dav1d decoder plugins stay, which
+# is what actually decodes AVIF and HEIC here; only the ffmpeg HEVC path goes.
+# Narrower than %%bcond bootstrap, which would also drop rav1e, SvtEnc and sdl2.
+%bcond ffmpeg 0
+
 Name:           libheif
 Version:        1.23.1
 Release:        %autorelease
@@ -32,7 +44,7 @@ BuildRequires:  gcc-c++
 BuildRequires:  ninja-build
 BuildRequires:  pkgconfig(aom)
 BuildRequires:  pkgconfig(dav1d)
-%if !%{with bootstrap}
+%if !%{with bootstrap} && %{with ffmpeg}
 BuildRequires:  pkgconfig(libavcodec)
 %endif
 BuildRequires:  pkgconfig(libbrotlidec)
@@ -70,7 +82,7 @@ file format decoder and encoder.
 %{_libdir}/%{name}/%{name}-aomdec.so
 %{_libdir}/%{name}/%{name}-aomenc.so
 %{_libdir}/%{name}/%{name}-dav1d.so
-%if !%{with bootstrap}
+%if !%{with bootstrap} && %{with ffmpeg}
 %{_libdir}/%{name}/%{name}-ffmpegdec.so
 %endif
 %{_libdir}/%{name}/%{name}-j2kdec.so
@@ -139,7 +151,7 @@ rm -rf third-party/
  -DWITH_DAV1D=ON \
  -DWITH_DAV1D_PLUGIN=ON \
  -DWITH_EXAMPLES=ON \
-%if !%{with bootstrap}
+%if !%{with bootstrap} && %{with ffmpeg}
  -DWITH_FFMPEG_DECODER=ON \
  -DWITH_FFMPEG_DECODER_PLUGIN=ON \
 %endif

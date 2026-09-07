@@ -1,0 +1,25 @@
+jobs:
+  - job: pull_from_upstream
+    trigger: release
+    dist_git_branches:
+      rawhide:
+        fast_forward_merge_into:
+          - fedora-latest
+
+  - job: koji_build
+    trigger: commit
+    require:
+      label:
+        absent:
+          - side-tag
+          - sidetag
+    allowed_pr_authors:
+      - all_admins
+      - packit
+    dist_git_branches:
+      - fedora-all
+
+  - job: bodhi_update
+    trigger: commit
+    dist_git_branches:
+      - fedora-all

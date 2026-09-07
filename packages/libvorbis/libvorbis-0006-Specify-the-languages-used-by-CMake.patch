@@ -1,0 +1,17 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Cameron Cawley <ccawley2011@gmail.com>
+Date: Fri, 6 May 2022 21:16:19 +0100
+Subject: [PATCH] Specify the languages used by CMake
+
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 2b3649f6..0e4613f2 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1,5 +1,5 @@
+ cmake_minimum_required(VERSION 3.6)
+-project(vorbis)
++project(vorbis LANGUAGES C)
+ 
+ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+ 

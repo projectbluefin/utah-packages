@@ -1,0 +1,27 @@
+diff -rupN --no-dereference enchant-2.8.19/configure.ac enchant-2.8.19-new/configure.ac
+--- enchant-2.8.19/configure.ac	2026-07-07 12:07:13.000000000 +0200
++++ enchant-2.8.19-new/configure.ac	2026-07-08 15:25:59.905003452 +0200
+@@ -213,11 +213,10 @@ dnl Check for providers
+ build_providers=
+ 
+ dnl Standard providers
+-AC_CHECK_HEADERS([aspell.h], [HAVE_ASPELL_H=yes])
+ AC_CHECK_HEADERS([hspell.h], [HAVE_HSPELL_H=yes])
+ ENCHANT_CHECK_PKG_CONFIG_PROVIDER([hunspell], [HUNSPELL])
+ ENCHANT_CHECK_PKG_CONFIG_PROVIDER([nuspell], [NUSPELL], [nuspell >= 5.1.0])
+-ENCHANT_CHECK_LIB_PROVIDER([aspell], [ASPELL], [get_aspell_dict_info_list],,, [ASPELL_H])
++ENCHANT_CHECK_PKG_CONFIG_PROVIDER([aspell], [ASPELL])
+ ENCHANT_CHECK_LIB_PROVIDER([hspell], [HSPELL], [hspell_get_dictionary_path],, [-lz], [HSPELL_H])
+ ENCHANT_CHECK_PKG_CONFIG_PROVIDER([voikko], [VOIKKO], [libvoikko])
+ 
+diff -rupN --no-dereference enchant-2.8.19/providers/Makefile.am enchant-2.8.19-new/providers/Makefile.am
+--- enchant-2.8.19/providers/Makefile.am	2026-07-05 00:37:54.000000000 +0200
++++ enchant-2.8.19-new/providers/Makefile.am	2026-07-08 15:25:59.905536843 +0200
+@@ -21,6 +21,7 @@ AM_LDFLAGS = -module -avoid-version -no-
+ 
+ if WITH_ASPELL
+ provider_LTLIBRARIES += enchant_aspell.la
++enchant_aspell_la_LIBADD = $(ASPELL_LIBS)
+ endif
+ enchant_aspell_la_CFLAGS = $(AM_CFLAGS) $(ASPELL_CFLAGS)
+ enchant_aspell_la_LIBADD = $(ASPELL_LIBS)

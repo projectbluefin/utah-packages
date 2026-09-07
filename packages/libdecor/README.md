@@ -1,0 +1,3 @@
+# libdecor
+
+The libdecor package

@@ -1,0 +1,19 @@
+# See the documentation for more information:
+# https://packit.dev/docs/configuration/
+
+specfile_path: xrdb.spec
+
+copy_upstream_release_description: false
+
+jobs:
+  - job: pull_from_upstream
+    trigger: release
+    dist_git_branches:
+      - fedora-rawhide
+
+  - job: koji_build
+    trigger: commit
+    allowed_committers: ['packit','all_admins']
+    dist_git_branches:
+      - fedora-rawhide
+

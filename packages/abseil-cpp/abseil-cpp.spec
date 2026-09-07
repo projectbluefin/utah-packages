@@ -144,6 +144,13 @@ MinGW Windows abseil-cpp library.
 # their graph avoids an LTO-heavy build that OOMs the hermetic runner; runtime
 # consumers (such as mozc) link the regular Abseil libraries. RPM_BUILD_NCPUS
 # caps ninja parallelism.
+#
+# Fedora builds these ON, for its -testing subpackage. Turning them off here
+# is therefore a deviation with one known consumer: protobuf configures test
+# targets against absl::scoped_mock_log, which this build does not export, so
+# packages/protobuf sets protobuf_BUILD_TESTS OFF to match. Anything else that
+# wants a test-only Abseil target will fail the same way and needs the same
+# treatment, or this option has to go back to ON.
 %cmake \
     -GNinja \
     -DABSL_USE_EXTERNAL_GOOGLETEST:BOOL=ON \

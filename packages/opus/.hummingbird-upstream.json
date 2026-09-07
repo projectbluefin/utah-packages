@@ -1,0 +1,8 @@
+{
+  "package": "opus",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/opus.git",
+  "commit": "8692cb3130a9f9285dba78b2b4aa7dd928bf13d6",
+  "tree": "0e312e61ce3fdd3c83ac6eb64f7f7ca3b32c0f01",
+  "imported_at": "2026-09-03T22:53:16.958831+00:00"
+}

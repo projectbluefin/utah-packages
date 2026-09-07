@@ -1,0 +1,7 @@
+/libatasmart-0.17.tar.gz
+/libatasmart-0.18.tar.gz
+/.build-*
+*.src.rpm
+/x86_64/
+libatasmart-*/
+/libatasmart-0.19.tar.xz

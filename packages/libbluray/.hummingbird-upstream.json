@@ -1,0 +1,8 @@
+{
+  "package": "libbluray",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libbluray.git",
+  "commit": "a3e05e3b2fa294b14e3ba6ebe0a9774d70efa956",
+  "tree": "d1f2a8a2e5e07e44df172b3886a8c7eab2ae3794",
+  "imported_at": "2026-09-03T22:53:14.467984+00:00"
+}

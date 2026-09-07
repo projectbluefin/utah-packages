@@ -1,0 +1,8 @@
+{
+  "package": "vo-amrwbenc",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/vo-amrwbenc.git",
+  "commit": "cc3a98d9f96249ea1a6fbee0ce45624a2e886e73",
+  "tree": "f3acf86a7e430a02c0bbf8c40531df7d007ee7f7",
+  "imported_at": "2026-09-05T04:39:19.296699+00:00"
+}

@@ -2,3 +2,4 @@ sources/
 reports/source-pipeline/
 __pycache__/
 *.pyc
+work/

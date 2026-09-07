@@ -1,0 +1,93 @@
+name: Track Fedora rawhide sources
+
+# Hummingbird is upstream-first, so the factory follows what Fedora currently
+# ships rather than freezing whatever version was imported. This proposes the
+# moves; it never makes them. Every proposal arrives as a reviewable pull
+# request, and a version move is only proposed once Koji reports a COMPLETE
+# build of that exact NVR -- dist-git advancing is not proof Fedora built it.
+#
+# Deliberately separate from the build. Editing config/upstream-sources.json
+# invalidates every package's build identity and rebuilds the whole factory, so
+# these land as their own reviewed change rather than arriving mid-wave.
+
+on:
+  workflow_dispatch:
+    inputs:
+      only:
+        description: 'Comma-separated packages, or empty for all'
+        required: false
+        default: ''
+  schedule:
+    # Away from the top of the hour, where scheduled jobs are commonly delayed.
+    - cron: '43 6 * * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: track-upstream
+  cancel-in-progress: true
+
+jobs:
+  propose:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Compare every source against rawhide
+        env:
+          ONLY: ${{ inputs.only }}
+        run: |
+          set -euo pipefail
+          args=""
+          if test -n "${ONLY}"; then args="--only ${ONLY}"; fi
+          # shellcheck disable=SC2086
+          python3 tools/track_upstream.py $args --apply > proposals.json
+      - name: Summarise what moved
+        run: |
+          set -euo pipefail
+          python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          from pathlib import Path
+          found = json.loads(Path("proposals.json").read_text())["proposals"]
+          if not found:
+              print("Every source already tracks rawhide through the Fedora lookaside.")
+          else:
+              print(f"## {len(found)} source(s) to move\n")
+              print("| package | rawhide NVR | why |")
+              print("| --- | --- | --- |")
+              for item in found:
+                  print(f"| {item['package']} | {item['nvr']} | {'; '.join(item['reasons'])} |")
+          PY
+      - name: Open a reviewable update
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- config/upstream-sources.json; then
+            echo "nothing to propose"
+            exit 0
+          fi
+          branch="track-upstream/$(date -u +%Y%m%d)"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
+          git add config/upstream-sources.json
+          git commit -F - <<'MSG'
+          chore: follow rawhide for the sources that have moved
+
+          Proposed by tools/track_upstream.py. A version change is only here if
+          Koji reports a COMPLETE build of that NVR; the rest are sources moving
+          to the Fedora lookaside, which is content addressed by the sha512
+          Fedora recorded and so cannot be rewritten or expire underneath us.
+
+          Merging this rebuilds the whole factory: the build identity hashes the
+          source manifest, deliberately, so that changing one provider cannot
+          reuse a result built against a different closure.
+          MSG
+          git push -u origin "$branch"
+          gh pr create --fill --base "${GITHUB_REF_NAME}" \
+            --title "chore: follow rawhide for the sources that have moved" \
+            || echo "a pull request for $branch already exists"

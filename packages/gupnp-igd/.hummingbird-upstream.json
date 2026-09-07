@@ -1,0 +1,8 @@
+{
+  "package": "gupnp-igd",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/gupnp-igd.git",
+  "commit": "c5e82144ae7fba58c3369440cfe28dc0e8620c67",
+  "tree": "c7a06f92f8388d5d1fe9558a7ee69c2f57d9c1ca",
+  "imported_at": "2026-09-05T04:39:14.040613+00:00"
+}

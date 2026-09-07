@@ -1,0 +1,14 @@
+test: ./runtest.sh
+duration: 50m
+framework: beakerlib
+require:
+  - make
+  - gcc
+  - autoconf
+  - autoconf-archive
+  - automake
+  - libtool
+  - doxygen
+  - libdatrie
+  - gnome-common
+  - rpm-build

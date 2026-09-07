@@ -1,0 +1,53 @@
+# Minimal Packit Configuration for GNOME Packages
+# Copy this to your dist-git repository as .packit.yaml
+#
+# Prerequisites:
+# - Package is monitored by release-monitoring.org
+# - Monitoring status set to "Monitoring" in dist-git
+
+# Required for tag filtering (release-monitoring also tracks alpha/beta)
+upstream_project_url: https://gitlab.gnome.org/GNOME/adwaita-icon-theme-legacy
+
+jobs:
+  # Automated updates for stable branches
+  - job: pull_from_upstream
+    trigger: release
+    dist_git_branches:
+      - fedora-stable
+
+    # ========================================================================
+    # VERSIONING: Choose ONE option based on your package's versioning scheme
+    # ========================================================================
+
+    # OPTION A: Major version only - allows minor and patch updates
+    #   For 2-digit: 50.0 -> 50.1 ✅, 50.x -> 51.0 ❌
+    #   For 3-digit: 1.2.3 -> 1.3.0 ✅, 1.x.x -> 2.0.0 ❌
+    #   Use for: GNOME apps/libs with 2-digit versions, or libraries following semver
+    version_update_mask: '^\d+\.'
+
+    # OPTION B: Major.minor version - patch updates only
+    #   Examples: 1.2.3 -> 1.2.4 ✅, 1.2.x -> 1.3.0 ❌
+    #   Use for: Libraries with ABI concerns, even/odd development scheme
+    # version_update_mask: '^\d+\.\d+\.'
+
+    # ========================================================================
+    # TAG FILTERING - Filter out pre-releases from release-monitoring
+    # ========================================================================
+    # Required because release-monitoring.org also tracks alpha/beta/rc
+    upstream_tag_exclude: '.*(alpha|beta|rc).*'
+
+    # Optional - only include stable release tags:
+    # upstream_tag_include: '^\d+\.\d+$'           # For 2-digit versions
+    # upstream_tag_include: '^\d+\.\d+\.\d+$'      # For 3-digit versions
+
+  # Build in Koji after merge
+  - job: koji_build
+    trigger: commit
+    dist_git_branches:
+      - fedora-stable
+
+  # Submit Bodhi update
+  - job: bodhi_update
+    trigger: commit
+    dist_git_branches:
+      - fedora-stable

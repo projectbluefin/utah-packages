@@ -20,13 +20,6 @@
 %bcond_without gtk4
 %bcond_without gtk3
 
-# One source package, built twice, would yield two -debugsource RPMs of the
-# same name and different contents. The GTK 4 shard carries it; the GTK 3
-# shard ships its -debuginfo packages without one.
-%if %{without gtk4}
-%global _debugsource_packages 0
-%endif
-
 # Clang is preferred: https://skia.org/docs/user/build/#supported-and-preferred-compilers
 %global toolchain clang
 
@@ -35,7 +28,21 @@
 %global _lto_cflags %{nil}
 %endif
 
+# The debug packages are named after the source package, so one recipe built
+# twice would emit two webkitgtk-debuginfo and two webkitgtk-debugsource RPMs:
+# same NEVR, different contents, one silently overwriting the other when the
+# lanes' artifacts merge into one repository. Nothing else here depends on this
+# name -- every binary package is declared with `%%package -n`, there is no bare
+# %%files section so no package named after it is ever produced, and Source0 and
+# %%autosetup spell the tarball out literally -- so giving the GTK 3 shard its
+# own source name is enough to give it its own debug namespace. Not webkit2gtk4.1,
+# which is already a subpackage below. With neither bcond given, as on a plain
+# rpmbuild, this is webkitgtk exactly as Fedora ships it.
+%if %{without gtk4}
+Name:           webkitgtk4.1
+%else
 Name:           webkitgtk
+%endif
 Version:        2.53.91
 Release:        %autorelease
 Summary:        GTK web content engine library
@@ -340,11 +347,17 @@ files for developing applications that use JavaScript engine from webkit2gtk-4.1
 %global optflags %(echo %{optflags} | sed 's/-mbranch-protection=standard /-mbranch-protection=pac-ret /')
 %endif
 
-# The source is built twice for the GTK 4 and GTK 3 ports. Cache compile
-# actions across both configurations when the factory provides its pinned
-# sccache client; links remain local and the cache is only an optimization.
+# Route every compile through the factory sccache client when it is mounted.
+# Sourcing sccache.env is what makes the cache outlive the container: it sets
+# SCCACHE_DIR to a directory on the /work mount, which the lane publishes to
+# GHCR afterwards. Without it sccache falls back to a directory inside the
+# container, and 8955 objects per port are compiled and then thrown away on
+# every run, which is exactly what happened before.
 cmake_launcher_args=""
 if test -x /work/tools/sccache; then
+  if test -r /work/tools/sccache.env; then
+    . /work/tools/sccache.env
+  fi
   cmake_launcher_args="-DCMAKE_C_COMPILER_LAUNCHER=/work/tools/sccache -DCMAKE_CXX_COMPILER_LAUNCHER=/work/tools/sccache"
 fi
 

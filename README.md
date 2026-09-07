@@ -23,8 +23,8 @@ way Utah already pulls `projectbluefin/common` and `ublue-os/brew`. `main`
 publishes `:latest`; every other branch publishes under its own name, so an
 image can be built against a package set before either is merged.
 
-A GitHub Pages mirror is also published from `main` for anything that wants a
-plain HTTP repository.
+The registry is the publication and recovery source; the Pages mirror has
+been retired.
 
 Packages are tagged `.hum1.bfin` — the vendor release and dist, then our suffix,
 following AlmaLinux's convention. See
@@ -37,9 +37,10 @@ rules and the `precedence` job that enforces them.
 covering the Fedora components that blocked Utah: FUSE, NTFS, device-mapper
 persistent data, UDisks, librsvg, glycin, GVFS, GNOME, Firefox, and Distrobox.
 
-The RPM workflow locks source RPM checksums, rebuilds them in Mock, creates
-repodata, keylessly signs `repomd.xml` using GitHub OIDC/Cosign, and deploys it
-to GitHub Pages. Pull requests never publish RPMs or images.
+The RPM workflow verifies source checksums, builds with rpmbuild in a Fedora 44
+plus Hummingbird container, creates repodata, and publishes the gated overlay
+to GHCR. Hummingbird itself uses hermetic mock; this factory's current build
+implementation is described in [architecture](docs/architecture.md).
 
 ## Hummingbird-compatible freshness model
 
@@ -91,6 +92,25 @@ dedicated, narrowly scoped repository-creation credential.
 
 See [architecture](docs/architecture.md) and [contributing](docs/contributing.md).
 
+For a fast package-level feedback loop, use `just build PACKAGE` or
+`just build-deps PACKAGE`. See [local builds](docs/local-builds.md) for cache,
+logs, dependency inputs, and failure inspection.
+
+## What publication promises
+
+`:latest` and the Pages repository move only when the candidate carries every
+package `config/upstream-sources.json` says the factory builds, with each RPM
+its build manifest names present and matching the checksum recorded when it was
+built (`tools/repository_contract.py`, run in `publish`).
+
+That gate exists because the others cannot see it. `precedence` ranks only what
+the current run built. The Hummingbird-only consumer transaction enables the
+base OS repository beside the candidate, as it must, so a package the factory
+failed to provide can resolve from Hummingbird and still pass. And `prepare`
+treats a package found in the `:building` accumulator as published while
+`publish` seeds from `:latest`, so a package can be skipped by the build and
+missing from the repository in the same run.
+
 ## Long builds and recovery
 
 The rebuild workflow separates the long WebKitGTK closure from packages that
@@ -99,6 +119,26 @@ is still compiling; `gjs` waits for mozjs140 in the ordinary stage-1 lane, and
 the WebKit/GNOME-shell consumers wait for WebKitGTK. The final precedence and
 Hummingbird-only transaction gates still require every selected lane to pass
 before `latest` moves.
+
+### The compiler cache
+
+`webkitgtk`, `webkit2gtk4.1` and `mozjs140` carry `"compiler_cache": true` in
+the source manifest. Their lane restores an sccache directory from
+`ghcr.io/<owner>/utah-packages-ccache:<package>` before the build and publishes
+it afterwards, so a rebuild of an unchanged source recompiles only what
+actually moved. Nothing else opts in: restoring and publishing several
+gigabytes costs minutes, which a three-minute package would pay for nothing.
+
+The recipe has to source `/work/tools/sccache.env`, as mozjs140 and webkitgtk
+do. That is what points `SCCACHE_DIR` at the `/work` mount. Measured on run
+33582351064, WebKitGTK routed all 8955 of its compile actions through sccache
+and cached none of them, because nothing in the container had set that
+variable and sccache defaulted to a directory that died with the container.
+
+The cache is not part of a package build identity. Every entry is addressed by
+the hash of the preprocessed source and the compiler flags, so it can change
+how long a build takes but not what it produces; hashing it into the identity
+meant tuning the cache invalidated all 178 packages at once.
 
 WebKitGTK is the one build that does not fit a runner: its two GTK ports are
 each a full WebKit compile, about two and a half hours on four cores, and back

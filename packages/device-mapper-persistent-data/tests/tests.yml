@@ -1,0 +1,26 @@
+---
+# Tests suitable to run in classic environment
+- hosts: localhost
+  roles:
+  - role: standard-test-beakerlib
+    tags:
+    - classic
+    tests:
+    - tools_not_linked_usr
+    - functions_test
+    required_packages:
+    - findutils         # beakerlib needs find command
+    - which             # tools_not_linked_usr needs which command
+
+# Tests suitable to run in container and atomic environments
+- hosts: localhost
+  roles:
+  - role: standard-test-beakerlib
+    tags:
+    - container
+    - atomic
+    tests:
+    - tools_not_linked_usr
+    required_packages:
+    - findutils         # beakerlib needs find command
+    - which             # tools_not_linked_usr needs which command
