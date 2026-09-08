@@ -2422,6 +2422,7 @@
     },
     {
       "name": "xorg-x11-server-Xwayland",
+    "stage": 2,
       "version": "26.0.99.901",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/xorg-x11-server-Xwayland/xwayland-26.0.99.901.tar.xz/sha512/384647c4577ac961037c8a450ca1e4fb681b42dfdb4abc26105021fe79c90a62bb0f648faf00d948f884007690a3fc6fbc9f28b58cd25f786c03749f01ccd466/xwayland-26.0.99.901.tar.xz",
       "filename": "xwayland-26.0.99.901.tar.xz",
