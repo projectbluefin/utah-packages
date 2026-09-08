@@ -233,6 +233,7 @@
     },
     {
       "name": "evolution-ews",
+    "stage": 2,
       "version": "3.61.3",
       "url": "http://download.gnome.org/sources/evolution-ews/3.61/evolution-ews-3.61.3.tar.xz",
       "filename": "evolution-ews-3.61.3.tar.xz",

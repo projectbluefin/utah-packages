@@ -79,7 +79,13 @@ sed \
 # are getting random crashes in Koji on secondary arches but I have not been
 # able to reproduce them locally so far.
 %ifarch x86_64 %{ix86}
-%meson_test
+# test-new-trickle negotiates ICE candidates against timers and needs more than
+# the 30s meson allows by default on a loaded builder -- it was the only test to
+# stop, and it stopped on the clock rather than on a failure:
+#   42/42 libnice:test-new-trickle  TIMEOUT  30.03s  killed by signal 15 SIGTERM
+#   Fail: 0   Timeout: 1
+# Give the suite room instead of dropping the test that ran out of it.
+%meson_test --timeout-multiplier 6
 %endif
 
 
