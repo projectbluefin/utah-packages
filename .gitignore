@@ -16,6 +16,14 @@ packages/*/*.crate
 packages/*/*.gz
 packages/*/*.sig
 packages/*/*.asc
+# ...except a keyring a spec carries as a SourceN. Those are part of the
+# recipe, not a downloaded artefact: %gpgverify --keyring='%{SOURCE11}' reads
+# one out of _sourcedir, so if it is not committed the build dies with
+# "Bad file: /work/staged/<pkg>/<KEYID>.asc: No such file or directory".
+# mdadm and setxkbmap were lost exactly that way.
+!packages/*/[0-9A-F][0-9A-F]*.asc
+!packages/*/*key*.asc
+!packages/*/*keyring*.asc
 packages/*/*.sha256sum
 packages/*/*.upstream
 
