@@ -144,6 +144,21 @@ jobs:
               HB_EXCLUDE="ruby-default-gems,ruby3.3-default-gems,ruby3.4-default-gems,libicu,icu,gpgme,qt6-qtbase"
               EXCLUDE="${HB_EXCLUDE}${EXCLUDE:+,}${EXCLUDE}"
               echo "hummingbird exclusions: $HB_EXCLUDE"
+              # The exclusions above are per-repo, which cannot settle a conflict
+              # where both sides come from the SAME repo. Hummingbird now ships
+              # ruby3.4-default-gems AND ruby4.0-default-gems, and they claim the
+              # same files, so the buildroot resolves and then dies in rpm:
+              #   Transaction failed: Rpm transaction failed.
+              #   file /usr/bin/erb conflicts between attempted installs of
+              #     ruby4.0-default-gems-4.0.6-37.3.hum1 and
+              #     ruby3.4-default-gems-3.4.10-31.7.hum1
+              # It reads as nothing at all in a tail: dnf reports success, the
+              # error lands after "Running transaction". gcc, git, iputils,
+              # libvdpau, appstream and libtheora all failed here. Exclude the
+              # superseded ruby globally, from every repo, so 4.0 is the only
+              # candidate.
+              GLOBAL_EXCLUDE="ruby3.3-default-gems,ruby3.4-default-gems"
+              echo "global exclusions: $GLOBAL_EXCLUDE"
               if [ -n "${FACTORY_REPO:-}" ]; then
                 printf "[factory]\nname=factory\nbaseurl=%s\nenabled=1\ngpgcheck=0\npriority=5\n" \
                   "$FACTORY_REPO" > /etc/yum.repos.d/factory.repo
@@ -204,7 +219,8 @@ jobs:
               spec=$(find "/packages/$PACKAGE" -maxdepth 1 -name "*.spec" -print -quit)
               test -n "$spec"
               dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
-                ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$spec"
+                ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} \
+                ${GLOBAL_EXCLUDE:+--exclude="$GLOBAL_EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$spec"
               # An imported spec keeps its dist-git PatchN and auxiliary SourceN
               # files next to itself, while the verified upstream archive lands in
               # /work/sources. rpmbuild takes a single _sourcedir, so stage both:
@@ -227,7 +243,8 @@ jobs:
                 generated=$(ls /root/rpmbuild/SRPMS/*.buildreqs.nosrc.rpm 2>/dev/null | head -1)
                 test -n "$generated"
                 dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
-                  ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$generated"
+                  ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} \
+                  ${GLOBAL_EXCLUDE:+--exclude="$GLOBAL_EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$generated"
               done
               rpmbuild -ba "$spec" \
                 --define "_sourcedir $staged" \
