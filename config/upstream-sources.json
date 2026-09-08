@@ -2015,7 +2015,7 @@
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/samba/samba-4.25.0rc1.tar.xz/sha512/34b1a2ebf9b391fa9f03cfc6bb95cfb47237e1c0a677144b6e699420fe27fe22a113783e6bc17244948156091bf1d24debe3b996ff026724f0c2aaf06e2ed736/samba-4.25.0rc1.tar.xz",
       "filename": "samba-4.25.0rc1.tar.xz",
       "sha512": "34b1a2ebf9b391fa9f03cfc6bb95cfb47237e1c0a677144b6e699420fe27fe22a113783e6bc17244948156091bf1d24debe3b996ff026724f0c2aaf06e2ed736",
-      "stage": 1
+      "stage": 2
     },
     {
       "name": "sassc",
