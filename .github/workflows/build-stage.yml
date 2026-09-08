@@ -337,7 +337,16 @@ jobs:
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: rpm-s${{ inputs.stage }}-${{ matrix.package }}
+          # Debuginfo and debugsource are excluded deliberately. No
+          # BuildRequires ever names one, so a later stage has no use for them,
+          # and they are more than half the bytes. Uploading them cost the run
+          # its artifact budget: seven stage 0 jobs died on
+          #   Failed to FinalizeArtifact: (403) Forbidden
+          # which is not a package failure and reads exactly like one.
           path: |
             work/result/**/*.rpm
+            !work/result/**/*-debuginfo-*.rpm
+            !work/result/**/*-debugsource-*.rpm
+            !work/result/**/*-debuginfo-common-*.rpm
             work/reports/*.json
           if-no-files-found: error
