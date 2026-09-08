@@ -231,6 +231,21 @@ jobs:
               mkdir -p "$staged"
               cp -a "/packages/$PACKAGE/." "$staged/"
               cp -a "/work/sources/$PACKAGE/." "$staged/"
+              # A package that declares system users creates them from its %pre
+              # at install time, which never happens to a buildroot -- so the
+              # test suite runs without them. The openssh regress tests die with
+              #   Privilege separation user sshd does not exist
+              #   FATAL: sshd_proxy broken
+              # Create whatever the recipe declares, the same way installing it
+              # would. Supplying what a real build root has, rather than
+              # disabling the test that noticed it was missing.
+              if command -v systemd-sysusers >/dev/null 2>&1; then
+                for sysusers in "$staged"/*sysusers*.conf; do
+                  [ -e "$sysusers" ] || continue
+                  echo "applying sysusers: $(basename "$sysusers")"
+                  systemd-sysusers "$sysusers" || true
+                done
+              fi
               # Packages with %generate_buildrequires -- every Rust one -- compute
               # their real BuildRequires during the build, so the spec alone does not
               # list them and rpmbuild exits 11 asking to be re-run. Install what the
