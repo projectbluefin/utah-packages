@@ -24,6 +24,21 @@
 # Narrower than %%bcond bootstrap, which would also drop rav1e, SvtEnc and sdl2.
 %bcond ffmpeg 0
 
+# openjph goes the same way, and for the same reason one layer down. This
+# factory promises openjph 0.31, which provides libopenjph.so.0.31, but libheif
+# builds in the same stage and therefore links Fedora openjph 0.25. At install
+# time the Fedora copy is excluded by name -- the factory answers for openjph --
+# so nothing provides libopenjph.so.0.25 and libheif itself becomes
+# uninstallable, taking gdk-pixbuf2, glycin, graphviz and doxygen with it again:
+#   package libheif-1.23.1-1.hum1.bfin from stages requires
+#     libopenjph.so.0.25()(64bit), but none of the providers can be installed
+# Ordering cannot fix this without a five-deep restratification
+# (openjph, libheif, glycin, gdk-pixbuf2, then everything reaching doxygen),
+# which is the whole stage budget. Decline the feature instead: this drops the
+# HTJ2K encoder plugin only. AVIF and HEIC decode through aom and dav1d, and
+# JPEG 2000 keeps working through OpenJPEG, which is a different library.
+%bcond openjph 0
+
 Name:           libheif
 Version:        1.23.1
 Release:        %autorelease
@@ -52,7 +67,9 @@ BuildRequires:  pkgconfig(libjpeg)
 BuildRequires:  pkgconfig(libopenjp2)
 BuildRequires:  pkgconfig(libpng)
 BuildRequires:  pkgconfig(libtiff-4)
+%if %{with openjph}
 BuildRequires:  pkgconfig(openjph) >= 0.18.0
+%endif
 %if !%{with bootstrap}
 BuildRequires:  pkgconfig(sdl2)
 %endif
@@ -89,7 +106,9 @@ file format decoder and encoder.
 %{_libdir}/%{name}/%{name}-j2kenc.so
 %{_libdir}/%{name}/%{name}-jpegdec.so
 %{_libdir}/%{name}/%{name}-jpegenc.so
+%if %{with openjph}
 %{_libdir}/%{name}/%{name}-jphenc.so
+%endif
 %ifnarch %{ix86}
 %{_libdir}/%{name}/%{name}-openh264dec.so
 %endif
@@ -164,9 +183,11 @@ rm -rf third-party/
  -DWITH_OpenJPEG_DECODER_PLUGIN=ON \
  -DWITH_OpenJPEG_ENCODER=ON \
  -DWITH_OpenJPEG_ENCODER_PLUGIN=ON \
+%if %{with openjph}
  -DWITH_OPENJPH_DECODER=ON \
  -DWITH_OPENJPH_ENCODER=ON \
  -DWITH_OPENJPH_ENCODER_PLUGIN=ON \
+%endif
 %ifnarch %{ix86}
  -DWITH_OpenH264_DECODER=ON \
  -DWITH_OpenH264_DECODER_PLUGIN=ON \
