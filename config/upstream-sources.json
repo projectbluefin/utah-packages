@@ -1238,7 +1238,6 @@
     },
     {
       "name": "libheif",
-    "stage": 1,
       "version": "1.23.1",
       "url": "https://github.com/strukturag/libheif/archive/v1.23.1/libheif-1.23.1.tar.gz",
       "filename": "libheif-1.23.1.tar.gz",
@@ -1781,13 +1780,6 @@
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/openjpeg/openjpeg-2.5.4.tar.gz/sha512/702a10e20caaf8209684ded7c9fcf32f5ba6a972cf2d9fcf2611cdc6a446d2c3bb60324205758e6b6f92278c8cf4ef0fbae511e6ffb45ed6e8df514db0c6ab25/openjpeg-2.5.4.tar.gz",
       "filename": "openjpeg-2.5.4.tar.gz",
       "sha512": "702a10e20caaf8209684ded7c9fcf32f5ba6a972cf2d9fcf2611cdc6a446d2c3bb60324205758e6b6f92278c8cf4ef0fbae511e6ffb45ed6e8df514db0c6ab25"
-    },
-    {
-      "name": "openjph",
-      "version": "0.31.0",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/openjph/OpenJPH-0.31.0.tar.gz/sha512/2dfafe3db360ac177014c4b65ea0b62ea14ccf61714d80dbaa0c01ab2dbc2153f6d26df3d7af5e6b74e298eb72670a7670fca626a37d2fe7e4c224a3256af35a/OpenJPH-0.31.0.tar.gz",
-      "filename": "OpenJPH-0.31.0.tar.gz",
-      "sha512": "2dfafe3db360ac177014c4b65ea0b62ea14ccf61714d80dbaa0c01ab2dbc2153f6d26df3d7af5e6b74e298eb72670a7670fca626a37d2fe7e4c224a3256af35a"
     },
     {
       "name": "openrgb",

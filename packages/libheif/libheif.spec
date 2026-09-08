@@ -31,6 +31,24 @@
 # Narrower than %%bcond bootstrap, which would also drop rav1e, SvtEnc and sdl2.
 %bcond ffmpeg 0
 
+# openjph goes too, and this one removes a package rather than a plugin.
+# libheif is the only thing in the factory that build-requires openjph, and
+# Hummingbird ships no libopenjph at all -- only Fedora does, at 0.25. So
+# carrying openjph 0.31 here excluded Fedora libopenjph by name, which made
+# Fedora libheif uninstallable, which made this factory own glycin-loaders
+# uninstallable, which took gdk-pixbuf2 and sixteen stage 1 packages with it:
+#   glycin-loaders-2.2~beta from stages requires libheif.so.1
+#   libheif-1.21.2-1.fc44 from fedora requires libopenjph.so.0.25
+#   libopenjph-0.25.3-3.fc44 from fedora is filtered out by exclude filtering
+# Ordering cannot untie it inside five stages: openjph, libheif, glycin,
+# gdk-pixbuf2 and then everything reaching gdk-pixbuf2 is five waves before
+# webkitgtk, gjs and gnome-shell have anywhere to go.
+# Declining the encoder drops the dependency entirely, so Fedora libopenjph is
+# never excluded and nothing downstream has to move. HTJ2K encoding is the
+# cost; AVIF and HEIC decode through aom and dav1d, and JPEG 2000 keeps
+# working through OpenJPEG, which is a different library.
+%bcond openjph 0
+
 
 Name:           libheif
 Version:        1.23.1
@@ -60,7 +78,9 @@ BuildRequires:  pkgconfig(libjpeg)
 BuildRequires:  pkgconfig(libopenjp2)
 BuildRequires:  pkgconfig(libpng)
 BuildRequires:  pkgconfig(libtiff-4)
+%if %{with openjph}
 BuildRequires:  pkgconfig(openjph) >= 0.18.0
+%endif
 %if !%{with bootstrap}
 BuildRequires:  pkgconfig(sdl2)
 %endif
@@ -97,7 +117,9 @@ file format decoder and encoder.
 %{_libdir}/%{name}/%{name}-j2kenc.so
 %{_libdir}/%{name}/%{name}-jpegdec.so
 %{_libdir}/%{name}/%{name}-jpegenc.so
+%if %{with openjph}
 %{_libdir}/%{name}/%{name}-jphenc.so
+%endif
 %ifnarch %{ix86}
 %{_libdir}/%{name}/%{name}-openh264dec.so
 %endif
@@ -172,9 +194,11 @@ rm -rf third-party/
  -DWITH_OpenJPEG_DECODER_PLUGIN=ON \
  -DWITH_OpenJPEG_ENCODER=ON \
  -DWITH_OpenJPEG_ENCODER_PLUGIN=ON \
+%if %{with openjph}
  -DWITH_OPENJPH_DECODER=ON \
  -DWITH_OPENJPH_ENCODER=ON \
  -DWITH_OPENJPH_ENCODER_PLUGIN=ON \
+%endif
 %ifnarch %{ix86}
  -DWITH_OpenH264_DECODER=ON \
  -DWITH_OpenH264_DECODER_PLUGIN=ON \

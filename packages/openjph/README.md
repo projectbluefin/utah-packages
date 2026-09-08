@@ -1,3 +1,0 @@
-# openjph
-
-The openjph package
