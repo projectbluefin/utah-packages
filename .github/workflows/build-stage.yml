@@ -246,22 +246,36 @@ jobs:
                   systemd-sysusers "$sysusers" || true
                 done
               fi
+              # Match the mock build user, exactly as tools/build-rpm.sh already does
+              # for a local build. rpmbuild as root can write files regardless of
+              # their mode bits, so a suite that chmods a file read-only and then
+              # asserts the write fails is defeated by the build root rather than
+              # by the code. FLAC says so outright:
+              #   ERROR: iterator claims file is writable when tester thinks it
+              #   should not be; are you running as root?
+              # The two lanes had drifted: the local one builds unprivileged, this
+              # one did not, so a package could pass locally and fail here.
+              id -u mockbuild >/dev/null 2>&1 || \
+                useradd --create-home --home-dir /builddir mockbuild
+              mkdir -p /builddir/rpmbuild/SRPMS
+              chown -R mockbuild:mockbuild /builddir/rpmbuild "$staged" /work/result
+              build_rpm() { runuser -u mockbuild -- rpmbuild --define "_topdir /builddir/rpmbuild" "$@"; }
               # Packages with %generate_buildrequires -- every Rust one -- compute
               # their real BuildRequires during the build, so the spec alone does not
               # list them and rpmbuild exits 11 asking to be re-run. Install what the
               # generated source RPM declares and retry, bounded so an unsatisfiable
               # requirement fails instead of looping.
               for _ in 1 2 3 4 5; do
-                rm -f /root/rpmbuild/SRPMS/*.buildreqs.nosrc.rpm
-                if rpmbuild -br "$spec" --define "_sourcedir $staged" \
+                rm -f /builddir/rpmbuild/SRPMS/*.buildreqs.nosrc.rpm
+                if build_rpm -br "$spec" --define "_sourcedir $staged" \
                      --define "dist $DISTTAG"; then break; fi
-                generated=$(ls /root/rpmbuild/SRPMS/*.buildreqs.nosrc.rpm 2>/dev/null | head -1)
+                generated=$(ls /builddir/rpmbuild/SRPMS/*.buildreqs.nosrc.rpm 2>/dev/null | head -1)
                 test -n "$generated"
                 dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
                   ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} \
                   ${GLOBAL_EXCLUDE:+--exclude="$GLOBAL_EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$generated"
               done
-              rpmbuild -ba "$spec" \
+              build_rpm -ba "$spec" \
                 --define "_sourcedir $staged" \
                 --define "dist $DISTTAG" \
                 --define "_rpmdir /work/result"
