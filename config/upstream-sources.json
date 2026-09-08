@@ -262,6 +262,7 @@
     },
     {
       "name": "ffmpeg",
+    "stage": 1,
       "version": "9.0.1",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/ffmpeg/ffmpeg-9.0.1.tar.xz/sha512/be8cdfca64886f2ec5cd2359f8db6a998ee759d105b10ade9b2a7b640356ad56ab0ff50218fce7b6312462f15f98d90ac9d197a3b02a23771754d2714fec628d/ffmpeg-9.0.1.tar.xz",
       "filename": "ffmpeg-9.0.1.tar.xz",
@@ -1048,7 +1049,7 @@
     },
     {
       "name": "libayatana-ido",
-    "stage": 1,
+    "stage": 2,
       "version": "0.10.4",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/libayatana-ido/ayatana-ido-0.10.4.tar.gz/sha512/a36b67cb505b9340a8193e281c72831b56d6a620054e99e1032145ec0d8d26fe4768402b36ee4d7e115dbbd6fb393cc15c3d71c15d040f5eb22d3d2114f80536/ayatana-ido-0.10.4.tar.gz",
       "filename": "ayatana-ido-0.10.4.tar.gz",
@@ -1171,7 +1172,7 @@
     },
     {
       "name": "libepoxy",
-    "stage": 1,
+    "stage": 2,
       "version": "1.5.10",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/libepoxy/libepoxy-1.5.10.tar.xz/sha512/d7b53bb34188412d93fd4c46a353038a6883fbaa9942f30df119d0e6de85cd93e0c0366fa40cbd75ffce64ac2cc509e65f94aefd710c4ff8a42324e235eabc44/libepoxy-1.5.10.tar.xz",
       "filename": "libepoxy-1.5.10.tar.xz",
@@ -1201,7 +1202,7 @@
     },
     {
       "name": "libglvnd",
-    "stage": 1,
+    "stage": 2,
       "version": "1.7.0",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/libglvnd/libglvnd-1.7.0.tar.gz/sha512/8ad2e64d5fc2c70918383170a8e335e63e5de151855bcc7140321e08f1ea91cc464a643edf060e2d4289e59011cd42e0edadb268c0067d5515141071825ce747/libglvnd-1.7.0.tar.gz",
       "filename": "libglvnd-1.7.0.tar.gz",
@@ -1237,6 +1238,7 @@
     },
     {
       "name": "libheif",
+    "stage": 1,
       "version": "1.23.1",
       "url": "https://github.com/strukturag/libheif/archive/v1.23.1/libheif-1.23.1.tar.gz",
       "filename": "libheif-1.23.1.tar.gz",
@@ -1845,6 +1847,7 @@
     },
     {
       "name": "pipewire",
+    "stage": 2,
       "version": "1.6.8",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/pipewire/pipewire-1.6.8.tar.gz/sha512/afa52e58eebe92ad2137afd9663076c8ecf62a5b1ec70aceeb368d58e6ff9eed1fd8fcf8e92f1b73951f7fbd6461a823c9d911b0d064cb523b8871c0dcc79187/pipewire-1.6.8.tar.gz",
       "filename": "pipewire-1.6.8.tar.gz",
@@ -1856,7 +1859,7 @@
       "url": "https://gitlab.freedesktop.org/pipewire/pipewire/-/archive/1.6.8/pipewire-1.6.8.tar.gz",
       "filename": "pipewire-1.6.8.tar.gz",
       "sha512": "afa52e58eebe92ad2137afd9663076c8ecf62a5b1ec70aceeb368d58e6ff9eed1fd8fcf8e92f1b73951f7fbd6461a823c9d911b0d064cb523b8871c0dcc79187",
-      "stage": 1
+      "stage": 2
     },
     {
       "name": "pixman",
@@ -2257,7 +2260,7 @@
       "url": "https://freedesktop.org/software/pulseaudio/webrtc-audio-processing/webrtc-audio-processing-2.1.tar.xz",
       "filename": "webrtc-audio-processing-2.1.tar.xz",
       "sha512": "534af17db1082e900ebd964042679685f26e8452c2e08c6f29660d0484bd5b079c804104600e972281d1ddcbca7762c63cc58b561b175b73447d069dd00f1a61",
-      "stage": 0,
+      "stage": 1,
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/webrtc-audio-processing/webrtc-audio-processing-2.1.tar.xz/sha512/534af17db1082e900ebd964042679685f26e8452c2e08c6f29660d0484bd5b079c804104600e972281d1ddcbca7762c63cc58b561b175b73447d069dd00f1a61/webrtc-audio-processing-2.1.tar.xz"
       ]
@@ -2351,7 +2354,7 @@
     },
     {
       "name": "xdg-desktop-portal-gtk",
-    "stage": 1,
+    "stage": 2,
       "version": "1.15.3",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/xdg-desktop-portal-gtk/xdg-desktop-portal-gtk-1.15.3.tar.xz/sha512/38a94ace605f95af74a2edd4cf9f52124b1f0e46612a3484d1fb51289ee27015077fa9f4cc75cfa48792101500ce8e0d62761d71ef4d4791837599352e2a81a0/xdg-desktop-portal-gtk-1.15.3.tar.xz",
       "filename": "xdg-desktop-portal-gtk-1.15.3.tar.xz",
