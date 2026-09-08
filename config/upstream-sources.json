@@ -1405,6 +1405,20 @@
       "url": "https://downloads.sourceforge.net/zsh/zsh-5.9.2.tar.xz",
       "filename": "zsh-5.9.2.tar.xz",
       "sha512": "40bb5eb2cf217e6bcff342fcc9314f082a5d8975abcb56897e86eba5839ddf0ec1ac3feed1e797d4c68cea22228197342916f14bb87309bbcc026a87622bc015"
+    },
+    {
+      "name": "kernel-centos",
+      "version": "6.12.0",
+      "url": "https://mirror.stream.centos.org/10-stream/BaseOS/source/tree/Packages/kernel-6.12.0-264.el10.src.rpm",
+      "filename": "kernel-6.12.0-264.el10.src.rpm",
+      "sha512": "99599fa0d9105f6207e903e98cf8add7f6d4c63da4e1500951e9ba52fd5ed5e7ca6e844a6f0bc69b248964da8fd8026c555142e93f2f300f3e6eef31f8c38665"
+    },
+    {
+      "name": "kernel-ogc",
+      "version": "7.2.3",
+      "url": "https://github.com/OpenGamingCollective/linux/archive/refs/tags/v7.2.3-ogc3.tar.gz",
+      "filename": "v7.2.3-ogc3.tar.gz",
+      "sha512": "f6e95f9e56a94a8ecec0b75f3101398214bd1d85838e16ebee552b384c87a00b8de39ae0baf97a81c2d64f68136e844471687b4f00c1dcba8ef7a18f95c6201e"
     }
   ]
 }

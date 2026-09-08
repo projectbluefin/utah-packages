@@ -520,6 +520,18 @@ packages:
     downstream_package_name: kde-filesystem
     paths:
       - packages/kde-filesystem
+  kernel-centos:
+    specfile_path: kernel-centos.spec
+    upstream_package_name: kernel-centos
+    downstream_package_name: kernel-centos
+    paths:
+      - packages/kernel-centos
+  kernel-ogc:
+    specfile_path: kernel-ogc.spec
+    upstream_package_name: kernel-ogc
+    downstream_package_name: kernel-ogc
+    paths:
+      - packages/kernel-ogc
   kf5:
     specfile_path: kf5.spec
     upstream_package_name: kf5
