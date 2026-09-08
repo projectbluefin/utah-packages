@@ -620,6 +620,7 @@
     },
     {
       "name": "gstreamer1-plugins-good",
+    "stage": 1,
       "version": "1.28.6",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/gstreamer1-plugins-good/gst-plugins-good-1.28.6.tar.xz/sha512/49a691f00f5b0c6010551b0affa272df3b74854b84d2342c9a6f874cd0032215142ca4f60ee89cb34dc54e10423ba6b6a7fd7b31eb0d48d26ece49f64b6d5494/gst-plugins-good-1.28.6.tar.xz",
       "filename": "gst-plugins-good-1.28.6.tar.xz",
@@ -1046,6 +1047,7 @@
     },
     {
       "name": "libayatana-ido",
+    "stage": 1,
       "version": "0.10.4",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/libayatana-ido/ayatana-ido-0.10.4.tar.gz/sha512/a36b67cb505b9340a8193e281c72831b56d6a620054e99e1032145ec0d8d26fe4768402b36ee4d7e115dbbd6fb393cc15c3d71c15d040f5eb22d3d2114f80536/ayatana-ido-0.10.4.tar.gz",
       "filename": "ayatana-ido-0.10.4.tar.gz",
@@ -1168,6 +1170,7 @@
     },
     {
       "name": "libepoxy",
+    "stage": 1,
       "version": "1.5.10",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/libepoxy/libepoxy-1.5.10.tar.xz/sha512/d7b53bb34188412d93fd4c46a353038a6883fbaa9942f30df119d0e6de85cd93e0c0366fa40cbd75ffce64ac2cc509e65f94aefd710c4ff8a42324e235eabc44/libepoxy-1.5.10.tar.xz",
       "filename": "libepoxy-1.5.10.tar.xz",
@@ -1197,6 +1200,7 @@
     },
     {
       "name": "libglvnd",
+    "stage": 1,
       "version": "1.7.0",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/libglvnd/libglvnd-1.7.0.tar.gz/sha512/8ad2e64d5fc2c70918383170a8e335e63e5de151855bcc7140321e08f1ea91cc464a643edf060e2d4289e59011cd42e0edadb268c0067d5515141071825ce747/libglvnd-1.7.0.tar.gz",
       "filename": "libglvnd-1.7.0.tar.gz",
@@ -1734,6 +1738,7 @@
     },
     {
       "name": "nautilus-python",
+    "stage": 2,
       "version": "4.1.0",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/nautilus-python/nautilus-python-4.1.0.tar.xz/sha512/410694f37b2bafb22afe21301a86211ada547973a17505b3a3f6f7370e7d22e2a5590c4bdde5b68fa3e1232fd9b4bae4ccf1aa21fc7119eb4d43905fb1747c26/nautilus-python-4.1.0.tar.xz",
       "filename": "nautilus-python-4.1.0.tar.xz",
@@ -1875,6 +1880,7 @@
     },
     {
       "name": "pulseaudio",
+    "stage": 1,
       "version": "17.0",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/pulseaudio/pulseaudio-17.0.tar.xz/sha512/be0aec46204d9c9188a796fbe41b4cf6f0f5e6b16fa08ce359b8f0f51253f0ade364b89448bbf5faa2af7e59deb6c72194734c3233944250dcfd4f31968a5e97/pulseaudio-17.0.tar.xz",
       "filename": "pulseaudio-17.0.tar.xz",
@@ -1976,6 +1982,7 @@
     },
     {
       "name": "rest",
+    "stage": 1,
       "version": "0.10.2",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/rest/librest-0.10.2.tar.xz/sha512/ef4080041953bd9d2264ffc533bd6a0f022a4c7fdea4494b3d5c313705f9c753fe75af78fdde2d75ef28402cc59b6ee40d73b7c4ee8d4b5620d8385763372f19/librest-0.10.2.tar.xz",
       "filename": "librest-0.10.2.tar.xz",
@@ -2033,6 +2040,7 @@
     },
     {
       "name": "sdl2-compat",
+    "stage": 1,
       "version": "2.32.70",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/sdl2-compat/sdl2-compat-2.32.70.tar.gz/sha512/141d7f329d069ba6861de1cdc2e6c428156b26b614ff5b665d73b078c973d7c6c4b53764228db4e6dfc26907d23b0b6880cc3317080117daf216bac22579bb96/sdl2-compat-2.32.70.tar.gz",
       "filename": "sdl2-compat-2.32.70.tar.gz",
@@ -2141,6 +2149,7 @@
     },
     {
       "name": "tecla",
+    "stage": 1,
       "version": "51~beta",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/tecla/tecla-51.beta.tar.xz/sha512/56c58e3b439deac0f3d46ed206f6d7a92a36c59714ea58c5649f6ba88a5c20d61ca0b289e5cedb02309701dba62e8eaa6097039fd2b2ed32956abc377fb64c65/tecla-51.beta.tar.xz",
       "filename": "tecla-51.beta.tar.xz",
@@ -2213,6 +2222,7 @@
     },
     {
       "name": "wayland",
+    "stage": 1,
       "version": "1.26.0",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/wayland/wayland-1.26.0.tar.xz/sha512/50861b0c40cedec5f31b49ff1e99fc135a299fa4a8e2ff50ff4bac3f42e2f3f7be38271929fd2f6e58d83d5df516f643946ceba7937cc199581487c082c7ec31/wayland-1.26.0.tar.xz",
       "filename": "wayland-1.26.0.tar.xz",
@@ -2260,6 +2270,7 @@
     },
     {
       "name": "wireplumber",
+    "stage": 1,
       "version": "0.5.14",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/wireplumber/wireplumber-0.5.14.tar.bz2/sha512/49c2813b6374a327e1d15b79a56aa8a0f31049f4b7f13cc3cc85858dc498099556928d8347080ad3135c7b0575334deeaf343cdec6ecfe6a7734f442b97d4b40/wireplumber-0.5.14.tar.bz2",
       "filename": "wireplumber-0.5.14.tar.bz2",
@@ -2339,6 +2350,7 @@
     },
     {
       "name": "xdg-desktop-portal-gtk",
+    "stage": 1,
       "version": "1.15.3",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/xdg-desktop-portal-gtk/xdg-desktop-portal-gtk-1.15.3.tar.xz/sha512/38a94ace605f95af74a2edd4cf9f52124b1f0e46612a3484d1fb51289ee27015077fa9f4cc75cfa48792101500ce8e0d62761d71ef4d4791837599352e2a81a0/xdg-desktop-portal-gtk-1.15.3.tar.xz",
       "filename": "xdg-desktop-portal-gtk-1.15.3.tar.xz",
@@ -2360,6 +2372,7 @@
     },
     {
       "name": "xdg-user-dirs-gtk",
+    "stage": 1,
       "version": "0.16",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/xdg-user-dirs-gtk/xdg-user-dirs-gtk-0.16.tar.xz/sha512/e491931b53480fcf067eb4077a1c547b196f27bf37d3ab56cf6849345c24b66af1d2d58c0b4818c144ad062cab47cbff951f547f27b5b574fde19c0d1eacfd19/xdg-user-dirs-gtk-0.16.tar.xz",
       "filename": "xdg-user-dirs-gtk-0.16.tar.xz",
