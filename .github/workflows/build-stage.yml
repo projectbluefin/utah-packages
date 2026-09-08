@@ -64,11 +64,20 @@ jobs:
       # uninstallable, and glycin, gdk-pixbuf2, graphviz and doxygen follow it
       # down -- so opus, mesa-demos, passim and msgraph all failed on a package
       # none of them names.
+      - name: Work out which earlier stages to collect
+        id: prior
+        if: inputs.stage != '0'
+        run: |
+          # Artifacts are named rpm-s<stage>-<package>, so rpm-* matches this
+          # stage as well as the ones before it -- and a job would collect
+          # whichever of its own siblings uploaded first. Ask for strictly
+          # earlier stages only: stage 3 wants rpm-s[0-2]-*.
+          printf 'pattern=rpm-s[0-%s]-*\n' "$(( ${{ inputs.stage }} - 1 ))" >> "$GITHUB_OUTPUT"
       - name: Collect RPMs built by earlier stages
         if: inputs.stage != '0'
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
-          pattern: rpm-*
+          pattern: ${{ steps.prior.outputs.pattern }}
           path: work/prior
           merge-multiple: true
         continue-on-error: true
