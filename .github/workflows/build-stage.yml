@@ -191,6 +191,22 @@ jobs:
               # manpage installer and fails without it.
               dnf -y $disable install dnf-plugins-core mock rpm-build @buildsys-build
               rpm -q --qf "buildroot openssl: %{VERSION}-%{RELEASE}\n" openssl-libs || true
+              # Excluding a repository does not touch a package that is already
+              # installed, and the base image arrives with some of these. Fedora
+              # sqlite-libs 3.51.2 ships in it, so telling dnf to prefer
+              # Hummingbird changed nothing and subversion -- built against
+              # 3.53.4 -- could not open a repository at all:
+              #   svn: E200030: SQLite compiled for 3.53.4, but running with 3.51.2
+              # which surfaced as six failures in the git test suite. Upgrade the
+              # names we have just said Hummingbird must answer for, so the
+              # decision reaches the build root rather than only the resolver.
+              for preinstalled in ${HB_EXCLUDE//,/ }; do
+                rpm -q "$preinstalled" >/dev/null 2>&1 || continue
+                dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
+                  ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} \
+                  upgrade "$preinstalled" || true
+              done
+              rpm -q --qf "buildroot sqlite: %{VERSION}-%{RELEASE}\n" sqlite-libs || true
               # NO APOSTROPHES IN THIS SCRIPT. It is the body of bash -exc
               # a single-quoted string, so one closes it and everything after
               # is reparsed. That is what the stilted "Fedora own
