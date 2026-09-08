@@ -51,7 +51,21 @@ jobs:
           sudo mkswap "$swapfile"
           sudo swapon "$swapfile" || { echo "Host does not permit extra swap" >&2; exit 0; }
           free -h
+      # Stage 0 has no earlier stage, so there is nothing legitimate to
+      # collect -- and without this guard the pattern matches whatever sibling
+      # stage 0 jobs happen to have uploaded already. That makes a stage 0
+      # buildroot depend on the order its own siblings finish in, which is not
+      # reproducible and is not what the stage contract says: a stage cannot
+      # see its own output.
+      #
+      # It fails in a way that names anything but the cause. Collecting a
+      # sibling openjph 0.31 puts openjph into the by-name exclusion list, which
+      # filters Fedora libopenjph 0.25, which makes Fedora libheif 1.21.2
+      # uninstallable, and glycin, gdk-pixbuf2, graphviz and doxygen follow it
+      # down -- so opus, mesa-demos, passim and msgraph all failed on a package
+      # none of them names.
       - name: Collect RPMs built by earlier stages
+        if: inputs.stage != '0'
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           pattern: rpm-*
