@@ -22,7 +22,12 @@ runs:
         sha256=aec995a83ad3dff3d14b6314e08858b7b73d35ca85a5bcf3d3a9ec07dee35588
         archive="$RUNNER_TEMP/sccache-${version}-x86_64-unknown-linux-musl.tar.gz"
         url="https://github.com/mozilla/sccache/releases/download/${version}/sccache-${version}-x86_64-unknown-linux-musl.tar.gz"
-        curl --fail --location --retry 3 --proto '=https' --tlsv1.2 "$url" --output "$archive"
+        # GitHub's release edge occasionally resets a connection before the
+        # archive starts. Retry those transport errors as well as HTTP 5xx;
+        # the checksum below still makes a truncated or substituted download
+        # fail closed.
+        curl --fail --location --retry 8 --retry-all-errors --retry-delay 2 \
+          --proto '=https' --tlsv1.2 "$url" --output "$archive"
         printf '%s  %s\n' "$sha256" "$archive" | sha256sum --check --strict
         tar --extract --gzip --file "$archive" --directory "$RUNNER_TEMP"
         binary="$RUNNER_TEMP/sccache-${version}-x86_64-unknown-linux-musl/sccache"
