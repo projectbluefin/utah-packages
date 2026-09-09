@@ -18,7 +18,15 @@ from tools.packit_workflow import package_names
 
 # Stages the rebuild matrix (.github/workflows/rebuild-rpms.yml) can resolve;
 # packages without an explicit stage build in stage 0.
-KNOWN_STAGES = frozenset(range(5))
+# Eleven waves, not five. The rebuild is a chain of dependency waves and a
+# package can only see what an earlier wave built, so every soname this factory
+# moves needs its consumers in a later wave than the library. Five was not
+# enough to express that: openjph, libheif, glycin, gdk-pixbuf2 and then
+# everything reaching gdk-pixbuf2 is already five, before webkitgtk, gjs,
+# evolution-data-server, flatpak or gnome-shell have anywhere to go. The lane
+# boundaries are the ones config/build-lanes.toml works out on
+# fix/repeatable-local-builds, flattened into consecutive numbers.
+KNOWN_STAGES = frozenset(range(11))
 
 
 @dataclass(frozen=True)
