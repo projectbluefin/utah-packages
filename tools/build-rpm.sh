@@ -212,6 +212,13 @@ echo "disttag: $DISTTAG"
 # failing one is a real test, so give the build root a bus rather
 # than disabling the test. Non-fatal: no other package needs it.
 dnf -y $disable install dbus-daemon || true
+# The Fedora build container carries an empty, root-owned machine-id. D-Bus
+# rejects Peer.GetMachineId without a valid ID, and %check runs as mockbuild,
+# so initialize it while the build setup still has root privileges.
+if [ ! -s /etc/machine-id ] && command -v dbus-uuidgen >/dev/null 2>&1; then
+  [ ! -e /etc/machine-id ] || unlink /etc/machine-id
+  dbus-uuidgen --ensure=/etc/machine-id
+fi
 mkdir -p /run/dbus
 dbus-daemon --system --fork || true
 # mock defines USER in its build root; a bare container does not.

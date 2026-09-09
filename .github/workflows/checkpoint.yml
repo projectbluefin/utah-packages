@@ -7,6 +7,11 @@ on:
         description: Completed factory lane being checkpointed
         required: true
         type: string
+      fresh:
+        description: Do not seed this checkpoint from the shared accumulator
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -26,25 +31,30 @@ jobs:
       - name: Seed the current partial candidate
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FRESH: ${{ inputs.fresh }}
         run: |
           set -euo pipefail
           owner=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           mkdir -p repository
           echo "${GITHUB_TOKEN}" | podman login ghcr.io -u "${{ github.actor }}" --password-stdin
-          for image in "ghcr.io/${owner}/utah-packages:building" "ghcr.io/${owner}/utah-packages:latest"; do
-            if podman pull "$image"; then
-              # podman 5 refuses to create a container from an image that declares
-              # no command, and every one of these is FROM scratch plus a COPY. The
-              # command is never run -- the container exists only for podman cp --
-              # but it has to be there or create exits 125 with
-              #   no command or entrypoint provided, and no CMD or ENTRYPOINT from image
-              container=$(podman create "$image" /bin/true)
-              podman cp "$container:/repository/." repository/ || true
-              podman rm "$container"
-              echo "seeded from $image"
-              break
-            fi
-          done
+          if [ "${FRESH}" = true ]; then
+            echo "fresh checkpoint: using only artifacts from this run"
+          else
+            for image in "ghcr.io/${owner}/utah-packages:building" "ghcr.io/${owner}/utah-packages:latest"; do
+              if podman pull "$image"; then
+                # podman 5 refuses to create a container from an image that declares
+                # no command, and every one of these is FROM scratch plus a COPY. The
+                # command is never run -- the container exists only for podman cp --
+                # but it has to be there or create exits 125 with
+                #   no command or entrypoint provided, and no CMD or ENTRYPOINT from image
+                container=$(podman create "$image" /bin/true)
+                podman cp "$container:/repository/." repository/ || true
+                podman rm "$container"
+                echo "seeded from $image"
+                break
+              fi
+            done
+          fi
 
       - name: Collect successful package artifacts
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
