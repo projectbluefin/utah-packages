@@ -107,7 +107,7 @@ repository the next stage resolves against:
 | 0 | everything with no in-set dependency, plus `wayland-protocols`, `accountsservice`, `gsettings-desktop-schemas` |
 | 1 | `gtk4` |
 | 2 | `libadwaita`, `mutter`, `gnome-desktop3` |
-| 3 | `gnome-shell`, `gnome-session`, `gnome-settings-daemon`, `xdg-desktop-portal-gnome`, `malcontent-bootstrap` |
+| 3 | `gnome-shell`, `gnome-session`, `gnome-settings-daemon`, `xdg-desktop-portal-gnome`, `malcontent-bootstrap`, then `flatpak` in the late lane |
 | 4 | `malcontent`, `gnome-control-center` |
 
 `malcontent` is in the set for a reason worth recording, because it is the
@@ -147,10 +147,12 @@ malcontent's build, in `libmalcontent-ui/meson.build`, which meson enters only
 under `if get_option('ui').enabled()`; upstream separates the two deliberately
 and ships a `use_system_libmalcontent` option described in `meson_options.txt`
 as "used in distros to break a dependency cycle". So `malcontent-bootstrap`
-builds the same sources with `-Dui=disabled` at stage 3, needing no flatpak,
-and produces a `malcontent-libs` linked against accountsservice 26. At stage 4
-that is in `[stages]`, `flatpak-libs` resolves against it, and the full
-malcontent and `gnome-control-center` both build.
+builds the same sources with `-Dui=disabled` in the stage-3 fast lane, needing
+no flatpak, and produces a `malcontent-libs` linked against accountsservice 26.
+Flatpak runs in the stage-3 late lane, after that bootstrap is published. At
+stage 4 both rebuilt packages are in `[stages]`: `flatpak-libs` resolves
+against the bootstrap, and the full malcontent and `gnome-control-center` can
+build.
 
 The bootstrap's release is `0.bootstrap`, which sorts below the real `1.hum1.bfin`:
 at stage 4 it is the only malcontent available and so is used, and anywhere both

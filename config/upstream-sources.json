@@ -254,7 +254,7 @@
     },
     {
       "name": "flatpak",
-      "stage": 1,
+      "stage": 3,
       "version": "1.19.0",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/flatpak/flatpak-1.19.0.tar.xz/sha512/686b6152705e6168d74093d44370d308093fa98d6c4e693f00804e540ee8f135b5994efa72f783a081b98d9c1b41ecdb4664f4fe05c78418cb5c6fbc5691f501/flatpak-1.19.0.tar.xz",
       "filename": "flatpak-1.19.0.tar.xz",

@@ -70,4 +70,7 @@ packages = ["webkitgtk", "webkit2gtk4.1"]
 packages = ["gjs"]
 
 [stage3_late]
-packages = ["evolution-data-server", "gnome-shell"]
+# malcontent-bootstrap is built in the stage-3 fast lane without its UI. Flatpak
+# needs that provider, while full malcontent needs Flatpak, so Flatpak must run
+# after the fast lane and before the stage-4 malcontent build.
+packages = ["evolution-data-server", "flatpak", "gnome-shell"]

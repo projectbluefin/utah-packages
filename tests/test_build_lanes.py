@@ -58,6 +58,21 @@ class BuildLaneTests(unittest.TestCase):
         self.assertLess(stages["webrtc-audio-processing"], stages["pipewire"])
         self.assertLess(stages["pipewire"], stages["xdg-desktop-portal"])
 
+    def test_malcontent_cycle_builds_bootstrap_flatpak_then_full_malcontent(self):
+        manifest = json.loads((ROOT / "config/upstream-sources.json").read_text())
+        stages = {item["name"]: item.get("stage", 0) for item in manifest["packages"]}
+        lanes = tomllib.loads((ROOT / "config/build-lanes.toml").read_text())
+        stage3_late = lanes["stage3_late"]["packages"]
+
+        # The UI-less provider must be available to Flatpak, and Flatpak must
+        # be available before the full malcontent build reaches stage 4.
+        self.assertEqual(stages["malcontent-bootstrap"], 3)
+        self.assertEqual(stages["flatpak"], 3)
+        self.assertEqual(stages["malcontent"], 4)
+        self.assertNotIn("malcontent-bootstrap", stage3_late)
+        self.assertIn("flatpak", stage3_late)
+        self.assertNotIn("malcontent", stage3_late)
+
     def test_every_late_lane_entry_names_why_it_is_late(self):
         """A late entry links something the fast lane rebuilds.
 
