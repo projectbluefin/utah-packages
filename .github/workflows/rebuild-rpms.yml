@@ -13,6 +13,11 @@ on:
         required: false
         default: ''
         type: string
+      promote:
+        description: Promote a complete building accumulator without rebuilding
+        required: false
+        default: false
+        type: boolean
   push:
     branches: [main]
     paths:
@@ -57,7 +62,7 @@ permissions:
 concurrency:
   # A selected-package recovery run may proceed beside the normal PR run;
   # package-level concurrency still prevents two copies of the same lane/package.
-  group: utah-packages-factory-${{ github.event.pull_request.number || github.ref }}-${{ inputs.packages != '' && 'recovery' || 'normal' }}
+  group: utah-packages-factory-${{ github.event.pull_request.number || github.ref }}-${{ inputs.packages && 'recovery' || 'normal' }}
   cancel-in-progress: false
 
 # Build waves may run concurrently.  They use run-scoped artifacts and each
@@ -698,7 +703,10 @@ jobs:
     # The consumer tag is atomic. Successful artifacts from a failed matrix are
     # still retained by Actions for diagnosis, but they never replace the
     # coherent repository Utah consumes. Publication requires every selected
-    # stage plus precedence and the Hummingbird-only transaction below.
+    # stage plus precedence and the Hummingbird-only transaction below. A
+    # promotion dispatch may have an empty build list when the accumulator
+    # already contains the complete candidate; the contract gate below still
+    # validates every promised package before the tag moves.
     #
     # This is no longer main-only. The repository is published as an OCI image
     # first and to Pages second, and the OCI push is what consumers actually
@@ -714,9 +722,10 @@ jobs:
     # noise that reads like a broken pipeline.
     if: >-
       ${{ !cancelled()
-          && needs.prepare.outputs.build_list != '[]'
-          && inputs.packages == ''
-          && needs.precedence.result == 'success'
+          && !inputs.packages
+          && (needs.prepare.outputs.build_list != '[]' || inputs.promote == true)
+          && (needs.precedence.result == 'success'
+              || (inputs.promote == true && needs.precedence.result == 'skipped'))
           && (needs.rebuild0.result == 'success' || needs.rebuild0.result == 'skipped')
           && (needs.rebuild1.result == 'success' || needs.rebuild1.result == 'skipped')
           && (needs.rebuild1_heavy.result == 'success' || needs.rebuild1_heavy.result == 'skipped')

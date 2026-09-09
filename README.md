@@ -162,9 +162,13 @@ just check
 just source-one webkitgtk
 just ci-smoke
 just ci-rebuild packages=webkitgtk,mozjs140
+just ci-promote
 just ci-status RUN_ID
 just ci-failed-log RUN_ID
 ```
+
+Use `promote=true` to contract-check and publish a complete `:building`
+accumulator after a build run that did not publish its consumer image.
 
 Set the `UTAH_HEAVY_RUNNER` repository variable to an enabled larger
 GitHub-hosted runner label when available; otherwise heavy jobs fall back to

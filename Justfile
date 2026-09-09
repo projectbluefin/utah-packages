@@ -131,17 +131,25 @@ ci-smoke package="python-argcomplete":
     gh workflow run smoke-lane.yml --repo "{{ repo_owner }}/{{ repo_name }}" \
       --ref "${FACTORY_REF:-$(git branch --show-current)}" --field "package={{ package }}"
 
-ci-rebuild full="false" packages="":
+ci-rebuild full="false" packages="" promote="false":
     #!/usr/bin/env bash
     set -euo pipefail
     case "{{ full }}" in
       true|false) ;;
       *) echo "full must be true or false" >&2; exit 2 ;;
     esac
+    case "{{ promote }}" in
+      true|false) ;;
+      *) echo "promote must be true or false" >&2; exit 2 ;;
+    esac
     ref="${FACTORY_REF:-$(git branch --show-current)}"
     test -n "$ref"
     gh workflow run rebuild-rpms.yml --repo "{{ repo_owner }}/{{ repo_name }}" \
-      --ref "$ref" --field "full={{ full }}" --field "packages={{ packages }}"
+      --ref "$ref" --field "full={{ full }}" --field "packages={{ packages }}" \
+      --field "promote={{ promote }}"
+
+ci-promote:
+    just ci-rebuild false "" true
 
 ci-runs limit="10":
     gh run list --repo "{{ repo_owner }}/{{ repo_name }}" \
