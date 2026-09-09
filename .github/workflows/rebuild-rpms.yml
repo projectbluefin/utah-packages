@@ -426,6 +426,7 @@ jobs:
       runner: ubuntu-24.04
       timeout: '180'
       fresh: ${{ github.event_name == 'workflow_dispatch' && inputs.full == true }}
+      prior_pattern: ''
     secrets: inherit
 
   rebuild0_b:
@@ -438,6 +439,7 @@ jobs:
       runner: ubuntu-24.04
       timeout: '180'
       fresh: ${{ github.event_name == 'workflow_dispatch' && inputs.full == true }}
+      prior_pattern: ''
     secrets: inherit
 
   rebuild0_late:
@@ -450,6 +452,7 @@ jobs:
       runner: ubuntu-24.04
       timeout: '180'
       fresh: ${{ github.event_name == 'workflow_dispatch' && inputs.full == true }}
+      prior_pattern: 'rpm-{s0-,s0-b-}*'
     secrets: inherit
 
   rebuild1:
@@ -462,6 +465,7 @@ jobs:
       runner: ubuntu-24.04
       timeout: '180'
       fresh: ${{ github.event_name == 'workflow_dispatch' && inputs.full == true }}
+      prior_pattern: 'rpm-{s0-,s0-b-,s0-late-}*'
     secrets: inherit
 
   rebuild1_heavy:
@@ -474,6 +478,7 @@ jobs:
       runner: ${{ vars.UTAH_HEAVY_RUNNER || 'ubuntu-24.04' }}
       timeout: '360'
       fresh: ${{ github.event_name == 'workflow_dispatch' && inputs.full == true }}
+      prior_pattern: 'rpm-{s0-,s0-b-,s0-late-,s1-fast-}*'
     secrets: inherit
 
   rebuild2:
@@ -486,6 +491,7 @@ jobs:
       runner: ubuntu-24.04
       timeout: '180'
       fresh: ${{ github.event_name == 'workflow_dispatch' && inputs.full == true }}
+      prior_pattern: 'rpm-{s0-,s0-b-,s0-late-,s1-fast-,s1-heavy-}*'
     secrets: inherit
 
   rebuild2_late:
@@ -498,6 +504,7 @@ jobs:
       runner: ubuntu-24.04
       timeout: '240'
       fresh: ${{ github.event_name == 'workflow_dispatch' && inputs.full == true }}
+      prior_pattern: 'rpm-{s0-,s0-b-,s0-late-,s1-fast-,s1-heavy-,s2-fast-}*'
     secrets: inherit
 
   rebuild3:
@@ -510,6 +517,7 @@ jobs:
       runner: ubuntu-24.04
       timeout: '180'
       fresh: ${{ github.event_name == 'workflow_dispatch' && inputs.full == true }}
+      prior_pattern: 'rpm-{s0-,s0-b-,s0-late-,s1-fast-,s1-heavy-,s2-fast-,s2-late-}*'
     secrets: inherit
 
   rebuild3_late:
@@ -522,6 +530,7 @@ jobs:
       runner: ubuntu-24.04
       timeout: '240'
       fresh: ${{ github.event_name == 'workflow_dispatch' && inputs.full == true }}
+      prior_pattern: 'rpm-{s0-,s0-b-,s0-late-,s1-fast-,s1-heavy-,s2-fast-,s2-late-,s3-fast-}*'
     secrets: inherit
 
   rebuild4:
@@ -534,6 +543,7 @@ jobs:
       runner: ubuntu-24.04
       timeout: '180'
       fresh: ${{ github.event_name == 'workflow_dispatch' && inputs.full == true }}
+      prior_pattern: 'rpm-{s0-,s0-b-,s0-late-,s1-fast-,s1-heavy-,s2-fast-,s2-late-,s3-fast-,s3-late-}*'
     secrets: inherit
 
   # Persist completed stages before later stages finish. These checkpoints are

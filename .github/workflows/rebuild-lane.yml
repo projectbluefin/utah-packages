@@ -20,6 +20,11 @@ on:
         required: false
         default: false
         type: boolean
+      prior_pattern:
+        description: Artifact glob for completed earlier lanes
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: read
@@ -86,9 +91,10 @@ jobs:
       # Overlay this run last: the shared accumulator may still hold an older
       # build at the same RPM filename and must not overwrite fresh lane output.
       - name: Collect RPMs built by earlier lanes
+        if: inputs.prior_pattern != ''
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
-          pattern: rpm-*
+          pattern: ${{ inputs.prior_pattern }}
           path: work/prior
           merge-multiple: true
         continue-on-error: true
