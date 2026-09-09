@@ -455,7 +455,7 @@
       "filename": "gnome-shell-51.beta.tar.xz",
       "sha512": "0f4dfdf4a8ea050c902b7bcc22e141932b1a33cf6c61f83d478d8495fb21711c8d639b0956ef2a5b7bae5580d88b0a3f7a53abccd544ff17d4ae2137542f77c2",
       "sha256_url": "https://download.gnome.org/sources/gnome-shell/51/gnome-shell-51.beta.sha256sum",
-      "stage": 3
+      "stage": 4
     },
     {
       "name": "gnome-shell-extension-gsconnect",
@@ -2262,7 +2262,7 @@
       "url": "https://github.com/flatpak/xdg-desktop-portal/releases/download/1.22.1/xdg-desktop-portal-1.22.1.tar.xz",
       "filename": "xdg-desktop-portal-1.22.1.tar.xz",
       "sha512": "c37319e84d8830e19e1fe4dd21d909c2fd9d7a9deb2720d3f83d33bbe00bac4c22e49018c1c8be0d0c4c038a9a236748ba03c73d2f1351de7bf9ad4fbffee4c8",
-      "stage": 2
+      "stage": 4
     },
     {
       "name": "xdg-desktop-portal-gnome",

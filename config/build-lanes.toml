@@ -73,4 +73,14 @@ packages = ["gjs"]
 # malcontent-bootstrap is built in the stage-3 fast lane without its UI. Flatpak
 # needs that provider, while full malcontent needs Flatpak, so Flatpak must run
 # after the fast lane and before the stage-4 malcontent build.
-packages = ["evolution-data-server", "flatpak", "gnome-shell"]
+#
+# gnome-shell is not here any more: it build-requires evolution-data-server,
+# and a package cannot see what its own lane builds. Sharing this lane sent
+# it to Fedora's evolution-data-server, which links libicu 77 and cannot
+# install beside the factory's libphonenumber (libicu 78). It is stage 4.
+#
+# xdg-desktop-portal is stage 4 for the same reason one lane earlier: it
+# build-requires flatpak-devel, Fedora's flatpak-libs needs a malcontent-libs
+# that needs libaccountsservice.so.0, and the factory's accountsservice ships
+# so.1 -- so only the flatpak built in this lane can ever satisfy it.
+packages = ["evolution-data-server", "flatpak"]

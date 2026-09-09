@@ -160,16 +160,28 @@ HB_EXCLUDE="ruby-default-gems,ruby3.3-default-gems,ruby3.4-default-gems,libicu,i
 # upstream-first is about what ships at runtime. Nothing in the
 # runtime contract carries a Rust toolchain. Version-anchored so
 # rust-1.* cannot match rust-std-static or a rust-<crate>.
-HB_GLOBAL_EXCLUDE="--exclude=ruby3.3-default-gems --exclude=ruby3.4-default-gems --exclude=libicu-77.*hum1 --exclude=libicu-devel-77.*hum1"
-# ...but that NEVR-glob form does not match: mozjs140 still
-# installed rust-0:1.98.0-1.hum1 with --exclude=rust-1.*hum1 on
-# the command line. Exclude by NAME from the Hummingbird repo
-# instead, which is the form already proven to work here -- it is
-# what puts "filtered out by exclude filtering" in the resolver
-# output for the Fedora side. Name-scoping is safe for the Rust
-# toolchain because Fedora is the only other source of it; libicu
-# cannot use this form, since 77 and 78 share one name and only
-# the older build is unwanted.
+#
+# The glob has to keep dnf's name-version-release split intact.
+# dnf cuts a package spec on its dashes BEFORE it globs each
+# field, so libicu-77.*hum1 parses as name "libicu", version
+# "77.*hum1", and no version ever matches. That is why the
+# same shape as --exclude=rust-1.*hum1 let mozjs140 install
+# rust-0:1.98.0-1.hum1, and why localsearch and enchant2 went on
+# linking libicu 77 for wave after wave: the accumulator kept
+# their RPMs until the ICU purge above threw them out at every
+# consumer, which then fell back to Fedora's copy and its
+# excluded libavformat. Spelling the release out as its own
+# field -- libicu-77.*-*hum1 -- makes dnf5 answer
+#   Argument 'libicu-devel-77.1-2.1.hum1' matches only excluded packages
+# while a bare libicu-devel resolves to 78.3, which is the
+# whole intent. Verified against Fedora 44 + Hummingbird locally.
+HB_GLOBAL_EXCLUDE="--exclude=ruby3.3-default-gems --exclude=ruby3.4-default-gems --exclude=libicu-77.*-*hum1 --exclude=libicu-devel-77.*-*hum1"
+# The Rust toolchain is excluded by NAME from the Hummingbird repo
+# instead, which is the form that puts "filtered out by exclude
+# filtering" in the resolver output for the Fedora side.
+# Name-scoping is safe for the Rust toolchain because Fedora is
+# the only other source of it; libicu cannot use this form, since
+# 77 and 78 share one name and only the older build is unwanted.
 HB_GLOBAL_EXCLUDE="${HB_GLOBAL_EXCLUDE} --setopt=public-hummingbird-x86_64-rpms.excludepkgs=rust,rustfmt,cargo,clippy,rust-std-static"
 read -r -a hb_args <<< "$HB_GLOBAL_EXCLUDE"
 EXCLUDE="${HB_EXCLUDE}${EXCLUDE:+,}${EXCLUDE}"
