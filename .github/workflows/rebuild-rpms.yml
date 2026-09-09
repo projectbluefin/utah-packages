@@ -80,6 +80,7 @@ jobs:
       stage3: ${{ steps.matrix.outputs.stage3 }}
       stage4: ${{ steps.matrix.outputs.stage4 }}
       stage0_late: ${{ steps.matrix.outputs.stage0_late }}
+      stage0_late_b: ${{ steps.matrix.outputs.stage0_late_b }}
       stage1_heavy: ${{ steps.matrix.outputs.stage1_heavy }}
       stage2_late: ${{ steps.matrix.outputs.stage2_late }}
       stage3_late: ${{ steps.matrix.outputs.stage3_late }}
@@ -283,9 +284,10 @@ jobs:
 
           # Numeric stages remain the conservative repository-ordering
           # boundary. Within them, these explicitly reviewed late closures may
-          # proceed independently: WebKitGTK/mozjs140, then gjs, then the
-          # WebKit/GNOME shell consumers. Everything else stays in its normal
-          # stage and cannot outrun an unclassified dependency.
+          # use ordered sub-lanes: libheif first, then its stage-0 consumers;
+          # WebKitGTK/mozjs140, then gjs, then the WebKit/GNOME shell consumers.
+          # Everything else stays in its normal stage and cannot outrun an
+          # unclassified dependency.
           invalid_stages = [
               p['name'] for p in build
               if not isinstance(p.get('stage', 0), int) or not 0 <= p.get('stage', 0) <= 4
@@ -294,20 +296,22 @@ jobs:
               raise SystemExit(f"unsupported stage for packages: {', '.join(sorted(invalid_stages))}")
           lane_config = tomllib.loads(Path('config/build-lanes.toml').read_text())
           late0 = set(lane_config.get('stage0_late', {}).get('packages', []))
+          late0_b = set(lane_config.get('stage0_late_b', {}).get('packages', []))
           heavy1 = set(lane_config.get('stage1_heavy', {}).get('packages', []))
           late2 = set(lane_config.get('stage2_late', {}).get('packages', []))
           late3 = set(lane_config.get('stage3_late', {}).get('packages', []))
-          configured = late0 | heavy1 | late2 | late3
+          configured = late0 | late0_b | heavy1 | late2 | late3
           if not configured <= {p['name'] for p in config['packages']}:
               raise SystemExit('build lane config names packages absent from source manifest')
           outputs = {'build_list': json.dumps([p['name'] for p in build])}
-          stage0 = [p['name'] for p in build if (p.get('stage') or 0) == 0 and p['name'] not in late0]
+          stage0 = [p['name'] for p in build if (p.get('stage') or 0) == 0 and p['name'] not in (late0 | late0_b)]
           lanes = {
               # GitHub Actions caps a matrix at 256 jobs. Keep both normal
               # stage-0 shards below that limit as the manifest grows.
               'stage0': stage0[:200],
               'stage0_b': stage0[200:],
               'stage0_late': [p['name'] for p in build if (p.get('stage') or 0) == 0 and p['name'] in late0],
+              'stage0_late_b': [p['name'] for p in build if (p.get('stage') or 0) == 0 and p['name'] in late0_b],
               'stage1': [p['name'] for p in build if (p.get('stage') or 0) == 1 and p['name'] not in heavy1],
               'stage1_heavy': [p['name'] for p in build if (p.get('stage') or 0) == 1 and p['name'] in heavy1],
               'stage2': [p['name'] for p in build if (p.get('stage') or 0) == 2 and p['name'] not in late2],
@@ -455,8 +459,21 @@ jobs:
       prior_pattern: 'rpm-{s0-,s0-b-}*'
     secrets: inherit
 
-  rebuild1:
+  rebuild0_late_b:
     needs: [prepare, rebuild0, rebuild0_b, rebuild0_late]
+    if: ${{ !cancelled() && (needs.rebuild0_late.result == 'success' || needs.rebuild0_late.result == 'skipped') && needs.prepare.outputs.stage0_late_b != '[]' }}
+    uses: ./.github/workflows/rebuild-lane.yml
+    with:
+      lane: s0-late-b
+      packages: ${{ needs.prepare.outputs.stage0_late_b }}
+      runner: ubuntu-24.04
+      timeout: '180'
+      fresh: ${{ github.event_name == 'workflow_dispatch' && inputs.full == true }}
+      prior_pattern: 'rpm-{s0-,s0-b-,s0-late-}*'
+    secrets: inherit
+
+  rebuild1:
+    needs: [prepare, rebuild0, rebuild0_b, rebuild0_late, rebuild0_late_b]
     if: ${{ !cancelled() && needs.prepare.outputs.stage1 != '[]' }}
     uses: ./.github/workflows/rebuild-lane.yml
     with:
@@ -465,11 +482,11 @@ jobs:
       runner: ubuntu-24.04
       timeout: '180'
       fresh: ${{ github.event_name == 'workflow_dispatch' && inputs.full == true }}
-      prior_pattern: 'rpm-{s0-,s0-b-,s0-late-}*'
+      prior_pattern: 'rpm-{s0-,s0-b-,s0-late-,s0-late-b-}*'
     secrets: inherit
 
   rebuild1_heavy:
-    needs: [prepare, rebuild0, rebuild0_b, rebuild0_late, rebuild1]
+    needs: [prepare, rebuild0, rebuild0_b, rebuild0_late, rebuild0_late_b, rebuild1]
     if: ${{ always() && !cancelled() && needs.prepare.outputs.stage1_heavy != '[]' }}
     uses: ./.github/workflows/rebuild-lane.yml
     with:
@@ -478,11 +495,11 @@ jobs:
       runner: ${{ vars.UTAH_HEAVY_RUNNER || 'ubuntu-24.04' }}
       timeout: '360'
       fresh: ${{ github.event_name == 'workflow_dispatch' && inputs.full == true }}
-      prior_pattern: 'rpm-{s0-,s0-b-,s0-late-,s1-fast-}*'
+      prior_pattern: 'rpm-{s0-,s0-b-,s0-late-,s0-late-b-,s1-fast-}*'
     secrets: inherit
 
   rebuild2:
-    needs: [prepare, rebuild0, rebuild0_b, rebuild0_late, rebuild1]
+    needs: [prepare, rebuild0, rebuild0_b, rebuild0_late, rebuild0_late_b, rebuild1]
     if: ${{ !cancelled() && needs.prepare.outputs.stage2 != '[]' }}
     uses: ./.github/workflows/rebuild-lane.yml
     with:
@@ -491,11 +508,11 @@ jobs:
       runner: ubuntu-24.04
       timeout: '180'
       fresh: ${{ github.event_name == 'workflow_dispatch' && inputs.full == true }}
-      prior_pattern: 'rpm-{s0-,s0-b-,s0-late-,s1-fast-,s1-heavy-}*'
+      prior_pattern: 'rpm-{s0-,s0-b-,s0-late-,s0-late-b-,s1-fast-,s1-heavy-}*'
     secrets: inherit
 
   rebuild2_late:
-    needs: [prepare, rebuild0, rebuild0_b, rebuild0_late, rebuild1, rebuild1_heavy, rebuild2]
+    needs: [prepare, rebuild0, rebuild0_b, rebuild0_late, rebuild0_late_b, rebuild1, rebuild1_heavy, rebuild2]
     if: ${{ always() && !cancelled() && needs.prepare.outputs.stage2_late != '[]' }}
     uses: ./.github/workflows/rebuild-lane.yml
     with:
@@ -504,11 +521,11 @@ jobs:
       runner: ubuntu-24.04
       timeout: '240'
       fresh: ${{ github.event_name == 'workflow_dispatch' && inputs.full == true }}
-      prior_pattern: 'rpm-{s0-,s0-b-,s0-late-,s1-fast-,s1-heavy-,s2-fast-}*'
+      prior_pattern: 'rpm-{s0-,s0-b-,s0-late-,s0-late-b-,s1-fast-,s1-heavy-,s2-fast-}*'
     secrets: inherit
 
   rebuild3:
-    needs: [prepare, rebuild0, rebuild0_b, rebuild0_late, rebuild1, rebuild2]
+    needs: [prepare, rebuild0, rebuild0_b, rebuild0_late, rebuild0_late_b, rebuild1, rebuild2]
     if: ${{ !cancelled() && needs.prepare.outputs.stage3 != '[]' }}
     uses: ./.github/workflows/rebuild-lane.yml
     with:
@@ -517,11 +534,11 @@ jobs:
       runner: ubuntu-24.04
       timeout: '180'
       fresh: ${{ github.event_name == 'workflow_dispatch' && inputs.full == true }}
-      prior_pattern: 'rpm-{s0-,s0-b-,s0-late-,s1-fast-,s1-heavy-,s2-fast-,s2-late-}*'
+      prior_pattern: 'rpm-{s0-,s0-b-,s0-late-,s0-late-b-,s1-fast-,s1-heavy-,s2-fast-,s2-late-}*'
     secrets: inherit
 
   rebuild3_late:
-    needs: [prepare, rebuild0, rebuild0_b, rebuild0_late, rebuild1, rebuild1_heavy, rebuild2, rebuild2_late, rebuild3]
+    needs: [prepare, rebuild0, rebuild0_b, rebuild0_late, rebuild0_late_b, rebuild1, rebuild1_heavy, rebuild2, rebuild2_late, rebuild3]
     if: ${{ always() && !cancelled() && needs.prepare.outputs.stage3_late != '[]' }}
     uses: ./.github/workflows/rebuild-lane.yml
     with:
@@ -530,11 +547,11 @@ jobs:
       runner: ubuntu-24.04
       timeout: '240'
       fresh: ${{ github.event_name == 'workflow_dispatch' && inputs.full == true }}
-      prior_pattern: 'rpm-{s0-,s0-b-,s0-late-,s1-fast-,s1-heavy-,s2-fast-,s2-late-,s3-fast-}*'
+      prior_pattern: 'rpm-{s0-,s0-b-,s0-late-,s0-late-b-,s1-fast-,s1-heavy-,s2-fast-,s2-late-,s3-fast-}*'
     secrets: inherit
 
   rebuild4:
-    needs: [prepare, rebuild0, rebuild0_b, rebuild0_late, rebuild1, rebuild1_heavy, rebuild2, rebuild2_late, rebuild3, rebuild3_late]
+    needs: [prepare, rebuild0, rebuild0_b, rebuild0_late, rebuild0_late_b, rebuild1, rebuild1_heavy, rebuild2, rebuild2_late, rebuild3, rebuild3_late]
     if: ${{ always() && !cancelled() && needs.prepare.outputs.stage4 != '[]' }}
     uses: ./.github/workflows/rebuild-lane.yml
     with:
@@ -543,7 +560,7 @@ jobs:
       runner: ubuntu-24.04
       timeout: '180'
       fresh: ${{ github.event_name == 'workflow_dispatch' && inputs.full == true }}
-      prior_pattern: 'rpm-{s0-,s0-b-,s0-late-,s1-fast-,s1-heavy-,s2-fast-,s2-late-,s3-fast-,s3-late-}*'
+      prior_pattern: 'rpm-{s0-,s0-b-,s0-late-,s0-late-b-,s1-fast-,s1-heavy-,s2-fast-,s2-late-,s3-fast-,s3-late-}*'
     secrets: inherit
 
   # Persist completed stages before later stages finish. These checkpoints are
@@ -564,7 +581,7 @@ jobs:
     secrets: inherit
 
   checkpoint0-late:
-    needs: [prepare, rebuild0, rebuild0_b, rebuild0_late, checkpoint0]
+    needs: [prepare, rebuild0, rebuild0_b, rebuild0_late, rebuild0_late_b, checkpoint0]
     if: >-
       ${{ always() && !cancelled() && needs.prepare.outputs.build_list != '[]'
           && (github.event_name != 'pull_request'
@@ -576,7 +593,7 @@ jobs:
     secrets: inherit
 
   checkpoint1-fast:
-    needs: [prepare, rebuild0, rebuild0_b, rebuild0_late, rebuild1, checkpoint0-late]
+    needs: [prepare, rebuild0, rebuild0_b, rebuild0_late, rebuild0_late_b, rebuild1, checkpoint0-late]
     if: >-
       ${{ always() && !cancelled() && needs.prepare.outputs.build_list != '[]'
           && (github.event_name != 'pull_request'
@@ -588,7 +605,7 @@ jobs:
     secrets: inherit
 
   checkpoint1-heavy:
-    needs: [prepare, rebuild0, rebuild0_b, rebuild0_late, rebuild1, rebuild1_heavy, checkpoint1-fast]
+    needs: [prepare, rebuild0, rebuild0_b, rebuild0_late, rebuild0_late_b, rebuild1, rebuild1_heavy, checkpoint1-fast]
     if: >-
       ${{ always() && !cancelled() && needs.prepare.outputs.build_list != '[]'
           && (github.event_name != 'pull_request'
@@ -600,7 +617,7 @@ jobs:
     secrets: inherit
 
   checkpoint2-fast:
-    needs: [prepare, rebuild0, rebuild0_b, rebuild0_late, rebuild1, rebuild2, checkpoint1-heavy]
+    needs: [prepare, rebuild0, rebuild0_b, rebuild0_late, rebuild0_late_b, rebuild1, rebuild2, checkpoint1-heavy]
     if: >-
       ${{ always() && !cancelled() && needs.prepare.outputs.build_list != '[]'
           && (github.event_name != 'pull_request'
@@ -612,7 +629,7 @@ jobs:
     secrets: inherit
 
   checkpoint2-late:
-    needs: [prepare, rebuild0, rebuild0_b, rebuild0_late, rebuild1, rebuild1_heavy, rebuild2, rebuild2_late, checkpoint2-fast]
+    needs: [prepare, rebuild0, rebuild0_b, rebuild0_late, rebuild0_late_b, rebuild1, rebuild1_heavy, rebuild2, rebuild2_late, checkpoint2-fast]
     if: >-
       ${{ always() && !cancelled() && needs.prepare.outputs.build_list != '[]'
           && (github.event_name != 'pull_request'
@@ -624,7 +641,7 @@ jobs:
     secrets: inherit
 
   checkpoint3-fast:
-    needs: [prepare, rebuild0, rebuild0_b, rebuild0_late, rebuild1, rebuild2, rebuild3, checkpoint2-late]
+    needs: [prepare, rebuild0, rebuild0_b, rebuild0_late, rebuild0_late_b, rebuild1, rebuild2, rebuild3, checkpoint2-late]
     if: >-
       ${{ always() && !cancelled() && needs.prepare.outputs.build_list != '[]'
           && (github.event_name != 'pull_request'
@@ -636,7 +653,7 @@ jobs:
     secrets: inherit
 
   checkpoint3-late:
-    needs: [prepare, rebuild0, rebuild0_b, rebuild0_late, rebuild1, rebuild1_heavy, rebuild2, rebuild2_late, rebuild3, rebuild3_late, checkpoint3-fast]
+    needs: [prepare, rebuild0, rebuild0_b, rebuild0_late, rebuild0_late_b, rebuild1, rebuild1_heavy, rebuild2, rebuild2_late, rebuild3, rebuild3_late, checkpoint3-fast]
     if: >-
       ${{ always() && !cancelled() && needs.prepare.outputs.build_list != '[]'
           && (github.event_name != 'pull_request'
@@ -648,7 +665,7 @@ jobs:
     secrets: inherit
 
   checkpoint4:
-    needs: [prepare, rebuild0, rebuild0_b, rebuild0_late, rebuild1, rebuild1_heavy, rebuild2, rebuild2_late, rebuild3, rebuild3_late, rebuild4, checkpoint3-late]
+    needs: [prepare, rebuild0, rebuild0_b, rebuild0_late, rebuild0_late_b, rebuild1, rebuild1_heavy, rebuild2, rebuild2_late, rebuild3, rebuild3_late, rebuild4, checkpoint3-late]
     if: >-
       ${{ always() && !cancelled() && needs.prepare.outputs.build_list != '[]'
           && (github.event_name != 'pull_request'
@@ -669,7 +686,7 @@ jobs:
   # in the picture, and compares. It reports every offender before failing, so
   # one run yields the whole worklist instead of one entry at a time.
   precedence:
-    needs: [prepare, rebuild0, rebuild0_late, rebuild1, rebuild1_heavy, rebuild2, rebuild2_late, rebuild3, rebuild3_late, rebuild4]
+    needs: [prepare, rebuild0, rebuild0_b, rebuild0_late, rebuild0_late_b, rebuild1, rebuild1_heavy, rebuild2, rebuild2_late, rebuild3, rebuild3_late, rebuild4]
     if: ${{ !cancelled() && needs.prepare.outputs.build_list != '[]' }}
     runs-on: ubuntu-24.04
     steps:
@@ -773,6 +790,8 @@ jobs:
               || (inputs.promote == true && needs.precedence.result == 'skipped'))
           && (needs.rebuild0.result == 'success' || needs.rebuild0.result == 'skipped')
           && (needs.rebuild0_b.result == 'success' || needs.rebuild0_b.result == 'skipped')
+          && (needs.rebuild0_late.result == 'success' || needs.rebuild0_late.result == 'skipped')
+          && (needs.rebuild0_late_b.result == 'success' || needs.rebuild0_late_b.result == 'skipped')
           && (needs.rebuild1.result == 'success' || needs.rebuild1.result == 'skipped')
           && (needs.rebuild1_heavy.result == 'success' || needs.rebuild1_heavy.result == 'skipped')
           && (needs.rebuild2.result == 'success' || needs.rebuild2.result == 'skipped')
@@ -782,7 +801,7 @@ jobs:
           && (needs.rebuild4.result == 'success' || needs.rebuild4.result == 'skipped')
           && (github.event_name != 'pull_request'
               || github.event.pull_request.head.repo.full_name == github.repository) }}
-    needs: [prepare, rebuild0, rebuild0_b, rebuild0_late, rebuild1, rebuild1_heavy, rebuild2, rebuild2_late, rebuild3, rebuild3_late, rebuild4, precedence]
+    needs: [prepare, rebuild0, rebuild0_b, rebuild0_late, rebuild0_late_b, rebuild1, rebuild1_heavy, rebuild2, rebuild2_late, rebuild3, rebuild3_late, rebuild4, precedence]
     # Build waves can overlap, but `:latest` is an atomic consumer input. Queue
     # only this critical section per ref; the later publisher re-seeds from the
     # repository that its predecessor just made current.
@@ -1006,7 +1025,7 @@ jobs:
           && needs.prepare.outputs.build_list != '[]'
           && (github.event_name != 'pull_request'
               || github.event.pull_request.head.repo.full_name == github.repository) }}
-    needs: [prepare, rebuild0, rebuild0_b, rebuild0_late, rebuild1, rebuild1_heavy, rebuild2, rebuild2_late, rebuild3, rebuild3_late, rebuild4]
+    needs: [prepare, rebuild0, rebuild0_b, rebuild0_late, rebuild0_late_b, rebuild1, rebuild1_heavy, rebuild2, rebuild2_late, rebuild3, rebuild3_late, rebuild4]
     # Serialise all cache writers so overlapping refs cannot clobber each
     # other's createrepo metadata. Do not cancel: a late writer still
     # carries RPMs worth keeping.

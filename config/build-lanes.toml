@@ -21,8 +21,10 @@
 # libheif is here for the same reason as ffmpeg, one library later: the
 # factory now builds openjph, and Fedora's 0.25 became rawhide's 0.31, so the
 # published libheif asks for libopenjph.so.0.25 and nothing will ever answer.
-# glycin build-requires libheif and stays in the fast lane, which is correct:
-# libheif's own soname does not move, only the openjph it links.
+# It gets a lane of its own after both stage-0 fast shards. The remaining late
+# packages must see this rebuilt libheif as well: glycin is in the fast lane and
+# its loader is a dependency of the gdk-pixbuf/GTK chain that DNF resolves for
+# all of them.
 #
 # libheif also builds with its own %bcond bootstrap set, permanently. Its
 # spec documents the cycle: libheif build-requires sdl2 -> SDL3 -> libdecor
@@ -39,10 +41,15 @@
 # see it -- in the fast lane beside it, meson stops at
 #   Dependency lookup for wayland-client ... found '1.25.0'
 [stage0_late]
+packages = ["libheif"]
+
+# Consumers of the rebuilt libheif and its glycin loader chain follow in a
+# second lane. Keeping this boundary explicit prevents a same-lane build from
+# resolving back to Fedora's old openjph/libheif pair.
+[stage0_late_b]
 packages = [
   "ffmpeg",
   "gstreamer1-plugins-good",
-  "libheif",
   "webrtc-audio-processing",
   "xorg-x11-server-Xwayland",
 ]

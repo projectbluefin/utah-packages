@@ -40,7 +40,7 @@ class BuildLaneTests(unittest.TestCase):
         manifest = json.loads((ROOT / "config/upstream-sources.json").read_text())
         stages = {item["name"]: item.get("stage", 0) for item in manifest["packages"]}
         lanes = tomllib.loads((ROOT / "config/build-lanes.toml").read_text())
-        late = lanes["stage0_late"]["packages"]
+        late = lanes["stage0_late"]["packages"] + lanes["stage0_late_b"]["packages"]
 
         # abseil-cpp is rebuilt in the stage-0 fast lane, so its one consumer
         # here has to be in the late lane rather than beside it.
@@ -63,7 +63,8 @@ class BuildLaneTests(unittest.TestCase):
         manifest = json.loads((ROOT / "config/upstream-sources.json").read_text())
         stages = {item["name"]: item.get("stage", 0) for item in manifest["packages"]}
         late = tomllib.loads((ROOT / "config/build-lanes.toml").read_text())
-        late = late["stage0_late"]["packages"]
+        first = late["stage0_late"]["packages"]
+        late = first + late["stage0_late_b"]["packages"]
 
         # consumer -> the stage-0 package whose rebuild it has to see
         reasons = {
@@ -74,6 +75,7 @@ class BuildLaneTests(unittest.TestCase):
             "xorg-x11-server-Xwayland": ["wayland"],
         }
         self.assertEqual(sorted(late), sorted(reasons))
+        self.assertEqual(first, ["libheif"])
         for consumer, providers in reasons.items():
             for provider in providers:
                 self.assertEqual(stages[provider], 0, provider)
