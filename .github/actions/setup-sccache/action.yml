@@ -16,8 +16,18 @@ runs:
   steps:
     - name: Download and verify sccache
       shell: bash
+      env:
+        CACHE_REF: ${{ inputs.cache_ref }}
       run: |
         set -euo pipefail
+        mkdir -p "$GITHUB_WORKSPACE/work/tools"
+        # sccache only accelerates the few recipes that opt into a durable
+        # cache. Every other package must remain buildable when the release
+        # edge is unavailable.
+        if [ -z "$CACHE_REF" ]; then
+          echo "No compiler cache requested for this package"
+          exit 0
+        fi
         version=v0.16.0
         sha256=aec995a83ad3dff3d14b6314e08858b7b73d35ca85a5bcf3d3a9ec07dee35588
         archive="$RUNNER_TEMP/sccache-${version}-x86_64-unknown-linux-musl.tar.gz"
@@ -26,13 +36,15 @@ runs:
         # archive starts. Retry those transport errors as well as HTTP 5xx;
         # the checksum below still makes a truncated or substituted download
         # fail closed.
-        curl --fail --location --retry 8 --retry-all-errors --retry-delay 2 \
-          --proto '=https' --tlsv1.2 "$url" --output "$archive"
+        if ! curl --fail --location --retry 8 --retry-all-errors --retry-delay 2 \
+          --proto '=https' --tlsv1.2 "$url" --output "$archive"; then
+          echo "sccache unavailable; continuing without the optional compiler cache" >&2
+          exit 0
+        fi
         printf '%s  %s\n' "$sha256" "$archive" | sha256sum --check --strict
         tar --extract --gzip --file "$archive" --directory "$RUNNER_TEMP"
         binary="$RUNNER_TEMP/sccache-${version}-x86_64-unknown-linux-musl/sccache"
         test -x "$binary"
-        mkdir -p "$GITHUB_WORKSPACE/work/tools"
         install -m 0755 "$binary" "$GITHUB_WORKSPACE/work/tools/sccache"
 
     # The cache lives under the /work mount the build container already has, so

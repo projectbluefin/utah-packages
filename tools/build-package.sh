@@ -50,9 +50,17 @@ if [[ $(python3 tools/recipe.py "$PACKAGE" cache) == true && ! -x $work/tools/sc
   version=v0.16.0
   sha256=aec995a83ad3dff3d14b6314e08858b7b73d35ca85a5bcf3d3a9ec07dee35588
   archive="$work/tools/sccache.tar.gz"
-  curl --fail --location --retry 3 "https://github.com/mozilla/sccache/releases/download/$version/sccache-$version-x86_64-unknown-linux-musl.tar.gz" --output "$archive"
-  printf '%s  %s\n' "$sha256" "$archive" | sha256sum --check --strict
-  tar -xzf "$archive" -C "$work/tools" --strip-components=1 "sccache-$version-x86_64-unknown-linux-musl/sccache"
+  if curl --fail --location --retry 8 --retry-all-errors --retry-delay 2 \
+    --proto '=https' --tlsv1.2 \
+    "https://github.com/mozilla/sccache/releases/download/$version/sccache-$version-x86_64-unknown-linux-musl.tar.gz" \
+    --output "$archive" \
+    && printf '%s  %s\n' "$sha256" "$archive" | sha256sum --check --strict \
+    && tar -xzf "$archive" -C "$work/tools" --strip-components=1 "sccache-$version-x86_64-unknown-linux-musl/sccache"; then
+    :
+  else
+    echo "sccache unavailable; continuing without the optional compiler cache" >&2
+    rm -f "$archive" "$work/tools/sccache"
+  fi
 fi
 if [[ ! -f $work/tools/sccache.env ]]; then
   printf '%s\n' 'export SCCACHE_DIR=/work/sccache' 'export SCCACHE_CACHE_SIZE=6G' 'export SCCACHE_IDLE_TIMEOUT=0' > "$work/tools/sccache.env"
