@@ -538,7 +538,7 @@ echo 'dracut_rescue_image="yes"' > $RPM_BUILD_ROOT%{dracutlibdir}/dracut.conf.d/
 - fix(base): replace eval with safe variable indirection in splitsep and export_n
 - spec: json support for dracut-install (needed for detecting dlopen dependencies)
 
-* Mon aug 10 2026 Hans de Goede <johannes.goede@oss.qualcomm.com> - 111-2
+* Mon Aug 10 2026 Hans de Goede <johannes.goede@oss.qualcomm.com> - 111-2
 - feat(dracut): add module to load Qualcomm ADSP module pre-udev
 
 * Fri Jul 31 2026 Pavel Valena <pvalena@redhat.com> - 111-1
