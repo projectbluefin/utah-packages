@@ -12,11 +12,13 @@
 # old soname -- checked against Hummingbird and against every Fedora package in
 # the runtime contract -- so rebuilding the consumers is the whole fix.
 #
-# webrtc-audio-processing takes pipewire's place in this lane. It links
+# webrtc-audio-processing takes pipewire's place in a late lane. It links
 # abseil-cpp, which the fast lane rebuilds, so it cannot share that lane; and
 # pipewire links webrtc-audio-processing, so pipewire cannot share this one.
 # pipewire therefore moves out to stage 1, which is the first wave that sees
-# every stage-0 lane.
+# every stage-0 lane. Keep WebRTC separate from gstreamer1-plugins-good: the
+# latter's buildroot resolves PipeWire, whose dependency transaction needs the
+# rebuilt WebRTC provider before it can install.
 #
 # libheif is here for the same reason as ffmpeg, one library later: the
 # factory now builds openjph, and Fedora's 0.25 became rawhide's 0.31, so the
@@ -43,14 +45,17 @@
 [stage0_late]
 packages = ["libheif"]
 
-# Consumers of the rebuilt libheif and its glycin loader chain follow in a
-# second lane. Keeping this boundary explicit prevents a same-lane build from
-# resolving back to Fedora's old openjph/libheif pair.
+# WebRTC follows the fast lanes in its own lane, before any consumer whose
+# buildroot resolves PipeWire. The remaining late consumers follow in a third
+# lane. Keeping both boundaries explicit prevents same-lane builds from
+# resolving back to Fedora's old providers.
 [stage0_late_b]
+packages = ["webrtc-audio-processing"]
+
+[stage0_late_c]
 packages = [
   "ffmpeg",
   "gstreamer1-plugins-good",
-  "webrtc-audio-processing",
   "xorg-x11-server-Xwayland",
 ]
 
