@@ -26,6 +26,9 @@
       "name": "raptor2",
       "version": "2.0.15",
       "url": "https://download.librdf.org/source/raptor2-2.0.15.tar.gz",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/raptor2/raptor2-2.0.15.tar.gz/md5/a39f6c07ddb20d7dd2ff1f95fa21e2cd/raptor2-2.0.15.tar.gz"
+      ],
       "filename": "raptor2-2.0.15.tar.gz",
       "sha512": "563dd01869eb4df8524ec12e2c0a541653874dcd834bd1eb265bc2943bb616968f624121d4688579cdce11b4f00a8ab53b7099f1a0850e256bb0a2c16ba048ee"
     },
