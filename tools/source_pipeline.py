@@ -183,6 +183,14 @@ def bundled_sources(package: dict, target_dir: Path, already: str) -> list[str]:
 def verify_staged_sources(package: dict, package_root: Path) -> list[str]:
     """Fail if Packit changed any source after the verification gate."""
     package_dir = package_root / package["name"]
+    if package.get("no_upstream_source"):
+        # Nothing was fetched, so there is nothing to re-verify. The fetch path
+        # below already refuses such an entry that carries a sha512, so reading
+        # one here raised KeyError instead: color-filesystem got through
+        # `packit srpm` and died in this gate. A spec with no Source line puts
+        # nothing but itself in the SRPM, and the placeholder archive
+        # tools/packit_source0.py writes to satisfy Packit is not a source.
+        return []
     expected_sources = {
         package.get("filename", ""): package["sha512"].lower(),
         **dict(source_manifest(package)),
