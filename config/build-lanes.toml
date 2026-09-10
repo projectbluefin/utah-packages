@@ -42,15 +42,23 @@
 # factory builds 1.26.0 in the fast lane, so this is the first place that can
 # see it -- in the fast lane beside it, meson stops at
 #   Dependency lookup for wayland-client ... found '1.25.0'
+#
+# libtevent and samba are here for ICU, not for a soname of their own.
+# ffmpeg build-requires pkgconfig(smbclient) and gvfs libsmbclient-devel,
+# and Fedora's samba-core-libs links libicu 77, which no build root may
+# install any more. The factory's samba is the only libsmbclient that can
+# ever resolve, so it has to precede ffmpeg's lane: libtalloc and libtdb
+# build in the fast lane, libtevent (which needs talloc) here, samba (which
+# needs tevent) in the WebRTC lane, and ffmpeg sees all three one lane on.
 [stage0_late]
-packages = ["libheif"]
+packages = ["libheif", "libtevent"]
 
 # WebRTC follows the fast lanes in its own lane, before any consumer whose
 # buildroot resolves PipeWire. The remaining late consumers follow in a third
 # lane. Keeping both boundaries explicit prevents same-lane builds from
 # resolving back to Fedora's old providers.
 [stage0_late_b]
-packages = ["webrtc-audio-processing"]
+packages = ["webrtc-audio-processing", "samba"]
 
 [stage0_late_c]
 packages = [

@@ -1389,7 +1389,7 @@
       "url": "https://www.samba.org/ftp/tevent/tevent-0.17.2.tar.gz",
       "filename": "tevent-0.17.2.tar.gz",
       "sha512": "23b8a8e4251d3a88e9bbb78134787280047e631393ab668fa34ab69986be72046506f9766b6b82f7ff6ce38412d7198665120312f98b9fe5428a662efc16b59b",
-      "stage": 1
+      "stage": 0
     },
     {
       "name": "libthai",
@@ -1938,7 +1938,7 @@
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/samba/samba-4.25.0rc1.tar.xz/sha512/34b1a2ebf9b391fa9f03cfc6bb95cfb47237e1c0a677144b6e699420fe27fe22a113783e6bc17244948156091bf1d24debe3b996ff026724f0c2aaf06e2ed736/samba-4.25.0rc1.tar.xz",
       "filename": "samba-4.25.0rc1.tar.xz",
       "sha512": "34b1a2ebf9b391fa9f03cfc6bb95cfb47237e1c0a677144b6e699420fe27fe22a113783e6bc17244948156091bf1d24debe3b996ff026724f0c2aaf06e2ed736",
-      "stage": 2
+      "stage": 0
     },
     {
       "name": "sassc",
