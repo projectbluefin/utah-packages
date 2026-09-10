@@ -1,0 +1,3 @@
+xml:
+  ignore:
+    - /usr/share/gtk-doc/html/raptor2/raptor2.devhelp2

@@ -50,8 +50,13 @@
 # ever resolve, so it has to precede ffmpeg's lane: libtalloc and libtdb
 # build in the fast lane, libtevent (which needs talloc) here, samba (which
 # needs tevent) in the WebRTC lane, and ffmpeg sees all three one lane on.
+#
+# liblrdf is here because gstreamer1-plugins-bad-free's LADSPA plugin links
+# it, and Fedora's liblrdf needs a raptor2 that links libicu 77. The factory
+# builds raptor2 in the fast lane; liblrdf has to build one lane later to
+# see it, and gst-bad in stage 1 then sees both.
 [stage0_late]
-packages = ["libheif", "libtevent"]
+packages = ["libheif", "libtevent", "liblrdf"]
 
 # WebRTC follows the fast lanes in its own lane, before any consumer whose
 # buildroot resolves PipeWire. The remaining late consumers follow in a third

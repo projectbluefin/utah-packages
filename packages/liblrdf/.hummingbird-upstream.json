@@ -1,0 +1,8 @@
+{
+  "package": "liblrdf",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/liblrdf.git",
+  "commit": "cc03c83d8275b064b1082708a0de960bf459a61b",
+  "tree": "ade74c21610351dd87fd730f777b44d564e9faa6",
+  "imported_at": "2026-09-10T00:41:33.892329+00:00"
+}

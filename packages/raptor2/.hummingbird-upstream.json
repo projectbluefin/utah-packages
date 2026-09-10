@@ -1,0 +1,8 @@
+{
+  "package": "raptor2",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/raptor2.git",
+  "commit": "edb43617b876ac7912e793781ee4da3a7b615cbd",
+  "tree": "3a9086a0288cccb0715afd29bc9cfaca7388de1f",
+  "imported_at": "2026-09-10T00:41:31.947371+00:00"
+}

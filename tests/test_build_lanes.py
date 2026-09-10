@@ -96,13 +96,14 @@ class BuildLaneTests(unittest.TestCase):
             "ffmpeg": ["libvpx", "openapv", "samba"],
             "gstreamer1-plugins-good": ["libvpx"],
             "libheif": ["openjph"],
+            "liblrdf": ["raptor2"],
             "libtevent": ["libtalloc"],
             "samba": ["libtevent"],
             "webrtc-audio-processing": ["abseil-cpp"],
             "xorg-x11-server-Xwayland": ["wayland"],
         }
         self.assertEqual(sorted(late), sorted(reasons))
-        self.assertEqual(sorted(first), ["libheif", "libtevent"])
+        self.assertEqual(sorted(first), ["libheif", "liblrdf", "libtevent"])
         self.assertEqual(sorted(second), ["samba", "webrtc-audio-processing"])
         self.assertIn("gstreamer1-plugins-good", third)
         lane_index = {name: 0 for name in first}

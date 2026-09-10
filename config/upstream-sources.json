@@ -2,6 +2,13 @@
   "schema": 1,
   "packages": [
     {
+      "name": "liblrdf",
+      "version": "0.5.0",
+      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/liblrdf/liblrdf-0.5.0.tar.gz/md5/371b90058c25d3cd80d2e185724b274d/liblrdf-0.5.0.tar.gz",
+      "filename": "liblrdf-0.5.0.tar.gz",
+      "sha512": "70fa58be2244916706701d6a37611070fe93db0eaa07b63fad7fae3aba4a12b0b08827cafe101fda6a54abaae7714f1ed5845d58b0aff452ef14e440fb01d924"
+    },
+    {
       "name": "ModemManager",
       "version": "1.24.2",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/ModemManager/ModemManager-1.24.2.tar.bz2/sha512/692d0699037845f7e189cc854f6fbaab90615c9eaaada83a00a02745d13bd87afac16349a4211425929a84cf373fda18475479bff64c9fe89cb35b361fb45663/ModemManager-1.24.2.tar.bz2",
@@ -14,6 +21,13 @@
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/nuspell/nuspell-5.1.8.tar.gz/sha512/1973fb0fd9c807b3bb4e9f49c792847741443e43035e83a79226ed041b8350ea8ca8855d2e204b5f3c9257d07ab853fd2077165731548dfd2e5521e36079db68/nuspell-5.1.8.tar.gz",
       "filename": "nuspell-5.1.8.tar.gz",
       "sha512": "1973fb0fd9c807b3bb4e9f49c792847741443e43035e83a79226ed041b8350ea8ca8855d2e204b5f3c9257d07ab853fd2077165731548dfd2e5521e36079db68"
+    },
+    {
+      "name": "raptor2",
+      "version": "2.0.15",
+      "url": "https://download.librdf.org/source/raptor2-2.0.15.tar.gz",
+      "filename": "raptor2-2.0.15.tar.gz",
+      "sha512": "563dd01869eb4df8524ec12e2c0a541653874dcd834bd1eb265bc2943bb616968f624121d4688579cdce11b4f00a8ab53b7099f1a0850e256bb0a2c16ba048ee"
     },
     {
       "name": "SDL3",
