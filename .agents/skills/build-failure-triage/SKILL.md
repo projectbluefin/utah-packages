@@ -197,6 +197,16 @@ Signs the triage is going wrong, not the build:
 - Concluding "flaky" without naming what the build root lacked.
 - Explaining a failure without saying which build root produced it.
 
+## Workflow contamination checks
+
+Before changing a spec, verify that a stage job downloaded only artifacts from
+strictly earlier stages. `rpm-*` also matches sibling output; stage 0 must
+download nothing, and stage N must use `rpm-s[0-(N-1)]-*`. Also inspect the
+initial container transaction: per-repository excludes cannot resolve packages
+from two Hummingbird versions, and excludes do not replace packages already
+installed in the Fedora image. Use a global exclude for same-repository
+conflicts and explicitly upgrade preinstalled packages that Hummingbird owns.
+
 ## Verification
 
 Before reporting a cause:

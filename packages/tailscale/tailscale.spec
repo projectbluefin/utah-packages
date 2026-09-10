@@ -20,6 +20,8 @@ Version:                1.98.8
 %global common_description %{expand:
 The easiest, most secure way to use WireGuard and 2FA.}
 
+%global debug_package %{nil}
+
 Name:           tailscale
 Release:        2%{?dist}
 Summary:        The easiest, most secure way to use WireGuard and 2FA
@@ -1048,6 +1050,8 @@ Provides:       bundled(golang(sigs.k8s.io/json)) = v0.0.0~20241014173422~cfa47c
 %build
 # https://github.com/tailscale/tailscale/blob/v1.92.5/README.md#building
 export LDFLAGS="-X tailscale.com/version.longStamp=%{version} -X tailscale.com/version.shortStamp=%{version}"
+# The vendored json experiment shim targets APIs absent from Fedora's Go.
+export GOEXPERIMENT=nojsonv2
 
 %gobuild -o %{gobuilddir}/bin/tailscale ./cmd/tailscale
 %gobuild -o %{gobuilddir}/bin/tailscaled ./cmd/tailscaled
