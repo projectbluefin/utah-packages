@@ -14,6 +14,7 @@ on:
       - config/**
       - packages/**
       - tools/source_pipeline.py
+      - tools/generated_sources.py
       - tools/runtime_contract.py
       - tests/**
       - .github/workflows/rebuild-rpms.yml
@@ -23,6 +24,7 @@ on:
       - config/**
       - packages/**
       - tools/source_pipeline.py
+      - tools/generated_sources.py
       - tools/runtime_contract.py
       - tests/**
       - .github/workflows/rebuild-rpms.yml

@@ -24,6 +24,7 @@ on:
       - .github/workflows/packit-srpm-pilot.yml
       - tools/packit_source0.py
       - tools/source_pipeline.py
+      - tools/generated_sources.py
       - tools/packit_workflow.py
   pull_request:
     paths:
@@ -33,6 +34,7 @@ on:
       - .github/workflows/packit-srpm-pilot.yml
       - tools/packit_source0.py
       - tools/source_pipeline.py
+      - tools/generated_sources.py
       - tools/packit_workflow.py
 
 permissions:

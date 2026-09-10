@@ -3,11 +3,13 @@
 
 from __future__ import annotations
 
+import gzip
 import json
 import os
 from pathlib import Path
 import subprocess
 import sys
+import tarfile
 
 
 def verified_source0(root: Path, working_directory: Path | None = None) -> str:
@@ -39,6 +41,9 @@ def verified_source0(root: Path, working_directory: Path | None = None) -> str:
     if len(matches) != 1:
         raise ValueError(f"cannot uniquely locate source lock for {package_name}")
 
+    if matches[0].get("no_upstream_source"):
+        return _placeholder_archive(candidates[0].parent, package_name, matches[0]["version"])
+
     archive = candidates[0].parent / matches[0]["filename"]
     if not archive.is_file():
         raise ValueError(f"verified Source0 is not staged: {archive}")
@@ -47,6 +52,31 @@ def verified_source0(root: Path, working_directory: Path | None = None) -> str:
         return str(archive.resolve().relative_to(working_directory))
     except ValueError:
         return str(archive.relative_to(root))
+
+
+def _placeholder_archive(spec_dir: Path, package: str, version: str) -> str:
+    """Satisfy Packit's create-archive contract for a recipe with no archive.
+
+    color-filesystem has no upstream source at all -- four directories and an
+    rpm macro file, no Source line, no dist-git sources -- so its lock declares
+    `no_upstream_source` rather than inventing a URL. Packit does not offer a
+    way to opt out: `prepare()` calls create_archive unconditionally, and the
+    action must print the path of a file that exists or Packit raises "No output
+    from create-archive action."
+
+    Nothing consumes the bytes. The workflow passes --preserve-spec, so Packit
+    never rewrites Source0 to point at this, and a spec with no Source line puts
+    nothing but itself in the SRPM. It is written into the spec directory so
+    Packit has no archive outside the spec dir to symlink, and it is emitted
+    empty with a zeroed gzip header so two runs produce identical bytes.
+    """
+    archive = spec_dir / f"{package}-{version}.tar.gz"
+    if not archive.is_file():
+        with archive.open("wb") as sink:
+            with gzip.GzipFile(filename="", mode="wb", fileobj=sink, mtime=0) as raw:
+                with tarfile.open(fileobj=raw, mode="w"):
+                    pass
+    return archive.name
 
 
 def main() -> int:
