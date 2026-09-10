@@ -35,8 +35,17 @@ because each build-requires one of them and a lane cannot see its own
 output. Each completed lane checkpoints its successful RPMs
 into the internal `:building` candidate. The candidate is serialized across
 all refs and is never published as the consumer `:latest` tag. Package build
-identities include the source lock, recipe tree, factory policy, and pinned
-Hummingbird base; missing or mismatched identities are rebuilt.
+identities are the source lock, recipe tree and pinned Hummingbird base --
+nothing about the factory's own scripts. Each build also records the factory
+packages installed in its build root (`build_deps` in the manifest), and
+`tools/rebuild_plan.py` rebuilds a package when its identity or recorded
+outputs changed, or when anything it was built against is rebuilding or has
+changed identity, or has left the manifest, to a fixed point. A change to how
+the factory builds is applied everywhere with `full=true`, not by hashing the
+script. A record carrying no `build_deps` field at all is rebuilt rather than
+trusted: an empty record means the build looked and found no factory package
+upstream, while a missing one means nobody looked, and reading the second as
+the first is how a soname bump would stop propagating without any error.
 
 Rawhide is also the bootstrap escape hatch for a newly introduced Hummingbird
 gap: its compiler, macros, and BuildRequires can establish the first RPM. Once

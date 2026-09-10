@@ -150,10 +150,21 @@ it with (`tools/recipe.py`); the spec gates each port behind a bcond, so a
 plain `rpmbuild` with no defines still builds both, as Fedora does.
 
 Every completed lane checkpoints successful RPM artifacts into the internal
-`:building` recovery candidate. That tag is never a consumer input. Package
-results carry an exact source/recipe/buildroot identity and are reusable only
-when that identity and recorded RPM outputs match. A failed or timed-out heavy
-package therefore does not require rebuilding completed lanes.
+`:building` recovery candidate. That tag is never a consumer input. A package result carries an
+identity covering its source lock, recipe tree and the pinned Hummingbird
+base, and is reusable while that identity and its recorded RPM outputs match.
+The factory's own scripts are deliberately not part of it: editing a build
+script changes how a package is built, not what it is built from, and hashing
+it in meant a one-line change rebuilt all 335 packages.
+
+What each build was built *against* is recorded instead. The build lists the
+factory RPMs installed in its build root, `tools/build_identity.py` maps them
+back to the entries that produced them, and `tools/rebuild_plan.py` rebuilds a
+package whenever a recorded dependency is itself rebuilding, has changed
+identity, or has left the manifest -- to a fixed point, so a soname bump at
+the bottom of the tree reaches every consumer above it. Applying a change in
+build machinery everywhere is what `full=true` is for. A failed or timed-out
+heavy package therefore does not require rebuilding completed lanes.
 
 Use the local Justfile for the supported operations:
 

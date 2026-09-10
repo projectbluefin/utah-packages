@@ -33,7 +33,16 @@ def update(root: Path) -> Path:
                 continue
         except (OSError, ValueError, TypeError, KeyError):
             continue
-        packages[package] = {"build_key": build_key, "outputs": outputs}
+        record = {"build_key": build_key, "outputs": outputs}
+        # Carried only when the build actually recorded one. A record without
+        # this field is one the rebuild planner cannot vouch for, and it says
+        # so by rebuilding; defaulting it to {} here would instead assert that
+        # the package has no upstream to check, which is how a soname bump
+        # stops propagating and nothing complains.
+        deps = item.get("build_deps")
+        if isinstance(deps, dict):
+            record["build_deps"] = deps
+        packages[package] = record
 
     manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
     return manifest_path

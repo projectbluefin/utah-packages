@@ -90,6 +90,12 @@ jobs:
 
       # Overlay this run last: the shared accumulator may still hold an older
       # build at the same RPM filename and must not overwrite fresh lane output.
+      # Must stay after the accumulator seed above. Both write into
+      # work/prior, and both carry result/<package>.build-key.json, so this
+      # step overwrites the accumulator's record with this run's wherever a
+      # package has already been rebuilt. build_identity.py reads those files
+      # as the authority on what the build root installed; reordering these
+      # two steps would silently record stale dependency keys.
       - name: Collect RPMs built by earlier lanes
         if: inputs.prior_pattern != ''
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8

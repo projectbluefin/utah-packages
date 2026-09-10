@@ -95,6 +95,7 @@ if ((status == 0)) && [[ $BUILD_MODE == build ]]; then
     echo 'Build inputs changed during execution; retained RPMs but refusing to record a reusable identity.' >&2
     exit 1
   fi
-  python3 tools/build_identity.py "$PACKAGE" --rpm-dir "$work/result" > "$work/result/$PACKAGE.build-key.json"
+  python3 tools/build_identity.py "$PACKAGE" --rpm-dir "$work/result" \
+    --deps-file "$work/build-deps.txt" --prior-dir "$work/prior" > "$work/result/$PACKAGE.build-key.json"
 fi
 exit "$status"

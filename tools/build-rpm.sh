@@ -316,6 +316,18 @@ find /work/result -name "*.rpm" -type f -print0 | \
 # work/reports/*.json, so one file always matches and the upload
 # reports success while shipping no packages at all.
 test -n "$(find /work/result -name "*.rpm" -type f -print -quit)"
+# What this build was built against, as RPM basenames. Every
+# factory RPM carries the .bfin disttag, so this is exactly the
+# set of factory packages the build root resolved. Basenames
+# rather than source names because two entries can share one
+# recipe -- the WebKitGTK shards, malcontent and its bootstrap --
+# and collapse to one %{SOURCERPM}; their binaries never collide,
+# and build_identity.py maps each back through the outputs the
+# producing build recorded. The rebuild planner reads that map:
+# when a dependency is rebuilt or changes identity, so is this.
+rpm -qa --qf "%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}.rpm\n" \
+  | grep -F ".bfin" | sort -u > /work/build-deps.txt || true
+echo "built against $(wc -l < /work/build-deps.txt) factory RPMs"
 # The runtime carries libicu 78 only. An RPM that links 77 is not a
 # package, it is a transaction failure deferred to the image build --
 # and the accumulator would drop it at every consumer anyway. Fail

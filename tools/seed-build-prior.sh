@@ -36,6 +36,12 @@ copy_rpms() {
   find "$from" -name '*.rpm' -type f \
     ! -name '*debuginfo*' ! -name '*debugsource*' \
     -exec cp -f -t "$prior" {} +
+  # The build identity records what the build root installed by mapping each
+  # RPM back through the outputs its producing build recorded. Those records
+  # live in these files, so a local build without them cannot name a single
+  # dependency -- carry them so a local result matches what CI would write.
+  find "$from" \( -name '*.build-key.json' -o -name 'factory-build-manifest.json' \) \
+    -type f -exec cp -f -t "$prior" {} + 2>/dev/null || true
 }
 
 for source in "$@"; do
@@ -52,8 +58,9 @@ for source in "$@"; do
     --mount "type=image,source=$source,destination=/input" \
     -v "$root/$prior:/prior:Z" \
     quay.io/fedora/fedora:44 \
-    find /input -name '*.rpm' -type f \
-      ! -name '*debuginfo*' ! -name '*debugsource*' \
+    find /input \( \( -name '*.rpm' -type f \
+      ! -name '*debuginfo*' ! -name '*debugsource*' \) \
+      -o -name '*.build-key.json' -o -name 'factory-build-manifest.json' \) \
       -exec cp -f -t /prior {} +
 done
 
