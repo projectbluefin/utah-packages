@@ -37,10 +37,22 @@ import subprocess
 import sys
 import tarfile
 import tempfile
+import time
 import urllib.request
 
 
 SCRIPT_PATH = "tools/generated_sources.py"
+
+# gcc.gnu.org rate-limits, and this factory asks it for the same revision from
+# every concurrent run: four branches each building gcc at stage 0 is four
+# clones at once, and the fourth gets
+#   fatal: unable to access 'https://gcc.gnu.org/git/gcc.git/':
+#   The requested URL returned error: 429
+# before the build root is even up. Retry on the same schedule
+# tools/source_pipeline.py uses for its HTTP fetches. This is availability
+# only: git verifies every object against its own hash on receipt, and the
+# caller still checks the pinned SHA-512 of the archive this produces.
+FETCH_ATTEMPTS = 3
 
 # SHA-512 of the first-party input archives, pinned so a re-rolled upstream
 # artifact fails closed instead of silently changing the generated output.
@@ -134,10 +146,17 @@ def _gcc_generate(package_dir: Path, out_dir: Path) -> Path:
         )
         # gcc.gnu.org serves fetch-by-sha1, so the pinned revision is fetched
         # directly; git verifies every object against its own hash on receipt.
-        subprocess.run(
-            ["git", "-C", str(repo), "fetch", "-q", "--depth", "1", "origin", revision],
-            check=True,
-        )
+        fetch = ["git", "-C", str(repo), "fetch", "-q", "--depth", "1", "origin", revision]
+        for attempt in range(1, FETCH_ATTEMPTS + 1):
+            completed = subprocess.run(fetch)
+            if completed.returncode == 0:
+                break
+            if attempt == FETCH_ATTEMPTS:
+                raise RuntimeError(
+                    f"git fetch of {revision} from gcc.gnu.org failed after "
+                    f"{FETCH_ATTEMPTS} attempts (exit {completed.returncode})"
+                )
+            time.sleep(2 ** attempt)
         archive = subprocess.Popen(
             ["git", "-C", str(repo), "archive", f"--prefix={prefix}/", revision],
             stdout=subprocess.PIPE,
