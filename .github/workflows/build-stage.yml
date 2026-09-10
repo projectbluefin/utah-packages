@@ -3,9 +3,10 @@
 # rebuild0 through rebuild4 were five copies of this file, differing only in a
 # stage number and a `needs:` list -- four substantive lines out of roughly two
 # hundred. Five copies meant five places to fix a build-root bug, and the
-# copies had already drifted: the Firefox swap workaround existed only in
+# copies had already drifted: a Firefox PGO swap workaround existed only in
 # stage 0, so it would have silently stopped applying the moment Firefox was
-# solved into a later wave.
+# solved into a later wave. That recipe is gone -- Utah ships the Flatpak --
+# but the drift it caused is why this file is the only copy.
 #
 # The caller owns ordering. This workflow builds one wave and knows nothing
 # about the others beyond the artifacts they left behind.
@@ -36,21 +37,6 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: ./.github/actions/setup-sccache
-      - name: Add best-effort swap for Firefox PGO/LTO
-        if: matrix.package == 'firefox'
-        run: |
-          set -euo pipefail
-          available_gib=$(df --output=avail -BG "$RUNNER_TEMP" | tail -n1 | tr -dc 0-9)
-          if [ "$available_gib" -lt 20 ]; then
-            echo "Only ${available_gib} GiB free; skipping extra swap to preserve build disk" >&2
-            exit 0
-          fi
-          swapfile="$RUNNER_TEMP/firefox-pgo.swap"
-          sudo fallocate -l 12G "$swapfile"
-          sudo chmod 600 "$swapfile"
-          sudo mkswap "$swapfile"
-          sudo swapon "$swapfile" || { echo "Host does not permit extra swap" >&2; exit 0; }
-          free -h
       - name: Collect RPMs built by earlier stages
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
