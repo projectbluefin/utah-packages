@@ -44,6 +44,7 @@ class BuildLaneTests(unittest.TestCase):
             lanes["stage0_late"]["packages"]
             + lanes["stage0_late_b"]["packages"]
             + lanes["stage0_late_c"]["packages"]
+            + lanes["stage0_late_d"]["packages"]
         )
 
         # abseil-cpp is rebuilt in the stage-0 fast lane, so its one consumer
@@ -87,7 +88,8 @@ class BuildLaneTests(unittest.TestCase):
         first = late["stage0_late"]["packages"]
         second = late["stage0_late_b"]["packages"]
         third = late["stage0_late_c"]["packages"]
-        late = first + second + third
+        fourth = late["stage0_late_d"]["packages"]
+        late = first + second + third + fourth
 
         # consumer -> the stage-0 package whose rebuild it has to see. A
         # provider may itself be a late entry (libtevent, samba): then it
@@ -103,12 +105,15 @@ class BuildLaneTests(unittest.TestCase):
             "xorg-x11-server-Xwayland": ["wayland"],
         }
         self.assertEqual(sorted(late), sorted(reasons))
-        self.assertEqual(sorted(first), ["libheif", "liblrdf", "libtevent"])
-        self.assertEqual(sorted(second), ["samba", "webrtc-audio-processing"])
+        self.assertEqual(sorted(first), ["libheif", "liblrdf"])
+        self.assertEqual(sorted(second), ["libtevent", "webrtc-audio-processing"])
         self.assertIn("gstreamer1-plugins-good", third)
+        self.assertIn("samba", third)
+        self.assertEqual(fourth, ["ffmpeg"])
         lane_index = {name: 0 for name in first}
         lane_index.update({name: 1 for name in second})
         lane_index.update({name: 2 for name in third})
+        lane_index.update({name: 3 for name in fourth})
         for consumer, providers in reasons.items():
             for provider in providers:
                 self.assertEqual(stages[provider], 0, provider)
