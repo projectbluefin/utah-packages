@@ -20,6 +20,8 @@ Version:                1.98.8
 %global common_description %{expand:
 The easiest, most secure way to use WireGuard and 2FA.}
 
+%global debug_package %{nil}
+
 Name:           tailscale
 Release:        2%{?dist}
 Summary:        The easiest, most secure way to use WireGuard and 2FA
