@@ -9,6 +9,13 @@
       "sha512": "692d0699037845f7e189cc854f6fbaab90615c9eaaada83a00a02745d13bd87afac16349a4211425929a84cf373fda18475479bff64c9fe89cb35b361fb45663"
     },
     {
+      "name": "nuspell",
+      "version": "5.1.8",
+      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/nuspell/nuspell-5.1.8.tar.gz/sha512/1973fb0fd9c807b3bb4e9f49c792847741443e43035e83a79226ed041b8350ea8ca8855d2e204b5f3c9257d07ab853fd2077165731548dfd2e5521e36079db68/nuspell-5.1.8.tar.gz",
+      "filename": "nuspell-5.1.8.tar.gz",
+      "sha512": "1973fb0fd9c807b3bb4e9f49c792847741443e43035e83a79226ed041b8350ea8ca8855d2e204b5f3c9257d07ab853fd2077165731548dfd2e5521e36079db68"
+    },
+    {
       "name": "SDL3",
       "version": "3.4.16",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/SDL3/SDL3-3.4.16.tar.gz/sha512/74a5ee1e5bba138a8daa710e200ac3585c60f696311c46252d86bc685c55e8271cd0d68439f8e13ca515b702d46ef58914d0f7b2352019870a5763ed79739e9a/SDL3-3.4.16.tar.gz",
@@ -104,7 +111,8 @@
       "version": "5.87",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/bluez/bluez-5.87.tar.xz/sha512/f1e3bede9b0bbc3b5cfe9fed5f7945be7cbcf7a299729b5f82f1cba4bbbd6c4d2e372c9685f61458dfc374c9dfee352b6c2933a2c0d7727b8171ff394055e169/bluez-5.87.tar.xz",
       "filename": "bluez-5.87.tar.xz",
-      "sha512": "f1e3bede9b0bbc3b5cfe9fed5f7945be7cbcf7a299729b5f82f1cba4bbbd6c4d2e372c9685f61458dfc374c9dfee352b6c2933a2c0d7727b8171ff394055e169"
+      "sha512": "f1e3bede9b0bbc3b5cfe9fed5f7945be7cbcf7a299729b5f82f1cba4bbbd6c4d2e372c9685f61458dfc374c9dfee352b6c2933a2c0d7727b8171ff394055e169",
+      "stage": 1
     },
     {
       "name": "cairo",
@@ -207,7 +215,8 @@
       "version": "2.8.19",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/enchant2/enchant-2.8.19.tar.gz/sha512/0aebd255d589637d0947f8832a194457f561e6000fbfdcff57e487f85203b5ddc77458d1eaad84fd8765052264ff2d9b1dbaf5fbce0ca194aa097f4944b302db/enchant-2.8.19.tar.gz",
       "filename": "enchant-2.8.19.tar.gz",
-      "sha512": "0aebd255d589637d0947f8832a194457f561e6000fbfdcff57e487f85203b5ddc77458d1eaad84fd8765052264ff2d9b1dbaf5fbce0ca194aa097f4944b302db"
+      "sha512": "0aebd255d589637d0947f8832a194457f561e6000fbfdcff57e487f85203b5ddc77458d1eaad84fd8765052264ff2d9b1dbaf5fbce0ca194aa097f4944b302db",
+      "stage": 1
     },
     {
       "name": "evolution-data-server",
@@ -1422,7 +1431,8 @@
       "version": "1.5",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/libvdpau/libvdpau-1.5.tar.bz2/sha512/7affb14874431eba1be6e8634fcbb6247cbf6956fb88116e06e60de30a7852a407e8598176a369c2ba4bfaef4be58727e51d4bc390f705991ac83d660f611ff5/libvdpau-1.5.tar.bz2",
       "filename": "libvdpau-1.5.tar.bz2",
-      "sha512": "7affb14874431eba1be6e8634fcbb6247cbf6956fb88116e06e60de30a7852a407e8598176a369c2ba4bfaef4be58727e51d4bc390f705991ac83d660f611ff5"
+      "sha512": "7affb14874431eba1be6e8634fcbb6247cbf6956fb88116e06e60de30a7852a407e8598176a369c2ba4bfaef4be58727e51d4bc390f705991ac83d660f611ff5",
+      "buildroot_icu77": true
     },
     {
       "name": "libvisual",

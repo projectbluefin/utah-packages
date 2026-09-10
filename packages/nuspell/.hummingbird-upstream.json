@@ -1,0 +1,8 @@
+{
+  "package": "nuspell",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/nuspell.git",
+  "commit": "5c5c29a2838a893141c43e2b023e751cdfb358d6",
+  "tree": "a97d096f0acbde6e35267af9aa65f40181b91f57",
+  "imported_at": "2026-09-09T23:40:44.840199+00:00"
+}

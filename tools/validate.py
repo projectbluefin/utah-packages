@@ -58,6 +58,7 @@ for item in manifest.get("packages", []):
     try:
         recipe.rpm_defines(item)
         recipe.compiler_cache(item)
+        recipe.buildroot_icu77(item)
     except ValueError as error:
         raise SystemExit(str(error))
     if "recipe" in item and item["recipe"] == item["name"]:

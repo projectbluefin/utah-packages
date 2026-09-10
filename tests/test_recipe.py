@@ -44,6 +44,27 @@ class RecipeTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             recipe.compiler_cache({"name": "demo", "compiler_cache": "yes"})
 
+    def test_buildroot_icu77_is_opt_in_and_boolean(self):
+        self.assertFalse(recipe.buildroot_icu77({"name": "demo"}))
+        self.assertTrue(recipe.buildroot_icu77({"name": "demo", "buildroot_icu77": True}))
+        with self.assertRaises(ValueError):
+            recipe.buildroot_icu77({"name": "demo", "buildroot_icu77": "yes"})
+
+    def test_only_build_tool_hostages_admit_icu77(self):
+        """libicu 77 in a build root is a documented exception, not a default.
+
+        Each entry here needs a Fedora build-only tool that links libicu 77
+        (TeX Live's xetex) and links no ICU itself; the build script fails
+        the build if an RPM it produces requires the old soname.
+        """
+        manifest = json.loads((ROOT / "config/upstream-sources.json").read_text())
+        opted = {
+            item["name"]
+            for item in manifest["packages"]
+            if recipe.buildroot_icu77(item)
+        }
+        self.assertEqual(opted, {"libvdpau"})
+
     def test_only_the_long_compiles_keep_a_compiler_cache(self):
         manifest = json.loads((ROOT / "config/upstream-sources.json").read_text())
         opted = {

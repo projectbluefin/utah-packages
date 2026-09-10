@@ -69,8 +69,24 @@ def compiler_cache(item: dict) -> bool:
     return value
 
 
+def buildroot_icu77(item: dict) -> bool:
+    """Whether the build root may install Hummingbird's older libicu 77.
+
+    The factory keeps libicu 77 out of every build root so nothing links it:
+    the runtime carries only libicu 78. A few build-only tools are unbuildable
+    without it -- TeX Live's xetex, which tex(latex) drags in for doxygen
+    formulas -- and a package that never links ICU loses nothing by having it
+    present. Opt in per entry with "buildroot_icu77": true; the build still
+    fails if any RPM it produces requires libicuuc.so.77 or libicui18n.so.77.
+    """
+    value = item.get("buildroot_icu77", False)
+    if not isinstance(value, bool):
+        raise ValueError(f"buildroot_icu77 for {item.get('name')} must be true or false")
+    return value
+
+
 def main() -> int:
-    if len(sys.argv) != 3 or sys.argv[2] not in ("dir", "defines", "cache"):
+    if len(sys.argv) != 3 or sys.argv[2] not in ("dir", "defines", "cache", "icu77"):
         print(__doc__, file=sys.stderr)
         return 2
     item = entry(sys.argv[1])
@@ -78,6 +94,8 @@ def main() -> int:
         print(f"packages/{recipe_name(item)}")
     elif sys.argv[2] == "cache":
         print("true" if compiler_cache(item) else "false")
+    elif sys.argv[2] == "icu77":
+        print("true" if buildroot_icu77(item) else "false")
     else:
         for define in rpm_defines(item):
             print(define)

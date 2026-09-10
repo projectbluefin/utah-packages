@@ -176,6 +176,17 @@ HB_EXCLUDE="ruby-default-gems,ruby3.3-default-gems,ruby3.4-default-gems,libicu,i
 # while a bare libicu-devel resolves to 78.3, which is the
 # whole intent. Verified against Fedora 44 + Hummingbird locally.
 HB_GLOBAL_EXCLUDE="--exclude=ruby3.3-default-gems --exclude=ruby3.4-default-gems --exclude=libicu-77.*-*hum1 --exclude=libicu-devel-77.*-*hum1"
+# A recipe may admit libicu 77 into its build root when a build-only
+# tool it needs is unbuildable without it: libvdpau's tex(latex),
+# for the doxygen formulas in vdpau.h, resolves to texlive-xetex,
+# which links libicu 77 and nothing else can provide. The package
+# itself must never link ICU; the check after rpmbuild below fails
+# the build if any RPM it produced requires the old soname, so the
+# runtime rule stays intact whatever the build root held.
+if [ "${BUILDROOT_ICU77:-false}" = true ]; then
+  echo "build root admits libicu 77 (buildroot_icu77); outputs are checked"
+  HB_GLOBAL_EXCLUDE="--exclude=ruby3.3-default-gems --exclude=ruby3.4-default-gems"
+fi
 # The Rust toolchain is excluded by NAME from the Hummingbird repo
 # instead, which is the form that puts "filtered out by exclude
 # filtering" in the resolver output for the Fedora side.
@@ -305,3 +316,16 @@ find /work/result -name "*.rpm" -type f -print0 | \
 # work/reports/*.json, so one file always matches and the upload
 # reports success while shipping no packages at all.
 test -n "$(find /work/result -name "*.rpm" -type f -print -quit)"
+# The runtime carries libicu 78 only. An RPM that links 77 is not a
+# package, it is a transaction failure deferred to the image build --
+# and the accumulator would drop it at every consumer anyway. Fail
+# here, where the log names the package, whether the build root was
+# meant to have 77 (buildroot_icu77) or let it in some other way.
+linked_icu77=$(find /work/result -name "*.rpm" -type f -print0 \
+  | xargs -0 -r -n1 sh -c 'rpm -qpR "$1" 2>/dev/null | grep -q "libicuuc.so.77\|libicui18n.so.77" && basename "$1"' _ \
+  || true)
+if [ -n "$linked_icu77" ]; then
+  echo "built against libicu 77, which the runtime does not carry:" >&2
+  printf "  %s\n" $linked_icu77 >&2
+  exit 1
+fi

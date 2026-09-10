@@ -30,7 +30,8 @@ RECIPE=${RECIPE#packages/}
 RPM_DEFINES=$(python3 tools/recipe.py "$PACKAGE" defines)
 DIST_BUMP=$(python3 tools/dist_bump.py "$PACKAGE")
 PROMISED_SOURCES=$(python3 tools/promised_sources.py)
-export PACKAGE RECIPE RPM_DEFINES DIST_BUMP PROMISED_SOURCES BUILD_MODE
+BUILDROOT_ICU77=$(python3 tools/recipe.py "$PACKAGE" icu77)
+export PACKAGE RECIPE RPM_DEFINES DIST_BUMP PROMISED_SOURCES BUILD_MODE BUILDROOT_ICU77
 mkdir -p "$work"
 work=$(realpath "$work")
 # Serialize users of a work directory; never race output or cache writers.
@@ -78,7 +79,7 @@ echo "Container: $container"
 started=$SECONDS
 set +e
 "$engine" "${args[@]}" \
-  -e PACKAGE -e RECIPE -e RPM_DEFINES -e DIST_BUMP -e PROMISED_SOURCES -e BUILD_MODE \
+  -e PACKAGE -e RECIPE -e RPM_DEFINES -e DIST_BUMP -e PROMISED_SOURCES -e BUILD_MODE -e BUILDROOT_ICU77 \
   -v "$work:/work:Z" -v "$work/dnf-cache:/var/cache/libdnf5:Z" \
   -v "$root/packages:/packages:ro,z" -v "$root/config:/repos:ro,z" \
   quay.io/fedora/fedora:44 bash /work/tools/build-rpm.sh 2>&1 | tee "$log"
