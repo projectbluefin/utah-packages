@@ -38,9 +38,10 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: ./.github/actions/setup-sccache
       - name: Collect RPMs built by earlier stages
+        if: inputs.stage != '0'
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
-          pattern: rpm-*
+          pattern: ${{ steps.prior.outputs.pattern }}
           path: work/prior
           merge-multiple: true
         continue-on-error: true
@@ -52,7 +53,17 @@ jobs:
       - name: Build the verified source with its RPM recipe
         env:
           PACKAGE: ${{ matrix.package }}
-          FACTORY_REPO: ${{ vars.FACTORY_REPO }}
+          # `prepare` skips any package the published repository already
+          # carries at the same version, so the build root MUST be able to
+          # reach that repository -- a skipped package is otherwise simply
+          # absent. It was: vars.FACTORY_REPO is unset on pull_request runs,
+          # so the [factory] block below never ran and pipewire-libs-extra
+          # failed on `No match for argument: pkgconfig(libfreeaptx)` while
+          # libfreeaptx-devel sat published and skipped. Default to the same
+          # published URL `prepare` reads to decide what to skip, so the two
+          # halves of that decision cannot disagree. The repository variable
+          # still wins when set.
+          FACTORY_REPO: ${{ vars.FACTORY_REPO || 'https://projectbluefin.github.io/utah-packages/' }}
         run: |
           test -d "packages/$PACKAGE"
           mkdir -p work/result
@@ -127,9 +138,32 @@ jobs:
               # Hummingbird copy by excluding these names from Fedora.
               # Unconditional: stage 0 has no prior RPMs, so the block above
               # never ran and EXCLUDE would otherwise be empty here.
-              HB_EXCLUDE="ruby-default-gems,ruby3.3-default-gems,ruby3.4-default-gems,libicu,icu,gpgme,qt6-qtbase"
+              # sqlite joins that list for the same reason. Hummingbird builds
+              # subversion against sqlite 3.53.4; Fedora 44 ships 3.51.2, wins the
+              # buildroot, and subversion then cannot open a repository at all:
+              #   svn: E200029: atomic initialization could not be performed
+              #   svn: E200030: SQLite compiled for 3.53.4, but running with 3.51.2
+              # Every svn checkout and copy fails from there, which surfaces far
+              # away as six failures in the git test suite
+              # (t9168-git-svn-partially-globbed-names) and looks like a git bug.
+              HB_EXCLUDE="ruby-default-gems,ruby3.3-default-gems,ruby3.4-default-gems,libicu,icu,gpgme,qt6-qtbase,sqlite,sqlite-libs"
               EXCLUDE="${HB_EXCLUDE}${EXCLUDE:+,}${EXCLUDE}"
               echo "hummingbird exclusions: $HB_EXCLUDE"
+              # The exclusions above are per-repo, which cannot settle a conflict
+              # where both sides come from the SAME repo. Hummingbird now ships
+              # ruby3.4-default-gems AND ruby4.0-default-gems, and they claim the
+              # same files, so the buildroot resolves and then dies in rpm:
+              #   Transaction failed: Rpm transaction failed.
+              #   file /usr/bin/erb conflicts between attempted installs of
+              #     ruby4.0-default-gems-4.0.6-37.3.hum1 and
+              #     ruby3.4-default-gems-3.4.10-31.7.hum1
+              # It reads as nothing at all in a tail: dnf reports success, the
+              # error lands after "Running transaction". gcc, git, iputils,
+              # libvdpau, appstream and libtheora all failed here. Exclude the
+              # superseded ruby globally, from every repo, so 4.0 is the only
+              # candidate.
+              GLOBAL_EXCLUDE="ruby3.3-default-gems,ruby3.4-default-gems"
+              echo "global exclusions: $GLOBAL_EXCLUDE"
               if [ -n "${FACTORY_REPO:-}" ]; then
                 printf "[factory]\nname=factory\nbaseurl=%s\nenabled=1\ngpgcheck=0\npriority=5\n" \
                   "$FACTORY_REPO" > /etc/yum.repos.d/factory.repo
@@ -140,6 +174,22 @@ jobs:
               # manpage installer and fails without it.
               dnf -y $disable install dnf-plugins-core mock rpm-build @buildsys-build
               rpm -q --qf "buildroot openssl: %{VERSION}-%{RELEASE}\n" openssl-libs || true
+              # Excluding a repository does not touch a package that is already
+              # installed, and the base image arrives with some of these. Fedora
+              # sqlite-libs 3.51.2 ships in it, so telling dnf to prefer
+              # Hummingbird changed nothing and subversion -- built against
+              # 3.53.4 -- could not open a repository at all:
+              #   svn: E200030: SQLite compiled for 3.53.4, but running with 3.51.2
+              # which surfaced as six failures in the git test suite. Upgrade the
+              # names we have just said Hummingbird must answer for, so the
+              # decision reaches the build root rather than only the resolver.
+              for preinstalled in ${HB_EXCLUDE//,/ }; do
+                rpm -q "$preinstalled" >/dev/null 2>&1 || continue
+                dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
+                  ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} \
+                  upgrade "$preinstalled" || true
+              done
+              rpm -q --qf "buildroot sqlite: %{VERSION}-%{RELEASE}\n" sqlite-libs || true
               # NO APOSTROPHES IN THIS SCRIPT. It is the body of bash -exc
               # a single-quoted string, so one closes it and everything after
               # is reparsed. That is what the stilted "Fedora own
@@ -190,7 +240,8 @@ jobs:
               spec=$(find "/packages/$PACKAGE" -maxdepth 1 -name "*.spec" -print -quit)
               test -n "$spec"
               dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
-                ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$spec"
+                ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} \
+                ${GLOBAL_EXCLUDE:+--exclude="$GLOBAL_EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$spec"
               # An imported spec keeps its dist-git PatchN and auxiliary SourceN
               # files next to itself, while the verified upstream archive lands in
               # /work/sources. rpmbuild takes a single _sourcedir, so stage both:
@@ -201,21 +252,51 @@ jobs:
               mkdir -p "$staged"
               cp -a "/packages/$PACKAGE/." "$staged/"
               cp -a "/work/sources/$PACKAGE/." "$staged/"
+              # A package that declares system users creates them from its %pre
+              # at install time, which never happens to a buildroot -- so the
+              # test suite runs without them. The openssh regress tests die with
+              #   Privilege separation user sshd does not exist
+              #   FATAL: sshd_proxy broken
+              # Create whatever the recipe declares, the same way installing it
+              # would. Supplying what a real build root has, rather than
+              # disabling the test that noticed it was missing.
+              if command -v systemd-sysusers >/dev/null 2>&1; then
+                for sysusers in "$staged"/*sysusers*.conf; do
+                  [ -e "$sysusers" ] || continue
+                  echo "applying sysusers: $(basename "$sysusers")"
+                  systemd-sysusers "$sysusers" || true
+                done
+              fi
+              # Match the mock build user, exactly as tools/build-rpm.sh already does
+              # for a local build. rpmbuild as root can write files regardless of
+              # their mode bits, so a suite that chmods a file read-only and then
+              # asserts the write fails is defeated by the build root rather than
+              # by the code. FLAC says so outright:
+              #   ERROR: iterator claims file is writable when tester thinks it
+              #   should not be; are you running as root?
+              # The two lanes had drifted: the local one builds unprivileged, this
+              # one did not, so a package could pass locally and fail here.
+              id -u mockbuild >/dev/null 2>&1 || \
+                useradd --create-home --home-dir /builddir mockbuild
+              mkdir -p /builddir/rpmbuild/SRPMS
+              chown -R mockbuild:mockbuild /builddir/rpmbuild "$staged" /work/result
+              build_rpm() { runuser -u mockbuild -- rpmbuild --define "_topdir /builddir/rpmbuild" "$@"; }
               # Packages with %generate_buildrequires -- every Rust one -- compute
               # their real BuildRequires during the build, so the spec alone does not
               # list them and rpmbuild exits 11 asking to be re-run. Install what the
               # generated source RPM declares and retry, bounded so an unsatisfiable
               # requirement fails instead of looping.
               for _ in 1 2 3 4 5; do
-                rm -f /root/rpmbuild/SRPMS/*.buildreqs.nosrc.rpm
-                if rpmbuild -br "$spec" --define "_sourcedir $staged" \
+                rm -f /builddir/rpmbuild/SRPMS/*.buildreqs.nosrc.rpm
+                if build_rpm -br "$spec" --define "_sourcedir $staged" \
                      --define "dist $DISTTAG"; then break; fi
-                generated=$(ls /root/rpmbuild/SRPMS/*.buildreqs.nosrc.rpm 2>/dev/null | head -1)
+                generated=$(ls /builddir/rpmbuild/SRPMS/*.buildreqs.nosrc.rpm 2>/dev/null | head -1)
                 test -n "$generated"
                 dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
-                  ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$generated"
+                  ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} \
+                  ${GLOBAL_EXCLUDE:+--exclude="$GLOBAL_EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$generated"
               done
-              rpmbuild -ba "$spec" \
+              build_rpm -ba "$spec" \
                 --define "_sourcedir $staged" \
                 --define "dist $DISTTAG" \
                 --define "_rpmdir /work/result"
@@ -230,7 +311,16 @@ jobs:
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: rpm-s${{ inputs.stage }}-${{ matrix.package }}
+          # Debuginfo and debugsource are excluded deliberately. No
+          # BuildRequires ever names one, so a later stage has no use for them,
+          # and they are more than half the bytes. Uploading them cost the run
+          # its artifact budget: seven stage 0 jobs died on
+          #   Failed to FinalizeArtifact: (403) Forbidden
+          # which is not a package failure and reads exactly like one.
           path: |
             work/result/**/*.rpm
+            !work/result/**/*-debuginfo-*.rpm
+            !work/result/**/*-debugsource-*.rpm
+            !work/result/**/*-debuginfo-common-*.rpm
             work/reports/*.json
           if-no-files-found: error

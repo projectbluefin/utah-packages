@@ -1,0 +1,17 @@
+--- tests/test.sh	2012-04-12 15:29:53.576994298 +0100
++++ tests/test.sh	2012-04-12 15:30:06.447143498 +0100
+@@ -7,12 +7,14 @@
+     if ! grep -q 'ERROR SUMMARY: 0 error' $log; then
+         echo "Fail in $NAME $1 checking detected by Valgrind"
+         echo "$log Valgrind log file moved to $TEMPDIR/badlogs"
++	cat $log
+         mv $log $TEMPDIR/badlogs
+         exit 1
+     fi
+     if grep -q 'LEAK SUMMARY' $log; then
+         echo "Memory leak in $NAME $1 checking detected by Valgrind"
+         echo "$log Valgrind log file moved to $TEMPDIR/badlogs"
++	cat $log
+         mv $log $TEMPDIR/badlogs
+         exit 1
+     fi    

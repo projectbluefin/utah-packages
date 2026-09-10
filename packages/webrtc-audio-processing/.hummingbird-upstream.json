@@ -1,0 +1,8 @@
+{
+  "package": "webrtc-audio-processing",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/webrtc-audio-processing.git",
+  "commit": "297594677065f9c2c63658f3e71b10748214bdba",
+  "tree": "d8a5ec51668125b008e8382d7fc84542f2932a8f",
+  "imported_at": "2026-08-31T07:01:28.920641+00:00"
+}

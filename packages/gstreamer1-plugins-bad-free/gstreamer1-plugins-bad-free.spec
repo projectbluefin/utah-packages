@@ -3,6 +3,12 @@
 
 # Only have extras package on fedora
 %bcond aom %{defined fedora}
+# chromaprint is declined here for the same reason ffmpeg.spec declines it:
+# Fedora's libchromaprint links libavutil.so.60, this factory's ffmpeg 9.0.1
+# provides libavutil.so.61, and the factory excludes the Fedora libav by name.
+# libchromaprint-devel is therefore uninstallable in this buildroot. Nothing in
+# the runtime contract links AcoustID fingerprinting.
+%bcond chromaprint 0
 %bcond extras %{defined fedora}
 %bcond opencv %{defined fedora}
 %bcond openh264 %{defined fedora}
@@ -148,7 +154,9 @@ BuildRequires:  pkgconfig(avtp)
 BuildRequires:  pkgconfig(fluidsynth)
 BuildRequires:  pkgconfig(libass)
 BuildRequires:  pkgconfig(libbs2b)
+%if %{with chromaprint}
 BuildRequires:  pkgconfig(libchromaprint)
+%endif
 BuildRequires:  pkgconfig(libcurl)
 BuildRequires:  pkgconfig(libdca)
 BuildRequires:  pkgconfig(libmodplug)
@@ -367,11 +375,13 @@ aren't tested well enough, or the code is not of good enough quality.
 %if %{without webrtc}
     -D webrtcdsp=disabled \
 %endif
+%if %{without chromaprint}
+    -D chromaprint=disabled \
+%endif
 %if %{without extras}
     -D assrender=disabled \
     -D avtp=disabled \
     -D bs2b=disabled \
-    -D chromaprint=disabled \
     -D curl=disabled -D curl-ssh2=disabled \
     -D d3dvideosink=disabled \
     -D decklink=disabled \
@@ -718,7 +728,9 @@ EOF
 %{_libdir}/gstreamer-%{majorminor}/libgstassrender.so
 %{_libdir}/gstreamer-%{majorminor}/libgstavtp.so
 %{_libdir}/gstreamer-%{majorminor}/libgstbs2b.so
+%if %{with chromaprint}
 %{_libdir}/gstreamer-%{majorminor}/libgstchromaprint.so
+%endif
 %if %{with dc1394}
 %{_libdir}/gstreamer-%{majorminor}/libgstdc1394.so
 %endif

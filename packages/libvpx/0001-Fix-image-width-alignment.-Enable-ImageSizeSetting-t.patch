@@ -1,0 +1,54 @@
+From 5a40c8fde11bf82cccb5bd2f57c46ab5e6262cbf Mon Sep 17 00:00:00 2001
+From: Jerome Jiang <jianj@google.com>
+Date: Wed, 27 Sep 2017 11:08:37 -0700
+Subject: [PATCH] Fix image width alignment. Enable ImageSizeSetting test.
+
+BUG=b/64710201
+
+Change-Id: I5465f6c6481d3c9a5e00fcab024cf4ae562b6b01
+
+diff --git a/vpx/src/vpx_image.c b/vpx/src/vpx_image.c
+index dba439c10..ebd3d7f74 100644
+--- a/vpx/src/vpx_image.c
++++ b/vpx/src/vpx_image.c
+@@ -88,11 +88,10 @@ static vpx_image_t *img_alloc_helper(vpx_image_t *img, vpx_img_fmt_t fmt,
+     default: ycs = 0; break;
+   }
+ 
+-  /* Calculate storage sizes given the chroma subsampling */
+-  align = (1 << xcs) - 1;
+-  w = (d_w + align) & ~align;
+-  align = (1 << ycs) - 1;
+-  h = (d_h + align) & ~align;
++  /* Calculate storage sizes. If the buffer was allocated externally, the width
++   * and height shouldn't be adjusted. */
++  w = d_w;
++  h = d_h;
+   s = (fmt & VPX_IMG_FMT_PLANAR) ? w : bps * w / 8;
+   s = (s + stride_align - 1) & ~(stride_align - 1);
+   stride_in_bytes = (fmt & VPX_IMG_FMT_HIGHBITDEPTH) ? s * 2 : s;
+@@ -111,9 +110,18 @@ static vpx_image_t *img_alloc_helper(vpx_image_t *img, vpx_img_fmt_t fmt,
+   img->img_data = img_data;
+ 
+   if (!img_data) {
+-    const uint64_t alloc_size = (fmt & VPX_IMG_FMT_PLANAR)
+-                                    ? (uint64_t)h * s * bps / 8
+-                                    : (uint64_t)h * s;
++    uint64_t alloc_size;
++    /* Calculate storage sizes given the chroma subsampling */
++    align = xcs ? (1 << xcs) - 1 : 1;
++    w = (d_w + align - 1) & ~(align - 1);
++    align = ycs ? (1 << ycs) - 1 : 1;
++    h = (d_h + align - 1) & ~(align - 1);
++
++    s = (fmt & VPX_IMG_FMT_PLANAR) ? w : bps * w / 8;
++    s = (s + stride_align - 1) & ~(stride_align - 1);
++    stride_in_bytes = (fmt & VPX_IMG_FMT_HIGHBITDEPTH) ? s * 2 : s;
++    alloc_size = (fmt & VPX_IMG_FMT_PLANAR) ? (uint64_t)h * s * bps / 8
++                                            : (uint64_t)h * s;
+ 
+     if (alloc_size != (size_t)alloc_size) goto fail;
+ 
+-- 
+2.14.3
+

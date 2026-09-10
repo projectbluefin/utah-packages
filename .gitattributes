@@ -1,0 +1,10 @@
+# Patches must reach the build byte for byte. Some upstream sources ship CRLF
+# (xvidcore's src/nasm.inc is CRLF on all 213 lines), and a patch against one
+# needs CRLF context to match. Git's end-of-line normalisation would rewrite
+# that context to LF on checkout, and every hunk would then be rejected in
+# %prep -- a failure that looks like a stale patch and is not one.
+*.patch -text
+*.diff -text
+# Signing keys and signatures are data, never text to be normalised.
+*.asc -text
+*.sig -text

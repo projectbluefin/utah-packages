@@ -1,0 +1,8 @@
+{
+  "package": "wireplumber",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/wireplumber.git",
+  "commit": "3c171d1ad4472135c542bd6f362850152c391830",
+  "tree": "c4a16908ab8347fb23908db11c60881b0cd8fe6c",
+  "imported_at": "2026-09-04T21:17:01.541899+00:00"
+}

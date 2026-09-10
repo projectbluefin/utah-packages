@@ -1,0 +1,8 @@
+{
+  "package": "desktop-file-utils",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/desktop-file-utils.git",
+  "commit": "a7912c76934f9b7c49a0d9658c4df2f164c309d1",
+  "tree": "f67af7d64bcba9b0fc95bd3d8338efd4d794d2e8",
+  "imported_at": "2026-09-05T17:47:05.211348+00:00"
+}

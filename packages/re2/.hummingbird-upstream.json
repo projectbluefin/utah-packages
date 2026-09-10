@@ -1,0 +1,8 @@
+{
+  "package": "re2",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/re2.git",
+  "commit": "5c18dbe3485213d77cc1a7ad00d195affdf1a256",
+  "tree": "535f1bc4eaba4419c8fbdf3b1ce898c812b4f60a",
+  "imported_at": "2026-08-31T07:01:26.398746+00:00"
+}

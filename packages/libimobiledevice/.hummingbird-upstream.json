@@ -1,0 +1,8 @@
+{
+  "package": "libimobiledevice",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libimobiledevice.git",
+  "commit": "73d7d1fc4e3fafbc5fd663eac0f1ced2cfe23ad1",
+  "tree": "88674d57f7f29838cad99f1373a19e665d7cd8ae",
+  "imported_at": "2026-09-03T22:53:15.068196+00:00"
+}

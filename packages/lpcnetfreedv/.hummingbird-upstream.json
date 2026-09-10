@@ -1,0 +1,8 @@
+{
+  "package": "lpcnetfreedv",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/lpcnetfreedv.git",
+  "commit": "5511588e8317a390fe799e43f790baaaebffd1ca",
+  "tree": "24790c505153180d838937a7a6b9f3434921c066",
+  "imported_at": "2026-09-05T04:39:16.184673+00:00"
+}
