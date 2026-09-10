@@ -1319,7 +1319,8 @@
       "version": "3.61.3",
       "url": "http://download.gnome.org/sources/evolution-ews/3.61/evolution-ews-3.61.3.tar.xz",
       "filename": "evolution-ews-3.61.3.tar.xz",
-      "sha512": "617369f907a62ebba88fc83dc21047d7b8fa126a40f85de807a7f561a4d682aea2f9e0e1e9920eb539696675290093fd78a657dfbd521f2e6783f82db55cf813"
+      "sha512": "617369f907a62ebba88fc83dc21047d7b8fa126a40f85de807a7f561a4d682aea2f9e0e1e9920eb539696675290093fd78a657dfbd521f2e6783f82db55cf813",
+      "stage": 2
     },
     {
       "name": "firewalld",

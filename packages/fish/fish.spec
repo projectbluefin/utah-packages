@@ -166,7 +166,14 @@ cp -a CONTRIBUTING.rst %{buildroot}%{_pkgdocdir}
 %check
 # Skip all super-flaky tests because I have no patience anymore...
 export CI=1
-%cmake_build --target fish_run_tests
+if [ "$(id -u)" -eq 0 ]; then
+    useradd --system --create-home fish-tests
+    chown -R fish-tests:fish-tests %{_vpath_builddir}
+    runuser -u fish-tests -- env USER=fish-tests LOGNAME=fish-tests HOME=/home/fish-tests \
+        cmake --build %{_vpath_builddir} --target fish_run_tests
+else
+    %cmake_build --target fish_run_tests
+fi
 
 
 %post

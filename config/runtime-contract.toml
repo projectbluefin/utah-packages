@@ -43,6 +43,7 @@ packages = [
   # Bluefin carries this as an installer web-engine dependency. Utah uses the
   # bootc-installer live path, not Anaconda WebUI or Slitherer.
   "slitherer",
+  "anaconda-live",
   "evolution-ews-core",
   "fish",
   "tailscale",
