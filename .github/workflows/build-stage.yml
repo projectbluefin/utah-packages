@@ -23,6 +23,16 @@ on:
         description: JSON array of source package names to build
         required: true
         type: string
+      backend:
+        description: >
+          container (default) builds with bare rpmbuild in a Fedora container
+          that hand-simulates a build root. mock builds the SRPM in a real mock
+          root, which is what Packit does (packit build in-mock). mock is opt-in
+          until a full run has proven it: the container path is what the
+          published repository was built with.
+        required: false
+        default: container
+        type: string
 
 permissions:
   contents: read
@@ -45,12 +55,27 @@ jobs:
           path: work/prior
           merge-multiple: true
         continue-on-error: true
+      # gcc is the one recipe whose Source0 comes from git rather than a
+      # release tarball, and asking gcc.gnu.org for it from every concurrent
+      # run is what earned a 429. Packit solves the same problem with a local
+      # reference repository (packit/utils/repo.py, RepositoryCache): keep the
+      # objects, and a repeated fetch costs no network. The key is the spec, so
+      # it changes exactly when the pinned revision does, and a miss seeds the
+      # mirror for the next run instead of failing.
+      - name: Reuse a cached git mirror for the one git-sourced recipe
+        if: matrix.package == 'gcc'
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+        with:
+          path: work/git-mirror
+          key: git-mirror-gcc-${{ hashFiles('packages/gcc/gcc.spec') }}
       - name: Fetch and verify direct upstream source
         env:
           PACKAGE: ${{ matrix.package }}
+          FACTORY_GIT_MIRROR: ${{ github.workspace }}/work/git-mirror
         run: |
           python3 tools/source_pipeline.py "$PACKAGE" --output work/sources --report-dir work/reports
       - name: Build the verified source with its RPM recipe
+        if: inputs.backend != 'mock'
         env:
           PACKAGE: ${{ matrix.package }}
           # `prepare` skips any package the published repository already
@@ -306,6 +331,80 @@ jobs:
               # the upload cannot catch it: the artifact also carries
               # work/reports/*.json, so one file always matches and the upload
               # reports success while shipping no packages at all.
+              test -n "$(find /work/result -name "*.rpm" -type f -print -quit)"
+            '
+      # The mock backend, which is what Packit uses locally
+      # (packit build in-mock -> mock --root <cfg> <srpm>). The step above
+      # hand-simulates a build root in a plain container; mock gives a real one,
+      # clean per package, with the macros and groups a build root is supposed
+      # to have. Opt-in until a full run has proven it: dispatch the rebuild
+      # with backend=mock. The container path is what the published repository
+      # was built with.
+      #
+      # Like every other build script here, this is the body of bash -exc with
+      # single quotes, so it must not contain one -- tools/check_workflow_quoting.py
+      # fails the run if it does, and only covers this form.
+      - name: Build the verified source in a mock root
+        if: inputs.backend == 'mock'
+        env:
+          PACKAGE: ${{ matrix.package }}
+          FACTORY_REPO: ${{ vars.FACTORY_REPO || 'https://projectbluefin.github.io/utah-packages/' }}
+        run: |
+          test -d "packages/$PACKAGE"
+          mkdir -p work/result work/srpm work/mock
+          DIST_BUMP="$(python3 tools/dist_bump.py "$PACKAGE")"
+          export DIST_BUMP
+          docker run --rm --privileged \
+            -e PACKAGE -e FACTORY_REPO -e DIST_BUMP \
+            -v "$PWD/work:/work:Z" \
+            -v "$PWD/packages:/packages:ro,Z" \
+            -v "$PWD/tools:/tools:ro,Z" \
+            -v "$PWD/config:/repos:ro,Z" \
+            quay.io/fedora/fedora:44 bash -exc '
+              dnf -y install mock rpm-build python3
+              # Whatever an earlier stage built, Fedora must not answer for.
+              # Same rule the container path applies, from the same artifacts.
+              PRIOR=
+              if [ -n "$(find /work/prior -name "*.rpm" -print -quit 2>/dev/null)" ]; then
+                dnf -y install createrepo_c
+                createrepo_c /work/prior
+                PRIOR=$(find /work/prior -name "*.rpm" -type f -print0 \
+                  | xargs -0 -r rpm -qp --qf "%{NAME}\n" 2>/dev/null \
+                  | sort -u | paste -sd, -)
+                STAGES=/work/prior
+              fi
+              python3 /tools/mock_config.py \
+                --output /work/mock/utah.cfg \
+                --factory-repo "${FACTORY_REPO:-}" \
+                --stages-dir "${STAGES:-}" \
+                --prior-built "$PRIOR"
+              # The disttag is read from the Hummingbird packages in the root
+              # rather than hardcoded, exactly as the container path does it, so
+              # a move to hum2 carries itself. Here that means asking the mock
+              # root, because that root is what does the building.
+              mock --root /work/mock/utah.cfg --init
+              HUM_TAG=$(mock --root /work/mock/utah.cfg --quiet --chroot -- \
+                rpm -qa --qf "%{RELEASE}\n" | grep -oE "hum[0-9]+$" | sort -u | head -n1)
+              if [ -z "$HUM_TAG" ]; then
+                echo "No Hummingbird package in the mock root; cannot derive a disttag" >&2
+                exit 1
+              fi
+              DISTTAG=".${HUM_TAG}.bfin${DIST_BUMP:-}"
+              echo "disttag: $DISTTAG"
+              rpmbuild -bs \
+                --define "_topdir /work/rpmbuild" \
+                --define "_sourcedir /work/sources/$PACKAGE" \
+                --define "_srcrpmdir /work/srpm" \
+                --define "dist $DISTTAG" \
+                /packages/$PACKAGE/*.spec
+              mock --root /work/mock/utah.cfg \
+                --resultdir /work/result \
+                --define "dist $DISTTAG" \
+                --rebuild /work/srpm/*.src.rpm
+              find /work/result -name "*.rpm" -type f -print0 | \
+                xargs -0 -r rpm -qp --qf "%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n"
+              # Same guard as the container path: an upload that finds no RPM
+              # still succeeds, because the artifact also carries reports.
               test -n "$(find /work/result -name "*.rpm" -type f -print -quit)"
             '
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7

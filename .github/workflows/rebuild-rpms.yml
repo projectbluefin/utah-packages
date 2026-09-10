@@ -8,6 +8,17 @@ on:
         required: false
         default: false
         type: boolean
+      backend:
+        description: >
+          How to build. container is the hand-simulated build root every
+          published RPM was built in. mock is a real mock root, the way Packit
+          builds locally; it is unproven here, so it is dispatch-only.
+        required: false
+        default: container
+        type: choice
+        options:
+          - container
+          - mock
   push:
     branches: [main]
     paths:
@@ -15,6 +26,9 @@ on:
       - packages/**
       - tools/source_pipeline.py
       - tools/generated_sources.py
+      - tools/rebuild_matrix.py
+      - tools/rebuild_plan.py
+      - tools/mock_config.py
       - tools/runtime_contract.py
       - tests/**
       - .github/workflows/rebuild-rpms.yml
@@ -25,6 +39,9 @@ on:
       - packages/**
       - tools/source_pipeline.py
       - tools/generated_sources.py
+      - tools/rebuild_matrix.py
+      - tools/rebuild_plan.py
+      - tools/mock_config.py
       - tools/runtime_contract.py
       - tests/**
       - .github/workflows/rebuild-rpms.yml
@@ -85,91 +102,13 @@ jobs:
         env:
           FULL: ${{ github.event_name == 'workflow_dispatch' && inputs.full == true && '1' || '0' }}
           BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+          # The same value build-stage.yml gives the build root. The skip
+          # decision and the buildroot must read one source of truth: when they
+          # disagreed, `prepare` skipped what the published repository carried
+          # and the build root could not see any of it.
+          FACTORY_REPO: ${{ vars.FACTORY_REPO || 'https://projectbluefin.github.io/utah-packages/' }}
         run: |
-          python3 - <<'PY'
-          import json, os, re, subprocess, urllib.request, gzip, io, sys
-          from pathlib import Path
-
-          config = json.loads(Path('config/upstream-sources.json').read_text())
-          full = os.environ.get('FULL') == '1'
-          changed = set()
-          base = os.environ.get('BASE_SHA', '')
-          if not full and re.fullmatch(r'[0-9a-f]{40}', base or '') and set(base) != {'0'}:
-              paths = subprocess.check_output(
-                  ['git', 'diff', '--name-only', f'{base}..HEAD'], text=True).splitlines()
-              changed = {
-                  match.group(1)
-                  for path in paths
-                  if (match := re.match(r'^packages/([^/]+)/', path))
-              }
-              print(f"changed package recipes: {', '.join(sorted(changed)) or 'none'}")
-
-          # Fetch the currently published repo so we only rebuild what is new
-          # or changed. Matching is name + normalized version: Fedora's spec
-          # Version rewrites the tarball's '.' to '~' (gnome-shell 51.beta ->
-          # 51~beta), so normalize '~' to '.' on both sides. A mismatch just
-          # rebuilds a package we could have skipped -- safe, only slower.
-          published = {}
-          if not full:
-              try:
-                  base = "https://projectbluefin.github.io/utah-packages/"
-                  repomd = urllib.request.urlopen(base + "repodata/repomd.xml", timeout=60).read().decode()
-                  href = re.search(r'<location href="([^"]*primary[^"]*)"', repomd).group(1)
-                  raw = urllib.request.urlopen(base + href, timeout=120).read()
-                  if href.endswith('.zst'):
-                      import zstandard
-                      stream = zstandard.ZstdDecompressor().stream_reader(io.BytesIO(raw))
-                  else:
-                      stream = gzip.GzipFile(fileobj=io.BytesIO(raw))
-                  text = stream.read()
-                  for m in re.finditer(rb'<package[^>]*>.*?<name>([^<]+)</name>.*?<version[^>]*ver="([^"]+)"', text, re.S):
-                      published[m.group(1).decode()] = m.group(2).decode()
-                  print(f"published repo has {len(published)} packages")
-              except Exception as error:
-                  print(f"WARNING: could not read published repo, rebuilding all: {error}", file=sys.stderr)
-
-          def norm(version: str) -> str:
-              return version.replace('~', '.')
-
-          build = []
-          for package in config['packages']:
-              name = package['name']
-              version = package.get('version', '')
-              if full or name in changed or name not in published or norm(published[name]) != norm(version):
-                  build.append(package)
-              else:
-                  print(f"skip {name} {version}: already published")
-
-          outputs = {'build_list': json.dumps([p['name'] for p in build])}
-          # GitHub caps a matrix at 256 jobs, and it does not fail when a
-          # matrix would exceed it -- it expands to NOTHING. A stage holding
-          # more than 256 packages therefore produces zero build jobs, silently,
-          # and every later stage builds against an empty buildroot. Utah's cold
-          # stage 0 is 315 packages, so this is not hypothetical. Hand each
-          # stage to build-stage.yml in chunks instead of in one piece.
-          CHUNK = 250
-          for n in range(11):
-              names = [p['name'] for p in build if (p.get('stage') or 0) == n]
-              outputs[f'stage{n}'] = json.dumps(names)
-              chunks = [names[i:i + CHUNK] for i in range(0, len(names), CHUNK)]
-              outputs[f'stage{n}_chunks'] = json.dumps(
-                  [json.dumps(c) for c in chunks])
-              if len(chunks) > 1:
-                  print(f"stage {n}: {len(names)} packages in {len(chunks)} chunks")
-          # The job chain is five deep and GitHub needs it static, so a package
-          # asking for a sixth wave has nowhere to run. It used to fall out of
-          # every stage list while staying in build_list, so the run published
-          # a repository that was quietly missing it. Fail instead.
-          overflow = sorted(p['name'] for p in build if (p.get('stage') or 0) >= 11)
-          if overflow:
-              raise SystemExit(
-                  "no job exists for stage 11 or later; "
-                  f"reduce the stage of: {', '.join(overflow)}")
-          with open(os.environ['GITHUB_OUTPUT'], 'a') as handle:
-              for key, value in outputs.items():
-                  handle.write(f'{key}={value}\n')
-          print(f"will build {len(build)} of {len(config['packages'])} packages")
-          PY
+          python3 tools/rebuild_matrix.py
 
   preflight:
     # Every missing platform dependency has so far been found the slow way: a
@@ -284,6 +223,7 @@ jobs:
     with:
       stage: '0'
       packages: ${{ matrix.chunk }}
+      backend: ${{ inputs.backend || 'container' }}
 
   rebuild1:
     needs: [prepare, rebuild0]
@@ -296,6 +236,7 @@ jobs:
     with:
       stage: '1'
       packages: ${{ matrix.chunk }}
+      backend: ${{ inputs.backend || 'container' }}
 
   rebuild2:
     needs: [prepare, rebuild0, rebuild1]
@@ -308,6 +249,7 @@ jobs:
     with:
       stage: '2'
       packages: ${{ matrix.chunk }}
+      backend: ${{ inputs.backend || 'container' }}
 
   rebuild3:
     needs: [prepare, rebuild0, rebuild1, rebuild2]
@@ -320,6 +262,7 @@ jobs:
     with:
       stage: '3'
       packages: ${{ matrix.chunk }}
+      backend: ${{ inputs.backend || 'container' }}
 
   rebuild4:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3]
@@ -332,6 +275,7 @@ jobs:
     with:
       stage: '4'
       packages: ${{ matrix.chunk }}
+      backend: ${{ inputs.backend || 'container' }}
 
   rebuild5:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4]
@@ -344,6 +288,7 @@ jobs:
     with:
       stage: '5'
       packages: ${{ matrix.chunk }}
+      backend: ${{ inputs.backend || 'container' }}
 
   rebuild6:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5]
@@ -356,6 +301,7 @@ jobs:
     with:
       stage: '6'
       packages: ${{ matrix.chunk }}
+      backend: ${{ inputs.backend || 'container' }}
 
   rebuild7:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6]
@@ -368,6 +314,7 @@ jobs:
     with:
       stage: '7'
       packages: ${{ matrix.chunk }}
+      backend: ${{ inputs.backend || 'container' }}
 
   rebuild8:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7]
@@ -380,6 +327,7 @@ jobs:
     with:
       stage: '8'
       packages: ${{ matrix.chunk }}
+      backend: ${{ inputs.backend || 'container' }}
 
   rebuild9:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8]
@@ -392,6 +340,7 @@ jobs:
     with:
       stage: '9'
       packages: ${{ matrix.chunk }}
+      backend: ${{ inputs.backend || 'container' }}
 
   rebuild10:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8, rebuild9]
@@ -404,6 +353,7 @@ jobs:
     with:
       stage: '10'
       packages: ${{ matrix.chunk }}
+      backend: ${{ inputs.backend || 'container' }}
 
   precedence:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4]

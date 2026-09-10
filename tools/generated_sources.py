@@ -54,6 +54,20 @@ SCRIPT_PATH = "tools/generated_sources.py"
 # caller still checks the pinned SHA-512 of the archive this produces.
 FETCH_ATTEMPTS = 3
 
+GCC_GIT_URL = "https://gcc.gnu.org/git/gcc.git"
+
+# Packit keeps a local reference repository and clones against it
+# (packit/utils/repo.py, RepositoryCache) so a repeated clone costs no network.
+# The same trick answers the 429 above at its root rather than retrying it: with
+# a mirror holding the pinned revision, the fetch is a local object copy and
+# gcc.gnu.org is never asked. Set FACTORY_GIT_MIRROR to a directory to use one
+# -- CI points it at a cached path keyed by the pinned revision, so a hit needs
+# no network at all and a miss seeds the mirror for next time. Unset, or a
+# mirror without the revision, falls back to fetching from upstream exactly as
+# before. Integrity is unchanged either way: git verifies every object against
+# its own hash on receipt, and the caller checks the archive's pinned SHA-512.
+MIRROR_ENV = "FACTORY_GIT_MIRROR"
+
 # SHA-512 of the first-party input archives, pinned so a re-rolled upstream
 # artifact fails closed instead of silently changing the generated output.
 INTEL_MEDIA_INPUT_SHA512 = {
@@ -134,29 +148,71 @@ def _gcc_metadata(package_dir: Path) -> dict:
     }
 
 
+def _git_mirror(name: str) -> Path | None:
+    """The configured reference mirror for one upstream, or None."""
+    configured = os.environ.get(MIRROR_ENV)
+    if not configured:
+        return None
+    return Path(configured) / f"{name}.git"
+
+
+def _mirror_has(mirror: Path, revision: str) -> bool:
+    if not (mirror / "objects").is_dir():
+        return False
+    return subprocess.run(
+        ["git", "-C", str(mirror), "cat-file", "-e", f"{revision}^{{commit}}"],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    ).returncode == 0
+
+
+def _seed_mirror(mirror: Path, url: str, revision: str) -> None:
+    """Record a fetched revision in the mirror so later runs need no network."""
+    if not (mirror / "objects").is_dir():
+        mirror.mkdir(parents=True, exist_ok=True)
+        subprocess.run(["git", "init", "-q", "--bare", str(mirror)], check=True)
+    subprocess.run(
+        ["git", "-C", str(mirror), "fetch", "-q", "--depth", "1", url, revision],
+        check=False,
+    )
+
+
+def _fetch_revision(repo: Path, url: str, revision: str, name: str) -> None:
+    """Fetch one pinned revision, preferring a local mirror over the network."""
+    mirror = _git_mirror(name)
+    if mirror is not None and _mirror_has(mirror, revision):
+        print(f"{name}: {revision} from mirror {mirror}", file=sys.stderr)
+        subprocess.run(
+            ["git", "-C", str(repo), "fetch", "-q", "--depth", "1", str(mirror), revision],
+            check=True,
+        )
+        return
+
+    # Upstream serves fetch-by-sha1, so the pinned revision is fetched directly;
+    # git verifies every object against its own hash on receipt.
+    fetch = ["git", "-C", str(repo), "fetch", "-q", "--depth", "1", url, revision]
+    for attempt in range(1, FETCH_ATTEMPTS + 1):
+        completed = subprocess.run(fetch)
+        if completed.returncode == 0:
+            break
+        if attempt == FETCH_ATTEMPTS:
+            raise RuntimeError(
+                f"git fetch of {revision} from {url} failed after "
+                f"{FETCH_ATTEMPTS} attempts (exit {completed.returncode})"
+            )
+        time.sleep(2 ** attempt)
+
+    if mirror is not None:
+        _seed_mirror(mirror, url, revision)
+
+
 def _gcc_generate(package_dir: Path, out_dir: Path) -> Path:
     revision, _, prefix, _ = _gcc_details(package_dir)
     target = out_dir / f"{prefix}.tar.xz"
     with tempfile.TemporaryDirectory(prefix="gcc-fetch-", dir=out_dir) as tmp:
         repo = Path(tmp) / "repo"
         subprocess.run(["git", "init", "-q", str(repo)], check=True)
-        subprocess.run(
-            ["git", "-C", str(repo), "remote", "add", "origin", "https://gcc.gnu.org/git/gcc.git"],
-            check=True,
-        )
-        # gcc.gnu.org serves fetch-by-sha1, so the pinned revision is fetched
-        # directly; git verifies every object against its own hash on receipt.
-        fetch = ["git", "-C", str(repo), "fetch", "-q", "--depth", "1", "origin", revision]
-        for attempt in range(1, FETCH_ATTEMPTS + 1):
-            completed = subprocess.run(fetch)
-            if completed.returncode == 0:
-                break
-            if attempt == FETCH_ATTEMPTS:
-                raise RuntimeError(
-                    f"git fetch of {revision} from gcc.gnu.org failed after "
-                    f"{FETCH_ATTEMPTS} attempts (exit {completed.returncode})"
-                )
-            time.sleep(2 ** attempt)
+        _fetch_revision(repo, GCC_GIT_URL, revision, "gcc")
         archive = subprocess.Popen(
             ["git", "-C", str(repo), "archive", f"--prefix={prefix}/", revision],
             stdout=subprocess.PIPE,
