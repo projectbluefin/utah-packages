@@ -1,0 +1,8 @@
+{
+  "package": "rest",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/rest.git",
+  "commit": "7c41651584dc246f60accfd6a23ba795cfdc8ffb",
+  "tree": "d24060114c56782edd23bf4e95f74c097364b452",
+  "imported_at": "2026-09-05T14:33:14.913988+00:00"
+}

@@ -49,6 +49,23 @@ jobs:
       stage2: ${{ steps.matrix.outputs.stage2 }}
       stage3: ${{ steps.matrix.outputs.stage3 }}
       stage4: ${{ steps.matrix.outputs.stage4 }}
+      stage0_chunks: ${{ steps.matrix.outputs.stage0_chunks }}
+      stage1_chunks: ${{ steps.matrix.outputs.stage1_chunks }}
+      stage2_chunks: ${{ steps.matrix.outputs.stage2_chunks }}
+      stage3_chunks: ${{ steps.matrix.outputs.stage3_chunks }}
+      stage4_chunks: ${{ steps.matrix.outputs.stage4_chunks }}
+      stage5: ${{ steps.matrix.outputs.stage5 }}
+      stage6: ${{ steps.matrix.outputs.stage6 }}
+      stage7: ${{ steps.matrix.outputs.stage7 }}
+      stage8: ${{ steps.matrix.outputs.stage8 }}
+      stage9: ${{ steps.matrix.outputs.stage9 }}
+      stage10: ${{ steps.matrix.outputs.stage10 }}
+      stage5_chunks: ${{ steps.matrix.outputs.stage5_chunks }}
+      stage6_chunks: ${{ steps.matrix.outputs.stage6_chunks }}
+      stage7_chunks: ${{ steps.matrix.outputs.stage7_chunks }}
+      stage8_chunks: ${{ steps.matrix.outputs.stage8_chunks }}
+      stage9_chunks: ${{ steps.matrix.outputs.stage9_chunks }}
+      stage10_chunks: ${{ steps.matrix.outputs.stage10_chunks }}
       build_list: ${{ steps.matrix.outputs.build_list }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -122,17 +139,29 @@ jobs:
                   print(f"skip {name} {version}: already published")
 
           outputs = {'build_list': json.dumps([p['name'] for p in build])}
-          for n in range(5):
-              outputs[f'stage{n}'] = json.dumps(
-                  [p['name'] for p in build if (p.get('stage') or 0) == n])
+          # GitHub caps a matrix at 256 jobs, and it does not fail when a
+          # matrix would exceed it -- it expands to NOTHING. A stage holding
+          # more than 256 packages therefore produces zero build jobs, silently,
+          # and every later stage builds against an empty buildroot. Utah's cold
+          # stage 0 is 315 packages, so this is not hypothetical. Hand each
+          # stage to build-stage.yml in chunks instead of in one piece.
+          CHUNK = 250
+          for n in range(11):
+              names = [p['name'] for p in build if (p.get('stage') or 0) == n]
+              outputs[f'stage{n}'] = json.dumps(names)
+              chunks = [names[i:i + CHUNK] for i in range(0, len(names), CHUNK)]
+              outputs[f'stage{n}_chunks'] = json.dumps(
+                  [json.dumps(c) for c in chunks])
+              if len(chunks) > 1:
+                  print(f"stage {n}: {len(names)} packages in {len(chunks)} chunks")
           # The job chain is five deep and GitHub needs it static, so a package
           # asking for a sixth wave has nowhere to run. It used to fall out of
           # every stage list while staying in build_list, so the run published
           # a repository that was quietly missing it. Fail instead.
-          overflow = sorted(p['name'] for p in build if (p.get('stage') or 0) >= 5)
+          overflow = sorted(p['name'] for p in build if (p.get('stage') or 0) >= 11)
           if overflow:
               raise SystemExit(
-                  "no job exists for stage 5 or later; "
+                  "no job exists for stage 11 or later; "
                   f"reduce the stage of: {', '.join(overflow)}")
           with open(os.environ['GITHUB_OUTPUT'], 'a') as handle:
               for key, value in outputs.items():
@@ -245,42 +274,134 @@ jobs:
   rebuild0:
     needs: prepare
     if: needs.prepare.outputs.stage0 != '[]'
+    strategy:
+      fail-fast: false
+      matrix:
+        chunk: ${{ fromJSON(needs.prepare.outputs.stage0_chunks) }}
     uses: ./.github/workflows/build-stage.yml
     with:
       stage: '0'
-      packages: ${{ needs.prepare.outputs.stage0 }}
+      packages: ${{ matrix.chunk }}
 
   rebuild1:
     needs: [prepare, rebuild0]
     if: ${{ !cancelled() && needs.prepare.outputs.stage1 != '[]' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        chunk: ${{ fromJSON(needs.prepare.outputs.stage1_chunks) }}
     uses: ./.github/workflows/build-stage.yml
     with:
       stage: '1'
-      packages: ${{ needs.prepare.outputs.stage1 }}
+      packages: ${{ matrix.chunk }}
 
   rebuild2:
     needs: [prepare, rebuild0, rebuild1]
     if: ${{ !cancelled() && needs.prepare.outputs.stage2 != '[]' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        chunk: ${{ fromJSON(needs.prepare.outputs.stage2_chunks) }}
     uses: ./.github/workflows/build-stage.yml
     with:
       stage: '2'
-      packages: ${{ needs.prepare.outputs.stage2 }}
+      packages: ${{ matrix.chunk }}
 
   rebuild3:
     needs: [prepare, rebuild0, rebuild1, rebuild2]
     if: ${{ !cancelled() && needs.prepare.outputs.stage3 != '[]' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        chunk: ${{ fromJSON(needs.prepare.outputs.stage3_chunks) }}
     uses: ./.github/workflows/build-stage.yml
     with:
       stage: '3'
-      packages: ${{ needs.prepare.outputs.stage3 }}
+      packages: ${{ matrix.chunk }}
 
   rebuild4:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3]
     if: ${{ !cancelled() && needs.prepare.outputs.stage4 != '[]' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        chunk: ${{ fromJSON(needs.prepare.outputs.stage4_chunks) }}
     uses: ./.github/workflows/build-stage.yml
     with:
       stage: '4'
-      packages: ${{ needs.prepare.outputs.stage4 }}
+      packages: ${{ matrix.chunk }}
+
+  rebuild5:
+    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4]
+    if: ${{ !cancelled() && needs.prepare.outputs.stage5 != '[]' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        chunk: ${{ fromJSON(needs.prepare.outputs.stage5_chunks) }}
+    uses: ./.github/workflows/build-stage.yml
+    with:
+      stage: '5'
+      packages: ${{ matrix.chunk }}
+
+  rebuild6:
+    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5]
+    if: ${{ !cancelled() && needs.prepare.outputs.stage6 != '[]' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        chunk: ${{ fromJSON(needs.prepare.outputs.stage6_chunks) }}
+    uses: ./.github/workflows/build-stage.yml
+    with:
+      stage: '6'
+      packages: ${{ matrix.chunk }}
+
+  rebuild7:
+    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6]
+    if: ${{ !cancelled() && needs.prepare.outputs.stage7 != '[]' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        chunk: ${{ fromJSON(needs.prepare.outputs.stage7_chunks) }}
+    uses: ./.github/workflows/build-stage.yml
+    with:
+      stage: '7'
+      packages: ${{ matrix.chunk }}
+
+  rebuild8:
+    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7]
+    if: ${{ !cancelled() && needs.prepare.outputs.stage8 != '[]' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        chunk: ${{ fromJSON(needs.prepare.outputs.stage8_chunks) }}
+    uses: ./.github/workflows/build-stage.yml
+    with:
+      stage: '8'
+      packages: ${{ matrix.chunk }}
+
+  rebuild9:
+    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8]
+    if: ${{ !cancelled() && needs.prepare.outputs.stage9 != '[]' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        chunk: ${{ fromJSON(needs.prepare.outputs.stage9_chunks) }}
+    uses: ./.github/workflows/build-stage.yml
+    with:
+      stage: '9'
+      packages: ${{ matrix.chunk }}
+
+  rebuild10:
+    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8, rebuild9]
+    if: ${{ !cancelled() && needs.prepare.outputs.stage10 != '[]' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        chunk: ${{ fromJSON(needs.prepare.outputs.stage10_chunks) }}
+    uses: ./.github/workflows/build-stage.yml
+    with:
+      stage: '10'
+      packages: ${{ matrix.chunk }}
 
   precedence:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4]

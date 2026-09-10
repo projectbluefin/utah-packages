@@ -1,0 +1,8 @@
+{
+  "package": "libayatana-ido",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libayatana-ido.git",
+  "commit": "e267f8aa27cb83157f80db1f5971628d518ef138",
+  "tree": "80a037a63655f639de2168906fd1997a2a0d41d7",
+  "imported_at": "2026-09-03T22:53:13.965112+00:00"
+}

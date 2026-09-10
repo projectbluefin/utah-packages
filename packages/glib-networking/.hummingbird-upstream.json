@@ -1,0 +1,8 @@
+{
+  "package": "glib-networking",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/glib-networking.git",
+  "commit": "96e4635450d8904b04bd58ef012060dc28b225f3",
+  "tree": "735ded0838d2a51bc111b6d1dd7e5d6d482c86f7",
+  "imported_at": "2026-09-04T21:16:58.572370+00:00"
+}

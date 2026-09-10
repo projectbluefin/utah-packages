@@ -1,0 +1,29 @@
+diff -up a/python/setup.py b/python/setup.py
+--- a/python/setup.py	2022-09-29 13:38:53.000000000 -0400
++++ b/python/setup.py	2026-06-08 12:00:00.000000000 -0400
+@@ -14,7 +14,7 @@ import platform
+
+ # We must use setuptools, not distutils, because we need to use the
+ # namespace_packages option for the "google" package.
+-from setuptools import setup, Extension, find_packages
++from setuptools import setup, Extension, find_namespace_packages
+
+ from distutils.command.build_ext import build_ext as _build_ext
+ from distutils.command.build_py import build_py as _build_py
+@@ -308,11 +308,14 @@ if __name__ == '__main__':
+           "Programming Language :: Python :: 3.9",
+           "Programming Language :: Python :: 3.10",
+       ],
+-      namespace_packages=['google'],
+-      packages=find_packages(
++      packages=find_namespace_packages(
+           exclude=[
++              'docs',
++              'docs.*',
+               'import_test_package',
++              'import_test_package.*',
+               'protobuf_distutils',
++              'protobuf_distutils.*',
+           ],),
+       test_suite='google.protobuf.internal',
+       cmdclass={

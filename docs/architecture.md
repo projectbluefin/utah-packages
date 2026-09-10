@@ -72,23 +72,75 @@ Whether to finish that design or supersede it is tracked in
 `.github/workflows/packit-srpm-pilot.yml` proves the SRPM path but is
 verification-only. Its `discover` job emits the package list from
 `tools/packit_workflow.py packages`; its per-package `srpm` matrix has
-`fail-fast: false`. Each matrix job uses `tools/source_pipeline.py` to fetch
+`fail-fast: false` and is fanned out over chunks of 250 by
+`tools/packit_workflow.py chunks`. The chunking is not cosmetic: GitHub caps a
+matrix at 256 jobs and expands a larger one to nothing rather than rejecting
+it, so once the monorepo passed 256 packages the pilot failed on every run with
+a green `discover` above an `srpm` job that never existed. The `discover` guard
+asserts the package list is non-empty, which a list of 345 satisfies while
+still producing no jobs. Each matrix job uses `tools/source_pipeline.py` to fetch
 and verify the configured sources and stage them beside the spec, then runs
 `packit srpm --preserve-spec`. It uploads one SRPM artifact and stops there:
 it does not feed the overlay or publication, and nothing consumes its output.
 
-The root Packit configuration and the source lock both cover all 193 recipes:
+### What Packit is for here, and what it is not
+
+Packit stays, scoped to what it is good at: **turning a recipe into an SRPM and
+proving the spec is well formed.** Run against this monorepo it does that in
+three or four seconds a package:
+
+```text
+flac-1.5.0-9.fc43      SRPM OK in 4s
+libnice-0.1.23-3.fc43  SRPM OK in 4s
+dracut-111-2.fc43      SRPM OK in 3s
+```
+
+That is worth having as a gate. A malformed spec fails in seconds rather than
+after a build lane has installed a build root and compiled for minutes --
+`dracut` sat behind a lowercase month in a `%changelog` date, the sort of thing
+an SRPM step catches immediately.
+
+Packit is **not** replacing the binary lane, and the disttags above say why.
+`packit srpm` yields `flac-1.5.0-9.fc43`; this factory ships
+`gnome-shell-extension-gsconnect-72-3.hum1.bfin`. The whole reason the factory
+exists is to rebuild against Hummingbird so that sonames match the image it
+feeds -- the staging work behind `libheif`, `abseil-cpp` and `ffmpeg` is
+exactly that problem. A Fedora-chroot SRPM does not answer it.
+
+**Copr is the shape in which Packit could take over the binary lane, and we are
+not pursuing it now.** Packit builds binaries through `copr_build` jobs, and
+Copr offers Fedora chroots; producing `hum1.bfin` RPMs would need a custom Copr
+chroot carrying the Hummingbird repository, plus the exclusion rules the lane
+scripts already encode (Fedora must not answer for what the factory rebuilds,
+and one Hummingbird package must not answer for another -- see the ruby
+default-gems conflict). That is a migration of the build root itself, not a
+change of build driver. Recorded here so the option is not rediscovered from
+scratch; tracked with the wider question in
+[#43](https://github.com/projectbluefin/utah-packages/issues/43).
+
+Two consequences worth stating plainly:
+
+- Packit does not do source acquisition either. It logs *We are unable to
+  download remote sources from spec-file ... skipping downloading of remote
+  sources*, so `tools/source_pipeline.py` remains the only thing fetching and
+  verifying upstream archives, in both lanes.
+- `.packit.yaml` declares packages but carries **no `jobs:` section**, so the
+  Packit service performs no work on a pull request. The manifest is a
+  precondition for Copr builds, not evidence of them. The only thing exercising
+  Packit is the pilot workflow.
+
+The root Packit configuration and the source lock both cover all 345 recipes:
 
 | check | result |
 | --- | ---: |
-| `ls -d packages/*/ \| wc -l` | `193` |
-| entries under `.packit.yaml:packages` | `193` |
-| entries under `config/upstream-sources.json:packages` | `193` |
+| `ls -d packages/*/ \| wc -l` | `345` |
+| entries under `.packit.yaml:packages` | `345` |
+| entries under `config/upstream-sources.json:packages` | `345` |
 
 `python3 tools/validate.py` reports:
 
 ```text
-validated 193 source RPMs
+validated 345 source RPMs
 ```
 
 ## Current binary pipeline
@@ -160,7 +212,7 @@ here as a list of completed work.
 | **Hummingbird overlap** | `precedence` reports any shared package name as a mistake | Allowed, but declared per package in `config/upstream-sources.json` | A general factory legitimately rebuilds things Hummingbird also ships. Undeclared overlap is still a mistake. |
 | **Build engine** | Bare `rpmbuild -br` then `-ba`, in a container that hand-simulates a build root | Mock, hermetic where possible | `build-stage.yml` installs `mock` and never invokes it, then reimplements it: *"mirroring Hummingbird mock.cfg"*, *"mock defines USER in its build root; a bare container does not"*. Hummingbird builds in mock, and so does the approved design in `docs/superpowers/specs/`, which this review reached independently. Whether Packit drives it is the open part — [#43](https://github.com/projectbluefin/utah-packages/issues/43). |
 | **Buildroot** | Solved live against whatever the repos serve at that moment | Resolve once, write `buildroot_lock.json` as a run artifact, build offline from it | Hummingbird's mechanism: `rpmspec --buildrequires` → DNF solve → `buildroot_lock.json` → hermetic repo → `--network=none` (`ci/build_rpms.sh`). Records EVR, arch, repo ID, URL, checksum and source RPM — not names. It is why the ABI question has an answer instead of a log grep. |
-| **Stage assignment** | 31 of 193 packages carry a hand-assigned `stage` | Solve waves from real BuildRequires; config `stage` demotes to an override for cycle-breakers such as `malcontent-bootstrap` | `preflight` already resolves every recipe's BuildRequires and then discards the result. Hand integers are a manual cache of a computed value; two of them were discovered by a build failing. Hummingbird has no stage numbers at all — it is solver-driven plus a reverse-dependency impact scanner. |
+| **Stage assignment** | 45 of 345 packages carry a hand-assigned `stage` | Solve waves from real BuildRequires; config `stage` demotes to an override for cycle-breakers such as `malcontent-bootstrap` | `preflight` already resolves every recipe's BuildRequires and then discards the result. Hand integers are a manual cache of a computed value; two of them were discovered by a build failing. Hummingbird has no stage numbers at all — it is solver-driven plus a reverse-dependency impact scanner. |
 | **Compiler cache** | `sccache` against the Actions cache service, over the network | Mock's `ccache` plugin plus `actions/cache`; delete `.github/actions/setup-sccache` | Hermetic mock is network-isolated. sccache would degrade to a total miss and look like "builds got slower" rather than failing. |
 | **Architecture** | `x86_64` hardcoded in the Hummingbird repository id and the sccache URL | Stay x86_64 only | Deferred deliberately, not overlooked. |
 | **Fork state** | `.hummingbird-upstream.json` pins a Fedora commit and tree; drift is invisible | Compute drift against the pinned commit in CI; an undeclared diff fails | Hummingbird labels every package `clean`, `modified` or `independent` and requires a reason for `modified`. Computed rather than declared, so it cannot rot the way the stage integers did. The recorded `tree` cannot be recomputed offline: the import drops files dist-git carries, so pango records tree `bdf8be16` while its three imported files hash to `f80aca67`, the difference being `.gitignore`. Drift detection has to fetch the pinned commit rather than rehash the working tree. |

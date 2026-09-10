@@ -1,0 +1,8 @@
+{
+  "package": "libasyncns",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libasyncns.git",
+  "commit": "0743e651083d48cb739a71ddddc2700a8e4a5c99",
+  "tree": "7527d4240c67af5c522f80e0e39dbe22b780c08d",
+  "imported_at": "2026-09-03T22:53:14.070771+00:00"
+}
