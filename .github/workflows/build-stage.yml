@@ -330,8 +330,19 @@ jobs:
                 find /builddir -maxdepth 8 -type f \
                   \( -name "*.log" -o -name "testlog*.txt" -o -name "*-diff.png" -o -name "*-out.png" \) \
                   -exec cp --parents {} "/work/reports/check/$PACKAGE/" \; 2>/dev/null || true
+                # The container runs as root and upload-artifact runs as the
+                # runner user, which could not read the tree cp left behind:
+                #   EACCES: permission denied, scandir .../check/librsvg2/builddir
+                chmod -R a+rX "/work/reports/check/$PACKAGE" || true
                 echo "collected %check evidence:" >&2
                 find "/work/reports/check/$PACKAGE" -type f | head -40 >&2
+                # An artifact still has to be downloaded to be read. meson
+                # writes the per-test detail to testlog.txt, so put it straight
+                # in the job log too -- bounded, because it can be long.
+                find "/work/reports/check/$PACKAGE" -name "testlog.txt" -type f | while read -r log; do
+                  echo "--- tail of $log" >&2
+                  tail -n 200 "$log" >&2
+                done
                 exit "$status"
               fi
               find /work/result -name "*.rpm" -type f -print0 | \
