@@ -3,7 +3,10 @@
 
 Every factory task consumes :func:`inventory` instead of rescanning
 ``packages/``, ``config/upstream-sources.json``, or ``.packit.yaml`` on its
-own. The inventory refuses ambiguous state outright: duplicate spec
+own. Consumers that need lock-entry fields (``sha512``, ``filename``,
+``dist_bump``, ``dist_git_name``, ...) take them from :func:`source_locks`,
+which shares the same validation -- the lock file is parsed exactly once,
+here. The inventory refuses ambiguous state outright: duplicate spec
 directories, duplicate source locks, unknown stages, or multiple specs per
 package are contract violations, not warnings.
 """
@@ -44,8 +47,14 @@ def _spec_per_package(root: Path) -> dict[str, Path]:
     return specs
 
 
-def _source_locks(root: Path) -> dict[str, int]:
-    data = json.loads((root / "config" / "upstream-sources.json").read_text())
+def load_source_locks(config: Path) -> dict[str, dict]:
+    """Validated source-lock entries keyed by package name.
+
+    The only parse of ``upstream-sources.json`` in the factory: a duplicated
+    package name or an unknown stage is a contract violation for every reader,
+    not only for :func:`inventory`.
+    """
+    data = json.loads(config.read_text())
     locks = {}
     for entry in data["packages"]:
         name = entry["name"]
@@ -54,19 +63,24 @@ def _source_locks(root: Path) -> dict[str, int]:
         stage = entry.get("stage", 0)
         if not isinstance(stage, int) or stage not in KNOWN_STAGES:
             raise ValueError(f"unknown stage for {name}: {stage!r}")
-        locks[name] = stage
+        locks[name] = entry
     return locks
+
+
+def source_locks(root: Path) -> dict[str, dict]:
+    """The validated source locks for the repository at ``root``."""
+    return load_source_locks(root / "config" / "upstream-sources.json")
 
 
 def inventory(root: Path) -> list[PackageRecord]:
     specs = _spec_per_package(root)
-    locks = _source_locks(root)
+    locks = source_locks(root)
     packit = set(package_names(root / ".packit.yaml"))
     return [
         PackageRecord(
             name=name,
             spec=spec,
-            stage=locks.get(name, 0),
+            stage=locks[name].get("stage", 0) if name in locks else 0,
             source_locked=name in locks,
             packit_configured=name in packit,
         )
