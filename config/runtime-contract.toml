@@ -45,6 +45,5 @@ packages = [
   "slitherer",
   "evolution-ews-core",
   "fish",
-  "tailscale",
   "zsh",
 ]

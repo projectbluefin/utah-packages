@@ -153,6 +153,7 @@ When a later stage cannot see what an earlier stage built, check in this order:
 | Error inside `/usr/share/cargo/registry/...` or another Fedora-packaged dependency | Fedora packaging bug | Verify it affects more than one Fedora release before calling it release-specific. Do not work around it in the spec |
 | `Bad exit status ... (%check)` needing a bus, display or device | The container lacks a service the test needs | Give the container the service. **Never** skip or disable the test |
 | rpmbuild exit **11**, `*.buildreqs.nosrc.rpm` written | Dynamic BuildRequires (`%generate_buildrequires`, all Rust packages) | Install what the generated SRPM declares, then retry, bounded |
+| `undefined: json.SkipFunc` in vendored `go-json-experiment/json` | Go toolchain's experimental `encoding/json/v2` API drift vs vendored shim | Export `GOEXPERIMENT=nojsonv2` in `%build` to use vendored implementation |
 | Exit **125**, log under ~1 KB | `docker run` failed before the build; infrastructure | Not the package. Re-run once at most |
 | `Signature verification failed` after a clean download | The repo's `gpgkey` is a multi-key bundle and one key in it fails to import | Point `gpgkey` at the single release key. Verify its fingerprint against the one the failing transaction named. **Keep `gpgcheck=1`** |
 | `wrong key?` on a third-party repo whose content the build does not need | A repo signed by a key the image does not trust | Disable that repo for the build |
