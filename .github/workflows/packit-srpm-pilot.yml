@@ -40,7 +40,7 @@ permissions:
 
 jobs:
   discover:
-    runs-on: ubuntu-24.04
+    runs-on: ghost-runners
     outputs:
       packages: ${{ steps.packages.outputs.packages }}
     steps:
@@ -60,7 +60,7 @@ jobs:
 
   srpm:
     needs: discover
-    runs-on: ubuntu-24.04
+    runs-on: ghost-runners
     strategy:
       fail-fast: false
       matrix:
