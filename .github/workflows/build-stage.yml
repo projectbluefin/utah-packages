@@ -55,23 +55,9 @@ jobs:
           path: work/prior
           merge-multiple: true
         continue-on-error: true
-      # gcc is the one recipe whose Source0 comes from git rather than a
-      # release tarball, and asking gcc.gnu.org for it from every concurrent
-      # run is what earned a 429. Packit solves the same problem with a local
-      # reference repository (packit/utils/repo.py, RepositoryCache): keep the
-      # objects, and a repeated fetch costs no network. The key is the spec, so
-      # it changes exactly when the pinned revision does, and a miss seeds the
-      # mirror for the next run instead of failing.
-      - name: Reuse a cached git mirror for the one git-sourced recipe
-        if: matrix.package == 'gcc'
-        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
-        with:
-          path: work/git-mirror
-          key: git-mirror-gcc-${{ hashFiles('packages/gcc/gcc.spec') }}
       - name: Fetch and verify direct upstream source
         env:
           PACKAGE: ${{ matrix.package }}
-          FACTORY_GIT_MIRROR: ${{ github.workspace }}/work/git-mirror
         run: |
           python3 tools/source_pipeline.py "$PACKAGE" --output work/sources --report-dir work/reports
       - name: Build the verified source with its RPM recipe
@@ -321,10 +307,33 @@ jobs:
                   ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} \
                   ${GLOBAL_EXCLUDE:+--exclude="$GLOBAL_EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$generated"
               done
+              # A %check that fails takes its evidence down with it. The test
+              # binaries run inside /builddir, which is not a mounted volume, so
+              # nothing survives the container -- librsvg2 failed its reference
+              # suite twice and neither log named a single failing test, because
+              # cargo test output never reached the job log at all. Copy whatever
+              # the build left behind before giving up, so the next failure can
+              # be read instead of guessed at.
+              # Captured explicitly: inside `if ! cmd`, $? is the status of the
+              # negation, which is 0, so exiting with it would turn every failed
+              # build green.
+              status=0
               build_rpm -ba "$spec" \
                 --define "_sourcedir $staged" \
                 --define "dist $DISTTAG" \
-                --define "_rpmdir /work/result"
+                --define "_rpmdir /work/result" || status=$?
+              if [ "$status" -ne 0 ]; then
+                mkdir -p "/work/reports/check/$PACKAGE"
+                find /builddir -maxdepth 8 -type d \
+                  \( -name meson-logs -o -name output -o -name test-suite.log \) \
+                  -exec cp -r {} "/work/reports/check/$PACKAGE/" \; 2>/dev/null || true
+                find /builddir -maxdepth 8 -type f \
+                  \( -name "*.log" -o -name "testlog*.txt" -o -name "*-diff.png" -o -name "*-out.png" \) \
+                  -exec cp --parents {} "/work/reports/check/$PACKAGE/" \; 2>/dev/null || true
+                echo "collected %check evidence:" >&2
+                find "/work/reports/check/$PACKAGE" -type f | head -40 >&2
+                exit "$status"
+              fi
               find /work/result -name "*.rpm" -type f -print0 | \
                 xargs -0 -r rpm -qp --qf "%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n"
               # A build that produced no RPM must fail here. if-no-files-found on
@@ -407,6 +416,18 @@ jobs:
               # still succeeds, because the artifact also carries reports.
               test -n "$(find /work/result -name "*.rpm" -type f -print -quit)"
             '
+      # Its own upload, and only on failure: the RPM artifact below declares
+      # if-no-files-found: error, so a build that produced nothing cannot carry
+      # this out with it.
+      - name: Upload the evidence from a failed %check
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: check-s${{ inputs.stage }}-${{ matrix.package }}
+          path: work/reports/check/**
+          if-no-files-found: ignore
+          retention-days: 7
+
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: rpm-s${{ inputs.stage }}-${{ matrix.package }}

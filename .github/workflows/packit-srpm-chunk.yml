@@ -30,23 +30,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
-      # gcc is the one recipe whose Source0 comes from git rather than a
-      # release tarball, and asking gcc.gnu.org for it from every concurrent
-      # run is what earned a 429. Packit solves the same problem with a local
-      # reference repository (packit/utils/repo.py, RepositoryCache): keep the
-      # objects, and a repeated fetch costs no network. The key is the spec, so
-      # it changes exactly when the pinned revision does, and a miss seeds the
-      # mirror for the next run instead of failing.
-      - name: Reuse a cached git mirror for the one git-sourced recipe
-        if: matrix.package == 'gcc'
-        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
-        with:
-          path: work/git-mirror
-          key: git-mirror-gcc-${{ hashFiles('packages/gcc/gcc.spec') }}
       - name: Fetch and stage verified sources
         env:
           PACKAGE: ${{ matrix.package }}
-          FACTORY_GIT_MIRROR: ${{ github.workspace }}/work/git-mirror
         run: |
           python3 tools/source_pipeline.py "$PACKAGE" \
             --output work/sources \

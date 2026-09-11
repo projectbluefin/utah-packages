@@ -298,12 +298,6 @@ packages:
     downstream_package_name: fzf
     paths:
       - packages/fzf
-  gcc:
-    specfile_path: gcc.spec
-    upstream_package_name: gcc
-    downstream_package_name: gcc
-    paths:
-      - packages/gcc
   gcr:
     specfile_path: gcr.spec
     upstream_package_name: gcr

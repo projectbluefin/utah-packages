@@ -347,17 +347,6 @@
       "sha512": "4bd8f0f202ebcc9bf69df729c87a2349637c326479939e424d957ae1633f1bd1526c1e08b207533bdb684eb2e77bedc47bb5ae262532d1c3d16f2e160e276f2c"
     },
     {
-      "name": "gcc",
-      "version": "16.2.1",
-      "filename": "gcc-16.2.1-20260819.tar.xz",
-      "sha512": "ecb291407817316f5516fe771099148ee2ead872d0044ba1b94b68141ef3c46f95f1242bac98881c69f056fc05a1b172e7f2ed3a160219d45c1e4acafc04e680",
-      "generate": {
-        "script": "tools/generated_sources.py",
-        "input": "https://gcc.gnu.org/git/gcc.git revision 95ef1679dd68f27b3d056a497318089d85aa0d55 (vendors/redhat/heads/gcc-16-branch)",
-        "method": "git archive --prefix=gcc-16.2.1-20260819/ 95ef1679dd68f27b3d056a497318089d85aa0d55 | xz -9e (single-stream liblzma, preset 9 extreme)"
-      }
-    },
-    {
       "name": "gcr",
       "version": "4.4.0.1",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/gcr/gcr-4.4.0.1.tar.xz/sha512/f84724e0e9850c6150ec93430a0c3a714f4b4376df2fd3fd68340463acf04d89de236510b40bab4f3dc8fd82a2e8dc98b53c2684df07fdb9a6a3528ed35652d1/gcr-4.4.0.1.tar.xz",
