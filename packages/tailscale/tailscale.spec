@@ -20,6 +20,8 @@ Version:                1.98.8
 %global common_description %{expand:
 The easiest, most secure way to use WireGuard and 2FA.}
 
+%global debug_package %{nil}
+
 Name:           tailscale
 Release:        2%{?dist}
 Summary:        The easiest, most secure way to use WireGuard and 2FA
@@ -1048,6 +1050,19 @@ Provides:       bundled(golang(sigs.k8s.io/json)) = v0.0.0~20241014173422~cfa47c
 %build
 # https://github.com/tailscale/tailscale/blob/v1.92.5/README.md#building
 export LDFLAGS="-X tailscale.com/version.longStamp=%{version} -X tailscale.com/version.shortStamp=%{version}"
+
+# tailscale vendors go-json-experiment/json, whose alias.go forwards to the
+# standard library encoding/json/v2 when the jsonv2 experiment is on. Go 1.27
+# carries a later v2 API than this vendored shim was written against, so the
+# forwarding file no longer compiles:
+#   vendor/github.com/go-json-experiment/json/alias.go:618:21:
+#     undefined: json.SkipFunc
+#   vendor/github.com/go-json-experiment/json/alias.go:957:14:
+#     undefined: json.DiscardUnknownMembers
+# Turn the experiment off for this build. The build tag then excludes alias.go
+# and the module uses its own implementation, which is what tailscale ships and
+# tests against. Nothing else here asks for the standard library v2.
+export GOEXPERIMENT=nojsonv2
 
 %gobuild -o %{gobuilddir}/bin/tailscale ./cmd/tailscale
 %gobuild -o %{gobuilddir}/bin/tailscaled ./cmd/tailscaled
