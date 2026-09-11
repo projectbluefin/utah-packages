@@ -15,34 +15,54 @@ all 36 stage 0 jobs at once. The existing comments avoid this by writing
 rather than a constraint, so nothing stopped the next person reintroducing it.
 This does.
 """
+
+from __future__ import annotations
+
 import sys
+from collections.abc import Iterable
 from pathlib import Path
 
-# The bash -exc build script used to live only in rebuild-rpms.yml; it now
-# lives in the reusable build-stage.yml too, so check every workflow.
-workflows_dir = Path(__file__).resolve().parent.parent / ".github" / "workflows"
-workflows = sorted(workflows_dir.glob("*.yml"))
 
-offenders = []
-for workflow in workflows:
-    lines = workflow.read_text().splitlines()
-    start = None
-    for number, line in enumerate(lines, start=1):
-        if "bash -exc '" in line:
-            start = number
-        elif start is not None and line.strip() == "'":
-            for offset, body in enumerate(lines[start:number - 1], start=start + 1):
-                if "'" in body:
-                    offenders.append((workflow.name, offset, body.strip()))
-            start = None
+def offending_lines(workflows: Iterable[Path]) -> list[tuple[str, int, str]]:
+    """Scan workflows for single quotes inside bash -exc '...' blocks."""
+    offenders = []
+    for workflow in workflows:
+        lines = workflow.read_text().splitlines()
+        start = None
+        for number, line in enumerate(lines, start=1):
+            if "bash -exc '" in line:
+                start = number
+            elif start is not None and line.strip() == "'":
+                for offset, body in enumerate(lines[start:number - 1], start=start + 1):
+                    if "'" in body:
+                        offenders.append((workflow.name, offset, body.strip()))
+                start = None
+    return offenders
 
-if offenders:
-    print("A single quote inside a bash -exc script closes it. These lines do that:",
-          file=sys.stderr)
-    for name, number, text in offenders:
-        print(f"  {name}:{number}: {text}", file=sys.stderr)
-    print("\nRephrase to avoid the apostrophe, as the surrounding comments do.",
-          file=sys.stderr)
-    raise SystemExit(1)
 
-print(f"checked {len(workflows)} workflows: no build script contains a quote that would close it")
+def main(workflows_dir: Path | None = None) -> int:
+    if workflows_dir is None:
+        workflows_dir = Path(__file__).resolve().parent.parent / ".github" / "workflows"
+    workflows = sorted(workflows_dir.glob("*.yml"))
+    offenders = offending_lines(workflows)
+    if offenders:
+        print(
+            "A single quote inside a bash -exc script closes it. These lines do that:",
+            file=sys.stderr,
+        )
+        for name, number, text in offenders:
+            print(f"  {name}:{number}: {text}", file=sys.stderr)
+        print(
+            "\nRephrase to avoid the apostrophe, as the surrounding comments do.",
+            file=sys.stderr,
+        )
+        return 1
+
+    print(
+        f"checked {len(workflows)} workflows: no build script contains a quote that would close it"
+    )
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

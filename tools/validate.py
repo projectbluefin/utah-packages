@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 """Validate package-factory configuration."""
+
+from __future__ import annotations
+
 import json
 import sys
 from pathlib import Path
@@ -8,8 +11,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from tools.package_inventory import inventory
 
-for path in Path("packages").glob("*/.hummingbird-upstream.json"):
-    data = json.loads(path.read_text())
+
+def check_provenance(path: Path, data: dict) -> None:
     required = {"package", "branch", "remote", "commit", "tree", "imported_at"}
     if set(data) != required:
         raise SystemExit(f"invalid upstream provenance: {path}")
@@ -29,13 +32,24 @@ for path in Path("packages").glob("*/.hummingbird-upstream.json"):
         for key in ("commit", "tree"):
             if not data[key]:
                 raise SystemExit(f"rawhide import must carry {key}: {path}")
-records = inventory(Path("."))
-missing_locks = sorted(record.name for record in records if not record.source_locked)
-missing_packit = sorted(record.name for record in records if not record.packit_configured)
-if missing_locks or missing_packit:
-    if missing_locks:
-        print(f"packages missing source locks: {', '.join(missing_locks)}")
-    if missing_packit:
-        print(f"packages missing Packit config: {', '.join(missing_packit)}")
-    raise SystemExit(1)
-print(f"validated {len(records)} source RPMs")
+
+
+def main(root: Path = Path(".")) -> int:
+    for path in (root / "packages").glob("*/.hummingbird-upstream.json"):
+        data = json.loads(path.read_text())
+        check_provenance(path, data)
+    records = inventory(root)
+    missing_locks = sorted(record.name for record in records if not record.source_locked)
+    missing_packit = sorted(record.name for record in records if not record.packit_configured)
+    if missing_locks or missing_packit:
+        if missing_locks:
+            print(f"packages missing source locks: {', '.join(missing_locks)}")
+        if missing_packit:
+            print(f"packages missing Packit config: {', '.join(missing_packit)}")
+        return 1
+    print(f"validated {len(records)} source RPMs")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
