@@ -10,7 +10,14 @@
 # the runtime contract links AcoustID fingerprinting.
 %bcond chromaprint 0
 %bcond extras %{defined fedora}
-%bcond opencv %{defined fedora}
+# Declined for the same reason as chromaprint above: the Fedora package this
+# needs cannot resolve against the libraries this factory replaces. opencv-devel
+# pulls opencv-videoio, which links libswscale.so.9, while this factory's ffmpeg
+# 9.0.1 provides libswscale.so.10 and the Fedora libsw* are excluded by name.
+# (Fedora's opencv also drags qt6-qtbase, which cannot resolve here at all --
+# Hummingbird offers libicu-77 and Fedora qt6 wants libicuuc.so.78.) Nothing in
+# the runtime contract uses GStreamer computer-vision plugins.
+%bcond opencv 0
 %bcond openh264 %{defined fedora}
 %bcond svtav1 %{defined fedora}
 # requires new webrtc-audio-processing-1/-2
@@ -23,7 +30,12 @@
 %bcond ldac %{defined fedora}
 %endif
 %ifnarch %{ix86} riscv64 s390x
-%bcond onnx %{defined fedora}
+# Same again. Fedora onnxruntime-devel requires libabsl_hash.so.2601.0.0 and
+# friends -- the soname of Fedora's abseil-cpp 20260107.1 -- while this factory
+# builds abseil-cpp 20260526.0 and excludes the Fedora copy by name, so the
+# Fedora onnxruntime can never be satisfied here. Nothing in the runtime
+# contract runs ML inference through GStreamer.
+%bcond onnx 0
 %endif
 # VPL runtimes (intel-mediasdk/intel-vpl-gpu-rt) are x86_64 only
 %ifarch x86_64
