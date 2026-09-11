@@ -102,7 +102,7 @@ The upstream Packit image is rebuilt daily and already contains the required
 toolchain. The pin used by this factory is:
 
 ```text
-quay.io/packit/packit@sha256:149e6e06d3e5fb2f10d19760c8a0031c7d8825e7bb91a5f4a7ab9b927c947494
+quay.io/packit/packit@sha256:8a1784251c51eed7a094820c894e2ee7f4ed4bbce4eb78eb172a04de3fae43e1
 ```
 
 PRs #36--#40 and closed issue #35 settle the final decision: this

@@ -51,7 +51,7 @@ mutable tag. What actually builds every RPM is:
 | --- | --- | --- |
 | `build-stage.yml` — the binary lane | `quay.io/fedora/fedora:44` | no, a mutable tag |
 | `rebuild-rpms.yml` — `preflight`, `precedence` | `quay.io/fedora/fedora:44` | no, a mutable tag |
-| `packit-srpm-pilot.yml` — verification only, feeds nothing | `quay.io/packit/packit@sha256:149e6e06…` | yes |
+| `packit-srpm-pilot.yml` — verification only, feeds nothing | `quay.io/packit/packit@sha256:8a178425…` | yes |
 | `recalculate-hummingbird-gaps.yml` | `quay.io/hummingbird-community/bootc-os:latest` | no, a mutable tag |
 
 So the only workflow honouring the rule is the one that produces nothing, and
