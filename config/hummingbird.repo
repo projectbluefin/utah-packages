@@ -11,3 +11,4 @@ sslverify=1
 gpgcheck=0
 priority=10
 zchunk=false
+excludepkgs=ruby3.3-default-gems,ruby3.4-default-gems
