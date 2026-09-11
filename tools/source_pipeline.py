@@ -23,6 +23,10 @@ import urllib.request
 from datetime import UTC, datetime
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from tools.package_inventory import load_source_locks
+
 
 def digest(path: Path, algorithm: str) -> str:
     value = hashlib.new(algorithm)
@@ -217,14 +221,12 @@ def stage_for_packit(package: dict, sources: list[Path], package_root: Path) -> 
 
 
 
-def selected(config: dict, name: str | None) -> list[dict]:
-    packages = config.get("packages", [])
+def selected(locks: dict[str, dict], name: str | None) -> list[dict]:
     if name is None:
-        return packages
-    matches = [package for package in packages if package.get("name") == name]
-    if not matches:
+        return list(locks.values())
+    if name not in locks:
         raise SystemExit(f"package is not configured for direct upstream tracking: {name}")
-    return matches
+    return [locks[name]]
 
 
 def main() -> int:
@@ -244,14 +246,14 @@ def main() -> int:
         help="verify that Packit did not change sources staged beside the spec",
     )
     args = parser.parse_args()
-    config = json.loads(args.config.read_text())
+    locks = load_source_locks(args.config)
     if args.verify_staged:
-        for package in selected(config, args.package):
+        for package in selected(locks, args.package):
             verified = verify_staged_sources(package, args.verify_staged)
             print(json.dumps({"package": package["name"], "verified": verified}, sort_keys=True))
         return 0
     succeeded = True
-    for package in selected(config, args.package):
+    for package in selected(locks, args.package):
         missing = {"name", "sha512"} - package.keys()
         if missing:
             raise SystemExit(f"invalid direct-source entry: missing {', '.join(sorted(missing))}")

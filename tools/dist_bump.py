@@ -35,10 +35,13 @@ do not mean what they appear to.
 """
 from __future__ import annotations
 
-import json
 import re
 import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from tools.package_inventory import source_locks
 
 ROOT = Path(__file__).resolve().parent.parent
 RELEASE = re.compile(r"^Release:\s*(\S+)", re.MULTILINE)
@@ -83,8 +86,7 @@ def suffix(entry: dict, release: str) -> str:
 
 
 def main(name: str) -> str:
-    config = json.loads((ROOT / "config" / "upstream-sources.json").read_text())
-    entry = next((e for e in config["packages"] if e.get("name") == name), None)
+    entry = source_locks(ROOT).get(name)
     if entry is None or entry.get("dist_bump") is None:
         return ""
     specs = sorted((ROOT / "packages" / name).glob("*.spec"))
