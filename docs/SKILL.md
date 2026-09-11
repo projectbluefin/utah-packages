@@ -21,6 +21,7 @@ Both are indexed below. A skill that exists but is not listed here fails
 | --- | --- |
 | Work out why a rebuild job failed, and whose bug it is | [`.agents/skills/build-failure-triage/SKILL.md`](../.agents/skills/build-failure-triage/SKILL.md) |
 | Query Hummingbird's image catalog, tags, CVEs, or SBOMs | [`.agents/skills/hummingbird/SKILL.md`](../.agents/skills/hummingbird/SKILL.md) |
+| Build or audit Bluefin's multimedia package closure | [`skills/multimedia-closure.md`](skills/multimedia-closure.md) |
 | Finish a task and decide what learning to write back | [`skills/skill-improvement.md`](skills/skill-improvement.md) |
 
 ## Reference docs (load on demand)

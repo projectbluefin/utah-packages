@@ -1,0 +1,63 @@
+{
+  "schema": 1,
+  "source": {
+    "bluefin_manifest": "https://github.com/projectbluefin/bluefin/blob/main/build_files/packages/base.toml",
+    "bluefin_install_script": "https://github.com/projectbluefin/bluefin/blob/main/build_files/base/03-packages.sh",
+    "group": "@multimedia",
+    "group_policy": "mandatory Fedora multimedia members are expanded into the factory manifest",
+    "factory_disttag": "hum1.bfin"
+  },
+  "requirements": [
+    {"requirement": "PackageKit-gstreamer-plugin", "factory_source": "PackageKit", "factory_binary": "PackageKit-gstreamer-plugin", "binary_nevra": "PackageKit-gstreamer-plugin-1.3.6-1.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "alsa-utils", "factory_source": "alsa-utils", "factory_binary": "alsa-utils", "binary_nevra": "alsa-utils-1.2.16-2.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "ffmpeg", "factory_source": "ffmpeg", "factory_binary": "ffmpeg-free", "binary_nevra": "ffmpeg-free-9.0.1-1.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "ffmpeg-libs", "factory_source": "ffmpeg", "factory_binary": "ffmpeg-free", "binary_nevra": "ffmpeg-free-9.0.1-1.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "ffmpegthumbnailer", "factory_source": "ffmpegthumbnailer", "factory_binary": "ffmpegthumbnailer", "binary_nevra": "ffmpegthumbnailer-2.3.0-1.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "ffmpegthumbnailer-libs", "factory_source": "ffmpegthumbnailer", "factory_binary": "ffmpegthumbnailer-libs", "binary_nevra": "ffmpegthumbnailer-libs-2.3.0-1.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "gstreamer1", "factory_source": "gstreamer1", "factory_binary": "gstreamer1", "binary_nevra": "gstreamer1-1.28.6-2.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "gstreamer1-plugin-dav1d", "factory_source": "rust-gst-plugin-dav1d", "factory_binary": "gstreamer1-plugin-dav1d", "binary_nevra": "gstreamer1-plugin-dav1d-0.15.0-1.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "gstreamer1-plugin-libav", "factory_source": "gstreamer1-plugin-libav", "factory_binary": "gstreamer1-plugin-libav", "binary_nevra": "gstreamer1-plugin-libav-1.28.7-1.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "gstreamer1-plugin-openh264", "factory_source": "gstreamer1-plugins-bad-free", "factory_binary": "gstreamer1-plugin-openh264", "binary_nevra": "gstreamer1-plugin-openh264-1.28.6-1.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "gstreamer1-plugins-bad-free", "factory_source": "gstreamer1-plugins-bad-free", "factory_binary": "gstreamer1-plugins-bad-free", "binary_nevra": "gstreamer1-plugins-bad-free-1.28.6-1.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "gstreamer1-plugins-bad-free-libs", "factory_source": "gstreamer1-plugins-bad-free", "factory_binary": "gstreamer1-plugins-bad-free-libs", "binary_nevra": "gstreamer1-plugins-bad-free-libs-1.28.6-1.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "gstreamer1-plugins-base", "factory_source": "gstreamer1-plugins-base", "factory_binary": "gstreamer1-plugins-base", "binary_nevra": "gstreamer1-plugins-base-1.28.6-1.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "gstreamer1-plugins-good", "factory_source": "gstreamer1-plugins-good", "factory_binary": "gstreamer1-plugins-good", "binary_nevra": "gstreamer1-plugins-good-1.28.6-1.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "gstreamer1-plugins-ugly-free", "factory_source": "gstreamer1-plugins-ugly-free", "factory_binary": "gstreamer1-plugins-ugly-free", "binary_nevra": "gstreamer1-plugins-ugly-free-1.28.7-1.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "intel-gmmlib", "factory_source": "intel-gmmlib", "factory_binary": "intel-gmmlib", "binary_nevra": "intel-gmmlib-22.10.1-1.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "intel-mediasdk", "factory_source": "intel-mediasdk", "factory_binary": "intel-mediasdk", "binary_nevra": "intel-mediasdk-23.2.2-12.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "intel-vpl-gpu-rt", "factory_source": "intel-vpl-gpu-rt", "factory_binary": "intel-vpl-gpu-rt", "binary_nevra": "intel-vpl-gpu-rt-26.1.6-1.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "libavcodec", "factory_source": "ffmpeg", "factory_binary": "libavcodec-free", "binary_nevra": "libavcodec-free-9.0.1-1.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "libavdevice", "factory_source": "ffmpeg", "factory_binary": "libavdevice-free", "binary_nevra": "libavdevice-free-9.0.1-1.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "libavfilter", "factory_source": "ffmpeg", "factory_binary": "libavfilter-free", "binary_nevra": "libavfilter-free-9.0.1-1.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "libavformat", "factory_source": "ffmpeg", "factory_binary": "libavformat-free", "binary_nevra": "libavformat-free-9.0.1-1.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "libavutil", "factory_source": "ffmpeg", "factory_binary": "libavutil-free", "binary_nevra": "libavutil-free-9.0.1-1.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "libfdk-aac", "factory_source": "fdk-aac-free", "factory_binary": "fdk-aac-free", "binary_nevra": "fdk-aac-free-2.0.3-3.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "libheif", "factory_source": "libheif", "factory_binary": "libheif", "binary_nevra": "libheif-1.23.1-1.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "libjxl", "factory_source": "jpegxl", "factory_binary": "libjxl", "binary_nevra": "1:libjxl-0.11.2-1.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "libva", "factory_source": "libva", "factory_binary": "libva", "binary_nevra": "libva-2.24.1-1.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "libva-intel-media-driver", "factory_source": "intel-media-driver-free", "factory_binary": "libva-intel-media-driver", "binary_nevra": "libva-intel-media-driver-26.2.4-1.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "mesa-dri-drivers", "factory_source": "mesa", "factory_binary": "mesa-dri-drivers", "binary_nevra": "mesa-dri-drivers-26.2.1-1.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "mesa-filesystem", "factory_source": "mesa", "factory_binary": "mesa-filesystem", "binary_nevra": "mesa-filesystem-26.2.1-1.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "mesa-libEGL", "factory_source": "mesa", "factory_binary": "mesa-libEGL", "binary_nevra": "mesa-libEGL-26.2.1-1.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "mesa-libGL", "factory_source": "mesa", "factory_binary": "mesa-libGL", "binary_nevra": "mesa-libGL-26.2.1-1.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "mesa-libgbm", "factory_source": "mesa", "factory_binary": "mesa-libgbm", "binary_nevra": "mesa-libgbm-26.2.1-1.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "mesa-vulkan-drivers", "factory_source": "mesa", "factory_binary": "mesa-vulkan-drivers", "binary_nevra": "mesa-vulkan-drivers-26.2.1-1.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "lame", "factory_source": "lame", "factory_binary": "lame", "binary_nevra": "lame-4.0-1.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "lame-libs", "factory_source": "lame", "factory_binary": "lame-libs", "binary_nevra": "lame-libs-4.0-1.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "libswresample", "factory_source": "ffmpeg", "factory_binary": "libswresample-free", "binary_nevra": "libswresample-free-9.0.1-1.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "libswscale", "factory_source": "ffmpeg", "factory_binary": "libswscale-free", "binary_nevra": "libswscale-free-9.0.1-1.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "pipewire-alsa", "factory_source": "pipewire", "factory_binary": "pipewire-alsa", "binary_nevra": "pipewire-alsa-1.6.8-3.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "pipewire-config-raop", "factory_source": "pipewire", "factory_binary": "pipewire-config-raop", "binary_nevra": "pipewire-config-raop-1.6.8-3.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "pipewire-gstreamer", "factory_source": "pipewire", "factory_binary": "pipewire-gstreamer", "binary_nevra": "pipewire-gstreamer-1.6.8-3.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "pipewire-libs", "factory_source": "pipewire", "factory_binary": "pipewire-libs", "binary_nevra": "pipewire-libs-1.6.8-3.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "pipewire-pulseaudio", "factory_source": "pipewire", "factory_binary": "pipewire-pulseaudio", "binary_nevra": "pipewire-pulseaudio-1.6.8-3.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "pipewire-utils", "factory_source": "pipewire", "factory_binary": "pipewire-utils", "binary_nevra": "pipewire-utils-1.6.8-3.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "wireplumber", "factory_source": "wireplumber", "factory_binary": "wireplumber", "binary_nevra": "wireplumber-0.5.14-2.hum1.bfin.x86_64", "status": "built"}
+  ],
+  "provided_by_hummingbird": [
+    {"requirement": "alsa-ucm", "factory_source": null, "factory_binary": "alsa-ucm", "binary_nevra": "alsa-ucm-1.2.16.1-2.hum1.x86_64", "status": "provided"}
+  ],
+  "documented_exceptions": [
+    {"requirement": "gstreamer-plugins-espeak", "status": "conditional", "reason": "Fedora's @multimedia group marks this member conditional; Bluefin installs the mandatory group transaction only."}
+  ]
+}

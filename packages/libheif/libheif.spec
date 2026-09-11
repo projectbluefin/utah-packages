@@ -10,7 +10,45 @@
 # gdk-pixbuf2 -> glycin-libs
 # glycin-libs -> glycin-loaders
 # glycin-loaders -> libheif
-%bcond bootstrap 0
+# Bootstrap stays on here, permanently. libheif build-requires sdl2, and
+# sdl2 -> SDL3 -> libdecor -> gtk3 -> gdk-pixbuf2 -> glycin-libs ->
+# glycin-loaders -> libheif closes a cycle. Fedora never trips it because its
+# repository is self-consistent; this accumulator is not, and the moment
+# openjph moved 0.25 -> 0.31 the accumulator libheif became uninstallable and
+# took its whole buildroot with it. Bootstrap costs exactly one binary, the
+# heif-view example; the encoders and every library stay.
+%bcond bootstrap 1
+
+# FFmpeg is staged later in the multimedia closure, but the factory promises
+# it as a runtime capability and Fedora's libav is excluded by name. Anything
+# that links libav here would otherwise resolve against a stale accumulator
+# copy or the wrong ABI. Fedora's libav is filtered out everywhere once the
+# factory promises ffmpeg. libheif is the only package in this closure that
+# hit this: its ffmpegdec plugin wanted libavutil.so.60 from Fedora 8.x while the
+# factory ffmpeg 9.x provides a later soname, so the accumulator copy became
+# uninstallable and took every buildroot reaching gdk-pixbuf2, glycin,
+# graphviz and doxygen with it. The aom and dav1d decoder plugins stay, which
+# is what actually decodes AVIF and HEIC here; only the ffmpeg HEVC path goes.
+# Narrower than %%bcond bootstrap, which would also drop rav1e, SvtEnc and sdl2.
+%bcond ffmpeg 0
+
+# openjph goes too, and this one removes a package rather than a plugin.
+# libheif is the only thing in the factory that build-requires openjph, and
+# Hummingbird ships no libopenjph at all -- only Fedora does, at 0.25. So
+# carrying openjph 0.31 here excluded Fedora libopenjph by name, which made
+# Fedora libheif uninstallable, which made this factory own glycin-loaders
+# uninstallable, which took gdk-pixbuf2 and sixteen stage 1 packages with it:
+#   glycin-loaders-2.2~beta from stages requires libheif.so.1
+#   libheif-1.21.2-1.fc44 from fedora requires libopenjph.so.0.25
+#   libopenjph-0.25.3-3.fc44 from fedora is filtered out by exclude filtering
+# Ordering cannot untie it inside five stages: openjph, libheif, glycin,
+# gdk-pixbuf2 and then everything reaching gdk-pixbuf2 is five waves before
+# webkitgtk, gjs and gnome-shell have anywhere to go.
+# Declining the encoder drops the dependency entirely, so Fedora libopenjph is
+# never excluded and nothing downstream has to move. HTJ2K encoding is the
+# cost; AVIF and HEIC decode through aom and dav1d, and JPEG 2000 keeps
+# working through OpenJPEG, which is a different library.
+%bcond openjph 0
 
 Name:           libheif
 Version:        1.23.1
@@ -32,7 +70,7 @@ BuildRequires:  gcc-c++
 BuildRequires:  ninja-build
 BuildRequires:  pkgconfig(aom)
 BuildRequires:  pkgconfig(dav1d)
-%if !%{with bootstrap}
+%if !%{with bootstrap} && %{with ffmpeg}
 BuildRequires:  pkgconfig(libavcodec)
 %endif
 BuildRequires:  pkgconfig(libbrotlidec)
@@ -40,7 +78,9 @@ BuildRequires:  pkgconfig(libjpeg)
 BuildRequires:  pkgconfig(libopenjp2)
 BuildRequires:  pkgconfig(libpng)
 BuildRequires:  pkgconfig(libtiff-4)
+%if %{with openjph}
 BuildRequires:  pkgconfig(openjph) >= 0.18.0
+%endif
 %if !%{with bootstrap}
 BuildRequires:  pkgconfig(sdl2)
 %endif
@@ -70,14 +110,16 @@ file format decoder and encoder.
 %{_libdir}/%{name}/%{name}-aomdec.so
 %{_libdir}/%{name}/%{name}-aomenc.so
 %{_libdir}/%{name}/%{name}-dav1d.so
-%if !%{with bootstrap}
+%if !%{with bootstrap} && %{with ffmpeg}
 %{_libdir}/%{name}/%{name}-ffmpegdec.so
 %endif
 %{_libdir}/%{name}/%{name}-j2kdec.so
 %{_libdir}/%{name}/%{name}-j2kenc.so
 %{_libdir}/%{name}/%{name}-jpegdec.so
 %{_libdir}/%{name}/%{name}-jpegenc.so
+%if %{with openjph}
 %{_libdir}/%{name}/%{name}-jphenc.so
+%endif
 %ifnarch %{ix86}
 %{_libdir}/%{name}/%{name}-openh264dec.so
 %endif
@@ -139,7 +181,7 @@ rm -rf third-party/
  -DWITH_DAV1D=ON \
  -DWITH_DAV1D_PLUGIN=ON \
  -DWITH_EXAMPLES=ON \
-%if !%{with bootstrap}
+%if !%{with bootstrap} && %{with ffmpeg}
  -DWITH_FFMPEG_DECODER=ON \
  -DWITH_FFMPEG_DECODER_PLUGIN=ON \
 %endif
@@ -152,9 +194,11 @@ rm -rf third-party/
  -DWITH_OpenJPEG_DECODER_PLUGIN=ON \
  -DWITH_OpenJPEG_ENCODER=ON \
  -DWITH_OpenJPEG_ENCODER_PLUGIN=ON \
+%if %{with openjph}
  -DWITH_OPENJPH_DECODER=ON \
  -DWITH_OPENJPH_ENCODER=ON \
  -DWITH_OPENJPH_ENCODER_PLUGIN=ON \
+%endif
 %ifnarch %{ix86}
  -DWITH_OpenH264_DECODER=ON \
  -DWITH_OpenH264_DECODER_PLUGIN=ON \

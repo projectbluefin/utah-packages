@@ -19,7 +19,29 @@ def command(*args: str) -> subprocess.CompletedProcess[str]:
     return subprocess.run(args, text=True, capture_output=True, check=False)
 
 
-def resolve_source(binary: str) -> tuple[str | None, str | None]:
+def explicit_sources(manifest: dict) -> dict[str, str]:
+    """Return source overrides for binaries absent from standard Rawhide.
+
+    Bluefin's multimedia transaction is assembled from Fedora plus the
+    fedora-multimedia repository. Free-codec names such as ``ffmpeg`` and
+    ``libfdk-aac`` therefore have no standard Rawhide binary for repoquery to
+    inspect even though their Rawhide source recipes are valid factory inputs.
+    """
+    section = manifest.get("multimedia_sources", {})
+    if not isinstance(section, dict):
+        raise ValueError("[multimedia_sources] must be a table")
+    value = section.get("source_by_binary", {})
+    if not isinstance(value, dict) or not all(
+        isinstance(binary, str) and isinstance(source, str)
+        for binary, source in value.items()
+    ):
+        raise ValueError("[multimedia_sources.source_by_binary] must be a string map")
+    return value
+
+
+def resolve_source(binary: str, overrides: dict[str, str] | None = None) -> tuple[str | None, str | None]:
+    if overrides and binary in overrides:
+        return overrides[binary], None
     result = command("dnf", "repoquery", "--latest-limit=1", "--qf", "%{sourcerpm}", binary)
     candidates = sorted({line.strip() for line in result.stdout.splitlines() if line.strip() and line.strip() != "(none)"})
     if not candidates:
@@ -39,11 +61,12 @@ def main() -> int:
 
     manifest = tomllib.loads(args.manifest.read_text())
     binaries = import_binaries(manifest)
+    overrides = explicit_sources(manifest)
 
     resolved: dict[str, str] = {}
     unavailable: list[dict[str, str]] = []
     for binary in binaries:
-        source, error = resolve_source(binary)
+        source, error = resolve_source(binary, overrides)
         if source:
             resolved[binary] = source
         else:

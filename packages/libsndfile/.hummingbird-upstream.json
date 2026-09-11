@@ -1,0 +1,8 @@
+{
+  "package": "libsndfile",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libsndfile.git",
+  "commit": "5ff8e8376b5b62374e42a3a58483b3a4a47537fc",
+  "tree": "564541e80e5043d1c67306a9a16708178a78036d",
+  "imported_at": "2026-09-03T22:53:15.958450+00:00"
+}

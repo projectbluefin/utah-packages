@@ -1,0 +1,8 @@
+{
+  "package": "openjpeg",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/openjpeg.git",
+  "commit": "40d001c8b02b482df9ee43a620f82163f1f070c5",
+  "tree": "7a1bab392b05da3350410462c4adb661b97f21bf",
+  "imported_at": "2026-09-05T04:39:18.268802+00:00"
+}
