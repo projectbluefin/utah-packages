@@ -102,6 +102,19 @@ jobs:
               # with the Fedora package: mock installs docs into a build root, and
               # this container was not. Restore that.
               sed -i "/^tsflags=nodocs/d" /etc/dnf/dnf.conf
+              # The Hummingbird repository times out under load, and dnf gives
+              # up far too readily on it. libtevent and vulkan-loader both died
+              # mid-builddep with
+              #   Curl error (28): Timeout was reached for .../rhash-1.4.5-5.hum1.rpm
+              #   Librepo error: ... All mirrors were tried
+              # and samba then failed at stage 6 for want of the libtevent
+              # those builds never produced -- one flaky download costing three
+              # packages. There is no mirror to fall back to, so the only
+              # answer is to wait longer and try harder: raise the retry count,
+              # let a slow transfer finish rather than tripping the 30s
+              # default, and only give up on one that has genuinely stalled.
+              printf "retries=10\ntimeout=120\nminrate=1000\nmax_parallel_downloads=4\n" \
+                >> /etc/dnf/dnf.conf
               # Fedora 44 plus Hummingbird, mirroring Hummingbird mock.cfg:
               # Fedora release repos with its own Pulp repos shadowing them by
               # priority. Proven correct by this job own diagnostic below --
@@ -232,6 +245,13 @@ jobs:
               fi
               DISTTAG=".${HUM_TAG}.bfin${DIST_BUMP:-}"
               echo "disttag: $DISTTAG"
+              # librsvg writes its reference-test output PNGs to TESTS_OUTPUT_DIR,
+              # defaulting to a temp dir outside /builddir -- which is why two
+              # collections found meson logs and no images. Point it at the
+              # mounted volume so a failed comparison leaves its -out.png and
+              # -diff.png behind. Harmless for every other package.
+              export TESTS_OUTPUT_DIR=/work/reports/check/$PACKAGE/test-output
+              mkdir -p "$TESTS_OUTPUT_DIR"
               # libratbag %check starts ratbagd, which calls
               # Gio.bus_get_sync(Gio.BusType.SYSTEM) and dies with "Could not
               # connect: No such file or directory" -- a plain container has no
@@ -336,13 +356,21 @@ jobs:
                 chmod -R a+rX "/work/reports/check/$PACKAGE" || true
                 echo "collected %check evidence:" >&2
                 find "/work/reports/check/$PACKAGE" -type f | head -40 >&2
-                # An artifact still has to be downloaded to be read. meson
-                # writes the per-test detail to testlog.txt, so put it straight
-                # in the job log too -- bounded, because it can be long.
-                find "/work/reports/check/$PACKAGE" -name "testlog.txt" -type f | while read -r log; do
-                  echo "--- tail of $log" >&2
-                  tail -n 200 "$log" >&2
+                # An artifact still has to be downloaded to be read, so put the
+                # detail in the job log too. Grepped, not tailed: the meson
+                # testlog.txt ends with hundreds of cargo "Fresh"/"Compiling"
+                # lines, so a tail of it showed nothing but build chatter while
+                # the failures sat further up. These patterns are what the test
+                # harnesses actually print -- librsvg reports
+                #   <name>: <N> pixels changed with maximum difference of <M>
+                # and meson prints its own per-test verdicts.
+                find "/work/reports/check/$PACKAGE" -name "testlog*.txt" -type f | while read -r log; do
+                  echo "--- failures in $log" >&2
+                  grep -aiE "pixels changed|panicked|FAILED|^not ok|TIMEOUT|[0-9]+/[0-9]+ .*(FAIL|ERROR)|^Ok: |^Fail: |^Timeout: |assertion" \
+                    "$log" | head -60 >&2 || echo "(no recognised failure lines)" >&2
                 done
+                find "/work/reports/check/$PACKAGE" -name "*-diff.png" -o -name "*-out.png" 2>/dev/null \
+                  | head -20 >&2
                 exit "$status"
               fi
               find /work/result -name "*.rpm" -type f -print0 | \

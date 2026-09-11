@@ -1,8 +1,0 @@
-{
-  "package": "evolution-ews",
-  "branch": "rawhide",
-  "remote": "https://src.fedoraproject.org/rpms/evolution-ews.git",
-  "commit": "30a350820623e2bf16e91aea09a74f07f792749a",
-  "tree": "5d5d825364ba20461e0e9064e62c50095c8c9c15",
-  "imported_at": "2026-08-30T12:39:11.251603+00:00"
-}

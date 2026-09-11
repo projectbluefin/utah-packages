@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parent.parent
 PACKIT_CONFIG = ROOT / ".packit.yaml"
 PACKIT_WORKFLOW = ROOT / ".github" / "workflows" / "packit-srpm-pilot.yml"
 # The per-package steps moved into a reusable workflow so the pilot can fan out
-# over chunks: 342 packages in one matrix exceeds the 256-job cap, which GitHub
+# over chunks: 341 packages in one matrix exceeds the 256-job cap, which GitHub
 # expands to nothing rather than rejecting.
 PACKIT_CHUNK_WORKFLOW = ROOT / ".github" / "workflows" / "packit-srpm-chunk.yml"
 SOURCE_CONFIG = ROOT / "config" / "upstream-sources.json"
@@ -28,7 +28,7 @@ class PackitSrpmTests(unittest.TestCase):
             for package in json.loads(SOURCE_CONFIG.read_text())["packages"]
         }
 
-        self.assertEqual(len(config_packages), 342)
+        self.assertEqual(len(config_packages), 341)
         self.assertEqual(config_packages - source_packages, set())
         self.assertTrue(
             {"adw-gtk3-theme", "bootc", "igt-gpu-tools", "mesa", "runc"}
@@ -51,7 +51,7 @@ class PackitSrpmTests(unittest.TestCase):
 
 
     def test_every_chunk_fits_inside_the_matrix_cap(self) -> None:
-        """342 packages in one matrix expands to zero jobs, not an error."""
+        """341 packages in one matrix expands to zero jobs, not an error."""
         names = package_names(PACKIT_CONFIG)
         chunks = package_chunks(names)
         rebuilt = [name for chunk in chunks for name in json.loads(chunk)]

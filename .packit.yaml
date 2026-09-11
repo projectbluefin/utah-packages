@@ -202,12 +202,6 @@ packages:
     downstream_package_name: evolution-data-server
     paths:
       - packages/evolution-data-server
-  evolution-ews:
-    specfile_path: evolution-ews.spec
-    upstream_package_name: evolution-ews
-    downstream_package_name: evolution-ews
-    paths:
-      - packages/evolution-ews
   evtest:
     specfile_path: evtest.spec
     upstream_package_name: evtest
