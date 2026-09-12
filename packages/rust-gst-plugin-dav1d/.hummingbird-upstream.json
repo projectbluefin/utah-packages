@@ -1,0 +1,8 @@
+{
+  "package": "rust-gst-plugin-dav1d",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/rust-gst-plugin-dav1d.git",
+  "commit": "a6203491d488fa7cf6cc75d1a893695a2dbefd49",
+  "tree": "e3266b3f212b69b6ec889454ef22f105b90ba846",
+  "imported_at": "2026-09-11T16:38:07.542883+00:00"
+}

@@ -1405,6 +1405,52 @@
       "url": "https://downloads.sourceforge.net/zsh/zsh-5.9.2.tar.xz",
       "filename": "zsh-5.9.2.tar.xz",
       "sha512": "40bb5eb2cf217e6bcff342fcc9314f082a5d8975abcb56897e86eba5839ddf0ec1ac3feed1e797d4c68cea22228197342916f14bb87309bbcc026a87622bc015"
+    },
+    {
+      "name": "PackageKit",
+      "version": "1.3.6",
+      "url": "http://www.freedesktop.org/software/PackageKit/releases/PackageKit-1.3.6.tar.xz",
+      "filename": "PackageKit-1.3.6.tar.xz",
+      "sha512": "5c4a9f9647be13348e7abfd758a3e8e26b75d33e563fea2cc85817c4d70a7afe36fd725825a23ed188cce2594c8da454504df25d777a28e170e5969bfe2cc4b2",
+      "stage": 0
+    },
+    {
+      "name": "alsa-utils",
+      "version": "1.2.16",
+      "url": "https://www.alsa-project.org/files/pub/utils/alsa-utils-1.2.16.tar.bz2",
+      "filename": "alsa-utils-1.2.16.tar.bz2",
+      "sha512": "288c042f5acb8a7cf1b0a0c25327c74e0bce126124253bdb2d0dc2630b8bc80b5e5d694de97738d031377fd82d887db32af1c4b27c6d940357b318d0a3ef02cf"
+    },
+    {
+      "name": "ffmpegthumbnailer",
+      "version": "2.3.0",
+      "url": "https://github.com/dirkvdb/ffmpegthumbnailer/archive/v2.3.0/ffmpegthumbnailer-2.3.0.tar.gz",
+      "filename": "ffmpegthumbnailer-2.3.0.tar.gz",
+      "stage": 4,
+      "sha512": "1eaa5446fc4388638a7b90600e1408c62d3d677bced5ba18b6f5be4745795fee2f5f084e9d315cbdfc963fd9ae7e655fb4b61a34d8e8558eb0f891334e2637e8"
+    },
+    {
+      "name": "gstreamer1-plugin-libav",
+      "version": "1.28.7",
+      "url": "https://gstreamer.freedesktop.org/src/gst-libav/gst-libav-1.28.7.tar.xz",
+      "filename": "gst-libav-1.28.7.tar.xz",
+      "stage": 4,
+      "sha512": "7a199c95727f5bd7fccacf6a1ab8d0dcaa708da7f1e279de9f9e4b3386cd2371e6d4196a04243afe8493f04306563fad92439b9cc10408291255274da2cea546"
+    },
+    {
+      "name": "gstreamer1-plugins-ugly-free",
+      "version": "1.28.7",
+      "url": "https://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.28.7.tar.xz",
+      "filename": "gst-plugins-ugly-1.28.7.tar.xz",
+      "stage": 1,
+      "sha512": "6dc22c7fb007b2458c2ab6ec1830a95ebc1c3de4172c85e4ea795f931d5d0e02289e0da39345b4b41976280aba9af35ea7c3a200cc8403e623fe5cba71c4e58a"
+    },
+    {
+      "name": "rust-gst-plugin-dav1d",
+      "version": "0.15.0",
+      "url": "https://crates.io/api/v1/crates/gst-plugin-dav1d/0.15.0/download#/gst-plugin-dav1d-0.15.0.crate",
+      "filename": "gst-plugin-dav1d-0.15.0.crate",
+      "sha512": "9326a569da4ad762f743107577d4817bb28724cfb036b35eaf7d57acfb25d0b52239df86d778e519788651d867200e4c0c2a3cacf438fc3d3f3e2016e02f5cc8"
     }
   ]
 }

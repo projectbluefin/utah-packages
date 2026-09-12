@@ -1,0 +1,8 @@
+{
+  "package": "gstreamer1-plugins-ugly-free",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/gstreamer1-plugins-ugly-free.git",
+  "commit": "557340a0ed7b81332f53039bda3af0b40c9f3b50",
+  "tree": "738505ab05f05ec2d55ab24c83bfedd263eb1e6a",
+  "imported_at": "2026-09-11T16:38:08.448950+00:00"
+}
