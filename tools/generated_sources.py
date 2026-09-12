@@ -2,10 +2,9 @@
 """Deterministic first-party Source0 generation.
 
 The factory contract is that source payloads come from upstream releases and
-Fedora dist-git supplies the recipe only. Three recipes consume an archive
+Fedora dist-git supplies the recipe only. Two recipes consume an archive
 that no upstream publishes verbatim:
 
-- gcc: a VCS snapshot of the Red Hat vendor branch (packages/gcc/update-gcc.sh)
 - intel-media-driver-free: the upstream tag archive with non-free kernel
   files removed (packages/intel-media-driver-free/strip.py)
 - tailscale: a go-vendored bundle (packages/tailscale/create-vendor-tarball.sh)
@@ -95,58 +94,6 @@ def _xz_compress_stream(chunks, sink) -> None:
         if data:
             sink.write(data)
     sink.write(compressor.flush())
-
-
-# --- gcc -------------------------------------------------------------------
-
-
-def _gcc_details(package_dir: Path) -> tuple[str, str, str, str]:
-    text = (package_dir / "gcc.spec").read_text()
-    macros = recipe_macros(text)
-    version = macros["gcc_version"]
-    prefix = f"gcc-{version}-{macros['DATE']}"
-    return macros["gitrev"], version, prefix, macros["gcc_major"]
-
-
-def _gcc_metadata(package_dir: Path) -> dict:
-    revision, version, prefix, major = _gcc_details(package_dir)
-    return {
-        "name": "gcc",
-        "version": version,
-        "filename": f"{prefix}.tar.xz",
-        "generate": {
-            "script": SCRIPT_PATH,
-            "input": f"https://gcc.gnu.org/git/gcc.git revision {revision} (vendors/redhat/heads/gcc-{major}-branch)",
-            "method": f"git archive --prefix={prefix}/ {revision} | xz -9e (single-stream liblzma, preset 9 extreme)",
-        },
-    }
-
-
-def _gcc_generate(package_dir: Path, out_dir: Path) -> Path:
-    revision, _, prefix, _ = _gcc_details(package_dir)
-    target = out_dir / f"{prefix}.tar.xz"
-    with tempfile.TemporaryDirectory(prefix="gcc-fetch-", dir=out_dir) as tmp:
-        repo = Path(tmp) / "repo"
-        subprocess.run(["git", "init", "-q", str(repo)], check=True)
-        subprocess.run(
-            ["git", "-C", str(repo), "remote", "add", "origin", "https://gcc.gnu.org/git/gcc.git"],
-            check=True,
-        )
-        # gcc.gnu.org serves fetch-by-sha1, so the pinned revision is fetched
-        # directly; git verifies every object against its own hash on receipt.
-        subprocess.run(
-            ["git", "-C", str(repo), "fetch", "-q", "--depth", "1", "origin", revision],
-            check=True,
-        )
-        archive = subprocess.Popen(
-            ["git", "-C", str(repo), "archive", f"--prefix={prefix}/", revision],
-            stdout=subprocess.PIPE,
-        )
-        with target.open("wb") as sink:
-            _xz_compress_stream(iter(lambda: archive.stdout.read(1024 * 1024), b""), sink)
-        if archive.wait() != 0:
-            raise RuntimeError(f"git archive failed for {revision}")
-    return target
 
 
 # --- intel-media-driver-free ------------------------------------------------
@@ -329,13 +276,11 @@ def _tailscale_generate(package_dir: Path, out_dir: Path) -> Path:
 
 
 METADATA = {
-    "gcc": _gcc_metadata,
     "intel-media-driver-free": _imd_metadata,
     "tailscale": _tailscale_metadata,
 }
 
 GENERATORS = {
-    "gcc": _gcc_generate,
     "intel-media-driver-free": _imd_generate,
     "tailscale": _tailscale_generate,
 }

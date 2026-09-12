@@ -1336,17 +1336,6 @@
       "sha512": "2acc6453f102b570f0f2765739a020f63051b7ee2a7f49d086459287c9e5a8658294b0081904b4897315195c6510a7e53794da9937f6f64aa53c65eb448d68b5"
     },
     {
-      "name": "gcc",
-      "version": "16.2.1",
-      "filename": "gcc-16.2.1-20260819.tar.xz",
-      "sha512": "ecb291407817316f5516fe771099148ee2ead872d0044ba1b94b68141ef3c46f95f1242bac98881c69f056fc05a1b172e7f2ed3a160219d45c1e4acafc04e680",
-      "generate": {
-        "script": "tools/generated_sources.py",
-        "input": "https://gcc.gnu.org/git/gcc.git revision 95ef1679dd68f27b3d056a497318089d85aa0d55 (vendors/redhat/heads/gcc-16-branch)",
-        "method": "git archive --prefix=gcc-16.2.1-20260819/ 95ef1679dd68f27b3d056a497318089d85aa0d55 | xz -9e (single-stream liblzma, preset 9 extreme)"
-      }
-    },
-    {
       "name": "git",
       "version": "2.55.0",
       "url": "https://www.kernel.org/pub/software/scm/git/git-2.55.0.tar.xz",

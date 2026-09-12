@@ -68,7 +68,7 @@ class TargetSelectionTests(unittest.TestCase):
     def test_hummingbird_supplied_packages_are_skipped_by_default(self):
         targets = plan_targets(ROOT / "packages", {"dracut": ["dracut"]})
         self.assertNotIn("dracut", [path.name for path in targets])
-        self.assertEqual(len(targets), 192)
+        self.assertEqual(len(targets), 191)
 
     def test_explicit_selection_processes_a_hummingbird_supplied_package(self):
         targets = plan_targets(ROOT / "packages", {"dracut": ["dracut"]}, only="dracut")
@@ -112,16 +112,6 @@ class GeneratedSourceTests(unittest.TestCase):
         # verify_staged_sources enforces the manifest pin over the lock, so a
         # pinned Source0 filename must agree with the lock's digest.
         self.assertEqual(entry["sha512"], self.manifest_hash(entry["name"], entry["filename"]))
-
-    def test_gcc_lock_regenerates_the_vendor_branch_snapshot(self):
-        candidate = generated_candidate(ROOT / "packages" / "gcc")
-        self.assertEqual(candidate["name"], "gcc")
-        self.assertEqual(candidate["version"], "16.2.1")
-        self.assertEqual(candidate["filename"], "gcc-16.2.1-20260819.tar.xz")
-        self.assertNotIn("sha512", candidate)  # filled by a proven generation run
-        self.assertIn("95ef1679dd68f27b3d056a497318089d85aa0d55", candidate["generate"]["input"])
-        self.assertIn("git archive", candidate["generate"]["method"])
-        self.assert_first_party_generated(self.lock("gcc"))
 
     def test_intel_media_driver_free_lock_regenerates_the_stripped_archive(self):
         candidate = generated_candidate(ROOT / "packages" / "intel-media-driver-free")

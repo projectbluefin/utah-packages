@@ -29,6 +29,25 @@ provenance, and editing it makes the recipe claim an origin it does not have.
 Pull requests validate configuration. They cannot publish packages,
 attestations, or image tags.
 
+## Removing a package
+
+Dropping a recipe out of the rebuild set (for example `gcc`, removed because
+Hummingbird ships the identical `gcc-16.2.1` and the factory scope is to build
+what Hummingbird does not -- projectbluefin/utah-packages#69) means editing the
+same four places an import writes to, or the next `just check` fails:
+
+- `config/upstream-sources.json` -- delete the package's entry (the recipe with
+  no entry is not eligible to build).
+- `.packit.yaml` -- delete the package's block.
+- `packages/<name>/` -- delete the whole directory (recipe, patches, sources).
+- Any generator special-casing in `tools/generated_sources.py` and the
+  hardcoded package-count assertions in `tests/` that track the set size.
+
+The image manifest (`config/bluefin-packages.toml`) and
+`config/hummingbird-provided-sources.json` are intentionally left alone: the
+image still wants the package, it just resolves from Hummingbird now. Re-add by
+reversing `Import Rawhide package`.
+
 ## Before you commit
 
 ```sh
