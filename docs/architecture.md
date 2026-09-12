@@ -138,7 +138,7 @@ between packages. Moving to real mock is agreed and unbuilt; see below.
 | --- | --- | --- |
 | Factory onboarding contract | `tools/factory_contract.py` | Skill router coverage, skill front-matter, the `AGENTS.md` self-improvement mandate, the pinned `projectbluefin/common` sidecar, banned changelog and session-notes files, and relative documentation links |
 | Package factory configuration | `tools/validate.py` | Import provenance in `.hummingbird-upstream.json`, source-lock coverage, and Packit configuration for every recipe |
-| Unit tests | `pytest tests` | The tooling in `tools/` |
+| Unit tests | `pytest tests` | The tooling in `tools/`, including `tools/publish_gate.py`, whose regression test asserts the rebuild-rpms.yml publish job stays gated so a failed build, precedence, or unresolved Hummingbird-only transaction cannot partially replace the published factory |
 
 `just check` runs the first two, `just test` the third, and
 `pre-commit run --all-files` adds YAML, JSON, and TOML hygiene plus actionlint
