@@ -1,0 +1,8 @@
+{
+  "package": "gnome-desktop3",
+  "branch": "upstream",
+  "remote": "https://gitlab.gnome.org/GNOME/gnome-desktop.git",
+  "commit": "",
+  "tree": "",
+  "imported_at": "2026-09-12T00:00:00+00:00"
+}

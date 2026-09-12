@@ -160,9 +160,12 @@ tooling arrives; do not copy them as-is.
 - Run package builds, source-generation and reproducibility probes, and other
   environment-sensitive validation in GitHub Actions on GitHub-hosted
   `ubuntu-26.04` runners, inside the digest-pinned
-  `quay.io/packit/packit` container. The container owns the toolchain: do not
+  `quay.io/packit/packit` container or locked buildroot images defined in
+  `config/buildroot-lock.json`. The container owns the toolchain: do not
   use ad hoc or unpinned containers, install packages into it at runtime, or
   substitute a generic distro image.
+- Buildroots are locked by image digest in `config/buildroot-lock.json`, and rebuilds
+  capture live package NEVRAs and emit complete package/source/buildroot manifests.
 - Never skip a test, or push an empty commit, to get a build green.
 
 ## Sibling repository
