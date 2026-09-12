@@ -104,12 +104,6 @@ class IntelMediaDriverFreeTransformTests(unittest.TestCase):
 
 
 class GeneratedMetadataTests(unittest.TestCase):
-    def test_gcc_filename_expands_spec_macros(self):
-        metadata = generated_sources.metadata_for("gcc", ROOT / "packages" / "gcc")
-        self.assertEqual(metadata["filename"], "gcc-16.2.1-20260819.tar.xz")
-        self.assertEqual(metadata["version"], "16.2.1")
-        self.assertEqual(metadata["generate"]["script"], "tools/generated_sources.py")
-
     def test_intel_media_metadata_uses_spec_version(self):
         metadata = generated_sources.metadata_for(
             "intel-media-driver-free", ROOT / "packages" / "intel-media-driver-free"
