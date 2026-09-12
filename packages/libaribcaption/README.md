@@ -1,3 +1,0 @@
-# libaribcaption
-
-The libaribcaption package

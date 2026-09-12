@@ -1,3 +1,0 @@
-# twolame
-
-The twolame package

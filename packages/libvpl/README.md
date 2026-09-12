@@ -1,3 +1,0 @@
-# libvpl
-
-The libvpl package

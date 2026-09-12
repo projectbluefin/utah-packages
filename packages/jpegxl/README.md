@@ -1,3 +1,0 @@
-# jpegxl
-
-The jpegxl package

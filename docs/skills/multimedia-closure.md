@@ -12,6 +12,16 @@ metadata:
 Use this procedure when a parity task concerns Bluefin's codecs, media
 acceleration, thumbnailing, or multimedia repository overrides.
 
+**Status**: `reports/bluefin-multimedia-closure.json` currently documents only
+the `@multimedia` members this repo's recipes build (media acceleration,
+thumbnailing, and the free-codec GStreamer plugins that don't depend on the
+FFmpeg/FDK-AAC closure). The remaining mandatory members — FFmpeg and its
+libav* family, FDK-AAC, the pipewire stack, and the rest of the free-codec
+GStreamer plugins — are tracked separately and expected to complete via
+utah-packages#70, which carries those recipes through a full build matrix.
+Extend the report and `[multimedia_overrides]` once that lands, rather than
+re-adding the same recipes here.
+
 ## Inventory the transaction
 
 Read both Bluefin inputs, not just the override table:

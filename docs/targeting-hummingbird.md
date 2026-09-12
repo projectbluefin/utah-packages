@@ -164,21 +164,26 @@ This is the same shape as Hummingbird's toolchain ordering, one layer up.
 Bluefin's multimedia install is a transaction, not just the twelve Mesa and
 VA-API overrides in `base.toml`: `03-packages.sh` also installs FFmpeg,
 GStreamer, LAME, FDK-AAC, JPEG XL, the thumbnailer, and the mandatory members
-of Fedora's `@multimedia` group. The factory records those binary names in
-`[multimedia_overrides]` and keeps a machine-readable mapping in
-`reports/bluefin-multimedia-closure.json`. The conditional `gstreamer-plugins-espeak`
-member is documented as an exception, while `alsa-ucm` is supplied by
-Hummingbird and is reported rather than rebuilt.
+of Fedora's `@multimedia` group — 45 binaries in total. The factory records
+required binary names in `[multimedia_overrides]` and keeps a machine-readable
+mapping in `reports/bluefin-multimedia-closure.json`. The conditional
+`gstreamer-plugins-espeak` member is documented as an exception, while
+`alsa-ucm` is supplied by Hummingbird and is reported rather than rebuilt.
 
-Some Fedora source recipes deliberately use `-free` binary names. The factory
-must retain those names in its source inventory while adding versioned
-`Provides` for Bluefin's unsuffixed transaction (`ffmpeg`, `libav*`, and
-`libfdk-aac`); otherwise dependency resolution silently falls back to Fedora's
-codec libraries. The same closure can expose build cycles: libheif keeps its
-bootstrap configuration and declines the optional FFmpeg/OpenJPH paths, while
-the GStreamer bad plugins decline chromaprint, OpenCV, and ONNX paths whose
-Fedora dependencies cannot resolve against the factory's replaced libraries.
-These are narrow buildroot exceptions, not omissions from the runtime report.
+As of this writing only the media-acceleration, thumbnailing, and free-codec
+GStreamer plugins that don't depend on the FFmpeg/FDK-AAC closure are built
+here (`alsa-utils`, `ffmpegthumbnailer`, `gstreamer1-plugin-dav1d`,
+`gstreamer1-plugin-libav`, `gstreamer1-plugins-ugly-free`,
+`PackageKit-gstreamer-plugin`, plus the pre-existing Mesa/VA-API/Intel media
+overrides). The remaining members — FFmpeg and its `libav*` family, FDK-AAC,
+the pipewire stack, and the rest of the free-codec GStreamer plugins — are
+tracked in `docs/skills/multimedia-closure.md` and expected to complete via
+utah-packages#70, which carries those recipes through a full build matrix.
+That closure will also need versioned `Provides` on the `-free` source
+recipes for Bluefin's unsuffixed transaction names (`ffmpeg`, `libav*`,
+`libfdk-aac`), and may need to work around buildroot cycles — e.g. a plugin
+that wants chromaprint, OpenCV, or ONNX support whose Fedora dependencies
+cannot resolve against the factory's replaced libraries.
 
 ## How the packages are published
 

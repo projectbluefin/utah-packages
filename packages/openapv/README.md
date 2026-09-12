@@ -1,3 +1,0 @@
-# openapv
-
-The openapv package
