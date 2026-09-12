@@ -474,6 +474,12 @@ jobs:
       ref: ${{ steps.oci.outputs.ref }}
       digest: ${{ steps.oci.outputs.digest }}
     steps:
+      # The consumer-transaction check below runs tools/runtime_contract.py
+      # against config/, and the OCI step reads nothing else from the tree, so
+      # this job was the one that never checked the repository out. It failed
+      # on `python3: can't open file .../tools/runtime_contract.py` the moment
+      # the seed step stopped failing first and let it get that far.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Seed repository from the last published factory image
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
