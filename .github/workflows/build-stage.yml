@@ -270,9 +270,42 @@ jobs:
               export LOGNAME="${LOGNAME:-$USER}"
               spec=$(find "/packages/$PACKAGE" -maxdepth 1 -name "*.spec" -print -quit)
               test -n "$spec"
-              dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
-                ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} \
-                ${GLOBAL_EXCLUDE:+--exclude="$GLOBAL_EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$spec"
+              # The Hummingbird repository is one host with no mirrors, so a bad
+              # minute there is a failed build. retries=10 and timeout=120 in
+              # dnf.conf cover a slow transfer, which is what Curl error 28 was,
+              # but not a refusal: snowball died on the S3 backend answering
+              #
+              #   Status code: 503 for .../python3-setuptools-83.0.0-2.1.hum1.rpm
+              #   No more mirrors to try - All mirrors were already tried
+              #
+              # after four attempts inside one second. librepo retries with no
+              # backoff, so all four hit the same bad moment. Waiting between
+              # attempts is the part that was missing. This retries resolution
+              # only, never the build, and an unsatisfiable graph still fails
+              # every attempt and then fails the job.
+              builddep_attempt() {
+                dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
+                  ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} \
+                  ${GLOBAL_EXCLUDE:+--exclude="$GLOBAL_EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$1"
+              }
+              with_backoff() {
+                delay=5
+                for attempt in 1 2 3 4; do
+                  status=0
+                  builddep_attempt "$1" || status=$?
+                  if [ "$status" -eq 0 ]; then
+                    return 0
+                  fi
+                  if [ "$attempt" -eq 4 ]; then
+                    echo "builddep failed after 4 attempts" >&2
+                    return "$status"
+                  fi
+                  echo "::warning title=builddep retry::attempt $attempt failed, waiting ${delay}s" >&2
+                  sleep "$delay"
+                  delay=$((delay * 3))
+                done
+              }
+              with_backoff "$spec"
               # An imported spec keeps its dist-git PatchN and auxiliary SourceN
               # files next to itself, while the verified upstream archive lands in
               # /work/sources. rpmbuild takes a single _sourcedir, so stage both:
@@ -323,9 +356,7 @@ jobs:
                      --define "dist $DISTTAG"; then break; fi
                 generated=$(ls /builddir/rpmbuild/SRPMS/*.buildreqs.nosrc.rpm 2>/dev/null | head -1)
                 test -n "$generated"
-                dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
-                  ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} \
-                  ${GLOBAL_EXCLUDE:+--exclude="$GLOBAL_EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$generated"
+                with_backoff "$generated"
               done
               # A %check that fails takes its evidence down with it. The test
               # binaries run inside /builddir, which is not a mounted volume, so
