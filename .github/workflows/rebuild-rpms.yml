@@ -356,7 +356,8 @@ jobs:
       backend: ${{ inputs.backend || 'container' }}
 
   precedence:
-    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4]
+    # Every wave, not the first five. See publish below.
+    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8, rebuild9, rebuild10]
     if: ${{ !cancelled() && needs.prepare.outputs.build_list != '[]' }}
     runs-on: ubuntu-24.04
     steps:
@@ -438,6 +439,18 @@ jobs:
     # coherent repository Utah consumes. Publication requires every selected
     # stage plus precedence and the Hummingbird-only transaction below.
     #
+    # "Every selected stage" was what this said and not what it did: needs
+    # stopped at rebuild4, so publication ran while stages 5 to 10 were still
+    # building and validated a repository that could not yet contain their
+    # output. The first run to reach the transaction check said so plainly --
+    #
+    #   nothing provides libepoxy.so.0()(64bit) needed by gtk4 ... from factory
+    #   nothing provides libGL.so.1()(64bit) needed by libva ... from factory
+    #
+    # -- with libepoxy and libglvnd both at stage 6, behind the gate. The
+    # dependency now covers all eleven waves, which is what makes the check
+    # meaningful: it can finally see the whole repository it is judging.
+    #
     # This is not main-only. The repository is published as an OCI image, and
     # that image is the only thing consumers read. A Pages mirror used to be
     # published alongside it, but Pages can only deploy from the default
@@ -460,9 +473,15 @@ jobs:
           && (needs.rebuild2.result == 'success' || needs.rebuild2.result == 'skipped')
           && (needs.rebuild3.result == 'success' || needs.rebuild3.result == 'skipped')
           && (needs.rebuild4.result == 'success' || needs.rebuild4.result == 'skipped')
+          && (needs.rebuild5.result == 'success' || needs.rebuild5.result == 'skipped')
+          && (needs.rebuild6.result == 'success' || needs.rebuild6.result == 'skipped')
+          && (needs.rebuild7.result == 'success' || needs.rebuild7.result == 'skipped')
+          && (needs.rebuild8.result == 'success' || needs.rebuild8.result == 'skipped')
+          && (needs.rebuild9.result == 'success' || needs.rebuild9.result == 'skipped')
+          && (needs.rebuild10.result == 'success' || needs.rebuild10.result == 'skipped')
           && (github.event_name != 'pull_request'
               || github.event.pull_request.head.repo.full_name == github.repository) }}
-    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, precedence]
+    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8, rebuild9, rebuild10, precedence]
     # Build waves can overlap, but `:latest` is an atomic consumer input. Queue
     # only this critical section per ref; the later publisher re-seeds from the
     # repository that its predecessor just made current.
