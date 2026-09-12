@@ -12,7 +12,23 @@
 [multimedia_overrides]
 # Replace mesa and friends with less-crippled versions from negativo17/fedora-multimedia.
 # Versions are pinned with `dnf5 versionlock` after install.
+#
+# The seven entries below (PackageKit-gstreamer-plugin through
+# gstreamer1-plugins-ugly-free) are the factory-built members of Fedora's
+# `@multimedia` comps group that this PR's new recipes provide. The rest of
+# the mandatory group (ffmpeg and its libav* family, fdk-aac, the remaining
+# gstreamer1 codec plugins, pipewire, lame, etc.) is tracked in
+# docs/skills/multimedia-closure.md and expected to land via utah-packages#70,
+# which already carries those recipes through a full matrix build. Add them
+# here once #70 lands rather than duplicating the recipes in this PR.
 packages = [
+    "PackageKit-gstreamer-plugin",
+    "alsa-utils",
+    "ffmpegthumbnailer",
+    "ffmpegthumbnailer-libs",
+    "gstreamer1-plugin-dav1d",
+    "gstreamer1-plugin-libav",
+    "gstreamer1-plugins-ugly-free",
     "intel-gmmlib",
     "intel-mediasdk",
     "intel-vpl-gpu-rt",
@@ -26,6 +42,22 @@ packages = [
     "mesa-libgbm",
     "mesa-vulkan-drivers",
 ]
+
+[hummingbird_provided]
+# Fedora's multimedia group includes this binary, but the pinned Hummingbird
+# base image already owns it. Keeping it outside [multimedia_overrides] stops
+# the Rawhide importer from rebuilding alsa-lib while still making the
+# exception visible to the gap report and the committed closure inventory.
+packages = [
+    "alsa-ucm",
+]
+
+[multimedia_sources.source_by_binary]
+# Names supplied by Bluefin are not always the source recipe's binary name.
+# This map lets the Rawhide importer use the source recipe already staged in
+# the factory when standard Rawhide does not expose the requested binary
+# under that name.
+libva-intel-media-driver = "intel-media-driver-free"
 
 [fedora]
 # Base packages from Fedora repos — common to all supported Fedora versions.

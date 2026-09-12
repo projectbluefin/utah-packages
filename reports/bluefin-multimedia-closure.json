@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "source": {
+    "bluefin_manifest": "https://github.com/projectbluefin/bluefin/blob/main/build_files/packages/base.toml",
+    "bluefin_install_script": "https://github.com/projectbluefin/bluefin/blob/main/build_files/base/03-packages.sh",
+    "group": "@multimedia",
+    "group_policy": "mandatory Fedora multimedia members are expanded into the factory manifest",
+    "factory_disttag": "hum1.bfin",
+    "note": "This report covers only the @multimedia members this PR's recipes build. The full 45-binary group closure is tracked in docs/skills/multimedia-closure.md and is expected to complete via utah-packages#70."
+  },
+  "requirements": [
+    {"requirement": "PackageKit-gstreamer-plugin", "factory_source": "PackageKit", "factory_binary": "PackageKit-gstreamer-plugin", "binary_nevra": "PackageKit-gstreamer-plugin-1.3.6-1.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "alsa-utils", "factory_source": "alsa-utils", "factory_binary": "alsa-utils", "binary_nevra": "alsa-utils-1.2.16-2.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "ffmpegthumbnailer", "factory_source": "ffmpegthumbnailer", "factory_binary": "ffmpegthumbnailer", "binary_nevra": "ffmpegthumbnailer-2.3.0-1.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "ffmpegthumbnailer-libs", "factory_source": "ffmpegthumbnailer", "factory_binary": "ffmpegthumbnailer-libs", "binary_nevra": "ffmpegthumbnailer-libs-2.3.0-1.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "gstreamer1-plugin-dav1d", "factory_source": "rust-gst-plugin-dav1d", "factory_binary": "gstreamer1-plugin-dav1d", "binary_nevra": "gstreamer1-plugin-dav1d-0.15.0-1.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "gstreamer1-plugin-libav", "factory_source": "gstreamer1-plugin-libav", "factory_binary": "gstreamer1-plugin-libav", "binary_nevra": "gstreamer1-plugin-libav-1.28.7-1.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "gstreamer1-plugins-ugly-free", "factory_source": "gstreamer1-plugins-ugly-free", "factory_binary": "gstreamer1-plugins-ugly-free", "binary_nevra": "gstreamer1-plugins-ugly-free-1.28.7-1.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "intel-gmmlib", "factory_source": "intel-gmmlib", "factory_binary": "intel-gmmlib", "binary_nevra": "intel-gmmlib-22.10.1-1.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "intel-mediasdk", "factory_source": "intel-mediasdk", "factory_binary": "intel-mediasdk", "binary_nevra": "intel-mediasdk-23.2.2-12.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "intel-vpl-gpu-rt", "factory_source": "intel-vpl-gpu-rt", "factory_binary": "intel-vpl-gpu-rt", "binary_nevra": "intel-vpl-gpu-rt-26.1.6-1.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "libheif", "factory_source": "libheif", "factory_binary": "libheif", "binary_nevra": "libheif-1.23.1-1.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "libva", "factory_source": "libva", "factory_binary": "libva", "binary_nevra": "libva-2.24.1-1.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "libva-intel-media-driver", "factory_source": "intel-media-driver-free", "factory_binary": "libva-intel-media-driver", "binary_nevra": "libva-intel-media-driver-26.2.4-1.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "mesa-dri-drivers", "factory_source": "mesa", "factory_binary": "mesa-dri-drivers", "binary_nevra": "mesa-dri-drivers-26.2.1-1.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "mesa-filesystem", "factory_source": "mesa", "factory_binary": "mesa-filesystem", "binary_nevra": "mesa-filesystem-26.2.1-1.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "mesa-libEGL", "factory_source": "mesa", "factory_binary": "mesa-libEGL", "binary_nevra": "mesa-libEGL-26.2.1-1.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "mesa-libGL", "factory_source": "mesa", "factory_binary": "mesa-libGL", "binary_nevra": "mesa-libGL-26.2.1-1.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "mesa-libgbm", "factory_source": "mesa", "factory_binary": "mesa-libgbm", "binary_nevra": "mesa-libgbm-26.2.1-1.hum1.bfin.x86_64", "status": "built"},
+    {"requirement": "mesa-vulkan-drivers", "factory_source": "mesa", "factory_binary": "mesa-vulkan-drivers", "binary_nevra": "mesa-vulkan-drivers-26.2.1-1.hum1.bfin.x86_64", "status": "built"}
+  ],
+  "provided_by_hummingbird": [
+    {"requirement": "alsa-ucm", "factory_source": null, "factory_binary": "alsa-ucm", "binary_nevra": "alsa-ucm-1.2.16.1-2.hum1.x86_64", "status": "provided"}
+  ],
+  "documented_exceptions": [
+    {"requirement": "gstreamer-plugins-espeak", "status": "conditional", "reason": "Fedora's @multimedia group marks this member conditional; Bluefin installs the mandatory group transaction only."}
+  ]
+}
