@@ -548,7 +548,7 @@
       "filename": "gnome-shell-51.beta.tar.xz",
       "sha512": "0f4dfdf4a8ea050c902b7bcc22e141932b1a33cf6c61f83d478d8495fb21711c8d639b0956ef2a5b7bae5580d88b0a3f7a53abccd544ff17d4ae2137542f77c2",
       "sha256_url": "https://download.gnome.org/sources/gnome-shell/51/gnome-shell-51.beta.sha256sum",
-      "stage": 9,
+      "stage": 10,
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/gnome-shell/gnome-shell-51.beta.tar.xz/sha512/0f4dfdf4a8ea050c902b7bcc22e141932b1a33cf6c61f83d478d8495fb21711c8d639b0956ef2a5b7bae5580d88b0a3f7a53abccd544ff17d4ae2137542f77c2/gnome-shell-51.beta.tar.xz"
       ]
@@ -741,7 +741,8 @@
       "sha512": "6873df98a1589a9b7216e2e0abc7b0391478a38561eebf3970e6a05baa6f4e842fc43eb2c243ae5ea9a000e941601e01f39507fb6f1fae23fc5a11bff42e0b98",
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/gvfs/gvfs-1.61.91.tar.xz/sha512/6873df98a1589a9b7216e2e0abc7b0391478a38561eebf3970e6a05baa6f4e842fc43eb2c243ae5ea9a000e941601e01f39507fb6f1fae23fc5a11bff42e0b98/gvfs-1.61.91.tar.xz"
-      ]
+      ],
+      "stage": 1
     },
     {
       "name": "gweather-locations",
@@ -1833,7 +1834,8 @@
       "version": "2.29.5111.102",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/mozc/mozc-2.29.5111.102.tar.xz/sha512/6a9c6abdc600e4e1c7fd9432419fb058adcf6bca45c27749f122e62ad520c8c1e2ce83ff55dd6b7975517924fb1c71d3a6e3a96a661703da627df372c2f5f700/mozc-2.29.5111.102.tar.xz",
       "filename": "mozc-2.29.5111.102.tar.xz",
-      "sha512": "6a9c6abdc600e4e1c7fd9432419fb058adcf6bca45c27749f122e62ad520c8c1e2ce83ff55dd6b7975517924fb1c71d3a6e3a96a661703da627df372c2f5f700"
+      "sha512": "6a9c6abdc600e4e1c7fd9432419fb058adcf6bca45c27749f122e62ad520c8c1e2ce83ff55dd6b7975517924fb1c71d3a6e3a96a661703da627df372c2f5f700",
+      "stage": 1
     },
     {
       "name": "mozjs140",
@@ -1907,7 +1909,8 @@
       "sha512": "5b0a866c3c556f97b1c712fd09b148ecfd194429620e1b45f0630f6b4dee6a087496ff9bbe36bfa1a3e7c58483c43d45bb1e03956e0386aebe8b66522d90cdc2",
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/ntfs-3g/ntfs-3g_ntfsprogs-2026.7.7.tgz/sha512/5b0a866c3c556f97b1c712fd09b148ecfd194429620e1b45f0630f6b4dee6a087496ff9bbe36bfa1a3e7c58483c43d45bb1e03956e0386aebe8b66522d90cdc2/ntfs-3g_ntfsprogs-2026.7.7.tgz"
-      ]
+      ],
+      "stage": 1
     },
     {
       "name": "openapv",
