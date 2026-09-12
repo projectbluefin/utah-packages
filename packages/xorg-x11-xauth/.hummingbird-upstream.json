@@ -1,0 +1,8 @@
+{
+  "package": "xorg-x11-xauth",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/xorg-x11-xauth.git",
+  "commit": "926c58357d3c0ded3039848c894a3b39e1cff3d0",
+  "tree": "e8d2c0d76987df2f33ab7afd2cddaca95083cd83",
+  "imported_at": "2026-09-05T15:35:35.070527+00:00"
+}

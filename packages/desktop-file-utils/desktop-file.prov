@@ -1,0 +1,26 @@
+#!/bin/sh
+#
+# Script to install in:
+# /usr/lib/rpm/redhat/find-provides.d
+#
+# Transform desktop mimetype info into RPM provides
+#
+# Author: Richard Hughes <richard@hughsie.com>
+# Based on other provides scripts from RPM
+#
+
+#!/bin/sh
+OLD_IFS="$IFS"
+while read instfile ; do
+	case "$instfile" in
+	*.desktop)
+		mime=`cat $instfile | grep MimeType | cut -d'=' -f2`
+                IFS=';'
+		for type in $mime ; do
+		        echo 'mimetype('$type')'
+	        done
+		;;
+	esac
+done
+IFS=$OLD_IFS
+

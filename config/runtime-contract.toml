@@ -43,6 +43,18 @@ packages = [
   # Bluefin carries this as an installer web-engine dependency. Utah uses the
   # bootc-installer live path, not Anaconda WebUI or Slitherer.
   "slitherer",
+  # The same installer path as slitherer, and the same reason. anaconda-live
+  # pulls anaconda-webui, which nothing in the inventory or in Hummingbird
+  # provides; the only anaconda-live the transaction could see was a stale
+  # build carried in from the seeded factory image, not something this
+  # factory still produces. Utah installs through bootc-installer.
+  "anaconda-live",
+  # Utah ships Firefox as the org.mozilla.firefox Flatpak, not an RPM. The
+  # factory built the browser only because Bluefin's copied [fedora] section
+  # names it; the recipe cost a 2.5-hour PGO/LTO job per run and was failing
+  # in %install. projectbluefin/utah already lists firefox as unavailable and
+  # carries the Flatpak in contracts/bluefin-desktop.toml.
+  "firefox",
   "evolution-ews-core",
   "fish",
   "tailscale",

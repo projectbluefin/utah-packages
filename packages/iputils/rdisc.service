@@ -1,0 +1,11 @@
+[Unit]
+Description=rdisc daemon which discovers routers on the local subnet
+After=network.target
+Documentation=man:rdisc
+
+[Service]
+Type=forking
+ExecStart=/sbin/rdisc -s
+
+[Install]
+WantedBy=multi-user.target

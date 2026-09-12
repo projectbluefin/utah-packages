@@ -3,9 +3,10 @@
 # rebuild0 through rebuild4 were five copies of this file, differing only in a
 # stage number and a `needs:` list -- four substantive lines out of roughly two
 # hundred. Five copies meant five places to fix a build-root bug, and the
-# copies had already drifted: the Firefox swap workaround existed only in
+# copies had already drifted: a Firefox PGO swap workaround existed only in
 # stage 0, so it would have silently stopped applying the moment Firefox was
-# solved into a later wave.
+# solved into a later wave. That recipe is gone -- Utah ships the Flatpak --
+# but the drift it caused is why this file is the only copy.
 #
 # The caller owns ordering. This workflow builds one wave and knows nothing
 # about the others beyond the artifacts they left behind.
@@ -22,6 +23,16 @@ on:
         description: JSON array of source package names to build
         required: true
         type: string
+      backend:
+        description: >
+          container (default) builds with bare rpmbuild in a Fedora container
+          that hand-simulates a build root. mock builds the SRPM in a real mock
+          root, which is what Packit does (packit build in-mock). mock is opt-in
+          until a full run has proven it: the container path is what the
+          published repository was built with.
+        required: false
+        default: container
+        type: string
 
 permissions:
   contents: read
@@ -36,25 +47,11 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: ./.github/actions/setup-sccache
-      - name: Add best-effort swap for Firefox PGO/LTO
-        if: matrix.package == 'firefox'
-        run: |
-          set -euo pipefail
-          available_gib=$(df --output=avail -BG "$RUNNER_TEMP" | tail -n1 | tr -dc 0-9)
-          if [ "$available_gib" -lt 20 ]; then
-            echo "Only ${available_gib} GiB free; skipping extra swap to preserve build disk" >&2
-            exit 0
-          fi
-          swapfile="$RUNNER_TEMP/firefox-pgo.swap"
-          sudo fallocate -l 12G "$swapfile"
-          sudo chmod 600 "$swapfile"
-          sudo mkswap "$swapfile"
-          sudo swapon "$swapfile" || { echo "Host does not permit extra swap" >&2; exit 0; }
-          free -h
       - name: Collect RPMs built by earlier stages
+        if: inputs.stage != '0'
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
-          pattern: rpm-*
+          pattern: ${{ steps.prior.outputs.pattern }}
           path: work/prior
           merge-multiple: true
         continue-on-error: true
@@ -64,9 +61,20 @@ jobs:
         run: |
           python3 tools/source_pipeline.py "$PACKAGE" --output work/sources --report-dir work/reports
       - name: Build the verified source with its RPM recipe
+        if: inputs.backend != 'mock'
         env:
           PACKAGE: ${{ matrix.package }}
-          FACTORY_REPO: ${{ vars.FACTORY_REPO }}
+          # `prepare` skips any package the published repository already
+          # carries at the same version, so the build root MUST be able to
+          # reach that repository -- a skipped package is otherwise simply
+          # absent. It was: vars.FACTORY_REPO is unset on pull_request runs,
+          # so the [factory] block below never ran and pipewire-libs-extra
+          # failed on `No match for argument: pkgconfig(libfreeaptx)` while
+          # libfreeaptx-devel sat published and skipped. Default to the same
+          # published URL `prepare` reads to decide what to skip, so the two
+          # halves of that decision cannot disagree. The repository variable
+          # still wins when set.
+          FACTORY_REPO: ${{ vars.FACTORY_REPO || 'https://projectbluefin.github.io/utah-packages/' }}
         run: |
           test -d "packages/$PACKAGE"
           mkdir -p work/result
@@ -94,6 +102,19 @@ jobs:
               # with the Fedora package: mock installs docs into a build root, and
               # this container was not. Restore that.
               sed -i "/^tsflags=nodocs/d" /etc/dnf/dnf.conf
+              # The Hummingbird repository times out under load, and dnf gives
+              # up far too readily on it. libtevent and vulkan-loader both died
+              # mid-builddep with
+              #   Curl error (28): Timeout was reached for .../rhash-1.4.5-5.hum1.rpm
+              #   Librepo error: ... All mirrors were tried
+              # and samba then failed at stage 6 for want of the libtevent
+              # those builds never produced -- one flaky download costing three
+              # packages. There is no mirror to fall back to, so the only
+              # answer is to wait longer and try harder: raise the retry count,
+              # let a slow transfer finish rather than tripping the 30s
+              # default, and only give up on one that has genuinely stalled.
+              printf "retries=10\ntimeout=120\nminrate=1000\nmax_parallel_downloads=4\n" \
+                >> /etc/dnf/dnf.conf
               # Fedora 44 plus Hummingbird, mirroring Hummingbird mock.cfg:
               # Fedora release repos with its own Pulp repos shadowing them by
               # priority. Proven correct by this job own diagnostic below --
@@ -141,9 +162,32 @@ jobs:
               # Hummingbird copy by excluding these names from Fedora.
               # Unconditional: stage 0 has no prior RPMs, so the block above
               # never ran and EXCLUDE would otherwise be empty here.
-              HB_EXCLUDE="ruby-default-gems,ruby3.3-default-gems,ruby3.4-default-gems,libicu,icu,gpgme,qt6-qtbase"
+              # sqlite joins that list for the same reason. Hummingbird builds
+              # subversion against sqlite 3.53.4; Fedora 44 ships 3.51.2, wins the
+              # buildroot, and subversion then cannot open a repository at all:
+              #   svn: E200029: atomic initialization could not be performed
+              #   svn: E200030: SQLite compiled for 3.53.4, but running with 3.51.2
+              # Every svn checkout and copy fails from there, which surfaces far
+              # away as six failures in the git test suite
+              # (t9168-git-svn-partially-globbed-names) and looks like a git bug.
+              HB_EXCLUDE="ruby-default-gems,ruby3.3-default-gems,ruby3.4-default-gems,libicu,icu,gpgme,qt6-qtbase,sqlite,sqlite-libs"
               EXCLUDE="${HB_EXCLUDE}${EXCLUDE:+,}${EXCLUDE}"
               echo "hummingbird exclusions: $HB_EXCLUDE"
+              # The exclusions above are per-repo, which cannot settle a conflict
+              # where both sides come from the SAME repo. Hummingbird now ships
+              # ruby3.4-default-gems AND ruby4.0-default-gems, and they claim the
+              # same files, so the buildroot resolves and then dies in rpm:
+              #   Transaction failed: Rpm transaction failed.
+              #   file /usr/bin/erb conflicts between attempted installs of
+              #     ruby4.0-default-gems-4.0.6-37.3.hum1 and
+              #     ruby3.4-default-gems-3.4.10-31.7.hum1
+              # It reads as nothing at all in a tail: dnf reports success, the
+              # error lands after "Running transaction". gcc, git, iputils,
+              # libvdpau, appstream and libtheora all failed here. Exclude the
+              # superseded ruby globally, from every repo, so 4.0 is the only
+              # candidate.
+              GLOBAL_EXCLUDE="ruby3.3-default-gems,ruby3.4-default-gems"
+              echo "global exclusions: $GLOBAL_EXCLUDE"
               if [ -n "${FACTORY_REPO:-}" ]; then
                 printf "[factory]\nname=factory\nbaseurl=%s\nenabled=1\ngpgcheck=0\npriority=5\n" \
                   "$FACTORY_REPO" > /etc/yum.repos.d/factory.repo
@@ -154,6 +198,22 @@ jobs:
               # manpage installer and fails without it.
               dnf -y $disable install dnf-plugins-core mock rpm-build @buildsys-build
               rpm -q --qf "buildroot openssl: %{VERSION}-%{RELEASE}\n" openssl-libs || true
+              # Excluding a repository does not touch a package that is already
+              # installed, and the base image arrives with some of these. Fedora
+              # sqlite-libs 3.51.2 ships in it, so telling dnf to prefer
+              # Hummingbird changed nothing and subversion -- built against
+              # 3.53.4 -- could not open a repository at all:
+              #   svn: E200030: SQLite compiled for 3.53.4, but running with 3.51.2
+              # which surfaced as six failures in the git test suite. Upgrade the
+              # names we have just said Hummingbird must answer for, so the
+              # decision reaches the build root rather than only the resolver.
+              for preinstalled in ${HB_EXCLUDE//,/ }; do
+                rpm -q "$preinstalled" >/dev/null 2>&1 || continue
+                dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
+                  ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} \
+                  upgrade "$preinstalled" || true
+              done
+              rpm -q --qf "buildroot sqlite: %{VERSION}-%{RELEASE}\n" sqlite-libs || true
               # NO APOSTROPHES IN THIS SCRIPT. It is the body of bash -exc
               # a single-quoted string, so one closes it and everything after
               # is reparsed. That is what the stilted "Fedora own
@@ -185,6 +245,13 @@ jobs:
               fi
               DISTTAG=".${HUM_TAG}.bfin${DIST_BUMP:-}"
               echo "disttag: $DISTTAG"
+              # librsvg writes its reference-test output PNGs to TESTS_OUTPUT_DIR,
+              # defaulting to a temp dir outside /builddir -- which is why two
+              # collections found meson logs and no images. Point it at the
+              # mounted volume so a failed comparison leaves its -out.png and
+              # -diff.png behind. Harmless for every other package.
+              export TESTS_OUTPUT_DIR=/work/reports/check/$PACKAGE/test-output
+              mkdir -p "$TESTS_OUTPUT_DIR"
               # libratbag %check starts ratbagd, which calls
               # Gio.bus_get_sync(Gio.BusType.SYSTEM) and dies with "Could not
               # connect: No such file or directory" -- a plain container has no
@@ -203,8 +270,42 @@ jobs:
               export LOGNAME="${LOGNAME:-$USER}"
               spec=$(find "/packages/$PACKAGE" -maxdepth 1 -name "*.spec" -print -quit)
               test -n "$spec"
-              dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
-                ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$spec"
+              # The Hummingbird repository is one host with no mirrors, so a bad
+              # minute there is a failed build. retries=10 and timeout=120 in
+              # dnf.conf cover a slow transfer, which is what Curl error 28 was,
+              # but not a refusal: snowball died on the S3 backend answering
+              #
+              #   Status code: 503 for .../python3-setuptools-83.0.0-2.1.hum1.rpm
+              #   No more mirrors to try - All mirrors were already tried
+              #
+              # after four attempts inside one second. librepo retries with no
+              # backoff, so all four hit the same bad moment. Waiting between
+              # attempts is the part that was missing. This retries resolution
+              # only, never the build, and an unsatisfiable graph still fails
+              # every attempt and then fails the job.
+              builddep_attempt() {
+                dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
+                  ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} \
+                  ${GLOBAL_EXCLUDE:+--exclude="$GLOBAL_EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$1"
+              }
+              with_backoff() {
+                delay=5
+                for attempt in 1 2 3 4; do
+                  status=0
+                  builddep_attempt "$1" || status=$?
+                  if [ "$status" -eq 0 ]; then
+                    return 0
+                  fi
+                  if [ "$attempt" -eq 4 ]; then
+                    echo "builddep failed after 4 attempts" >&2
+                    return "$status"
+                  fi
+                  echo "::warning title=builddep retry::attempt $attempt failed, waiting ${delay}s" >&2
+                  sleep "$delay"
+                  delay=$((delay * 3))
+                done
+              }
+              with_backoff "$spec"
               # An imported spec keeps its dist-git PatchN and auxiliary SourceN
               # files next to itself, while the verified upstream archive lands in
               # /work/sources. rpmbuild takes a single _sourcedir, so stage both:
@@ -215,24 +316,94 @@ jobs:
               mkdir -p "$staged"
               cp -a "/packages/$PACKAGE/." "$staged/"
               cp -a "/work/sources/$PACKAGE/." "$staged/"
+              # A package that declares system users creates them from its %pre
+              # at install time, which never happens to a buildroot -- so the
+              # test suite runs without them. The openssh regress tests die with
+              #   Privilege separation user sshd does not exist
+              #   FATAL: sshd_proxy broken
+              # Create whatever the recipe declares, the same way installing it
+              # would. Supplying what a real build root has, rather than
+              # disabling the test that noticed it was missing.
+              if command -v systemd-sysusers >/dev/null 2>&1; then
+                for sysusers in "$staged"/*sysusers*.conf; do
+                  [ -e "$sysusers" ] || continue
+                  echo "applying sysusers: $(basename "$sysusers")"
+                  systemd-sysusers "$sysusers" || true
+                done
+              fi
+              # Match the mock build user, exactly as tools/build-rpm.sh already does
+              # for a local build. rpmbuild as root can write files regardless of
+              # their mode bits, so a suite that chmods a file read-only and then
+              # asserts the write fails is defeated by the build root rather than
+              # by the code. FLAC says so outright:
+              #   ERROR: iterator claims file is writable when tester thinks it
+              #   should not be; are you running as root?
+              # The two lanes had drifted: the local one builds unprivileged, this
+              # one did not, so a package could pass locally and fail here.
+              id -u mockbuild >/dev/null 2>&1 || \
+                useradd --create-home --home-dir /builddir mockbuild
+              mkdir -p /builddir/rpmbuild/SRPMS
+              chown -R mockbuild:mockbuild /builddir/rpmbuild "$staged" /work/result
+              build_rpm() { runuser -u mockbuild -- rpmbuild --define "_topdir /builddir/rpmbuild" "$@"; }
               # Packages with %generate_buildrequires -- every Rust one -- compute
               # their real BuildRequires during the build, so the spec alone does not
               # list them and rpmbuild exits 11 asking to be re-run. Install what the
               # generated source RPM declares and retry, bounded so an unsatisfiable
               # requirement fails instead of looping.
               for _ in 1 2 3 4 5; do
-                rm -f /root/rpmbuild/SRPMS/*.buildreqs.nosrc.rpm
-                if rpmbuild -br "$spec" --define "_sourcedir $staged" \
+                rm -f /builddir/rpmbuild/SRPMS/*.buildreqs.nosrc.rpm
+                if build_rpm -br "$spec" --define "_sourcedir $staged" \
                      --define "dist $DISTTAG"; then break; fi
-                generated=$(ls /root/rpmbuild/SRPMS/*.buildreqs.nosrc.rpm 2>/dev/null | head -1)
+                generated=$(ls /builddir/rpmbuild/SRPMS/*.buildreqs.nosrc.rpm 2>/dev/null | head -1)
                 test -n "$generated"
-                dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
-                  ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$generated"
+                with_backoff "$generated"
               done
-              rpmbuild -ba "$spec" \
+              # A %check that fails takes its evidence down with it. The test
+              # binaries run inside /builddir, which is not a mounted volume, so
+              # nothing survives the container -- librsvg2 failed its reference
+              # suite twice and neither log named a single failing test, because
+              # cargo test output never reached the job log at all. Copy whatever
+              # the build left behind before giving up, so the next failure can
+              # be read instead of guessed at.
+              # Captured explicitly: inside `if ! cmd`, $? is the status of the
+              # negation, which is 0, so exiting with it would turn every failed
+              # build green.
+              status=0
+              build_rpm -ba "$spec" \
                 --define "_sourcedir $staged" \
                 --define "dist $DISTTAG" \
-                --define "_rpmdir /work/result"
+                --define "_rpmdir /work/result" || status=$?
+              if [ "$status" -ne 0 ]; then
+                mkdir -p "/work/reports/check/$PACKAGE"
+                find /builddir -maxdepth 8 -type d \
+                  \( -name meson-logs -o -name output -o -name test-suite.log \) \
+                  -exec cp -r {} "/work/reports/check/$PACKAGE/" \; 2>/dev/null || true
+                find /builddir -maxdepth 8 -type f \
+                  \( -name "*.log" -o -name "testlog*.txt" -o -name "*-diff.png" -o -name "*-out.png" \) \
+                  -exec cp --parents {} "/work/reports/check/$PACKAGE/" \; 2>/dev/null || true
+                # The container runs as root and upload-artifact runs as the
+                # runner user, which could not read the tree cp left behind:
+                #   EACCES: permission denied, scandir .../check/librsvg2/builddir
+                chmod -R a+rX "/work/reports/check/$PACKAGE" || true
+                echo "collected %check evidence:" >&2
+                find "/work/reports/check/$PACKAGE" -type f | head -40 >&2
+                # An artifact still has to be downloaded to be read, so put the
+                # detail in the job log too. Grepped, not tailed: the meson
+                # testlog.txt ends with hundreds of cargo "Fresh"/"Compiling"
+                # lines, so a tail of it showed nothing but build chatter while
+                # the failures sat further up. These patterns are what the test
+                # harnesses actually print -- librsvg reports
+                #   <name>: <N> pixels changed with maximum difference of <M>
+                # and meson prints its own per-test verdicts.
+                find "/work/reports/check/$PACKAGE" -name "testlog*.txt" -type f | while read -r log; do
+                  echo "--- failures in $log" >&2
+                  grep -aiE "pixels changed|panicked|FAILED|^not ok|TIMEOUT|[0-9]+/[0-9]+ .*(FAIL|ERROR)|^Ok: |^Fail: |^Timeout: |assertion" \
+                    "$log" | head -60 >&2 || echo "(no recognised failure lines)" >&2
+                done
+                find "/work/reports/check/$PACKAGE" -name "*-diff.png" -o -name "*-out.png" 2>/dev/null \
+                  | head -20 >&2
+                exit "$status"
+              fi
               find /work/result -name "*.rpm" -type f -print0 | \
                 xargs -0 -r rpm -qp --qf "%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n"
               # A build that produced no RPM must fail here. if-no-files-found on
@@ -241,10 +412,105 @@ jobs:
               # reports success while shipping no packages at all.
               test -n "$(find /work/result -name "*.rpm" -type f -print -quit)"
             '
+      # The mock backend, which is what Packit uses locally
+      # (packit build in-mock -> mock --root <cfg> <srpm>). The step above
+      # hand-simulates a build root in a plain container; mock gives a real one,
+      # clean per package, with the macros and groups a build root is supposed
+      # to have. Opt-in until a full run has proven it: dispatch the rebuild
+      # with backend=mock. The container path is what the published repository
+      # was built with.
+      #
+      # Like every other build script here, this is the body of bash -exc with
+      # single quotes, so it must not contain one -- tools/check_workflow_quoting.py
+      # fails the run if it does, and only covers this form.
+      - name: Build the verified source in a mock root
+        if: inputs.backend == 'mock'
+        env:
+          PACKAGE: ${{ matrix.package }}
+          FACTORY_REPO: ${{ vars.FACTORY_REPO || 'https://projectbluefin.github.io/utah-packages/' }}
+        run: |
+          test -d "packages/$PACKAGE"
+          mkdir -p work/result work/srpm work/mock
+          DIST_BUMP="$(python3 tools/dist_bump.py "$PACKAGE")"
+          export DIST_BUMP
+          docker run --rm --privileged \
+            -e PACKAGE -e FACTORY_REPO -e DIST_BUMP \
+            -v "$PWD/work:/work:Z" \
+            -v "$PWD/packages:/packages:ro,Z" \
+            -v "$PWD/tools:/tools:ro,Z" \
+            -v "$PWD/config:/repos:ro,Z" \
+            quay.io/fedora/fedora:44 bash -exc '
+              dnf -y install mock rpm-build python3
+              # Whatever an earlier stage built, Fedora must not answer for.
+              # Same rule the container path applies, from the same artifacts.
+              PRIOR=
+              if [ -n "$(find /work/prior -name "*.rpm" -print -quit 2>/dev/null)" ]; then
+                dnf -y install createrepo_c
+                createrepo_c /work/prior
+                PRIOR=$(find /work/prior -name "*.rpm" -type f -print0 \
+                  | xargs -0 -r rpm -qp --qf "%{NAME}\n" 2>/dev/null \
+                  | sort -u | paste -sd, -)
+                STAGES=/work/prior
+              fi
+              python3 /tools/mock_config.py \
+                --output /work/mock/utah.cfg \
+                --factory-repo "${FACTORY_REPO:-}" \
+                --stages-dir "${STAGES:-}" \
+                --prior-built "$PRIOR"
+              # The disttag is read from the Hummingbird packages in the root
+              # rather than hardcoded, exactly as the container path does it, so
+              # a move to hum2 carries itself. Here that means asking the mock
+              # root, because that root is what does the building.
+              mock --root /work/mock/utah.cfg --init
+              HUM_TAG=$(mock --root /work/mock/utah.cfg --quiet --chroot -- \
+                rpm -qa --qf "%{RELEASE}\n" | grep -oE "hum[0-9]+$" | sort -u | head -n1)
+              if [ -z "$HUM_TAG" ]; then
+                echo "No Hummingbird package in the mock root; cannot derive a disttag" >&2
+                exit 1
+              fi
+              DISTTAG=".${HUM_TAG}.bfin${DIST_BUMP:-}"
+              echo "disttag: $DISTTAG"
+              rpmbuild -bs \
+                --define "_topdir /work/rpmbuild" \
+                --define "_sourcedir /work/sources/$PACKAGE" \
+                --define "_srcrpmdir /work/srpm" \
+                --define "dist $DISTTAG" \
+                /packages/$PACKAGE/*.spec
+              mock --root /work/mock/utah.cfg \
+                --resultdir /work/result \
+                --define "dist $DISTTAG" \
+                --rebuild /work/srpm/*.src.rpm
+              find /work/result -name "*.rpm" -type f -print0 | \
+                xargs -0 -r rpm -qp --qf "%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n"
+              # Same guard as the container path: an upload that finds no RPM
+              # still succeeds, because the artifact also carries reports.
+              test -n "$(find /work/result -name "*.rpm" -type f -print -quit)"
+            '
+      # Its own upload, and only on failure: the RPM artifact below declares
+      # if-no-files-found: error, so a build that produced nothing cannot carry
+      # this out with it.
+      - name: Upload the evidence from a failed %check
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: check-s${{ inputs.stage }}-${{ matrix.package }}
+          path: work/reports/check/**
+          if-no-files-found: ignore
+          retention-days: 7
+
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: rpm-s${{ inputs.stage }}-${{ matrix.package }}
+          # Debuginfo and debugsource are excluded deliberately. No
+          # BuildRequires ever names one, so a later stage has no use for them,
+          # and they are more than half the bytes. Uploading them cost the run
+          # its artifact budget: seven stage 0 jobs died on
+          #   Failed to FinalizeArtifact: (403) Forbidden
+          # which is not a package failure and reads exactly like one.
           path: |
             work/result/**/*.rpm
+            !work/result/**/*-debuginfo-*.rpm
+            !work/result/**/*-debugsource-*.rpm
+            !work/result/**/*-debuginfo-common-*.rpm
             work/reports/*.json
           if-no-files-found: error

@@ -1,0 +1,8 @@
+{
+  "package": "xcb-util-renderutil",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/xcb-util-renderutil.git",
+  "commit": "52dc6e68e8823026183aae2a358cea83a2f68135",
+  "tree": "b07f0a8bbc95591f68fc0a63a71cee3db0730df9",
+  "imported_at": "2026-09-04T21:17:01.523601+00:00"
+}

@@ -1,0 +1,8 @@
+{
+  "package": "python-typing-inspection",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/python-typing-inspection.git",
+  "commit": "f4e6cba69a36f350bf9353484dac3ba2aaf65499",
+  "tree": "60cd9759b936e315ce0a6fe8a58fb936b1238629",
+  "imported_at": "2026-09-03T22:53:17.493406+00:00"
+}

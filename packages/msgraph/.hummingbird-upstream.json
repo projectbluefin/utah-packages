@@ -1,0 +1,8 @@
+{
+  "package": "msgraph",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/msgraph.git",
+  "commit": "58b79bb79a268c1e1fb6f13b1407702a1f2a38c5",
+  "tree": "03ee276a71a61d5d404e6d23f2c28ac75bd10d39",
+  "imported_at": "2026-09-05T15:19:24.316677+00:00"
+}

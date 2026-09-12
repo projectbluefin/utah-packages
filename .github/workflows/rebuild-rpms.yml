@@ -8,12 +8,27 @@ on:
         required: false
         default: false
         type: boolean
+      backend:
+        description: >
+          How to build. container is the hand-simulated build root every
+          published RPM was built in. mock is a real mock root, the way Packit
+          builds locally; it is unproven here, so it is dispatch-only.
+        required: false
+        default: container
+        type: choice
+        options:
+          - container
+          - mock
   push:
     branches: [main]
     paths:
       - config/**
       - packages/**
       - tools/source_pipeline.py
+      - tools/generated_sources.py
+      - tools/rebuild_matrix.py
+      - tools/rebuild_plan.py
+      - tools/mock_config.py
       - tools/runtime_contract.py
       - tests/**
       - .github/workflows/rebuild-rpms.yml
@@ -23,6 +38,10 @@ on:
       - config/**
       - packages/**
       - tools/source_pipeline.py
+      - tools/generated_sources.py
+      - tools/rebuild_matrix.py
+      - tools/rebuild_plan.py
+      - tools/mock_config.py
       - tools/runtime_contract.py
       - tests/**
       - .github/workflows/rebuild-rpms.yml
@@ -49,6 +68,23 @@ jobs:
       stage2: ${{ steps.matrix.outputs.stage2 }}
       stage3: ${{ steps.matrix.outputs.stage3 }}
       stage4: ${{ steps.matrix.outputs.stage4 }}
+      stage0_chunks: ${{ steps.matrix.outputs.stage0_chunks }}
+      stage1_chunks: ${{ steps.matrix.outputs.stage1_chunks }}
+      stage2_chunks: ${{ steps.matrix.outputs.stage2_chunks }}
+      stage3_chunks: ${{ steps.matrix.outputs.stage3_chunks }}
+      stage4_chunks: ${{ steps.matrix.outputs.stage4_chunks }}
+      stage5: ${{ steps.matrix.outputs.stage5 }}
+      stage6: ${{ steps.matrix.outputs.stage6 }}
+      stage7: ${{ steps.matrix.outputs.stage7 }}
+      stage8: ${{ steps.matrix.outputs.stage8 }}
+      stage9: ${{ steps.matrix.outputs.stage9 }}
+      stage10: ${{ steps.matrix.outputs.stage10 }}
+      stage5_chunks: ${{ steps.matrix.outputs.stage5_chunks }}
+      stage6_chunks: ${{ steps.matrix.outputs.stage6_chunks }}
+      stage7_chunks: ${{ steps.matrix.outputs.stage7_chunks }}
+      stage8_chunks: ${{ steps.matrix.outputs.stage8_chunks }}
+      stage9_chunks: ${{ steps.matrix.outputs.stage9_chunks }}
+      stage10_chunks: ${{ steps.matrix.outputs.stage10_chunks }}
       build_list: ${{ steps.matrix.outputs.build_list }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -66,79 +102,13 @@ jobs:
         env:
           FULL: ${{ github.event_name == 'workflow_dispatch' && inputs.full == true && '1' || '0' }}
           BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+          # The same value build-stage.yml gives the build root. The skip
+          # decision and the buildroot must read one source of truth: when they
+          # disagreed, `prepare` skipped what the published repository carried
+          # and the build root could not see any of it.
+          FACTORY_REPO: ${{ vars.FACTORY_REPO || 'https://projectbluefin.github.io/utah-packages/' }}
         run: |
-          python3 - <<'PY'
-          import json, os, re, subprocess, urllib.request, gzip, io, sys
-          from pathlib import Path
-
-          config = json.loads(Path('config/upstream-sources.json').read_text())
-          full = os.environ.get('FULL') == '1'
-          changed = set()
-          base = os.environ.get('BASE_SHA', '')
-          if not full and re.fullmatch(r'[0-9a-f]{40}', base or '') and set(base) != {'0'}:
-              paths = subprocess.check_output(
-                  ['git', 'diff', '--name-only', f'{base}..HEAD'], text=True).splitlines()
-              changed = {
-                  match.group(1)
-                  for path in paths
-                  if (match := re.match(r'^packages/([^/]+)/', path))
-              }
-              print(f"changed package recipes: {', '.join(sorted(changed)) or 'none'}")
-
-          # Fetch the currently published repo so we only rebuild what is new
-          # or changed. Matching is name + normalized version: Fedora's spec
-          # Version rewrites the tarball's '.' to '~' (gnome-shell 51.beta ->
-          # 51~beta), so normalize '~' to '.' on both sides. A mismatch just
-          # rebuilds a package we could have skipped -- safe, only slower.
-          published = {}
-          if not full:
-              try:
-                  base = "https://projectbluefin.github.io/utah-packages/"
-                  repomd = urllib.request.urlopen(base + "repodata/repomd.xml", timeout=60).read().decode()
-                  href = re.search(r'<location href="([^"]*primary[^"]*)"', repomd).group(1)
-                  raw = urllib.request.urlopen(base + href, timeout=120).read()
-                  if href.endswith('.zst'):
-                      import zstandard
-                      stream = zstandard.ZstdDecompressor().stream_reader(io.BytesIO(raw))
-                  else:
-                      stream = gzip.GzipFile(fileobj=io.BytesIO(raw))
-                  text = stream.read()
-                  for m in re.finditer(rb'<package[^>]*>.*?<name>([^<]+)</name>.*?<version[^>]*ver="([^"]+)"', text, re.S):
-                      published[m.group(1).decode()] = m.group(2).decode()
-                  print(f"published repo has {len(published)} packages")
-              except Exception as error:
-                  print(f"WARNING: could not read published repo, rebuilding all: {error}", file=sys.stderr)
-
-          def norm(version: str) -> str:
-              return version.replace('~', '.')
-
-          build = []
-          for package in config['packages']:
-              name = package['name']
-              version = package.get('version', '')
-              if full or name in changed or name not in published or norm(published[name]) != norm(version):
-                  build.append(package)
-              else:
-                  print(f"skip {name} {version}: already published")
-
-          outputs = {'build_list': json.dumps([p['name'] for p in build])}
-          for n in range(5):
-              outputs[f'stage{n}'] = json.dumps(
-                  [p['name'] for p in build if (p.get('stage') or 0) == n])
-          # The job chain is five deep and GitHub needs it static, so a package
-          # asking for a sixth wave has nowhere to run. It used to fall out of
-          # every stage list while staying in build_list, so the run published
-          # a repository that was quietly missing it. Fail instead.
-          overflow = sorted(p['name'] for p in build if (p.get('stage') or 0) >= 5)
-          if overflow:
-              raise SystemExit(
-                  "no job exists for stage 5 or later; "
-                  f"reduce the stage of: {', '.join(overflow)}")
-          with open(os.environ['GITHUB_OUTPUT'], 'a') as handle:
-              for key, value in outputs.items():
-                  handle.write(f'{key}={value}\n')
-          print(f"will build {len(build)} of {len(config['packages'])} packages")
-          PY
+          python3 tools/rebuild_matrix.py
 
   preflight:
     # Every missing platform dependency has so far been found the slow way: a
@@ -245,45 +215,149 @@ jobs:
   rebuild0:
     needs: prepare
     if: needs.prepare.outputs.stage0 != '[]'
+    strategy:
+      fail-fast: false
+      matrix:
+        chunk: ${{ fromJSON(needs.prepare.outputs.stage0_chunks) }}
     uses: ./.github/workflows/build-stage.yml
     with:
       stage: '0'
-      packages: ${{ needs.prepare.outputs.stage0 }}
+      packages: ${{ matrix.chunk }}
+      backend: ${{ inputs.backend || 'container' }}
 
   rebuild1:
     needs: [prepare, rebuild0]
     if: ${{ !cancelled() && needs.prepare.outputs.stage1 != '[]' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        chunk: ${{ fromJSON(needs.prepare.outputs.stage1_chunks) }}
     uses: ./.github/workflows/build-stage.yml
     with:
       stage: '1'
-      packages: ${{ needs.prepare.outputs.stage1 }}
+      packages: ${{ matrix.chunk }}
+      backend: ${{ inputs.backend || 'container' }}
 
   rebuild2:
     needs: [prepare, rebuild0, rebuild1]
     if: ${{ !cancelled() && needs.prepare.outputs.stage2 != '[]' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        chunk: ${{ fromJSON(needs.prepare.outputs.stage2_chunks) }}
     uses: ./.github/workflows/build-stage.yml
     with:
       stage: '2'
-      packages: ${{ needs.prepare.outputs.stage2 }}
+      packages: ${{ matrix.chunk }}
+      backend: ${{ inputs.backend || 'container' }}
 
   rebuild3:
     needs: [prepare, rebuild0, rebuild1, rebuild2]
     if: ${{ !cancelled() && needs.prepare.outputs.stage3 != '[]' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        chunk: ${{ fromJSON(needs.prepare.outputs.stage3_chunks) }}
     uses: ./.github/workflows/build-stage.yml
     with:
       stage: '3'
-      packages: ${{ needs.prepare.outputs.stage3 }}
+      packages: ${{ matrix.chunk }}
+      backend: ${{ inputs.backend || 'container' }}
 
   rebuild4:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3]
     if: ${{ !cancelled() && needs.prepare.outputs.stage4 != '[]' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        chunk: ${{ fromJSON(needs.prepare.outputs.stage4_chunks) }}
     uses: ./.github/workflows/build-stage.yml
     with:
       stage: '4'
-      packages: ${{ needs.prepare.outputs.stage4 }}
+      packages: ${{ matrix.chunk }}
+      backend: ${{ inputs.backend || 'container' }}
+
+  rebuild5:
+    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4]
+    if: ${{ !cancelled() && needs.prepare.outputs.stage5 != '[]' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        chunk: ${{ fromJSON(needs.prepare.outputs.stage5_chunks) }}
+    uses: ./.github/workflows/build-stage.yml
+    with:
+      stage: '5'
+      packages: ${{ matrix.chunk }}
+      backend: ${{ inputs.backend || 'container' }}
+
+  rebuild6:
+    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5]
+    if: ${{ !cancelled() && needs.prepare.outputs.stage6 != '[]' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        chunk: ${{ fromJSON(needs.prepare.outputs.stage6_chunks) }}
+    uses: ./.github/workflows/build-stage.yml
+    with:
+      stage: '6'
+      packages: ${{ matrix.chunk }}
+      backend: ${{ inputs.backend || 'container' }}
+
+  rebuild7:
+    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6]
+    if: ${{ !cancelled() && needs.prepare.outputs.stage7 != '[]' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        chunk: ${{ fromJSON(needs.prepare.outputs.stage7_chunks) }}
+    uses: ./.github/workflows/build-stage.yml
+    with:
+      stage: '7'
+      packages: ${{ matrix.chunk }}
+      backend: ${{ inputs.backend || 'container' }}
+
+  rebuild8:
+    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7]
+    if: ${{ !cancelled() && needs.prepare.outputs.stage8 != '[]' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        chunk: ${{ fromJSON(needs.prepare.outputs.stage8_chunks) }}
+    uses: ./.github/workflows/build-stage.yml
+    with:
+      stage: '8'
+      packages: ${{ matrix.chunk }}
+      backend: ${{ inputs.backend || 'container' }}
+
+  rebuild9:
+    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8]
+    if: ${{ !cancelled() && needs.prepare.outputs.stage9 != '[]' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        chunk: ${{ fromJSON(needs.prepare.outputs.stage9_chunks) }}
+    uses: ./.github/workflows/build-stage.yml
+    with:
+      stage: '9'
+      packages: ${{ matrix.chunk }}
+      backend: ${{ inputs.backend || 'container' }}
+
+  rebuild10:
+    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8, rebuild9]
+    if: ${{ !cancelled() && needs.prepare.outputs.stage10 != '[]' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        chunk: ${{ fromJSON(needs.prepare.outputs.stage10_chunks) }}
+    uses: ./.github/workflows/build-stage.yml
+    with:
+      stage: '10'
+      packages: ${{ matrix.chunk }}
+      backend: ${{ inputs.backend || 'container' }}
 
   precedence:
-    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4]
+    # Every wave, not the first five. See publish below.
+    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8, rebuild9, rebuild10]
     if: ${{ !cancelled() && needs.prepare.outputs.build_list != '[]' }}
     runs-on: ubuntu-24.04
     steps:
@@ -365,6 +439,18 @@ jobs:
     # coherent repository Utah consumes. Publication requires every selected
     # stage plus precedence and the Hummingbird-only transaction below.
     #
+    # "Every selected stage" was what this said and not what it did: needs
+    # stopped at rebuild4, so publication ran while stages 5 to 10 were still
+    # building and validated a repository that could not yet contain their
+    # output. The first run to reach the transaction check said so plainly --
+    #
+    #   nothing provides libepoxy.so.0()(64bit) needed by gtk4 ... from factory
+    #   nothing provides libGL.so.1()(64bit) needed by libva ... from factory
+    #
+    # -- with libepoxy and libglvnd both at stage 6, behind the gate. The
+    # dependency now covers all eleven waves, which is what makes the check
+    # meaningful: it can finally see the whole repository it is judging.
+    #
     # This is not main-only. The repository is published as an OCI image, and
     # that image is the only thing consumers read. A Pages mirror used to be
     # published alongside it, but Pages can only deploy from the default
@@ -387,9 +473,15 @@ jobs:
           && (needs.rebuild2.result == 'success' || needs.rebuild2.result == 'skipped')
           && (needs.rebuild3.result == 'success' || needs.rebuild3.result == 'skipped')
           && (needs.rebuild4.result == 'success' || needs.rebuild4.result == 'skipped')
+          && (needs.rebuild5.result == 'success' || needs.rebuild5.result == 'skipped')
+          && (needs.rebuild6.result == 'success' || needs.rebuild6.result == 'skipped')
+          && (needs.rebuild7.result == 'success' || needs.rebuild7.result == 'skipped')
+          && (needs.rebuild8.result == 'success' || needs.rebuild8.result == 'skipped')
+          && (needs.rebuild9.result == 'success' || needs.rebuild9.result == 'skipped')
+          && (needs.rebuild10.result == 'success' || needs.rebuild10.result == 'skipped')
           && (github.event_name != 'pull_request'
               || github.event.pull_request.head.repo.full_name == github.repository) }}
-    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, precedence]
+    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8, rebuild9, rebuild10, precedence]
     # Build waves can overlap, but `:latest` is an atomic consumer input. Queue
     # only this critical section per ref; the later publisher re-seeds from the
     # repository that its predecessor just made current.
@@ -401,6 +493,12 @@ jobs:
       ref: ${{ steps.oci.outputs.ref }}
       digest: ${{ steps.oci.outputs.digest }}
     steps:
+      # The consumer-transaction check below runs tools/runtime_contract.py
+      # against config/, and the OCI step reads nothing else from the tree, so
+      # this job was the one that never checked the repository out. It failed
+      # on `python3: can't open file .../tools/runtime_contract.py` the moment
+      # the seed step stopped failing first and let it get that far.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Seed repository from the last published factory image
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -411,7 +509,12 @@ jobs:
           mkdir -p repository
           echo "${GITHUB_TOKEN}" | podman login ghcr.io -u "${{ github.actor }}" --password-stdin
           if podman pull "$image"; then
-            container=$(podman create "$image")
+            # The factory image is FROM scratch with one COPY and no CMD or
+            # ENTRYPOINT, so a bare create exits 125 with "no command or
+            # entrypoint provided". A command is only recorded here, never run
+            # -- the container exists to be copied out of -- so naming one that
+            # the image does not even contain is enough to satisfy create.
+            container=$(podman create "$image" /bin/true)
             podman cp "$container:/repository/." repository/
             podman rm "$container"
           else

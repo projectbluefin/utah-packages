@@ -1,0 +1,8 @@
+{
+  "package": "xeve",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/xeve.git",
+  "commit": "e701417e30806ec4e6e7975bbda28d9a9a4f42fb",
+  "tree": "7aa32978c5ae3d647ce186308769b8cd97097088",
+  "imported_at": "2026-09-05T04:39:19.030351+00:00"
+}

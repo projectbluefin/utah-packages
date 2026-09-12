@@ -183,6 +183,14 @@ def bundled_sources(package: dict, target_dir: Path, already: str) -> list[str]:
 def verify_staged_sources(package: dict, package_root: Path) -> list[str]:
     """Fail if Packit changed any source after the verification gate."""
     package_dir = package_root / package["name"]
+    if package.get("no_upstream_source"):
+        # Nothing was fetched, so there is nothing to re-verify. The fetch path
+        # below already refuses such an entry that carries a sha512, so reading
+        # one here raised KeyError instead: color-filesystem got through
+        # `packit srpm` and died in this gate. A spec with no Source line puts
+        # nothing but itself in the SRPM, and the placeholder archive
+        # tools/packit_source0.py writes to satisfy Packit is not a source.
+        return []
     expected_sources = {
         package.get("filename", ""): package["sha512"].lower(),
         **dict(source_manifest(package)),
@@ -252,6 +260,29 @@ def main() -> int:
         return 0
     succeeded = True
     for package in selected(config, args.package):
+        if package.get("no_upstream_source"):
+            # A handful of recipes ship no archive at all: color-filesystem
+            # creates four directories and an rpm macro file, so its spec has
+            # no Source line and its dist-git records no sources. There is
+            # nothing to download and nothing to verify, and inventing a URL
+            # to satisfy the shape of an entry would be a lie in the lock
+            # file. Still create the output directory, because the build
+            # stages it unconditionally.
+            name = package["name"]
+            for key in ("url", "url_template", "sha512", "fallback_urls", "generate"):
+                if key in package:
+                    raise SystemExit(f"{name}: a no_upstream_source entry must not carry {key}")
+            (args.output / name).mkdir(parents=True, exist_ok=True)
+            report = {
+                "package": name,
+                "checked_at": datetime.now(UTC).isoformat(),
+                "result": "accepted",
+                "no_upstream_source": True,
+            }
+            args.report_dir.mkdir(parents=True, exist_ok=True)
+            (args.report_dir / f"{name}.json").write_text(json.dumps(report, indent=2, sort_keys=True) + "\n")
+            print(json.dumps(report, sort_keys=True))
+            continue
         missing = {"name", "sha512"} - package.keys()
         if missing:
             raise SystemExit(f"invalid direct-source entry: missing {', '.join(sorted(missing))}")

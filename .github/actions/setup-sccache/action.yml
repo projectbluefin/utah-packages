@@ -18,7 +18,22 @@ runs:
         sha256=aec995a83ad3dff3d14b6314e08858b7b73d35ca85a5bcf3d3a9ec07dee35588
         archive="$RUNNER_TEMP/sccache-${version}-x86_64-unknown-linux-musl.tar.gz"
         url="https://github.com/mozilla/sccache/releases/download/${version}/sccache-${version}-x86_64-unknown-linux-musl.tar.gz"
-        curl --fail --location --retry 3 --proto '=https' --tlsv1.2 "$url" --output "$archive"
+        # A compiler cache must not be able to fail a build. GitHub's release
+        # download answered 500 four times -- the initial attempt and all three
+        # retries -- and took libXt, ilbc and lame down with it, none of which
+        # use sccache at all: packages/mozjs140/mozjs140.spec is the only
+        # consumer, and it already guards on
+        #   test -x /work/tools/sccache && test -r /work/tools/sccache.env
+        # so an absent cache means a slower mozjs140, not a broken run.
+        #
+        # Availability is therefore best-effort. Integrity is not: bytes that
+        # arrive and fail their checksum are a different matter from bytes that
+        # never arrive, and that still stops the run rather than installing
+        # something unverified or quietly skipping it.
+        if ! curl --fail --location --retry 3 --proto '=https' --tlsv1.2 "$url" --output "$archive"; then
+          echo "::warning title=sccache unavailable::$url could not be fetched; building without a compiler cache"
+          exit 0
+        fi
         printf '%s  %s\n' "$sha256" "$archive" | sha256sum --check --strict
         tar --extract --gzip --file "$archive" --directory "$RUNNER_TEMP"
         binary="$RUNNER_TEMP/sccache-${version}-x86_64-unknown-linux-musl/sccache"
