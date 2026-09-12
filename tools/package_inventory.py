@@ -28,6 +28,20 @@ class PackageRecord:
     stage: int
     source_locked: bool
     packit_configured: bool
+    provenance: Path | None
+    provenance_branch: str | None
+
+
+def _recipe_provenance(root: Path) -> dict[str, tuple[Path, str]]:
+    provenance = {}
+    for path in sorted((root / "packages").glob("*/.hummingbird-upstream.json")):
+        name = path.parent.name
+        data = json.loads(path.read_text())
+        branch = data.get("branch")
+        if not isinstance(branch, str):
+            raise ValueError(f"invalid provenance branch: {path}")
+        provenance[name] = (path, branch)
+    return provenance
 
 
 def _spec_per_package(root: Path) -> dict[str, Path]:
@@ -62,6 +76,7 @@ def inventory(root: Path) -> list[PackageRecord]:
     specs = _spec_per_package(root)
     locks = _source_locks(root)
     packit = set(package_names(root / ".packit.yaml"))
+    provenance = _recipe_provenance(root)
     return [
         PackageRecord(
             name=name,
@@ -69,6 +84,8 @@ def inventory(root: Path) -> list[PackageRecord]:
             stage=locks.get(name, 0),
             source_locked=name in locks,
             packit_configured=name in packit,
+            provenance=provenance.get(name, (None, None))[0],
+            provenance_branch=provenance.get(name, (None, None))[1],
         )
         for name, spec in specs.items()
     ]

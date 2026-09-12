@@ -304,7 +304,15 @@ def main() -> int:
             final = target_dir / filename
             candidate.replace(final)
             bundled = bundled_sources(package, target_dir, filename)
-            report.update({"result": "accepted", "sha512": actual, "file": str(final), "resolved_url": resolved_url})
+            verification = "signature" if package.get("signature_url") else "sha256-manifest" if package.get("sha256_url") else "sha512"
+            report.update({
+                "result": "accepted",
+                "sha512": actual,
+                "file": str(final),
+                "resolved_url": resolved_url,
+                "verification": verification,
+                "checksum_only": verification != "signature",
+            })
             if bundled:
                 report["bundled"] = bundled
             if args.stage_into:
