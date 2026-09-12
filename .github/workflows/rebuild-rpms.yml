@@ -484,7 +484,12 @@ jobs:
           mkdir -p repository
           echo "${GITHUB_TOKEN}" | podman login ghcr.io -u "${{ github.actor }}" --password-stdin
           if podman pull "$image"; then
-            container=$(podman create "$image")
+            # The factory image is FROM scratch with one COPY and no CMD or
+            # ENTRYPOINT, so a bare create exits 125 with "no command or
+            # entrypoint provided". A command is only recorded here, never run
+            # -- the container exists to be copied out of -- so naming one that
+            # the image does not even contain is enough to satisfy create.
+            container=$(podman create "$image" /bin/true)
             podman cp "$container:/repository/." repository/
             podman rm "$container"
           else
