@@ -44,7 +44,6 @@ packages = [
   # bootc-installer live path, not Anaconda WebUI or Slitherer.
   "slitherer",
   "evolution-ews-core",
-  "fish",
   "tailscale",
   "zsh",
 ]

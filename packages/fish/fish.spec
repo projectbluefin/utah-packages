@@ -88,6 +88,123 @@ Provides:       bundled(js-alpine)
 # For forked pcre2 crate that includes https://github.com/BurntSushi/rust-pcre2/pull/38
 Provides:       bundled(crate(pcre2)) = %{rust_pcre2_fish_tag}
 
+# Vendored Rust crate dependencies
+Provides:       bundled(crate(aho-corasick)) = 1.1.4
+Provides:       bundled(crate(allocator-api2)) = 0.2.21
+Provides:       bundled(crate(anstream)) = 0.6.21
+Provides:       bundled(crate(anstyle)) = 1.0.13
+Provides:       bundled(crate(anstyle-parse)) = 0.2.7
+Provides:       bundled(crate(anstyle-query)) = 1.1.5
+Provides:       bundled(crate(anstyle-wincon)) = 3.0.11
+Provides:       bundled(crate(assert_matches)) = 1.5.0
+Provides:       bundled(crate(autocfg)) = 1.5.0
+Provides:       bundled(crate(bitflags)) = 2.10.0
+Provides:       bundled(crate(block-buffer)) = 0.10.4
+Provides:       bundled(crate(bstr)) = 1.12.1
+Provides:       bundled(crate(cc)) = 1.2.55
+Provides:       bundled(crate(cfg-if)) = 1.0.4
+Provides:       bundled(crate(cfg_aliases)) = 0.2.1
+Provides:       bundled(crate(clap)) = 4.5.56
+Provides:       bundled(crate(clap_builder)) = 4.5.56
+Provides:       bundled(crate(clap_derive)) = 4.5.55
+Provides:       bundled(crate(clap_lex)) = 0.7.7
+Provides:       bundled(crate(colorchoice)) = 1.0.4
+Provides:       bundled(crate(cpufeatures)) = 0.2.17
+Provides:       bundled(crate(crypto-common)) = 0.1.7
+Provides:       bundled(crate(digest)) = 0.10.7
+Provides:       bundled(crate(dirs)) = 6.0.0
+Provides:       bundled(crate(dirs-sys)) = 0.5.0
+Provides:       bundled(crate(either)) = 1.15.0
+Provides:       bundled(crate(equivalent)) = 1.0.2
+Provides:       bundled(crate(errno)) = 0.3.14
+Provides:       bundled(crate(fastrand)) = 2.3.0
+Provides:       bundled(crate(find-msvc-tools)) = 0.1.9
+Provides:       bundled(crate(foldhash)) = 0.2.0
+Provides:       bundled(crate(generic-array)) = 0.14.7
+Provides:       bundled(crate(getrandom)) = 0.2.17
+Provides:       bundled(crate(getrandom)) = 0.3.4
+Provides:       bundled(crate(globset)) = 0.4.18
+Provides:       bundled(crate(hashbrown)) = 0.16.1
+Provides:       bundled(crate(heck)) = 0.5.0
+Provides:       bundled(crate(is_terminal_polyfill)) = 1.70.2
+Provides:       bundled(crate(itertools)) = 0.14.0
+Provides:       bundled(crate(jobserver)) = 0.1.34
+Provides:       bundled(crate(libc)) = 0.2.180
+Provides:       bundled(crate(libredox)) = 0.1.12
+Provides:       bundled(crate(lock_api)) = 0.4.14
+Provides:       bundled(crate(log)) = 0.4.29
+Provides:       bundled(crate(lru)) = 0.16.3
+Provides:       bundled(crate(macro_rules_attribute)) = 0.2.2
+Provides:       bundled(crate(macro_rules_attribute-proc_macro)) = 0.2.2
+Provides:       bundled(crate(memchr)) = 2.7.6
+Provides:       bundled(crate(nix)) = 0.31.1
+Provides:       bundled(crate(num-traits)) = 0.2.19
+Provides:       bundled(crate(once_cell)) = 1.21.3
+Provides:       bundled(crate(once_cell_polyfill)) = 1.70.2
+Provides:       bundled(crate(option-ext)) = 0.2.0
+Provides:       bundled(crate(parking_lot)) = 0.12.5
+Provides:       bundled(crate(parking_lot_core)) = 0.9.12
+Provides:       bundled(crate(paste)) = 1.0.15
+Provides:       bundled(crate(pcre2-sys)) = 0.2.9
+Provides:       bundled(crate(phf)) = 0.13.1
+Provides:       bundled(crate(phf_codegen)) = 0.13.1
+Provides:       bundled(crate(phf_generator)) = 0.13.1
+Provides:       bundled(crate(phf_shared)) = 0.13.1
+Provides:       bundled(crate(pkg-config)) = 0.3.32
+Provides:       bundled(crate(portable-atomic)) = 1.13.1
+Provides:       bundled(crate(ppv-lite86)) = 0.2.21
+Provides:       bundled(crate(proc-macro2)) = 1.0.106
+Provides:       bundled(crate(quote)) = 1.0.44
+Provides:       bundled(crate(r-efi)) = 5.3.0
+Provides:       bundled(crate(rand)) = 0.9.2
+Provides:       bundled(crate(rand_chacha)) = 0.9.0
+Provides:       bundled(crate(rand_core)) = 0.9.5
+Provides:       bundled(crate(redox_syscall)) = 0.5.18
+Provides:       bundled(crate(redox_users)) = 0.5.2
+Provides:       bundled(crate(regex-automata)) = 0.4.13
+Provides:       bundled(crate(regex-syntax)) = 0.8.8
+Provides:       bundled(crate(rsconf)) = 0.3.0
+Provides:       bundled(crate(rust-embed)) = 8.11.0
+Provides:       bundled(crate(rust-embed-impl)) = 8.11.0
+Provides:       bundled(crate(rust-embed-utils)) = 8.11.0
+Provides:       bundled(crate(same-file)) = 1.0.6
+Provides:       bundled(crate(scc)) = 2.4.0
+Provides:       bundled(crate(scopeguard)) = 1.2.0
+Provides:       bundled(crate(sdd)) = 3.0.10
+Provides:       bundled(crate(serde)) = 1.0.228
+Provides:       bundled(crate(serde_core)) = 1.0.228
+Provides:       bundled(crate(serde_derive)) = 1.0.228
+Provides:       bundled(crate(serial_test)) = 3.3.1
+Provides:       bundled(crate(serial_test_derive)) = 3.3.1
+Provides:       bundled(crate(sha2)) = 0.10.9
+Provides:       bundled(crate(shellexpand)) = 3.1.2
+Provides:       bundled(crate(shlex)) = 1.3.0
+Provides:       bundled(crate(siphasher)) = 1.0.2
+Provides:       bundled(crate(smallvec)) = 1.15.1
+Provides:       bundled(crate(strsim)) = 0.11.1
+Provides:       bundled(crate(syn)) = 2.0.114
+Provides:       bundled(crate(thiserror)) = 2.0.18
+Provides:       bundled(crate(thiserror-impl)) = 2.0.18
+Provides:       bundled(crate(typenum)) = 1.19.0
+Provides:       bundled(crate(unicode-ident)) = 1.0.22
+Provides:       bundled(crate(unicode-segmentation)) = 1.12.0
+Provides:       bundled(crate(unicode-width)) = 0.2.2
+Provides:       bundled(crate(unix_path)) = 1.0.1
+Provides:       bundled(crate(unix_str)) = 1.0.0
+Provides:       bundled(crate(utf8parse)) = 0.2.2
+Provides:       bundled(crate(version_check)) = 0.9.5
+Provides:       bundled(crate(walkdir)) = 2.5.0
+Provides:       bundled(crate(wasi)) = 0.11.1+wasi-snapshot-preview1
+Provides:       bundled(crate(wasip2)) = 1.0.1+wasi-0.2.4
+Provides:       bundled(crate(widestring)) = 1.2.1
+Provides:       bundled(crate(winapi-util)) = 0.1.11
+Provides:       bundled(crate(windows-link)) = 0.2.1
+Provides:       bundled(crate(windows-sys)) = 0.61.2
+Provides:       bundled(crate(wit-bindgen)) = 0.46.0
+Provides:       bundled(crate(xterm-color)) = 1.0.2
+Provides:       bundled(crate(zerocopy)) = 0.8.37
+Provides:       bundled(crate(zerocopy-derive)) = 0.8.37
+
 %description
 fish is a fully-equipped command line shell (like bash or zsh) that is
 smart and user-friendly. fish supports powerful features like syntax
@@ -117,12 +234,9 @@ done
 
 # Do horrible things in our quest to have fish work properly
 mv .cargo/config.toml fishshell-cargo-config.toml
-%cargo_prep
+cargo vendor
+%cargo_prep -v vendor
 cat fishshell-cargo-config.toml >> .cargo/config.toml
-
-
-%generate_buildrequires
-%cargo_generate_buildrequires -t
 
 
 %conf
@@ -149,6 +263,7 @@ sed -i 's^/usr/local/^/usr/^g' %{_vpath_builddir}/*.pc
 # Get Rust licensing data
 %{cargo_license_summary}
 %{cargo_license} > LICENSE.dependencies
+%cargo_vendor_manifest
 
 
 %install
@@ -190,6 +305,7 @@ fi
 %files
 %license COPYING
 %license LICENSE.dependencies
+%license cargo-vendor.txt
 %{_mandir}/man1/fish*.1*
 %{_bindir}/fish*
 %config(noreplace) %{_sysconfdir}/fish/
