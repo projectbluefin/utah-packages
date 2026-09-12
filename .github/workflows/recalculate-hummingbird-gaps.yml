@@ -20,7 +20,10 @@ jobs:
   measure:
     runs-on: ubuntu-24.04
     env:
-      HUMMINGBIRD_IMAGE: quay.io/hummingbird-community/bootc-os:latest
+      # Digest-pinned to match runtime-contract.toml's bootc-os pin (Utah's
+      # BASE_IMAGE), so the parity report measures the image Utah consumes.
+      # Re-pin when that contract is bumped.
+      HUMMINGBIRD_IMAGE: quay.io/hummingbird-community/bootc-os@sha256:c5539f9ed4d93aab6bd41e4f5aef8ab83055f3f9e855a47b69fadb7420d0d1df
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Pull Hummingbird image and inspect installed RPMs
