@@ -1,5 +1,5 @@
 %define dracutlibdir %{_prefix}/lib/dracut
-%bcond_without doc
+%bcond_with doc
 
 # We ship a .pc file but don't want to have a dep on pkg-config. We
 # strip the automatically generated dep here and instead co-own the
