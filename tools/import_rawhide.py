@@ -16,6 +16,16 @@ def run(*args: str, cwd: Path | None = None) -> str:
     return subprocess.check_output(args, cwd=cwd, text=True).strip()
 
 
+def validate_package(name: str) -> None:
+    if not name or not name.replace("-", "").replace("_", "").isalnum() or name.startswith("-"):
+        raise ValueError("package name must contain only letters, numbers, '_' or '-' and cannot start with '-'")
+
+
+def validate_branch(branch: str) -> None:
+    if not branch or not all(c.isalnum() or c in "-_./" for c in branch) or branch.startswith("-") or ".." in branch:
+        raise ValueError("branch name contains invalid characters")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("package", help="Fedora dist-git package name")
@@ -24,8 +34,11 @@ def main() -> int:
     parser.add_argument("--destination", type=Path, default=Path("packages"))
     args = parser.parse_args()
 
-    if not args.package.replace("-", "").replace("_", "").isalnum():
-        raise SystemExit("package name must contain only letters, numbers, '_' or '-'")
+    try:
+        validate_package(args.package)
+        validate_branch(args.branch)
+    except ValueError as exc:
+        raise SystemExit(str(exc))
 
     remote = args.remote_template.format(package=args.package)
     destination = args.destination / args.package
