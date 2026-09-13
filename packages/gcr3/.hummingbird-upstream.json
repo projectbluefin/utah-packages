@@ -1,0 +1,8 @@
+{
+  "package": "gcr3",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/gcr3.git",
+  "commit": "e893cfa064b61ec8d9ab22d86ad08f37bda3e0e8",
+  "tree": "832e2ac9d7c36e2b528ca661b8e479eb714868de",
+  "imported_at": "2026-09-05T17:16:45.606354+00:00"
+}

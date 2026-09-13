@@ -1,0 +1,8 @@
+{
+  "package": "libvpx",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libvpx.git",
+  "commit": "1b40b6e9406c7d4627d94fc827f1080a9d323660",
+  "tree": "37fe0f440e946d733e5687100725efc6711c839e",
+  "imported_at": "2026-09-05T04:39:17.440050+00:00"
+}

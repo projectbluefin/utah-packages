@@ -1,0 +1,8 @@
+{
+  "package": "libSM",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libSM.git",
+  "commit": "edd8fe76bdc10244a58e6e5b354511656cc1fd4b",
+  "tree": "6fc4116fd60dbb1b1c2a857663282aeffea98ffc",
+  "imported_at": "2026-09-04T21:17:00.328927+00:00"
+}

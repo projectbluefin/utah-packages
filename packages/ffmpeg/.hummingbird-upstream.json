@@ -1,0 +1,8 @@
+{
+  "package": "ffmpeg",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/ffmpeg.git",
+  "commit": "3cd07204d95ae0cb3cbff177466213ec24973acb",
+  "tree": "2b204ccfe88b4bca4ef952452f1ec85c7668b75c",
+  "imported_at": "2026-09-03T22:53:13.318851+00:00"
+}

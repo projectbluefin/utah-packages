@@ -1,0 +1,8 @@
+{
+  "package": "taglib",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/taglib.git",
+  "commit": "86df033b2cfbc35d78d7ea1ba36d1adaae9c4933",
+  "tree": "27e891d4c34d7684972e68eb521133de1d436d05",
+  "imported_at": "2026-09-05T14:33:19.596236+00:00"
+}

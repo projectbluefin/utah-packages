@@ -1,0 +1,8 @@
+{
+  "package": "mpg123",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/mpg123.git",
+  "commit": "e4e8f13e82bfc69eaff419bfcd9a93ff5a7f6d09",
+  "tree": "27cdd93b22df01cfc13b28006997c694d5ba1bf8",
+  "imported_at": "2026-09-05T04:39:16.178823+00:00"
+}

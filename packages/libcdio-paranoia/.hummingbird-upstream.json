@@ -1,0 +1,8 @@
+{
+  "package": "libcdio-paranoia",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libcdio-paranoia.git",
+  "commit": "0a3bc5d6d2658634fd5832ae20bde0bc01b10dee",
+  "tree": "0cb69734426889a1a10cd2d8f1553b12671b35ac",
+  "imported_at": "2026-09-02T04:34:01.694699+00:00"
+}

@@ -1,0 +1,8 @@
+{
+  "package": "spandsp",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/spandsp.git",
+  "commit": "259dc96a5928cfdd537f7f8eec065e31b9e92c07",
+  "tree": "94f02080b9b964f0ac0ca5c9a7c433cd2bced155",
+  "imported_at": "2026-09-03T22:53:17.709745+00:00"
+}

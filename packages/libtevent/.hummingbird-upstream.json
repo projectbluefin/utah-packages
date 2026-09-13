@@ -1,0 +1,8 @@
+{
+  "package": "libtevent",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libtevent.git",
+  "commit": "c5353560e52485efd35154a3d94925d9fe40b93b",
+  "tree": "2c4d4eebd3d21d7b4742c457a3201b206b2127b8",
+  "imported_at": "2026-08-31T07:22:22.217002+00:00"
+}

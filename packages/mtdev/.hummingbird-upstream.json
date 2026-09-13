@@ -1,0 +1,8 @@
+{
+  "package": "mtdev",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/mtdev.git",
+  "commit": "9aeee12a72bc8f41124e0c53fe299a9d94999263",
+  "tree": "eaaf358e18f737c30425de46ea82c4af68640cbf",
+  "imported_at": "2026-09-05T04:39:16.210364+00:00"
+}

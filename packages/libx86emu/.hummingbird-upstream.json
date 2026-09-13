@@ -1,0 +1,8 @@
+{
+  "package": "libx86emu",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libx86emu.git",
+  "commit": "920f91fa7d2c4a07eeed1ac128b27c00bf75c096",
+  "tree": "7a351f0199a3720463b38727af976ec690c66175",
+  "imported_at": "2026-09-05T04:39:16.456678+00:00"
+}

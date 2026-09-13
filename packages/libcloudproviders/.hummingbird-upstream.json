@@ -1,0 +1,8 @@
+{
+  "package": "libcloudproviders",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libcloudproviders.git",
+  "commit": "72c9b8274b6542930119208c92d7153f9f494b16",
+  "tree": "71e6f8e30ab8ec3e0f7e0881357238b684c80ca0",
+  "imported_at": "2026-09-02T04:33:23.803390+00:00"
+}

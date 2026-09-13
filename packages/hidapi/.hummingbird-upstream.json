@@ -1,0 +1,8 @@
+{
+  "package": "hidapi",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/hidapi.git",
+  "commit": "367a2d7d337f3e240b4532781061615a913e7339",
+  "tree": "a66150351b66632f21b625cafa693d19c66ff25f",
+  "imported_at": "2026-09-05T15:55:28.151229+00:00"
+}

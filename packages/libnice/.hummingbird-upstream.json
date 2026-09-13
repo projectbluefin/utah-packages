@@ -1,0 +1,8 @@
+{
+  "package": "libnice",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libnice.git",
+  "commit": "cf54685fa3e2af90b39c942975b5830c6e817461",
+  "tree": "4462780f143bf9b4d09291f99f73a0c8507f7b47",
+  "imported_at": "2026-09-04T21:17:00.959412+00:00"
+}

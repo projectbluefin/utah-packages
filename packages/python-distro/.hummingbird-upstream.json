@@ -1,0 +1,8 @@
+{
+  "package": "python-distro",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/python-distro.git",
+  "commit": "b9b137450a9203e60a1b0eaba799376fbc1277e0",
+  "tree": "5081fe6f04dac53046265a9e559dfda3333f027f",
+  "imported_at": "2026-09-05T23:47:25.443252+00:00"
+}

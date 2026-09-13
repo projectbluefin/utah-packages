@@ -1,0 +1,8 @@
+{
+  "package": "xorg-x11-xinit",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/xorg-x11-xinit.git",
+  "commit": "1243eb4ee2a9142b4478b6bf756ed353b4a1513e",
+  "tree": "e5c46fa3e8ce3d78692d91aaa1b8915d24629896",
+  "imported_at": "2026-09-05T15:19:28.362712+00:00"
+}

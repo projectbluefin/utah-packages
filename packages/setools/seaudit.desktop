@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=SELinux Audit Log Analysis
+GenericName=SELinux Audit Log Analysis Tool
+Comment=The tool parses syslog files and extracts all policy , AVC and change of boolean messages. 
+Icon=seaudit.png
+Exec=/usr/bin/seaudit
+Type=Application
+Terminal=false
+Categories=System;
+X-Desktop-File-Install-Version=0.2
+StartupNotify=true

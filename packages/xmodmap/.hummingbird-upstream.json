@@ -1,0 +1,8 @@
+{
+  "package": "xmodmap",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/xmodmap.git",
+  "commit": "fb7803313992f75fab87548561dec12bdd2d1e28",
+  "tree": "f00d31319b1e902f4f4ecafcf7b52a012b2887f6",
+  "imported_at": "2026-09-05T15:35:34.483102+00:00"
+}

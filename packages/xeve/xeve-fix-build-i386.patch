@@ -1,0 +1,11 @@
+--- a/app/xeve_app_util.h
++++ b/app/xeve_app_util.h
+@@ -77,7 +77,7 @@
+ 
+     len = (pre == NULL) ? 0 : (int)strlen(pre);
+     if(len > 0) {
+-        sprintf(str + 3, " %s ", pre);
++        snprintf(str + 3, sizeof(str) - 3, " %.73s ", pre);
+         len = (int)strlen(str);
+     }
+ 

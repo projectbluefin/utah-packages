@@ -1,0 +1,8 @@
+{
+  "package": "libmanette",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libmanette.git",
+  "commit": "cb69b6248d008249df93b7a6a4e06c6c1f3420e9",
+  "tree": "e8c208e37036946b285a7167b0acf0cbc0725a79",
+  "imported_at": "2026-09-03T22:53:15.023025+00:00"
+}

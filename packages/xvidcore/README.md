@@ -1,0 +1,3 @@
+# xvidcore
+
+The xvidcore package

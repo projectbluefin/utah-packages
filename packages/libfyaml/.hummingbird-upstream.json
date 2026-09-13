@@ -1,0 +1,8 @@
+{
+  "package": "libfyaml",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libfyaml.git",
+  "commit": "9c4d22b32cefd0a1299e0d1088aa6cd06a63dff4",
+  "tree": "a5d2a26fa34930d0e2676c79ad033177157fff92",
+  "imported_at": "2026-09-05T23:38:21.137366+00:00"
+}

@@ -138,8 +138,13 @@ if test -x /work/tools/sccache && test -r /work/tools/sccache.env; then
   case "$-" in *x*) sccache_restore_xtrace=1; set +x ;; *) sccache_restore_xtrace=0 ;; esac
   . /work/tools/sccache.env
   if test "$sccache_restore_xtrace" = 1; then set -x; fi
+  %if "%{toolchain}" == "clang"
+  export CC="/work/tools/sccache clang"
+  export CXX="/work/tools/sccache clang++"
+  %else
   export CC="/work/tools/sccache gcc"
   export CXX="/work/tools/sccache g++"
+  %endif
 fi
 %configure \
   --with-system-icu \

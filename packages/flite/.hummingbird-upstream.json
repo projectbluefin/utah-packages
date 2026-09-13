@@ -1,0 +1,8 @@
+{
+  "package": "flite",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/flite.git",
+  "commit": "78043195d55b8c7494ee7d15966a1da35dff9440",
+  "tree": "8e5fd1160633003e77660e3be9793f229aff8889",
+  "imported_at": "2026-09-03T22:53:13.231776+00:00"
+}

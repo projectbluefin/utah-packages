@@ -1,0 +1,8 @@
+{
+  "package": "volume_key",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/volume_key.git",
+  "commit": "1ca9b5628bd0b7bc82b4aa412e99186974026e6f",
+  "tree": "6c0a1b47e3316933dc9a9757da31279f8b1a02b2",
+  "imported_at": "2026-09-05T15:19:28.770707+00:00"
+}

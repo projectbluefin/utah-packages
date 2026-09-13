@@ -1,0 +1,8 @@
+{
+  "package": "SDL3",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/SDL3.git",
+  "commit": "45dd8eb6ffa408f729da0632a674e5b0b7a34a4c",
+  "tree": "8b30f184cb4a59234e936a97743d159e9fd8b4c3",
+  "imported_at": "2026-09-03T22:53:12.243493+00:00"
+}

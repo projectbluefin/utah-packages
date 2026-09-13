@@ -1,0 +1,8 @@
+{
+  "package": "xkbcomp",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/xkbcomp.git",
+  "commit": "074e7f3109a162799dd87d0c4db0ab42aeb62016",
+  "tree": "cf94e1859f50ff95b2bdd0285c0c1b9bf557945d",
+  "imported_at": "2026-09-05T16:46:34.538563+00:00"
+}

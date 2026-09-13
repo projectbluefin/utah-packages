@@ -1,0 +1,8 @@
+{
+  "package": "libnvme",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libnvme.git",
+  "commit": "e6900dd22716d47e82c07f8ba959a749cd88ca24",
+  "tree": "18b3534cc228f9e99920d6a9d76774e40cec2e11",
+  "imported_at": "2026-09-03T22:53:15.297791+00:00"
+}

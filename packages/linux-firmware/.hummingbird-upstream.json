@@ -1,0 +1,8 @@
+{
+  "package": "linux-firmware",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/linux-firmware.git",
+  "commit": "56abbaf2387bd3902d54c43a9f7e3cbd4a86ce4b",
+  "tree": "dde2c42b1464ef8b83efc3be6993ff0e2845a635",
+  "imported_at": "2026-09-05T06:31:01.691992+00:00"
+}

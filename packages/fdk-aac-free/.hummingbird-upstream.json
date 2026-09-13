@@ -1,0 +1,8 @@
+{
+  "package": "fdk-aac-free",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/fdk-aac-free.git",
+  "commit": "827a29f5cca86bb4549951b29dc7bf70c76b0810",
+  "tree": "940d269226ca2ff8c29be80ada531540ee19236f",
+  "imported_at": "2026-09-03T22:53:12.917872+00:00"
+}
