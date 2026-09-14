@@ -1,0 +1,8 @@
+{
+  "package": "gnome-desktop3",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/gnome-desktop3.git",
+  "commit": "ca5a1ca1ab5d3878f7bcdfc0e39c2a0a95d0d95e",
+  "tree": "467dc2738765c85d4ad3e79e1d7ffc81f4b25b73",
+  "imported_at": "2026-08-29T13:56:58.000000+00:00"
+}
