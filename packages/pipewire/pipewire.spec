@@ -34,6 +34,20 @@
 %bcond_without jack
 %endif
 
+# The ONNX filter-chain module is off everywhere in this factory, for the same
+# reason 718d4e4 declined it in gstreamer1-plugins-bad-free:
+#
+#     onnxruntime-devel-1.22.2-2.fc44 requires libabsl_hash.so.2601.0.0, but
+#       none of the providers can be installed
+#       - abseil-cpp-20260107.1-1.fc44 from fedora is filtered out by exclude
+#
+# Fedora's onnxruntime links the soname of Fedora's abseil-cpp 20260107.1; this
+# factory builds abseil-cpp 20260526.0 and excludes the Fedora copy by name, so
+# that BuildRequires can never be satisfied here. It is a permanent conflict,
+# not a bootstrap phase. Nothing in the runtime contract runs ML inference
+# through PipeWire's filter chain.
+%bcond_with onnx
+
 # Features disabled for RHEL
 %if 0%{?rhel}
 %bcond_with jackserver_plugin
@@ -41,7 +55,6 @@
 %bcond_with lv2
 %bcond_with roc
 %bcond_with ffado
-%bcond_with onnx
 %else
 %bcond_without jackserver_plugin
 %bcond_without libmysofa
@@ -49,13 +62,10 @@
 %bcond_without roc
 %ifarch s390x
 %bcond_with ffado
-%bcond_with onnx
 %elifarch %{ix86}
 %bcond_without ffado
-%bcond_with onnx
 %else
 %bcond_without ffado
-%bcond_without onnx
 %endif
 %endif
 

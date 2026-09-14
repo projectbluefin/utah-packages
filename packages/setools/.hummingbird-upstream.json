@@ -1,0 +1,8 @@
+{
+  "package": "setools",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/setools.git",
+  "commit": "640bb1ce1c22cc1b29c8941420c957f29e95658f",
+  "tree": "8ccd3f6a4cc4f716d6787b2a97541fe0f5c84e57",
+  "imported_at": "2026-09-05T23:52:44.704990+00:00"
+}

@@ -1,0 +1,8 @@
+{
+  "package": "libvorbis",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libvorbis.git",
+  "commit": "e5544dddd37f085c638655ac80a0619b918f6204",
+  "tree": "ba4db0ddfa92d688b0bd2a74d6dfe14be659c7d5",
+  "imported_at": "2026-09-03T22:53:15.978057+00:00"
+}

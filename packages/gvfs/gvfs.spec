@@ -188,6 +188,13 @@ file services.
 %prep
 %autosetup -p1
 
+# The bluray backend is off everywhere, not just on RHEL. Hummingbird ships no
+# libbluray, so it cannot resolve at install time: gvfs required
+# libbluray.so.3, nothing in factory or Hummingbird provided it, and that took
+# gnome-online-accounts and gnome-control-center down with it in the consumer
+# transaction. The backend browses an inserted Blu-ray disc, and Utah is an
+# image for machines without the drive. To reverse this, add a libbluray
+# recipe to the inventory and drop the flag.
 %build
 %meson \
        -Dman=true \
@@ -197,9 +204,9 @@ file services.
        -Dlibusb=false \
        -Dmtp=false \
 %endif
+       -Dbluray=false \
 %if 0%{?rhel}
        -Dnfs=false \
-       -Dbluray=false \
        -Dafc=false \
        -Donedrive=false \
 %endif

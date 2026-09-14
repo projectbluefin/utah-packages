@@ -1,0 +1,8 @@
+{
+  "package": "sbc",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/sbc.git",
+  "commit": "4144eaf22948b9bfbccb4c852f6d40b298fddbb1",
+  "tree": "463d09e2b22aa23e3182a4e369432ef09bd79808",
+  "imported_at": "2026-09-03T22:53:17.994974+00:00"
+}

@@ -9,6 +9,18 @@ Source0:        https://github.com/gvalkov/%{name}/archive/refs/tags/v%{version}
 
 BuildRequires:  gcc
 BuildRequires:  kernel-headers
+# %%generate_buildrequires runs %%pyproject_buildrequires, and that has to
+# execute before the dependencies it generates can be resolved. Without these
+# named statically, the first pass has nothing to run the macro with and
+# rpmbuild stops on the three it needs to start:
+#   pyproject-rpm-macros is needed by python-evdev
+#   python3-devel is needed by python-evdev
+#   python3dist(packaging) is needed by python-evdev
+# Same shape as python-typing-inspection, which asks for python3-packaging by
+# name for the same reason.
+BuildRequires:  python3-devel
+BuildRequires:  pyproject-rpm-macros
+BuildRequires:  python3dist(packaging)
 
 
 %global _description \

@@ -1,0 +1,8 @@
+{
+  "package": "libcdio",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libcdio.git",
+  "commit": "99b86a77555a8067c813a3a028c18e6ac4f68eec",
+  "tree": "0ffe06b4ba9ba1ba302d8fbdc3a4fad373fb8b4d",
+  "imported_at": "2026-09-02T04:33:59.924549+00:00"
+}

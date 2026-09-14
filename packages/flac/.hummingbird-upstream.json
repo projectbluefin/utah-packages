@@ -1,0 +1,8 @@
+{
+  "package": "flac",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/flac.git",
+  "commit": "9cb8ed95975bc75c61297219495c4eafa66f3cff",
+  "tree": "ba41083b03c2996ea7f0a6ddfe1c1b5895909fd1",
+  "imported_at": "2026-09-05T04:39:13.448352+00:00"
+}

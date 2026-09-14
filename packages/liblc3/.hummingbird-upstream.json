@@ -1,0 +1,8 @@
+{
+  "package": "liblc3",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/liblc3.git",
+  "commit": "d862a4cbed5b3a8d5b996112babe271d441624a5",
+  "tree": "97edc4c5dbdc5c3868d6223ea0a36e2503f754fd",
+  "imported_at": "2026-09-03T22:53:15.277059+00:00"
+}

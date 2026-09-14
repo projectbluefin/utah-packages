@@ -1,0 +1,8 @@
+{
+  "package": "device-mapper-persistent-data",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/device-mapper-persistent-data.git",
+  "commit": "72a87f69866059786122d191d712ee5b634c6f57",
+  "tree": "01720afbdd6e46b23f3a9acf39f6eccc65970b3d",
+  "imported_at": "2026-09-03T22:53:12.370405+00:00"
+}

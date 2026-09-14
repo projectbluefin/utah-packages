@@ -3,8 +3,21 @@
 
 # Only have extras package on fedora
 %bcond aom %{defined fedora}
+# chromaprint is declined here for the same reason ffmpeg.spec declines it:
+# Fedora's libchromaprint links libavutil.so.60, this factory's ffmpeg 9.0.1
+# provides libavutil.so.61, and the factory excludes the Fedora libav by name.
+# libchromaprint-devel is therefore uninstallable in this buildroot. Nothing in
+# the runtime contract links AcoustID fingerprinting.
+%bcond chromaprint 0
 %bcond extras %{defined fedora}
-%bcond opencv %{defined fedora}
+# Declined for the same reason as chromaprint above: the Fedora package this
+# needs cannot resolve against the libraries this factory replaces. opencv-devel
+# pulls opencv-videoio, which links libswscale.so.9, while this factory's ffmpeg
+# 9.0.1 provides libswscale.so.10 and the Fedora libsw* are excluded by name.
+# (Fedora's opencv also drags qt6-qtbase, which cannot resolve here at all --
+# Hummingbird offers libicu-77 and Fedora qt6 wants libicuuc.so.78.) Nothing in
+# the runtime contract uses GStreamer computer-vision plugins.
+%bcond opencv 0
 %bcond openh264 %{defined fedora}
 %bcond svtav1 %{defined fedora}
 # requires new webrtc-audio-processing-1/-2
@@ -17,7 +30,12 @@
 %bcond ldac %{defined fedora}
 %endif
 %ifnarch %{ix86} riscv64 s390x
-%bcond onnx %{defined fedora}
+# Same again. Fedora onnxruntime-devel requires libabsl_hash.so.2601.0.0 and
+# friends -- the soname of Fedora's abseil-cpp 20260107.1 -- while this factory
+# builds abseil-cpp 20260526.0 and excludes the Fedora copy by name, so the
+# Fedora onnxruntime can never be satisfied here. Nothing in the runtime
+# contract runs ML inference through GStreamer.
+%bcond onnx 0
 %endif
 # VPL runtimes (intel-mediasdk/intel-vpl-gpu-rt) are x86_64 only
 %ifarch x86_64
@@ -148,7 +166,9 @@ BuildRequires:  pkgconfig(avtp)
 BuildRequires:  pkgconfig(fluidsynth)
 BuildRequires:  pkgconfig(libass)
 BuildRequires:  pkgconfig(libbs2b)
+%if %{with chromaprint}
 BuildRequires:  pkgconfig(libchromaprint)
+%endif
 BuildRequires:  pkgconfig(libcurl)
 BuildRequires:  pkgconfig(libdca)
 BuildRequires:  pkgconfig(libmodplug)
@@ -367,11 +387,13 @@ aren't tested well enough, or the code is not of good enough quality.
 %if %{without webrtc}
     -D webrtcdsp=disabled \
 %endif
+%if %{without chromaprint}
+    -D chromaprint=disabled \
+%endif
 %if %{without extras}
     -D assrender=disabled \
     -D avtp=disabled \
     -D bs2b=disabled \
-    -D chromaprint=disabled \
     -D curl=disabled -D curl-ssh2=disabled \
     -D d3dvideosink=disabled \
     -D decklink=disabled \
@@ -718,7 +740,9 @@ EOF
 %{_libdir}/gstreamer-%{majorminor}/libgstassrender.so
 %{_libdir}/gstreamer-%{majorminor}/libgstavtp.so
 %{_libdir}/gstreamer-%{majorminor}/libgstbs2b.so
+%if %{with chromaprint}
 %{_libdir}/gstreamer-%{majorminor}/libgstchromaprint.so
+%endif
 %if %{with dc1394}
 %{_libdir}/gstreamer-%{majorminor}/libgstdc1394.so
 %endif

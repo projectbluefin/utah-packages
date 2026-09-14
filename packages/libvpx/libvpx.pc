@@ -1,0 +1,14 @@
+prefix=@PREFIX@
+exec_prefix=@PREFIX@
+libdir=@LIBDIR@
+includedir=@INCLUDEDIR@
+
+Name: libvpx
+Description: VP8 Video Codec SDK library
+Version: 1.0.0
+URL: http://www.webmproject.org/tools/vp8-sdk/
+Requires:
+Conflicts:
+Libs: -L${libdir} -lvpx
+Libs.private:  
+Cflags: -I${includedir}/vpx/

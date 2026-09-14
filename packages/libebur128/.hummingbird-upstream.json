@@ -1,0 +1,8 @@
+{
+  "package": "libebur128",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libebur128.git",
+  "commit": "f62d53d17e114d5cd8a348fc0bd1ace7c785b6c2",
+  "tree": "da5d5ef2f2c5dfa129fe201202bb347c34eb1757",
+  "imported_at": "2026-09-03T22:53:14.253915+00:00"
+}

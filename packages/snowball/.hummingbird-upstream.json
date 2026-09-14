@@ -1,0 +1,8 @@
+{
+  "package": "snowball",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/snowball.git",
+  "commit": "be8af54b7a11d8af23448a1bd9203a11b6245b44",
+  "tree": "0564e78b5986e66787532609c7a37c60a14895f7",
+  "imported_at": "2026-09-03T19:42:57.093148+00:00"
+}

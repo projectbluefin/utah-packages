@@ -1,0 +1,8 @@
+{
+  "package": "libxmlb",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libxmlb.git",
+  "commit": "4ff6f75dbf69f6878ebb8cbf35db6857ed926e78",
+  "tree": "8f19247e8559767b35de09f39ea5aa14f3719e0b",
+  "imported_at": "2026-09-03T22:53:16.798208+00:00"
+}

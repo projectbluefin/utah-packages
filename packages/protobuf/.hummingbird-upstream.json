@@ -1,0 +1,8 @@
+{
+  "package": "protobuf",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/protobuf.git",
+  "commit": "823108311dd525219823c0eaaaa1b7c535215d0f",
+  "tree": "ff1f63367e08c6675cbe26bd929db005c80fe65e",
+  "imported_at": "2026-09-03T22:53:17.838926+00:00"
+}

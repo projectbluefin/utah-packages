@@ -1,0 +1,8 @@
+{
+  "package": "kde-settings",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/kde-settings.git",
+  "commit": "1571d03ff4132930e912a0c60bba039041bc0ad5",
+  "tree": "7b23e392d658d129d05cb6c01373f679e696faee",
+  "imported_at": "2026-09-05T04:39:14.747798+00:00"
+}

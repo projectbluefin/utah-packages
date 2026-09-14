@@ -1,0 +1,8 @@
+{
+  "package": "cdparanoia",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/cdparanoia.git",
+  "commit": "f74e5e9730dd329fb004942811e9cdb69959771e",
+  "tree": "426e0694f8e77db73e5ec8a5c8f4ed8459827ae6",
+  "imported_at": "2026-09-03T22:53:12.322394+00:00"
+}

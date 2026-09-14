@@ -62,13 +62,24 @@
 %bcond winexe 1
 %endif
 
-# Build vfs_ceph module and ctdb cepth mutex helper by default on 64bit Fedora
+# The Ceph VFS modules are off here, on every arch. f8e7154 already made this
+# call once, for the reason that came straight back the moment the modules
+# returned: libcephfs-devel drags Fedora libcephfs2 into the build root, and
+# libcephfs2 requires libicuuc.so.77, so samba cannot be built against ICU 78
+# while it is enabled --
+#
+#   package libcephfs2-2:20.2.4-1.fc44 requires libicuuc.so.77
+#   cannot install both libicu-78.3-8.hum1 and libicu-77.1-2.1.hum1
+#
+# -- and 507b2bf settled that 78 is the sole ICU here. Nothing in the Utah
+# contract asks for samba-vfs-cephfs, samba-vfs-ceph-rgw or ctdb-ceph-mutex;
+# they are storage-cluster modules for a desktop image that has no cluster.
 %if 0%{?fedora}
 
 %ifarch aarch64 ppc64le s390x x86_64 riscv64 loongarch64
-%bcond vfs_cephfs 1
-%bcond vfs_ceph_rgw 1
-%bcond ceph_mutex 1
+%bcond vfs_cephfs 0
+%bcond vfs_ceph_rgw 0
+%bcond ceph_mutex 0
 %else
 %bcond vfs_cephfs 0
 %bcond vfs_ceph_rgw 0
@@ -300,7 +311,16 @@ BuildRequires: libaio-devel
 BuildRequires: libarchive-devel
 BuildRequires: libattr-devel
 BuildRequires: libcap-devel
-BuildRequires: libicu-devel
+# Hummingbird ships libicu 77.1 beside its own 78.3 and an unversioned
+# BuildRequires let dnf take either, so samba linked libicuuc.so.77 while the
+# factory libical linked .so.78; the two cannot be installed together, and
+# gnome-control-center could not resolve a build root at all. 507b2bf settled
+# that 78 is the sole runtime ICU, so ask for it here rather than excluding 77
+# from every build root: 012cb6a already removed such an exclusion because
+# Fedora build-only consumers legitimately link 77 -- notably the Fedora
+# libsmbclient that gvfs and ffmpeg resolve at stages 1 and 3, before this
+# factory has built samba at all.
+BuildRequires: libicu-devel >= 78
 BuildRequires: libcmocka-devel
 BuildRequires: libtirpc-devel
 BuildRequires: libuuid-devel

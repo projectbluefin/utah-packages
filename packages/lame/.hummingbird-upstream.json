@@ -1,0 +1,8 @@
+{
+  "package": "lame",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/lame.git",
+  "commit": "7728fce40b1d5a766ec6caa68986884977d1ef54",
+  "tree": "53b6878fc3ae72cf3d701fb960ad6f00f80b499a",
+  "imported_at": "2026-09-05T04:39:15.552898+00:00"
+}

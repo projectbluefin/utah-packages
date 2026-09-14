@@ -1,0 +1,8 @@
+{
+  "package": "libXxf86vm",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libXxf86vm.git",
+  "commit": "fde017f2a0b81cac619d4c5f7c1d9bc8e24a1f26",
+  "tree": "3c3941251cd88db3cfb6689b04b139e1b01a6a8e",
+  "imported_at": "2026-09-02T04:32:23.497679+00:00"
+}

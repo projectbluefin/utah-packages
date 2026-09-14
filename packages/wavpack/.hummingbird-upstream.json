@@ -1,0 +1,8 @@
+{
+  "package": "wavpack",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/wavpack.git",
+  "commit": "dbbec6b4037ff2f3856ec39fbc7ece85f10085fd",
+  "tree": "894ba1622a7b3037ab459b74cf5eb0edd9ac9501",
+  "imported_at": "2026-09-05T14:33:23.513355+00:00"
+}

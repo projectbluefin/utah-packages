@@ -1,0 +1,8 @@
+{
+  "package": "libshout",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libshout.git",
+  "commit": "59be7852435b15d6db285a2fbe37424812a8b7e1",
+  "tree": "db060dd6900408d8c23638b6903bc75b1afa5e81",
+  "imported_at": "2026-09-05T14:33:17.575771+00:00"
+}

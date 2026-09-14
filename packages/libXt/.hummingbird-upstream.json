@@ -1,0 +1,8 @@
+{
+  "package": "libXt",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libXt.git",
+  "commit": "827d647f54442dedfc227386430c055bc8ef859b",
+  "tree": "c46c75e0201675548a834af8c46180c3aa5159fc",
+  "imported_at": "2026-09-05T17:31:06.542463+00:00"
+}

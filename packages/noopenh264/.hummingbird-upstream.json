@@ -1,0 +1,8 @@
+{
+  "package": "noopenh264",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/noopenh264.git",
+  "commit": "cbfe0360d0d6d7f562a90300f7616892c55920ea",
+  "tree": "5a37dab6a8bc34e38dca1cc32bb455949ecd674a",
+  "imported_at": "2026-09-05T04:39:18.112856+00:00"
+}

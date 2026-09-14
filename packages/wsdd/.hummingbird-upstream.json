@@ -1,0 +1,8 @@
+{
+  "package": "wsdd",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/wsdd.git",
+  "commit": "a370b0b4b53a110acde8f472fee73f09f65b6f9b",
+  "tree": "af52ea322015ac4dc4d7be6ea16d8385b723bad0",
+  "imported_at": "2026-09-03T22:53:17.491623+00:00"
+}

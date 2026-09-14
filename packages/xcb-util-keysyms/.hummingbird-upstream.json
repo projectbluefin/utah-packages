@@ -1,0 +1,8 @@
+{
+  "package": "xcb-util-keysyms",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/xcb-util-keysyms.git",
+  "commit": "a587c4382558406b9f582ab31f29b197aa45ac1b",
+  "tree": "cd35349bb99889e6ffe01d71891596e4832c9f7d",
+  "imported_at": "2026-09-04T21:17:01.803518+00:00"
+}

@@ -1,0 +1,8 @@
+{
+  "package": "bluez",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/bluez.git",
+  "commit": "ab19be0e18bb050ce91c446e2925b2d329b2991e",
+  "tree": "c9df476ebd576c7149aa5dfed320e82121172d5e",
+  "imported_at": "2026-09-03T22:53:12.216898+00:00"
+}

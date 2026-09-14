@@ -1,0 +1,8 @@
+{
+  "package": "libisofs",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libisofs.git",
+  "commit": "4eaaf76066c5f5317b5ae260a0389745ad815bbe",
+  "tree": "301269c296cc557022310648644bef1ddbd66d5c",
+  "imported_at": "2026-09-03T22:53:15.038425+00:00"
+}

@@ -1,0 +1,8 @@
+{
+  "package": "gnome-keyring",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/gnome-keyring.git",
+  "commit": "b7ebb6723044bb4d714e25fe1bbeacd5eb43eda1",
+  "tree": "4e070dbe5a6499bf753b379381ad76d61282b7f2",
+  "imported_at": "2026-09-05T15:19:25.999009+00:00"
+}

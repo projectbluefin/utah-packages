@@ -1,0 +1,8 @@
+{
+  "package": "hwinfo",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/hwinfo.git",
+  "commit": "346d8a3d95d3ba953861748541a6d65db61b1f95",
+  "tree": "29313b13e7ea58c56465a2e69c3b0e1b3edc38a0",
+  "imported_at": "2026-09-05T04:39:14.349784+00:00"
+}

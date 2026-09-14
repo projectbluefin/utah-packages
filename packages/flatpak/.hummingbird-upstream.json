@@ -1,0 +1,8 @@
+{
+  "package": "flatpak",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/flatpak.git",
+  "commit": "44da60affc6b697a0899305844e501e60ef5b66d",
+  "tree": "a4eba6e645f2ce9c84a8a9dbc4afbcf94399413d",
+  "imported_at": "2026-09-05T23:02:36.962497+00:00"
+}

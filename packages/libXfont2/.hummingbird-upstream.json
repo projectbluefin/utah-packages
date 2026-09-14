@@ -1,0 +1,8 @@
+{
+  "package": "libXfont2",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libXfont2.git",
+  "commit": "e87bac79e8155fef29baf71603cdcaa9f9092043",
+  "tree": "91b4c210d875e3db9ef09be89bc93c7249ff05c0",
+  "imported_at": "2026-09-05T16:46:34.538691+00:00"
+}

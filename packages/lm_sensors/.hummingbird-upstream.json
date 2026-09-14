@@ -1,0 +1,8 @@
+{
+  "package": "lm_sensors",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/lm_sensors.git",
+  "commit": "069e0913fb4bd80526e2d19e0c664f46c8d47ef5",
+  "tree": "d69269f334dc992c70734861b32a3d5113a18b5c",
+  "imported_at": "2026-09-03T04:17:54.612542+00:00"
+}

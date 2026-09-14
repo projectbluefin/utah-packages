@@ -1,0 +1,45 @@
+From: Simone Caronni <negativo17@gmail.com>
+Subject: [PATCH] Avoid buffer overflows in the trace line helpers
+
+xevd_trace_line() and log_line() copy a caller supplied string of unknown
+length into a fixed 128 byte buffer with sprintf(), which GCC diagnoses as a
+potential format overflow. Upstream builds with -Werror, so this breaks the
+build on i686.
+
+Use snprintf() with an explicit precision, so the copy is bounded both by the
+size of the destination buffer and by the line width the helpers pad to, and
+only write the terminating NUL when it still falls inside the buffer.
+
+--- a/src_base/xevd_port.c
++++ b/src_base/xevd_port.c
+@@ -49,10 +49,10 @@
+     int len = (pre == NULL) ? 0 : (int)strlen(pre);
+     if (len > 0)
+     {
+-        sprintf(str, "%s ", pre);
++        snprintf(str, sizeof(str), "%.*s ", chars - 1, pre);
+         len = (int)strlen(str);
+     }
+     for (int i = len; i < chars; i++) { str[i] = '='; }
+-    str[chars] = '\0';
++    if (len < chars) { str[chars] = '\0'; }
+     printf("%s\n", str);
+ }
+\ No newline at end of file
+--- a/app/xevd_app_util.h
++++ b/app/xevd_app_util.h
+@@ -67,12 +67,12 @@
+     len = (pre == NULL)? 0: (int)strlen(pre);
+     if(len > 0)
+     {
+-        sprintf(str + 3, " %s ", pre);
++        snprintf(str + 3, sizeof(str) - 3, " %.*s ", chars - 5, pre);
+         len = (int)strlen(str);
+     }
+ 
+     for(i = len ; i< chars; i++) {str[i] = '=';}
+-    str[chars] = '\0';
++    if(len < chars) {str[chars] = '\0';}
+     printf("%s\n", str);
+ }
+ 

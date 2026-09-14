@@ -1,0 +1,8 @@
+{
+  "package": "libdatrie",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libdatrie.git",
+  "commit": "a41f503576461425cfd4a07553c486f5d0ce586e",
+  "tree": "32e7f951efa7f7dffbcdf2688388259fe701ed6f",
+  "imported_at": "2026-09-04T21:17:00.398305+00:00"
+}

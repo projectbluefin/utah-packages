@@ -1,0 +1,8 @@
+{
+  "package": "libxcvt",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libxcvt.git",
+  "commit": "27245553cecb9de30ccc95e32247a9d70286ad94",
+  "tree": "95b27916a5de75eed89d68a241808212b8d4b226",
+  "imported_at": "2026-09-05T16:46:34.538696+00:00"
+}

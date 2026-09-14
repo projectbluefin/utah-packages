@@ -1,0 +1,19 @@
+diff -up a/python/setup.py b/python/setup.py
+--- a/python/setup.py	2022-09-29 13:38:53.000000000 -0400
++++ b/python/setup.py	2026-05-20 12:27:08.147369533 -0400
+@@ -5,7 +5,6 @@ from distutils import util
+ import fnmatch
+ import glob
+ import os
+-import pkg_resources
+ import re
+ import subprocess
+ import sys
+@@ -237,6 +236,7 @@ if __name__ == '__main__':
+     # C++ projects must now migrate to libc++ and are recommended to set a
+     # deployment target of macOS 10.9 or later, or iOS 7 or later.
+     if sys.platform == 'darwin':
++      import pkg_resources
+       mac_target = str(sysconfig.get_config_var('MACOSX_DEPLOYMENT_TARGET'))
+       if mac_target and (pkg_resources.parse_version(mac_target) <
+                        pkg_resources.parse_version('10.9.0')):

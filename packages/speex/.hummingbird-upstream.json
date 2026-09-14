@@ -1,0 +1,8 @@
+{
+  "package": "speex",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/speex.git",
+  "commit": "624c53d9e70e688e3875e8328bf21d54f63619af",
+  "tree": "c272bb3f306a3a1d77b06c765cf2ecbd3600e4d1",
+  "imported_at": "2026-09-05T04:39:18.259068+00:00"
+}

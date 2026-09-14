@@ -1,0 +1,8 @@
+{
+  "package": "xrdb",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/xrdb.git",
+  "commit": "46d4e35215d658b1ba51748cc4c18778d5b95cf1",
+  "tree": "d342b4dfb157127da6c6692b9f0b2e7572a92714",
+  "imported_at": "2026-09-05T15:35:33.765797+00:00"
+}

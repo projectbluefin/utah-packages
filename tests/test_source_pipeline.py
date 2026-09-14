@@ -103,6 +103,18 @@ class SourcePipelineTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "SHA-512 mismatch"):
                 verify_staged_sources(package, root / "packages")
 
+    def test_verifies_nothing_for_a_recipe_with_no_upstream_source(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            package_dir = root / "packages" / "nosource"
+            package_dir.mkdir(parents=True)
+            # What Packit's create-archive action leaves behind. It is not a
+            # source and must not be treated as one.
+            (package_dir / "nosource-1.tar.gz").write_bytes(b"placeholder")
+            package = {"name": "nosource", "version": "1", "no_upstream_source": True}
+
+            self.assertEqual(verify_staged_sources(package, root / "packages"), [])
+
 
 FAKE_GENERATOR = """\
 import pathlib

@@ -41,6 +41,7 @@ import urllib.request
 
 SCRIPT_PATH = "tools/generated_sources.py"
 
+
 # SHA-512 of the first-party input archives, pinned so a re-rolled upstream
 # artifact fails closed instead of silently changing the generated output.
 INTEL_MEDIA_INPUT_SHA512 = {

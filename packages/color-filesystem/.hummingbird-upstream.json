@@ -1,0 +1,8 @@
+{
+  "package": "color-filesystem",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/color-filesystem.git",
+  "commit": "fc404404efeae29917fd472d00051a12b5422393",
+  "tree": "58eb671049943187bba9cfed48c257b471797e09",
+  "imported_at": "2026-09-05T14:38:49.552016+00:00"
+}

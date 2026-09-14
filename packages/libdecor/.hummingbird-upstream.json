@@ -1,0 +1,8 @@
+{
+  "package": "libdecor",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libdecor.git",
+  "commit": "5c486f1100e351efd005ecfd45d2f7dc7996ee05",
+  "tree": "12e251902a4e439bb5be57d4577d3a5f2c350a00",
+  "imported_at": "2026-09-04T21:17:00.357703+00:00"
+}
