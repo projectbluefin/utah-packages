@@ -28,10 +28,13 @@ We express the counter in the disttag rather than in `Release:`, so the
 translation is that a moved baseline retires the counter instead of re-seating
 it.
 
-Like theirs, this refuses to guess at a `Release:` built from macros --
-nodejs, kernel-headers and krb5 are the packages that shape is used for -- and
-asks for the bump to be handled by hand rather than comparing two strings that
-do not mean what they appear to.
+Like theirs, this compares only the stable leading segment of a `Release:` --
+the `5` in `5%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}`, the `1` in
+`1%{?pre_tag}%{?dist}`. A release that is only macros has nothing literal to
+compare against a baseline -- `%autorelease`, `%{baserelease}`, and the fully
+dynamic releases of nodejs, kernel-headers and krb5 -- so the bump is skipped
+rather than guessed at. That skip is graceful: the tool reports no suffix
+instead of crashing on two strings that do not mean what they appear to.
 """
 from __future__ import annotations
 
@@ -52,21 +55,25 @@ class BumpError(Exception):
 
 
 def spec_release(spec: str) -> str:
-    """The `Release:` value, with a trailing dist macro removed."""
+    """The comparable leading release, or the empty string when the spec
+    cannot be bumped.
+
+    The release is the literal segment before the first unexpanded macro -- the
+    `5` in `5%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}` and the `1` in
+    `1%{?pre_tag}%{?dist}`. That literal is stable across rebuilds of the same
+    Fedora release, so it is what a recorded baseline can be checked against.
+    A release that is only macros -- `%autorelease`, `%{baserelease}` -- has no
+    literal segment to compare, so this returns the empty string and the caller
+    skips the bump instead of guessing at (or crashing on) two strings that do
+    not mean what they appear to.
+    """
     match = RELEASE.search(spec)
     if match is None:
         raise BumpError("spec has no Release: line")
-    release = match.group(1)
-    for dist in ("%{?dist}", "%{dist}"):
-        if release.endswith(dist):
-            release = release[: -len(dist)]
-            break
-    if "%" in release:
-        raise BumpError(
-            f"Release: {match.group(1)} is built from macros; bump it by hand "
-            "rather than against a baseline that cannot be compared"
-        )
-    return release
+    # The dist macro and every optional sub-macro sit after the first `%`, so
+    # the literal release is everything before it. A (\S+) capture carries no
+    # whitespace, so nothing further needs stripping.
+    return match.group(1).split("%", 1)[0]
 
 
 def suffix(entry: dict, release: str) -> str:
@@ -92,7 +99,19 @@ def main(name: str) -> str:
     specs = sorted((ROOT / "packages" / name).glob("*.spec"))
     if not specs:
         raise BumpError(f"{name} records a dist_bump but has no spec")
-    return suffix(entry, spec_release(specs[0].read_text()))
+    release = spec_release(specs[0].read_text())
+    if not release:
+        # A purely-macro Release: (%autorelease, %{baserelease}) has no literal
+        # segment to compare against the recorded baseline, so the bump is
+        # skipped. build-stage.yml captures main()'s stdout, so a silent "" would
+        # drop the rebuild with no trace and ship an RPM that does not supersede;
+        # log it on stderr to keep the skip observable.
+        print(
+            f"{name}: dist_bump skipped, Release: has no comparable baseline",
+            file=sys.stderr,
+        )
+        return ""
+    return suffix(entry, release)
 
 
 if __name__ == "__main__":

@@ -235,9 +235,15 @@ rebuild that never happened.
 This is Hummingbird's `bump_release()` translated. They put the counter in
 `Release:` and re-seat it against the new baseline (`3.1` against baseline `3`
 becomes `3.2`); we put it in the disttag, where a moved baseline retires it
-instead. A `Release:` built from macros -- `krb5_release`, nodejs, and
-`kernel-headers`'s `specrelease` -- is refused by both, rather than compared
-as a string that is not a release.
+instead. We compare only the stable leading literal of a `Release:` -- the `5`
+in `5%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}` -- exactly as Hummingbird
+does. A `Release:` that is only macros -- `%autorelease`, `%{baserelease}`,
+krb5's `krb5_release`, nodejs, and `kernel-headers`'s `specrelease` -- has no
+literal segment to compare against a baseline, so the bump is skipped (the tool
+prints nothing to stdout and logs the skip on stderr) rather than compared as a
+string that is not a release. This is a deliberate divergence from Hummingbird's
+`bump_release()`, which refuses such lines outright instead of extracting the
+leading literal.
 
 Verified against rpm's ordering rather than assumed -- the comparison was
 reimplemented from rpmvercmp's rules and every row checked, including the ones we

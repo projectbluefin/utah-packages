@@ -13,12 +13,28 @@ class SpecReleaseTests(unittest.TestCase):
     def test_keeps_a_release_with_no_dist_macro(self) -> None:
         self.assertEqual(spec_release("Release: 7\n"), "7")
 
-    def test_refuses_a_release_built_from_macros(self) -> None:
-        # krb5, nodejs and kernel-headers all do this. Comparing the literal
-        # string against a baseline would compare two things that are not
-        # releases.
-        with self.assertRaises(BumpError):
-            spec_release("Release: %{krb5_release}%{?dist}\n")
+    def test_extracts_the_leading_release_from_sub_macros(self) -> None:
+        # The literal release before the first macro is stable across rebuilds,
+        # so it is what a baseline compares against; trailing optional macros
+        # (gitdate, pre_tag) are ignored rather than treated as uncomparable.
+        self.assertEqual(
+            spec_release(
+                "Release: 5%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}\n"
+            ),
+            "5",
+        )
+        self.assertEqual(spec_release("Release: 1%{?pre_tag}%{?dist}\n"), "1")
+
+    def test_returns_no_release_for_a_purely_macro_release(self) -> None:
+        # %autorelease, %{baserelease}, krb5's %{krb5_release}: no literal
+        # segment to compare, so the bump is skipped (""), not crashed on.
+        for release in (
+            "Release: %{krb5_release}%{?dist}\n",
+            "Release: %{autorelease}\n",
+            "Release:        %autorelease -b3\n",
+            "Release: %{baserelease}%{?snapdate:.%{snapdate}git%{shortcommit}}%{?dist}\n",
+        ):
+            self.assertEqual(spec_release(release), "")
 
     def test_reports_a_spec_with_no_release(self) -> None:
         with self.assertRaises(BumpError):
