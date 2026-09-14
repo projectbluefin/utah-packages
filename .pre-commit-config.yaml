@@ -38,3 +38,9 @@ repos:
         entry: python3 tools/check_workflow_quoting.py
         pass_filenames: false
         always_run: true
+      - id: build-container-pinning
+        name: Validate build toolchain containers are digest-pinned
+        language: system
+        entry: python3 tools/check_build_container_pinning.py
+        pass_filenames: false
+        always_run: true
