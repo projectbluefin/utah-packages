@@ -4,13 +4,6 @@
   "automerge": false,
   "packageRules": [
     {
-      "description": "Keep the GitHub Actions supply chain patched automatically.",
-      "matchManagers": ["github-actions"],
-      "matchUpdateTypes": ["digest", "patch", "minor"],
-      "automerge": true,
-      "platformAutomerge": true
-    },
-    {
       "description": "Direct upstream RPM sources may merge only after their real build and verification gate succeeds.",
       "matchDepTypes": ["upstream-source"],
       "automerge": true,
