@@ -61,7 +61,7 @@ jobs:
             config/bluefin-packages.toml config/runtime-contract.toml --check
           python3 -m unittest discover -s tests -v
       - name: Install zstandard
-        run: pip install --quiet zstandard
+        run: pip install --disable-pip-version-check --quiet 'zstandard==0.25.0'
       - id: matrix
         env:
           FULL: ${{ github.event_name == 'workflow_dispatch' && inputs.full == true && '1' || '0' }}
