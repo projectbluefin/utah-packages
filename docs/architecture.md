@@ -100,7 +100,7 @@ validated 193 source RPMs
 
 | job | verified behavior |
 | --- | --- |
-| `prepare` | Selects the packages that are new, changed, or requested by a full rebuild, then emits five stage lists. A package declaring a stage above 4 has no job to run in, so this fails and names it rather than dropping it. |
+| `prepare` | Selects packages that are new, changed, affected by reverse dependencies, or requested by a full rebuild using `tools/build_plan.py`, emits a reviewable build plan artifact and step summary, and outputs five stage lists. A package declaring a stage above 4 has no job to run in, so this fails and names it rather than dropping it. |
 | `preflight` | Resolves BuildRequires for the selected packages in the real build root and uploads a worklist; it is `continue-on-error`. Its output is advisory: the waves are still driven by the hand-assigned `stage` in config, not by what this resolves. |
 | `rebuild0` through `rebuild4` | Five calls to the reusable `build-stage.yml`, one per wave, each a `fail-fast: false` package matrix. Each later stage downloads the earlier workflow artifacts, creates a local `[stages]` dnf repository with `createrepo_c`, and resolves against it. |
 | `precedence` | Checks that each produced RPM outranks what Fedora 44 and Hummingbird already offer, and reports any name Hummingbird also provides. |

@@ -13,8 +13,7 @@ on:
     paths:
       - config/**
       - packages/**
-      - tools/source_pipeline.py
-      - tools/runtime_contract.py
+      - tools/**
       - tests/**
       - .github/workflows/rebuild-rpms.yml
       - .github/workflows/build-stage.yml
@@ -22,8 +21,7 @@ on:
     paths:
       - config/**
       - packages/**
-      - tools/source_pipeline.py
-      - tools/runtime_contract.py
+      - tools/**
       - tests/**
       - .github/workflows/rebuild-rpms.yml
       - .github/workflows/build-stage.yml
@@ -67,78 +65,19 @@ jobs:
           FULL: ${{ github.event_name == 'workflow_dispatch' && inputs.full == true && '1' || '0' }}
           BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
         run: |
-          python3 - <<'PY'
-          import json, os, re, subprocess, urllib.request, gzip, io, sys
-          from pathlib import Path
-
-          config = json.loads(Path('config/upstream-sources.json').read_text())
-          full = os.environ.get('FULL') == '1'
-          changed = set()
-          base = os.environ.get('BASE_SHA', '')
-          if not full and re.fullmatch(r'[0-9a-f]{40}', base or '') and set(base) != {'0'}:
-              paths = subprocess.check_output(
-                  ['git', 'diff', '--name-only', f'{base}..HEAD'], text=True).splitlines()
-              changed = {
-                  match.group(1)
-                  for path in paths
-                  if (match := re.match(r'^packages/([^/]+)/', path))
-              }
-              print(f"changed package recipes: {', '.join(sorted(changed)) or 'none'}")
-
-          # Fetch the currently published repo so we only rebuild what is new
-          # or changed. Matching is name + normalized version: Fedora's spec
-          # Version rewrites the tarball's '.' to '~' (gnome-shell 51.beta ->
-          # 51~beta), so normalize '~' to '.' on both sides. A mismatch just
-          # rebuilds a package we could have skipped -- safe, only slower.
-          published = {}
-          if not full:
-              try:
-                  base = "https://projectbluefin.github.io/utah-packages/"
-                  repomd = urllib.request.urlopen(base + "repodata/repomd.xml", timeout=60).read().decode()
-                  href = re.search(r'<location href="([^"]*primary[^"]*)"', repomd).group(1)
-                  raw = urllib.request.urlopen(base + href, timeout=120).read()
-                  if href.endswith('.zst'):
-                      import zstandard
-                      stream = zstandard.ZstdDecompressor().stream_reader(io.BytesIO(raw))
-                  else:
-                      stream = gzip.GzipFile(fileobj=io.BytesIO(raw))
-                  text = stream.read()
-                  for m in re.finditer(rb'<package[^>]*>.*?<name>([^<]+)</name>.*?<version[^>]*ver="([^"]+)"', text, re.S):
-                      published[m.group(1).decode()] = m.group(2).decode()
-                  print(f"published repo has {len(published)} packages")
-              except Exception as error:
-                  print(f"WARNING: could not read published repo, rebuilding all: {error}", file=sys.stderr)
-
-          def norm(version: str) -> str:
-              return version.replace('~', '.')
-
-          build = []
-          for package in config['packages']:
-              name = package['name']
-              version = package.get('version', '')
-              if full or name in changed or name not in published or norm(published[name]) != norm(version):
-                  build.append(package)
-              else:
-                  print(f"skip {name} {version}: already published")
-
-          outputs = {'build_list': json.dumps([p['name'] for p in build])}
-          for n in range(5):
-              outputs[f'stage{n}'] = json.dumps(
-                  [p['name'] for p in build if (p.get('stage') or 0) == n])
-          # The job chain is five deep and GitHub needs it static, so a package
-          # asking for a sixth wave has nowhere to run. It used to fall out of
-          # every stage list while staying in build_list, so the run published
-          # a repository that was quietly missing it. Fail instead.
-          overflow = sorted(p['name'] for p in build if (p.get('stage') or 0) >= 5)
-          if overflow:
-              raise SystemExit(
-                  "no job exists for stage 5 or later; "
-                  f"reduce the stage of: {', '.join(overflow)}")
-          with open(os.environ['GITHUB_OUTPUT'], 'a') as handle:
-              for key, value in outputs.items():
-                  handle.write(f'{key}={value}\n')
-          print(f"will build {len(build)} of {len(config['packages'])} packages")
-          PY
+          mkdir -p work/reports
+          python3 tools/build_plan.py \
+            ${BASE_SHA:+--base-sha "$BASE_SHA"} \
+            ${FULL:+--full} \
+            --summary-file "$GITHUB_STEP_SUMMARY" \
+            --summary-file work/reports/build-plan.md \
+            --output-json work/reports/build-plan.json \
+            --github-output "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: factory-build-plan
+          path: work/reports/build-plan.*
+          if-no-files-found: warn
 
   preflight:
     # Every missing platform dependency has so far been found the slow way: a
