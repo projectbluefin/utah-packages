@@ -46,5 +46,10 @@ packages = [
   "anaconda-live",
   "evolution-ews-core",
   "fish",
+  # Not an upstream Fedora/Rawhide package: pipewire-libs-extra is published by
+  # negativo17's fedora-multimedia repo. It is part of the multimedia override
+  # closure (utah-packages#24); until that closes, treat it as tracked debt so
+  # the Rawhide import resolver does not keep reopening issue utah-packages#2.
+  "pipewire-libs-extra",
   "zsh",
 ]
