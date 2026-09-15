@@ -21,7 +21,7 @@ from tools.packit_workflow import package_names
 
 # Stages the rebuild matrix (.github/workflows/rebuild-rpms.yml) can resolve;
 # packages without an explicit stage build in stage 0.
-KNOWN_STAGES = frozenset(range(5))
+KNOWN_STAGES = frozenset(range(6))
 
 
 @dataclass(frozen=True)

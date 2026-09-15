@@ -49,6 +49,7 @@ jobs:
       stage2: ${{ steps.matrix.outputs.stage2 }}
       stage3: ${{ steps.matrix.outputs.stage3 }}
       stage4: ${{ steps.matrix.outputs.stage4 }}
+      stage5: ${{ steps.matrix.outputs.stage5 }}
       build_list: ${{ steps.matrix.outputs.build_list }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -122,17 +123,17 @@ jobs:
                   print(f"skip {name} {version}: already published")
 
           outputs = {'build_list': json.dumps([p['name'] for p in build])}
-          for n in range(5):
+          for n in range(6):
               outputs[f'stage{n}'] = json.dumps(
                   [p['name'] for p in build if (p.get('stage') or 0) == n])
-          # The job chain is five deep and GitHub needs it static, so a package
-          # asking for a sixth wave has nowhere to run. It used to fall out of
+          # The job chain is six deep and GitHub needs it static, so a package
+          # asking for a seventh wave has nowhere to run. It used to fall out of
           # every stage list while staying in build_list, so the run published
           # a repository that was quietly missing it. Fail instead.
-          overflow = sorted(p['name'] for p in build if (p.get('stage') or 0) >= 5)
+          overflow = sorted(p['name'] for p in build if (p.get('stage') or 0) >= 6)
           if overflow:
               raise SystemExit(
-                  "no job exists for stage 5 or later; "
+                  "no job exists for stage 6 or later; "
                   f"reduce the stage of: {', '.join(overflow)}")
           with open(os.environ['GITHUB_OUTPUT'], 'a') as handle:
               for key, value in outputs.items():
@@ -236,13 +237,12 @@ jobs:
           path: work/reports/preflight.txt
           if-no-files-found: warn
 
-  # Five waves of the same build, ordered so a package can resolve a
+  # Six waves of the same build, ordered so a package can resolve a
   # BuildRequires against something an earlier wave produced. The wave
   # itself lives in build-stage.yml; only the ordering is here.
   #
-  # GitHub needs the chain to be static, so the count is fixed at five. A
-  # sixth wave is a real decision, not a silent overflow: `prepare` fails
-  # rather than dropping a package that does not fit.
+  # Stage 1 rebuilds WebRTC against stage 0 Abseil before the desktop roots
+  # install PipeWire or Mutter. Later waves retain their relative ordering.
   rebuild0:
     needs: prepare
     if: needs.prepare.outputs.stage0 != '[]'
@@ -283,8 +283,16 @@ jobs:
       stage: '4'
       packages: ${{ needs.prepare.outputs.stage4 }}
 
-  precedence:
+  rebuild5:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4]
+    if: ${{ !cancelled() && needs.prepare.outputs.stage5 != '[]' }}
+    uses: ./.github/workflows/build-stage.yml
+    with:
+      stage: '5'
+      packages: ${{ needs.prepare.outputs.stage5 }}
+
+  precedence:
+    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5]
     if: ${{ !cancelled() && needs.prepare.outputs.build_list != '[]' }}
     runs-on: ubuntu-24.04
     steps:
@@ -388,9 +396,10 @@ jobs:
           && (needs.rebuild2.result == 'success' || needs.rebuild2.result == 'skipped')
           && (needs.rebuild3.result == 'success' || needs.rebuild3.result == 'skipped')
           && (needs.rebuild4.result == 'success' || needs.rebuild4.result == 'skipped')
+          && (needs.rebuild5.result == 'success' || needs.rebuild5.result == 'skipped')
           && (github.event_name != 'pull_request'
               || github.event.pull_request.head.repo.full_name == github.repository) }}
-    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, precedence]
+    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, precedence]
     # Build waves can overlap, but `:latest` is an atomic consumer input. Queue
     # only this critical section per ref; the later publisher re-seeds from the
     # repository that its predecessor just made current.
@@ -412,7 +421,7 @@ jobs:
           mkdir -p repository
           echo "${GITHUB_TOKEN}" | podman login ghcr.io -u "${{ github.actor }}" --password-stdin
           if podman pull "$image"; then
-            container=$(podman create "$image")
+            container=$(podman create "$image" /bin/true)
             podman cp "$container:/repository/." repository/
             podman rm "$container"
           else

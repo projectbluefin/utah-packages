@@ -34,10 +34,19 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: ./.github/actions/setup-sccache
+      - name: Select completed earlier stages
+        id: prior
+        if: inputs.stage != '0'
+        env:
+          STAGE: ${{ inputs.stage }}
+        run: |
+          previous=$(seq 0 "$((STAGE - 1))" | tr -d '\n')
+          echo "pattern=rpm-s[$previous]-*" >> "$GITHUB_OUTPUT"
       - name: Collect RPMs built by earlier stages
+        if: inputs.stage != '0'
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
-          pattern: rpm-*
+          pattern: ${{ steps.prior.outputs.pattern }}
           path: work/prior
           merge-multiple: true
         continue-on-error: true

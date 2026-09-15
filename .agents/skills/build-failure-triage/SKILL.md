@@ -149,6 +149,23 @@ When a later stage cannot see what an earlier stage built, check in this order:
 3. What is the artifact's size? A few hundred bytes means metadata only.
 4. Only then look at the consuming side.
 
+## Stage isolation and ABI consumers
+
+Artifact collection must select only completed, strictly earlier stages.
+Downloading `rpm-*` at the start of each matrix job lets a slow-starting job
+consume a sibling's output, making its build root depend on scheduling.
+Stage 0 downloads no artifacts. Later stages select `rpm-s[...]-*` using
+only stage numbers below their own.
+
+An Abseil rebuild changes library sonames. WebRTC must be rebuilt against it
+before a desktop root installs PipeWire or Mutter, even though those consumers
+do not directly BuildRequire Abseil. Stage 1 exists for this ABI transition.
+
+Evolution EWS must follow evolution-data-server. For the desktop's
+`evolution-ews-core` backends, upstream provides `-DWITH_EVOLUTION=OFF`; this
+avoids requiring an otherwise unused Evolution mail UI build. Do not confuse
+that feature switch with disabling `ENABLE_TESTS`.
+
 ## Inventory failures after removing a recipe
 
 Removing `packages/<name>` alone leaves the source lock and generated Packit
