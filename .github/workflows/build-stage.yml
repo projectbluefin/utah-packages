@@ -3,9 +3,7 @@
 # rebuild0 through rebuild4 were five copies of this file, differing only in a
 # stage number and a `needs:` list -- four substantive lines out of roughly two
 # hundred. Five copies meant five places to fix a build-root bug, and the
-# copies had already drifted: the Firefox swap workaround existed only in
-# stage 0, so it would have silently stopped applying the moment Firefox was
-# solved into a later wave.
+# copies had already drifted.
 #
 # The caller owns ordering. This workflow builds one wave and knows nothing
 # about the others beyond the artifacts they left behind.
@@ -36,21 +34,6 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: ./.github/actions/setup-sccache
-      - name: Add best-effort swap for Firefox PGO/LTO
-        if: matrix.package == 'firefox'
-        run: |
-          set -euo pipefail
-          available_gib=$(df --output=avail -BG "$RUNNER_TEMP" | tail -n1 | tr -dc 0-9)
-          if [ "$available_gib" -lt 20 ]; then
-            echo "Only ${available_gib} GiB free; skipping extra swap to preserve build disk" >&2
-            exit 0
-          fi
-          swapfile="$RUNNER_TEMP/firefox-pgo.swap"
-          sudo fallocate -l 12G "$swapfile"
-          sudo chmod 600 "$swapfile"
-          sudo mkswap "$swapfile"
-          sudo swapon "$swapfile" || { echo "Host does not permit extra swap" >&2; exit 0; }
-          free -h
       - name: Collect RPMs built by earlier stages
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
@@ -66,7 +49,7 @@ jobs:
       - name: Build the verified source with its RPM recipe
         env:
           PACKAGE: ${{ matrix.package }}
-          FACTORY_REPO: ${{ vars.FACTORY_REPO }}
+          FACTORY_REPO: ${{ vars.FACTORY_REPO || 'https://projectbluefin.github.io/utah-packages/' }}
         run: |
           test -d "packages/$PACKAGE"
           mkdir -p work/result
@@ -79,8 +62,8 @@ jobs:
             -v "$PWD/work:/work:Z" \
             -v "$PWD/packages:/packages:ro,Z" \
             -v "$PWD/config:/repos:ro,Z" \
-            quay.io/fedora/fedora@sha256:a58a82ed658c109c104e97fdcce52690337cff52e68dc8fa9c033a5fe38dfeec bash -exc '
-              # The fedora:rawhide image ships fedora-cisco-openh264 enabled, but
+            quay.io/fedora/fedora:44@sha256:e64b8b7945c88d2bc368f4bf66a69ed418a3789bf0638fef403b8e18780f3383 bash -exc '
+              # The Fedora image ships fedora-cisco-openh264 enabled, but
               # its packages are signed with Cisco key, which the image does not
               # trust -- so any builddep graph reaching gstreamer/pipewire dies on
               # "Import of the key did not help, wrong key?". openh264 is a runtime
@@ -160,7 +143,8 @@ jobs:
               # them in transitively; squashfs-tools calls echo directly from its
               # manpage installer and fails without it.
               dnf -y $disable install dnf-plugins-core mock rpm-build @buildsys-build
-              rpm -q --qf "buildroot openssl: %{VERSION}-%{RELEASE}\n" openssl-libs || true
+              rpm -q --qf "buildroot openssl: %{VERSION}-%{RELEASE}\n" openssl-libs
+              test "$(rpm -q --qf "%{VERSION}" openssl-libs | cut -d. -f1)" = 3
               # NO APOSTROPHES IN THIS SCRIPT. It is the body of bash -exc
               # a single-quoted string, so one closes it and everything after
               # is reparsed. That is what the stilted "Fedora own

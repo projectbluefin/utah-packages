@@ -160,7 +160,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Resolve BuildRequires for packages being built
         env:
-          FACTORY_REPO: ${{ vars.FACTORY_REPO }}
+          FACTORY_REPO: ${{ vars.FACTORY_REPO || 'https://projectbluefin.github.io/utah-packages/' }}
           BUILD_LIST: ${{ needs.prepare.outputs.build_list }}
         run: |
           mkdir -p work/reports
@@ -169,7 +169,7 @@ jobs:
             -v "$PWD/work:/work:Z" \
             -v "$PWD/packages:/packages:ro,Z" \
             -v "$PWD/config:/repos:ro,Z" \
-            quay.io/fedora/fedora@sha256:a58a82ed658c109c104e97fdcce52690337cff52e68dc8fa9c033a5fe38dfeec bash -exc '
+            quay.io/fedora/fedora:44@sha256:e64b8b7945c88d2bc368f4bf66a69ed418a3789bf0638fef403b8e18780f3383 bash -exc '
               disable=--disablerepo=fedora-cisco-openh264
               # The Fedora container images set tsflags=nodocs, so every %doc file is
               # dropped at install time. rand_core ships its crate docs that way and
@@ -184,7 +184,8 @@ jobs:
                   "$FACTORY_REPO" > /etc/yum.repos.d/factory.repo
               fi
               dnf -y $disable install dnf-plugins-core rpm-build @buildsys-build
-              rpm -q --qf "buildroot openssl: %{VERSION}-%{RELEASE}\n" openssl-libs || true
+              rpm -q --qf "buildroot openssl: %{VERSION}-%{RELEASE}\n" openssl-libs
+              test "$(rpm -q --qf "%{VERSION}" openssl-libs | cut -d. -f1)" = 3
               : > /work/reports/preflight.txt
               # Only resolve BuildRequires for packages this run will actually
               # build (the incremental matrix), not the whole tree.
@@ -298,7 +299,7 @@ jobs:
           docker run --rm \
             -v "$PWD/built:/built:ro,Z" \
             -v "$PWD/config:/repos:ro,Z" \
-            quay.io/fedora/fedora@sha256:a58a82ed658c109c104e97fdcce52690337cff52e68dc8fa9c033a5fe38dfeec bash -exc '
+            quay.io/fedora/fedora:44@sha256:e64b8b7945c88d2bc368f4bf66a69ed418a3789bf0638fef403b8e18780f3383 bash -exc '
               dnf -y install rpmdevtools >/dev/null
               cp /repos/hummingbird.repo /etc/yum.repos.d/
               disable=--disablerepo=fedora-cisco-openh264

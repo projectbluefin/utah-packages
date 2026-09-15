@@ -53,6 +53,12 @@ D-Bus session). Both reversed once the full log was read.
 
 ## Rule 1: confirm which build root ran
 
+Repinning an unavailable container must preserve its distribution release.
+Use Fedora 44 for the current binary RPM workflow; a digest of `rawhide` can
+restore image pulls while silently changing the output ABI. Resolve the live
+tag, then verify that the resulting digest itself is readable. Packit's SRPM
+pilot has its own image pin and is not the binary RPM build root.
+
 Every job prints this before `builddep`:
 
 ```
@@ -142,6 +148,20 @@ When a later stage cannot see what an earlier stage built, check in this order:
    uploaded` is the number that matters, not the step's green tick.
 3. What is the artifact's size? A few hundred bytes means metadata only.
 4. Only then look at the consuming side.
+
+## Inventory failures after removing a recipe
+
+Removing `packages/<name>` alone leaves the source lock and generated Packit
+entry active. Remove its `config/upstream-sources.json` entry, regenerate
+`.packit.yaml` with `tools/render_packit_config.py --write`, and record an
+intentional runtime replacement in `config/runtime-contract.toml`. Preserve
+the copied Bluefin manifest. Inventory tests should compare the recipe,
+source-lock, and Packit sets, not a hardcoded historical count.
+
+The planner and build root must see the same prior repository: when prepare
+skips packages found on Pages, the build-stage `FACTORY_REPO` default must
+point there too. An unset repository variable must not make a skipped
+BuildRequires disappear from the build root.
 
 ## Classifying the failure
 

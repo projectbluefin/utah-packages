@@ -142,12 +142,6 @@ packages:
     downstream_package_name: fastfetch
     paths:
       - packages/fastfetch
-  firefox:
-    specfile_path: firefox.spec
-    upstream_package_name: firefox
-    downstream_package_name: firefox
-    paths:
-      - packages/firefox
   firewalld:
     specfile_path: firewalld.spec
     upstream_package_name: firewalld
