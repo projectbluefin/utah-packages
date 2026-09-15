@@ -1,5 +1,9 @@
 %undefine __cmake_in_source_build
 
+# Utah needs the EDS backends (evolution-ews-core), not the Evolution mail UI.
+# Upstream's WITH_EVOLUTION option keeps those backends independently buildable.
+%bcond evolution 0
+
 %global json_glib_version 1.0.4
 %global libmspack_version 0.4
 %global libsoup_version 3.1.1
@@ -24,8 +28,11 @@ BuildRequires: gcc
 BuildRequires: intltool
 BuildRequires: pkgconfig(camel-1.2) >= %{eds_evo_version}
 BuildRequires: pkgconfig(evolution-data-server-1.2) >= %{eds_evo_version}
+%if %{with evolution}
 BuildRequires: pkgconfig(evolution-mail-3.0) >= %{eds_evo_version}
 BuildRequires: pkgconfig(evolution-shell-3.0) >= %{eds_evo_version}
+BuildRequires: pkgconfig(libemail-engine) >= %{eds_evo_version}
+%endif
 BuildRequires: pkgconfig(glib-2.0)
 BuildRequires: pkgconfig(gtk+-3.0)
 BuildRequires: pkgconfig(json-glib-1.0) >= %{json_glib_version}
@@ -34,7 +41,6 @@ BuildRequires: pkgconfig(libebook-1.2) >= %{eds_evo_version}
 BuildRequires: pkgconfig(libecal-2.0) >= %{eds_evo_version}
 BuildRequires: pkgconfig(libedata-book-1.2) >= %{eds_evo_version}
 BuildRequires: pkgconfig(libedata-cal-2.0) >= %{eds_evo_version}
-BuildRequires: pkgconfig(libemail-engine) >= %{eds_evo_version}
 BuildRequires: pkgconfig(libical)
 BuildRequires: pkgconfig(libmspack) >= %{libmspack_version}
 BuildRequires: pkgconfig(libsoup-3.0) >= %{libsoup_version}
@@ -68,6 +74,7 @@ This package contains translations for %{name}.
 %build
 export CFLAGS="$RPM_OPT_FLAGS -Wno-deprecated-declarations"
 %cmake -DINCLUDE_INSTALL_DIR:PATH=%{_includedir} \
+	-DWITH_EVOLUTION:BOOL=%{?with_evolution:ON}%{!?with_evolution:OFF} \
 	-DLIB_INSTALL_DIR:PATH=%{_libdir} \
 	-DSYSCONF_INSTALL_DIR:PATH=%{_sysconfdir} \
 	-DSHARE_INSTALL_PREFIX:PATH=%{_datadir} \
@@ -84,6 +91,7 @@ export CFLAGS="$RPM_OPT_FLAGS -Wno-deprecated-declarations"
 
 %ldconfig_scriptlets
 
+%if %{with evolution}
 %files
 %license COPYING
 %doc NEWS README
@@ -91,8 +99,11 @@ export CFLAGS="$RPM_OPT_FLAGS -Wno-deprecated-declarations"
 %{_libdir}/evolution/modules/module-microsoft365-configuration.so
 %{_datadir}/evolution/errors/module-ews-configuration.error
 %{_datadir}/metainfo/org.gnome.Evolution-ews.metainfo.xml
+%endif
 
 %files core
+%license COPYING
+%doc NEWS README
 %{_libdir}/evolution-data-server/camel-providers/libcamelews.so
 %{_libdir}/evolution-data-server/camel-providers/libcamelews.urls
 %{_libdir}/evolution-data-server/camel-providers/libcamelmicrosoft365.so

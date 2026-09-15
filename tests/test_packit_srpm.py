@@ -24,8 +24,7 @@ class PackitSrpmTests(unittest.TestCase):
             for package in json.loads(SOURCE_CONFIG.read_text())["packages"]
         }
 
-        self.assertEqual(len(config_packages), 192)
-        self.assertEqual(config_packages - source_packages, set())
+        self.assertEqual(config_packages, source_packages)
         self.assertTrue(
             {"adw-gtk3-theme", "bootc", "igt-gpu-tools", "mesa", "runc"}
             <= config_packages
@@ -40,9 +39,9 @@ class PackitSrpmTests(unittest.TestCase):
         self.assertRegex(workflow, r"(?m)^  push:\n    branches: \[main\]$")
         self.assertIn("create-archive:", PACKIT_CONFIG.read_text())
         self.assertIn("tools/packit_source0.py", PACKIT_CONFIG.read_text())
-        self.assertIn(
-            "quay.io/packit/packit@sha256:8a1784251c51eed7a094820c894e2ee7f4ed4bbce4eb78eb172a04de3fae43e1",
+        self.assertRegex(
             workflow,
+            r"quay\.io/packit/packit@sha256:[0-9a-f]{64}",
         )
         self.assertNotIn(
             "149e6e06d3e5fb2f10d19760c8a0031c7d8825e7bb91a5f4a7ab9b927c947494",

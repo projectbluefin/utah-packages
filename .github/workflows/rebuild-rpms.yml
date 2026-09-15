@@ -49,6 +49,7 @@ jobs:
       stage2: ${{ steps.matrix.outputs.stage2 }}
       stage3: ${{ steps.matrix.outputs.stage3 }}
       stage4: ${{ steps.matrix.outputs.stage4 }}
+      stage5: ${{ steps.matrix.outputs.stage5 }}
       build_list: ${{ steps.matrix.outputs.build_list }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -122,17 +123,17 @@ jobs:
                   print(f"skip {name} {version}: already published")
 
           outputs = {'build_list': json.dumps([p['name'] for p in build])}
-          for n in range(5):
+          for n in range(6):
               outputs[f'stage{n}'] = json.dumps(
                   [p['name'] for p in build if (p.get('stage') or 0) == n])
-          # The job chain is five deep and GitHub needs it static, so a package
-          # asking for a sixth wave has nowhere to run. It used to fall out of
+          # The job chain is six deep and GitHub needs it static, so a package
+          # asking for a seventh wave has nowhere to run. It used to fall out of
           # every stage list while staying in build_list, so the run published
           # a repository that was quietly missing it. Fail instead.
-          overflow = sorted(p['name'] for p in build if (p.get('stage') or 0) >= 5)
+          overflow = sorted(p['name'] for p in build if (p.get('stage') or 0) >= 6)
           if overflow:
               raise SystemExit(
-                  "no job exists for stage 5 or later; "
+                  "no job exists for stage 6 or later; "
                   f"reduce the stage of: {', '.join(overflow)}")
           with open(os.environ['GITHUB_OUTPUT'], 'a') as handle:
               for key, value in outputs.items():
@@ -160,7 +161,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Resolve BuildRequires for packages being built
         env:
-          FACTORY_REPO: ${{ vars.FACTORY_REPO }}
+          FACTORY_REPO: ${{ vars.FACTORY_REPO || 'https://projectbluefin.github.io/utah-packages/' }}
           BUILD_LIST: ${{ needs.prepare.outputs.build_list }}
         run: |
           mkdir -p work/reports
@@ -169,7 +170,7 @@ jobs:
             -v "$PWD/work:/work:Z" \
             -v "$PWD/packages:/packages:ro,Z" \
             -v "$PWD/config:/repos:ro,Z" \
-            quay.io/fedora/fedora@sha256:a58a82ed658c109c104e97fdcce52690337cff52e68dc8fa9c033a5fe38dfeec bash -exc '
+            quay.io/fedora/fedora:44@sha256:e64b8b7945c88d2bc368f4bf66a69ed418a3789bf0638fef403b8e18780f3383 bash -exc '
               disable=--disablerepo=fedora-cisco-openh264
               # The Fedora container images set tsflags=nodocs, so every %doc file is
               # dropped at install time. rand_core ships its crate docs that way and
@@ -184,7 +185,8 @@ jobs:
                   "$FACTORY_REPO" > /etc/yum.repos.d/factory.repo
               fi
               dnf -y $disable install dnf-plugins-core rpm-build @buildsys-build
-              rpm -q --qf "buildroot openssl: %{VERSION}-%{RELEASE}\n" openssl-libs || true
+              rpm -q --qf "buildroot openssl: %{VERSION}-%{RELEASE}\n" openssl-libs
+              test "$(rpm -q --qf "%{VERSION}" openssl-libs | cut -d. -f1)" = 3
               : > /work/reports/preflight.txt
               # Only resolve BuildRequires for packages this run will actually
               # build (the incremental matrix), not the whole tree.
@@ -235,13 +237,12 @@ jobs:
           path: work/reports/preflight.txt
           if-no-files-found: warn
 
-  # Five waves of the same build, ordered so a package can resolve a
+  # Six waves of the same build, ordered so a package can resolve a
   # BuildRequires against something an earlier wave produced. The wave
   # itself lives in build-stage.yml; only the ordering is here.
   #
-  # GitHub needs the chain to be static, so the count is fixed at five. A
-  # sixth wave is a real decision, not a silent overflow: `prepare` fails
-  # rather than dropping a package that does not fit.
+  # Stage 1 rebuilds WebRTC against stage 0 Abseil before the desktop roots
+  # install PipeWire or Mutter. Later waves retain their relative ordering.
   rebuild0:
     needs: prepare
     if: needs.prepare.outputs.stage0 != '[]'
@@ -282,8 +283,16 @@ jobs:
       stage: '4'
       packages: ${{ needs.prepare.outputs.stage4 }}
 
-  precedence:
+  rebuild5:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4]
+    if: ${{ !cancelled() && needs.prepare.outputs.stage5 != '[]' }}
+    uses: ./.github/workflows/build-stage.yml
+    with:
+      stage: '5'
+      packages: ${{ needs.prepare.outputs.stage5 }}
+
+  precedence:
+    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5]
     if: ${{ !cancelled() && needs.prepare.outputs.build_list != '[]' }}
     runs-on: ubuntu-24.04
     steps:
@@ -298,7 +307,7 @@ jobs:
           docker run --rm \
             -v "$PWD/built:/built:ro,Z" \
             -v "$PWD/config:/repos:ro,Z" \
-            quay.io/fedora/fedora@sha256:a58a82ed658c109c104e97fdcce52690337cff52e68dc8fa9c033a5fe38dfeec bash -exc '
+            quay.io/fedora/fedora:44@sha256:e64b8b7945c88d2bc368f4bf66a69ed418a3789bf0638fef403b8e18780f3383 bash -exc '
               dnf -y install rpmdevtools >/dev/null
               cp /repos/hummingbird.repo /etc/yum.repos.d/
               disable=--disablerepo=fedora-cisco-openh264
@@ -387,9 +396,10 @@ jobs:
           && (needs.rebuild2.result == 'success' || needs.rebuild2.result == 'skipped')
           && (needs.rebuild3.result == 'success' || needs.rebuild3.result == 'skipped')
           && (needs.rebuild4.result == 'success' || needs.rebuild4.result == 'skipped')
+          && (needs.rebuild5.result == 'success' || needs.rebuild5.result == 'skipped')
           && (github.event_name != 'pull_request'
               || github.event.pull_request.head.repo.full_name == github.repository) }}
-    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, precedence]
+    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, precedence]
     # Build waves can overlap, but `:latest` is an atomic consumer input. Queue
     # only this critical section per ref; the later publisher re-seeds from the
     # repository that its predecessor just made current.
@@ -401,6 +411,7 @@ jobs:
       ref: ${{ steps.oci.outputs.ref }}
       digest: ${{ steps.oci.outputs.digest }}
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Seed repository from the last published factory image
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -411,7 +422,7 @@ jobs:
           mkdir -p repository
           echo "${GITHUB_TOKEN}" | podman login ghcr.io -u "${{ github.actor }}" --password-stdin
           if podman pull "$image"; then
-            container=$(podman create "$image")
+            container=$(podman create "$image" /bin/true)
             podman cp "$container:/repository/." repository/
             podman rm "$container"
           else
@@ -501,7 +512,9 @@ jobs:
           else
             tag=$(echo "${{ github.ref_name }}" | tr "/" "-" | tr -cd "[:alnum:]._-" | cut -c1-96)
           fi
-          printf "FROM scratch\nCOPY repository /repository\n" > Containerfile.repo
+          # Consumers verify the small leading layer to resolve dependencies
+          # without fetching the RPM payload. Both layers use the same metadata.
+          printf "FROM scratch\nCOPY repository/repodata /repository/repodata\nCOPY repository /repository\n" > Containerfile.repo
           # cosign signs by pushing to the same registry, but it reads the
           # Docker config rather than podman own auth file, so the login has to
           # land somewhere both of them look. DOCKER_CONFIG is set on this step

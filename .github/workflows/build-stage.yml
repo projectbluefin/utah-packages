@@ -3,9 +3,7 @@
 # rebuild0 through rebuild4 were five copies of this file, differing only in a
 # stage number and a `needs:` list -- four substantive lines out of roughly two
 # hundred. Five copies meant five places to fix a build-root bug, and the
-# copies had already drifted: the Firefox swap workaround existed only in
-# stage 0, so it would have silently stopped applying the moment Firefox was
-# solved into a later wave.
+# copies had already drifted.
 #
 # The caller owns ordering. This workflow builds one wave and knows nothing
 # about the others beyond the artifacts they left behind.
@@ -36,25 +34,19 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: ./.github/actions/setup-sccache
-      - name: Add best-effort swap for Firefox PGO/LTO
-        if: matrix.package == 'firefox'
+      - name: Select completed earlier stages
+        id: prior
+        if: inputs.stage != '0'
+        env:
+          STAGE: ${{ inputs.stage }}
         run: |
-          set -euo pipefail
-          available_gib=$(df --output=avail -BG "$RUNNER_TEMP" | tail -n1 | tr -dc 0-9)
-          if [ "$available_gib" -lt 20 ]; then
-            echo "Only ${available_gib} GiB free; skipping extra swap to preserve build disk" >&2
-            exit 0
-          fi
-          swapfile="$RUNNER_TEMP/firefox-pgo.swap"
-          sudo fallocate -l 12G "$swapfile"
-          sudo chmod 600 "$swapfile"
-          sudo mkswap "$swapfile"
-          sudo swapon "$swapfile" || { echo "Host does not permit extra swap" >&2; exit 0; }
-          free -h
+          previous=$(seq 0 "$((STAGE - 1))" | tr -d '\n')
+          echo "pattern=rpm-s[$previous]-*" >> "$GITHUB_OUTPUT"
       - name: Collect RPMs built by earlier stages
+        if: inputs.stage != '0'
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
-          pattern: rpm-*
+          pattern: ${{ steps.prior.outputs.pattern }}
           path: work/prior
           merge-multiple: true
         continue-on-error: true
@@ -66,7 +58,7 @@ jobs:
       - name: Build the verified source with its RPM recipe
         env:
           PACKAGE: ${{ matrix.package }}
-          FACTORY_REPO: ${{ vars.FACTORY_REPO }}
+          FACTORY_REPO: ${{ vars.FACTORY_REPO || 'https://projectbluefin.github.io/utah-packages/' }}
         run: |
           test -d "packages/$PACKAGE"
           mkdir -p work/result
@@ -79,8 +71,8 @@ jobs:
             -v "$PWD/work:/work:Z" \
             -v "$PWD/packages:/packages:ro,Z" \
             -v "$PWD/config:/repos:ro,Z" \
-            quay.io/fedora/fedora@sha256:a58a82ed658c109c104e97fdcce52690337cff52e68dc8fa9c033a5fe38dfeec bash -exc '
-              # The fedora:rawhide image ships fedora-cisco-openh264 enabled, but
+            quay.io/fedora/fedora:44@sha256:e64b8b7945c88d2bc368f4bf66a69ed418a3789bf0638fef403b8e18780f3383 bash -exc '
+              # The Fedora image ships fedora-cisco-openh264 enabled, but
               # its packages are signed with Cisco key, which the image does not
               # trust -- so any builddep graph reaching gstreamer/pipewire dies on
               # "Import of the key did not help, wrong key?". openh264 is a runtime
@@ -160,7 +152,8 @@ jobs:
               # them in transitively; squashfs-tools calls echo directly from its
               # manpage installer and fails without it.
               dnf -y $disable install dnf-plugins-core mock rpm-build @buildsys-build
-              rpm -q --qf "buildroot openssl: %{VERSION}-%{RELEASE}\n" openssl-libs || true
+              rpm -q --qf "buildroot openssl: %{VERSION}-%{RELEASE}\n" openssl-libs
+              test "$(rpm -q --qf "%{VERSION}" openssl-libs | cut -d. -f1)" = 3
               # NO APOSTROPHES IN THIS SCRIPT. It is the body of bash -exc
               # a single-quoted string, so one closes it and everything after
               # is reparsed. That is what the stilted "Fedora own
@@ -208,6 +201,14 @@ jobs:
               # build root has rather than disable the test.
               export USER="${USER:-root}"
               export LOGNAME="${LOGNAME:-$USER}"
+              # OpenSSH regression tests launch sshd, whose privilege-separation
+              # account and chroot are absent in a bare container. Use the
+              # imported sysusers definition, not a modified or skipped test.
+              if [ "$PACKAGE" = openssh ]; then
+                dnf -y $disable install /usr/bin/systemd-sysusers
+                systemd-sysusers /packages/openssh/openssh-server-systemd-sysusers.conf
+                install -d -m 0755 /usr/share/empty.sshd
+              fi
               spec=$(find "/packages/$PACKAGE" -maxdepth 1 -name "*.spec" -print -quit)
               test -n "$spec"
               dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
@@ -224,23 +225,36 @@ jobs:
               mkdir -p "$staged"
               cp -a "/packages/$PACKAGE/." "$staged/"
               cp -a "/work/sources/$PACKAGE/." "$staged/"
+              builder=()
+              buildtop=/root/rpmbuild
+              if [ "$PACKAGE" = fish ]; then
+                # Prompt and access-permission tests require a normal UID;
+                # root prints a different prompt and bypasses mode bits.
+                dnf -y $disable install shadow-utils util-linux
+                useradd --create-home rpm-builder
+                buildtop=/work/rpmbuild-fish
+                install -d -o rpm-builder -g rpm-builder "$buildtop" /work/result
+                builder=(runuser -u rpm-builder --)
+              fi
               # Packages with %generate_buildrequires -- every Rust one -- compute
               # their real BuildRequires during the build, so the spec alone does not
               # list them and rpmbuild exits 11 asking to be re-run. Install what the
               # generated source RPM declares and retry, bounded so an unsatisfiable
               # requirement fails instead of looping.
               for _ in 1 2 3 4 5; do
-                rm -f /root/rpmbuild/SRPMS/*.buildreqs.nosrc.rpm
-                if rpmbuild -br "$spec" --define "_sourcedir $staged" \
+                rm -f "$buildtop"/SRPMS/*.buildreqs.nosrc.rpm
+                if "${builder[@]}" rpmbuild -br "$spec" --define "_topdir $buildtop" \
+                     --define "_sourcedir $staged" \
                      --define "dist $DISTTAG"; then break; fi
-                generated=$(ls /root/rpmbuild/SRPMS/*.buildreqs.nosrc.rpm 2>/dev/null | head -1)
+                generated=$(ls "$buildtop"/SRPMS/*.buildreqs.nosrc.rpm 2>/dev/null | head -1)
                 test -n "$generated"
                 dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
                   ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} \
                   ${HB_REPO_EXCLUDE:+--setopt=public-hummingbird-x86_64-rpms.excludepkgs="$HB_REPO_EXCLUDE"} \
                   builddep -D "_sourcedir /packages/$PACKAGE" "$generated"
               done
-              rpmbuild -ba "$spec" \
+              "${builder[@]}" rpmbuild -ba "$spec" \
+                --define "_topdir $buildtop" \
                 --define "_sourcedir $staged" \
                 --define "dist $DISTTAG" \
                 --define "_rpmdir /work/result"

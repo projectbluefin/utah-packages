@@ -115,6 +115,19 @@ class PublishGateWorkflowTests(unittest.TestCase):
         )
         self.assertNotIn("if", steps[validate])
 
+    def test_publish_checks_out_its_validation_scripts_before_seeding(self):
+        steps = self.workflow["jobs"]["publish"]["steps"]
+        self.assertTrue(steps[0].get("uses", "").startswith("actions/checkout@"))
+
+    def test_repository_image_has_a_small_leading_metadata_layer(self):
+        steps = self.workflow["jobs"]["publish"]["steps"]
+        publish = next(step for step in steps if step.get("id") == "oci")
+        self.assertIn(
+            'printf "FROM scratch\\nCOPY repository/repodata /repository/repodata\\n'
+            'COPY repository /repository\\n" > Containerfile.repo',
+            publish["run"],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

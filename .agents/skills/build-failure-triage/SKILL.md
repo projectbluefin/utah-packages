@@ -53,6 +53,12 @@ D-Bus session). Both reversed once the full log was read.
 
 ## Rule 1: confirm which build root ran
 
+Repinning an unavailable container must preserve its distribution release.
+Use Fedora 44 for the current binary RPM workflow; a digest of `rawhide` can
+restore image pulls while silently changing the output ABI. Resolve the live
+tag, then verify that the resulting digest itself is readable. Packit's SRPM
+pilot has its own image pin and is not the binary RPM build root.
+
 Every job prints this before `builddep`:
 
 ```
@@ -143,6 +149,37 @@ When a later stage cannot see what an earlier stage built, check in this order:
 3. What is the artifact's size? A few hundred bytes means metadata only.
 4. Only then look at the consuming side.
 
+## Stage isolation and ABI consumers
+
+Artifact collection must select only completed, strictly earlier stages.
+Downloading `rpm-*` at the start of each matrix job lets a slow-starting job
+consume a sibling's output, making its build root depend on scheduling.
+Stage 0 downloads no artifacts. Later stages select `rpm-s[...]-*` using
+only stage numbers below their own.
+
+An Abseil rebuild changes library sonames. WebRTC must be rebuilt against it
+before a desktop root installs PipeWire or Mutter, even though those consumers
+do not directly BuildRequire Abseil. Stage 1 exists for this ABI transition.
+
+Evolution EWS must follow evolution-data-server. For the desktop's
+`evolution-ews-core` backends, upstream provides `-DWITH_EVOLUTION=OFF`; this
+avoids requiring an otherwise unused Evolution mail UI build. Do not confuse
+that feature switch with disabling `ENABLE_TESTS`.
+
+## Inventory failures after removing a recipe
+
+Removing `packages/<name>` alone leaves the source lock and generated Packit
+entry active. Remove its `config/upstream-sources.json` entry, regenerate
+`.packit.yaml` with `tools/render_packit_config.py --write`, and record an
+intentional runtime replacement in `config/runtime-contract.toml`. Preserve
+the copied Bluefin manifest. Inventory tests should compare the recipe,
+source-lock, and Packit sets, not a hardcoded historical count.
+
+The planner and build root must see the same prior repository: when prepare
+skips packages found on Pages, the build-stage `FACTORY_REPO` default must
+point there too. An unset repository variable must not make a skipped
+BuildRequires disappear from the build root.
+
 ## Classifying the failure
 
 | What the log shows | What it means | What to do |
@@ -152,6 +189,8 @@ When a later stage cannot see what an earlier stage built, check in this order:
 | `No match for argument: <pkg>` where `<pkg>` is a Fedora package | Genuine gap: Fedora predates what the source needs | Import and pin it, like `wayland-protocols` and `accountsservice` |
 | Error inside `/usr/share/cargo/registry/...` or another Fedora-packaged dependency | Fedora packaging bug | Verify it affects more than one Fedora release before calling it release-specific. Do not work around it in the spec |
 | `Bad exit status ... (%check)` needing a bus, display or device | The container lacks a service the test needs | Give the container the service. **Never** skip or disable the test |
+| OpenSSH `%check`: `Privilege separation user sshd does not exist`, then `FATAL: sshd_proxy broken` | Bare build container lacks the daemon account and privilege-separation directory | Apply the recipe's sysusers definition with `systemd-sysusers` and create `/usr/share/empty.sshd` mode 0755 before building. Keep the regression suite enabled. |
+| Fish `%check`: prompt expects `>` but gets `#`, and `cd.fish`/`path.fish` permission checks fail | rpmbuild is running as root, unlike a normal mock builder | Run both dynamic BuildRequires generation and the complete RPM build as an unprivileged account with its own writable `_topdir`. Keep dependency installation privileged and all tests intact. |
 | rpmbuild exit **11**, `*.buildreqs.nosrc.rpm` written | Dynamic BuildRequires (`%generate_buildrequires`, all Rust packages) | Install what the generated SRPM declares, then retry, bounded |
 | `undefined: json.SkipFunc` in vendored `go-json-experiment/json` | Go toolchain's experimental `encoding/json/v2` API drift vs vendored shim | Export `GOEXPERIMENT=nojsonv2` in `%build` to use vendored implementation |
 | Exit **125**, `manifest unknown` | Pinned container image digest was pruned upstream (e.g. quay.io repushed `latest` and pruned old manifest-list digests) | Repin the workflow container image to the active manifest digest on the registry |
@@ -160,6 +199,14 @@ When a later stage cannot see what an earlier stage built, check in this order:
 | `wrong key?` on a third-party repo whose content the build does not need | A repo signed by a key the image does not trust | Disable that repo for the build |
 
 ## Verify against primary sources
+
+Publication has its own clean runner: check out the repository before invoking
+`tools/runtime_contract.py` or mounting `config/`. A successful matrix does not
+provide these files to the publish job. Keep OCI repository metadata in the
+first, small layer (`COPY repository/repodata /repository/repodata`) before the
+full repository COPY. Utah verifies that layer by digest for dependency
+preflight; a single multi-gigabyte layer fails its metadata size guard. Both
+COPYs must use the same generated metadata, without regeneration between them.
 
 Do not infer a version from what Rawhide ships or from a package name.
 
