@@ -20,21 +20,31 @@ permissions:
 jobs:
   import:
     runs-on: ubuntu-24.04
+    env:
+      # Bind dispatch inputs to the environment once, at job scope, so every
+      # step (the run shell and the create-pull-request with: block alike) sees
+      # them instead of interpolating ${{ inputs.* }} per step. With env:
+      # at step scope, "Open reviewable update" saw nothing and opened a
+      # constant-named branch that delete-branch:true then clobbered.
+      # Quoting "$PACKAGE"/"$BRANCH" keeps any literal value from being parsed
+      # as shell in the run step, matching source-pipeline.yml.
+      PACKAGE: ${{ inputs.package }}
+      BRANCH: ${{ inputs.branch }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Import Fedora dist-git snapshot
         run: |
           python3 tools/import_rawhide.py \
-            "${{ inputs.package }}" \
-            --branch "${{ inputs.branch }}"
+            "$PACKAGE" \
+            --branch "$BRANCH"
       - name: Open reviewable update
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8
         with:
-          branch: import/rawhide-${{ inputs.package }}
+          branch: import/rawhide-${{ env.PACKAGE }}
           delete-branch: true
-          title: 'import: Rawhide ${{ inputs.package }}'
-          commit-message: 'import: Rawhide ${{ inputs.package }}'
+          title: 'import: Rawhide ${{ env.PACKAGE }}'
+          commit-message: 'import: Rawhide ${{ env.PACKAGE }}'
           body: |
             Imports Fedora dist-git at the exact commit recorded in
-            `packages/${{ inputs.package }}/.hummingbird-upstream.json`.
+            `packages/${{ env.PACKAGE }}/.hummingbird-upstream.json`.
             Review and patch the snapshot here before enabling it in a rebuild set.
