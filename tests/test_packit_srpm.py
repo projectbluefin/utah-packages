@@ -41,7 +41,7 @@ class PackitSrpmTests(unittest.TestCase):
         self.assertIn("create-archive:", PACKIT_CONFIG.read_text())
         self.assertIn("tools/packit_source0.py", PACKIT_CONFIG.read_text())
         self.assertIn(
-            "quay.io/packit/packit@sha256:8a1784251c51eed7a094820c894e2ee7f4ed4bbce4eb78eb172a04de3fae43e1",
+            "quay.io/packit/packit@sha256:c617706074f95f07715590279ade94704b4e797167105dcc53957dfc2086d5b1",
             workflow,
         )
         self.assertNotIn(
