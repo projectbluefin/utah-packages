@@ -189,6 +189,7 @@ BuildRequires disappear from the build root.
 | `No match for argument: <pkg>` where `<pkg>` is a Fedora package | Genuine gap: Fedora predates what the source needs | Import and pin it, like `wayland-protocols` and `accountsservice` |
 | Error inside `/usr/share/cargo/registry/...` or another Fedora-packaged dependency | Fedora packaging bug | Verify it affects more than one Fedora release before calling it release-specific. Do not work around it in the spec |
 | `Bad exit status ... (%check)` needing a bus, display or device | The container lacks a service the test needs | Give the container the service. **Never** skip or disable the test |
+| OpenSSH `%check`: `Privilege separation user sshd does not exist`, then `FATAL: sshd_proxy broken` | Bare build container lacks the daemon account and privilege-separation directory | Apply the recipe's sysusers definition with `systemd-sysusers` and create `/usr/share/empty.sshd` mode 0755 before building. Keep the regression suite enabled. |
 | rpmbuild exit **11**, `*.buildreqs.nosrc.rpm` written | Dynamic BuildRequires (`%generate_buildrequires`, all Rust packages) | Install what the generated SRPM declares, then retry, bounded |
 | `undefined: json.SkipFunc` in vendored `go-json-experiment/json` | Go toolchain's experimental `encoding/json/v2` API drift vs vendored shim | Export `GOEXPERIMENT=nojsonv2` in `%build` to use vendored implementation |
 | Exit **125**, `manifest unknown` | Pinned container image digest was pruned upstream (e.g. quay.io repushed `latest` and pruned old manifest-list digests) | Repin the workflow container image to the active manifest digest on the registry |
@@ -197,6 +198,14 @@ BuildRequires disappear from the build root.
 | `wrong key?` on a third-party repo whose content the build does not need | A repo signed by a key the image does not trust | Disable that repo for the build |
 
 ## Verify against primary sources
+
+Publication has its own clean runner: check out the repository before invoking
+`tools/runtime_contract.py` or mounting `config/`. A successful matrix does not
+provide these files to the publish job. Keep OCI repository metadata in the
+first, small layer (`COPY repository/repodata /repository/repodata`) before the
+full repository COPY. Utah verifies that layer by digest for dependency
+preflight; a single multi-gigabyte layer fails its metadata size guard. Both
+COPYs must use the same generated metadata, without regeneration between them.
 
 Do not infer a version from what Rawhide ships or from a package name.
 

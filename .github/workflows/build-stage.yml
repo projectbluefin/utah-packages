@@ -201,6 +201,14 @@ jobs:
               # build root has rather than disable the test.
               export USER="${USER:-root}"
               export LOGNAME="${LOGNAME:-$USER}"
+              # OpenSSH regression tests launch sshd, whose privilege-separation
+              # account and chroot are absent in a bare container. Use the
+              # imported sysusers definition, not a modified or skipped test.
+              if [ "$PACKAGE" = openssh ]; then
+                dnf -y $disable install /usr/bin/systemd-sysusers
+                systemd-sysusers /packages/openssh/openssh-server-systemd-sysusers.conf
+                install -d -m 0755 /usr/share/empty.sshd
+              fi
               spec=$(find "/packages/$PACKAGE" -maxdepth 1 -name "*.spec" -print -quit)
               test -n "$spec"
               dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \

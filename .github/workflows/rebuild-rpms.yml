@@ -411,6 +411,7 @@ jobs:
       ref: ${{ steps.oci.outputs.ref }}
       digest: ${{ steps.oci.outputs.digest }}
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Seed repository from the last published factory image
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -511,7 +512,9 @@ jobs:
           else
             tag=$(echo "${{ github.ref_name }}" | tr "/" "-" | tr -cd "[:alnum:]._-" | cut -c1-96)
           fi
-          printf "FROM scratch\nCOPY repository /repository\n" > Containerfile.repo
+          # Consumers verify the small leading layer to resolve dependencies
+          # without fetching the RPM payload. Both layers use the same metadata.
+          printf "FROM scratch\nCOPY repository/repodata /repository/repodata\nCOPY repository /repository\n" > Containerfile.repo
           # cosign signs by pushing to the same registry, but it reads the
           # Docker config rather than podman own auth file, so the login has to
           # land somewhere both of them look. DOCKER_CONFIG is set on this step
