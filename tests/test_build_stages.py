@@ -45,3 +45,14 @@ class BuildStageTests(unittest.TestCase):
         self.assertLess(stage["webrtc-audio-processing"], stage["gtk4"])
         self.assertLess(stage["webrtc-audio-processing"], stage["mutter"])
         self.assertLess(stage["evolution-data-server"], stage["evolution-ews"])
+
+    def test_fish_builds_use_an_unprivileged_account_for_both_rpm_phases(self):
+        workflow = yaml.safe_load((ROOT / ".github/workflows/build-stage.yml").read_text())
+        script = next(step["run"] for step in workflow["jobs"]["build"]["steps"]
+                      if "rpmbuild -ba" in step.get("run", ""))
+        self.assertIn('if [ "$PACKAGE" = fish ]; then', script)
+        self.assertIn('builder=(runuser -u rpm-builder --)', script)
+        self.assertIn('buildtop=/work/rpmbuild-fish', script)
+        for phase in ("-br", "-ba"):
+            self.assertIn(f'"${{builder[@]}}" rpmbuild {phase}', script)
+        self.assertEqual(script.count('--define "_topdir $buildtop"'), 2)

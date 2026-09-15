@@ -225,23 +225,36 @@ jobs:
               mkdir -p "$staged"
               cp -a "/packages/$PACKAGE/." "$staged/"
               cp -a "/work/sources/$PACKAGE/." "$staged/"
+              builder=()
+              buildtop=/root/rpmbuild
+              if [ "$PACKAGE" = fish ]; then
+                # Prompt and access-permission tests require a normal UID;
+                # root prints a different prompt and bypasses mode bits.
+                dnf -y $disable install shadow-utils util-linux
+                useradd --create-home rpm-builder
+                buildtop=/work/rpmbuild-fish
+                install -d -o rpm-builder -g rpm-builder "$buildtop" /work/result
+                builder=(runuser -u rpm-builder --)
+              fi
               # Packages with %generate_buildrequires -- every Rust one -- compute
               # their real BuildRequires during the build, so the spec alone does not
               # list them and rpmbuild exits 11 asking to be re-run. Install what the
               # generated source RPM declares and retry, bounded so an unsatisfiable
               # requirement fails instead of looping.
               for _ in 1 2 3 4 5; do
-                rm -f /root/rpmbuild/SRPMS/*.buildreqs.nosrc.rpm
-                if rpmbuild -br "$spec" --define "_sourcedir $staged" \
+                rm -f "$buildtop"/SRPMS/*.buildreqs.nosrc.rpm
+                if "${builder[@]}" rpmbuild -br "$spec" --define "_topdir $buildtop" \
+                     --define "_sourcedir $staged" \
                      --define "dist $DISTTAG"; then break; fi
-                generated=$(ls /root/rpmbuild/SRPMS/*.buildreqs.nosrc.rpm 2>/dev/null | head -1)
+                generated=$(ls "$buildtop"/SRPMS/*.buildreqs.nosrc.rpm 2>/dev/null | head -1)
                 test -n "$generated"
                 dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
                   ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} \
                   ${HB_REPO_EXCLUDE:+--setopt=public-hummingbird-x86_64-rpms.excludepkgs="$HB_REPO_EXCLUDE"} \
                   builddep -D "_sourcedir /packages/$PACKAGE" "$generated"
               done
-              rpmbuild -ba "$spec" \
+              "${builder[@]}" rpmbuild -ba "$spec" \
+                --define "_topdir $buildtop" \
                 --define "_sourcedir $staged" \
                 --define "dist $DISTTAG" \
                 --define "_rpmdir /work/result"
