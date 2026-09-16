@@ -4,11 +4,10 @@
   "automerge": false,
   "packageRules": [
     {
-      "description": "Keep the GitHub Actions supply chain patched automatically.",
+      "description": "GitHub Actions updates require human review — no automerge (sec-check#123).",
       "matchManagers": ["github-actions"],
       "matchUpdateTypes": ["digest", "patch", "minor"],
-      "automerge": true,
-      "platformAutomerge": true
+      "automerge": false
     },
     {
       "description": "Direct upstream RPM sources may merge only after their real build and verification gate succeeds.",
