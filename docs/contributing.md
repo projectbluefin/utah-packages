@@ -38,10 +38,15 @@ same four places an import writes to, or the next `just check` fails:
 
 - `config/upstream-sources.json` -- delete the package's entry (the recipe with
   no entry is not eligible to build).
-- `.packit.yaml` -- delete the package's block.
+- `.packit.yaml` -- delete the package's block. Regenerate rather than hand-edit:
+  `python3 tools/render_packit_config.py --write`.
 - `packages/<name>/` -- delete the whole directory (recipe, patches, sources).
 - Any generator special-casing in `tools/generated_sources.py` and the
   hardcoded package-count assertions in `tests/` that track the set size.
+
+`tests/test_recipe_set_agreement.py` enforces the first three against each
+other and names whichever one was missed. The count assertions only tell you
+the set changed size, not where, so read the agreement failure first.
 
 The image manifest (`config/bluefin-packages.toml`) and
 `config/hummingbird-provided-sources.json` are intentionally left alone: the
