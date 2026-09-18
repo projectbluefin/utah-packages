@@ -154,7 +154,7 @@ When a later stage cannot see what an earlier stage built, check in this order:
 | `Bad exit status ... (%check)` needing a bus, display or device | The container lacks a service the test needs | Give the container the service. **Never** skip or disable the test |
 | rpmbuild exit **11**, `*.buildreqs.nosrc.rpm` written | Dynamic BuildRequires (`%generate_buildrequires`, all Rust packages) | Install what the generated SRPM declares, then retry, bounded |
 | `undefined: json.SkipFunc` in vendored `go-json-experiment/json` | Go toolchain's experimental `encoding/json/v2` API drift vs vendored shim | Export `GOEXPERIMENT=nojsonv2` in `%build` to use vendored implementation |
-| Exit **125**, `manifest unknown` | Pinned container image digest was pruned upstream (e.g. quay.io repushed `latest` and pruned old manifest-list digests) | Repin the workflow container image to the active manifest digest on the registry |
+| Exit **125**, `manifest unknown` | A container image digest was pruned upstream (quay.io repushes `latest` and prunes old digests, several times a day for `fedora:44`) | For the build root: nothing. `prepare` pulls it once by tag and shares it as an artifact (`f1f1e4e`); a per-job registry pull is the bug, and `tests/test_buildroot_sharing.py` rejects it. For any other image still pulled by digest in a job, repin, and note that three repins died in five days before the build root moved to the shared artifact |
 | Exit **125**, log under ~1 KB (transient) | `docker run` failed before the build; infrastructure | Not the package. Re-run once at most |
 | `Signature verification failed` after a clean download | The repo's `gpgkey` is a multi-key bundle and one key in it fails to import | Point `gpgkey` at the single release key. Verify its fingerprint against the one the failing transaction named. **Keep `gpgcheck=1`** |
 | `wrong key?` on a third-party repo whose content the build does not need | A repo signed by a key the image does not trust | Disable that repo for the build |
@@ -186,7 +186,7 @@ Do not infer a version from what Rawhide ships or from a package name.
 | "It is a mock configuration problem." | There is no mock. It is installed and never invoked; the root is hand-simulated. See Rule 1. |
 | "The artifact uploaded, so the package built." | Every artifact also carries `work/reports/*.json`, so one file always matches and the upload reports success while shipping no RPM. Rule 4. |
 | "This package is missing from Fedora." | Check whether it is one of ours in an earlier wave, and whether you are searching for a binary name that its source package does not use. |
-| "Re-running will fix it." | Only for transient infrastructure exit 125 with a sub-kilobyte log, and only once. Exit 125 with `manifest unknown` means the pinned digest is gone and requires repinning. |
+| "Re-running will fix it." | Only for transient infrastructure exit 125 with a sub-kilobyte log, and only once. Exit 125 with `manifest unknown` means a digest was pruned upstream; for the build root the answer is the once-per-run pull in `prepare`, not a new digest (see `docs/skills/repeated-mistakes.md`, pattern 7). |
 
 ## Red Flags
 

@@ -130,6 +130,7 @@ must appear in the router.
 | `build-failure-triage` | A rebuild job failed and you need to know whose bug it is — ours, Fedora's, or the container's |
 | `hummingbird` | Querying Hummingbird's image catalog: available images, tags, CVEs, SBOMs |
 | `skill-improvement` | Finishing a task and deciding what learning to write back |
+| `repeated-mistakes` | Changing a stage, a container pin, a bcond, the rebuild workflow, or dropping a recipe: the history already reverted several of these once |
 
 The `hummingbird` skill is vendored from
 <https://gitlab.com/redhat/hummingbird/skills> (Apache-2.0, Red Hat). It
@@ -191,6 +192,7 @@ against the `projectbluefin/common` commit recorded in
 | Pipeline shape | [`docs/architecture.md`](docs/architecture.md) |
 | Adding a package | [`docs/contributing.md`](docs/contributing.md) |
 | Writing learning back | [`docs/skills/skill-improvement.md`](docs/skills/skill-improvement.md) |
+| Fixes the history already made and unmade | [`docs/skills/repeated-mistakes.md`](docs/skills/repeated-mistakes.md) |
 
 | Factory-wide topic | `projectbluefin/common` contract |
 | --- | --- |
