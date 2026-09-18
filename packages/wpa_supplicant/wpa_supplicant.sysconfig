@@ -1,0 +1,11 @@
+# Use the flag "-i" before each of your interfaces, like so:
+#  INTERFACES="-ieth1 -iwlan0"
+INTERFACES=""
+
+# Use the flag "-D" before each driver, like so:
+#  DRIVERS="-Dwext"
+DRIVERS=""
+
+# Other arguments
+#   -s   Use syslog logging backend
+OTHER_ARGS="-s"

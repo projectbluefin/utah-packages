@@ -1,0 +1,8 @@
+{
+  "package": "inih",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/inih.git",
+  "commit": "05628600e68182bf41777d39b66000cbd039f1d2",
+  "tree": "c3019835ab3730ca279b65e9bd6d22c0ffd3683d",
+  "imported_at": "2026-09-18T15:33:22.393256+00:00"
+}

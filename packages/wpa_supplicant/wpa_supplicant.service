@@ -1,0 +1,15 @@
+[Unit]
+Description=WPA supplicant
+Before=network.target
+Wants=network.target
+After=dbus.service
+
+[Service]
+Type=dbus
+BusName=fi.w1.wpa_supplicant1
+EnvironmentFile=-/etc/sysconfig/wpa_supplicant
+ExecStart=/usr/sbin/wpa_supplicant -c /etc/wpa_supplicant/wpa_supplicant.conf -u $INTERFACES $DRIVERS $OTHER_ARGS
+
+[Install]
+WantedBy=multi-user.target
+

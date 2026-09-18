@@ -1,0 +1,8 @@
+{
+  "package": "wireless-regdb",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/wireless-regdb.git",
+  "commit": "d9aa0acc73774f0f68f5793ee1457faaa1150c30",
+  "tree": "cd3419ba3fdb3b43ae6f1f216198a7182f4d05f3",
+  "imported_at": "2026-09-18T15:33:19.830922+00:00"
+}

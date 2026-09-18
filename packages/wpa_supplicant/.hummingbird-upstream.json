@@ -1,0 +1,8 @@
+{
+  "package": "wpa_supplicant",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/wpa_supplicant.git",
+  "commit": "b55d27f5c0966f44ff5aeac69c6bebad4bc2cac8",
+  "tree": "6f0745927d883e355d764fbe442ead985ec5678b",
+  "imported_at": "2026-09-18T15:33:19.219953+00:00"
+}

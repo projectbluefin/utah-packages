@@ -208,6 +208,12 @@ packages:
     downstream_package_name: evtest
     paths:
       - packages/evtest
+  exiv2:
+    specfile_path: exiv2.spec
+    upstream_package_name: exiv2
+    downstream_package_name: exiv2
+    paths:
+      - packages/exiv2
   fastfetch:
     specfile_path: fastfetch.spec
     upstream_package_name: fastfetch
@@ -646,6 +652,12 @@ packages:
     downstream_package_name: ilbc
     paths:
       - packages/ilbc
+  inih:
+    specfile_path: inih.spec
+    upstream_package_name: inih
+    downstream_package_name: inih
+    paths:
+      - packages/inih
   input-remapper:
     specfile_path: input-remapper.spec
     upstream_package_name: input-remapper
@@ -694,6 +706,12 @@ packages:
     downstream_package_name: isomd5sum
     paths:
       - packages/isomd5sum
+  iw:
+    specfile_path: iw.spec
+    upstream_package_name: iw
+    downstream_package_name: iw
+    paths:
+      - packages/iw
   jpegxl:
     specfile_path: jpegxl.spec
     upstream_package_name: jpegxl
@@ -910,6 +928,12 @@ packages:
     downstream_package_name: libcloudproviders
     paths:
       - packages/libcloudproviders
+  libdaemon:
+    specfile_path: libdaemon.spec
+    upstream_package_name: libdaemon
+    downstream_package_name: libdaemon
+    paths:
+      - packages/libdaemon
   libdatrie:
     specfile_path: libdatrie.spec
     upstream_package_name: libdatrie
@@ -976,6 +1000,12 @@ packages:
     downstream_package_name: libfyaml
     paths:
       - packages/libfyaml
+  libgexiv2:
+    specfile_path: libgexiv2.spec
+    upstream_package_name: libgexiv2
+    downstream_package_name: libgexiv2
+    paths:
+      - packages/libgexiv2
   libglvnd:
     specfile_path: libglvnd.spec
     upstream_package_name: libglvnd
@@ -1132,6 +1162,12 @@ packages:
     downstream_package_name: libplist
     paths:
       - packages/libplist
+  libportal:
+    specfile_path: libportal.spec
+    upstream_package_name: libportal
+    downstream_package_name: libportal
+    paths:
+      - packages/libportal
   libproxy:
     specfile_path: libproxy.spec
     upstream_package_name: libproxy
@@ -1858,6 +1894,12 @@ packages:
     downstream_package_name: wireguard-tools
     paths:
       - packages/wireguard-tools
+  wireless-regdb:
+    specfile_path: wireless-regdb.spec
+    upstream_package_name: wireless-regdb
+    downstream_package_name: wireless-regdb
+    paths:
+      - packages/wireless-regdb
   wireplumber:
     specfile_path: wireplumber.spec
     upstream_package_name: wireplumber
@@ -1870,6 +1912,12 @@ packages:
     downstream_package_name: wl-clipboard
     paths:
       - packages/wl-clipboard
+  wpa_supplicant:
+    specfile_path: wpa_supplicant.spec
+    upstream_package_name: wpa_supplicant
+    downstream_package_name: wpa_supplicant
+    paths:
+      - packages/wpa_supplicant
   wsdd:
     specfile_path: wsdd.spec
     upstream_package_name: wsdd

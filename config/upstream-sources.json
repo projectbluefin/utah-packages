@@ -263,6 +263,17 @@
       ]
     },
     {
+      "name": "exiv2",
+      "version": "0.28.9",
+      "url": "https://github.com/Exiv2/exiv2/archive/v0.28.9/exiv2-0.28.9.tar.gz",
+      "filename": "exiv2-0.28.9.tar.gz",
+      "sha512": "a7fa8fb19e54cdf0b9aac917087c86d45ea1b4a991a85ea8c5dd96af0289df63823901e44604d4c8df55883dcd19aee2efc48d7b5fde313dc0787b842a223a4a",
+      "stage": 1,
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/exiv2/exiv2-0.28.9.tar.gz/sha512/a7fa8fb19e54cdf0b9aac917087c86d45ea1b4a991a85ea8c5dd96af0289df63823901e44604d4c8df55883dcd19aee2efc48d7b5fde313dc0787b842a223a4a/exiv2-0.28.9.tar.gz"
+      ]
+    },
+    {
       "name": "fastfetch",
       "version": "2.66.0",
       "url": "https://github.com/fastfetch-cli/fastfetch/archive/2.66.0/fastfetch-2.66.0.tar.gz",
@@ -864,6 +875,16 @@
       "sha512": "cdbfe17074d4fdcff511f753d7dc67be6859f255e8f6eaa25dca7ecf87365a74eedac2b31e58b402715606291b6c900a3911bccf4ff27480301ad3cc7b82c194"
     },
     {
+      "name": "inih",
+      "version": "62",
+      "url": "https://github.com/benhoyt/inih/archive/r62/inih-r62.tar.gz",
+      "filename": "inih-r62.tar.gz",
+      "sha512": "206ddfaa55d29396c3a44f8d1dfcf578c5ebf892e81fe875cd6b4ec2af5cccf400ca13fc6585b6d8232bd122bd8aef7522bfc83898b5609b29c20bad9390ee02",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/inih/inih-r62.tar.gz/sha512/206ddfaa55d29396c3a44f8d1dfcf578c5ebf892e81fe875cd6b4ec2af5cccf400ca13fc6585b6d8232bd122bd8aef7522bfc83898b5609b29c20bad9390ee02/inih-r62.tar.gz"
+      ]
+    },
+    {
       "name": "input-remapper",
       "version": "2.2.1",
       "url": "https://github.com/sezanzeb/input-remapper/archive/2.2.1/input-remapper-2.2.1.tar.gz",
@@ -937,6 +958,13 @@
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/isomd5sum/isomd5sum-1.2.5.tar.gz/sha512/aa6bb16be18b42925ac1834aa4d558fafdba7751639acfb7344a79f7ead1125d810f13c442458526f394d8790369b1c48ab41cb73881808740263161caa99655/isomd5sum-1.2.5.tar.gz"
       ]
+    },
+    {
+      "name": "iw",
+      "version": "6.17",
+      "url": "http://www.kernel.org/pub/software/network/iw/iw-6.17.tar.xz",
+      "filename": "iw-6.17.tar.xz",
+      "sha512": "4c0d80d54e69dddc4c70469fad6a647199f98223835dd36dc174b82e425492779330a0fa3d7287190ccf02c597cb78c4bfa97b7c1f1e0a27335edb56c9f831d1"
     },
     {
       "name": "jpegxl",
@@ -1225,6 +1253,13 @@
       ]
     },
     {
+      "name": "libdaemon",
+      "version": "0.14",
+      "url": "http://0pointer.de/lennart/projects/libdaemon/libdaemon-0.14.tar.gz",
+      "filename": "libdaemon-0.14.tar.gz",
+      "sha512": "a96b25c09bd63cc192c1c5f8b5bf34cc6ad0c32d42ac14b520add611423b6ad3d64091a47e0c7ab9a94476a5e645529abccea3ed6b23596567163fba88131ff2"
+    },
+    {
       "name": "libdatrie",
       "version": "0.2.14",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/libdatrie/libdatrie-0.2.14.tar.xz/sha512/c5df387a1c9b5fae65eff69102651f4f054d873194d97faa8e329282353156fa4fb41a1ea771b24ade3f0ad2a548d85d7950a4aa6ed4e5c356bc504720e792d1/libdatrie-0.2.14.tar.xz",
@@ -1302,6 +1337,17 @@
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/libfyaml/libfyaml-0.8.tar.gz/sha512/7c9dd4e0d39a8dec71fa6e9518e81e4c1c5998e3de1db9ab7db58ebd4f99efaa41b071bf9575de88400a4aeff597cf36361d01f568122a6e1214a92fb1efd507/libfyaml-0.8.tar.gz",
       "filename": "libfyaml-0.8.tar.gz",
       "sha512": "7c9dd4e0d39a8dec71fa6e9518e81e4c1c5998e3de1db9ab7db58ebd4f99efaa41b071bf9575de88400a4aeff597cf36361d01f568122a6e1214a92fb1efd507"
+    },
+    {
+      "name": "libgexiv2",
+      "version": "0.16.2",
+      "url": "https://download.gnome.org/sources/gexiv2/0.16/gexiv2-0.16.2.tar.xz",
+      "filename": "gexiv2-0.16.2.tar.xz",
+      "sha512": "1987b96199979ee20bf8e7a7aaf57f929409dc97ebd217bfceedf5254e22d2860c0fa94c64dcc70b2e538747c7351d6bd08d2ae1da06cbf36007b1fda7bc89ec",
+      "stage": 2,
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libgexiv2/gexiv2-0.16.2.tar.xz/sha512/1987b96199979ee20bf8e7a7aaf57f929409dc97ebd217bfceedf5254e22d2860c0fa94c64dcc70b2e538747c7351d6bd08d2ae1da06cbf36007b1fda7bc89ec/gexiv2-0.16.2.tar.xz"
+      ]
     },
     {
       "name": "libglvnd",
@@ -1497,6 +1543,14 @@
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/libplist/libplist-2.7.0.tar.bz2/sha512/83d0398b75ea9e610e49b4b96a7675b854c7551d4faf3e82e74c5c45cf04bbd95478cc40688f0995742e6a50601744d2a36641d0673aa7cc413f5ce2ec42f2d4/libplist-2.7.0.tar.bz2",
       "filename": "libplist-2.7.0.tar.bz2",
       "sha512": "83d0398b75ea9e610e49b4b96a7675b854c7551d4faf3e82e74c5c45cf04bbd95478cc40688f0995742e6a50601744d2a36641d0673aa7cc413f5ce2ec42f2d4"
+    },
+    {
+      "name": "libportal",
+      "version": "0.10.0",
+      "url": "https://github.com/flatpak/libportal/releases/download/0.10.0/libportal-0.10.0.tar.xz",
+      "filename": "libportal-0.10.0.tar.xz",
+      "sha512": "1ddd359d399c523c03cdeb70eb7009d706f281373650b7c44644492fb8de55aa5ed92ef57f0c4cd1c8c2a8d3ee159ed806d1afd246a050a40aaa8664d91c66a2",
+      "stage": 5
     },
     {
       "name": "libproxy",
@@ -2454,6 +2508,13 @@
       "sha512": "ab56199345fdc385e62e414ec200c10777c985fb2bde767f9c76e049f47bc6d2ae83ed12d60dc1ebe0e66f22f7a7e554c13ab13837fb8cb2fbd5481149b07654"
     },
     {
+      "name": "wireless-regdb",
+      "version": "2026.09.03",
+      "url": "http://www.kernel.org/pub/software/network/wireless-regdb/wireless-regdb-2026.09.03.tar.xz",
+      "filename": "wireless-regdb-2026.09.03.tar.xz",
+      "sha512": "625918883b65361081db2d5ede754af5d58892da969500655d6211f163c463bfa8c6ab671d3be17117651fc45c41fb3f960a3544c91236fb314179318c191aa2"
+    },
+    {
       "name": "wireplumber",
       "stage": 4,
       "version": "0.5.14",
@@ -2470,6 +2531,13 @@
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/wl-clipboard/wl-clipboard-2.3.0.tar.gz/sha512/101dd7a18fbaee0754318cf9ec8403068df4091ccc5d3dd0bd1e46627d56a183c718c206816c08e5dbadf6fd5c747fa0c95eca1925fa27c7eeda133909696f9b/wl-clipboard-2.3.0.tar.gz"
       ]
+    },
+    {
+      "name": "wpa_supplicant",
+      "version": "2.11",
+      "url": "http://w1.fi/releases/wpa_supplicant-2.11.tar.gz",
+      "filename": "wpa_supplicant-2.11.tar.gz",
+      "sha512": "9a0a3a9d6fa2235903c40aa57b5955f0c9dd1dccfd0e3825a3b6f92b3e32db8d464b3ea0aef3285ba3ee109e7b190560cedd744902e954f0003cdba543e277b2"
     },
     {
       "name": "wsdd",

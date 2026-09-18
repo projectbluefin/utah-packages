@@ -1,0 +1,8 @@
+{
+  "package": "libportal",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libportal.git",
+  "commit": "77e8817f4e0358df04e72c57a6ea85a7d13c7bba",
+  "tree": "d0d3af10ba20ac14bad2fdff5a995aac076738eb",
+  "imported_at": "2026-09-18T15:33:21.850279+00:00"
+}
