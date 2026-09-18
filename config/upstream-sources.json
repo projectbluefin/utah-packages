@@ -2276,6 +2276,13 @@
       "sha512": "7fe10838c7d1bafcbe42295b82b79262420dba793b8a4388e2f73a3007850b5572face1b5308d9f4e8d7dfc9cb1c016cbad88cd65b2892667986107ed946836b"
     },
     {
+      "name": "spirv-tools",
+      "version": "2026.2",
+      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/spirv-tools/SPIRV-Tools-sdk-1.4.350.0.tar.gz/sha512/765c71b082c77450b0823d9b04cdcfe8990ff83c9c12ab7d2318c1d7c3caf5d0db175ee8618472544c7ef9e18637d679ce07b6b43b2d6040cdb0435a59dd780b/SPIRV-Tools-sdk-1.4.350.0.tar.gz",
+      "filename": "SPIRV-Tools-sdk-1.4.350.0.tar.gz",
+      "sha512": "765c71b082c77450b0823d9b04cdcfe8990ff83c9c12ab7d2318c1d7c3caf5d0db175ee8618472544c7ef9e18637d679ce07b6b43b2d6040cdb0435a59dd780b"
+    },
+    {
       "name": "squashfs-tools",
       "version": "4.7.4",
       "url": "https://github.com/plougher/squashfs-tools/archive/4.7.4/squashfs-tools-4.7.4.tar.gz",

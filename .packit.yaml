@@ -1726,6 +1726,12 @@ packages:
     downstream_package_name: speex
     paths:
       - packages/speex
+  spirv-tools:
+    specfile_path: spirv-tools.spec
+    upstream_package_name: spirv-tools
+    downstream_package_name: spirv-tools
+    paths:
+      - packages/spirv-tools
   squashfs-tools:
     specfile_path: squashfs-tools.spec
     upstream_package_name: squashfs-tools
