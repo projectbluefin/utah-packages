@@ -12,9 +12,11 @@ from tools.rebuild_plan import (
     is_published,
     overflow,
     plan,
+    provides_from_primary,
     published_from_primary,
     reverse_closure,
     stage_outputs,
+    stale_from_primary,
 )
 
 
@@ -331,6 +333,59 @@ class DependentsTests(unittest.TestCase):
             full=False, factory_repo="", dependents={"mutter": {"ghost"}},
         )
         self.assertEqual([e["name"] for e in build], ["mutter"])
+
+
+class StaleTests(unittest.TestCase):
+    """A published binary asking for what nothing provides any more rebuilds."""
+
+    PRIMARY = full_primary(
+        ("libheif", "libheif", ["libheif.so.1()(64bit)"], ["libavcodec.so.62()(64bit)", "libc.so.6"]),
+        ("libavcodec-free", "ffmpeg-free", ["libavcodec.so.63()(64bit)"], ["libc.so.6"]),
+        ("gnome-shell", "gnome-shell", ["gnome-shell"], ["libheif.so.1()(64bit)", "rpmlib(PayloadIsZstd)", "(foo or bar)", "/usr/bin/python3"]),
+    )
+    EXTERNAL = {"libc.so.6"}
+
+    def test_provides_include_shipped_files(self) -> None:
+        primary = full_primary(("a", "a", ["cap"], [])).replace(
+            b"</format>", b"</format><file>/usr/bin/a</file>", 1
+        )
+        self.assertEqual(provides_from_primary(primary), {"cap", "/usr/bin/a"})
+
+    def test_an_unsatisfied_soname_marks_its_source_stale(self) -> None:
+        stale = stale_from_primary(self.PRIMARY, self.EXTERNAL)
+        self.assertEqual(stale, {"libheif": {"libavcodec.so.62()(64bit)"}})
+
+    def test_external_provides_count_as_satisfied(self) -> None:
+        # libc comes from Hummingbird, not the factory: without the external
+        # set every package would look stale.
+        stale = stale_from_primary(self.PRIMARY, set())
+        self.assertIn("libc.so.6", stale["ffmpeg-free"])
+
+    def test_rpmlib_rich_and_file_requires_are_not_judged(self) -> None:
+        stale = stale_from_primary(self.PRIMARY, self.EXTERNAL)
+        self.assertNotIn("gnome-shell", stale)
+
+    def test_a_stale_package_rebuilds_and_drags_its_dependents(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for name in ("libheif", "ffmpeg-free", "gnome-shell"):
+                recipe(root, name, "1")
+            config = {"packages": [
+                {"name": "ffmpeg-free", "version": "1.0", "stage": 0},
+                {"name": "libheif", "version": "1.0", "stage": 1},
+                {"name": "gnome-shell", "version": "1.0", "stage": 2},
+            ]}
+            published = published_from_primary(self.PRIMARY)
+            stale = set(stale_from_primary(self.PRIMARY, self.EXTERNAL))
+            names = [
+                entry["name"]
+                for entry in plan(
+                    config, root, published=published, changed=set(), full=False,
+                    factory_repo="file:///work/factory",
+                    dependents=dependents_from_primary(self.PRIMARY), stale=stale,
+                )
+            ]
+            self.assertEqual(names, ["libheif", "gnome-shell"])
 
 
 class StageOutputTests(unittest.TestCase):

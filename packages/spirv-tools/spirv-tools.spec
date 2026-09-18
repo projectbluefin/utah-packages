@@ -1,17 +1,15 @@
 %undefine __cmake_in_source_build
 
-%global sdkver 1.4.350.0
+%global sdkver 1.4.357.0
 
 Name:           spirv-tools
-Version:        2026.2
+Version:        2026.3
 Release:        %autorelease
 Summary:        API and commands for processing SPIR-V modules
 
 License:        Apache-2.0
 URL:            https://github.com/KhronosGroup/SPIRV-Tools
 Source0:        %url/archive/vulkan-sdk-%{sdkver}.tar.gz#/SPIRV-Tools-sdk-%{sdkver}.tar.gz
-
-Patch0: fix-gcc12-build.patch
 
 BuildRequires:  cmake
 BuildRequires:  gcc-c++
@@ -48,26 +46,7 @@ Development files for %{name}
 %autosetup -p1 -n SPIRV-Tools-vulkan-sdk-%{sdkver}
 
 %build
-# SPIRV_WERROR=OFF. spirv-tools is compiled against whatever spirv-headers-devel
-# the build root supplies, and that package is not in this factory's inventory
-# -- it comes from outside, and it moves. When it gains SPIR-V enum values that
-# this pinned spirv-tools predates, the switch in source/operand.cpp does not
-# name them and upstream's default -Werror turns the -Wswitch warning into a
-# fatal error:
-#
-#     source/operand.cpp:643:10: error: enumeration value 'Float4E2M1EXT'
-#       not handled in switch [-Werror=switch]
-#     ... 'Float8UnsignedE8M0EXT' ... 'MXInt8EXT' ...
-#     cc1plus: all warnings being treated as errors
-#
-# This recipe built green on 2026-09-13 and failed on 2026-09-17 with the same
-# pinned tarball, so the headers moved, not this package. SPIRV_WERROR is
-# upstream's own option for exactly this (CMakeLists.txt:87, gating the -Werror
-# flags at 111 and 117); the code is unchanged and an unnamed enum simply takes
-# the switch's default. Nothing here silences a test -- this is the compile's
-# warnings-as-errors setting.
 %cmake -DCMAKE_BUILD_TYPE=Release \
-       -DSPIRV_WERROR=OFF \
        -DCMAKE_INSTALL_LIBDIR=%{_lib} \
        -DSPIRV-Headers_SOURCE_DIR=%{_prefix} \
        -DPYTHON_EXECUTABLE=%{__python3} \

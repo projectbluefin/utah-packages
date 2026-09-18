@@ -130,6 +130,68 @@ def dependents_from_primary(primary: bytes) -> dict[str, set[str]]:
     return dependents
 
 
+def provides_from_primary(primary: bytes) -> set[str]:
+    """Every capability a repository provides: rpm Provides plus shipped files."""
+    provided: set[str] = set()
+    root = ElementTree.fromstring(primary)
+    for package in root.iter(f"{{{COMMON_NS}}}package"):
+        fmt = package.find(f"{{{COMMON_NS}}}format")
+        if fmt is None:
+            continue
+        for entry in fmt.iterfind(f"{{{RPM_NS}}}provides/{{{RPM_NS}}}entry"):
+            provided.add(entry.get("name", ""))
+        for file in package.iterfind(f"{{{COMMON_NS}}}file"):
+            provided.add(file.text or "")
+    return provided
+
+
+def stale_from_primary(primary: bytes, external: set[str]) -> dict[str, set[str]]:
+    """Source name -> the Requires of its published binaries that nothing provides.
+
+    A published package can be exactly the recipe on disk and still be wrong:
+    it was linked against whatever the build root had at the time, and the
+    build root moves. libheif built when the factory carried ffmpeg 8 asks for
+    libavcodec.so.62; once ffmpeg 9 is published and provides .so.63, nothing
+    satisfies the old binary and the consumer transaction fails on it. The
+    same happens when Hummingbird bumps a soname underneath the factory.
+
+    Neither the recipe nor the inventory changed, so `changed` never sees it,
+    and the dependents map does not either: it follows edges from a provider
+    that exists, and here the provider is what went missing. This is the
+    third rule, and the only one that reads what the published binaries
+    actually ask for. `external` is what the consumer's other repository
+    (Hummingbird) provides; a Requires satisfied by neither side marks the
+    package stale, and stale packages rebuild -- against the current build
+    root, which is the only cure.
+
+    Skipped, to avoid calling healthy packages stale on a partial view:
+    rpmlib() capabilities, which are the package manager's; rich
+    dependencies in parentheses, which need dnf to evaluate; and file paths,
+    because primary.xml lists only a subset of files and the full list lives
+    in filelists.xml, which is not read here.
+    """
+    provided = provides_from_primary(primary) | external
+    stale: dict[str, set[str]] = {}
+    root = ElementTree.fromstring(primary)
+    for package in root.iter(f"{{{COMMON_NS}}}package"):
+        fmt = package.find(f"{{{COMMON_NS}}}format")
+        if fmt is None:
+            continue
+        source = source_name(fmt.findtext(f"{{{RPM_NS}}}sourcerpm") or "")
+        if source is None:
+            continue
+        for entry in fmt.iterfind(f"{{{RPM_NS}}}requires/{{{RPM_NS}}}entry"):
+            capability = entry.get("name", "")
+            if (
+                not capability
+                or capability.startswith(("rpmlib(", "(", "/"))
+                or capability in provided
+            ):
+                continue
+            stale.setdefault(source, set()).add(capability)
+    return stale
+
+
 def source_name(sourcerpm: str) -> str | None:
     """`name` out of `name-version-release.src.rpm`, or None if it is not one."""
     if not sourcerpm.endswith(".src.rpm"):
@@ -241,13 +303,16 @@ def plan(
     full: bool,
     factory_repo: str,
     dependents: dict[str, set[str]] | None = None,
+    stale: set[str] = frozenset(),
 ) -> list[dict]:
     """The recipes to build, in inventory order.
 
     `dependents` is the reverse dependency map of the published repository
     (see dependents_from_primary). Whatever is rebuilt drags its published
     dependents with it, so a skip can never leave a consumer linked against
-    a library the same run is replacing.
+    a library the same run is replacing. `stale` names published packages
+    whose binaries require something nothing provides any more (see
+    stale_from_primary); they build regardless of matching the recipe.
     """
     # Without a factory repository the build root cannot see anything the
     # published listing claims, so the listing is not a witness and nothing may
@@ -256,7 +321,7 @@ def plan(
     build = []
     for entry in config["packages"]:
         name = entry["name"]
-        if full or name in changed or not trust_published:
+        if full or name in changed or name in stale or not trust_published:
             build.append(entry)
         elif is_published(root, entry, published):
             continue
