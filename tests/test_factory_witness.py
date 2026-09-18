@@ -71,6 +71,10 @@ class FactoryWitnessTests(unittest.TestCase):
         text = uncommented(BUILD_STAGE)
         self.assertIn("!work/result/**/*-debuginfo-*.rpm", text)
         self.assertEqual(text.count('--define "debug_package %{nil}"'), 2)
+        # debug_package alone is not enough: %mingw_debug_package sets
+        # __debug_package itself, which runs the native find-debuginfo and
+        # leaves .debug files no subpackage declares (run 380, ten specs).
+        self.assertEqual(text.count('--define "__debug_install_post %{nil}"'), 2)
 
     def test_a_failed_prepare_stops_precedence_and_publish(self) -> None:
         text = uncommented(REBUILD)

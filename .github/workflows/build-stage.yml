@@ -365,10 +365,25 @@ jobs:
               # debuginfo RPMs, on the serial critical path of an eight-hour
               # run. Publishing debuginfo would be a separate artifact; until
               # then nothing pays for it.
+              #
+              # Two defines, because one is not enough. debug_package %{nil}
+              # keeps rpmbuild from declaring the native -debuginfo
+              # subpackage. It does not stop find-debuginfo: that runs from
+              # __spec_install_post whenever __debug_package is set, and the
+              # ten specs that build a MinGW half (opus, libsoup3, taglib...)
+              # set it themselves through %mingw_debug_package. With only the
+              # first define those built, ran find-debuginfo, and failed on
+              # the native .debug files nothing declared -- run 380, all ten,
+              # "Installed (but unpackaged) file(s) found". Emptying
+              # __debug_install_post stops the native extraction at the
+              # source. The MinGW halves keep their own -debuginfo
+              # subpackages, produced by the explicit %mingw_debug_install_post
+              # in %install, which the upload filter drops like the rest.
               build_rpm() {
                 runuser -u mockbuild -- rpmbuild \
                   --define "_topdir /builddir/rpmbuild" \
-                  --define "debug_package %{nil}" "$@"
+                  --define "debug_package %{nil}" \
+                  --define "__debug_install_post %{nil}" "$@"
               }
               # Packages with %generate_buildrequires -- every Rust one -- compute
               # their real BuildRequires during the build, so the spec alone does not
@@ -501,11 +516,13 @@ jobs:
                 --define "_srcrpmdir /work/srpm" \
                 --define "dist $DISTTAG" \
                 /packages/$PACKAGE/*.spec
-              # No debuginfo, for the reason the container lane gives.
+              # No debuginfo, for the reasons the container lane gives --
+              # both defines, or the MinGW specs fail on orphaned .debug files.
               mock --root /work/mock/utah.cfg \
                 --resultdir /work/result \
                 --define "dist $DISTTAG" \
                 --define "debug_package %{nil}" \
+                --define "__debug_install_post %{nil}" \
                 --rebuild /work/srpm/*.src.rpm
               find /work/result -name "*.rpm" -type f -print0 | \
                 xargs -0 -r rpm -qp --qf "%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n"
