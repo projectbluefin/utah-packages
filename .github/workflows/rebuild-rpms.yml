@@ -58,6 +58,14 @@ permissions:
 # Build waves may run concurrently.  They use run-scoped artifacts and each
 # publication re-seeds from the then-current repository, so concurrent work
 # cannot lose RPMs.  The consumer tag itself remains serialized at `publish`.
+#
+# A pull request is the exception: a push to it supersedes the run before,
+# and that run used to carry on for hours anyway -- 369, 370 and 374 were all
+# cancelled by hand, one of them four hours in. Nothing on main or a schedule
+# is cancelled, because there a run in flight is the one that publishes.
+concurrency:
+  group: utah-packages-rebuild-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   prepare:
@@ -85,6 +93,7 @@ jobs:
       BUILDROOT_IMAGE: quay.io/fedora/fedora:44@sha256:e7d398c0a67572b33a43260102f9135ab79b6b8d95efca91faa5179d83b2cdf0
     outputs:
       buildroot_digest: ${{ steps.buildroot.outputs.digest }}
+      factory_image: ${{ steps.factory_image.outputs.image }}
       stage0: ${{ steps.matrix.outputs.stage0 }}
       stage1: ${{ steps.matrix.outputs.stage1 }}
       stage2: ${{ steps.matrix.outputs.stage2 }}
@@ -153,16 +162,70 @@ jobs:
           path: buildroot.tar.zst
           if-no-files-found: error
           retention-days: 1
+      # The published repository is the witness for what may be skipped, and
+      # it lives in one place: the OCI image publish writes. It used to be
+      # read over HTTP from a GitHub Pages mirror that had been retired but
+      # never taken down, frozen at 67 packages from before the 343-recipe
+      # contract. Every run therefore skipped 7 and rebuilt 333, whatever had
+      # changed -- eight hours for a one-line spec fix, and webkitgtk alone
+      # five of them, on the serial path, with no change to its recipe.
+      #
+      # Resolved once here to a digest, like the build root, so every job in
+      # the run reads the same repository even if publish moves the tag while
+      # the run is in flight. A branch reads its own image first, so a second
+      # push to a pull request skips what the first push built; main only ever
+      # reads latest. No image at all is not an error: it means nothing can
+      # be skipped, which is what rebuild_plan.py does with an empty witness.
+      - name: Resolve the published factory image
+        id: factory_image
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          owner=$(echo "${{ github.repository_owner }}" | tr "[:upper:]" "[:lower:]")
+          image="ghcr.io/${owner}/utah-packages"
+          branch=$(echo "${{ github.ref_name }}" \
+            | tr "/" "-" | tr -cd "[:alnum:]._-" | cut -c1-96)
+          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            candidates="latest"
+          else
+            candidates="$branch latest"
+          fi
+          echo "${GITHUB_TOKEN}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin \
+            || echo "::warning title=ghcr login failed::resolving the factory image anonymously"
+          resolved=
+          for tag in $candidates; do
+            if docker pull "${image}:${tag}"; then
+              digest=$(docker image inspect "${image}:${tag}" \
+                --format '{{index .RepoDigests 0}}' | sed 's/.*@//')
+              resolved="${image}@${digest}"
+              echo "factory repository: ${image}:${tag} -> ${resolved}"
+              break
+            fi
+            echo "no factory image at ${image}:${tag}"
+          done
+          if [ -z "$resolved" ]; then
+            echo "::warning title=no factory image::nothing is published for this ref or main, so nothing can be skipped as already built"
+          fi
+          echo "image=${resolved}" >> "$GITHUB_OUTPUT"
+      - uses: ./.github/actions/load-factory-repo
+        id: factory
+        with:
+          image: ${{ steps.factory_image.outputs.image }}
       - id: matrix
         env:
           FULL: ${{ github.event_name == 'workflow_dispatch' && inputs.full == true && '1' || '0' }}
           BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
-          # The same value build-stage.yml gives the build root. The skip
-          # decision and the buildroot must read one source of truth: when they
-          # disagreed, `prepare` skipped what the published repository carried
-          # and the build root could not see any of it.
-          FACTORY_REPO: ${{ vars.FACTORY_REPO || 'https://projectbluefin.github.io/utah-packages/' }}
+          FACTORY_URL: ${{ steps.factory.outputs.url }}
         run: |
+          # The action reports the path as the build container sees it under
+          # /work; this step runs on the host, so read the same directory
+          # from the workspace. Same bytes, and the only witness there is.
+          if [ -n "$FACTORY_URL" ]; then
+            export FACTORY_REPO="file://$PWD/work/factory"
+          else
+            export FACTORY_REPO=
+          fi
           python3 tools/rebuild_matrix.py
 
   preflight:
@@ -184,9 +247,13 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: ./.github/actions/load-buildroot
+      - uses: ./.github/actions/load-factory-repo
+        id: factory
+        with:
+          image: ${{ needs.prepare.outputs.factory_image }}
       - name: Resolve BuildRequires for packages being built
         env:
-          FACTORY_REPO: ${{ vars.FACTORY_REPO }}
+          FACTORY_REPO: ${{ steps.factory.outputs.url }}
           BUILD_LIST: ${{ needs.prepare.outputs.build_list }}
         run: |
           mkdir -p work/reports
@@ -280,6 +347,7 @@ jobs:
       stage: '0'
       packages: ${{ matrix.chunk }}
       backend: ${{ inputs.backend || 'container' }}
+      factory_image: ${{ needs.prepare.outputs.factory_image }}
 
   rebuild1:
     needs: [prepare, rebuild0]
@@ -293,6 +361,7 @@ jobs:
       stage: '1'
       packages: ${{ matrix.chunk }}
       backend: ${{ inputs.backend || 'container' }}
+      factory_image: ${{ needs.prepare.outputs.factory_image }}
 
   rebuild2:
     needs: [prepare, rebuild0, rebuild1]
@@ -306,6 +375,7 @@ jobs:
       stage: '2'
       packages: ${{ matrix.chunk }}
       backend: ${{ inputs.backend || 'container' }}
+      factory_image: ${{ needs.prepare.outputs.factory_image }}
 
   rebuild3:
     needs: [prepare, rebuild0, rebuild1, rebuild2]
@@ -319,6 +389,7 @@ jobs:
       stage: '3'
       packages: ${{ matrix.chunk }}
       backend: ${{ inputs.backend || 'container' }}
+      factory_image: ${{ needs.prepare.outputs.factory_image }}
 
   rebuild4:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3]
@@ -332,6 +403,7 @@ jobs:
       stage: '4'
       packages: ${{ matrix.chunk }}
       backend: ${{ inputs.backend || 'container' }}
+      factory_image: ${{ needs.prepare.outputs.factory_image }}
 
   rebuild5:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4]
@@ -345,6 +417,7 @@ jobs:
       stage: '5'
       packages: ${{ matrix.chunk }}
       backend: ${{ inputs.backend || 'container' }}
+      factory_image: ${{ needs.prepare.outputs.factory_image }}
 
   rebuild6:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5]
@@ -358,6 +431,7 @@ jobs:
       stage: '6'
       packages: ${{ matrix.chunk }}
       backend: ${{ inputs.backend || 'container' }}
+      factory_image: ${{ needs.prepare.outputs.factory_image }}
 
   rebuild7:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6]
@@ -371,6 +445,7 @@ jobs:
       stage: '7'
       packages: ${{ matrix.chunk }}
       backend: ${{ inputs.backend || 'container' }}
+      factory_image: ${{ needs.prepare.outputs.factory_image }}
 
   rebuild8:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7]
@@ -384,6 +459,7 @@ jobs:
       stage: '8'
       packages: ${{ matrix.chunk }}
       backend: ${{ inputs.backend || 'container' }}
+      factory_image: ${{ needs.prepare.outputs.factory_image }}
 
   rebuild9:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8]
@@ -397,6 +473,7 @@ jobs:
       stage: '9'
       packages: ${{ matrix.chunk }}
       backend: ${{ inputs.backend || 'container' }}
+      factory_image: ${{ needs.prepare.outputs.factory_image }}
 
   rebuild10:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8, rebuild9]
@@ -410,11 +487,17 @@ jobs:
       stage: '10'
       packages: ${{ matrix.chunk }}
       backend: ${{ inputs.backend || 'container' }}
+      factory_image: ${{ needs.prepare.outputs.factory_image }}
 
   precedence:
     # Every wave, not the first five. See publish below.
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8, rebuild9, rebuild10]
-    if: ${{ !cancelled() && needs.prepare.outputs.build_list != '[]' }}
+    # `!cancelled()` is what lets this run after a failed wave, which is the
+    # point: it has to see every RPM that did build. It also let it run after
+    # a failed prepare, where there is no build root artifact to load, so a
+    # unit-test failure in prepare surfaced a second time as a download error
+    # here (runs 372 and 379). prepare has to have succeeded.
+    if: ${{ !cancelled() && needs.prepare.result == 'success' && needs.prepare.outputs.build_list != '[]' }}
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -523,6 +606,7 @@ jobs:
     # noise that reads like a broken pipeline.
     if: >-
       ${{ !cancelled()
+          && needs.prepare.result == 'success'
           && needs.prepare.outputs.build_list != '[]'
           && needs.precedence.result == 'success'
           && (needs.rebuild0.result == 'success' || needs.rebuild0.result == 'skipped')

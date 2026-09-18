@@ -41,6 +41,14 @@ A GitHub Pages mirror used to be published alongside it. It was removed: it
 could only deploy from `main`, nothing consumed it, and the OCI image is the
 contract.
 
+The image is also the factory's own memory. `prepare` pulls it, extracts the
+repository, and skips every recipe the listing already carries at the same
+version and release -- then drags along whatever published package depends on
+something being rebuilt, so a library fix cannot leave its consumers linked
+against the copy it replaces. Every build root installs from that same
+extracted repository as a local `file://` repo. A one-recipe change is
+therefore a handful of jobs, not a traversal of all eleven waves.
+
 Packages are tagged `.hum1.bfin` — the vendor release and dist, then our suffix,
 following AlmaLinux's convention. See
 [docs/targeting-hummingbird.md](docs/targeting-hummingbird.md) for the ordering

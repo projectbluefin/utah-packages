@@ -22,6 +22,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from tools.rebuild_plan import (
     changed_entries,
+    dependents_from_primary,
     overflow,
     plan,
     published_from_primary,
@@ -74,14 +75,17 @@ def changed_inventory(base_sha: str, paths: list[str]) -> set[str]:
     return changed_entries(before, after)
 
 
-def fetch_published(base_url: str) -> dict[str, tuple[str, str]]:
-    """What the published repository already carries, by source package.
+def fetch_primary(base_url: str) -> bytes:
+    """The decompressed primary.xml of the repository at base_url.
 
-    A failure here is not fatal: an empty result means nothing can be proven
+    base_url is normally the file:// path of the repository `prepare`
+    extracted from the published factory image, so the listing read here is
+    byte-for-byte the one every build root will have enabled. A failure here
+    is not fatal to the caller: an empty result means nothing can be proven
     published, so everything rebuilds. Slower, never wrong.
     """
     if not base_url:
-        return {}
+        return b""
     if not base_url.endswith("/"):
         base_url += "/"
     repomd = (
@@ -97,7 +101,12 @@ def fetch_published(base_url: str) -> dict[str, tuple[str, str]]:
         primary = zstandard.ZstdDecompressor().stream_reader(io.BytesIO(raw)).read()
     else:
         primary = gzip.GzipFile(fileobj=io.BytesIO(raw)).read()
-    return published_from_primary(primary)
+    return primary
+
+
+def fetch_published(base_url: str) -> dict[str, tuple[str, str]]:
+    """What the published repository already carries, by source package."""
+    return published_from_primary(fetch_primary(base_url))
 
 
 def main() -> int:
@@ -109,9 +118,12 @@ def main() -> int:
     print(f"changed package recipes: {', '.join(sorted(changed)) or 'none'}")
 
     published: dict[str, tuple[str, str]] = {}
+    dependents: dict[str, set[str]] = {}
     if not full:
         try:
-            published = fetch_published(factory_repo)
+            primary = fetch_primary(factory_repo)
+            published = published_from_primary(primary)
+            dependents = dependents_from_primary(primary) if primary else {}
             print(f"published repo has {len(published)} source packages")
         except Exception as error:  # noqa: BLE001 - availability, not correctness
             print(
@@ -132,11 +144,21 @@ def main() -> int:
         changed=changed,
         full=full,
         factory_repo=factory_repo,
+        dependents=dependents,
     )
     building = {entry["name"] for entry in build}
+    direct = {
+        entry["name"]
+        for entry in plan(
+            config, ROOT, published=published, changed=changed, full=full,
+            factory_repo=factory_repo,
+        )
+    }
     for entry in config["packages"]:
         if entry["name"] not in building:
             print(f"skip {entry['name']}: already published")
+        elif entry["name"] not in direct:
+            print(f"rebuild {entry['name']}: depends on something being rebuilt")
 
     if late := overflow(build):
         raise SystemExit(

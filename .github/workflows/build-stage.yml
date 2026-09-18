@@ -33,6 +33,14 @@ on:
         required: false
         default: container
         type: string
+      factory_image:
+        description: >
+          The published factory image as prepare resolved it (ref@digest), or
+          empty when none exists. Its repository is what prepare skipped
+          against, so it is what this build root gets to install from.
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: read
@@ -48,6 +56,10 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: ./.github/actions/setup-sccache
       - uses: ./.github/actions/load-buildroot
+      - uses: ./.github/actions/load-factory-repo
+        id: factory
+        with:
+          image: ${{ inputs.factory_image }}
       - name: Collect RPMs built by earlier stages
         if: inputs.stage != '0'
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
@@ -68,14 +80,15 @@ jobs:
           # `prepare` skips any package the published repository already
           # carries at the same version, so the build root MUST be able to
           # reach that repository -- a skipped package is otherwise simply
-          # absent. It was: vars.FACTORY_REPO is unset on pull_request runs,
-          # so the [factory] block below never ran and pipewire-libs-extra
-          # failed on `No match for argument: pkgconfig(libfreeaptx)` while
-          # libfreeaptx-devel sat published and skipped. Default to the same
-          # published URL `prepare` reads to decide what to skip, so the two
-          # halves of that decision cannot disagree. The repository variable
-          # still wins when set.
-          FACTORY_REPO: ${{ vars.FACTORY_REPO || 'https://projectbluefin.github.io/utah-packages/' }}
+          # absent. It was, twice: first vars.FACTORY_REPO was unset on
+          # pull_request runs and pipewire-libs-extra failed on
+          # `No match for argument: pkgconfig(libfreeaptx)` while
+          # libfreeaptx-devel sat published and skipped; then both halves read
+          # the same URL, and the URL was a retired Pages mirror. Now both read
+          # the repository extracted from the one image prepare resolved, as a
+          # local file:// repo, so they cannot disagree and nothing is fetched
+          # over HTTP mid-build.
+          FACTORY_REPO: ${{ steps.factory.outputs.url }}
         run: |
           test -d "packages/$PACKAGE"
           mkdir -p work/result
@@ -345,7 +358,18 @@ jobs:
                 useradd --create-home --home-dir /builddir mockbuild
               mkdir -p /builddir/rpmbuild/SRPMS
               chown -R mockbuild:mockbuild /builddir/rpmbuild "$staged" /work/result
-              build_rpm() { runuser -u mockbuild -- rpmbuild --define "_topdir /builddir/rpmbuild" "$@"; }
+              # No debuginfo. The upload below excludes every debuginfo and
+              # debugsource RPM by pattern, so they were being built, stripped
+              # and compressed only to be thrown away: webkitgtk spent 25
+              # minutes in find-debuginfo and another 10 compressing four
+              # debuginfo RPMs, on the serial critical path of an eight-hour
+              # run. Publishing debuginfo would be a separate artifact; until
+              # then nothing pays for it.
+              build_rpm() {
+                runuser -u mockbuild -- rpmbuild \
+                  --define "_topdir /builddir/rpmbuild" \
+                  --define "debug_package %{nil}" "$@"
+              }
               # Packages with %generate_buildrequires -- every Rust one -- compute
               # their real BuildRequires during the build, so the spec alone does not
               # list them and rpmbuild exits 11 asking to be re-run. Install what the
@@ -428,7 +452,7 @@ jobs:
         if: inputs.backend == 'mock'
         env:
           PACKAGE: ${{ matrix.package }}
-          FACTORY_REPO: ${{ vars.FACTORY_REPO || 'https://projectbluefin.github.io/utah-packages/' }}
+          FACTORY_REPO: ${{ steps.factory.outputs.url }}
         run: |
           test -d "packages/$PACKAGE"
           mkdir -p work/result work/srpm work/mock
@@ -477,9 +501,11 @@ jobs:
                 --define "_srcrpmdir /work/srpm" \
                 --define "dist $DISTTAG" \
                 /packages/$PACKAGE/*.spec
+              # No debuginfo, for the reason the container lane gives.
               mock --root /work/mock/utah.cfg \
                 --resultdir /work/result \
                 --define "dist $DISTTAG" \
+                --define "debug_package %{nil}" \
                 --rebuild /work/srpm/*.src.rpm
               find /work/result -name "*.rpm" -type f -print0 | \
                 xargs -0 -r rpm -qp --qf "%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n"

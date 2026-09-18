@@ -33,6 +33,7 @@ from __future__ import annotations
 
 import json
 import re
+import xml.etree.ElementTree as ElementTree
 from pathlib import Path
 
 from tools.dist_bump import BumpError, spec_release, suffix
@@ -75,6 +76,81 @@ def published_from_primary(primary: bytes) -> dict[str, tuple[str, str]]:
             continue
         published[name] = (version, remainder)
     return published
+
+
+# repodata primary.xml puts every rpm: element in this namespace.
+RPM_NS = "http://linux.duke.edu/metadata/rpm"
+COMMON_NS = "http://linux.duke.edu/metadata/common"
+
+
+def dependents_from_primary(primary: bytes) -> dict[str, set[str]]:
+    """Map source package name -> the source packages that depend on it.
+
+    Runtime dependencies, read from the published binaries: gnome-shell
+    Requires libmutter-17.so.0, which mutter-libs Provides, so mutter maps to
+    {gnome-shell}. That is exactly the edge a soname break travels along, and
+    the one a skip must never cut: with the published listing as a witness, a
+    fix to mutter would build mutter alone and leave a gnome-shell in the
+    repository that was linked against the mutter it just replaced. The
+    published repository carries no source RPMs, so BuildRequires are not
+    readable here; a devel package that is only built against, never linked,
+    is the residual gap.
+
+    Self-edges are dropped: a package requiring its own subpackages is not a
+    reason to rebuild anything else.
+    """
+    provided_by: dict[str, set[str]] = {}
+    requires: list[tuple[str, set[str]]] = []
+    root = ElementTree.fromstring(primary)
+    for package in root.iter(f"{{{COMMON_NS}}}package"):
+        fmt = package.find(f"{{{COMMON_NS}}}format")
+        if fmt is None:
+            continue
+        sourcerpm = fmt.findtext(f"{{{RPM_NS}}}sourcerpm") or ""
+        source = source_name(sourcerpm)
+        if source is None:
+            continue
+        for entry in fmt.iterfind(f"{{{RPM_NS}}}provides/{{{RPM_NS}}}entry"):
+            provided_by.setdefault(entry.get("name", ""), set()).add(source)
+        # Files a package ships are Provides in every sense dnf cares about:
+        # a Requires: /usr/bin/foo resolves through them.
+        for file in package.iterfind(f"{{{COMMON_NS}}}file"):
+            provided_by.setdefault(file.text or "", set()).add(source)
+        needed = {
+            entry.get("name", "")
+            for entry in fmt.iterfind(f"{{{RPM_NS}}}requires/{{{RPM_NS}}}entry")
+        }
+        requires.append((source, needed))
+    dependents: dict[str, set[str]] = {}
+    for source, needed in requires:
+        for capability in needed:
+            for provider in provided_by.get(capability, ()):
+                if provider != source:
+                    dependents.setdefault(provider, set()).add(source)
+    return dependents
+
+
+def source_name(sourcerpm: str) -> str | None:
+    """`name` out of `name-version-release.src.rpm`, or None if it is not one."""
+    if not sourcerpm.endswith(".src.rpm"):
+        return None
+    nevr = sourcerpm[: -len(".src.rpm")]
+    name, _, _ = nevr.rpartition("-")
+    name, _, _ = name.rpartition("-")
+    return name or None
+
+
+def reverse_closure(names: set[str], dependents: dict[str, set[str]]) -> set[str]:
+    """Every published package that transitively depends on one of `names`."""
+    closure: set[str] = set()
+    frontier = list(names)
+    while frontier:
+        current = frontier.pop()
+        for dependent in dependents.get(current, ()):
+            if dependent not in closure and dependent not in names:
+                closure.add(dependent)
+                frontier.append(dependent)
+    return closure
 
 
 def normalize_version(version: str) -> str:
@@ -164,8 +240,15 @@ def plan(
     changed: set[str],
     full: bool,
     factory_repo: str,
+    dependents: dict[str, set[str]] | None = None,
 ) -> list[dict]:
-    """The recipes to build, in inventory order."""
+    """The recipes to build, in inventory order.
+
+    `dependents` is the reverse dependency map of the published repository
+    (see dependents_from_primary). Whatever is rebuilt drags its published
+    dependents with it, so a skip can never leave a consumer linked against
+    a library the same run is replacing.
+    """
     # Without a factory repository the build root cannot see anything the
     # published listing claims, so the listing is not a witness and nothing may
     # be skipped.
@@ -179,6 +262,14 @@ def plan(
             continue
         else:
             build.append(entry)
+    if dependents:
+        building = {entry["name"] for entry in build}
+        dragged = reverse_closure(building, dependents)
+        build = [
+            entry
+            for entry in config["packages"]
+            if entry["name"] in building or entry["name"] in dragged
+        ]
     return build
 
 

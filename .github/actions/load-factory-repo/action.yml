@@ -1,0 +1,77 @@
+name: Load the published factory repository
+description: >
+  Extract the repository out of the published factory image so that this job
+  can enable it as a local dnf repository, and so that `prepare` can read the
+  same listing to decide what is already built.
+
+  This is the two-witness rule from tools/rebuild_plan.py made physical. The
+  skip decision and the build root used to read a URL, and for weeks that URL
+  was a GitHub Pages mirror frozen at 67 packages from before the 343-recipe
+  contract -- the mirror had been retired, the deployment had not, and nothing
+  ever updated it. prepare therefore skipped 7 packages and rebuilt 333 on
+  every push, PR and nightly, whatever had changed. The image is the only
+  thing publish writes, so it is the only thing worth reading.
+
+  The image is pulled by the digest prepare resolved, the same way the build
+  root is shared, so every job in a run sees one repository even if publish
+  moves the tag mid-run.
+
+inputs:
+  image:
+    description: >
+      The factory image, as prepare resolved it (ref@digest). Empty when no
+      image has ever been published for this ref or its fallback, in which
+      case there is no repository, nothing may be skipped, and the output is
+      empty.
+    required: true
+  path:
+    description: Where to extract the repository, relative to the workspace.
+    required: false
+    default: work/factory
+
+outputs:
+  url:
+    description: >
+      file:// URL of the extracted repository as the build container sees it
+      under its /work mount, or empty when there is no repository.
+    value: ${{ steps.load.outputs.url }}
+
+runs:
+  using: composite
+  steps:
+    - name: Extract the repository from the factory image
+      id: load
+      shell: bash
+      env:
+        IMAGE: ${{ inputs.image }}
+        TARGET: ${{ inputs.path }}
+        GITHUB_TOKEN: ${{ github.token }}
+      run: |
+        set -euo pipefail
+        if [ -z "$IMAGE" ]; then
+          echo "no published factory image; nothing may be skipped as already built"
+          echo "url=" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+        # The package is public, so an anonymous pull works; the login only
+        # widens rate limits and is not allowed to fail the job. A fork PR
+        # holds a read-only token and that is enough here.
+        echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin \
+          || echo "::warning title=ghcr login failed::pulling the factory image anonymously"
+        docker pull "$IMAGE"
+        # The image is FROM scratch with one COPY and no entrypoint, so create
+        # needs a command it will never run.
+        container=$(docker create "$IMAGE" /bin/true)
+        rm -rf "$TARGET"
+        mkdir -p "$(dirname "$TARGET")"
+        docker cp "$container:/repository" "$TARGET"
+        docker rm "$container" >/dev/null
+        test -f "$TARGET/repodata/repomd.xml"
+        count=$(find "$TARGET" -name '*.rpm' | wc -l)
+        echo "factory repository: $count RPMs from $IMAGE"
+        # The build steps mount $PWD/work at /work, so the path the container
+        # will use is fixed by that mount, not by where this action extracted.
+        case "$TARGET" in
+          work/*) echo "url=file:///$TARGET" >> "$GITHUB_OUTPUT" ;;
+          *) echo "url=file://$PWD/$TARGET" >> "$GITHUB_OUTPUT" ;;
+        esac

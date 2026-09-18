@@ -7,11 +7,13 @@ import unittest
 
 from tools.rebuild_plan import (
     changed_entries,
+    dependents_from_primary,
     expected_release,
     is_published,
     overflow,
     plan,
     published_from_primary,
+    reverse_closure,
     stage_outputs,
 )
 
@@ -242,6 +244,93 @@ class PlanTests(unittest.TestCase):
                 ),
                 1,
             )
+
+
+def full_primary(*packages: tuple[str, str, list[str], list[str]]) -> bytes:
+    """A primary.xml with real namespaces, provides and requires.
+
+    Each package is (binary name, source name, provides, requires); the source
+    is always version 1.0 release 1.hum1.bfin.
+    """
+    body = ""
+    for name, source, provides, requires in packages:
+        body += (
+            f"<package type=\"rpm\"><name>{name}</name><format>"
+            f"<rpm:sourcerpm>{source}-1.0-1.hum1.bfin.src.rpm</rpm:sourcerpm>"
+            "<rpm:provides>"
+            + "".join(f"<rpm:entry name=\"{p}\"/>" for p in provides)
+            + "</rpm:provides><rpm:requires>"
+            + "".join(f"<rpm:entry name=\"{r}\"/>" for r in requires)
+            + "</rpm:requires></format></package>"
+        )
+    return (
+        "<metadata xmlns=\"http://linux.duke.edu/metadata/common\" "
+        "xmlns:rpm=\"http://linux.duke.edu/metadata/rpm\">" + body + "</metadata>"
+    ).encode()
+
+
+class DependentsTests(unittest.TestCase):
+    """The soname edge: a rebuilt library drags what links against it."""
+
+    PRIMARY = full_primary(
+        ("mutter-libs", "mutter", ["libmutter-17.so.0()(64bit)"], ["libc.so.6"]),
+        ("gnome-shell", "gnome-shell", ["gnome-shell"], ["libmutter-17.so.0()(64bit)"]),
+        ("gnome-shell-extension-x", "gse-x", [], ["gnome-shell"]),
+        ("unrelated", "unrelated", [], ["libc.so.6"]),
+    )
+
+    def test_maps_a_provider_to_the_sources_that_require_it(self) -> None:
+        self.assertEqual(
+            dependents_from_primary(self.PRIMARY),
+            {"mutter": {"gnome-shell"}, "gnome-shell": {"gse-x"}},
+        )
+
+    def test_a_package_requiring_its_own_subpackage_is_not_an_edge(self) -> None:
+        primary = full_primary(
+            ("demo", "demo", ["demo"], ["demo-libs"]),
+            ("demo-libs", "demo", ["demo-libs"], []),
+        )
+        self.assertEqual(dependents_from_primary(primary), {})
+
+    def test_closure_is_transitive_and_excludes_the_seed(self) -> None:
+        dependents = dependents_from_primary(self.PRIMARY)
+        self.assertEqual(reverse_closure({"mutter"}, dependents), {"gnome-shell", "gse-x"})
+
+    def test_a_rebuilt_library_drags_its_published_dependents(self) -> None:
+        # Every package is published at the version the inventory names, so
+        # without the closure only the changed mutter would build -- and the
+        # published gnome-shell would stay linked against the mutter this run
+        # replaces.
+        config = {
+            "packages": [
+                {"name": "mutter", "version": "1.0", "stage": 6},
+                {"name": "gnome-shell", "version": "1.0", "stage": 10},
+                {"name": "gse-x", "version": "1.0", "stage": 10},
+                {"name": "unrelated", "version": "1.0"},
+            ]
+        }
+        published = published_from_primary(self.PRIMARY)
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for name in ("mutter", "gnome-shell", "gse-x", "unrelated"):
+                recipe(root, name, "1")
+            build = plan(
+                config, root, published=published, changed={"mutter"},
+                full=False, factory_repo="file:///repo",
+                dependents=dependents_from_primary(self.PRIMARY),
+            )
+        # Inventory order is preserved so stages still come out in wave order.
+        self.assertEqual([e["name"] for e in build], ["mutter", "gnome-shell", "gse-x"])
+
+    def test_a_dependent_with_no_recipe_is_ignored(self) -> None:
+        # Something the repository still carries from a recipe that was since
+        # dropped cannot be rebuilt; the closure must not invent an entry.
+        config = {"packages": [{"name": "mutter", "version": "1.0"}]}
+        build = plan(
+            config, Path("/nonexistent"), published={}, changed={"mutter"},
+            full=False, factory_repo="", dependents={"mutter": {"ghost"}},
+        )
+        self.assertEqual([e["name"] for e in build], ["mutter"])
 
 
 class StageOutputTests(unittest.TestCase):
