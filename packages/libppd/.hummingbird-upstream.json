@@ -1,0 +1,8 @@
+{
+  "package": "libppd",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libppd.git",
+  "commit": "0c9053989649a5f2a4cfb1f3b3e22daec35651fc",
+  "tree": "8e2f17951fea886a2ed096d631204c247a988897",
+  "imported_at": "2026-09-19T17:17:33.400753+00:00"
+}

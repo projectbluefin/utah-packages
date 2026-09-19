@@ -142,6 +142,18 @@ packages:
     downstream_package_name: containerd
     paths:
       - packages/containerd
+  cups-browsed:
+    specfile_path: cups-browsed.spec
+    upstream_package_name: cups-browsed
+    downstream_package_name: cups-browsed
+    paths:
+      - packages/cups-browsed
+  cups-filters:
+    specfile_path: cups-filters.spec
+    upstream_package_name: cups-filters
+    downstream_package_name: cups-filters
+    paths:
+      - packages/cups-filters
   cups-pk-helper:
     specfile_path: cups-pk-helper.spec
     upstream_package_name: cups-pk-helper
@@ -910,6 +922,12 @@ packages:
     downstream_package_name: libcloudproviders
     paths:
       - packages/libcloudproviders
+  libcupsfilters:
+    specfile_path: libcupsfilters.spec
+    upstream_package_name: libcupsfilters
+    downstream_package_name: libcupsfilters
+    paths:
+      - packages/libcupsfilters
   libdatrie:
     specfile_path: libdatrie.spec
     upstream_package_name: libdatrie
@@ -1132,6 +1150,12 @@ packages:
     downstream_package_name: libplist
     paths:
       - packages/libplist
+  libppd:
+    specfile_path: libppd.spec
+    upstream_package_name: libppd
+    downstream_package_name: libppd
+    paths:
+      - packages/libppd
   libproxy:
     specfile_path: libproxy.spec
     upstream_package_name: libproxy

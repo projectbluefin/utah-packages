@@ -23,6 +23,15 @@ If it needs to build after something else this factory builds, give it a
 `stage`. Stage N resolves against everything in stages below N, and there is
 no stage above 4.
 
+Some recipes BuildRequire capabilities that a separate Fedora source package
+provides rather than building them in-tree. `cups-filters` and `cups-browsed`
+both `pkgconfig(libcupsfilters)` and `pkgconfig(libppd)`; those came from the
+split-out `libcupsfilters` and `libppd` source packages (the split landed in
+cups-filters 2.x), not from the `cups-filters` recipe itself. Import every
+source package a recipe's `BuildRequires` resolves to, and put the split-out
+libraries in an earlier `stage` than the recipes that consume them, or the
+consumer builds in the same concurrent wave before the library is published.
+
 Do not hand-edit `.hummingbird-upstream.json`. Re-import instead; it is
 provenance, and editing it makes the recipe claim an origin it does not have.
 

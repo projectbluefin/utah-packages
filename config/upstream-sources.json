@@ -2693,6 +2693,34 @@
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/zvbi/zvbi-0.2.45.tar.gz/sha512/c627b65627446287cededd26857a7f25191adc8c42cab5a66e76f9673e06cafa52d9c3e2d31e60f949bbcaa155f61b31d775876f97f3f5c7cffe980548992a07/zvbi-0.2.45.tar.gz",
       "filename": "zvbi-0.2.45.tar.gz",
       "sha512": "c627b65627446287cededd26857a7f25191adc8c42cab5a66e76f9673e06cafa52d9c3e2d31e60f949bbcaa155f61b31d775876f97f3f5c7cffe980548992a07"
+    },
+    {
+      "name": "libcupsfilters",
+      "version": "2.2.1",
+      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/libcupsfilters/libcupsfilters-2.2.1.tar.gz/sha512/9d4b34cd56fa9d6ad1307779458e231e5474fc046edb298d13ba9037574ed91a1ed2f13d479ab0028e1d213dfba867917c503cb926b9e605f74a29037ac026f0/libcupsfilters-2.2.1.tar.gz",
+      "filename": "libcupsfilters-2.2.1.tar.gz",
+      "sha512": "9d4b34cd56fa9d6ad1307779458e231e5474fc046edb298d13ba9037574ed91a1ed2f13d479ab0028e1d213dfba867917c503cb926b9e605f74a29037ac026f0"
+    },
+    {
+      "name": "libppd",
+      "version": "2.1.1",
+      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/libppd/libppd-2.1.1.tar.gz/sha512/401b91b96d8a0297d1c39c328037459d3ba7a9f78e011f6abc9c7d29f1c2677e001295a58642d94c2786f43116643f59205a6a29490ae40276871f59a82942e3/libppd-2.1.1.tar.gz",
+      "filename": "libppd-2.1.1.tar.gz",
+      "sha512": "401b91b96d8a0297d1c39c328037459d3ba7a9f78e011f6abc9c7d29f1c2677e001295a58642d94c2786f43116643f59205a6a29490ae40276871f59a82942e3"
+    },
+    {
+      "name": "cups-filters",
+      "version": "2.0.1",
+      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/cups-filters/cups-filters-2.0.1.tar.gz/sha512/b5d7b8f5a89a6a6bba0e861dd3c3263195be75996d22129d123f325f6bff74fbabf22f2ee2d953908ffb8294d825af5568af6695896c76ef4082ae98cd19c42c/cups-filters-2.0.1.tar.gz",
+      "filename": "cups-filters-2.0.1.tar.gz",
+      "sha512": "b5d7b8f5a89a6a6bba0e861dd3c3263195be75996d22129d123f325f6bff74fbabf22f2ee2d953908ffb8294d825af5568af6695896c76ef4082ae98cd19c42c"
+    },
+    {
+      "name": "cups-browsed",
+      "version": "2.1.1",
+      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/cups-browsed/cups-browsed-2.1.1.tar.gz/sha512/e0c611f9d43acd86561c2cb7cd23f27846620f8a96ce41dc8e97459d85e993aa501f9f35de411a5437bde92fdea74514a506942496ea2623378c6ab383d6aa8f/cups-browsed-2.1.1.tar.gz",
+      "filename": "cups-browsed-2.1.1.tar.gz",
+      "sha512": "e0c611f9d43acd86561c2cb7cd23f27846620f8a96ce41dc8e97459d85e993aa501f9f35de411a5437bde92fdea74514a506942496ea2623378c6ab383d6aa8f"
     }
   ]
 }
