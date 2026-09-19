@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   measure:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     env:
       # Digest-pinned to match runtime-contract.toml's bootc-os pin (Utah's
       # BASE_IMAGE), so the parity report measures the image Utah consumes.

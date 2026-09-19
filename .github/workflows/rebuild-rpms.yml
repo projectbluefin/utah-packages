@@ -61,7 +61,7 @@ permissions:
 
 jobs:
   prepare:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     env:
       # The build root this factory intends to use, recorded so the choice is
       # auditable and so Renovate keeps the digest current through the
@@ -179,7 +179,7 @@ jobs:
     # without resolving against the staged output. Read it as a worklist.
     needs: prepare
     if: needs.prepare.outputs.build_list != '[]'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     continue-on-error: true
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -415,7 +415,7 @@ jobs:
     # Every wave, not the first five. See publish below.
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8, rebuild9, rebuild10]
     if: ${{ !cancelled() && needs.prepare.outputs.build_list != '[]' }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: ./.github/actions/load-buildroot
@@ -545,7 +545,7 @@ jobs:
     concurrency:
       group: utah-packages-publish-${{ github.ref }}
       cancel-in-progress: false
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     outputs:
       ref: ${{ steps.oci.outputs.ref }}
       digest: ${{ steps.oci.outputs.digest }}
