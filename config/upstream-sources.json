@@ -742,7 +742,8 @@
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/gvfs/gvfs-1.61.91.tar.xz/sha512/6873df98a1589a9b7216e2e0abc7b0391478a38561eebf3970e6a05baa6f4e842fc43eb2c243ae5ea9a000e941601e01f39507fb6f1fae23fc5a11bff42e0b98/gvfs-1.61.91.tar.xz"
       ],
-      "stage": 1
+      "stage": 1,
+      "rebuild_reason": "Rebuild without bluray and nfs features disabled by spec bconds to drop libnfs.so and libbluray.so.3 dependencies."
     },
     {
       "name": "gweather-locations",
@@ -1348,7 +1349,8 @@
       "sha512": "ebb0bf74d6d1ae2d39a7cefcec0f4a04006fee330e147c49c863f6d4febb45e82ccebf36cc4e30812bd3591918ee8964fbde9a3a4793c5f60eaf30a0e011add0",
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/libheif/libheif-1.23.1.tar.gz/sha512/ebb0bf74d6d1ae2d39a7cefcec0f4a04006fee330e147c49c863f6d4febb45e82ccebf36cc4e30812bd3591918ee8964fbde9a3a4793c5f60eaf30a0e011add0/libheif-1.23.1.tar.gz"
-      ]
+      ],
+      "rebuild_reason": "Rebuild with ffmpeg and openjph disabled to drop libavcodec.so.62 and libopenjph.so.0.25 dependencies."
     },
     {
       "name": "libical",
@@ -1803,7 +1805,8 @@
       "version": "26.2.1",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/mesa/mesa-26.2.1.tar.xz/sha512/d4bc755442c6573a1b75cafad50ec66594fa0ca7599c525f368bdecbd551a970e890ed6b044d9251f84278d27dcaa30649fbf4f4bf0adbaa76e1cc1ba6a1181f/mesa-26.2.1.tar.xz",
       "filename": "mesa-26.2.1.tar.xz",
-      "sha512": "d4bc755442c6573a1b75cafad50ec66594fa0ca7599c525f368bdecbd551a970e890ed6b044d9251f84278d27dcaa30649fbf4f4bf0adbaa76e1cc1ba6a1181f"
+      "sha512": "d4bc755442c6573a1b75cafad50ec66594fa0ca7599c525f368bdecbd551a970e890ed6b044d9251f84278d27dcaa30649fbf4f4bf0adbaa76e1cc1ba6a1181f",
+      "rebuild_reason": "Rebuild against buildroot spirv-tools following spirv-tools recipe removal in 56b2973."
     },
     {
       "name": "mesa-demos",
@@ -1835,7 +1838,12 @@
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/mozc/mozc-2.29.5111.102.tar.xz/sha512/6a9c6abdc600e4e1c7fd9432419fb058adcf6bca45c27749f122e62ad520c8c1e2ce83ff55dd6b7975517924fb1c71d3a6e3a96a661703da627df372c2f5f700/mozc-2.29.5111.102.tar.xz",
       "filename": "mozc-2.29.5111.102.tar.xz",
       "sha512": "6a9c6abdc600e4e1c7fd9432419fb058adcf6bca45c27749f122e62ad520c8c1e2ce83ff55dd6b7975517924fb1c71d3a6e3a96a661703da627df372c2f5f700",
-      "stage": 1
+      "stage": 1,
+      "dist_bump": {
+        "count": 1,
+        "baseline": "21"
+      },
+      "rebuild_reason": "Rebuild against abseil-cpp in stage 0 to resolve libabsl soname change."
     },
     {
       "name": "mozjs140",

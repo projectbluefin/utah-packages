@@ -158,6 +158,7 @@ When a later stage cannot see what an earlier stage built, check in this order:
 | Exit **125**, log under ~1 KB (transient) | `docker run` failed before the build; infrastructure | Not the package. Re-run once at most |
 | `Signature verification failed` after a clean download | The repo's `gpgkey` is a multi-key bundle and one key in it fails to import | Point `gpgkey` at the single release key. Verify its fingerprint against the one the failing transaction named. **Keep `gpgcheck=1`** |
 | `wrong key?` on a third-party repo whose content the build does not need | A repo signed by a key the image does not trust | Disable that repo for the build |
+| `Validate Hummingbird-only consumer transaction` fails with missing soname/requires on published packages | Soname/ABI change in shared library or changed bconds/features, but consumer skipped as published | Add `rebuild_reason` (and `dist_bump` if spec has literal Release) in `config/upstream-sources.json` to force rebuild and invalidation |
 
 ## Verify against primary sources
 
