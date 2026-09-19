@@ -33,6 +33,7 @@ from __future__ import annotations
 
 import json
 import re
+import xml.etree.ElementTree as ElementTree
 from pathlib import Path
 
 from tools.dist_bump import BumpError, spec_release, suffix
@@ -75,6 +76,169 @@ def published_from_primary(primary: bytes) -> dict[str, tuple[str, str]]:
             continue
         published[name] = (version, remainder)
     return published
+
+
+# repodata primary.xml puts every rpm: element in this namespace.
+RPM_NS = "http://linux.duke.edu/metadata/rpm"
+COMMON_NS = "http://linux.duke.edu/metadata/common"
+
+
+def dependents_from_primary(primary: bytes) -> dict[str, set[str]]:
+    """Map source package name -> the source packages that depend on it.
+
+    Runtime dependencies, read from the published binaries: gnome-shell
+    Requires libmutter-17.so.0, which mutter-libs Provides, so mutter maps to
+    {gnome-shell}. That is exactly the edge a soname break travels along, and
+    the one a skip must never cut: with the published listing as a witness, a
+    fix to mutter would build mutter alone and leave a gnome-shell in the
+    repository that was linked against the mutter it just replaced. The
+    published repository carries no source RPMs, so BuildRequires are not
+    readable here; a devel package that is only built against, never linked,
+    is the residual gap.
+
+    Self-edges are dropped: a package requiring its own subpackages is not a
+    reason to rebuild anything else.
+    """
+    provided_by: dict[str, set[str]] = {}
+    requires: list[tuple[str, set[str]]] = []
+    root = ElementTree.fromstring(primary)
+    for package in root.iter(f"{{{COMMON_NS}}}package"):
+        fmt = package.find(f"{{{COMMON_NS}}}format")
+        if fmt is None:
+            continue
+        sourcerpm = fmt.findtext(f"{{{RPM_NS}}}sourcerpm") or ""
+        source = source_name(sourcerpm)
+        if source is None:
+            continue
+        for entry in fmt.iterfind(f"{{{RPM_NS}}}provides/{{{RPM_NS}}}entry"):
+            provided_by.setdefault(entry.get("name", ""), set()).add(source)
+        # Files a package ships are Provides in every sense dnf cares about:
+        # a Requires: /usr/bin/foo resolves through them.
+        for file in package.iterfind(f"{{{COMMON_NS}}}file"):
+            provided_by.setdefault(file.text or "", set()).add(source)
+        needed = {
+            entry.get("name", "")
+            for entry in fmt.iterfind(f"{{{RPM_NS}}}requires/{{{RPM_NS}}}entry")
+        }
+        requires.append((source, needed))
+    dependents: dict[str, set[str]] = {}
+    for source, needed in requires:
+        for capability in needed:
+            for provider in provided_by.get(capability, ()):
+                if provider != source:
+                    dependents.setdefault(provider, set()).add(source)
+    return dependents
+
+
+# Builds the consumer transaction refuses, as (name, version prefix). Their
+# capabilities must not count as provided here either, or this model disagrees
+# with the transaction it exists to predict.
+#
+# Hummingbird ships libicu 77.1 beside 78.3 under one package name; it has
+# migrated to 78 (every current build links libicuuc.so.78, only superseded ones
+# link .so.77), and the publish gate excludes 77 so consumers cannot split
+# across both. Counting 77 as provided here meant a published package linked
+# against it looked satisfiable, was skipped as fresh, and then failed the very
+# transaction this check exists to predict -- which is how run 35413902261 lost
+# publication after 331 green builds.
+EXCLUDED_EXTERNAL: tuple[tuple[str, str], ...] = (("libicu", "77."),)
+
+
+def provides_from_primary(
+    primary: bytes, excluded: tuple[tuple[str, str], ...] = EXCLUDED_EXTERNAL
+) -> set[str]:
+    """Every capability a repository provides: rpm Provides plus shipped files.
+
+    Builds named in `excluded` contribute nothing, because the consumer
+    transaction will not install them.
+    """
+    provided: set[str] = set()
+    root = ElementTree.fromstring(primary)
+    for package in root.iter(f"{{{COMMON_NS}}}package"):
+        fmt = package.find(f"{{{COMMON_NS}}}format")
+        if fmt is None:
+            continue
+        name = package.findtext(f"{{{COMMON_NS}}}name") or ""
+        version = package.find(f"{{{COMMON_NS}}}version")
+        ver = version.get("ver", "") if version is not None else ""
+        if any(name == excluded_name and ver.startswith(prefix)
+               for excluded_name, prefix in excluded):
+            continue
+        for entry in fmt.iterfind(f"{{{RPM_NS}}}provides/{{{RPM_NS}}}entry"):
+            provided.add(entry.get("name", ""))
+        for file in package.iterfind(f"{{{COMMON_NS}}}file"):
+            provided.add(file.text or "")
+    return provided
+
+
+def stale_from_primary(primary: bytes, external: set[str]) -> dict[str, set[str]]:
+    """Source name -> the Requires of its published binaries that nothing provides.
+
+    A published package can be exactly the recipe on disk and still be wrong:
+    it was linked against whatever the build root had at the time, and the
+    build root moves. libheif built when the factory carried ffmpeg 8 asks for
+    libavcodec.so.62; once ffmpeg 9 is published and provides .so.63, nothing
+    satisfies the old binary and the consumer transaction fails on it. The
+    same happens when Hummingbird bumps a soname underneath the factory.
+
+    Neither the recipe nor the inventory changed, so `changed` never sees it,
+    and the dependents map does not either: it follows edges from a provider
+    that exists, and here the provider is what went missing. This is the
+    third rule, and the only one that reads what the published binaries
+    actually ask for. `external` is what the consumer's other repository
+    (Hummingbird) provides; a Requires satisfied by neither side marks the
+    package stale, and stale packages rebuild -- against the current build
+    root, which is the only cure.
+
+    Skipped, to avoid calling healthy packages stale on a partial view:
+    rpmlib() capabilities, which are the package manager's; rich
+    dependencies in parentheses, which need dnf to evaluate; and file paths,
+    because primary.xml lists only a subset of files and the full list lives
+    in filelists.xml, which is not read here.
+    """
+    provided = provides_from_primary(primary) | external
+    stale: dict[str, set[str]] = {}
+    root = ElementTree.fromstring(primary)
+    for package in root.iter(f"{{{COMMON_NS}}}package"):
+        fmt = package.find(f"{{{COMMON_NS}}}format")
+        if fmt is None:
+            continue
+        source = source_name(fmt.findtext(f"{{{RPM_NS}}}sourcerpm") or "")
+        if source is None:
+            continue
+        for entry in fmt.iterfind(f"{{{RPM_NS}}}requires/{{{RPM_NS}}}entry"):
+            capability = entry.get("name", "")
+            if (
+                not capability
+                or capability.startswith(("rpmlib(", "(", "/"))
+                or capability in provided
+            ):
+                continue
+            stale.setdefault(source, set()).add(capability)
+    return stale
+
+
+def source_name(sourcerpm: str) -> str | None:
+    """`name` out of `name-version-release.src.rpm`, or None if it is not one."""
+    if not sourcerpm.endswith(".src.rpm"):
+        return None
+    nevr = sourcerpm[: -len(".src.rpm")]
+    name, _, _ = nevr.rpartition("-")
+    name, _, _ = name.rpartition("-")
+    return name or None
+
+
+def reverse_closure(names: set[str], dependents: dict[str, set[str]]) -> set[str]:
+    """Every published package that transitively depends on one of `names`."""
+    closure: set[str] = set()
+    frontier = list(names)
+    while frontier:
+        current = frontier.pop()
+        for dependent in dependents.get(current, ()):
+            if dependent not in closure and dependent not in names:
+                closure.add(dependent)
+                frontier.append(dependent)
+    return closure
 
 
 def normalize_version(version: str) -> str:
@@ -166,8 +330,18 @@ def plan(
     changed: set[str],
     full: bool,
     factory_repo: str,
+    dependents: dict[str, set[str]] | None = None,
+    stale: set[str] = frozenset(),
 ) -> list[dict]:
-    """The recipes to build, in inventory order."""
+    """The recipes to build, in inventory order.
+
+    `dependents` is the reverse dependency map of the published repository
+    (see dependents_from_primary). Whatever is rebuilt drags its published
+    dependents with it, so a skip can never leave a consumer linked against
+    a library the same run is replacing. `stale` names published packages
+    whose binaries require something nothing provides any more (see
+    stale_from_primary); they build regardless of matching the recipe.
+    """
     # Without a factory repository the build root cannot see anything the
     # published listing claims, so the listing is not a witness and nothing may
     # be skipped.
@@ -175,13 +349,48 @@ def plan(
     build = []
     for entry in config["packages"]:
         name = entry["name"]
-        if full or name in changed or not trust_published:
+        if full or name in changed or name in stale or not trust_published:
             build.append(entry)
         elif is_published(root, entry, published):
             continue
         else:
             build.append(entry)
+    if dependents:
+        building = {entry["name"] for entry in build}
+        dragged = reverse_closure(building, dependents)
+        build = [
+            entry
+            for entry in config["packages"]
+            if entry["name"] in building or entry["name"] in dragged
+        ]
     return build
+
+
+def cacheable(build: list[dict], changed: set[str], stale: set[str]) -> list[str]:
+    """Which selected packages may consult the per-package build cache.
+
+    The cache answers "have we already built this exact thing" (see
+    tools/package_cache_key.py and issue #177). It deliberately does not answer
+    "should this be rebuilt", which is what `plan` above decides -- so it narrows
+    nothing and widens nothing. Every package `plan` selected is still selected;
+    this only says which of them a build job may satisfy from the cache instead
+    of by compiling.
+
+    Two exclusions, both about intent rather than correctness:
+
+    `changed` is excluded because a recipe the author just edited is the one case
+    where they are owed a real build. The key would in fact miss -- editing the
+    recipe changes the recipe digest -- so this is belt and braces, and it keeps
+    the promise legible rather than resting on the key being right.
+
+    `stale` is excluded because a stale published package is one whose binaries
+    require something nothing provides any more. Its recipe may not have moved,
+    so its key can hit, and hitting would hand back the very build that is
+    broken. That is the one case where the cache would actively defeat the
+    repair, so it is named here rather than left to chance.
+    """
+    excluded = set(changed) | set(stale)
+    return [entry["name"] for entry in build if entry["name"] not in excluded]
 
 
 def stage_outputs(build: list[dict]) -> dict[str, str]:

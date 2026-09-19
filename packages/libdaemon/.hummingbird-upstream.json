@@ -1,0 +1,8 @@
+{
+  "package": "libdaemon",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libdaemon.git",
+  "commit": "1b64c23a73c3d27f891a05e82a26e4c4b0dcccb7",
+  "tree": "d48950b6e4fba074c60f23b5ee513e4e0505a7ec",
+  "imported_at": "2026-09-18T15:33:21.164222+00:00"
+}

@@ -1,0 +1,8 @@
+{
+  "package": "iw",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/iw.git",
+  "commit": "afe88e586306ab34c1df1e0d0fabb53ee7bb33f4",
+  "tree": "7dc7f06a2ac869887e485cb9496ac9d90b12d149",
+  "imported_at": "2026-09-18T15:33:20.415192+00:00"
+}

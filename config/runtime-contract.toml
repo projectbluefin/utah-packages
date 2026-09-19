@@ -21,6 +21,18 @@ sections = [
 
 [utah]
 packages = [
+  # Wi-Fi. Hummingbird ships NetworkManager-wifi but neither supplicant it
+  # requires nor the regulatory database; the factory builds wpa_supplicant,
+  # wireless-regdb and iw so the plugin resolves (utah-packages#136, utah#97).
+  "NetworkManager-wifi",
+  "wpa_supplicant",
+  "wireless-regdb",
+  # Hummingbird ships the avahi daemon but not libdaemon, which it links; the
+  # factory builds libdaemon so geoclue has a daemon to talk to (utah#104).
+  "avahi",
+  # Files. The factory built nautilus with no way to install it: gexiv2 and
+  # libportal were in no repository. Both are recipes now (utah#100).
+  "nautilus",
   "fwupd",
   "gnome-control-center",
   "gnome-session",

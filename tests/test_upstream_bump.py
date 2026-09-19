@@ -21,6 +21,14 @@ from tools.upstream_bump import (
     rpm_version,
     tarball_version,
     version_key,
+    forge_feed,
+    forge_label,
+    forge_planned_entry,
+    forge_proposal,
+    forge_versions,
+    strip_tag_prefix,
+    substituted,
+    candidates,
 )
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -389,3 +397,242 @@ class ApplyTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ForgeFeedDetectionTests(unittest.TestCase):
+    """Which locks this tool can poll, and which it must leave alone."""
+
+    def feed(self, url):
+        return forge_feed({"name": "x", "url": url})
+
+    def test_github_archive_and_release_shapes_are_distinguished(self):
+        archive = self.feed(
+            "https://github.com/rockowitz/ddcutil/archive/v2.2.1/ddcutil-2.2.1.tar.gz"
+        )
+        self.assertEqual(
+            (archive["forge"], archive["endpoint"], archive["owner"], archive["repo"]),
+            ("github", "tags", "rockowitz", "ddcutil"),
+        )
+        release = self.feed(
+            "https://github.com/lassekongo83/adw-gtk3/releases/download/v6.4/adw-gtk3v6.4.tar.xz"
+        )
+        self.assertEqual(
+            (release["forge"], release["endpoint"], release["repo"]),
+            ("github", "releases", "adw-gtk3"),
+        )
+
+    def test_gitlab_archive_release_and_plain_http_all_resolve(self):
+        for url, path in (
+            ("https://gitlab.freedesktop.org/camera/libcamera/-/archive/0.6.0/x.tar.bz2",
+             "camera/libcamera"),
+            ("https://gitlab.freedesktop.org/wayland/wayland-protocols/-/releases/1.49/downloads/x.tar.xz",
+             "wayland/wayland-protocols"),
+            # evtest is locked over http, and a scheme is not worth a missed feed.
+            ("http://gitlab.freedesktop.org/libevdev/evtest/-/archive/evtest-1.36/x.tar.bz2",
+             "libevdev/evtest"),
+        ):
+            with self.subTest(url=url):
+                feed = self.feed(url)
+                self.assertEqual(feed["forge"], "gitlab")
+                self.assertEqual(feed["path"], path)
+
+    def test_sources_without_a_release_feed_are_not_claimed(self):
+        # A lookaside path carries its digest in the URL and has nothing to
+        # poll; a bare directory listing has no API. Both must be skipped
+        # rather than guessed at.
+        for url in (
+            "https://src.fedoraproject.org/repo/pkgs/rpms/speex/speex-1.2.0.tar.gz/sha512/7fe/speex-1.2.0.tar.gz",
+            "https://xorg.freedesktop.org/archive/individual/app/igt-gpu-tools-2.5.tar.xz",
+            "https://download.gnome.org/sources/gtk4/4.23/gtk4-4.23.3.tar.xz",
+        ):
+            with self.subTest(url=url):
+                self.assertIsNone(self.feed(url))
+
+    def test_every_automatable_lock_in_the_real_inventory_is_claimed_once(self):
+        from tools.package_inventory import source_locks
+
+        locks = source_locks(ROOT)
+        found = candidates(locks)
+        names = [name for name, _, _ in found]
+        self.assertEqual(len(names), len(set(names)), "a lock was claimed twice")
+        # GNOME must keep being handled by the GNOME path, not swept into a
+        # forge one: gitlab.gnome.org and download.gnome.org are different
+        # feeds and only the latter has a cache.json.
+        for name, entry, feed in found:
+            with self.subTest(package=name):
+                if entry["url"].startswith("https://download.gnome.org/sources/"):
+                    self.assertEqual(feed["forge"], "gnome")
+
+
+class TagParsingTests(unittest.TestCase):
+    def test_version_is_recovered_from_common_tag_spellings(self):
+        for tag, expected in (
+            ("v2.2.1", "2.2.1"),
+            ("2.2.1", "2.2.1"),
+            ("release-1.4", "1.4"),
+            ("V3.0", "3.0"),
+            ("evtest-1.36", "1.36"),
+            ("xdg-desktop-portal-1.20.0", "1.20.0"),
+        ):
+            with self.subTest(tag=tag):
+                self.assertEqual(strip_tag_prefix(tag), expected)
+
+    def test_tags_that_are_not_versions_are_dropped(self):
+        for tag in ("main", "stable", "v", "", "HEAD"):
+            with self.subTest(tag=tag):
+                self.assertEqual(strip_tag_prefix(tag), "")
+
+
+class ForgeVersionListingTests(unittest.TestCase):
+    def test_github_tags_are_read_and_stripped(self):
+        feed = {"forge": "github", "endpoint": "tags", "owner": "o", "repo": "r"}
+        opener = fake_opener(
+            {
+                "https://api.github.com/repos/o/r/tags?per_page=100": json.dumps(
+                    [{"name": "v2.3.0"}, {"name": "v2.2.1"}, {"name": "main"}]
+                ).encode()
+            }
+        )
+        self.assertEqual(forge_versions(feed, opener=opener), ["2.3.0", "2.2.1"])
+
+    def test_github_draft_and_prerelease_flags_are_honoured(self):
+        # A maintainer's prerelease flag is a stronger signal than the version
+        # string, and some prereleases carry no alpha/beta suffix at all.
+        feed = {"forge": "github", "endpoint": "releases", "owner": "o", "repo": "r"}
+        opener = fake_opener(
+            {
+                "https://api.github.com/repos/o/r/releases?per_page=100": json.dumps(
+                    [
+                        {"tag_name": "v9.0", "draft": True},
+                        {"tag_name": "v8.0", "prerelease": True},
+                        {"tag_name": "v7.1"},
+                    ]
+                ).encode()
+            }
+        )
+        self.assertEqual(forge_versions(feed, opener=opener), ["7.1"])
+
+    def test_gitlab_project_path_is_url_encoded(self):
+        feed = {"forge": "gitlab", "endpoint": "tags",
+                "host": "gitlab.freedesktop.org", "path": "camera/libcamera"}
+        url = ("https://gitlab.freedesktop.org/api/v4/projects/"
+               "camera%2Flibcamera/repository/tags?per_page=100")
+        opener = fake_opener({url: json.dumps([{"name": "v0.6.0"}]).encode()})
+        self.assertEqual(forge_versions(feed, opener=opener), ["0.6.0"])
+
+    def test_a_non_list_response_is_an_error_not_an_empty_feed(self):
+        # GitHub answers rate limiting and 404 with an object. Treating that as
+        # "no releases" would silently report every package as up to date.
+        feed = {"forge": "github", "endpoint": "tags", "owner": "o", "repo": "r"}
+        opener = fake_opener(
+            {
+                "https://api.github.com/repos/o/r/tags?per_page=100":
+                    b'{"message": "API rate limit exceeded"}'
+            }
+        )
+        with self.assertRaises(ValueError):
+            forge_versions(feed, opener=opener)
+
+
+class ForgeProposalTests(unittest.TestCase):
+    ENTRY = {
+        "name": "ddcutil",
+        "version": "2.2.1",
+        "url": "https://github.com/rockowitz/ddcutil/archive/v2.2.1/ddcutil-2.2.1.tar.gz",
+    }
+    FEED = {"forge": "github", "endpoint": "tags", "owner": "rockowitz", "repo": "ddcutil"}
+
+    def propose(self, tags):
+        opener = fake_opener(
+            {
+                "https://api.github.com/repos/rockowitz/ddcutil/tags?per_page=100":
+                    json.dumps([{"name": t} for t in tags]).encode()
+            }
+        )
+        return forge_proposal("ddcutil", self.ENTRY, self.FEED, opener=opener)
+
+    def test_a_newer_release_in_the_same_major_is_an_update(self):
+        p = self.propose(["v2.3.0", "v2.2.1"])
+        self.assertEqual((p["kind"], p["latest"]), ("update", "2.3.0"))
+
+    def test_crossing_a_major_is_review_only(self):
+        # A major can move a soname and break every consumer in the graph.
+        p = self.propose(["v3.0.0", "v2.2.1"])
+        self.assertEqual((p["kind"], p["latest"]), ("review", "3.0.0"))
+
+    def test_the_newest_in_major_wins_even_when_a_major_also_exists(self):
+        p = self.propose(["v3.0.0", "v2.4.0", "v2.3.0", "v2.2.1"])
+        self.assertEqual((p["kind"], p["latest"]), ("update", "2.4.0"))
+
+    def test_prereleases_are_never_proposed(self):
+        p = self.propose(["v2.3.0-rc1", "v2.2.1"])
+        self.assertIsNone(p["latest"])
+
+    def test_nothing_newer_proposes_nothing(self):
+        p = self.propose(["v2.2.1", "v2.1.0"])
+        self.assertIsNone(p["latest"])
+        self.assertNotIn("kind", p)
+
+    def test_an_unreachable_forge_is_reported_and_not_fatal(self):
+        def broken(request, timeout=None):
+            raise OSError("connection reset")
+
+        p = forge_proposal("ddcutil", self.ENTRY, self.FEED, opener=broken)
+        self.assertIn("error", p)
+        self.assertIn("ddcutil", p["error"])
+
+
+class ForgeEntryRewriteTests(unittest.TestCase):
+    def test_every_url_field_moves_together(self):
+        entry = {
+            "name": "ddcutil",
+            "version": "2.2.1",
+            "url": "https://github.com/rockowitz/ddcutil/archive/v2.2.1/ddcutil-2.2.1.tar.gz",
+            "filename": "ddcutil-2.2.1.tar.gz",
+            "sha512": "old" * 10,
+            "fallback_urls": [
+                "https://src.fedoraproject.org/repo/pkgs/rpms/ddcutil/"
+                "ddcutil-2.2.1.tar.gz/sha512/" + "old" * 10 + "/ddcutil-2.2.1.tar.gz"
+            ],
+        }
+        updated = forge_planned_entry(entry, "2.3.0", "new" * 10)
+        self.assertEqual(updated["version"], "2.3.0")
+        self.assertEqual(updated["sha512"], "new" * 10)
+        # The v-prefixed tag moves in the same substitution as the bare version.
+        self.assertIn("/archive/v2.3.0/", updated["url"])
+        self.assertEqual(updated["filename"], "ddcutil-2.3.0.tar.gz")
+        # The lookaside fallback embeds both the filename and the digest, and
+        # is exactly what a field-by-field rebuild leaves pointing at the old
+        # tarball.
+        fallback = updated["fallback_urls"][0]
+        self.assertNotIn("2.2.1", fallback)
+        self.assertNotIn("old" * 10, fallback)
+        self.assertIn("new" * 10, fallback)
+
+    def test_a_version_absent_from_the_url_refuses_to_substitute(self):
+        # Substituting nothing would write a new version beside an old tarball.
+        entry = {
+            "name": "odd",
+            "version": "1.0",
+            "url": "https://example.invalid/odd/latest.tar.gz",
+            "sha512": "x" * 8,
+        }
+        with self.assertRaises(ValueError):
+            forge_planned_entry(entry, "1.1", "y" * 8)
+
+    def test_substituted_handles_strings_and_lists(self):
+        self.assertEqual(substituted("a-1.0", [("1.0", "2.0")]), "a-2.0")
+        self.assertEqual(substituted(["a-1.0", "b-1.0"], [("1.0", "2.0")]),
+                         ["a-2.0", "b-2.0"])
+
+
+class ForgeLabelTests(unittest.TestCase):
+    def test_labels_name_the_project_for_a_report(self):
+        self.assertEqual(
+            forge_label({"forge": "github", "owner": "o", "repo": "r"}),
+            "github.com/o/r",
+        )
+        self.assertEqual(
+            forge_label({"forge": "gitlab", "host": "h", "path": "a/b"}),
+            "h/a/b",
+        )

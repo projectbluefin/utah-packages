@@ -21,7 +21,10 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from tools.rebuild_plan import (
+    stale_from_primary,
+    provides_from_primary,
     changed_entries,
+    dependents_from_primary,
     overflow,
     plan,
     published_from_primary,
@@ -74,14 +77,17 @@ def changed_inventory(base_sha: str, paths: list[str]) -> set[str]:
     return changed_entries(before, after)
 
 
-def fetch_published(base_url: str) -> dict[str, tuple[str, str]]:
-    """What the published repository already carries, by source package.
+def fetch_primary(base_url: str) -> bytes:
+    """The decompressed primary.xml of the repository at base_url.
 
-    A failure here is not fatal: an empty result means nothing can be proven
+    base_url is normally the file:// path of the repository `prepare`
+    extracted from the published factory image, so the listing read here is
+    byte-for-byte the one every build root will have enabled. A failure here
+    is not fatal to the caller: an empty result means nothing can be proven
     published, so everything rebuilds. Slower, never wrong.
     """
     if not base_url:
-        return {}
+        return b""
     if not base_url.endswith("/"):
         base_url += "/"
     repomd = (
@@ -97,7 +103,20 @@ def fetch_published(base_url: str) -> dict[str, tuple[str, str]]:
         primary = zstandard.ZstdDecompressor().stream_reader(io.BytesIO(raw)).read()
     else:
         primary = gzip.GzipFile(fileobj=io.BytesIO(raw)).read()
-    return published_from_primary(primary)
+    return primary
+
+
+def hummingbird_baseurl(repo_file: Path) -> str:
+    """The baseurl of config/hummingbird.repo, with a trailing slash."""
+    match = re.search(r"^baseurl=(\S+)", repo_file.read_text(), re.MULTILINE)
+    if match is None:
+        raise ValueError(f"{repo_file} has no baseurl")
+    return match.group(1).rstrip("/") + "/"
+
+
+def fetch_published(base_url: str) -> dict[str, tuple[str, str]]:
+    """What the published repository already carries, by source package."""
+    return published_from_primary(fetch_primary(base_url))
 
 
 def main() -> int:
@@ -109,15 +128,37 @@ def main() -> int:
     print(f"changed package recipes: {', '.join(sorted(changed)) or 'none'}")
 
     published: dict[str, tuple[str, str]] = {}
+    dependents: dict[str, set[str]] = {}
+    stale: dict[str, set[str]] = {}
     if not full:
+        primary = b""
         try:
-            published = fetch_published(factory_repo)
+            primary = fetch_primary(factory_repo)
+            published = published_from_primary(primary)
+            dependents = dependents_from_primary(primary) if primary else {}
             print(f"published repo has {len(published)} source packages")
         except Exception as error:  # noqa: BLE001 - availability, not correctness
             print(
                 f"WARNING: could not read published repo, rebuilding all: {error}",
                 file=sys.stderr,
             )
+        # A published package whose binaries require something that neither
+        # the published repository nor Hummingbird provides is stale: it was
+        # built against a build root that has since moved. Without the
+        # Hummingbird listing that judgement cannot be made, so it is not
+        # made -- the run then trusts the recipe match alone, as before.
+        if primary:
+            try:
+                external = provides_from_primary(
+                    fetch_primary(hummingbird_baseurl(ROOT / "config" / "hummingbird.repo"))
+                )
+                stale = stale_from_primary(primary, external)
+            except Exception as error:  # noqa: BLE001 - availability, not correctness
+                print(
+                    "WARNING: could not read the Hummingbird repository, "
+                    f"so stale published builds cannot be detected: {error}",
+                    file=sys.stderr,
+                )
     if not factory_repo:
         print(
             "WARNING: no factory repository for the build root; "
@@ -132,11 +173,26 @@ def main() -> int:
         changed=changed,
         full=full,
         factory_repo=factory_repo,
+        dependents=dependents,
+        stale=set(stale),
     )
     building = {entry["name"] for entry in build}
+    direct = {
+        entry["name"]
+        for entry in plan(
+            config, ROOT, published=published, changed=changed, full=full,
+            factory_repo=factory_repo, stale=set(stale),
+        )
+    }
     for entry in config["packages"]:
-        if entry["name"] not in building:
-            print(f"skip {entry['name']}: already published")
+        name = entry["name"]
+        if name not in building:
+            print(f"skip {name}: already published")
+        elif name in stale:
+            missing = ", ".join(sorted(stale[name])[:3])
+            print(f"rebuild {name}: published build requires {missing}, which nothing provides")
+        elif name not in direct:
+            print(f"rebuild {name}: depends on something being rebuilt")
 
     if late := overflow(build):
         raise SystemExit(
