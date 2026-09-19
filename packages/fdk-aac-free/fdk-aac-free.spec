@@ -2,6 +2,9 @@ Name:           fdk-aac-free
 Version:        2.0.3
 Release:        3%{?dist}
 Summary:        Third-Party Modified Version of the Fraunhofer FDK AAC Codec Library for Android
+# Bluefin requests the Fedora multimedia binary name; retain the free-codec
+# source package name and provide the expected capability.
+Provides:       libfdk-aac = %{?epoch:%{epoch}:}%{version}-%{release}
 
 License:        FDK-AAC
 URL:            https://cgit.freedesktop.org/~wtay/fdk-aac/log/?h=fedora

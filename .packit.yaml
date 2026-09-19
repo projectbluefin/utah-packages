@@ -10,6 +10,12 @@ packages:
     downstream_package_name: ModemManager
     paths:
       - packages/ModemManager
+  PackageKit:
+    specfile_path: PackageKit.spec
+    upstream_package_name: PackageKit
+    downstream_package_name: PackageKit
+    paths:
+      - packages/PackageKit
   SDL3:
     specfile_path: SDL3.spec
     upstream_package_name: SDL3
@@ -70,6 +76,12 @@ packages:
     downstream_package_name: alsa-tools
     paths:
       - packages/alsa-tools
+  alsa-utils:
+    specfile_path: alsa-utils.spec
+    upstream_package_name: alsa-utils
+    downstream_package_name: alsa-utils
+    paths:
+      - packages/alsa-utils
   appstream:
     specfile_path: appstream.spec
     upstream_package_name: appstream
@@ -226,6 +238,12 @@ packages:
     downstream_package_name: ffmpeg
     paths:
       - packages/ffmpeg
+  ffmpegthumbnailer:
+    specfile_path: ffmpegthumbnailer.spec
+    upstream_package_name: ffmpegthumbnailer
+    downstream_package_name: ffmpegthumbnailer
+    paths:
+      - packages/ffmpegthumbnailer
   firewalld:
     specfile_path: firewalld.spec
     upstream_package_name: firewalld
@@ -484,6 +502,12 @@ packages:
     downstream_package_name: gstreamer1
     paths:
       - packages/gstreamer1
+  gstreamer1-plugin-libav:
+    specfile_path: gstreamer1-plugin-libav.spec
+    upstream_package_name: gstreamer1-plugin-libav
+    downstream_package_name: gstreamer1-plugin-libav
+    paths:
+      - packages/gstreamer1-plugin-libav
   gstreamer1-plugins-bad-free:
     specfile_path: gstreamer1-plugins-bad-free.spec
     upstream_package_name: gstreamer1-plugins-bad-free
@@ -502,6 +526,12 @@ packages:
     downstream_package_name: gstreamer1-plugins-good
     paths:
       - packages/gstreamer1-plugins-good
+  gstreamer1-plugins-ugly-free:
+    specfile_path: gstreamer1-plugins-ugly-free.spec
+    upstream_package_name: gstreamer1-plugins-ugly-free
+    downstream_package_name: gstreamer1-plugins-ugly-free
+    paths:
+      - packages/gstreamer1-plugins-ugly-free
   gtk2:
     specfile_path: gtk2.spec
     upstream_package_name: gtk2
@@ -1648,6 +1678,12 @@ packages:
     downstream_package_name: rust-bootupd
     paths:
       - packages/rust-bootupd
+  rust-gst-plugin-dav1d:
+    specfile_path: rust-gst-plugin-dav1d.spec
+    upstream_package_name: rust-gst-plugin-dav1d
+    downstream_package_name: rust-gst-plugin-dav1d
+    paths:
+      - packages/rust-gst-plugin-dav1d
   rust-just:
     specfile_path: rust-just.spec
     upstream_package_name: rust-just

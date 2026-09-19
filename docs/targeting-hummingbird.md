@@ -159,6 +159,27 @@ malcontent with no parental controls UI should not reach anyone's system.
 
 This is the same shape as Hummingbird's toolchain ordering, one layer up.
 
+## Multimedia closure
+
+Bluefin's multimedia install is a transaction, not just the twelve Mesa and
+VA-API overrides in `base.toml`: `03-packages.sh` also installs FFmpeg,
+GStreamer, LAME, FDK-AAC, JPEG XL, the thumbnailer, and the mandatory members
+of Fedora's `@multimedia` group. The factory records those binary names in
+`[multimedia_overrides]` and keeps a machine-readable mapping in
+`reports/bluefin-multimedia-closure.json`. The conditional `gstreamer-plugins-espeak`
+member is documented as an exception, while `alsa-ucm` is supplied by
+Hummingbird and is reported rather than rebuilt.
+
+Some Fedora source recipes deliberately use `-free` binary names. The factory
+must retain those names in its source inventory while adding versioned
+`Provides` for Bluefin's unsuffixed transaction (`ffmpeg`, `libav*`, and
+`libfdk-aac`); otherwise dependency resolution silently falls back to Fedora's
+codec libraries. The same closure can expose build cycles: libheif keeps its
+bootstrap configuration and declines the optional FFmpeg/OpenJPH paths, while
+the GStreamer bad plugins decline chromaprint, OpenCV, and ONNX paths whose
+Fedora dependencies cannot resolve against the factory's replaced libraries.
+These are narrow buildroot exceptions, not omissions from the runtime report.
+
 ## How the packages are published
 
 The repository is published twice, and only one of them is meant to be consumed.

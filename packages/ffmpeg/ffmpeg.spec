@@ -329,6 +329,10 @@ This build of ffmpeg is limited in the number of codecs supported.
 %if "x%{?pkg_suffix}" != "x"
 %package -n     %{pkg_name}
 Summary:        A complete solution to record, convert and stream audio and video
+# Bluefin installs the Fedora multimedia names. Keep the free-codec payload
+# namespaced while satisfying that transaction through versioned Provides.
+Provides:       ffmpeg = %{?epoch:%{epoch}:}%{version}-%{release}
+Provides:       ffmpeg-libs = %{?epoch:%{epoch}:}%{version}-%{release}
 Requires:       libavcodec%{?pkg_suffix}%{_isa} = %{version}-%{release}
 Requires:       libavdevice%{?pkg_suffix}%{_isa} = %{version}-%{release}
 Requires:       libavfilter%{?pkg_suffix}%{_isa} = %{version}-%{release}
@@ -390,6 +394,7 @@ community or a corporation.
 
 %package -n libavcodec%{?pkg_suffix}
 Summary:        FFmpeg codec library
+Provides:       libavcodec = %{?epoch:%{epoch}:}%{version}-%{release}
 Requires:       libavutil%{?pkg_suffix}%{_isa} = %{version}-%{release}
 Requires:       libswresample%{?pkg_suffix}%{_isa} = %{version}-%{release}
 # We require libopenh264 library, which has a dummy implementation and a real one
@@ -436,6 +441,7 @@ This subpackage contains the headers for FFmpeg libavcodec.
 
 %package -n libavdevice%{?pkg_suffix}
 Summary:        FFmpeg device library
+Provides:       libavdevice = %{?epoch:%{epoch}:}%{version}-%{release}
 Requires:       libavcodec%{?pkg_suffix}%{_isa} = %{version}-%{release}
 Requires:       libavfilter%{?pkg_suffix}%{_isa} = %{version}-%{release}
 Requires:       libavformat%{?pkg_suffix}%{_isa} = %{version}-%{release}
@@ -482,6 +488,7 @@ This subpackage contains the headers for FFmpeg libavdevice.
 
 %package -n libavfilter%{?pkg_suffix}
 Summary:        FFmpeg audio and video filtering library
+Provides:       libavfilter = %{?epoch:%{epoch}:}%{version}-%{release}
 Requires:       libavcodec%{?pkg_suffix}%{_isa} = %{version}-%{release}
 Requires:       libavformat%{?pkg_suffix}%{_isa} = %{version}-%{release}
 Requires:       libavutil%{?pkg_suffix}%{_isa} = %{version}-%{release}
@@ -524,6 +531,7 @@ This subpackage contains the headers for FFmpeg libavfilter.
 
 %package -n libavformat%{?pkg_suffix}
 Summary:        FFmpeg's stream format library
+Provides:       libavformat = %{?epoch:%{epoch}:}%{version}-%{release}
 Requires:       libavcodec%{?pkg_suffix}%{_isa} = %{version}-%{release}
 Requires:       libavutil%{?pkg_suffix}%{_isa} = %{version}-%{release}
 
@@ -569,6 +577,7 @@ This subpackage contains the headers for FFmpeg libavformat.
 
 %package -n libavutil%{?pkg_suffix}
 Summary:        FFmpeg's utility library
+Provides:       libavutil = %{?epoch:%{epoch}:}%{version}-%{release}
 Group:          System/Libraries
 Obsoletes:      libpostproc%{?pkg_suffix} < 8.0
 
@@ -610,6 +619,7 @@ This subpackage contains the headers for FFmpeg libavutil.
 
 %package -n libswresample%{?pkg_suffix}
 Summary:        FFmpeg software resampling library
+Provides:       libswresample = %{?epoch:%{epoch}:}%{version}-%{release}
 Requires:       libavutil%{?pkg_suffix}%{_isa} = %{version}-%{release}
 
 %description -n libswresample%{?pkg_suffix}
@@ -643,6 +653,7 @@ This subpackage contains the headers for FFmpeg libswresample.
 
 %package -n libswscale%{?pkg_suffix}
 Summary:        FFmpeg image scaling and colorspace/pixel conversion library
+Provides:       libswscale = %{?epoch:%{epoch}:}%{version}-%{release}
 Requires:       libavutil%{?pkg_suffix}%{_isa} = %{version}-%{release}
 
 %description -n libswscale%{?pkg_suffix}

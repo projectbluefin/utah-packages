@@ -1,0 +1,24 @@
+[package]
+bin-package-name = "gstreamer1-plugin-dav1d"
+suppress-cdylib-install-fixme = true
+extra-files = ["%{_libdir}/gstreamer-1.0/libgstdav1d.so"]
+bin-package-extra = """\
+# additionally provide the upstream name
+Provides:       %{crate} = %{version}-%{release}
+"""
+
+[requires]
+build = ["cargo-c >= 0.9.21"]
+
+[scripts]
+build.post = [
+    "%cargo_cbuild",
+]
+install.post = [
+    "%cargo_cinstall",
+    "# remove statically linked library",
+    "rm -v %{buildroot}/%{_libdir}/gstreamer-1.0/libgstdav1d.a",
+    "# remove unnecessary pkgconfig file",
+    "rm -v %{buildroot}/%{_libdir}/pkgconfig/gstdav1d.pc",
+]
+

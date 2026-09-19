@@ -1,0 +1,8 @@
+{
+  "package": "ffmpegthumbnailer",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/ffmpegthumbnailer.git",
+  "commit": "777ed73238b36fdf58912fea771ff1534e8d5c20",
+  "tree": "2729027d076695566929983863b810c84ec51994",
+  "imported_at": "2026-09-11T16:38:08.822971+00:00"
+}

@@ -9,6 +9,14 @@
       "sha512": "692d0699037845f7e189cc854f6fbaab90615c9eaaada83a00a02745d13bd87afac16349a4211425929a84cf373fda18475479bff64c9fe89cb35b361fb45663"
     },
     {
+      "name": "PackageKit",
+      "version": "1.3.6",
+      "url": "http://www.freedesktop.org/software/PackageKit/releases/PackageKit-1.3.6.tar.xz",
+      "filename": "PackageKit-1.3.6.tar.xz",
+      "sha512": "5c4a9f9647be13348e7abfd758a3e8e26b75d33e563fea2cc85817c4d70a7afe36fd725825a23ed188cce2594c8da454504df25d777a28e170e5969bfe2cc4b2",
+      "stage": 0
+    },
+    {
       "name": "SDL3",
       "version": "3.4.16",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/SDL3/SDL3-3.4.16.tar.gz/sha512/74a5ee1e5bba138a8daa710e200ac3585c60f696311c46252d86bc685c55e8271cd0d68439f8e13ca515b702d46ef58914d0f7b2352019870a5763ed79739e9a/SDL3-3.4.16.tar.gz",
@@ -86,6 +94,13 @@
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/alsa-tools/alsa-tools-1.2.15.tar.bz2/sha512/b2354fcaccfa316df7847438ad6b4ca3702be4ca88c46878c198a52ca6c659263b61759d4898e7a73acf64dd0e3004c103fa67a1cbdb2e53212f13368173be23/alsa-tools-1.2.15.tar.bz2",
       "filename": "alsa-tools-1.2.15.tar.bz2",
       "sha512": "b2354fcaccfa316df7847438ad6b4ca3702be4ca88c46878c198a52ca6c659263b61759d4898e7a73acf64dd0e3004c103fa67a1cbdb2e53212f13368173be23"
+    },
+    {
+      "name": "alsa-utils",
+      "version": "1.2.16",
+      "url": "https://www.alsa-project.org/files/pub/utils/alsa-utils-1.2.16.tar.bz2",
+      "filename": "alsa-utils-1.2.16.tar.bz2",
+      "sha512": "288c042f5acb8a7cf1b0a0c25327c74e0bce126124253bdb2d0dc2630b8bc80b5e5d694de97738d031377fd82d887db32af1c4b27c6d940357b318d0a3ef02cf"
     },
     {
       "name": "appstream",
@@ -286,6 +301,14 @@
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/ffmpeg/ffmpeg-9.0.1.tar.xz/sha512/be8cdfca64886f2ec5cd2359f8db6a998ee759d105b10ade9b2a7b640356ad56ab0ff50218fce7b6312462f15f98d90ac9d197a3b02a23771754d2714fec628d/ffmpeg-9.0.1.tar.xz",
       "filename": "ffmpeg-9.0.1.tar.xz",
       "sha512": "be8cdfca64886f2ec5cd2359f8db6a998ee759d105b10ade9b2a7b640356ad56ab0ff50218fce7b6312462f15f98d90ac9d197a3b02a23771754d2714fec628d"
+    },
+    {
+      "name": "ffmpegthumbnailer",
+      "version": "2.3.0",
+      "url": "https://github.com/dirkvdb/ffmpegthumbnailer/archive/v2.3.0/ffmpegthumbnailer-2.3.0.tar.gz",
+      "filename": "ffmpegthumbnailer-2.3.0.tar.gz",
+      "stage": 4,
+      "sha512": "1eaa5446fc4388638a7b90600e1408c62d3d677bced5ba18b6f5be4745795fee2f5f084e9d315cbdfc963fd9ae7e655fb4b61a34d8e8558eb0f891334e2637e8"
     },
     {
       "name": "firewalld",
@@ -654,6 +677,14 @@
       "sha512": "66ce778b7beed3d5f96d866a8866184c20380b1be4b0088fa5d5627bf9dc06a67f974ec78a6f0077333b7905be7658d00f4a716483957a90fd498e532b4846ea"
     },
     {
+      "name": "gstreamer1-plugin-libav",
+      "version": "1.28.6",
+      "url": "https://gstreamer.freedesktop.org/src/gst-libav/gst-libav-1.28.6.tar.xz",
+      "filename": "gst-libav-1.28.6.tar.xz",
+      "stage": 4,
+      "sha512": "6c11b4149945a5cf557a7ddfe2fef6a70ce504b49e126f2a19ccd9ec601d5867da31527a669c77aa3e22fe20015503f4190ab11e20554999b02ba652690785b6"
+    },
+    {
       "name": "gstreamer1-plugins-bad-free",
       "version": "1.28.6",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/gstreamer1-plugins-bad-free/gst-plugins-bad-1.28.6.tar.xz/sha512/233c88e50af78204f1a707eba67350df1140d4293ae1bfe7a6f64ee9ce423968c4d9a515aed397cc88f302f69c86e11f3d6a7d43c406dbd30e34febc934b83d8/gst-plugins-bad-1.28.6.tar.xz",
@@ -675,6 +706,14 @@
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/gstreamer1-plugins-good/gst-plugins-good-1.28.6.tar.xz/sha512/49a691f00f5b0c6010551b0affa272df3b74854b84d2342c9a6f874cd0032215142ca4f60ee89cb34dc54e10423ba6b6a7fd7b31eb0d48d26ece49f64b6d5494/gst-plugins-good-1.28.6.tar.xz",
       "filename": "gst-plugins-good-1.28.6.tar.xz",
       "sha512": "49a691f00f5b0c6010551b0affa272df3b74854b84d2342c9a6f874cd0032215142ca4f60ee89cb34dc54e10423ba6b6a7fd7b31eb0d48d26ece49f64b6d5494"
+    },
+    {
+      "name": "gstreamer1-plugins-ugly-free",
+      "version": "1.28.6",
+      "url": "https://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.28.6.tar.xz",
+      "filename": "gst-plugins-ugly-1.28.6.tar.xz",
+      "stage": 1,
+      "sha512": "6356a7281366c278b21f1ad775fb82dbafebc9b52c64173f53bb037cc7dd5d989ec1f9d031fddbd4e1170915046907a3e2747becc3087a5c2d31a9c38bbb5a25"
     },
     {
       "name": "gtk2",
@@ -2171,6 +2210,13 @@
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/rust-bootupd/bootupd-0.2.36.crate/sha512/2ee451f486ef35a1978731657fcbbd964f525e29b73a603b72250f84518bfc1afb13acb0ef9b2ae96ac4be4efb586c516d4c7f88605c990ed241b57c1edd6d7e/bootupd-0.2.36.crate"
       ]
+    },
+    {
+      "name": "rust-gst-plugin-dav1d",
+      "version": "0.15.0",
+      "url": "https://crates.io/api/v1/crates/gst-plugin-dav1d/0.15.0/download#/gst-plugin-dav1d-0.15.0.crate",
+      "filename": "gst-plugin-dav1d-0.15.0.crate",
+      "sha512": "9326a569da4ad762f743107577d4817bb28724cfb036b35eaf7d57acfb25d0b52239df86d778e519788651d867200e4c0c2a3cacf438fc3d3f3e2016e02f5cc8"
     },
     {
       "name": "rust-just",

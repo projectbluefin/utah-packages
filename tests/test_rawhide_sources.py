@@ -12,6 +12,7 @@ from pathlib import Path
 import tomllib
 import unittest
 
+from tools.import_bluefin_rawhide import explicit_sources
 from tools.rawhide_sources import IMPORT_SECTIONS, import_binaries, source_name
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -50,6 +51,24 @@ class ImportBinariesTests(unittest.TestCase):
     def test_missing_section_is_an_error_not_an_empty_set(self):
         with self.assertRaises(ValueError):
             import_binaries({"fedora": {"packages": ["a"]}})
+
+    def test_explicit_source_map_is_used_for_multimedia_aliases(self):
+        self.assertEqual(
+            explicit_sources({
+                "multimedia_sources": {
+                    "source_by_binary": {"ffmpeg": "ffmpeg"},
+                },
+            }),
+            {"ffmpeg": "ffmpeg"},
+        )
+
+    def test_explicit_source_map_rejects_non_string_values(self):
+        with self.assertRaises(ValueError):
+            explicit_sources({"multimedia_sources": {"source_by_binary": {"ffmpeg": 1}}})
+
+    def test_explicit_source_map_rejects_non_table_section(self):
+        with self.assertRaises(ValueError):
+            explicit_sources({"multimedia_sources": []})
 
     def test_release_specific_sections_are_not_ingested(self):
         # fedora_v42/v43/v44 are part of the Bluefin contract measured by
