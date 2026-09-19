@@ -19,6 +19,7 @@ from tools.source_pipeline import (
     bundled_sources,
     fetch,
     fetch_with_fallbacks,
+    main,
     selected,
     source_manifest,
     stage_for_packit,
@@ -52,14 +53,64 @@ class SourcePipelineTests(unittest.TestCase):
 
     def test_uses_fallback_only_after_upstream_transport_failure(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
-            destination = Path(directory) / "source"
-            with patch(
-                "tools.source_pipeline.fetch",
-                side_effect=[RuntimeError("HTTP Error 418"), None],
-            ) as fetch:
-                chosen = fetch_with_fallbacks(["https://upstream.example/source", "https://mirror.example/source"], destination)
-            self.assertEqual(chosen, "https://mirror.example/source")
-            self.assertEqual(fetch.call_count, 2)
+            root = Path(directory)
+            (root / "packages" / "demo").mkdir(parents=True)
+            payload = b"verified fallback bytes"
+            expected_sha512 = hashlib.sha512(payload).hexdigest()
+            expected_sha256 = hashlib.sha256(payload).hexdigest()
+            upstream = "https://upstream.example/source"
+            fallback = "https://mirror.example/source"
+            checksum_url = "https://upstream.example/SHA256SUMS"
+            config = root / "sources.json"
+            config.write_text(
+                json.dumps(
+                    {
+                        "packages": [
+                            {
+                                "name": "demo",
+                                "url": upstream,
+                                "fallback_urls": [fallback],
+                                "sha256_url": checksum_url,
+                                "filename": "demo.tar.gz",
+                                "sha512": expected_sha512,
+                            }
+                        ]
+                    }
+                )
+            )
+
+            def fetch_source(url: str, target: Path) -> None:
+                if url == upstream:
+                    raise RuntimeError("upstream unavailable")
+                if url == checksum_url:
+                    target.write_text(f"{expected_sha256}  demo.tar.gz\n")
+                else:
+                    target.write_bytes(payload)
+
+            argv = [
+                str(SOURCE_PIPELINE),
+                "demo",
+                "--config",
+                str(config),
+                "--output",
+                str(root / "sources"),
+                "--report-dir",
+                str(root / "reports"),
+            ]
+            with working_directory(root), patch.object(sys, "argv", argv), patch(
+                "tools.source_pipeline.fetch", side_effect=fetch_source
+            ) as fetched:
+                self.assertEqual(main(), 0)
+
+            accepted = root / "sources" / "demo" / "demo.tar.gz"
+            self.assertEqual(accepted.read_bytes(), payload)
+            self.assertEqual(hashlib.sha512(accepted.read_bytes()).hexdigest(), expected_sha512)
+            report = json.loads((root / "reports" / "demo.json").read_text())
+            self.assertEqual(report["resolved_url"], fallback)
+            self.assertEqual(
+                [call.args[0] for call in fetched.call_args_list],
+                [upstream, fallback, checksum_url],
+            )
 
     def test_reports_every_failed_url(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
