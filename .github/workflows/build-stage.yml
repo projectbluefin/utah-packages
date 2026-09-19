@@ -199,33 +199,41 @@ jobs:
               # libvdpau, appstream and libtheora all failed here (issue #75).
               # Exclude the legacy default-gems from the Hummingbird repository so
               # ruby4.0 alone answers for default gems.
-              # libicu joins that list, and it is the same decision the consumer
-              # transaction already makes. Hummingbird has migrated to ICU 78:
-              # read against its primary.xml, every current build links
-              # libicuuc.so.78 and only superseded ones link .so.77
-              # (harfbuzz-icu up to 14.2.0-1, boost 1.90.0-6.1 and -7). The two
-              # libicu builds share a package name, so dnf installs exactly one,
-              # and nothing forced which. A build root that resolved the
-              # superseded copy dragged in libicu 77, which made libicu-devel
-              # resolve to 77.1 to match, and the package then linked ICU 77:
               #
-              #   package nautilus-51~beta-1.hum1.bfin from factory requires
+              # libicu does NOT join that list, and the attempt to add it is worth
+              # recording because the reasoning looked airtight and was not.
+              #
+              # Hummingbird has migrated to ICU 78: read against its primary.xml,
+              # every current build links libicuuc.so.78 and only superseded ones
+              # link .so.77. From that it seemed to follow that excluding
+              # libicu-77 from the Hummingbird repository could not strand
+              # anything, since no current Hummingbird build needs it.
+              #
+              # The build root is not only Hummingbird. It also carries Fedora
+              # binaries that Hummingbird has never rebuilt, and those link
+              # whatever ICU Fedora built them against -- libical-3.0.20-7.fc44
+              # requires libicuuc.so.77 outright. HB_EXCLUDE above already keeps
+              # Fedora libicu out, so Hummingbird superseded libicu-77 is the
+              # only remaining provider of .so.77. Excluding it too leaves none,
+              # and the root stops resolving:
+              #
+              #   package libical-3.0.20-7.fc44 from fedora requires
               #   libicuuc.so.77, but none of the providers can be installed
               #   - package libicu-77.1-2.1.hum1 is filtered out by exclude filtering
               #
-              # which failed the Hummingbird-only consumer transaction in run
-              # 35413902261. The exclusion there and the one here have to agree,
-              # or the factory builds against an ICU its consumers refuse. This
-              # is not the blanket exclusion 012cb6a reverted: that one reached
-              # Fedora, whose build-only deps do legitimately link ICU 77, and
-              # HB_EXCLUDE already keeps Fedora ICU out of the build root
-              # entirely. Excluding it here cannot strand a current Hummingbird
-              # package, because no current build requires it.
+              # bluez failed exactly that way in run 35443117478, at stage 0,
+              # which is worse than the publish failure the exclusion was meant to
+              # fix: it loses all 331 builds instead of one gate. 012cb6a reverted
+              # a blanket libicu exclusion for the same underlying reason, and
+              # scoping it to the Hummingbird repository did not change the
+              # reason -- it only changed which repository the last provider of
+              # .so.77 happened to live in.
               #
-              # Release is its own field for the reason 1f88491 found: dnf splits
-              # a spec on dashes before globbing, so libicu-77.*hum1 would parse
-              # 77.*hum1 as the version and match nothing.
-              HB_REPO_EXCLUDE="ruby3.3-default-gems,ruby3.4-default-gems,libicu-77.*-*hum1"
+              # The real problem is still open: a factory package can link ICU 77
+              # because Fedora build deps pull it into the root, and the consumer
+              # transaction then refuses that package. It has to be solved without
+              # removing the .so.77 provider the root legitimately needs.
+              HB_REPO_EXCLUDE="ruby3.3-default-gems,ruby3.4-default-gems"
               echo "hummingbird repo exclusions: $HB_REPO_EXCLUDE"
               if [ -n "${FACTORY_REPO:-}" ]; then
                 printf "[factory]\nname=factory\nbaseurl=%s\nenabled=1\ngpgcheck=0\npriority=5\n" \

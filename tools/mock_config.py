@@ -53,16 +53,14 @@ HUMMINGBIRD_WINS = (
 HUMMINGBIRD_REPO_EXCLUDE = (
     "ruby3.3-default-gems",
     "ruby3.4-default-gems",
-    # Hummingbird ships libicu 77.1 beside 78.3 under one package name, so dnf
-    # installs exactly one and nothing forced which. It has migrated to 78:
-    # every current build links libicuuc.so.78 and only superseded ones link
-    # .so.77 (harfbuzz-icu up to 14.2.0-1, boost 1.90.0-6.1 and -7). A build
-    # root that resolved a superseded copy pulled libicu 77, libicu-devel
-    # followed it to 77.1, and the built package then required libicuuc.so.77 --
-    # which the consumer transaction excludes, so it could not be installed at
-    # all. Both roots have to make the same choice. Release is its own field
-    # because dnf splits a spec on dashes before globbing (1f88491).
-    "libicu-77.*-*hum1",
+    # libicu-77.*-*hum1 does NOT belong here, though it was added once and had
+    # to come back out. Hummingbird has migrated to ICU 78 and only its
+    # superseded builds link .so.77, so excluding 77 looked free. But the build
+    # root also carries Fedora binaries Hummingbird never rebuilt, and
+    # libical-3.0.20-7.fc44 requires libicuuc.so.77 outright. Fedora libicu is
+    # already excluded above, so Hummingbird superseded 77 is the last provider
+    # of .so.77; excluding it too left none and bluez stopped resolving at stage
+    # 0 of run 35443117478. See the matching note in build-stage.yml.
 )
 
 FEDORA_RELEASEVER = "44"

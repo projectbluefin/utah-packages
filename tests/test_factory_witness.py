@@ -100,42 +100,63 @@ if __name__ == "__main__":
 
 
 class IcuAgreementTests(unittest.TestCase):
-    """The build root and the consumer transaction must exclude the same ICU.
+    """The build root must keep the ICU 77 provider the consumer side refuses.
 
     Hummingbird ships libicu 77.1 beside 78.3 under one package name, so dnf
-    installs exactly one. The consumer transaction excludes 77, because
-    Hummingbird has migrated to 78: every current build links libicuuc.so.78 and
-    only superseded ones link .so.77. If the build root does not make the same
-    choice, the factory links an ICU its consumers refuse -- which is how
-    nautilus came to require libicuuc.so.77 and fail publication in run
-    35413902261, after all 331 builds had passed.
+    installs exactly one, and Hummingbird itself has migrated to 78: every
+    current build links libicuuc.so.78 and only superseded ones link .so.77.
+    From that it looks as though excluding libicu 77 from the Hummingbird
+    repository in the build root could not strand anything, and these tests
+    asserted exactly that for one revision.
+
+    It is wrong, and the way it is wrong is the point. The build root is not
+    only Hummingbird: it carries Fedora binaries Hummingbird never rebuilt, and
+    libical-3.0.20-7.fc44 requires libicuuc.so.77 outright. Fedora libicu is
+    already excluded from the root so Hummingbird wins the name, which leaves
+    Hummingbird superseded libicu-77 as the last provider of .so.77. Excluding
+    it too left none, and bluez stopped resolving at stage 0 of run
+    35443117478 -- a worse failure than the publish-gate one it was meant to
+    fix, because it loses every build rather than one gate.
+
+    So the two halves are deliberately asymmetric, and that asymmetry is what
+    is pinned here: the consumer transaction excludes ICU 77 because nothing it
+    installs may link it; the build root does not, because Fedora build deps
+    legitimately do.
     """
 
     SPELLING = "libicu-77.*-*hum1"
 
-    def test_both_halves_exclude_the_same_icu(self):
-        consumer = uncommented(REBUILD)
-        buildroot = uncommented(BUILD_STAGE)
-        self.assertIn(self.SPELLING, consumer,
+    def test_the_consumer_transaction_still_excludes_icu_77(self):
+        self.assertIn(self.SPELLING, uncommented(REBUILD),
                       "the consumer transaction must exclude libicu 77")
-        self.assertIn(self.SPELLING, buildroot,
-                      "the build root must exclude the same libicu 77")
 
-    def test_the_spelling_keeps_release_as_its_own_field(self):
-        # dnf splits a package spec on dashes before globbing each field, so
-        # libicu-77.*hum1 parses 77.*hum1 as the version and matches nothing.
-        for text in (uncommented(REBUILD), uncommented(BUILD_STAGE)):
-            self.assertNotIn("libicu-77.*hum1", text.replace(self.SPELLING, ""))
-
-    def test_the_build_root_exclusion_is_scoped_to_hummingbird(self):
-        # Excluding ICU 77 from Fedora as well is what 012cb6a had to revert:
-        # Fedora build-only deps legitimately link it.
+    def test_the_build_root_does_not_exclude_the_last_provider_of_so_77(self):
         text = uncommented(BUILD_STAGE)
         hb_line = next(line for line in text.splitlines()
                        if line.strip().startswith("HB_REPO_EXCLUDE="))
-        self.assertIn(self.SPELLING, hb_line)
-        fedora_lines = [line for line in text.splitlines()
-                        if "fedora.excludepkgs" in line]
-        self.assertTrue(fedora_lines)
-        for line in fedora_lines:
-            self.assertNotIn("libicu-77", line)
+        self.assertNotIn("libicu", hb_line,
+                         "excluding libicu from the build root strands Fedora "
+                         "packages that require libicuuc.so.77 (bluez, run "
+                         "35443117478)")
+
+    def test_the_mock_root_agrees_with_the_container_root(self):
+        # The two build roots encode one policy; test_mock_config.py asserts
+        # that in general, and this pins the specific decision so a future
+        # change has to make it in both places or fail here.
+        import tools.mock_config as mock_config
+        self.assertNotIn(
+            self.SPELLING, mock_config.HUMMINGBIRD_REPO_EXCLUDE,
+            "the mock root must not exclude libicu 77 either")
+
+    def test_the_spelling_keeps_release_as_its_own_field(self):
+        # Where ICU 77 *is* excluded, the spelling still matters: dnf splits a
+        # package spec on dashes before globbing each field, so libicu-77.*hum1
+        # parses 77.*hum1 as the version and matches nothing.
+        text = uncommented(REBUILD)
+        self.assertNotIn("libicu-77.*hum1", text.replace(self.SPELLING, ""))
+
+    def test_fedora_icu_77_is_not_excluded_either(self):
+        # 012cb6a reverted a blanket exclusion for the same underlying reason.
+        for line in uncommented(BUILD_STAGE).splitlines():
+            if "fedora.excludepkgs" in line:
+                self.assertNotIn("libicu-77", line)
