@@ -170,6 +170,11 @@ Do not infer a version from what Rawhide ships or from a package name.
 - **Binary versus source names** — `wayland` the source RPM ships as
   `libwayland-server` and `wayland-devel`. A name lookup that misses is not a
   missing package.
+- **Direct-upstream vs Fedora dist-git** — packages like `pipewire-libs-extra`,
+  `liblc3plus`, and `libfreeaptx` carry `branch: upstream` in
+  `.hummingbird-upstream.json`. They are built by the factory from upstream
+  releases, not imported from Fedora dist-git. Do not triage them as Rawhide
+  import gaps or declare them unavailable in the runtime contract.
 
 ## Never
 
@@ -186,6 +191,7 @@ Do not infer a version from what Rawhide ships or from a package name.
 | "It is a mock configuration problem." | There is no mock. It is installed and never invoked; the root is hand-simulated. See Rule 1. |
 | "The artifact uploaded, so the package built." | Every artifact also carries `work/reports/*.json`, so one file always matches and the upload reports success while shipping no RPM. Rule 4. |
 | "This package is missing from Fedora." | Check whether it is one of ours in an earlier wave, and whether you are searching for a binary name that its source package does not use. |
+| "Rawhide resolver reports a package as unavailable from Fedora Rawhide." | Check if the package is maintained directly by the factory (e.g. `pipewire-libs-extra` with `.hummingbird-upstream.json` `branch: upstream`). The Rawhide import resolver must skip factory-sourced packages rather than flagging them as missing Rawhide sources or recording them as contract debt in `runtime-contract.toml`. |
 | "Re-running will fix it." | Only for transient infrastructure exit 125 with a sub-kilobyte log, and only once. Exit 125 with `manifest unknown` means the pinned digest is gone and requires repinning. |
 
 ## Red Flags
