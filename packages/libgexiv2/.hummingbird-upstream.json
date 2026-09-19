@@ -1,0 +1,8 @@
+{
+  "package": "libgexiv2",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libgexiv2.git",
+  "commit": "d8a483817e21d036bb4b623eb8f1d520f37cc8aa",
+  "tree": "f945c1a6a38126005972dd9f636da127a8f08bcb",
+  "imported_at": "2026-09-18T15:34:34.152326+00:00"
+}

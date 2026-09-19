@@ -1,0 +1,8 @@
+{
+  "package": "spirv-tools",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/spirv-tools.git",
+  "commit": "1f49f35cfd4f76936bb8df3ed170c981bdb9d25f",
+  "tree": "ddcd1d06bbb0ddddf1bd9d6920d519ebdc4a0ac5",
+  "imported_at": "2026-09-18T14:53:57.973418+00:00"
+}

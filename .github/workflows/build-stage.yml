@@ -33,6 +33,14 @@ on:
         required: false
         default: container
         type: string
+      factory_image:
+        description: >
+          The published factory image as prepare resolved it (ref@digest), or
+          empty when none exists. Its repository is what prepare skipped
+          against, so it is what this build root gets to install from.
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: read
@@ -48,6 +56,10 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: ./.github/actions/setup-sccache
       - uses: ./.github/actions/load-buildroot
+      - uses: ./.github/actions/load-factory-repo
+        id: factory
+        with:
+          image: ${{ inputs.factory_image }}
       - name: Collect RPMs built by earlier stages
         if: inputs.stage != '0'
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
@@ -68,14 +80,15 @@ jobs:
           # `prepare` skips any package the published repository already
           # carries at the same version, so the build root MUST be able to
           # reach that repository -- a skipped package is otherwise simply
-          # absent. It was: vars.FACTORY_REPO is unset on pull_request runs,
-          # so the [factory] block below never ran and pipewire-libs-extra
-          # failed on `No match for argument: pkgconfig(libfreeaptx)` while
-          # libfreeaptx-devel sat published and skipped. Default to the same
-          # published URL `prepare` reads to decide what to skip, so the two
-          # halves of that decision cannot disagree. The repository variable
-          # still wins when set.
-          FACTORY_REPO: ${{ vars.FACTORY_REPO || 'https://projectbluefin.github.io/utah-packages/' }}
+          # absent. It was, twice: first vars.FACTORY_REPO was unset on
+          # pull_request runs and pipewire-libs-extra failed on
+          # `No match for argument: pkgconfig(libfreeaptx)` while
+          # libfreeaptx-devel sat published and skipped; then both halves read
+          # the same URL, and the URL was a retired Pages mirror. Now both read
+          # the repository extracted from the one image prepare resolved, as a
+          # local file:// repo, so they cannot disagree and nothing is fetched
+          # over HTTP mid-build.
+          FACTORY_REPO: ${{ steps.factory.outputs.url }}
         run: |
           test -d "packages/$PACKAGE"
           mkdir -p work/result
@@ -186,6 +199,40 @@ jobs:
               # libvdpau, appstream and libtheora all failed here (issue #75).
               # Exclude the legacy default-gems from the Hummingbird repository so
               # ruby4.0 alone answers for default gems.
+              #
+              # libicu does NOT join that list, and the attempt to add it is worth
+              # recording because the reasoning looked airtight and was not.
+              #
+              # Hummingbird has migrated to ICU 78: read against its primary.xml,
+              # every current build links libicuuc.so.78 and only superseded ones
+              # link .so.77. From that it seemed to follow that excluding
+              # libicu-77 from the Hummingbird repository could not strand
+              # anything, since no current Hummingbird build needs it.
+              #
+              # The build root is not only Hummingbird. It also carries Fedora
+              # binaries that Hummingbird has never rebuilt, and those link
+              # whatever ICU Fedora built them against -- libical-3.0.20-7.fc44
+              # requires libicuuc.so.77 outright. HB_EXCLUDE above already keeps
+              # Fedora libicu out, so Hummingbird superseded libicu-77 is the
+              # only remaining provider of .so.77. Excluding it too leaves none,
+              # and the root stops resolving:
+              #
+              #   package libical-3.0.20-7.fc44 from fedora requires
+              #   libicuuc.so.77, but none of the providers can be installed
+              #   - package libicu-77.1-2.1.hum1 is filtered out by exclude filtering
+              #
+              # bluez failed exactly that way in run 35443117478, at stage 0,
+              # which is worse than the publish failure the exclusion was meant to
+              # fix: it loses all 331 builds instead of one gate. 012cb6a reverted
+              # a blanket libicu exclusion for the same underlying reason, and
+              # scoping it to the Hummingbird repository did not change the
+              # reason -- it only changed which repository the last provider of
+              # .so.77 happened to live in.
+              #
+              # The real problem is still open: a factory package can link ICU 77
+              # because Fedora build deps pull it into the root, and the consumer
+              # transaction then refuses that package. It has to be solved without
+              # removing the .so.77 provider the root legitimately needs.
               HB_REPO_EXCLUDE="ruby3.3-default-gems,ruby3.4-default-gems"
               echo "hummingbird repo exclusions: $HB_REPO_EXCLUDE"
               if [ -n "${FACTORY_REPO:-}" ]; then
@@ -345,7 +392,33 @@ jobs:
                 useradd --create-home --home-dir /builddir mockbuild
               mkdir -p /builddir/rpmbuild/SRPMS
               chown -R mockbuild:mockbuild /builddir/rpmbuild "$staged" /work/result
-              build_rpm() { runuser -u mockbuild -- rpmbuild --define "_topdir /builddir/rpmbuild" "$@"; }
+              # No debuginfo. The upload below excludes every debuginfo and
+              # debugsource RPM by pattern, so they were being built, stripped
+              # and compressed only to be thrown away: webkitgtk spent 25
+              # minutes in find-debuginfo and another 10 compressing four
+              # debuginfo RPMs, on the serial critical path of an eight-hour
+              # run. Publishing debuginfo would be a separate artifact; until
+              # then nothing pays for it.
+              #
+              # Two defines, because one is not enough. debug_package %{nil}
+              # keeps rpmbuild from declaring the native -debuginfo
+              # subpackage. It does not stop find-debuginfo: that runs from
+              # __spec_install_post whenever __debug_package is set, and the
+              # ten specs that build a MinGW half (opus, libsoup3, taglib...)
+              # set it themselves through %mingw_debug_package. With only the
+              # first define those built, ran find-debuginfo, and failed on
+              # the native .debug files nothing declared -- run 380, all ten,
+              # "Installed (but unpackaged) file(s) found". Emptying
+              # __debug_install_post stops the native extraction at the
+              # source. The MinGW halves keep their own -debuginfo
+              # subpackages, produced by the explicit %mingw_debug_install_post
+              # in %install, which the upload filter drops like the rest.
+              build_rpm() {
+                runuser -u mockbuild -- rpmbuild \
+                  --define "_topdir /builddir/rpmbuild" \
+                  --define "debug_package %{nil}" \
+                  --define "__debug_install_post %{nil}" "$@"
+              }
               # Packages with %generate_buildrequires -- every Rust one -- compute
               # their real BuildRequires during the build, so the spec alone does not
               # list them and rpmbuild exits 11 asking to be re-run. Install what the
@@ -428,7 +501,7 @@ jobs:
         if: inputs.backend == 'mock'
         env:
           PACKAGE: ${{ matrix.package }}
-          FACTORY_REPO: ${{ vars.FACTORY_REPO || 'https://projectbluefin.github.io/utah-packages/' }}
+          FACTORY_REPO: ${{ steps.factory.outputs.url }}
         run: |
           test -d "packages/$PACKAGE"
           mkdir -p work/result work/srpm work/mock
@@ -477,9 +550,13 @@ jobs:
                 --define "_srcrpmdir /work/srpm" \
                 --define "dist $DISTTAG" \
                 /packages/$PACKAGE/*.spec
+              # No debuginfo, for the reasons the container lane gives --
+              # both defines, or the MinGW specs fail on orphaned .debug files.
               mock --root /work/mock/utah.cfg \
                 --resultdir /work/result \
                 --define "dist $DISTTAG" \
+                --define "debug_package %{nil}" \
+                --define "__debug_install_post %{nil}" \
                 --rebuild /work/srpm/*.src.rpm
               find /work/result -name "*.rpm" -type f -print0 | \
                 xargs -0 -r rpm -qp --qf "%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n"

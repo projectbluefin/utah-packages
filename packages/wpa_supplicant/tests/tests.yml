@@ -1,0 +1,14 @@
+# Tests for wpa_supplicant using NM's wifi and 802.1x tests
+- hosts: localhost
+  roles:
+  - role: standard-test-basic
+    tags:
+    - classic
+    repositories:
+    - repo: "https://gitlab.freedesktop.org/NetworkManager/NetworkManager-ci"
+      dest: "NetworkManager-ci"
+    tests:
+    - sanity-tests:
+        dir: NetworkManager-ci
+        run: run/osci/run-tests wpa_supplicant
+

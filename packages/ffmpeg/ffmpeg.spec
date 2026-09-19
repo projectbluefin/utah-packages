@@ -88,7 +88,24 @@
 %bcond placebo 0
 %else
 %bcond lcms2 1
-%bcond placebo 1
+# libplacebo is in neither of Utah's runtime repositories. Hummingbird does not
+# package it at all (checked: no libplacebo in its primary.xml), and the factory
+# has no recipe, so the BuildRequires above is satisfied only by Fedora 44 in
+# the build root. The result was an ffmpeg-free nobody could install:
+#
+#   nothing provides libplacebo.so.360()(64bit) needed by
+#   ffmpeg-free-9.0.1-1.hum1.bfin.x86_64 from factory
+#
+# which failed the Hummingbird-only consumer transaction in run 35413902261 and
+# took gnome-shell-extension-gsconnect with it, since that needs /usr/bin/ffmpeg.
+# A build-only dependency from Fedora becoming a runtime dependency nothing can
+# satisfy is the shape this factory exists to prevent.
+#
+# Turning it off costs the Vulkan-backed libavfilter paths (placebo scaling and
+# tone mapping). Re-enable it the day libplacebo has a recipe here -- it would
+# need glslang, shaderc and spirv-headers first, none of which the factory
+# builds yet.
+%bcond placebo 0
 %endif
 
 # For using an alternative build of EVC codecs
@@ -125,7 +142,7 @@ Name:           ffmpeg
 %global pkg_name %{name}%{?pkg_suffix}
 
 Version:        9.0.1
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        A complete solution to record, convert and stream audio and video
 License:        GPL-3.0-or-later
 URL:            https://ffmpeg.org/
@@ -1007,6 +1024,10 @@ rm -rf %{buildroot}%{_datadir}
 
 
 %changelog
+* Sat Sep 19 2026 Utah package factory <noreply@projectbluefin.io> - 9.0.1-2
+- build without libplacebo: it is in neither runtime repository, so the
+  resulting libplacebo.so.360 dependency was unsatisfiable for consumers
+
 * Thu Sep 03 2026 Dominik Mierzejewski <dominik@greysector.net> - 9.0.1-1
 - update to 9.0.1 (resolves rhbz#2510859)
 - bump SONAMEs of all libraries

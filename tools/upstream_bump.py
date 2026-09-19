@@ -48,9 +48,11 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import re
 import sys
 import urllib.error
+import urllib.parse
 import urllib.request
 from pathlib import Path
 
@@ -59,6 +61,23 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from tools.package_inventory import source_locks
 
 GNOME_SOURCES = "https://download.gnome.org/sources/"
+
+# The git forges this factory locks sources on. Both expose an ordered tag
+# list, which is the only feed a bump needs; releases are preferred over tags
+# where a project publishes them, because a tag is not a release.
+GITHUB_API = "https://api.github.com"
+FORGE_ARCHIVE = re.compile(
+    r"^https://github\.com/(?P<owner>[^/]+)/(?P<repo>[^/]+)/archive/"
+)
+FORGE_RELEASE = re.compile(
+    r"^https://github\.com/(?P<owner>[^/]+)/(?P<repo>[^/]+)/releases/download/"
+)
+# http:// appears in one lock (evtest) and a scheme is not worth missing a
+# feed over. Both GitLab shapes resolve to the same tag list: /-/archive/<tag>
+# and /-/releases/<tag>/downloads/<asset> name the tag in the same position.
+GITLAB_ARCHIVE = re.compile(
+    r"^https?://(?P<host>[^/]*gitlab[^/]*)/(?P<path>.+?)/-/(?:archive|releases)/"
+)
 LOOKASIDE = "https://src.fedoraproject.org/repo/pkgs/rpms"
 
 # alpha/beta/rc in any spelling GNOME uses: 51.beta, 51~rc, 1.10.beta.1.
@@ -175,6 +194,97 @@ def release_cycle(version: str) -> str:
     return ".".join(numeric[:-1]) if len(numeric) >= 3 else numeric[0]
 
 
+def forge_feed(entry: dict) -> dict | None:
+    """The git-forge release feed a locked entry tracks, if it tracks one.
+
+    Returns a descriptor rather than a tuple because the three shapes differ in
+    what they need: GitHub releases are read from a different endpoint than
+    GitHub tags, and GitLab is a different host entirely.
+    """
+    url = entry.get("url", "")
+    match = FORGE_RELEASE.match(url)
+    if match:
+        return {"forge": "github", "endpoint": "releases", **match.groupdict()}
+    match = FORGE_ARCHIVE.match(url)
+    if match:
+        return {"forge": "github", "endpoint": "tags", **match.groupdict()}
+    match = GITLAB_ARCHIVE.match(url)
+    if match:
+        return {"forge": "gitlab", "endpoint": "tags", **match.groupdict()}
+    return None
+
+
+def forge_label(feed: dict) -> str:
+    """A short human name for a feed, for reports."""
+    if feed["forge"] == "github":
+        return f"github.com/{feed['owner']}/{feed['repo']}"
+    return f"{feed['host']}/{feed['path']}"
+
+
+def _forge_request(url: str) -> urllib.request.Request:
+    """A forge API request, authenticated when a token is in the environment.
+
+    Unauthenticated GitHub allows 60 requests an hour, and this factory locks
+    36 sources on it, so an anonymous run would rate-limit part way through and
+    report the rest as unreachable. The workflow supplies GITHUB_TOKEN.
+    """
+    headers = {
+        "User-Agent": "utah-packages-bump/1",
+        "Accept": "application/vnd.github+json",
+    }
+    token = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
+    if token and url.startswith(GITHUB_API):
+        headers["Authorization"] = f"Bearer {token}"
+    return urllib.request.Request(url, headers=headers)
+
+
+def forge_versions(feed: dict, opener=urllib.request.urlopen) -> list[str]:
+    """Every version a forge lists for a project, tag prefixes stripped.
+
+    Draft and prerelease-flagged GitHub releases are dropped here rather than
+    left to is_prerelease: a maintainer marking a release prerelease is a
+    stronger signal than the version string, and some use neither an alpha nor
+    a beta suffix for one.
+    """
+    if feed["forge"] == "github":
+        url = (
+            f"{GITHUB_API}/repos/{feed['owner']}/{feed['repo']}"
+            f"/{feed['endpoint']}?per_page=100"
+        )
+    else:
+        project = urllib.parse.quote(feed["path"], safe="")
+        url = (
+            f"https://{feed['host']}/api/v4/projects/{project}"
+            f"/repository/tags?per_page=100"
+        )
+    with opener(_forge_request(url), timeout=60) as response:
+        document = json.loads(response.read())
+    if not isinstance(document, list):
+        raise ValueError("forge returned no list")
+    found = []
+    for item in document:
+        if feed.get("endpoint") == "releases" and feed["forge"] == "github":
+            if item.get("draft") or item.get("prerelease"):
+                continue
+            tag = item.get("tag_name", "")
+        else:
+            tag = item.get("name", "")
+        version = strip_tag_prefix(tag)
+        if version:
+            found.append(version)
+    return found
+
+
+def strip_tag_prefix(tag: str) -> str:
+    """The version inside a tag name: v2.2.1, release-2.2.1 and 2.2.1 alike.
+
+    A tag carrying no digits at all is not a version and returns empty, which
+    drops branch-style tags such as "main" or "stable" from the feed.
+    """
+    match = re.match(r"^[A-Za-z._-]*?(\d.*)$", tag.strip())
+    return match.group(1) if match else ""
+
+
 def gnome_module(entry: dict) -> str | None:
     """The download.gnome.org module a locked entry tracks, if it tracks one."""
     url = entry.get("url", "")
@@ -233,6 +343,50 @@ def planned_entry(entry: dict, release: str, digest: str) -> dict:
     return updated
 
 
+def substituted(value, replacements: list[tuple[str, str]]):
+    """A string, or list of strings, with every replacement applied in turn."""
+    if isinstance(value, list):
+        return [substituted(item, replacements) for item in value]
+    for old, new in replacements:
+        value = value.replace(old, new)
+    return value
+
+
+def forge_planned_entry(entry: dict, release: str, digest: str) -> dict:
+    """A forge-hosted entry rewritten for a new release.
+
+    GNOME entries are rebuilt from a known template; a forge URL has no
+    template this tool can own, because projects choose their own tag and
+    asset names. So every URL-bearing field is rewritten by substituting the
+    old version for the new one and the old digest for the new one. That
+    reaches the places a field-by-field rebuild forgets -- fallback_urls
+    embeds both the filename and the SHA-512, and sha256_url embeds the tag.
+
+    Substituting the bare version also fixes a v-prefixed tag in the same
+    pass, since "v2.2.1" contains "2.2.1".
+
+    The old version must appear in the URL or this raises rather than writing
+    a half-substituted entry: a project whose URL does not carry its version
+    cannot be bumped by substitution, and guessing would corrupt the lock.
+    """
+    current = entry["version"]
+    if current not in entry.get("url", ""):
+        raise ValueError(
+            f"{entry['name']}: version {current} does not appear in its url, "
+            "so it cannot be bumped by substitution"
+        )
+    swaps = [(current, release)]
+    if entry.get("sha512"):
+        swaps.append((entry["sha512"], digest))
+    updated = dict(entry)
+    for field in ("url", "filename", "sha256_url", "fallback_urls"):
+        if field in entry:
+            updated[field] = substituted(entry[field], swaps)
+    updated["version"] = release
+    updated["sha512"] = digest
+    return updated
+
+
 def rewrite_spec(spec: Path, release: str) -> bool:
     """Point a spec's Version: at a new release. True when it changed."""
     text = spec.read_text()
@@ -252,16 +406,71 @@ def rewrite_sources(manifest: Path, filename: str, digest: str) -> None:
     manifest.write_text(f"SHA512 ({filename}) = {digest}\n")
 
 
-def candidates(locks: dict[str, dict], only: str | None = None) -> list[tuple[str, dict, str]]:
-    """(name, entry, module) for every GNOME-hosted lock, newest first by name."""
+def candidates(locks: dict[str, dict], only: str | None = None) -> list[tuple[str, dict, dict]]:
+    """(name, entry, feed) for every lock this tool can track, sorted by name.
+
+    A feed is either {"forge": "gnome", "module": ...} or a git-forge
+    descriptor from forge_feed. A lock on neither -- the Fedora lookaside, a
+    bare directory listing -- has no release feed to poll and is skipped; see
+    the module docstring.
+    """
     found = []
     for name, entry in sorted(locks.items()):
         if only and name != only:
             continue
         module = gnome_module(entry)
         if module:
-            found.append((name, entry, module))
+            found.append((name, entry, {"forge": "gnome", "module": module}))
+            continue
+        feed = forge_feed(entry)
+        if feed:
+            found.append((name, entry, feed))
     return found
+
+
+def forge_proposal(name: str, entry: dict, feed: dict, opener=urllib.request.urlopen) -> dict:
+    """What a single git-forge lock should move to, if anything.
+
+    The safety rule mirrors the GNOME path's, with the major standing in for
+    the release cycle: a newer stable release sharing the current major is an
+    "update" and may be applied, while one that crosses a major is "review"
+    only. A major bump can move a soname and break every consumer in the
+    graph, which is a judgement no comparison of version strings can make.
+
+    Prereleases are never proposed, and a forge whose API cannot be read is
+    reported and skipped so one unreachable project does not stop the rest.
+    """
+    label = forge_label(feed)
+    try:
+        available = forge_versions(feed, opener=opener)
+    except (urllib.error.URLError, OSError, ValueError, KeyError, IndexError) as error:
+        return {"name": name, "error": f"{label}: {error}"}
+
+    current = entry["version"]
+    newest = newest_stable(available)
+    if newest is None or version_key(newest) <= version_key(current):
+        return {"name": name, "module": label, "current": current, "latest": None}
+
+    same_major = [
+        v for v in available
+        if not is_prerelease(v) and major(v) == major(current)
+    ]
+    within = newest_stable(same_major)
+    if within is not None and version_key(within) > version_key(current):
+        return {
+            "kind": "update",
+            "name": name,
+            "module": label,
+            "current": current,
+            "latest": within,
+        }
+    return {
+        "kind": "review",
+        "name": name,
+        "module": label,
+        "current": current,
+        "latest": newest,
+    }
 
 
 def plan(root: Path, only: str | None, opener=urllib.request.urlopen) -> list[dict]:
@@ -281,7 +490,11 @@ def plan(root: Path, only: str | None, opener=urllib.request.urlopen) -> list[di
     """
     locks = source_locks(root)
     proposals = []
-    for name, entry, module in candidates(locks, only):
+    for name, entry, feed in candidates(locks, only):
+        if feed["forge"] != "gnome":
+            proposals.append(forge_proposal(name, entry, feed, opener=opener))
+            continue
+        module = feed["module"]
         try:
             available = releases(module, opener=opener)
         except (urllib.error.URLError, OSError, ValueError, KeyError, IndexError) as error:
@@ -337,11 +550,18 @@ def apply(root: Path, proposal: dict, opener=urllib.request.urlopen) -> dict:
     entry = document["packages"][index]
 
     module = gnome_module(entry)
-    tarball = tarball_version(release)
-    url = f"{GNOME_SOURCES}{module}/{major(tarball)}/{module}-{tarball}.tar.xz"
-    digest = sha512_of(url, opener=opener)
-
-    updated = planned_entry(entry, release, digest)
+    if module:
+        tarball = tarball_version(release)
+        url = f"{GNOME_SOURCES}{module}/{major(tarball)}/{module}-{tarball}.tar.xz"
+        digest = sha512_of(url, opener=opener)
+        updated = planned_entry(entry, release, digest)
+    else:
+        # The new URL comes from substituting into the old one, so the digest
+        # is fetched from the same address the lock will carry -- not from a
+        # template this tool guessed.
+        url = substituted(entry["url"], [(entry["version"], release)])
+        digest = sha512_of(url, opener=opener)
+        updated = forge_planned_entry(entry, release, digest)
     document["packages"][index] = updated
     config.write_text(json.dumps(document, indent=2) + "\n")
 
@@ -368,7 +588,9 @@ def main() -> int:
 
     proposals = plan(args.root, args.package)
     failures = [p for p in proposals if "error" in p]
-    finals = [p for p in proposals if p.get("kind") == "final"]
+    # "final" is the GNOME in-cycle move, "update" the forge same-major one.
+    # Both are safe to write; both are reported the same way.
+    finals = [p for p in proposals if p.get("kind") in ("final", "update")]
     review = [p for p in proposals if p.get("kind") == "review"]
 
     for failure in failures:
@@ -385,7 +607,7 @@ def main() -> int:
         # here can tell from a stable one.
         print(
             f"needs review  {item['name']}: {item['current']} -> {item['latest']} "
-            f"(crosses a release cycle)",
+            f"(crosses a release cycle or a major)",
             file=sys.stderr,
         )
 

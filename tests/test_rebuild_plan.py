@@ -7,12 +7,16 @@ import unittest
 
 from tools.rebuild_plan import (
     changed_entries,
+    dependents_from_primary,
     expected_release,
     is_published,
     overflow,
     plan,
+    provides_from_primary,
     published_from_primary,
+    reverse_closure,
     stage_outputs,
+    stale_from_primary,
 )
 
 
@@ -244,6 +248,146 @@ class PlanTests(unittest.TestCase):
             )
 
 
+def full_primary(*packages: tuple[str, str, list[str], list[str]]) -> bytes:
+    """A primary.xml with real namespaces, provides and requires.
+
+    Each package is (binary name, source name, provides, requires); the source
+    is always version 1.0 release 1.hum1.bfin.
+    """
+    body = ""
+    for name, source, provides, requires in packages:
+        body += (
+            f"<package type=\"rpm\"><name>{name}</name><format>"
+            f"<rpm:sourcerpm>{source}-1.0-1.hum1.bfin.src.rpm</rpm:sourcerpm>"
+            "<rpm:provides>"
+            + "".join(f"<rpm:entry name=\"{p}\"/>" for p in provides)
+            + "</rpm:provides><rpm:requires>"
+            + "".join(f"<rpm:entry name=\"{r}\"/>" for r in requires)
+            + "</rpm:requires></format></package>"
+        )
+    return (
+        "<metadata xmlns=\"http://linux.duke.edu/metadata/common\" "
+        "xmlns:rpm=\"http://linux.duke.edu/metadata/rpm\">" + body + "</metadata>"
+    ).encode()
+
+
+class DependentsTests(unittest.TestCase):
+    """The soname edge: a rebuilt library drags what links against it."""
+
+    PRIMARY = full_primary(
+        ("mutter-libs", "mutter", ["libmutter-17.so.0()(64bit)"], ["libc.so.6"]),
+        ("gnome-shell", "gnome-shell", ["gnome-shell"], ["libmutter-17.so.0()(64bit)"]),
+        ("gnome-shell-extension-x", "gse-x", [], ["gnome-shell"]),
+        ("unrelated", "unrelated", [], ["libc.so.6"]),
+    )
+
+    def test_maps_a_provider_to_the_sources_that_require_it(self) -> None:
+        self.assertEqual(
+            dependents_from_primary(self.PRIMARY),
+            {"mutter": {"gnome-shell"}, "gnome-shell": {"gse-x"}},
+        )
+
+    def test_a_package_requiring_its_own_subpackage_is_not_an_edge(self) -> None:
+        primary = full_primary(
+            ("demo", "demo", ["demo"], ["demo-libs"]),
+            ("demo-libs", "demo", ["demo-libs"], []),
+        )
+        self.assertEqual(dependents_from_primary(primary), {})
+
+    def test_closure_is_transitive_and_excludes_the_seed(self) -> None:
+        dependents = dependents_from_primary(self.PRIMARY)
+        self.assertEqual(reverse_closure({"mutter"}, dependents), {"gnome-shell", "gse-x"})
+
+    def test_a_rebuilt_library_drags_its_published_dependents(self) -> None:
+        # Every package is published at the version the inventory names, so
+        # without the closure only the changed mutter would build -- and the
+        # published gnome-shell would stay linked against the mutter this run
+        # replaces.
+        config = {
+            "packages": [
+                {"name": "mutter", "version": "1.0", "stage": 6},
+                {"name": "gnome-shell", "version": "1.0", "stage": 10},
+                {"name": "gse-x", "version": "1.0", "stage": 10},
+                {"name": "unrelated", "version": "1.0"},
+            ]
+        }
+        published = published_from_primary(self.PRIMARY)
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for name in ("mutter", "gnome-shell", "gse-x", "unrelated"):
+                recipe(root, name, "1")
+            build = plan(
+                config, root, published=published, changed={"mutter"},
+                full=False, factory_repo="file:///repo",
+                dependents=dependents_from_primary(self.PRIMARY),
+            )
+        # Inventory order is preserved so stages still come out in wave order.
+        self.assertEqual([e["name"] for e in build], ["mutter", "gnome-shell", "gse-x"])
+
+    def test_a_dependent_with_no_recipe_is_ignored(self) -> None:
+        # Something the repository still carries from a recipe that was since
+        # dropped cannot be rebuilt; the closure must not invent an entry.
+        config = {"packages": [{"name": "mutter", "version": "1.0"}]}
+        build = plan(
+            config, Path("/nonexistent"), published={}, changed={"mutter"},
+            full=False, factory_repo="", dependents={"mutter": {"ghost"}},
+        )
+        self.assertEqual([e["name"] for e in build], ["mutter"])
+
+
+class StaleTests(unittest.TestCase):
+    """A published binary asking for what nothing provides any more rebuilds."""
+
+    PRIMARY = full_primary(
+        ("libheif", "libheif", ["libheif.so.1()(64bit)"], ["libavcodec.so.62()(64bit)", "libc.so.6"]),
+        ("libavcodec-free", "ffmpeg-free", ["libavcodec.so.63()(64bit)"], ["libc.so.6"]),
+        ("gnome-shell", "gnome-shell", ["gnome-shell"], ["libheif.so.1()(64bit)", "rpmlib(PayloadIsZstd)", "(foo or bar)", "/usr/bin/python3"]),
+    )
+    EXTERNAL = {"libc.so.6"}
+
+    def test_provides_include_shipped_files(self) -> None:
+        primary = full_primary(("a", "a", ["cap"], [])).replace(
+            b"</format>", b"</format><file>/usr/bin/a</file>", 1
+        )
+        self.assertEqual(provides_from_primary(primary), {"cap", "/usr/bin/a"})
+
+    def test_an_unsatisfied_soname_marks_its_source_stale(self) -> None:
+        stale = stale_from_primary(self.PRIMARY, self.EXTERNAL)
+        self.assertEqual(stale, {"libheif": {"libavcodec.so.62()(64bit)"}})
+
+    def test_external_provides_count_as_satisfied(self) -> None:
+        # libc comes from Hummingbird, not the factory: without the external
+        # set every package would look stale.
+        stale = stale_from_primary(self.PRIMARY, set())
+        self.assertIn("libc.so.6", stale["ffmpeg-free"])
+
+    def test_rpmlib_rich_and_file_requires_are_not_judged(self) -> None:
+        stale = stale_from_primary(self.PRIMARY, self.EXTERNAL)
+        self.assertNotIn("gnome-shell", stale)
+
+    def test_a_stale_package_rebuilds_and_drags_its_dependents(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for name in ("libheif", "ffmpeg-free", "gnome-shell"):
+                recipe(root, name, "1")
+            config = {"packages": [
+                {"name": "ffmpeg-free", "version": "1.0", "stage": 0},
+                {"name": "libheif", "version": "1.0", "stage": 1},
+                {"name": "gnome-shell", "version": "1.0", "stage": 2},
+            ]}
+            published = published_from_primary(self.PRIMARY)
+            stale = set(stale_from_primary(self.PRIMARY, self.EXTERNAL))
+            names = [
+                entry["name"]
+                for entry in plan(
+                    config, root, published=published, changed=set(), full=False,
+                    factory_repo="file:///work/factory",
+                    dependents=dependents_from_primary(self.PRIMARY), stale=stale,
+                )
+            ]
+            self.assertEqual(names, ["libheif", "gnome-shell"])
+
+
 class StageOutputTests(unittest.TestCase):
     def test_chunks_a_stage_past_the_matrix_cap(self) -> None:
         build = [{"name": f"p{n}", "stage": 0} for n in range(266)]
@@ -270,3 +414,60 @@ class StageOutputTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def icu_primary() -> bytes:
+    """Hummingbird as it really is: libicu 77.1 beside 78.3, one package name."""
+    body = ""
+    for ver, rel, soname in (("77.1", "2.1.hum1", "77"), ("78.3", "8.hum1", "78")):
+        body += (
+            "<package type=\"rpm\"><name>libicu</name>"
+            f"<version epoch=\"0\" ver=\"{ver}\" rel=\"{rel}\"/><format>"
+            f"<rpm:sourcerpm>icu-{ver}-{rel}.src.rpm</rpm:sourcerpm>"
+            "<rpm:provides>"
+            f"<rpm:entry name=\"libicuuc.so.{soname}()(64bit)\"/>"
+            f"<rpm:entry name=\"libicui18n.so.{soname}()(64bit)\"/>"
+            "</rpm:provides><rpm:requires></rpm:requires></format></package>"
+        )
+    return (
+        "<metadata xmlns=\"http://linux.duke.edu/metadata/common\" "
+        "xmlns:rpm=\"http://linux.duke.edu/metadata/rpm\">" + body + "</metadata>"
+    ).encode()
+
+
+class ExcludedExternalTests(unittest.TestCase):
+    """This model must refuse what the consumer transaction refuses.
+
+    The publish gate excludes libicu 77, because Hummingbird has migrated to 78
+    and the two builds share a package name so dnf installs exactly one.
+    Counting 77 as provided here made a published package linked against it look
+    satisfiable: it was skipped as fresh, and then failed the very transaction
+    this check exists to predict. Run 35413902261 lost publication that way
+    after 331 green builds.
+    """
+
+    def test_an_excluded_build_provides_nothing(self) -> None:
+        provided = provides_from_primary(icu_primary())
+        self.assertIn("libicuuc.so.78()(64bit)", provided)
+        self.assertNotIn("libicuuc.so.77()(64bit)", provided)
+
+    def test_a_published_package_linked_against_it_is_stale(self) -> None:
+        external = provides_from_primary(icu_primary())
+        published = full_primary(
+            ("nautilus", "nautilus", ["nautilus"], ["libicuuc.so.77()(64bit)"]),
+        )
+        stale = stale_from_primary(published, external)
+        self.assertEqual(stale, {"nautilus": {"libicuuc.so.77()(64bit)"}},
+                         "a package the gate will reject must rebuild, not be skipped")
+
+    def test_the_same_package_on_the_kept_build_is_not_stale(self) -> None:
+        # The rule must not condemn everything that touches ICU.
+        external = provides_from_primary(icu_primary())
+        published = full_primary(
+            ("nautilus", "nautilus", ["nautilus"], ["libicuuc.so.78()(64bit)"]),
+        )
+        self.assertEqual(stale_from_primary(published, external), {})
+
+    def test_the_exclusion_is_declared_once_and_names_libicu_77(self) -> None:
+        from tools.rebuild_plan import EXCLUDED_EXTERNAL
+        self.assertIn(("libicu", "77."), EXCLUDED_EXTERNAL)

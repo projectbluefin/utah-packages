@@ -1,0 +1,8 @@
+{
+  "package": "exiv2",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/exiv2.git",
+  "commit": "be37401175499ee4f646e36d3e29611b03066358",
+  "tree": "98a1dcb6ce155be1c87bda27d89e639e60441984",
+  "imported_at": "2026-09-18T15:33:23.063876+00:00"
+}
