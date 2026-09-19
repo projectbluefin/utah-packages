@@ -27,10 +27,13 @@ def query(package: str) -> dict[str, str] | None:
     ]
     result = subprocess.run(command, text=True, capture_output=True, check=False)
     lines = [line for line in result.stdout.splitlines() if line and "(none)" not in line]
-    if not lines:
-        return None
-    name, evr, arch, sourcerpm = lines[0].split("\t", 3)
-    return {"name": name, "evr": evr, "arch": arch, "sourcerpm": sourcerpm}
+    for line in lines:
+        parts = line.split("\t", 3)
+        if len(parts) == 4:
+            name, evr, arch, sourcerpm = parts
+            return {"name": name, "evr": evr, "arch": arch, "sourcerpm": sourcerpm}
+        print(f"warning: discarding malformed repoquery line for {package}: {line}", file=sys.stderr)
+    return None
 
 
 def main() -> int:

@@ -17,7 +17,7 @@ import json
 import sys
 import tempfile
 import unittest
-from contextlib import redirect_stdout
+from contextlib import redirect_stderr, redirect_stdout
 from io import StringIO
 from pathlib import Path
 import tomllib
@@ -69,6 +69,41 @@ class QueryTests(unittest.TestCase):
     def test_query_none_line_yields_no_result(self):
         with patch("subprocess.run", return_value=_repoquery_result("(none)\n")):
             self.assertIsNone(srs.query("ModemManager"))
+
+    def test_query_skips_malformed_lines_and_picks_first_valid(self):
+        stdout = "Repository 'rawhide' is missing name(s)\n" + REPOQUERY_LINE + "\n"
+        stderr = StringIO()
+        with patch("subprocess.run", return_value=_repoquery_result(stdout)), \
+             redirect_stderr(stderr):
+            value = srs.query("ModemManager")
+
+        self.assertEqual(
+            value,
+            {"name": "ModemManager", "evr": "1.24.0-1.fc44",
+             "arch": "x86_64", "sourcerpm": "ModemManager-1.24.0-1.fc44.src.rpm"},
+        )
+        self.assertIn("discarding malformed repoquery line for ModemManager", stderr.getvalue())
+        self.assertIn("Repository 'rawhide' is missing name(s)", stderr.getvalue())
+
+    def test_query_returns_none_when_all_lines_are_malformed(self):
+        stdout = "Repository 'rawhide' is missing name(s)\nSome unexpected text\n"
+        stderr = StringIO()
+        with patch("subprocess.run", return_value=_repoquery_result(stdout)), \
+             redirect_stderr(stderr):
+            value = srs.query("ModemManager")
+
+        self.assertIsNone(value)
+        self.assertIn("discarding malformed repoquery line for ModemManager", stderr.getvalue())
+
+    def test_query_skips_partially_tabbed_lines(self):
+        stdout = "only\ttwo\tparts\n"
+        stderr = StringIO()
+        with patch("subprocess.run", return_value=_repoquery_result(stdout)), \
+             redirect_stderr(stderr):
+            value = srs.query("ModemManager")
+
+        self.assertIsNone(value)
+        self.assertIn("discarding malformed repoquery line for ModemManager", stderr.getvalue())
 
 
 class MainTests(unittest.TestCase):
