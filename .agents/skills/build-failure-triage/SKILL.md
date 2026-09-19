@@ -159,6 +159,20 @@ When a later stage cannot see what an earlier stage built, check in this order:
 | `Signature verification failed` after a clean download | The repo's `gpgkey` is a multi-key bundle and one key in it fails to import | Point `gpgkey` at the single release key. Verify its fingerprint against the one the failing transaction named. **Keep `gpgcheck=1`** |
 | `wrong key?` on a third-party repo whose content the build does not need | A repo signed by a key the image does not trust | Disable that repo for the build |
 
+### A published recipe is not a skip once this pull request changes it
+
+`rebuild_plan.plan()` treats `name in changed` as a rebuild before it asks
+`is_published()`. Restoring a recipe byte-for-byte to the version of a
+published RPM still changes `packages/<name>/` in the pull request and
+therefore forces a rebuild; it cannot freeze a package.
+
+For PipeWire's `pw-test-endpoint`, serializing `%check` was measured at the
+same five-second `SIGALRM` failure. Raising the test's own `alarm(5)` is not
+evidence of a fix either: Meson's 30-second timeout becomes the effective
+bound, so an actual hang still fails. Preserve the test and root-cause the
+endpoint path in the build root before changing its recipe.
+
+
 ## Verify against primary sources
 
 Do not infer a version from what Rawhide ships or from a package name.
@@ -176,6 +190,7 @@ Do not infer a version from what Rawhide ships or from a package name.
 - Skip, disable or quarantine a test to make a build pass.
 - Push an empty commit, or close and reopen, to re-trigger CI.
 - Report a package as fixed without a green job to point at.
+- Treat a content-restoring recipe revert as a way to skip its rebuild.
 
 ## Common Rationalizations
 
