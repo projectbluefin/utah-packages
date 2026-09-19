@@ -63,8 +63,14 @@ permissions:
 # and that run used to carry on for hours anyway -- 369, 370 and 374 were all
 # cancelled by hand, one of them four hours in. Nothing on main or a schedule
 # is cancelled, because there a run in flight is the one that publishes.
+# The group is pull-request-only for the same reason. A group covering every
+# ref would also queue main and schedule runs behind one another and let GitHub
+# drop a superseded *pending* run -- a behaviour change the comment above
+# explicitly says is not wanted, since concurrent waves are safe by design.
 concurrency:
-  group: utah-packages-rebuild-${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.event_name == 'pull_request'
+    && format('utah-packages-rebuild-{0}-{1}', github.workflow, github.ref)
+    || format('utah-packages-rebuild-{0}-{1}-{2}', github.workflow, github.ref, github.run_id) }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
@@ -645,11 +651,20 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          owner=$(echo "${{ github.repository_owner }}" | tr "[:upper:]" "[:lower:]")
-          image="ghcr.io/${owner}/utah-packages:latest"
+          # Seed from the image `prepare` actually witnessed, not from :latest.
+          # prepare resolves the branch tag first and falls back to latest, so a
+          # hardcoded latest here disagreed with it: on a second push, anything
+          # skipped because the *branch* tag carried it was in neither the seed
+          # nor this run's artifacts, and the republished branch image lost it.
+          # Two sources of truth for "what is already built" is the bug this
+          # workflow removed everywhere else in this change; it had no business
+          # surviving at the end of the pipeline.
+          image="${{ needs.prepare.outputs.factory_image }}"
           mkdir -p repository
           echo "${GITHUB_TOKEN}" | podman login ghcr.io -u "${{ github.actor }}" --password-stdin
-          if podman pull "$image"; then
+          if [ -z "$image" ]; then
+            echo "prepare witnessed no published image; publishing a new repository"
+          elif podman pull "$image"; then
             # The factory image is FROM scratch with one COPY and no CMD or
             # ENTRYPOINT, so a bare create exits 125 with "no command or
             # entrypoint provided". A command is only recorded here, never run

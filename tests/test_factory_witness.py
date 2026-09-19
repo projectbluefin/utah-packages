@@ -76,6 +76,20 @@ class FactoryWitnessTests(unittest.TestCase):
         # leaves .debug files no subpackage declares (run 380, ten specs).
         self.assertEqual(text.count('--define "__debug_install_post %{nil}"'), 2)
 
+    def test_publish_seeds_from_the_image_prepare_witnessed(self) -> None:
+        """The seed and the skip witness have to be the same image.
+
+        prepare resolves the branch tag first and falls back to latest. While
+        publish seeded from a hardcoded latest, a second push to a pull request
+        dropped every package that had been skipped because the *branch* tag
+        carried it: absent from the seed and absent from this run's artifacts,
+        so absent from the republished image. Two sources of truth for "what is
+        already built" is the bug this workflow exists to have removed.
+        """
+        text = uncommented(REBUILD)
+        self.assertIn('image="${{ needs.prepare.outputs.factory_image }}"', text)
+        self.assertNotIn('utah-packages:latest"', text)
+
     def test_a_failed_prepare_stops_precedence_and_publish(self) -> None:
         text = uncommented(REBUILD)
         self.assertEqual(text.count("needs.prepare.result == 'success'"), 2)
