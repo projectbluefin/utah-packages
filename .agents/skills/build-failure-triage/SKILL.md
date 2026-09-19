@@ -157,6 +157,7 @@ When a later stage cannot see what an earlier stage built, check in this order:
 | Exit **125**, `manifest unknown` | Pinned container image digest was pruned upstream (e.g. quay.io repushed `latest` and pruned old manifest-list digests) | Repin the workflow container image to the active manifest digest on the registry |
 | Exit **125**, log under ~1 KB (transient) | `docker run` failed before the build; infrastructure | Not the package. Re-run once at most |
 | `Signature verification failed` after a clean download | The repo's `gpgkey` is a multi-key bundle and one key in it fails to import | Point `gpgkey` at the single release key. Verify its fingerprint against the one the failing transaction named. **Keep `gpgcheck=1`** |
+| `cosign verify` failure / `no matching signatures` in publish seed step | Seed image signature or identity mismatch | Investigate `ghcr.io/...:latest`: verify whether image was signed by `rebuild-rpms.yml@refs/heads/main` keyless identity. If unsigned or tampered, do not seed from it |
 | `wrong key?` on a third-party repo whose content the build does not need | A repo signed by a key the image does not trust | Disable that repo for the build |
 
 ## Verify against primary sources

@@ -115,6 +115,17 @@ class PublishGateWorkflowTests(unittest.TestCase):
         )
         self.assertNotIn("if", steps[validate])
 
+    def test_seed_step_verifies_cosign_signature(self):
+        steps = self.workflow["jobs"]["publish"]["steps"]
+        seed_step = next(
+            step for step in steps
+            if "Seed repository from the last published factory image" in str(step.get("name", ""))
+        )
+        script = seed_step.get("run", "")
+        self.assertIn("cosign verify", script)
+        self.assertIn("--certificate-oidc-issuer", script)
+        self.assertIn("--certificate-identity-regexp", script)
+
 
 if __name__ == "__main__":
     unittest.main()

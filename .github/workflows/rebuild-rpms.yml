@@ -559,19 +559,29 @@ jobs:
       - name: Seed repository from the last published factory image
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COSIGN_YES: "true"
         run: |
           set -euo pipefail
+          curl -fsSL https://github.com/sigstore/cosign/releases/download/v2.4.1/cosign-linux-amd64 -o cosign
+          echo '8b24b946dd5809c6bd93de08033bcf6bc0ed7d336b7785787c080f574b89249b  cosign' | sha256sum -c -
+          sudo install -m 0755 cosign /usr/local/bin/cosign
           owner=$(echo "${{ github.repository_owner }}" | tr "[:upper:]" "[:lower:]")
           image="ghcr.io/${owner}/utah-packages:latest"
           mkdir -p repository
           echo "${GITHUB_TOKEN}" | podman login ghcr.io -u "${{ github.actor }}" --password-stdin
           if podman pull "$image"; then
+            # Verify the digest we actually pulled, not the mutable tag, so the
+            # tag cannot move between verification and extraction.
+            digest=$(podman image inspect --format '{{ index .RepoDigests 0 }}' "$image" | cut -d@ -f2)
+            cosign verify "ghcr.io/${owner}/utah-packages@${digest}" \
+              --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+              --certificate-identity-regexp "^https://github.com/${{ github.repository }}/\.github/workflows/rebuild-rpms\.yml@refs/heads/main$"
             # The factory image is FROM scratch with one COPY and no CMD or
             # ENTRYPOINT, so a bare create exits 125 with "no command or
             # entrypoint provided". A command is only recorded here, never run
             # -- the container exists to be copied out of -- so naming one that
             # the image does not even contain is enough to satisfy create.
-            container=$(podman create "$image" /bin/true)
+            container=$(podman create "ghcr.io/${owner}/utah-packages@${digest}" /bin/true)
             podman cp "$container:/repository/." repository/
             podman rm "$container"
           else
