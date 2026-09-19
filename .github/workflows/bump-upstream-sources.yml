@@ -1,12 +1,18 @@
-name: Bump GNOME source locks
+name: Bump upstream source locks
 
-# Opens one reviewable PR when a GNOME module this factory tracks ships a
-# release inside the cycle its lock already names -- the 51.beta to 51.0 move,
-# which nothing here does today. renovate.json has a custom manager aimed at
-# config/upstream-sources.json, but it keys on datasource and depName and no
-# entry carries those, so it has never matched. Renovate could not finish the
-# job anyway: a version lives in three files here and only one of them is JSON,
-# and the tarball's SHA-512 has to be computed from the bytes.
+# Opens one reviewable PR when a source this factory tracks ships a newer
+# release. Feeds are polled across:
+#
+#   download.gnome.org  cache.json per-module release index
+#   github.com          tags, or releases where a project publishes them
+#   gitlab instances    repository tags API
+#   release-monitoring  Anitya project release API
+#
+# Across the 340 source locks in the factory inventory:
+#   - 63 are pollable directly from their source URL
+#   - 197 are pollable via explicit `feed` annotations in config/upstream-sources.json
+#   - 80 belong to a documented pinned subset (directory listings, bare ftp/http,
+#     recipe-only, or vendored sources without automated feed)
 #
 # Deliberately proposes, never merges. The bump changes what the factory
 # builds, so it goes through the same review and the same eleven-stage run as
@@ -16,7 +22,7 @@ on:
   workflow_dispatch:
     inputs:
       package:
-        description: "Limit the run to a single package (default: every GNOME-hosted lock)"
+        description: "Limit the run to a single package (default: every lock with a release feed)"
         required: false
         type: string
   schedule:
@@ -27,7 +33,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: gnome-source-bump
+  group: upstream-source-bump
   cancel-in-progress: true
 
 jobs:
@@ -39,20 +45,26 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      # Report first, unconditionally, so the run's log says what was
-      # considered even when nothing is written -- including the cross-cycle
-      # candidates the tool refuses to apply on its own.
-      - name: Report what GNOME has released
+      # Report inventory audit first, so the run log shows coverage.
+      - name: Audit source lock inventory coverage
+        run: |
+          python3 tools/upstream_bump.py --audit
+
+      # Report what upstream has released. GITHUB_TOKEN is required for forge
+      # feeds to avoid unauthenticated GitHub rate limits (60 requests/hr).
+      - name: Report what upstream has released
         run: |
           python3 tools/upstream_bump.py ${PACKAGE:+--package "$PACKAGE"}
         env:
           PACKAGE: ${{ inputs.package }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Rewrite the locks, specs and source manifests
         run: |
           python3 tools/upstream_bump.py --apply ${PACKAGE:+--package "$PACKAGE"}
         env:
           PACKAGE: ${{ inputs.package }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # The same gates a contributor runs. A bump that cannot pass these is a
       # bump nobody should be asked to review.
@@ -74,26 +86,25 @@ jobs:
       - name: Open reviewable update
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8
         with:
-          branch: bump/gnome-sources
+          branch: bump/upstream-sources
           delete-branch: true
-          title: 'chore(sources): bump GNOME locks to their released versions'
-          commit-message: 'chore(sources): bump GNOME locks to their released versions'
+          title: 'chore(sources): bump upstream locks to their released versions'
+          commit-message: 'chore(sources): bump upstream locks to their released versions'
           body: |
-            Opened by `.github/workflows/bump-gnome-sources.yml`.
+            Opened by `.github/workflows/bump-upstream-sources.yml`.
 
             Each package below had its `Version:`, its `sources` manifest and
             its `config/upstream-sources.json` entry rewritten together, with
-            the SHA-512 computed from the tarball GNOME actually serves. The
+            the SHA-512 computed from the tarball upstream actually serves. The
             run log lists what moved, and any candidate that crosses a release
-            cycle -- those are reported for a human and never applied, because
-            GNOME's numbering encodes development series that no arithmetic
-            rule separates from stable ones.
+            cycle or major series -- those are reported for human review and
+            never applied automatically.
 
             Verified in the run before this PR was opened: the unit tests,
             `tools/validate.py`, the workflow quoting check, and
             `tools/source_pipeline.py`, which re-downloads every rewritten
             source and rejects a digest that does not match.
 
-            **Not verified: the build.** A GNOME major bump usually needs spec
-            patch refreshes, and this is a large rebuild. That is what this
+            **Not verified: the build.** Upstream version bumps may require
+            spec patch refreshes and dependency rebuilds. That is what this
             PR's own factory run is for.
