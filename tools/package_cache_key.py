@@ -47,6 +47,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -55,6 +56,39 @@ ROOT = Path(__file__).resolve().parent.parent
 # Bumped when the meaning of the key changes, so an old cache entry computed
 # under different rules can never be mistaken for a current one.
 SCHEMA = "1"
+
+# The OCI tag grammar. A tag is [a-zA-Z0-9_][a-zA-Z0-9._-]{0,127}, and RPM names
+# are laxer than that -- `gtk+` and `libstdc++` are legal package names and
+# illegal tag components. No recipe here carries one today (checked: all 349 are
+# valid, longest tag 64 of the 128 characters), but a future import could, and a
+# silently mangled tag would mean a permanent cache miss that looks like a
+# correctness problem. So it is asserted rather than assumed.
+TAG = re.compile(r"^[a-zA-Z0-9_][a-zA-Z0-9._-]{0,127}$")
+
+
+def cache_tag(package: str, key: str) -> str:
+    """The tag for one cache entry: <package>-<key>.
+
+    The package name is in the hash already, so the prefix adds no uniqueness.
+    It is there to make the registry readable: a bare hash says nothing, while
+    `nautilus-bdb4765a...` can be listed, filtered and reasoned about without a
+    side database -- which matters when the question is "why did this miss".
+
+    This belongs under an image name of its own, NOT under `utah-packages`. That
+    name is the consumer repository, and `prepare` resolves `utah-packages:latest`
+    and `utah-packages:<branch>` and treats whatever it gets as a whole
+    repository. A cache entry holds one package's RPMs. If the two shared a tag
+    namespace, a resolve that landed on a cache entry would compute `published`
+    from a single package -- and `publish` seeds from that same image, so it
+    would drop the other 66. Different artifact shapes do not share a name.
+    """
+    tag = f"{package}-{key}"
+    if not TAG.match(tag):
+        raise ValueError(
+            f"{tag!r} is not a valid OCI tag; package name {package!r} contains "
+            "characters a tag cannot carry"
+        )
+    return tag
 
 
 def recipe_digest(package_dir: Path) -> str:
@@ -131,6 +165,11 @@ def main() -> int:
     parser.add_argument("--factory-digest", default="")
     parser.add_argument("--disttag", required=True)
     parser.add_argument(
+        "--key-only",
+        action="store_true",
+        help="Print the bare key instead of the <package>-<key> tag",
+    )
+    parser.add_argument(
         "--resolved-root",
         required=True,
         help="File of NEVRAs installed for builddep, one per line, or - for stdin",
@@ -156,16 +195,19 @@ def main() -> int:
         )
         return 1
 
-    print(
-        cache_key(
-            package=args.package,
-            recipe=recipe_digest(package_dir),
-            buildroot_digest=args.buildroot_digest,
-            factory_digest=args.factory_digest,
-            resolved_root=nevras,
-            disttag=args.disttag,
-        )
+    key = cache_key(
+        package=args.package,
+        recipe=recipe_digest(package_dir),
+        buildroot_digest=args.buildroot_digest,
+        factory_digest=args.factory_digest,
+        resolved_root=nevras,
+        disttag=args.disttag,
     )
+    # cache_tag validates the tag grammar, so the --key-only path deliberately
+    # still builds it: a name that cannot be tagged should fail here rather than
+    # at the registry, whichever output was asked for.
+    tag = cache_tag(args.package, key)
+    print(key if args.key_only else tag)
     return 0
 
 

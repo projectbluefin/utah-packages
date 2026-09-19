@@ -147,10 +147,14 @@ class CommandLineTests(unittest.TestCase):
         finally:
             Path(path).unlink()
 
-    def test_it_prints_a_single_key(self):
+    def test_it_prints_a_single_package_prefixed_tag(self):
+        # The default output is the tag, not the bare key: that is what the
+        # workflow passes to the registry, and CacheTagTests covers why the
+        # package name is in it.
         result = self.run_script()
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertRegex(result.stdout.strip(), r"^[0-9a-f]{32}$")
+        self.assertRegex(result.stdout.strip(), r"^webkitgtk-[0-9a-f]{32}$")
+        self.assertEqual(len(result.stdout.strip().splitlines()), 1)
 
     def test_an_empty_resolved_root_is_refused_rather_than_keyed(self):
         """A key over nothing would collide across genuinely different roots."""
@@ -211,3 +215,78 @@ class CacheableSelectionTests(unittest.TestCase):
         self.assertEqual(
             self.rp.cacheable(selected, set(), set()), ["zeta", "alpha", "mu"]
         )
+
+class CacheTagTests(unittest.TestCase):
+    """The tag is <package>-<key> under a cache image name of its own."""
+
+    def test_the_tag_is_the_package_then_the_key(self):
+        self.assertEqual(pck.cache_tag("nautilus", "abc123"), "nautilus-abc123")
+
+    def test_every_real_recipe_name_produces_a_valid_tag(self):
+        """RPM names are laxer than OCI tags; assert rather than assume."""
+        key = "0" * 32
+        names = sorted(
+            d.name for d in (ROOT / "packages").iterdir() if d.is_dir()
+        )
+        self.assertGreater(len(names), 300)
+        for name in names:
+            with self.subTest(package=name):
+                tag = pck.cache_tag(name, key)
+                self.assertRegex(tag, r"^[a-zA-Z0-9_][a-zA-Z0-9._-]{0,127}$")
+                self.assertLessEqual(len(tag), 128)
+
+    def test_a_name_a_tag_cannot_carry_is_refused(self):
+        """gtk+ and libstdc++ are legal RPM names and illegal tag components.
+
+        None are in the inventory today, but an import could bring one, and a
+        silently mangled tag would be a permanent cache miss that looks like a
+        correctness bug.
+        """
+        for bad in ("gtk+", "libstdc++", "foo/bar", "-leading-dash"):
+            with self.subTest(package=bad):
+                with self.assertRaises(ValueError):
+                    pck.cache_tag(bad, "abc123")
+
+    def test_the_prefix_adds_no_uniqueness_the_hash_already_binds_the_name(self):
+        """The prefix is for legibility; the key must bind the package itself.
+
+        If the prefix were the only thing distinguishing two packages, a
+        consumer that resolved by key alone could be served the wrong RPMs.
+        """
+        a = pck.cache_key(**dict(BASE, package="nautilus"))
+        b = pck.cache_key(**dict(BASE, package="webkitgtk"))
+        self.assertNotEqual(a, b)
+
+
+class CommandLineTagTests(unittest.TestCase):
+    def run_script(self, package="nautilus", extra=()):
+        with tempfile.NamedTemporaryFile("w", suffix=".txt", delete=False) as handle:
+            handle.write("gcc-1\nglibc-1\n")
+            path = handle.name
+        try:
+            return subprocess.run(
+                ["python3", str(SCRIPT), package,
+                 "--buildroot-digest", "sha256:aaa",
+                 "--factory-digest", "sha256:bbb",
+                 "--disttag", ".hum1.bfin",
+                 "--resolved-root", path, *extra],
+                capture_output=True, text=True, cwd=ROOT,
+            )
+        finally:
+            Path(path).unlink()
+
+    def test_it_prints_the_package_prefixed_tag_by_default(self):
+        result = self.run_script()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertRegex(result.stdout.strip(), r"^nautilus-[0-9a-f]{32}$")
+
+    def test_key_only_prints_the_bare_key(self):
+        result = self.run_script(extra=("--key-only",))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertRegex(result.stdout.strip(), r"^[0-9a-f]{32}$")
+
+    def test_the_two_forms_agree(self):
+        tag = self.run_script().stdout.strip()
+        key = self.run_script(extra=("--key-only",)).stdout.strip()
+        self.assertEqual(tag, f"nautilus-{key}")
+
