@@ -7,12 +7,20 @@ import unittest
 
 from tools.rebuild_plan import (
     changed_entries,
+    dependents_from_primary,
     expected_release,
+    format_build_plan,
+    is_global_change,
     is_published,
+    merge_dependents,
     overflow,
     plan,
+    provides_from_primary,
     published_from_primary,
+    reverse_closure,
+    spec_dependents,
     stage_outputs,
+    stale_from_primary,
 )
 
 
@@ -242,6 +250,277 @@ class PlanTests(unittest.TestCase):
                 ),
                 1,
             )
+
+
+def full_primary(*packages: tuple[str, str, list[str], list[str]]) -> bytes:
+    """A primary.xml with real namespaces, provides and requires.
+
+    Each package is (binary name, source name, provides, requires); the source
+    is always version 1.0 release 1.hum1.bfin.
+    """
+    body = ""
+    for name, source, provides, requires in packages:
+        body += (
+            f"<package type=\"rpm\"><name>{name}</name><format>"
+            f"<rpm:sourcerpm>{source}-1.0-1.hum1.bfin.src.rpm</rpm:sourcerpm>"
+            "<rpm:provides>"
+            + "".join(f"<rpm:entry name=\"{p}\"/>" for p in provides)
+            + "</rpm:provides><rpm:requires>"
+            + "".join(f"<rpm:entry name=\"{r}\"/>" for r in requires)
+            + "</rpm:requires></format></package>"
+        )
+    return (
+        "<metadata xmlns=\"http://linux.duke.edu/metadata/common\" "
+        "xmlns:rpm=\"http://linux.duke.edu/metadata/rpm\">" + body + "</metadata>"
+    ).encode()
+
+
+class DependentsTests(unittest.TestCase):
+    """The runtime soname edge: a rebuilt library drags what links against it."""
+
+    PRIMARY = full_primary(
+        ("mutter-libs", "mutter", ["libmutter-17.so.0()(64bit)"], ["libc.so.6"]),
+        ("gnome-shell", "gnome-shell", ["gnome-shell"], ["libmutter-17.so.0()(64bit)"]),
+        ("gnome-shell-extension-x", "gse-x", [], ["gnome-shell"]),
+        ("unrelated", "unrelated", [], ["libc.so.6"]),
+    )
+
+    def test_maps_a_provider_to_the_sources_that_require_it(self) -> None:
+        self.assertEqual(
+            dependents_from_primary(self.PRIMARY),
+            {"mutter": {"gnome-shell"}, "gnome-shell": {"gse-x"}},
+        )
+
+    def test_a_package_requiring_its_own_subpackage_is_not_an_edge(self) -> None:
+        primary = full_primary(
+            ("demo", "demo", ["demo"], ["demo-libs"]),
+            ("demo-libs", "demo", ["demo-libs"], []),
+        )
+        self.assertEqual(dependents_from_primary(primary), {})
+
+    def test_closure_is_transitive_and_excludes_the_seed(self) -> None:
+        dependents = dependents_from_primary(self.PRIMARY)
+        self.assertEqual(reverse_closure({"mutter"}, dependents), {"gnome-shell", "gse-x"})
+
+    def test_a_rebuilt_library_drags_its_published_dependents(self) -> None:
+        config = {
+            "packages": [
+                {"name": "mutter", "version": "1.0", "stage": 6},
+                {"name": "gnome-shell", "version": "1.0", "stage": 10},
+                {"name": "gse-x", "version": "1.0", "stage": 10},
+                {"name": "unrelated", "version": "1.0"},
+            ]
+        }
+        published = published_from_primary(self.PRIMARY)
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for name in ("mutter", "gnome-shell", "gse-x", "unrelated"):
+                recipe(root, name, "1")
+            build = plan(
+                config, root, published=published, changed={"mutter"},
+                full=False, factory_repo="file:///repo",
+                dependents=dependents_from_primary(self.PRIMARY),
+            )
+        self.assertEqual([e["name"] for e in build], ["mutter", "gnome-shell", "gse-x"])
+
+    def test_a_dependent_with_no_recipe_is_ignored(self) -> None:
+        config = {"packages": [{"name": "mutter", "version": "1.0"}]}
+        build = plan(
+            config, Path("/nonexistent"), published={}, changed={"mutter"},
+            full=False, factory_repo="", dependents={"mutter": {"ghost"}},
+        )
+        self.assertEqual([e["name"] for e in build], ["mutter"])
+
+
+class SpecDependentsTests(unittest.TestCase):
+    """Build-time dependency edges parsed from specs."""
+
+    def test_spec_dependents_finds_buildrequires_relationships(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            packages_dir = root / "packages"
+
+            # libfoo provides libfoo, libfoo-devel, pkgconfig(libfoo)
+            p_foo = packages_dir / "libfoo"
+            p_foo.mkdir(parents=True)
+            (p_foo / "libfoo.spec").write_text(
+                "Name: libfoo\nVersion: 1.0\nRelease: 1%{?dist}\n"
+                "%package devel\nSummary: devel\n"
+            )
+
+            # bar BuildRequires: libfoo-devel
+            p_bar = packages_dir / "bar"
+            p_bar.mkdir(parents=True)
+            (p_bar / "bar.spec").write_text(
+                "Name: bar\nVersion: 1.0\nRelease: 1%{?dist}\n"
+                "BuildRequires: libfoo-devel\n"
+            )
+
+            deps = spec_dependents(root, {"libfoo", "bar"})
+            self.assertIn("bar", deps.get("libfoo", set()))
+
+    def test_pkgconfig_symbols_map_to_provider(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            packages_dir = root / "packages"
+
+            p_cam = packages_dir / "libcamera"
+            p_cam.mkdir(parents=True)
+            (p_cam / "libcamera.spec").write_text(
+                "Name: libcamera\nVersion: 1.0\nRelease: 1%{?dist}\n"
+                "Provides: pkgconfig(libcamera)\n"
+            )
+
+            p_pw = packages_dir / "pipewire"
+            p_pw.mkdir(parents=True)
+            (p_pw / "pipewire.spec").write_text(
+                "Name: pipewire\nVersion: 1.0\nRelease: 1%{?dist}\n"
+                "BuildRequires: pkgconfig(libcamera)\n"
+            )
+
+            deps = spec_dependents(root, {"libcamera", "pipewire"})
+            self.assertIn("pipewire", deps.get("libcamera", set()))
+
+    def test_merge_dependents_combines_multiple_maps(self) -> None:
+        m1 = {"a": {"b"}}
+        m2 = {"a": {"c"}, "d": {"e"}}
+        merged = merge_dependents(m1, m2)
+        self.assertEqual(merged, {"a": {"b", "c"}, "d": {"e"}})
+
+
+class GlobalChangeTests(unittest.TestCase):
+    def test_global_workflow_changes_trigger_full_rebuild(self) -> None:
+        is_global, triggers = is_global_change([".github/workflows/rebuild-rpms.yml"])
+        self.assertTrue(is_global)
+        self.assertIn(".github/workflows/rebuild-rpms.yml", triggers)
+
+        is_global, triggers = is_global_change([".github/workflows/build-stage.yml"])
+        self.assertTrue(is_global)
+
+    def test_global_tooling_changes_trigger_full_rebuild(self) -> None:
+        is_global, triggers = is_global_change(["tools/mock_config.py"])
+        self.assertTrue(is_global)
+        self.assertIn("tools/mock_config.py", triggers)
+
+        # Test and planning tool changes do not force full rebuilds
+        is_global, _ = is_global_change(["tools/rebuild_plan.py", "tests/test_rebuild_plan.py"])
+        self.assertFalse(is_global)
+
+    def test_global_config_changes_trigger_full_rebuild(self) -> None:
+        is_global, triggers = is_global_change(["config/hummingbird.repo"])
+        self.assertTrue(is_global)
+        self.assertIn("config/hummingbird.repo", triggers)
+
+        # upstream-sources.json alone is an inventory change, not global rebuild
+        is_global, _ = is_global_change(["config/upstream-sources.json"])
+        self.assertFalse(is_global)
+
+    def test_ignored_paths_do_not_trigger_rebuild(self) -> None:
+        is_global, _ = is_global_change([
+            "docs/architecture.md",
+            "AGENTS.md",
+            "README.md",
+            ".agents/skills/build-failure-triage/SKILL.md",
+        ])
+        self.assertFalse(is_global)
+
+
+class StaleTests(unittest.TestCase):
+    """A published binary asking for what nothing provides any more rebuilds."""
+
+    PRIMARY = full_primary(
+        ("libheif", "libheif", ["libheif.so.1()(64bit)"], ["libavcodec.so.62()(64bit)", "libX11.so.6()(64bit)"]),
+        ("libavcodec-free", "ffmpeg-free", ["libavcodec.so.63()(64bit)"], ["libc.so.6"]),
+        ("gnome-shell", "gnome-shell", ["gnome-shell"], ["libheif.so.1()(64bit)", "rpmlib(PayloadIsZstd)", "(foo or bar)", "/usr/bin/python3"]),
+    )
+    EXTERNAL = {"libc.so.6"}
+
+    def test_provides_include_shipped_files(self) -> None:
+        primary = full_primary(("a", "a", ["cap"], [])).replace(
+            b"</format>", b"</format><file>/usr/bin/a</file>", 1
+        )
+        self.assertEqual(provides_from_primary(primary), {"cap", "/usr/bin/a"})
+
+    def test_an_unsatisfied_soname_marks_its_source_stale(self) -> None:
+        stale = stale_from_primary(self.PRIMARY, self.EXTERNAL)
+        self.assertEqual(stale, {"libheif": {"libavcodec.so.62()(64bit)"}})
+
+    def test_unsatisfied_base_buildroot_sonames_do_not_flag_stale(self) -> None:
+        # libX11.so.6()(64bit) is unsatisfied in PRIMARY and absent from EXTERNAL,
+        # but libX11.so is not provided by the factory, so it must not mark libheif stale.
+        stale = stale_from_primary(self.PRIMARY, {"libavcodec.so.62()(64bit)"})
+        self.assertEqual(stale, {})
+
+    def test_external_provides_count_as_satisfied(self) -> None:
+        stale = stale_from_primary(self.PRIMARY, {"libavcodec.so.62()(64bit)"})
+        self.assertNotIn("libheif", stale)
+
+    def test_rpmlib_rich_and_file_requires_are_not_judged(self) -> None:
+        stale = stale_from_primary(self.PRIMARY, self.EXTERNAL)
+        self.assertNotIn("gnome-shell", stale)
+
+    def test_a_stale_package_rebuilds_and_drags_its_dependents(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for name in ("libheif", "ffmpeg-free", "gnome-shell"):
+                recipe(root, name, "1")
+            config = {"packages": [
+                {"name": "ffmpeg-free", "version": "1.0", "stage": 0},
+                {"name": "libheif", "version": "1.0", "stage": 1},
+                {"name": "gnome-shell", "version": "1.0", "stage": 2},
+            ]}
+            published = published_from_primary(self.PRIMARY)
+            stale = set(stale_from_primary(self.PRIMARY, self.EXTERNAL))
+            names = [
+                entry["name"]
+                for entry in plan(
+                    config, root, published=published, changed=set(), full=False,
+                    factory_repo="file:///work/factory",
+                    dependents=dependents_from_primary(self.PRIMARY), stale=stale,
+                )
+            ]
+            self.assertEqual(names, ["libheif", "gnome-shell"])
+
+
+class BuildPlanFormattingTests(unittest.TestCase):
+    def test_format_build_plan_markdown_and_json(self) -> None:
+        build = [{"name": "demo", "stage": 0}, {"name": "sub", "stage": 1}]
+        reasons = {
+            "demo": ["recipe edit"],
+            "sub": ["reverse dependency of demo"],
+        }
+        md, plan_json = format_build_plan(
+            build,
+            reasons,
+            full=False,
+            direct_changes={"demo"},
+            reverse_deps={"sub"},
+            total_inventory=10,
+        )
+        self.assertIn("# Factory Build Plan", md)
+        self.assertIn("**Build Mode:** Incremental", md)
+        self.assertIn("`demo`", md)
+        self.assertIn("`sub`", md)
+        self.assertEqual(plan_json["mode"], "incremental")
+        self.assertEqual(plan_json["total_selected"], 2)
+        self.assertEqual(plan_json["total_inventory"], 10)
+        self.assertEqual(plan_json["stages"]["stage0"], ["demo"])
+        self.assertEqual(plan_json["stages"]["stage1"], ["sub"])
+
+    def test_format_build_plan_full_rebuild(self) -> None:
+        build = [{"name": "demo", "stage": 0}]
+        reasons = {"demo": ["global trigger (tools/rebuild_plan.py)"]}
+        md, plan_json = format_build_plan(
+            build,
+            reasons,
+            full=True,
+            global_triggers=["tools/rebuild_plan.py"],
+            total_inventory=1,
+        )
+        self.assertIn("**Build Mode:** Full Rebuild", md)
+        self.assertIn("tools/rebuild_plan.py", md)
+        self.assertEqual(plan_json["mode"], "full")
+        self.assertEqual(plan_json["global_triggers"], ["tools/rebuild_plan.py"])
 
 
 class StageOutputTests(unittest.TestCase):

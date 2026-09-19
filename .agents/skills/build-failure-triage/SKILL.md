@@ -170,6 +170,15 @@ Do not infer a version from what Rawhide ships or from a package name.
 - **Binary versus source names** — `wayland` the source RPM ships as
   `libwayland-server` and `wayland-devel`. A name lookup that misses is not a
   missing package.
+- **Why a package was selected or skipped** — read the `factory-build-plan`
+  artifact (`build-plan.md` / `build-plan.json`) or the run's step summary. It
+  records the selection reasons: direct recipe changes, unpublished packages,
+  stale builds with missing runtime providers, or reverse dependency closures
+  dragging downstream packages across waves.
+- **Reverse dependency closures** — editing a library drags its downstream
+  factory dependents across stages (from both runtime soname edges in
+  `primary.xml` and spec-level `BuildRequires`). If a later wave package fails,
+  check whether an earlier wave package rebuilt in the same run moved an ABI.
 
 ## Never
 

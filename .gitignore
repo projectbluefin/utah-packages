@@ -1,5 +1,6 @@
 sources/
 reports/source-pipeline/
+work/
 __pycache__/
 *.pyc
 .worktrees/
