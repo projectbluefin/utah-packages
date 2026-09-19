@@ -169,7 +169,20 @@ Do not infer a version from what Rawhide ships or from a package name.
 - **What a repository actually has** — read its `repodata/primary.xml`.
 - **Binary versus source names** — `wayland` the source RPM ships as
   `libwayland-server` and `wayland-devel`. A name lookup that misses is not a
-  missing package.
+  missing package. Similarly, `libgda-sqlite` is a binary subpackage of `libgda`,
+  and `linux-atm-libs-devel` is produced by the `linux-atm` source package.
+- **Convergent multi-package dependencies across stages** — when a consumer
+  package (such as `ppp`) depends on multiple prerequisites (`libpcap-devel` and
+  `linux-atm-libs-devel`) that do not depend on each other, the prerequisites
+  can all build concurrently in stage 0. Only the consumer needs to step up to
+  stage 1 (`stage = max(dependency stages) + 1`). Do not unnecessarily stagger
+  mutually independent dependencies across different stages.
+- **Secondary sources in Fedora dist-git** — some packages declare additional
+  source archives or signature files (e.g., `ppp-watch.tar.xz` in `ppp` or
+  detached signatures in `libpcap`). `tools/source_pipeline.py` fetches Source0
+  directly from upstream, while secondary sources pinned in the dist-git
+  `sources` file are fetched and verified against their SHA-512 hashes from
+  Fedora's lookaside cache via `bundled_sources`.
 
 ## Never
 
@@ -187,6 +200,7 @@ Do not infer a version from what Rawhide ships or from a package name.
 | "The artifact uploaded, so the package built." | Every artifact also carries `work/reports/*.json`, so one file always matches and the upload reports success while shipping no RPM. Rule 4. |
 | "This package is missing from Fedora." | Check whether it is one of ours in an earlier wave, and whether you are searching for a binary name that its source package does not use. |
 | "Re-running will fix it." | Only for transient infrastructure exit 125 with a sub-kilobyte log, and only once. Exit 125 with `manifest unknown` means the pinned digest is gone and requires repinning. |
+| "Every imported dependency must be given its own unique stage in a sequence." | Mutually independent prerequisites (such as `libpcap` and `linux-atm` for `ppp`) can both build in stage 0; only the consumer needing both (`ppp`) needs to be in stage 1 (`stage > max(prerequisite stages)`). |
 
 ## Red Flags
 

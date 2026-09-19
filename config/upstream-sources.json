@@ -1304,6 +1304,17 @@
       "sha512": "7c9dd4e0d39a8dec71fa6e9518e81e4c1c5998e3de1db9ab7db58ebd4f99efaa41b071bf9575de88400a4aeff597cf36361d01f568122a6e1214a92fb1efd507"
     },
     {
+      "name": "libgda",
+      "version": "6.0.0",
+      "url": "https://download.gnome.org/sources/libgda/6.0/libgda-6.0.0.tar.xz",
+      "filename": "libgda-6.0.0.tar.xz",
+      "sha512": "adf81589b4c27e3a229cd95cf19df329678677b4c860ea1944bcb774795fc442a288e6de7e2a88efad88e645b5586b7cf9443d2932c703f177e41a582c65fd52",
+      "sha256_url": "https://download.gnome.org/sources/libgda/6.0/libgda-6.0.0.sha256sum",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libgda/libgda-6.0.0.tar.xz/sha512/adf81589b4c27e3a229cd95cf19df329678677b4c860ea1944bcb774795fc442a288e6de7e2a88efad88e645b5586b7cf9443d2932c703f177e41a582c65fd52/libgda-6.0.0.tar.xz"
+      ]
+    },
+    {
       "name": "libglvnd",
       "stage": 6,
       "version": "1.7.0",
@@ -1472,6 +1483,17 @@
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/liboping/liboping-1.10.0.tar.bz2/sha512/f1e9984cf0c1df89b29f7bc657c19a5439019db7643680744d8f353664b6a53070581f40b51e72f896c7df88799c6868257f6308e1a9d84b4d2a0666491214d8/liboping-1.10.0.tar.bz2",
       "filename": "liboping-1.10.0.tar.bz2",
       "sha512": "f1e9984cf0c1df89b29f7bc657c19a5439019db7643680744d8f353664b6a53070581f40b51e72f896c7df88799c6868257f6308e1a9d84b4d2a0666491214d8"
+    },
+    {
+      "name": "libpcap",
+      "stage": 0,
+      "version": "1.10.6",
+      "url": "https://www.tcpdump.org/release/libpcap-1.10.6.tar.xz",
+      "filename": "libpcap-1.10.6.tar.xz",
+      "sha512": "d0841d91ac68dda73bad9198e7a43195ec68b04d2987500946c34fdf066924462f025b26b5b2a88bfa67d82fa946246d498cf50f3b5de4adbc8537162e1a16c4",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libpcap/libpcap-1.10.6.tar.xz/sha512/d0841d91ac68dda73bad9198e7a43195ec68b04d2987500946c34fdf066924462f025b26b5b2a88bfa67d82fa946246d498cf50f3b5de4adbc8537162e1a16c4/libpcap-1.10.6.tar.xz"
+      ]
     },
     {
       "name": "libpciaccess",
@@ -1714,6 +1736,17 @@
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/libxshmfence/libxshmfence-1.3.2.tar.xz/sha512/e20a6827e370726cf50489a69f4a52b897f1c44e3eba8c72a4e626b08724e877d090770b8016765736d887d5d5eaba1fda9c29066e62d259b4d1e2064bc1626c/libxshmfence-1.3.2.tar.xz",
       "filename": "libxshmfence-1.3.2.tar.xz",
       "sha512": "e20a6827e370726cf50489a69f4a52b897f1c44e3eba8c72a4e626b08724e877d090770b8016765736d887d5d5eaba1fda9c29066e62d259b4d1e2064bc1626c"
+    },
+    {
+      "name": "linux-atm",
+      "stage": 0,
+      "version": "2.5.1",
+      "url": "https://downloads.sourceforge.net/project/linux-atm/linux-atm/2.5.1/linux-atm-2.5.1.tgz",
+      "filename": "linux-atm-2.5.1.tgz",
+      "sha512": "7a3e931c47651f7a2acc646120f9a8172c2177d1c6b2267a1a0249c0b3c97ef5c4e93c4e213c455984ec2adf3eaebaab34d489dd27161425fa1c5bcd483fa7a3",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/linux-atm/linux-atm-2.5.1.tgz/sha512/7a3e931c47651f7a2acc646120f9a8172c2177d1c6b2267a1a0249c0b3c97ef5c4e93c4e213c455984ec2adf3eaebaab34d489dd27161425fa1c5bcd483fa7a3/linux-atm-2.5.1.tgz"
+      ]
     },
     {
       "name": "linux-firmware",
@@ -2020,6 +2053,17 @@
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/pixman/pixman-0.46.4.tar.xz/sha512/83b133e7969ba34f883f4e08dcc5d388c4397f43ce836c191c05945fe77c16ff501d531600780c12678a0d08105828a6bdeff2156b63f9c1a84087bc7f40ae9f/pixman-0.46.4.tar.xz",
       "filename": "pixman-0.46.4.tar.xz",
       "sha512": "83b133e7969ba34f883f4e08dcc5d388c4397f43ce836c191c05945fe77c16ff501d531600780c12678a0d08105828a6bdeff2156b63f9c1a84087bc7f40ae9f"
+    },
+    {
+      "name": "ppp",
+      "stage": 1,
+      "version": "2.5.3",
+      "url": "https://github.com/paulusmack/ppp/archive/v2.5.3/ppp-2.5.3.tar.gz",
+      "filename": "ppp-2.5.3.tar.gz",
+      "sha512": "ab9f46aab15c5d8f779ca86dd03b993edb85efcca55b3ac1e97e4e9f55ddf3daa9f4f6f152ccb35e38dea5b415364aaeb0f75fa9ed1e913e4a7636e45adef1af",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/ppp/ppp-2.5.3.tar.gz/sha512/ab9f46aab15c5d8f779ca86dd03b993edb85efcca55b3ac1e97e4e9f55ddf3daa9f4f6f152ccb35e38dea5b415364aaeb0f75fa9ed1e913e4a7636e45adef1af/ppp-2.5.3.tar.gz"
+      ]
     },
     {
       "name": "protobuf",

@@ -1,0 +1,13 @@
+diff --git a/src/test/Makefile.am b/src/test/Makefile.am
+index 8b9f6d4..e876a3e 100644
+--- a/src/test/Makefile.am
++++ b/src/test/Makefile.am
+@@ -1,7 +1,7 @@
+ USRPGMS = aread awrite ttcp_atm atmswitch svc_recv svc_send @pmp_send@
+ EXTRA_PROGRAMS = pmp_send
+-PGMS = align aping br bw isp window
++PGMS = align aping br bw window
+ bin_PROGRAMS = $(USRPGMS)
+ noinst_PROGRAMS = $(PGMS)
+ 
+ LDADD = $(top_builddir)/src/lib/libatm.la
