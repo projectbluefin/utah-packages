@@ -170,6 +170,13 @@ Do not infer a version from what Rawhide ships or from a package name.
 - **Binary versus source names** — `wayland` the source RPM ships as
   `libwayland-server` and `wayland-devel`. A name lookup that misses is not a
   missing package.
+- **Chained package dependencies across stages** — a package only sees what
+  earlier stages built (`stages < N`). When importing a multi-layer stack
+  (such as `libfprint` needing `libgusb` and `pixman`, followed by `fprintd`
+  needing `libfprint-devel`), each dependency tier requires incrementing the
+  stage: `libgusb`/`pixman` in stage 0, `libfprint` in stage 1, and `fprintd` in
+  stage 2. Staging a consumer in the same wave as its newly imported dependency
+  fails at builddep resolution.
 
 ## Never
 
@@ -187,6 +194,7 @@ Do not infer a version from what Rawhide ships or from a package name.
 | "The artifact uploaded, so the package built." | Every artifact also carries `work/reports/*.json`, so one file always matches and the upload reports success while shipping no RPM. Rule 4. |
 | "This package is missing from Fedora." | Check whether it is one of ours in an earlier wave, and whether you are searching for a binary name that its source package does not use. |
 | "Re-running will fix it." | Only for transient infrastructure exit 125 with a sub-kilobyte log, and only once. Exit 125 with `manifest unknown` means the pinned digest is gone and requires repinning. |
+| "Staging both library and daemon in stage 1 will work if imported together." | Wave N resolves dependencies strictly from waves `< N`. Chained dependencies must have strictly increasing stages (`stage(consumer) > max(stage(dep))`). |
 
 ## Red Flags
 

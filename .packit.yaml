@@ -262,6 +262,12 @@ packages:
     downstream_package_name: flite
     paths:
       - packages/flite
+  fprintd:
+    specfile_path: fprintd.spec
+    upstream_package_name: fprintd
+    downstream_package_name: fprintd
+    paths:
+      - packages/fprintd
   fribidi:
     specfile_path: fribidi.spec
     upstream_package_name: fribidi
@@ -964,6 +970,12 @@ packages:
     downstream_package_name: libevdev
     paths:
       - packages/libevdev
+  libfprint:
+    specfile_path: libfprint.spec
+    upstream_package_name: libfprint
+    downstream_package_name: libfprint
+    paths:
+      - packages/libfprint
   libfreeaptx:
     specfile_path: libfreeaptx.spec
     upstream_package_name: libfreeaptx

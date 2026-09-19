@@ -340,6 +340,14 @@
       "sha512": "1ca2f4145651490ef8405fdb830a3b42e885020a7603d965f6a5581b01bed41047d396b38c2ceab138fc0b28d28078db17acd2b5a84c6444cb99d65c581afa72"
     },
     {
+      "name": "fprintd",
+      "version": "1.94.5",
+      "url": "https://gitlab.freedesktop.org/libfprint/fprintd/-/archive/v1.94.5/fprintd-v1.94.5.tar.gz",
+      "filename": "fprintd-v1.94.5.tar.gz",
+      "sha512": "ee71d1d8cfea99fb6711bd4039011702a1f31c59a23d13423fca8be17b43b29bf7a7434e0baf598f2d4bfefd42c08f2f7e3c6ebdf371d53aa9d6b7963d4732dc",
+      "stage": 2
+    },
+    {
       "name": "fribidi",
       "version": "1.0.16",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/fribidi/fribidi-1.0.16.tar.xz/sha512/e3a56f36155f6813e3609473639fc533de742309f561c463012dc90b412a1ac7694b765d92669b2cbfaee973ca0e92fa5e926e68a1a078921f26ef17d82ab651/fribidi-1.0.16.tar.xz",
@@ -1287,6 +1295,14 @@
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/libevdev/libevdev-1.13.7.tar.xz/sha512/fd64ded32a7f303d45d545ebf293cc9d1a1e79672e1d5879d05e2c723b78709d1ecc972afb1f043eafe961cbded06d221a6fccc25ebba00a68fcf76e4ee3da8b/libevdev-1.13.7.tar.xz",
       "filename": "libevdev-1.13.7.tar.xz",
       "sha512": "fd64ded32a7f303d45d545ebf293cc9d1a1e79672e1d5879d05e2c723b78709d1ecc972afb1f043eafe961cbded06d221a6fccc25ebba00a68fcf76e4ee3da8b"
+    },
+    {
+      "name": "libfprint",
+      "version": "1.94.100",
+      "url": "https://gitlab.freedesktop.org/libfprint/libfprint/-/archive/v1.94.100/libfprint-v1.94.100.tar.gz",
+      "filename": "libfprint-v1.94.100.tar.gz",
+      "sha512": "c7a167b849fd3cd0ccc861d4c021568209eedab038bbbff160825af41efaf5db55d1c38da98419fa034333820b90152dc94a975825d5d646f3f1ef7f8d04e299",
+      "stage": 1
     },
     {
       "name": "libfreeaptx",

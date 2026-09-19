@@ -1,0 +1,8 @@
+{
+  "package": "fprintd",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/fprintd.git",
+  "commit": "e72af79b65bfa15c3c20ef07ea6a4feb746e21c9",
+  "tree": "964cd53da357e28bba7b2df510ed023805d58dfc",
+  "imported_at": "2026-09-19T02:29:24.200623+00:00"
+}
