@@ -364,6 +364,33 @@ def plan(
     return build
 
 
+def cacheable(build: list[dict], changed: set[str], stale: set[str]) -> list[str]:
+    """Which selected packages may consult the per-package build cache.
+
+    The cache answers "have we already built this exact thing" (see
+    tools/package_cache_key.py and issue #177). It deliberately does not answer
+    "should this be rebuilt", which is what `plan` above decides -- so it narrows
+    nothing and widens nothing. Every package `plan` selected is still selected;
+    this only says which of them a build job may satisfy from the cache instead
+    of by compiling.
+
+    Two exclusions, both about intent rather than correctness:
+
+    `changed` is excluded because a recipe the author just edited is the one case
+    where they are owed a real build. The key would in fact miss -- editing the
+    recipe changes the recipe digest -- so this is belt and braces, and it keeps
+    the promise legible rather than resting on the key being right.
+
+    `stale` is excluded because a stale published package is one whose binaries
+    require something nothing provides any more. Its recipe may not have moved,
+    so its key can hit, and hitting would hand back the very build that is
+    broken. That is the one case where the cache would actively defeat the
+    repair, so it is named here rather than left to chance.
+    """
+    excluded = set(changed) | set(stale)
+    return [entry["name"] for entry in build if entry["name"] not in excluded]
+
+
 def stage_outputs(build: list[dict]) -> dict[str, str]:
     """Per-stage package lists and their <=250-package chunks."""
     outputs: dict[str, str] = {
