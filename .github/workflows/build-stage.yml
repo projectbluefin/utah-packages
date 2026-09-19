@@ -199,7 +199,33 @@ jobs:
               # libvdpau, appstream and libtheora all failed here (issue #75).
               # Exclude the legacy default-gems from the Hummingbird repository so
               # ruby4.0 alone answers for default gems.
-              HB_REPO_EXCLUDE="ruby3.3-default-gems,ruby3.4-default-gems"
+              # libicu joins that list, and it is the same decision the consumer
+              # transaction already makes. Hummingbird has migrated to ICU 78:
+              # read against its primary.xml, every current build links
+              # libicuuc.so.78 and only superseded ones link .so.77
+              # (harfbuzz-icu up to 14.2.0-1, boost 1.90.0-6.1 and -7). The two
+              # libicu builds share a package name, so dnf installs exactly one,
+              # and nothing forced which. A build root that resolved the
+              # superseded copy dragged in libicu 77, which made libicu-devel
+              # resolve to 77.1 to match, and the package then linked ICU 77:
+              #
+              #   package nautilus-51~beta-1.hum1.bfin from factory requires
+              #   libicuuc.so.77, but none of the providers can be installed
+              #   - package libicu-77.1-2.1.hum1 is filtered out by exclude filtering
+              #
+              # which failed the Hummingbird-only consumer transaction in run
+              # 35413902261. The exclusion there and the one here have to agree,
+              # or the factory builds against an ICU its consumers refuse. This
+              # is not the blanket exclusion 012cb6a reverted: that one reached
+              # Fedora, whose build-only deps do legitimately link ICU 77, and
+              # HB_EXCLUDE already keeps Fedora ICU out of the build root
+              # entirely. Excluding it here cannot strand a current Hummingbird
+              # package, because no current build requires it.
+              #
+              # Release is its own field for the reason 1f88491 found: dnf splits
+              # a spec on dashes before globbing, so libicu-77.*hum1 would parse
+              # 77.*hum1 as the version and match nothing.
+              HB_REPO_EXCLUDE="ruby3.3-default-gems,ruby3.4-default-gems,libicu-77.*-*hum1"
               echo "hummingbird repo exclusions: $HB_REPO_EXCLUDE"
               if [ -n "${FACTORY_REPO:-}" ]; then
                 printf "[factory]\nname=factory\nbaseurl=%s\nenabled=1\ngpgcheck=0\npriority=5\n" \

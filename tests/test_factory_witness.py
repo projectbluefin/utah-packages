@@ -97,3 +97,45 @@ class FactoryWitnessTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class IcuAgreementTests(unittest.TestCase):
+    """The build root and the consumer transaction must exclude the same ICU.
+
+    Hummingbird ships libicu 77.1 beside 78.3 under one package name, so dnf
+    installs exactly one. The consumer transaction excludes 77, because
+    Hummingbird has migrated to 78: every current build links libicuuc.so.78 and
+    only superseded ones link .so.77. If the build root does not make the same
+    choice, the factory links an ICU its consumers refuse -- which is how
+    nautilus came to require libicuuc.so.77 and fail publication in run
+    35413902261, after all 331 builds had passed.
+    """
+
+    SPELLING = "libicu-77.*-*hum1"
+
+    def test_both_halves_exclude_the_same_icu(self):
+        consumer = uncommented(REBUILD)
+        buildroot = uncommented(BUILD_STAGE)
+        self.assertIn(self.SPELLING, consumer,
+                      "the consumer transaction must exclude libicu 77")
+        self.assertIn(self.SPELLING, buildroot,
+                      "the build root must exclude the same libicu 77")
+
+    def test_the_spelling_keeps_release_as_its_own_field(self):
+        # dnf splits a package spec on dashes before globbing each field, so
+        # libicu-77.*hum1 parses 77.*hum1 as the version and matches nothing.
+        for text in (uncommented(REBUILD), uncommented(BUILD_STAGE)):
+            self.assertNotIn("libicu-77.*hum1", text.replace(self.SPELLING, ""))
+
+    def test_the_build_root_exclusion_is_scoped_to_hummingbird(self):
+        # Excluding ICU 77 from Fedora as well is what 012cb6a had to revert:
+        # Fedora build-only deps legitimately link it.
+        text = uncommented(BUILD_STAGE)
+        hb_line = next(line for line in text.splitlines()
+                       if line.strip().startswith("HB_REPO_EXCLUDE="))
+        self.assertIn(self.SPELLING, hb_line)
+        fedora_lines = [line for line in text.splitlines()
+                        if "fedora.excludepkgs" in line]
+        self.assertTrue(fedora_lines)
+        for line in fedora_lines:
+            self.assertNotIn("libicu-77", line)
