@@ -88,6 +88,17 @@
       "sha512": "b2354fcaccfa316df7847438ad6b4ca3702be4ca88c46878c198a52ca6c659263b61759d4898e7a73acf64dd0e3004c103fa67a1cbdb2e53212f13368173be23"
     },
     {
+      "name": "alsa-utils",
+      "version": "1.2.16",
+      "url": "https://www.alsa-project.org/files/pub/utils/alsa-utils-1.2.16.tar.bz2",
+      "filename": "alsa-utils-1.2.16.tar.bz2",
+      "sha512": "288c042f5acb8a7cf1b0a0c25327c74e0bce126124253bdb2d0dc2630b8bc80b5e5d694de97738d031377fd82d887db32af1c4b27c6d940357b318d0a3ef02cf",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/alsa-utils/alsa-utils-1.2.16.tar.bz2/sha512/288c042f5acb8a7cf1b0a0c25327c74e0bce126124253bdb2d0dc2630b8bc80b5e5d694de97738d031377fd82d887db32af1c4b27c6d940357b318d0a3ef02cf/alsa-utils-1.2.16.tar.bz2"
+      ],
+      "feed": "pinned: bare ftp directory listing"
+    },
+    {
       "name": "appstream",
       "version": "1.1.3",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/appstream/AppStream-1.1.3.tar.xz/sha512/f0fdce1e4c43818a41c31fcb2531725fe5e1c1e9b47b028c0f2810860866d8058c5dada0500f2cee0ae5a36e1498abb7304e570179e95fdc834127e1746c5225/AppStream-1.1.3.tar.xz",

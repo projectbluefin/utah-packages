@@ -28,7 +28,7 @@ class PackitSrpmTests(unittest.TestCase):
             for package in json.loads(SOURCE_CONFIG.read_text())["packages"]
         }
 
-        self.assertEqual(len(config_packages), 340)
+        self.assertEqual(len(config_packages), 341)
         self.assertEqual(config_packages - source_packages, set())
         self.assertTrue(
             {"adw-gtk3-theme", "bootc", "igt-gpu-tools", "mesa", "runc"}
@@ -75,7 +75,7 @@ class PackitSrpmTests(unittest.TestCase):
 
 
     def test_every_chunk_fits_inside_the_matrix_cap(self) -> None:
-        """340 packages in one matrix expands to zero jobs, not an error."""
+        """341 packages in one matrix expands to zero jobs, not an error."""
         names = package_names(PACKIT_CONFIG)
         chunks = package_chunks(names)
         rebuilt = [name for chunk in chunks for name in json.loads(chunk)]

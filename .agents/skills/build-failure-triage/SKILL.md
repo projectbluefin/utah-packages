@@ -167,6 +167,10 @@ Do not infer a version from what Rawhide ships or from a package name.
   tarball. GNOME 51 needs glib `2.86`, not the `2.89` Rawhide carries; assuming
   the latter sent one attempt down a dead end.
 - **What a repository actually has** — read its `repodata/primary.xml`.
+- **Lockstep dependencies against Hummingbird** — packages released in lockstep
+  with base OS libraries (e.g. `alsa-utils` against Hummingbird's `alsa-lib`)
+  require matching ABI. Query Hummingbird repository metadata directly
+  (`repodata/*-primary.xml.gz`) to verify the exact version provided in the buildroot.
 - **Binary versus source names** — `wayland` the source RPM ships as
   `libwayland-server` and `wayland-devel`. A name lookup that misses is not a
   missing package.

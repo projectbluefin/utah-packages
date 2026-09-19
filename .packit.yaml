@@ -70,6 +70,12 @@ packages:
     downstream_package_name: alsa-tools
     paths:
       - packages/alsa-tools
+  alsa-utils:
+    specfile_path: alsa-utils.spec
+    upstream_package_name: alsa-utils
+    downstream_package_name: alsa-utils
+    paths:
+      - packages/alsa-utils
   appstream:
     specfile_path: appstream.spec
     upstream_package_name: appstream
