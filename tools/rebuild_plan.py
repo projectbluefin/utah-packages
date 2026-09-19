@@ -130,13 +130,39 @@ def dependents_from_primary(primary: bytes) -> dict[str, set[str]]:
     return dependents
 
 
-def provides_from_primary(primary: bytes) -> set[str]:
-    """Every capability a repository provides: rpm Provides plus shipped files."""
+# Builds the consumer transaction refuses, as (name, version prefix). Their
+# capabilities must not count as provided here either, or this model disagrees
+# with the transaction it exists to predict.
+#
+# Hummingbird ships libicu 77.1 beside 78.3 under one package name; it has
+# migrated to 78 (every current build links libicuuc.so.78, only superseded ones
+# link .so.77), and the publish gate excludes 77 so consumers cannot split
+# across both. Counting 77 as provided here meant a published package linked
+# against it looked satisfiable, was skipped as fresh, and then failed the very
+# transaction this check exists to predict -- which is how run 35413902261 lost
+# publication after 331 green builds.
+EXCLUDED_EXTERNAL: tuple[tuple[str, str], ...] = (("libicu", "77."),)
+
+
+def provides_from_primary(
+    primary: bytes, excluded: tuple[tuple[str, str], ...] = EXCLUDED_EXTERNAL
+) -> set[str]:
+    """Every capability a repository provides: rpm Provides plus shipped files.
+
+    Builds named in `excluded` contribute nothing, because the consumer
+    transaction will not install them.
+    """
     provided: set[str] = set()
     root = ElementTree.fromstring(primary)
     for package in root.iter(f"{{{COMMON_NS}}}package"):
         fmt = package.find(f"{{{COMMON_NS}}}format")
         if fmt is None:
+            continue
+        name = package.findtext(f"{{{COMMON_NS}}}name") or ""
+        version = package.find(f"{{{COMMON_NS}}}version")
+        ver = version.get("ver", "") if version is not None else ""
+        if any(name == excluded_name and ver.startswith(prefix)
+               for excluded_name, prefix in excluded):
             continue
         for entry in fmt.iterfind(f"{{{RPM_NS}}}provides/{{{RPM_NS}}}entry"):
             provided.add(entry.get("name", ""))

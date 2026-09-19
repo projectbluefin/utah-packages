@@ -414,3 +414,60 @@ class StageOutputTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def icu_primary() -> bytes:
+    """Hummingbird as it really is: libicu 77.1 beside 78.3, one package name."""
+    body = ""
+    for ver, rel, soname in (("77.1", "2.1.hum1", "77"), ("78.3", "8.hum1", "78")):
+        body += (
+            "<package type=\"rpm\"><name>libicu</name>"
+            f"<version epoch=\"0\" ver=\"{ver}\" rel=\"{rel}\"/><format>"
+            f"<rpm:sourcerpm>icu-{ver}-{rel}.src.rpm</rpm:sourcerpm>"
+            "<rpm:provides>"
+            f"<rpm:entry name=\"libicuuc.so.{soname}()(64bit)\"/>"
+            f"<rpm:entry name=\"libicui18n.so.{soname}()(64bit)\"/>"
+            "</rpm:provides><rpm:requires></rpm:requires></format></package>"
+        )
+    return (
+        "<metadata xmlns=\"http://linux.duke.edu/metadata/common\" "
+        "xmlns:rpm=\"http://linux.duke.edu/metadata/rpm\">" + body + "</metadata>"
+    ).encode()
+
+
+class ExcludedExternalTests(unittest.TestCase):
+    """This model must refuse what the consumer transaction refuses.
+
+    The publish gate excludes libicu 77, because Hummingbird has migrated to 78
+    and the two builds share a package name so dnf installs exactly one.
+    Counting 77 as provided here made a published package linked against it look
+    satisfiable: it was skipped as fresh, and then failed the very transaction
+    this check exists to predict. Run 35413902261 lost publication that way
+    after 331 green builds.
+    """
+
+    def test_an_excluded_build_provides_nothing(self) -> None:
+        provided = provides_from_primary(icu_primary())
+        self.assertIn("libicuuc.so.78()(64bit)", provided)
+        self.assertNotIn("libicuuc.so.77()(64bit)", provided)
+
+    def test_a_published_package_linked_against_it_is_stale(self) -> None:
+        external = provides_from_primary(icu_primary())
+        published = full_primary(
+            ("nautilus", "nautilus", ["nautilus"], ["libicuuc.so.77()(64bit)"]),
+        )
+        stale = stale_from_primary(published, external)
+        self.assertEqual(stale, {"nautilus": {"libicuuc.so.77()(64bit)"}},
+                         "a package the gate will reject must rebuild, not be skipped")
+
+    def test_the_same_package_on_the_kept_build_is_not_stale(self) -> None:
+        # The rule must not condemn everything that touches ICU.
+        external = provides_from_primary(icu_primary())
+        published = full_primary(
+            ("nautilus", "nautilus", ["nautilus"], ["libicuuc.so.78()(64bit)"]),
+        )
+        self.assertEqual(stale_from_primary(published, external), {})
+
+    def test_the_exclusion_is_declared_once_and_names_libicu_77(self) -> None:
+        from tools.rebuild_plan import EXCLUDED_EXTERNAL
+        self.assertIn(("libicu", "77."), EXCLUDED_EXTERNAL)
