@@ -6,7 +6,9 @@ contract Hummingbird can already satisfy, and it had no unit coverage.  Two
 rules carry the meaning and were unpinned: ``lines`` must drop comments and
 blanks so a commented-out package is not counted as shipped, and ``main`` must
 include every manifest section except ``excluded`` so a version-specific list
-is still part of the contract.
+is still part of the contract.  A third rule joins them: the runtime contract's
+``[unavailable]`` packages are policy exclusions, so they must leave the
+contract instead of being reported as parity Hummingbird still owes.
 
 These tests build manifests and package lists on disk; nothing pulls an image.
 """
@@ -50,17 +52,20 @@ class MainTests(unittest.TestCase):
     def setUp(self):
         self.root = Path(tempfile.mkdtemp(prefix="gaps-main-"))
 
-    def run_main(self, manifest: str, image: str, repo: str, extra=()):
+    def run_main(self, manifest: str, image: str, repo: str, extra=(), policy="[unavailable]\npackages = []\n"):
         manifest_path = self.root / "manifest.toml"
+        policy_path = self.root / "policy.toml"
         image_path = self.root / "image.txt"
         repo_path = self.root / "repo.txt"
         output = self.root / "reports" / "hummingbird-gap.json"
         manifest_path.write_text(manifest)
+        policy_path.write_text(policy)
         image_path.write_text(image)
         repo_path.write_text(repo)
         argv = [
             "recalculate_hummingbird_gaps.py",
             "--manifest", str(manifest_path),
+            "--policy", str(policy_path),
             "--image-packages", str(image_path),
             "--repo-packages", str(repo_path),
             "--output", str(output),
@@ -82,7 +87,8 @@ class MainTests(unittest.TestCase):
         self.assertEqual(report["available_from_repo_only"], ["grub2"])
         self.assertEqual(report["missing_from_hummingbird"], ["mozjs140"])
         self.assertEqual(report["counts"],
-                         {"contract": 3, "image": 1, "repo_only": 1, "missing": 1})
+                         {"contract": 3, "excluded_as_unavailable": 0,
+                          "image": 1, "repo_only": 1, "missing": 1})
 
     def test_image_wins_over_repo_so_repo_only_excludes_it(self):
         _, report = self.run_main(
@@ -135,7 +141,8 @@ class MainTests(unittest.TestCase):
             "fish\nsomething-else\n",
             "another-thing\n",
         )
-        self.assertEqual(report["counts"], {"contract": 1, "image": 1, "repo_only": 0, "missing": 0})
+        self.assertEqual(report["counts"], {"contract": 1, "excluded_as_unavailable": 0,
+                                            "image": 1, "repo_only": 0, "missing": 0})
 
     def test_output_lists_are_sorted_and_image_ref_is_recorded(self):
         _, report = self.run_main(
@@ -147,6 +154,75 @@ class MainTests(unittest.TestCase):
         self.assertEqual(report["missing_from_hummingbird"], ["fish", "grub2", "zsh"])
         self.assertEqual(report["image"], "ghcr.io/example/hummingbird:latest")
 
+    def test_unavailable_packages_leave_the_contract(self):
+        # The runtime contract's [unavailable] list is debt Utah decided not to
+        # carry. Counting it as missing would report parity Hummingbird is not
+        # expected to close — see issue #112 for firefox specifically.
+        _, report = self.run_main(
+            "[base]\npackages = ['fish', 'firefox', 'grub2']\n",
+            "",
+            "",
+            policy="[unavailable]\npackages = ['firefox']\n",
+        )
+        self.assertEqual(report["contract_binary_packages"], ["fish", "grub2"])
+        self.assertNotIn("firefox", report["missing_from_hummingbird"])
+        self.assertEqual(report["counts"]["contract"], 2)
+        self.assertEqual(report["counts"]["missing"], 2)
+
+    def test_dropped_packages_are_reported_so_the_exclusion_is_auditable(self):
+        _, report = self.run_main(
+            "[base]\npackages = ['fish', 'firefox', 'zsh']\n",
+            "",
+            "",
+            policy="[unavailable]\npackages = ['zsh', 'firefox']\n",
+        )
+        self.assertEqual(report["excluded_as_unavailable"], ["firefox", "zsh"])
+        self.assertEqual(report["counts"]["excluded_as_unavailable"], 2)
+
+    def test_unavailable_entry_outside_the_contract_is_not_reported_as_dropped(self):
+        # Only names the manifest actually requested can be dropped from it, so
+        # an exception for a package this manifest never named stays invisible
+        # rather than inflating the audit list.
+        _, report = self.run_main(
+            "[base]\npackages = ['fish']\n",
+            "",
+            "",
+            policy="[unavailable]\npackages = ['not-in-this-manifest']\n",
+        )
+        self.assertEqual(report["excluded_as_unavailable"], [])
+        self.assertEqual(report["contract_binary_packages"], ["fish"])
+
+    def test_unavailable_package_is_dropped_even_when_hummingbird_ships_it(self):
+        # Availability does not revive an exception: the package is excluded by
+        # policy, not by absence, so it must not reappear as satisfied parity.
+        _, report = self.run_main(
+            "[base]\npackages = ['fish', 'firefox']\n",
+            "firefox\n",
+            "",
+            policy="[unavailable]\npackages = ['firefox']\n",
+        )
+        self.assertEqual(report["available_from_image"], [])
+        self.assertEqual(report["counts"]["image"], 0)
+
+    def test_policy_without_an_unavailable_section_drops_nothing(self):
+        _, report = self.run_main(
+            "[base]\npackages = ['fish']\n",
+            "",
+            "",
+            policy="[base]\nimage = 'example'\n",
+        )
+        self.assertEqual(report["excluded_as_unavailable"], [])
+        self.assertEqual(report["contract_binary_packages"], ["fish"])
+
+    def test_malformed_unavailable_section_is_rejected(self):
+        with self.assertRaises(ValueError):
+            self.run_main(
+                "[base]\npackages = ['fish']\n",
+                "",
+                "",
+                policy="[unavailable]\npackages = 'firefox'\n",
+            )
+
     def test_measured_at_is_utc_iso8601(self):
         _, report = self.run_main("[base]\npackages = ['fish']\n", "", "")
         stamp = datetime.fromisoformat(report["measured_at"])
@@ -157,11 +233,14 @@ class MainTests(unittest.TestCase):
         output = self.root / "deep" / "nested" / "gap.json"
         manifest = self.root / "m.toml"
         manifest.write_text("[base]\npackages = ['fish']\n")
+        policy = self.root / "p.toml"
+        policy.write_text("[unavailable]\npackages = []\n")
         empty = self.root / "empty.txt"
         empty.write_text("")
         argv = [
             "recalculate_hummingbird_gaps.py",
             "--manifest", str(manifest),
+            "--policy", str(policy),
             "--image-packages", str(empty),
             "--repo-packages", str(empty),
             "--output", str(output),
@@ -190,6 +269,31 @@ class RealManifestTests(unittest.TestCase):
         self.assertTrue(contract, "contract must not be empty")
         excluded = set(manifest.get("excluded", {}).get("packages", []))
         self.assertFalse(contract & excluded, "excluded packages leaked into the contract")
+
+    def test_real_policy_removes_firefox_from_the_real_contract(self):
+        # End-to-end pin for issue #112: Utah ships Firefox as the
+        # org.mozilla.firefox Flatpak, so the gap report must not carry it as
+        # parity Hummingbird still owes.
+        root = Path(__file__).resolve().parent.parent
+        directory = Path(tempfile.mkdtemp(prefix="gaps-real-"))
+        empty = directory / "empty.txt"
+        empty.write_text("")
+        output = directory / "gap.json"
+        argv = [
+            "recalculate_hummingbird_gaps.py",
+            "--manifest", str(root / "config" / "bluefin-packages.toml"),
+            "--policy", str(root / "config" / "runtime-contract.toml"),
+            "--image-packages", str(empty),
+            "--repo-packages", str(empty),
+            "--output", str(output),
+            "--image", "ghcr.io/example/hummingbird:latest",
+        ]
+        with mock.patch("sys.argv", argv):
+            self.assertEqual(gaps.main(), 0)
+        report = json.loads(output.read_text())
+        self.assertNotIn("firefox", report["contract_binary_packages"])
+        self.assertNotIn("firefox", report["missing_from_hummingbird"])
+        self.assertIn("firefox", report["excluded_as_unavailable"])
 
 
 if __name__ == "__main__":
