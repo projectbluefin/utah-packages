@@ -1,0 +1,9 @@
+{
+  "schema": 1,
+  "buildroots": {
+    "fedora-44": {
+      "image": "quay.io/fedora/fedora:44@sha256:e7d398c0a67572b33a43260102f9135ab79b6b8d95efca91faa5179d83b2cdf0",
+      "packages": []
+    }
+  }
+}

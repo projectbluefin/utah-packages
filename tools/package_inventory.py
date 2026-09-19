@@ -39,6 +39,29 @@ class PackageRecord:
     stage: int
     source_locked: bool
     packit_configured: bool
+    provenance: Path | None = None
+    provenance_branch: str | None = None
+
+
+def _recipe_provenance(root: Path) -> dict[str, tuple[Path, str]]:
+    provenance = {}
+    packages_dir = root / "packages"
+    if not packages_dir.is_dir():
+        return provenance
+    for directory in sorted(packages_dir.iterdir()):
+        if not directory.is_dir():
+            continue
+        path = directory / ".hummingbird-upstream.json"
+        if not path.is_file():
+            continue
+        try:
+            data = json.loads(path.read_text())
+            branch = data.get("branch")
+            if isinstance(branch, str):
+                provenance[directory.name] = (path, branch)
+        except (OSError, json.JSONDecodeError):
+            continue
+    return provenance
 
 
 def _spec_per_package(root: Path) -> dict[str, Path]:
@@ -84,6 +107,7 @@ def inventory(root: Path) -> list[PackageRecord]:
     specs = _spec_per_package(root)
     locks = source_locks(root)
     packit = set(package_names(root / ".packit.yaml"))
+    provenance = _recipe_provenance(root)
     return [
         PackageRecord(
             name=name,
@@ -91,6 +115,8 @@ def inventory(root: Path) -> list[PackageRecord]:
             stage=locks[name].get("stage", 0) if name in locks else 0,
             source_locked=name in locks,
             packit_configured=name in packit,
+            provenance=provenance.get(name, (None, None))[0],
+            provenance_branch=provenance.get(name, (None, None))[1],
         )
         for name, spec in specs.items()
     ]

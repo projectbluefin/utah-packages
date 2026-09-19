@@ -38,6 +38,16 @@ UPSTREAM_PROVENANCE = {
     "imported_at": "2026-08-30T15:46:53.402315+00:00",
 }
 
+DEFAULT_BUILDROOT_LOCK = {
+    "schema": 1,
+    "buildroots": {
+        "fedora-44": {
+            "image": "quay.io/fedora/fedora:44@sha256:" + "0" * 64,
+            "packages": [],
+        }
+    },
+}
+
 
 class ValidateScriptTests(unittest.TestCase):
     def build(
@@ -48,6 +58,7 @@ class ValidateScriptTests(unittest.TestCase):
         provenance=RAWHIDE_PROVENANCE,
         locked=None,
         packit=None,
+        buildroot_lock=DEFAULT_BUILDROOT_LOCK,
     ) -> None:
         """Write a factory tree validate.py accepts unless a case breaks one rule."""
         locked = packages if locked is None else locked
@@ -64,6 +75,10 @@ class ValidateScriptTests(unittest.TestCase):
         (root / "config" / "upstream-sources.json").write_text(
             json.dumps({"packages": [{"name": name} for name in locked]})
         )
+        if buildroot_lock is not None:
+            (root / "config" / "buildroot-lock.json").write_text(
+                json.dumps(buildroot_lock)
+            )
         entries = "".join(
             f"  {name}:\n    specfile_path: {name}.spec\n" for name in packit
         )
@@ -125,15 +140,72 @@ class ValidateScriptTests(unittest.TestCase):
         assert result.returncode != 0
         assert "upstream import must not carry tree" in result.stderr
 
+    def test_rejects_an_upstream_import_with_an_empty_remote(self) -> None:
+        result = self.check(provenance={**UPSTREAM_PROVENANCE, "remote": ""})
+        assert result.returncode != 0
+        assert "upstream import must name its upstream remote" in result.stderr
+
     def test_rejects_a_rawhide_import_with_an_empty_commit(self) -> None:
         result = self.check(provenance={**RAWHIDE_PROVENANCE, "commit": ""})
         assert result.returncode != 0
         assert "rawhide import must carry commit" in result.stderr
 
+    def test_rejects_a_rawhide_import_with_a_short_commit(self) -> None:
+        result = self.check(provenance={**RAWHIDE_PROVENANCE, "commit": "abc1234"})
+        assert result.returncode != 0
+        assert "rawhide import must carry a full commit SHA" in result.stderr
+
     def test_rejects_a_rawhide_import_with_an_empty_tree(self) -> None:
         result = self.check(provenance={**RAWHIDE_PROVENANCE, "tree": ""})
         assert result.returncode != 0
         assert "rawhide import must carry tree" in result.stderr
+
+    def test_rejects_a_rawhide_import_with_a_short_tree(self) -> None:
+        result = self.check(provenance={**RAWHIDE_PROVENANCE, "tree": "def5678"})
+        assert result.returncode != 0
+        assert "rawhide import must carry a full tree SHA" in result.stderr
+
+    def test_rejects_missing_buildroot_lock(self) -> None:
+        result = self.check(buildroot_lock=None)
+        assert result.returncode != 0
+        assert "missing buildroot lock" in result.stderr
+
+    def test_rejects_unpinned_buildroot_image(self) -> None:
+        unpinned = {
+            "schema": 1,
+            "buildroots": {
+                "fedora-44": {
+                    "image": "quay.io/fedora/fedora:44",
+                    "packages": [],
+                }
+            },
+        }
+        result = self.check(buildroot_lock=unpinned)
+        assert result.returncode != 0
+        assert "image must be digest-pinned" in result.stderr
+
+    def test_rejects_invalid_buildroot_lock_schema(self) -> None:
+        invalid = {
+            "schema": 2,
+            "buildroots": {},
+        }
+        result = self.check(buildroot_lock=invalid)
+        assert result.returncode != 0
+        assert "invalid buildroot lock" in result.stderr
+
+    def test_detects_drift_between_buildroot_lock_and_workflow(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.build(root)
+            wf_dir = root / ".github" / "workflows"
+            wf_dir.mkdir(parents=True)
+            wf_file = wf_dir / "rebuild-rpms.yml"
+            wf_file.write_text(
+                "jobs:\n  prepare:\n    env:\n      BUILDROOT_IMAGE: quay.io/fedora/fedora:44@sha256:" + "1" * 64 + "\n"
+            )
+            result = self.run_validate(root)
+            assert result.returncode != 0
+            assert "buildroot drift" in result.stderr
 
     def test_reports_a_package_with_no_source_lock(self) -> None:
         result = self.check(provenance=RAWHIDE_PROVENANCE, locked=())

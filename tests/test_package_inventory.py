@@ -16,6 +16,8 @@ class PackageInventoryTests(unittest.TestCase):
         records = inventory(ROOT)
         assert len(records) == 340
         assert {r.name for r in records if not r.source_locked} == set()
+        assert {r.name for r in records if r.provenance is None} == set()
+        assert {r.name for r in records if not r.provenance_branch} == set()
 
 
 class SourceLocksTests(unittest.TestCase):
