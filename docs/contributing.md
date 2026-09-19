@@ -59,7 +59,7 @@ removal fails legibly.
 ## Before you commit
 
 ```sh
-just check   # factory onboarding contract + package configuration
+just check   # all CI gates: contract, validate, quoting, runtime contract, tests
 just test    # pytest
 pre-commit run --all-files
 ```

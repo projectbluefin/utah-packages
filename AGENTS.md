@@ -27,7 +27,7 @@ that supplies factory-wide rules; it never overrides local authority here.
 ## Validate
 
 ```sh
-just check           # factory contract + configuration validation
+just check           # all CI gates: contract, validate, quoting, runtime contract, tests
 just test            # pytest
 just factory-check   # onboarding contract only
 pre-commit run --all-files

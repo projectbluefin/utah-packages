@@ -128,7 +128,7 @@ mandate, no changelog or session-notes file is committed, and every relative
 documentation link resolves.
 
 ```sh
-just check   # factory contract + package configuration
+just check   # all CI gates: contract, validate, quoting, runtime contract, tests
 just test    # pytest
 ```
 
