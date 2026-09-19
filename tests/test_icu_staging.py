@@ -41,7 +41,11 @@ STAGES = {
 # rebuild must land in a strictly earlier stage than every consumer, or the
 # consumer resolves Fedora's ICU-77 build instead and inherits the requirement.
 ICU_77_REBUILDS = {
-    "samba": ("localsearch", "nautilus"),
+    # Fedora's samba-core-libs and libsmbclient both require libicuuc.so.77.
+    # localsearch and nautilus reach them transitively; gvfs BuildRequires
+    # libsmbclient-devel outright, and its stage-1 root installed
+    # libicu-77.1-2.1.hum1 in run 35413902261 for exactly that reason.
+    "samba": ("gvfs", "localsearch", "nautilus"),
 }
 
 
@@ -65,6 +69,9 @@ class IcuStagingTests(unittest.TestCase):
         """
         required_before = {
             "samba": ("libtevent", "libtalloc", "libtdb", "icu", "libxcrypt"),
+            # gvfs moved from stage 1 to 3 to land after samba; everything else
+            # it is built from is stage 0, so nothing else constrains it.
+            "gvfs": ("samba", "libnfs", "libsoup3", "libsecret", "udisks2"),
         }
         for pkg, deps in required_before.items():
             for dep in deps:

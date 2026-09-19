@@ -753,7 +753,7 @@
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/gvfs/gvfs-1.61.91.tar.xz/sha512/6873df98a1589a9b7216e2e0abc7b0391478a38561eebf3970e6a05baa6f4e842fc43eb2c243ae5ea9a000e941601e01f39507fb6f1fae23fc5a11bff42e0b98/gvfs-1.61.91.tar.xz"
       ],
-      "stage": 1
+      "stage": 3
     },
     {
       "name": "gweather-locations",
