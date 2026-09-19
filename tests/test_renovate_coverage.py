@@ -111,6 +111,35 @@ class RenovateCoverageTests(unittest.TestCase):
         self.assertTrue(rules[0]["automerge"])
         self.assertEqual(rules[0]["matchUpdateTypes"], ["digest"])
 
+    def test_no_rule_automerges_an_action_update(self) -> None:
+        # An action ref is executable code that runs with contents: write,
+        # packages: write and id-token: write. A rotted action pin does not
+        # fail the run the way a rotted build-root digest does -- it runs
+        # something else -- so automerging buys no availability here and
+        # spends the only review this supply chain gets.
+        config = json.loads(RENOVATE.read_text())
+        self.assertFalse(config.get("automerge", False), "top-level automerge must stay off")
+        offenders = [
+            r.get("description", r)
+            for r in config["packageRules"]
+            if "github-actions" in (r.get("matchManagers") or [])
+            and (r.get("automerge") or r.get("platformAutomerge"))
+        ]
+        self.assertEqual(offenders, [], "github-actions updates must be human-reviewed")
+
+    def test_the_actions_rule_states_its_stance_explicitly(self) -> None:
+        # config:recommended is a moving target. Leaving github-actions to the
+        # top-level default would let a preset bump re-enable automerge with no
+        # diff in this file, so the rule is pinned off on purpose.
+        config = json.loads(RENOVATE.read_text())
+        rules = [
+            r for r in config["packageRules"]
+            if "github-actions" in (r.get("matchManagers") or [])
+        ]
+        self.assertEqual(len(rules), 1, "expected exactly one github-actions rule")
+        self.assertIs(rules[0]["automerge"], False)
+        self.assertIs(rules[0]["platformAutomerge"], False)
+
 
 if __name__ == "__main__":
     unittest.main()
