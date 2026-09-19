@@ -581,6 +581,16 @@
       "sha512": "a9d2edbe1cea710e10ef1ea8059a45cf5689bace43b5d2a6861809e863a6de7114b4763db8df3916ad6202c9967f48f7997acd0810a86e5e88dea7e0be88b585"
     },
     {
+      "name": "google-noto-color-emoji-fonts",
+      "version": "2.051",
+      "url": "https://github.com/googlefonts/noto-emoji/archive/8998f5dd683424a73e2314a8c1f1e359c19e8742.tar.gz",
+      "filename": "noto-emoji-8998f5d.tar.gz",
+      "sha512": "41ec1520dbb244451446479e0107cb8d06d893fc7045ec83f7d2dc853291c98fb44f18b1c5cf8d10e4011c40f46542f3038bd667cc216f5affa3a93eb65df85d",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/google-noto-color-emoji-fonts/noto-emoji-8998f5d.tar.gz/sha512/41ec1520dbb244451446479e0107cb8d06d893fc7045ec83f7d2dc853291c98fb44f18b1c5cf8d10e4011c40f46542f3038bd667cc216f5affa3a93eb65df85d/noto-emoji-8998f5d.tar.gz"
+      ]
+    },
+    {
       "name": "google-noto-sans-cjk-vf-fonts",
       "version": "2.004",
       "url": "https://github.com/googlefonts/noto-cjk/releases/download/Sans2.004/01_NotoSansCJK-OTF-VF.zip",
@@ -2294,6 +2304,16 @@
       ],
       "filename": "startup-notification-0.12.tar.gz",
       "sha512": "ea1246acdb50dafd9ced9914ec3c8f0d499c0ca3cfd447b43a444c768a6e9ea7135e5c42d9ca0089354698ac235bd86d42f12c70a3a17c9c79f998c07461f7ab"
+    },
+    {
+      "name": "stix-fonts",
+      "version": "2.13b171",
+      "url": "https://github.com/stipub/stixfonts/archive/v2.13b171/stixfonts-2.13b171.tar.gz",
+      "filename": "stixfonts-2.13b171.tar.gz",
+      "sha512": "6d034ce6f760ba9ea571c715eff7c9d874e20f942b97613178dfb62f059d472d4648b2f5f91ec7c2da2b4d4347465c406f0ba630cf8180244af5d6dd1a2d9d3c",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/stix-fonts/stixfonts-2.13b171.tar.gz/sha512/6d034ce6f760ba9ea571c715eff7c9d874e20f942b97613178dfb62f059d472d4648b2f5f91ec7c2da2b4d4347465c406f0ba630cf8180244af5d6dd1a2d9d3c/stixfonts-2.13b171.tar.gz"
+      ]
     },
     {
       "name": "switcheroo-control",

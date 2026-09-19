@@ -1,0 +1,8 @@
+{
+  "package": "stix-fonts",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/stix-fonts.git",
+  "commit": "bafabefd2b9463700b745f6573e871f81bc6ad27",
+  "tree": "edbd145df10446502f821bc8569bde11984619c9",
+  "imported_at": "2026-09-19T15:11:50.048147+00:00"
+}

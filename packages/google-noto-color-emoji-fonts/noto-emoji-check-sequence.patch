@@ -1,0 +1,20 @@
+Index: noto-emoji-aac7ccaa4d1dea4543453b96f7d6fc47066a57ff/Makefile
+===================================================================
+--- noto-emoji-aac7ccaa4d1dea4543453b96f7d6fc47066a57ff.orig/Makefile
++++ noto-emoji-aac7ccaa4d1dea4543453b96f7d6fc47066a57ff/Makefile
+@@ -207,7 +207,7 @@ $(COMPRESSED_DIR)/%.png: $(QUANTIZED_DIR
+ 	@rm -f "$@"
+ 	ttx "$<"
+ 
+-$(EMOJI).ttf: check_sequence $(EMOJI).tmpl.ttf $(EMOJI_BUILDER) $(PUA_ADDER) \
++$(EMOJI).ttf: $(EMOJI).tmpl.ttf $(EMOJI_BUILDER) $(PUA_ADDER) \
+ 	$(ALL_COMPRESSED_FILES) | check_tools
+ 
+ 	@$(PYTHON) $(EMOJI_BUILDER) $(SMALL_METRICS) -V $(word 2,$^) "$@" "$(COMPRESSED_DIR)/emoji_u"
+@@ -231,5 +231,5 @@ clean:
+ .SECONDARY: $(EMOJI_FILES) $(FLAG_FILES) $(RESIZED_FLAG_FILES) $(RENAMED_FLAG_FILES) \
+   $(ALL_QUANTIZED_FILES) $(ALL_COMPRESSED_FILES)
+ 
+-.PHONY:	clean flags emoji renamed_flags quantized compressed check_tools
++.PHONY:	clean flags emoji renamed_flags quantized compressed check_tools check_sequence
+ 

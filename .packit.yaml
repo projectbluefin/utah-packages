@@ -430,6 +430,12 @@ packages:
     downstream_package_name: gobject-introspection
     paths:
       - packages/gobject-introspection
+  google-noto-color-emoji-fonts:
+    specfile_path: google-noto-color-emoji-fonts.spec
+    upstream_package_name: google-noto-color-emoji-fonts
+    downstream_package_name: google-noto-color-emoji-fonts
+    paths:
+      - packages/google-noto-color-emoji-fonts
   google-noto-sans-cjk-vf-fonts:
     specfile_path: google-noto-sans-cjk-vf-fonts.spec
     upstream_package_name: google-noto-sans-cjk-vf-fonts
@@ -1738,6 +1744,12 @@ packages:
     downstream_package_name: startup-notification
     paths:
       - packages/startup-notification
+  stix-fonts:
+    specfile_path: stix-fonts.spec
+    upstream_package_name: stix-fonts
+    downstream_package_name: stix-fonts
+    paths:
+      - packages/stix-fonts
   switcheroo-control:
     specfile_path: switcheroo-control.spec
     upstream_package_name: switcheroo-control
