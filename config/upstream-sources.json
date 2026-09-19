@@ -113,7 +113,8 @@
       "version": "5.87",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/bluez/bluez-5.87.tar.xz/sha512/f1e3bede9b0bbc3b5cfe9fed5f7945be7cbcf7a299729b5f82f1cba4bbbd6c4d2e372c9685f61458dfc374c9dfee352b6c2933a2c0d7727b8171ff394055e169/bluez-5.87.tar.xz",
       "filename": "bluez-5.87.tar.xz",
-      "sha512": "f1e3bede9b0bbc3b5cfe9fed5f7945be7cbcf7a299729b5f82f1cba4bbbd6c4d2e372c9685f61458dfc374c9dfee352b6c2933a2c0d7727b8171ff394055e169"
+      "sha512": "f1e3bede9b0bbc3b5cfe9fed5f7945be7cbcf7a299729b5f82f1cba4bbbd6c4d2e372c9685f61458dfc374c9dfee352b6c2933a2c0d7727b8171ff394055e169",
+      "stage": 1
     },
     {
       "name": "bootc",

@@ -27,6 +27,7 @@ was tried and removed in de4ac4d, because Fedora packages the root legitimately
 needs (libical) require .so.77 and excluding it strands them outright.
 """
 import json
+import re
 import unittest
 from pathlib import Path
 
@@ -46,6 +47,12 @@ ICU_77_REBUILDS = {
     # libsmbclient-devel outright, and its stage-1 root installed
     # libicu-77.1-2.1.hum1 in run 35413902261 for exactly that reason.
     "samba": ("gvfs", "localsearch", "nautilus"),
+    # Fedora's libical-3.0.20-7.fc44 requires libicuuc.so.77 directly. bluez
+    # BuildRequires libical-devel and sat in the same stage as libical, so its
+    # root took Fedora's copy -- confirmed in run 35413902261, which installed
+    # libical-0:3.0.20-7.fc44 from fedora and then libicu-0:77.1-2.1.hum1.
+    # The factory's own libical is clean: it built against libicu-78.3-8.hum1.
+    "libical": ("bluez",),
 }
 
 
@@ -85,6 +92,89 @@ class IcuStagingTests(unittest.TestCase):
     def test_libtevent_precedes_samba_and_follows_libtalloc(self):
         self.assertLess(STAGES["libtalloc"], STAGES["libtevent"])
         self.assertLess(STAGES["libtevent"], STAGES["samba"])
+
+
+class IcuLinkerOrderingTests(unittest.TestCase):
+    """Derive the rule rather than re-listing it each time one is found.
+
+    Three contaminated packages were found one at a time -- localsearch and
+    nautilus from the publish failure, gvfs by asking who consumes samba, bluez
+    by asking which factory packages link ICU at all. That is three rounds of
+    the same question, and the fourth would have been found the same slow way.
+
+    The rule underneath: if the factory rebuilds a package X that links ICU,
+    and another factory package consumes X, then the consumer must build in a
+    strictly later stage. Otherwise the consumer resolves X from Fedora, whose
+    build links whatever ICU Fedora used, and inherits that requirement.
+
+    Not every same-stage pair is a live bug -- it only bites when Fedora's
+    build of X actually requires libicuuc.so.77 -- but every such pair is a
+    place where a Fedora ICU can enter a factory build root unnoticed, and the
+    cost of ordering them correctly is a stage number.
+    """
+
+    PACKAGES = ROOT / "packages"
+
+    @classmethod
+    def setUpClass(cls):
+        cls.provides, cls.subpackages = {}, {}
+        for directory in sorted(cls.PACKAGES.iterdir()):
+            spec = next(directory.glob("*.spec"), None)
+            if spec is None:
+                continue
+            text = spec.read_text(errors="replace")
+            match = re.search(r"^Name:\s*(\S+)", text, re.M)
+            base = (match.group(1) if match else directory.name).replace(
+                "%{name}", directory.name)
+            names = {base}
+            cls.provides.setdefault(base, directory.name)
+            for sub in re.finditer(r"^%package\s+(-n\s+)?(\S+)", text, re.M):
+                full = (sub.group(2) if sub.group(1)
+                        else f"{base}-{sub.group(2)}").replace("%{name}", directory.name)
+                cls.provides.setdefault(full, directory.name)
+                names.add(full)
+            cls.subpackages[directory.name] = names
+
+    def icu_linkers(self) -> set[str]:
+        found = set()
+        for directory in sorted(self.PACKAGES.iterdir()):
+            spec = next(directory.glob("*.spec"), None)
+            if spec is None:
+                continue
+            for line in re.finditer(r"^BuildRequires:\s*(.+)$",
+                                    spec.read_text(errors="replace"), re.M):
+                if re.search(r"\blibicu-devel\b|\bicu\b|pkgconfig\(icu-",
+                             line.group(1)):
+                    found.add(directory.name)
+                    break
+        return found
+
+    def test_no_factory_package_consumes_an_icu_linker_from_its_own_stage(self):
+        linkers = self.icu_linkers()
+        self.assertIn("samba", linkers, "the scan stopped finding known linkers")
+        self.assertIn("libical", linkers)
+
+        offenders = []
+        for directory in sorted(self.PACKAGES.iterdir()):
+            spec = next(directory.glob("*.spec"), None)
+            if spec is None or directory.name not in STAGES:
+                continue
+            for line in re.finditer(r"^BuildRequires:\s*(.+)$",
+                                    spec.read_text(errors="replace"), re.M):
+                for dep in re.split(r"[,\s]+", line.group(1).strip()):
+                    provider = self.provides.get(dep.strip())
+                    if (provider in linkers and provider != directory.name
+                            and STAGES.get(directory.name, 0) <= STAGES.get(provider, 0)):
+                        offenders.append(
+                            f"{directory.name} (stage {STAGES[directory.name]}) "
+                            f"BuildRequires {dep.strip()} from {provider} "
+                            f"(stage {STAGES[provider]})")
+        self.assertEqual(
+            sorted(set(offenders)), [],
+            "these consumers build no later than the ICU-linking package they "
+            "are built from, so they resolve it from Fedora and can inherit "
+            "Fedora's ICU:\n  " + "\n  ".join(sorted(set(offenders))))
+
 
 
 if __name__ == "__main__":
