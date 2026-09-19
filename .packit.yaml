@@ -1378,6 +1378,12 @@ packages:
     downstream_package_name: mesa-libGLU
     paths:
       - packages/mesa-libGLU
+  microcode_ctl:
+    specfile_path: microcode_ctl.spec
+    upstream_package_name: microcode_ctl
+    downstream_package_name: microcode_ctl
+    paths:
+      - packages/microcode_ctl
   mobile-broadband-provider-info:
     specfile_path: mobile-broadband-provider-info.spec
     upstream_package_name: mobile-broadband-provider-info

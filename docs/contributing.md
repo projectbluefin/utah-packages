@@ -23,6 +23,12 @@ If it needs to build after something else this factory builds, give it a
 `stage`. Stage N resolves against everything in stages below N, and there is
 no stage above 4.
 
+Next, regenerate `.packit.yaml` using `python3 tools/render_packit_config.py --write`
+and update the package-count assertions in `tests/` (`test_package_inventory.py`,
+`test_packit_srpm.py`, `test_render_packit_config.py`, `test_source_inventory.py`).
+See [`skills/package-onboarding.md`](skills/package-onboarding.md) for the complete
+procedure.
+
 Do not hand-edit `.hummingbird-upstream.json`. Re-import instead; it is
 provenance, and editing it makes the recipe claim an origin it does not have.
 

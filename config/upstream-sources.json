@@ -1823,6 +1823,16 @@
       ]
     },
     {
+      "name": "microcode_ctl",
+      "version": "20260812",
+      "url": "https://github.com/intel/Intel-Linux-Processor-Microcode-Data-Files/archive/microcode-20260812.tar.gz",
+      "filename": "microcode-20260812.tar.gz",
+      "sha512": "847935813453368ba890839e422a71912a8f53cc1256cd6800849976b58929d8415641d521ab3a7523262e0ef76058fb5db228f68e467424d45846d0f1ab2ebc",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/microcode_ctl/microcode-20260812.tar.gz/sha512/847935813453368ba890839e422a71912a8f53cc1256cd6800849976b58929d8415641d521ab3a7523262e0ef76058fb5db228f68e467424d45846d0f1ab2ebc/microcode-20260812.tar.gz"
+      ]
+    },
+    {
       "name": "mobile-broadband-provider-info",
       "version": "20240407",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/mobile-broadband-provider-info/mobile-broadband-provider-info-20240407.tar.xz/sha512/988d6a2b455580d16dd60f19f0057f440e5f9e57ea84723440c515039b23e1d76d77f18c0316ea5ca43eb2ed291c44c290c83b1e965df09ed75176c8df9728cd/mobile-broadband-provider-info-20240407.tar.xz",
