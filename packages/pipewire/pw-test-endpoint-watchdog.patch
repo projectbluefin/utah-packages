@@ -1,0 +1,37 @@
+From: Project Bluefin factory <noreply@projectbluefin.io>
+Subject: [PATCH] tests: let meson bound pw-test-endpoint, not a 5-second alarm
+
+test-endpoint.c arms its own watchdog before doing the same context setup
+and connect that its sibling tests do:
+
+    alarm(5); /* watchdog; terminate after 5 seconds */
+
+On this factory's build root that setup costs more than five seconds, so
+the test kills itself part way through and meson reports
+
+    39/52 pipewire:pw-test-endpoint  FAIL  5.01s  killed by signal 14 SIGALRM
+
+with all 51 other tests passing. The budget is out of line with its own
+siblings rather than with anything this test does: pw-test-stream and
+pw-test-filter are declared in the same test_apps list in
+src/tests/meson.build, with the same environment, and take 12.02s and
+18.03s on the same machine in the same run.
+
+Neither the test nor any assertion is skipped here, and the run is still
+bounded: src/tests/meson.build sets no timeout: kwarg on these tests, so
+meson's default 30-second per-test timeout applies and kills a genuine
+hang well before this alarm. Raising the alarm above that default makes
+meson the effective guard instead of a second, tighter one that fires
+first on a slow machine.
+
+--- a/src/tests/test-endpoint.c
++++ b/src/tests/test-endpoint.c
+@@ -438,7 +438,7 @@ int main(int argc, char *argv[])
+ {
+ 	pw_init(&argc, &argv);
+ 
+-	alarm(5); /* watchdog; terminate after 5 seconds */
++	alarm(60); /* watchdog; meson's 30s per-test timeout fires first */
+ 	test_endpoint();
+ 
+ 	return 0;

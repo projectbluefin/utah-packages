@@ -93,6 +93,10 @@ Source0:        https://gitlab.freedesktop.org/pipewire/pipewire/-/archive/%{ver
 %endif
 Source1:        pipewire.sysusers
 
+# Raise pw-test-endpoint's self-imposed 5-second watchdog; meson's default
+# 30-second per-test timeout still bounds the run. See the patch header.
+Patch0: pw-test-endpoint-watchdog.patch
+
 ## upstream patches
 
 ## upstreamable patches
@@ -562,20 +566,22 @@ ln -s ../pipewire.conf.avail/50-raop.conf \
 %find_lang %{name}
 
 %check
-# Serialized. pw-test-endpoint fails as "killed by signal 14 SIGALRM" at 5.01s
-# because src/tests/test-endpoint.c:441 arms its own watchdog:
+# pw-test-endpoint used to fail as "killed by signal 14 SIGALRM" at 5.01s, with
+# the other 51 tests passing. src/tests/test-endpoint.c:441 armed its own
+# watchdog -- alarm(5) -- around setup that costs more than five seconds here,
+# so the process killed itself; meson never got to apply a timeout, which is
+# why --timeout-multiplier was not the lever either.
 #
-#     alarm(5); /* watchdog; terminate after 5 seconds */
-#
-# before driving five sequential pw_main_loop_run round trips through a real
-# context with the session-manager modules loaded. That budget is the test's
-# own, inside the binary, so --timeout-multiplier cannot move it -- meson never
-# gets to apply a timeout, the process kills itself first. The lever that does
-# work is not starving it: 52 tests in parallel on a 4-vCPU runner is what
-# pushes a 5-second handshake past 5 seconds. 51 of 52 passed, and nothing is
-# skipped or made non-fatal here -- the same suite runs, one process at a time.
-# Same approach as e6cf24a took for librsvg2's remaining suites.
-%meson_test --num-processes 1 || TESTS_ERROR=$?
+# Serializing the suite was tried first and did not work: --num-processes 1
+# produced the identical failure at the identical 5.01s, so contention was not
+# the cause and the serialization is gone again rather than left in place
+# slowing the longest job in stage 6. What the run does show is that the budget
+# is out of line with the test's own siblings: pw-test-stream and
+# pw-test-filter come from the same test_apps list and take 12.02s and 18.03s
+# on the same machine. The watchdog is patched up instead, and meson's default
+# 30-second per-test timeout -- these tests declare no timeout: kwarg -- is
+# what now bounds a real hang. Nothing is skipped or made non-fatal.
+%meson_test || TESTS_ERROR=$?
 if [ "${TESTS_ERROR}" != "" ]; then
 echo "test failed"
 %{!?tests_nonfatal:exit $TESTS_ERROR}
