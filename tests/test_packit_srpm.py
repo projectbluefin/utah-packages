@@ -5,6 +5,8 @@ import re
 from pathlib import Path
 import unittest
 
+import yaml
+
 
 ROOT = Path(__file__).resolve().parent.parent
 PACKIT_CONFIG = ROOT / ".packit.yaml"
@@ -20,6 +22,11 @@ from tools.packit_workflow import MATRIX_CHUNK, package_chunks, package_names
 
 
 class PackitSrpmTests(unittest.TestCase):
+    def test_pull_requests_do_not_launch_the_full_srpm_matrix(self) -> None:
+        workflow = yaml.safe_load(PACKIT_WORKFLOW.read_text())
+        triggers = workflow.get("on", workflow.get(True, {}))
+        self.assertNotIn("pull_request", triggers)
+
     def test_workflow_stages_verified_sources_for_every_configured_package(self) -> None:
         config_packages = set(package_names(PACKIT_CONFIG))
         workflow = PACKIT_WORKFLOW.read_text() + PACKIT_CHUNK_WORKFLOW.read_text()
