@@ -124,3 +124,29 @@ The useful test is two runs of the same factory inputs, not one green build:
 A full matrix containing cache-hit jobs is acceptable; a full recompilation is
 not. The distinction is the compile step and cache-hit evidence, not the number
 of matrix jobs GitHub displays.
+
+## Merge queue rollout and batching
+
+Do not use the several-hundred-job factory as a pull-request or merge-group
+check. PRs and merges run the fast validation workflow; the package factory
+runs once daily or by explicit dispatch. This prevents N ready changes from
+creating N competing matrices when one repository publication can incorporate
+all N commits.
+
+Enable GitHub's merge queue only after repeated runs demonstrate both sides of
+the cache contract: unchanged packages restore without compiling, and a failed
+run's successful packages restore on its retry. At that point the merge queue
+should gate merge groups with the fast validation workflow, not with the full
+factory.
+
+After a batch drains from the merge queue, dispatch one factory run at the
+batch's final `main` commit (or let the next daily run do so). Its prepare-time
+factory witness covers the previously published repository, and its package
+caches cover completed work that never reached publication. The final OCI tag
+moves once, atomically, only after the batch passes precedence and the
+Hummingbird-only consumer transaction.
+
+Do not reintroduce per-PR, per-merge, or per-merge-group factory triggers as a
+shortcut. If a batch run fails, fix or revert the responsible commit and rerun
+the final `main` commit; successful package work from the failed run is already
+preserved per package.
