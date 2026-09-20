@@ -41,9 +41,14 @@ on:
         required: false
         default: ''
         type: string
+      buildroot_digest:
+        description: Digest of the build root prepared for this run.
+        required: true
+        type: string
 
 permissions:
   contents: read
+  packages: write
 
 jobs:
   build:
@@ -73,8 +78,87 @@ jobs:
           PACKAGE: ${{ matrix.package }}
         run: |
           python3 tools/source_pipeline.py "$PACKAGE" --output work/sources --report-dir work/reports
+      # A cache key includes the root dnf actually resolved. Resolve it before
+      # asking GHCR so a hit cannot cross a build-root boundary. This is cheap
+      # beside an RPM compile; a cache hit skips the compile entirely.
+      - name: Resolve the package cache key
+        id: package_cache
+        if: inputs.backend == 'container'
+        env:
+          PACKAGE: ${{ matrix.package }}
+          FACTORY_REPO: ${{ steps.factory.outputs.url }}
+          BUILDROOT_DIGEST: ${{ inputs.buildroot_digest }}
+          FACTORY_DIGEST: ${{ inputs.factory_image }}
+        run: |
+          set -euo pipefail
+          mkdir -p work/cache
+          DIST_BUMP="$(python3 tools/dist_bump.py "$PACKAGE")"
+          export DIST_BUMP
+          docker run --rm --privileged \
+            -e PACKAGE -e FACTORY_REPO -e DIST_BUMP \
+            -v "$PWD/work:/work:Z" \
+            -v "$PWD/packages:/packages:ro,Z" \
+            -v "$PWD/config:/repos:ro,Z" \
+            utah-buildroot:run bash -exc '
+              disable=--disablerepo=fedora-cisco-openh264
+              sed -i "/^tsflags=nodocs/d" /etc/dnf/dnf.conf
+              cp /repos/hummingbird.repo /etc/yum.repos.d/
+              if [ -n "$(find /work/prior -name "*.rpm" -print -quit 2>/dev/null)" ]; then
+                dnf -y $disable install createrepo_c
+                createrepo_c /work/prior
+                EXCLUDE=$(find /work/prior -name "*.rpm" -type f -print0 | xargs -0 -r rpm -qp --qf "%{NAME}\n" | sort -u | paste -sd, -)
+                printf "[stages]\nname=stages\nbaseurl=file:///work/prior\nenabled=1\ngpgcheck=0\npriority=1\n" > /etc/yum.repos.d/stages.repo
+              fi
+              HB_EXCLUDE="ruby-default-gems,ruby3.3-default-gems,ruby3.4-default-gems,libicu,icu,gpgme,qt6-qtbase,sqlite,sqlite-libs"
+              EXCLUDE="${HB_EXCLUDE}${EXCLUDE:+,}${EXCLUDE}"
+              HB_REPO_EXCLUDE="ruby3.3-default-gems,ruby3.4-default-gems"
+              if [ -n "${FACTORY_REPO:-}" ]; then
+                printf "[factory]\nname=factory\nbaseurl=%s\nenabled=1\ngpgcheck=0\npriority=5\n" "$FACTORY_REPO" > /etc/yum.repos.d/factory.repo
+              fi
+              dnf -y $disable install dnf-plugins-core mock rpm-build @buildsys-build
+              dnf -y $disable swap sqlite-libs sqlite-libs --allowerasing || true
+              DISTTAG=".$(rpm -qa --qf "%{RELEASE}\n" | grep -oE "hum[0-9]+$" | sort -u | head -n1).bfin${DIST_BUMP:-}"
+              test "$DISTTAG" != ".bfin"
+              spec=$(find "/packages/$PACKAGE" -maxdepth 1 -name "*.spec" -print -quit)
+              dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} ${HB_REPO_EXCLUDE:+--setopt=public-hummingbird-x86_64-rpms.excludepkgs="$HB_REPO_EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$spec"
+              rpm -qa --qf "%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n" | sort -u > /work/cache/root
+              printf "%s\n" "$DISTTAG" > /work/cache/disttag
+            '
+          key=$(python3 tools/package_cache_key.py "$PACKAGE" \
+            --buildroot-digest "$BUILDROOT_DIGEST" \
+            --factory-digest "$FACTORY_DIGEST" \
+            --disttag "$(cat work/cache/disttag)" \
+            --resolved-root work/cache/root)
+          echo "key=$key" >> "$GITHUB_OUTPUT"
+      - name: Restore package RPM cache
+        id: package_cache_restore
+        if: inputs.backend == 'container'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          KEY: ${{ steps.package_cache.outputs.key }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          set -euo pipefail
+          image="ghcr.io/$(printf '%s' "$OWNER" | tr '[:upper:]' '[:lower:]')/utah-packages-cache:$KEY"
+          if ! echo "$GITHUB_TOKEN" | podman login ghcr.io -u "$GITHUB_ACTOR" --password-stdin; then
+            echo "::warning title=package cache unavailable::could not authenticate to GHCR"
+            echo "hit=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if podman pull "$image"; then
+            container=$(podman create "$image" /bin/true)
+            mkdir -p work/result
+            podman cp "$container:/rpms/." work/result/
+            podman rm "$container"
+            test -n "$(find work/result -name '*.rpm' -print -quit)"
+            echo "hit=true" >> "$GITHUB_OUTPUT"
+            echo "cache hit: $KEY"
+          else
+            echo "hit=false" >> "$GITHUB_OUTPUT"
+            echo "cache miss: $KEY"
+          fi
       - name: Build the verified source with its RPM recipe
-        if: inputs.backend != 'mock'
+        if: inputs.backend != 'mock' && steps.package_cache_restore.outputs.hit != 'true'
         env:
           PACKAGE: ${{ matrix.package }}
           # `prepare` skips any package the published repository already
@@ -486,6 +570,25 @@ jobs:
               # reports success while shipping no packages at all.
               test -n "$(find /work/result -name "*.rpm" -type f -print -quit)"
             '
+      - name: Publish package RPM cache
+        if: success() && inputs.backend == 'container' && steps.package_cache_restore.outputs.hit != 'true'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          KEY: ${{ steps.package_cache.outputs.key }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          set -euo pipefail
+          test -n "$KEY"
+          test -n "$(find work/result -name '*.rpm' -print -quit)"
+          image="ghcr.io/$(printf '%s' "$OWNER" | tr '[:upper:]' '[:lower:]')/utah-packages-cache:$KEY"
+          printf 'FROM scratch\nCOPY work/result /rpms\n' > Containerfile.package-cache
+          if ! echo "$GITHUB_TOKEN" | podman login ghcr.io -u "$GITHUB_ACTOR" --password-stdin; then
+            echo "::warning title=package cache unavailable::could not authenticate to GHCR"
+            exit 0
+          fi
+          podman build --tag "$image" --file Containerfile.package-cache . \
+            && podman push "$image" \
+            || echo "::warning title=package cache publish failed::the build artifact remains valid; a later run will rebuild this package"
       # The mock backend, which is what Packit uses locally
       # (packit build in-mock -> mock --root <cfg> <srpm>). The step above
       # hand-simulates a build root in a plain container; mock gives a real one,

@@ -72,7 +72,7 @@ class FactoryWitnessTests(unittest.TestCase):
     def test_the_build_root_installs_from_the_extracted_repository(self) -> None:
         text = uncommented(BUILD_STAGE)
         self.assertIn("./.github/actions/load-factory-repo", text)
-        self.assertEqual(text.count("FACTORY_REPO: ${{ steps.factory.outputs.url }}"), 2)
+        self.assertEqual(text.count("FACTORY_REPO: ${{ steps.factory.outputs.url }}"), 3)
         # The container mounts $PWD/work at /work, so that is the only path
         # the repository can be enabled under.
         self.assertIn("url=file:///$TARGET", LOAD_ACTION.read_text())
@@ -106,6 +106,14 @@ class FactoryWitnessTests(unittest.TestCase):
         scripts = run_scripts(REBUILD)
         self.assertNotIn('${{ github.ref_name }}', scripts)
         self.assertNotIn('${{ github.ref }}', scripts)
+
+    def test_package_cache_restores_before_compiling_and_publishes_misses(self) -> None:
+        text = uncommented(BUILD_STAGE)
+        self.assertIn("Resolve the package cache key", text)
+        self.assertIn("Restore package RPM cache", text)
+        self.assertIn("Publish package RPM cache", text)
+        self.assertIn("steps.package_cache_restore.outputs.hit != 'true'", text)
+        self.assertIn("tools/package_cache_key.py", text)
 
     def test_a_failed_prepare_stops_precedence_and_publish(self) -> None:
         text = uncommented(REBUILD)
