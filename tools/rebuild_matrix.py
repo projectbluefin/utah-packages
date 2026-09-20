@@ -21,6 +21,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from tools.rebuild_plan import (
+    cacheable,
     stale_from_primary,
     provides_from_primary,
     changed_entries,
@@ -201,6 +202,7 @@ def main() -> int:
         )
 
     outputs = stage_outputs(build)
+    outputs["cacheable"] = json.dumps(cacheable(build, changed, set(stale)))
     for stage in range(11):
         chunks = json.loads(outputs[f"stage{stage}_chunks"])
         if len(chunks) > 1:

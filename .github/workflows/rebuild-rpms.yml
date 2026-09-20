@@ -123,6 +123,7 @@ jobs:
       stage9_chunks: ${{ steps.matrix.outputs.stage9_chunks }}
       stage10_chunks: ${{ steps.matrix.outputs.stage10_chunks }}
       build_list: ${{ steps.matrix.outputs.build_list }}
+      cacheable: ${{ steps.matrix.outputs.cacheable }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -359,6 +360,7 @@ jobs:
       backend: ${{ inputs.backend || 'container' }}
       factory_image: ${{ needs.prepare.outputs.factory_image }}
       buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
+      cacheable_packages: ${{ needs.prepare.outputs.cacheable }}
 
   rebuild1:
     needs: [prepare, rebuild0]
@@ -374,6 +376,7 @@ jobs:
       backend: ${{ inputs.backend || 'container' }}
       factory_image: ${{ needs.prepare.outputs.factory_image }}
       buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
+      cacheable_packages: ${{ needs.prepare.outputs.cacheable }}
 
   rebuild2:
     needs: [prepare, rebuild0, rebuild1]
@@ -389,6 +392,7 @@ jobs:
       backend: ${{ inputs.backend || 'container' }}
       factory_image: ${{ needs.prepare.outputs.factory_image }}
       buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
+      cacheable_packages: ${{ needs.prepare.outputs.cacheable }}
 
   rebuild3:
     needs: [prepare, rebuild0, rebuild1, rebuild2]
@@ -404,6 +408,7 @@ jobs:
       backend: ${{ inputs.backend || 'container' }}
       factory_image: ${{ needs.prepare.outputs.factory_image }}
       buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
+      cacheable_packages: ${{ needs.prepare.outputs.cacheable }}
 
   rebuild4:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3]
@@ -419,6 +424,7 @@ jobs:
       backend: ${{ inputs.backend || 'container' }}
       factory_image: ${{ needs.prepare.outputs.factory_image }}
       buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
+      cacheable_packages: ${{ needs.prepare.outputs.cacheable }}
 
   rebuild5:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4]
@@ -434,6 +440,7 @@ jobs:
       backend: ${{ inputs.backend || 'container' }}
       factory_image: ${{ needs.prepare.outputs.factory_image }}
       buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
+      cacheable_packages: ${{ needs.prepare.outputs.cacheable }}
 
   rebuild6:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5]
@@ -449,6 +456,7 @@ jobs:
       backend: ${{ inputs.backend || 'container' }}
       factory_image: ${{ needs.prepare.outputs.factory_image }}
       buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
+      cacheable_packages: ${{ needs.prepare.outputs.cacheable }}
 
   rebuild7:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6]
@@ -464,6 +472,7 @@ jobs:
       backend: ${{ inputs.backend || 'container' }}
       factory_image: ${{ needs.prepare.outputs.factory_image }}
       buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
+      cacheable_packages: ${{ needs.prepare.outputs.cacheable }}
 
   rebuild8:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7]
@@ -479,6 +488,7 @@ jobs:
       backend: ${{ inputs.backend || 'container' }}
       factory_image: ${{ needs.prepare.outputs.factory_image }}
       buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
+      cacheable_packages: ${{ needs.prepare.outputs.cacheable }}
 
   rebuild9:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8]
@@ -494,6 +504,7 @@ jobs:
       backend: ${{ inputs.backend || 'container' }}
       factory_image: ${{ needs.prepare.outputs.factory_image }}
       buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
+      cacheable_packages: ${{ needs.prepare.outputs.cacheable }}
 
   rebuild10:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8, rebuild9]
@@ -509,6 +520,7 @@ jobs:
       backend: ${{ inputs.backend || 'container' }}
       factory_image: ${{ needs.prepare.outputs.factory_image }}
       buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
+      cacheable_packages: ${{ needs.prepare.outputs.cacheable }}
 
   precedence:
     # Every wave, not the first five. See publish below.

@@ -173,6 +173,21 @@ Inside the Fedora 44 container, the workflow stages the verified source and
 runs `rpmbuild -br` to resolve generated BuildRequires, followed by
 `rpmbuild -ba` to produce the binary RPMs.
 
+### Preserving completed package builds
+
+Atomic repository publication and incremental work preservation are separate.
+The consumer image advances only after the complete repository passes its
+gates. Each successful package build is also written immediately to a
+content-keyed OCI cache, so a later run can restore completed RPMs even when
+the earlier run never published a repository. Restored RPMs follow the same
+stage-artifact and final-gate path as freshly compiled RPMs.
+
+The key binds the recipe, prepared build-root digest, prepare-time factory
+digest, resolved build-root NEVRAs and disttag. Rebuild planning remains
+authoritative: directly changed and stale packages are excluded from reuse.
+The full rationale and invariants are in
+[`docs/skills/package-build-cache.md`](skills/package-build-cache.md).
+
 It is not a mock build, and this is the most misleading thing about the file:
 `build-stage.yml` installs `mock` and never invokes it, then hand-simulates
 what mock would have set up. Its own comments say so — *"mirroring Hummingbird

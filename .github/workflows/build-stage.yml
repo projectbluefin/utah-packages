@@ -45,6 +45,10 @@ on:
         description: Digest of the build root prepared for this run.
         required: true
         type: string
+      cacheable_packages:
+        description: JSON names allowed to reuse an exact package-cache entry.
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -83,7 +87,7 @@ jobs:
       # beside an RPM compile; a cache hit skips the compile entirely.
       - name: Resolve the package cache key
         id: package_cache
-        if: inputs.backend == 'container'
+        if: inputs.backend == 'container' && contains(fromJSON(inputs.cacheable_packages), matrix.package)
         env:
           PACKAGE: ${{ matrix.package }}
           FACTORY_REPO: ${{ steps.factory.outputs.url }}
@@ -132,7 +136,7 @@ jobs:
           echo "key=$key" >> "$GITHUB_OUTPUT"
       - name: Restore package RPM cache
         id: package_cache_restore
-        if: inputs.backend == 'container'
+        if: inputs.backend == 'container' && contains(fromJSON(inputs.cacheable_packages), matrix.package)
         env:
           GITHUB_TOKEN: ${{ github.token }}
           KEY: ${{ steps.package_cache.outputs.key }}
@@ -571,7 +575,7 @@ jobs:
               test -n "$(find /work/result -name "*.rpm" -type f -print -quit)"
             '
       - name: Publish package RPM cache
-        if: success() && inputs.backend == 'container' && steps.package_cache_restore.outputs.hit != 'true'
+        if: success() && inputs.backend == 'container' && contains(fromJSON(inputs.cacheable_packages), matrix.package) && steps.package_cache_restore.outputs.hit != 'true'
         env:
           GITHUB_TOKEN: ${{ github.token }}
           KEY: ${{ steps.package_cache.outputs.key }}

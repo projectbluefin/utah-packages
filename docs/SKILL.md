@@ -23,6 +23,7 @@ Both are indexed below. A skill that exists but is not listed here fails
 | Query Hummingbird's image catalog, tags, CVEs, or SBOMs | [`.agents/skills/hummingbird/SKILL.md`](../.agents/skills/hummingbird/SKILL.md) |
 | Finish a task and decide what learning to write back | [`skills/skill-improvement.md`](skills/skill-improvement.md) |
 | Change a stage, a container pin, a bcond, the rebuild workflow, or drop a recipe, without repeating a fix the history already reverted | [`skills/repeated-mistakes.md`](skills/repeated-mistakes.md) |
+| Change package-cache keys, eligibility, restore/publish ordering, or cache storage | [`skills/package-build-cache.md`](skills/package-build-cache.md) |
 
 ## Reference docs (load on demand)
 
@@ -31,6 +32,7 @@ Both are indexed below. A skill that exists but is not listed here fails
 | What "targeting Hummingbird" means: fork scope, build root, ABI, disttag ordering | [`targeting-hummingbird.md`](targeting-hummingbird.md) |
 | Pipeline shape: imports, source verification, rebuild, publish | [`architecture.md`](architecture.md) |
 | How to add a package | [`contributing.md`](contributing.md) |
+| Why and how successful package builds survive failed factory runs | [`skills/package-build-cache.md`](skills/package-build-cache.md) |
 
 ## Scope rules
 

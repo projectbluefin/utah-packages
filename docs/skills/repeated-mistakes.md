@@ -244,6 +244,21 @@ prepare-time witness inside the critical section. If they differ, refuse to
 publish and rerun the newer commit. The lock protects the check and the copy
 together; it does not make a stale build current.
 
+## 15. Atomic publication must not discard successful build work
+
+**What happened.** The published repository was the only witness and the only
+reuse mechanism. When any late package or final gate failed, the repository
+correctly stayed unchanged, but the next run recompiled every package absent
+from that old witness. WebKitGTK alone compiled repeatedly for hours with
+unchanged inputs. A cache-key helper was then merged without workflow wiring,
+which documented the intended identity but preserved no work in practice.
+
+**Rule.** Publish a successful package to its content-keyed cache immediately,
+then restore it into the ordinary stage artifact on a later exact-key hit. The
+cache never replaces rebuild selection or final repository gates, and stale or
+directly changed packages never reuse it. Read
+[`package-build-cache.md`](package-build-cache.md) before changing this path.
+
 ## Quick checks before pushing a fix
 
 - [ ] Does `git log --oneline -- <file>` show this file being fixed for the
@@ -255,5 +270,7 @@ together; it does not make a stale build current.
 - [ ] Did a config change alter how a package is built without changing its
       NEVR? Then the plan has to know.
 - [ ] Is the fix applied in both build lanes?
+- [ ] Does a cache change preserve the invariants in
+      [`package-build-cache.md`](package-build-cache.md)?
 - [ ] Is there a run, on this head, that reached the gate this fix claims to
       satisfy?
