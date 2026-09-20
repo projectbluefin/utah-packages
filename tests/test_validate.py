@@ -169,6 +169,72 @@ class ValidateScriptTests(unittest.TestCase):
             result = self.run_validate(root)
             assert result.returncode == 0, result.stderr
 
+    def test_rejects_fedora_primary_source_url(self) -> None:
+        for url in (
+            "https://src.fedoraproject.org/repo/pkgs/rpms/badpkg/badpkg.tar.gz",
+            "https://ftp.fedoraproject.org/pub/fedora/badpkg.tar.gz",
+        ):
+            with tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                self.build(root, packages=("badpkg",))
+                (root / "config" / "upstream-sources.json").write_text(
+                    json.dumps(
+                        {
+                            "packages": [
+                                {
+                                    "name": "badpkg",
+                                    "url": url,
+                                }
+                            ]
+                        }
+                    )
+                )
+                result = self.run_validate(root)
+                assert result.returncode != 0
+                assert "fedora-primary source url not allowed" in result.stderr
+                assert "badpkg" in result.stderr
+
+    def test_accepts_fedora_fallback_with_upstream_primary(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.build(root, packages=("goodpkg",))
+            (root / "config" / "upstream-sources.json").write_text(
+                json.dumps(
+                    {
+                        "packages": [
+                            {
+                                "name": "goodpkg",
+                                "url": "https://github.com/example/goodpkg/releases/download/v1/goodpkg-1.tar.gz",
+                                "fallback_urls": [
+                                    "https://src.fedoraproject.org/repo/pkgs/rpms/goodpkg/goodpkg-1.tar.gz"
+                                ],
+                            }
+                        ]
+                    }
+                )
+            )
+            result = self.run_validate(root)
+            assert result.returncode == 0, result.stderr
+
+    def test_accepts_fedora_primary_structural_exception(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.build(root, packages=("containerd",))
+            (root / "config" / "upstream-sources.json").write_text(
+                json.dumps(
+                    {
+                        "packages": [
+                            {
+                                "name": "containerd",
+                                "url": "https://src.fedoraproject.org/repo/pkgs/rpms/containerd/containerd.tar.gz",
+                            }
+                        ]
+                    }
+                )
+            )
+            result = self.run_validate(root)
+            assert result.returncode == 0, result.stderr
+
     def test_the_checked_in_factory_tree_passes_its_own_gate(self) -> None:
         result = self.run_validate(ROOT)
         assert result.returncode == 0, result.stdout + result.stderr

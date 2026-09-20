@@ -313,9 +313,9 @@ class PlanTests(unittest.TestCase):
         self.assertIn("error", proposals[0])
 
     def test_considers_only_packages_locked_to_gnome(self) -> None:
-        # nautilus is locked to Fedora's lookaside, so it is out of scope even
-        # though it is a GNOME module and is sitting on a prerelease.
-        self.assertEqual(plan(ROOT, only="nautilus", opener=fake_opener({})), [])
+        # glib-networking is locked to Fedora's lookaside, so it is out of scope
+        # even though it is a GNOME module and is sitting on a prerelease.
+        self.assertEqual(plan(ROOT, only="glib-networking", opener=fake_opener({})), [])
 
 
 class ApplyTests(unittest.TestCase):

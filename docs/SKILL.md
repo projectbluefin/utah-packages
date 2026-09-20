@@ -21,6 +21,7 @@ Both are indexed below. A skill that exists but is not listed here fails
 | --- | --- |
 | Work out why a rebuild job failed, and whose bug it is | [`.agents/skills/build-failure-triage/SKILL.md`](../.agents/skills/build-failure-triage/SKILL.md) |
 | Query Hummingbird's image catalog, tags, CVEs, or SBOMs | [`.agents/skills/hummingbird/SKILL.md`](../.agents/skills/hummingbird/SKILL.md) |
+| Verify upstream source locks and provenance policy | [`skills/upstream-source-locks.md`](skills/upstream-source-locks.md) |
 | Finish a task and decide what learning to write back | [`skills/skill-improvement.md`](skills/skill-improvement.md) |
 | Change a stage, a container pin, a bcond, the rebuild workflow, or drop a recipe, without repeating a fix the history already reverted | [`skills/repeated-mistakes.md`](skills/repeated-mistakes.md) |
 | Change package-cache keys, eligibility, restore/publish ordering, or cache storage | [`skills/package-build-cache.md`](skills/package-build-cache.md) |
