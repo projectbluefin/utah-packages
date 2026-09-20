@@ -70,7 +70,8 @@ Whether to finish that design or supersede it is tracked in
 [#43](https://github.com/projectbluefin/utah-packages/issues/43).
 
 `.github/workflows/packit-srpm-pilot.yml` proves the SRPM path but is
-verification-only. Its `discover` job emits the package list from
+verification-only and manual-dispatch-only: its full-inventory fan-out is not
+a PR or merge check and its output is not published. Its `discover` job emits the package list from
 `tools/packit_workflow.py packages`; its per-package `srpm` matrix has
 `fail-fast: false` and is fanned out over chunks of 250 by
 `tools/packit_workflow.py chunks`. The chunking is not cosmetic: GitHub caps a

@@ -22,10 +22,10 @@ from tools.packit_workflow import MATRIX_CHUNK, package_chunks, package_names
 
 
 class PackitSrpmTests(unittest.TestCase):
-    def test_pull_requests_do_not_launch_the_full_srpm_matrix(self) -> None:
+    def test_only_dispatch_launches_the_full_srpm_matrix(self) -> None:
         workflow = yaml.safe_load(PACKIT_WORKFLOW.read_text())
         triggers = workflow.get("on", workflow.get(True, {}))
-        self.assertNotIn("pull_request", triggers)
+        self.assertEqual(set(triggers), {"workflow_dispatch"})
 
     def test_workflow_stages_verified_sources_for_every_configured_package(self) -> None:
         config_packages = set(package_names(PACKIT_CONFIG))
@@ -50,9 +50,6 @@ class PackitSrpmTests(unittest.TestCase):
         self.assertIn("--stage-into packages", workflow)
         self.assertIn("--verify-staged packages", workflow)
         self.assertIn("packit srpm --preserve-spec", workflow)
-        self.assertIn("- tools/packit_source0.py", workflow)
-        self.assertIn("- tools/packit_workflow.py", workflow)
-        self.assertRegex(workflow, r"(?m)^  push:\n    branches: \[main\]$")
         self.assertIn("create-archive:", PACKIT_CONFIG.read_text())
         self.assertIn("tools/packit_source0.py", PACKIT_CONFIG.read_text())
         # The invariant AGENTS.md states is "pinned by digest, never a mutable
