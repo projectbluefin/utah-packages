@@ -19,20 +19,6 @@ on:
         options:
           - container
           - mock
-  push:
-    branches: [main]
-    paths:
-      - config/**
-      - packages/**
-      - tools/source_pipeline.py
-      - tools/generated_sources.py
-      - tools/rebuild_matrix.py
-      - tools/rebuild_plan.py
-      - tools/mock_config.py
-      - tools/runtime_contract.py
-      - tests/**
-      - .github/workflows/rebuild-rpms.yml
-      - .github/workflows/build-stage.yml
   schedule:
     - cron: '41 6 * * *'
 
@@ -46,9 +32,9 @@ permissions:
 # at `publish`, and publish refuses to replace an image that advanced while the
 # run was building.  That keeps an older run from overwriting newer artifacts.
 #
-# Pull requests run the validation workflow, not this several-hundred-job
-# factory. A main push, schedule or explicit dispatch is the only event allowed
-# to consume the build queue. Publication itself remains serialized below.
+# Pull requests and merges run the validation workflow, not this
+# several-hundred-job factory. Only the daily schedule or an explicit dispatch
+# may consume the build queue. Publication itself remains serialized below.
 
 jobs:
   prepare:
