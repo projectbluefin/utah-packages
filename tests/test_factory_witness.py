@@ -14,6 +14,8 @@ from pathlib import Path
 import re
 import unittest
 
+import yaml
+
 ROOT = Path(__file__).resolve().parent.parent
 WORKFLOWS = ROOT / ".github" / "workflows"
 REBUILD = WORKFLOWS / "rebuild-rpms.yml"
@@ -25,6 +27,17 @@ def uncommented(path: Path) -> str:
     return "\n".join(
         line for line in path.read_text().splitlines() if not line.strip().startswith("#")
     )
+
+
+def run_scripts(path: Path) -> str:
+    """Return shell source from workflow run steps, excluding expression envs."""
+    workflow = yaml.safe_load(path.read_text())
+    scripts = []
+    for job in workflow.get("jobs", {}).values():
+        for step in job.get("steps", []):
+            if "run" in step:
+                scripts.append(step["run"])
+    return "\n".join(scripts)
 
 
 class FactoryWitnessTests(unittest.TestCase):
@@ -77,26 +90,26 @@ class FactoryWitnessTests(unittest.TestCase):
         self.assertEqual(text.count('--define "__debug_install_post %{nil}"'), 2)
 
     def test_publish_seeds_from_the_image_prepare_witnessed(self) -> None:
-        """The seed and the skip witness have to be the same image.
+        """Publish must validate the seed before copying it.
 
-        prepare resolves the branch tag first and falls back to latest. While
-        publish seeded from a hardcoded latest, a second push to a pull request
-        dropped every package that had been skipped because the *branch* tag
-        carried it: absent from the seed and absent from this run's artifacts,
-        so absent from the republished image. Two sources of truth for "what is
-        already built" is the bug this workflow exists to have removed.
+        The publish job is serialized per ref, but its build jobs may have
+        started before another run published. It must refuse to overwrite that
+        newer image with artifacts built against an older witness.
         """
         text = uncommented(REBUILD)
-        self.assertIn('image="${{ needs.prepare.outputs.factory_image }}"', text)
+        self.assertIn('EXPECTED_IMAGE: ${{ needs.prepare.outputs.factory_image }}', text)
+        self.assertIn('if [ "$current" != "$EXPECTED_IMAGE" ]; then', text)
+        self.assertIn("refusing to overwrite the newer repository", text)
         self.assertNotIn('utah-packages:latest"', text)
+
+    def test_branch_names_are_passed_through_environment_not_shell_source(self) -> None:
+        scripts = run_scripts(REBUILD)
+        self.assertNotIn('${{ github.ref_name }}', scripts)
+        self.assertNotIn('${{ github.ref }}', scripts)
 
     def test_a_failed_prepare_stops_precedence_and_publish(self) -> None:
         text = uncommented(REBUILD)
         self.assertEqual(text.count("needs.prepare.result == 'success'"), 2)
-
-
-if __name__ == "__main__":
-    unittest.main()
 
 
 class IcuAgreementTests(unittest.TestCase):
@@ -160,3 +173,7 @@ class IcuAgreementTests(unittest.TestCase):
         for line in uncommented(BUILD_STAGE).splitlines():
             if "fedora.excludepkgs" in line:
                 self.assertNotIn("libicu-77", line)
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -55,9 +55,9 @@ permissions:
   packages: write
   attestations: write
 
-# Build waves may run concurrently.  They use run-scoped artifacts and each
-# publication re-seeds from the then-current repository, so concurrent work
-# cannot lose RPMs.  The consumer tag itself remains serialized at `publish`.
+# Build waves may run concurrently.  The consumer tag itself remains serialized
+# at `publish`, and publish refuses to replace an image that advanced while the
+# run was building.  That keeps an older run from overwriting newer artifacts.
 #
 # A pull request is the exception: a push to it supersedes the run before,
 # and that run used to carry on for hours anyway -- 369, 370 and 374 were all
@@ -186,18 +186,22 @@ jobs:
         id: factory_image
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY_OWNER: ${{ github.repository_owner }}
+          REF_NAME: ${{ github.ref_name }}
+          REF: ${{ github.ref }}
+          ACTOR: ${{ github.actor }}
         run: |
           set -euo pipefail
-          owner=$(echo "${{ github.repository_owner }}" | tr "[:upper:]" "[:lower:]")
+          owner=$(printf '%s' "$REPOSITORY_OWNER" | tr "[:upper:]" "[:lower:]")
           image="ghcr.io/${owner}/utah-packages"
-          branch=$(echo "${{ github.ref_name }}" \
+          branch=$(printf '%s' "$REF_NAME" \
             | tr "/" "-" | tr -cd "[:alnum:]._-" | cut -c1-96)
-          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+          if [ "$REF" = "refs/heads/main" ]; then
             candidates="latest"
           else
             candidates="$branch latest"
           fi
-          echo "${GITHUB_TOKEN}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin \
+          echo "${GITHUB_TOKEN}" | docker login ghcr.io -u "$ACTOR" --password-stdin \
             || echo "::warning title=ghcr login failed::resolving the factory image anonymously"
           resolved=
           for tag in $candidates; do
@@ -629,9 +633,10 @@ jobs:
           && (github.event_name != 'pull_request'
               || github.event.pull_request.head.repo.full_name == github.repository) }}
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8, rebuild9, rebuild10, precedence]
-    # Build waves can overlap, but `:latest` is an atomic consumer input. Queue
-    # only this critical section per ref; the later publisher re-seeds from the
-    # repository that its predecessor just made current.
+    # Build waves can overlap, but the consumer tag is an atomic input. Queue
+    # only this critical section per ref. The seed step verifies that the image
+    # seen by `prepare` is still current; an older run therefore cannot publish
+    # over a newer one.
     concurrency:
       group: utah-packages-publish-${{ github.ref }}
       cancel-in-progress: false
@@ -646,35 +651,56 @@ jobs:
       # on `python3: can't open file .../tools/runtime_contract.py` the moment
       # the seed step stopped failing first and let it get that far.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - name: Seed repository from the last published factory image
+      - name: Verify and seed repository from the prepare-time factory image
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EXPECTED_IMAGE: ${{ needs.prepare.outputs.factory_image }}
+          REPOSITORY_OWNER: ${{ github.repository_owner }}
+          REF_NAME: ${{ github.ref_name }}
+          REF: ${{ github.ref }}
+          ACTOR: ${{ github.actor }}
         run: |
           set -euo pipefail
-          # Seed from the image `prepare` actually witnessed, not from :latest.
-          # prepare resolves the branch tag first and falls back to latest, so a
-          # hardcoded latest here disagreed with it: on a second push, anything
-          # skipped because the *branch* tag carried it was in neither the seed
-          # nor this run's artifacts, and the republished branch image lost it.
-          # Two sources of truth for "what is already built" is the bug this
-          # workflow removed everywhere else in this change; it had no business
-          # surviving at the end of the pipeline.
-          image="${{ needs.prepare.outputs.factory_image }}"
+          owner=$(printf '%s' "$REPOSITORY_OWNER" | tr "[:upper:]" "[:lower:]")
+          image="ghcr.io/${owner}/utah-packages"
+          branch=$(printf '%s' "$REF_NAME" \
+            | tr "/" "-" | tr -cd "[:alnum:]._-" | cut -c1-96)
+          if [ "$REF" = "refs/heads/main" ]; then
+            candidates="latest"
+          else
+            candidates="$branch latest"
+          fi
           mkdir -p repository
-          echo "${GITHUB_TOKEN}" | podman login ghcr.io -u "${{ github.actor }}" --password-stdin
-          if [ -z "$image" ]; then
+          echo "${GITHUB_TOKEN}" | podman login ghcr.io -u "$ACTOR" --password-stdin
+          current=
+          for tag in $candidates; do
+            if podman pull "${image}:${tag}"; then
+              digest=$(podman image inspect "${image}:${tag}" \
+                --format '{{index .RepoDigests 0}}' | sed 's/.*@//')
+              current="${image}@${digest}"
+              echo "current factory image: ${image}:${tag} -> ${current}"
+              break
+            fi
+            echo "no factory image at ${image}:${tag}"
+          done
+          if [ "$current" != "$EXPECTED_IMAGE" ]; then
+            echo "factory image advanced while this run was building" >&2
+            echo "  prepare witnessed: ${EXPECTED_IMAGE:-<none>}" >&2
+            echo "  publish sees:      ${current:-<none>}" >&2
+            echo "refusing to overwrite the newer repository; rerun this commit" >&2
+            exit 1
+          fi
+          if [ -z "$current" ]; then
             echo "prepare witnessed no published image; publishing a new repository"
-          elif podman pull "$image"; then
+          else
             # The factory image is FROM scratch with one COPY and no CMD or
             # ENTRYPOINT, so a bare create exits 125 with "no command or
             # entrypoint provided". A command is only recorded here, never run
             # -- the container exists to be copied out of -- so naming one that
             # the image does not even contain is enough to satisfy create.
-            container=$(podman create "$image" /bin/true)
+            container=$(podman create "$current" /bin/true)
             podman cp "$container:/repository/." repository/
             podman rm "$container"
-          else
-            echo "No prior factory image; publishing a new repository"
           fi
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
@@ -780,16 +806,20 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DOCKER_CONFIG: ${{ runner.temp }}/.docker
+          REPOSITORY_OWNER: ${{ github.repository_owner }}
+          REF_NAME: ${{ github.ref_name }}
+          REF: ${{ github.ref }}
+          ACTOR: ${{ github.actor }}
         run: |
           set -euo pipefail
-          owner=$(echo "${{ github.repository_owner }}" | tr "[:upper:]" "[:lower:]")
+          owner=$(printf '%s' "$REPOSITORY_OWNER" | tr "[:upper:]" "[:lower:]")
           image="ghcr.io/${owner}/utah-packages"
           # main publishes the tag consumers follow; every other ref publishes
           # under its own name so it can be tested without touching main.
-          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+          if [ "$REF" = "refs/heads/main" ]; then
             tag=latest
           else
-            tag=$(echo "${{ github.ref_name }}" | tr "/" "-" | tr -cd "[:alnum:]._-" | cut -c1-96)
+            tag=$(printf '%s' "$REF_NAME" | tr "/" "-" | tr -cd "[:alnum:]._-" | cut -c1-96)
           fi
           printf "FROM scratch\nCOPY repository /repository\n" > Containerfile.repo
           # cosign signs by pushing to the same registry, but it reads the
@@ -797,7 +827,7 @@ jobs:
           # land somewhere both of them look. DOCKER_CONFIG is set on this step
           # and on the signing step to the same directory.
           mkdir -p "${DOCKER_CONFIG}"
-          echo "${GITHUB_TOKEN}" | podman login ghcr.io -u "${{ github.actor }}" \
+          echo "${GITHUB_TOKEN}" | podman login ghcr.io -u "$ACTOR" \
             --password-stdin --authfile "${DOCKER_CONFIG}/config.json"
           podman build --tag "${image}:${tag}" --file Containerfile.repo .
           podman push "${image}:${tag}" --digestfile /tmp/digest \
@@ -828,8 +858,9 @@ jobs:
         env:
           COSIGN_YES: "true"
           DOCKER_CONFIG: ${{ runner.temp }}/.docker
+          REPOSITORY_OWNER: ${{ github.repository_owner }}
         run: |
-          owner=$(echo "${{ github.repository_owner }}" | tr "[:upper:]" "[:lower:]")
+          owner=$(printf '%s' "$REPOSITORY_OWNER" | tr "[:upper:]" "[:lower:]")
           cosign sign "ghcr.io/${owner}/utah-packages@${{ steps.oci.outputs.digest }}"
       # A signature says this image came from here. Provenance says what built
       # it -- workflow, commit, runner -- which is the question asked after a

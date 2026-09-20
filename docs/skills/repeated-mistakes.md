@@ -229,6 +229,21 @@ When a later stage fails after a change, first check whether the package the
 change touched actually built. The triage skill's verification checklist
 applies to every claim, including claims about your own previous commit.
 
+## 14. A serialized publish must validate its seed after it acquires the lock
+
+**What happened.** The `publish` job serialized writes to the consumer tag, but
+its seed came from the image `prepare` resolved before the build ran. Two
+independent reviews of #133 caught the same lost-update window: a concurrent
+`main` run could publish a newer image first, then an older run could acquire
+the publish lock and replace it with artifacts built from the older witness.
+Re-resolving the tag alone would make the seed newer while still allowing those
+older artifacts to overwrite it.
+
+**Rule.** A serialized writer must compare the current tag's digest with the
+prepare-time witness inside the critical section. If they differ, refuse to
+publish and rerun the newer commit. The lock protects the check and the copy
+together; it does not make a stale build current.
+
 ## Quick checks before pushing a fix
 
 - [ ] Does `git log --oneline -- <file>` show this file being fixed for the

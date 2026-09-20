@@ -271,6 +271,13 @@ def full_primary(*packages: tuple[str, str, list[str], list[str]]) -> bytes:
     ).encode()
 
 
+def add_file_provide(primary: bytes, binary: str, path: str) -> bytes:
+    """Put a file in the format node, as createrepo_c does in primary.xml."""
+    marker = f"<name>{binary}</name><format>".encode()
+    replacement = marker + f"<file>{path}</file>".encode()
+    return primary.replace(marker, replacement, 1)
+
+
 class DependentsTests(unittest.TestCase):
     """The soname edge: a rebuilt library drags what links against it."""
 
@@ -346,10 +353,23 @@ class StaleTests(unittest.TestCase):
     EXTERNAL = {"libc.so.6"}
 
     def test_provides_include_shipped_files(self) -> None:
-        primary = full_primary(("a", "a", ["cap"], [])).replace(
-            b"</format>", b"</format><file>/usr/bin/a</file>", 1
+        primary = add_file_provide(
+            full_primary(("a", "a", ["cap"], [])), "a", "/usr/bin/a"
         )
         self.assertEqual(provides_from_primary(primary), {"cap", "/usr/bin/a"})
+
+    def test_file_provides_drag_a_dependent(self) -> None:
+        primary = add_file_provide(
+            full_primary(
+                ("provider", "provider", [], []),
+                ("consumer", "consumer", [], ["/usr/bin/provider"]),
+            ),
+            "provider",
+            "/usr/bin/provider",
+        )
+        self.assertEqual(
+            dependents_from_primary(primary), {"provider": {"consumer"}}
+        )
 
     def test_an_unsatisfied_soname_marks_its_source_stale(self) -> None:
         stale = stale_from_primary(self.PRIMARY, self.EXTERNAL)
@@ -412,10 +432,6 @@ class StageOutputTests(unittest.TestCase):
         )
 
 
-if __name__ == "__main__":
-    unittest.main()
-
-
 def icu_primary() -> bytes:
     """Hummingbird as it really is: libicu 77.1 beside 78.3, one package name."""
     body = ""
@@ -471,3 +487,7 @@ class ExcludedExternalTests(unittest.TestCase):
     def test_the_exclusion_is_declared_once_and_names_libicu_77(self) -> None:
         from tools.rebuild_plan import EXCLUDED_EXTERNAL
         self.assertIn(("libicu", "77."), EXCLUDED_EXTERNAL)
+
+
+if __name__ == "__main__":
+    unittest.main()

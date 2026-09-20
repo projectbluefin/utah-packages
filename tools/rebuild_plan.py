@@ -114,7 +114,7 @@ def dependents_from_primary(primary: bytes) -> dict[str, set[str]]:
             provided_by.setdefault(entry.get("name", ""), set()).add(source)
         # Files a package ships are Provides in every sense dnf cares about:
         # a Requires: /usr/bin/foo resolves through them.
-        for file in package.iterfind(f"{{{COMMON_NS}}}file"):
+        for file in fmt.iterfind(f"{{{COMMON_NS}}}file"):
             provided_by.setdefault(file.text or "", set()).add(source)
         needed = {
             entry.get("name", "")
@@ -166,7 +166,7 @@ def provides_from_primary(
             continue
         for entry in fmt.iterfind(f"{{{RPM_NS}}}provides/{{{RPM_NS}}}entry"):
             provided.add(entry.get("name", ""))
-        for file in package.iterfind(f"{{{COMMON_NS}}}file"):
+        for file in fmt.iterfind(f"{{{COMMON_NS}}}file"):
             provided.add(file.text or "")
     return provided
 

@@ -37,7 +37,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: gnome-source-bump
+  group: upstream-source-bump
   cancel-in-progress: true
 
 jobs:
@@ -90,20 +90,20 @@ jobs:
       - name: Open reviewable update
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8
         with:
-          branch: bump/gnome-sources
+          branch: bump/upstream-sources
           delete-branch: true
-          title: 'chore(sources): bump GNOME locks to their released versions'
-          commit-message: 'chore(sources): bump GNOME locks to their released versions'
+          title: 'chore(sources): bump upstream locks to released versions'
+          commit-message: 'chore(sources): bump upstream locks to released versions'
           body: |
-            Opened by `.github/workflows/bump-gnome-sources.yml`.
+            Opened by `.github/workflows/bump-upstream-sources.yml`.
 
             Each package below had its `Version:`, its `sources` manifest and
             its `config/upstream-sources.json` entry rewritten together, with
-            the SHA-512 computed from the tarball GNOME actually serves. The
+            the SHA-512 computed from the upstream bytes actually served. The
             run log lists what moved, and any candidate that crosses a release
-            cycle -- those are reported for a human and never applied, because
-            GNOME's numbering encodes development series that no arithmetic
-            rule separates from stable ones.
+            cycle or a major version is reported for a human and never applied,
+            because version arithmetic alone cannot make that compatibility
+            decision.
 
             Verified in the run before this PR was opened: the unit tests,
             `tools/validate.py`, the workflow quoting check, and
