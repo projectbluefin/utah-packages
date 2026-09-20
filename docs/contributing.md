@@ -48,6 +48,13 @@ The image manifest (`config/bluefin-packages.toml`) and
 image still wants the package, it just resolves from Hummingbird now. Re-add by
 reversing `Import Rawhide package`.
 
+Publication also prunes binaries from these Hummingbird-owned sources out of
+the previous factory repository before regenerating metadata. Merely stopping
+their builds is insufficient: the OCI repository is seeded from its prior
+digest, so an explicit prune is what prevents removed RPMs from surviving
+forever. The rebuild plan only requests a cleanup publication while such an
+overlap is actually present, making the operation retryable and idempotent.
+
 Leaving one of these behind is what makes `main` red: the other three sources
 end up at different set sizes, which surfaces later as an unrelated failing
 integer assertion instead of as "you forgot `config/upstream-sources.json`".

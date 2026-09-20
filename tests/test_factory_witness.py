@@ -43,6 +43,12 @@ def run_scripts(path: Path) -> str:
 
 
 class FactoryWitnessTests(unittest.TestCase):
+    def test_only_schedule_and_dispatch_launch_the_full_factory(self) -> None:
+        workflow = yaml.safe_load(REBUILD.read_text())
+        # PyYAML 1.1 treats the plain scalar ``on`` as boolean true.
+        triggers = workflow.get("on", workflow.get(True, {}))
+        self.assertEqual(set(triggers), {"schedule", "workflow_dispatch"})
+
     def test_no_workflow_reads_the_retired_pages_mirror(self) -> None:
         offenders = [
             path.name
@@ -141,6 +147,13 @@ class FactoryWitnessTests(unittest.TestCase):
     def test_a_failed_prepare_stops_precedence_and_publish(self) -> None:
         text = uncommented(REBUILD)
         self.assertEqual(text.count("needs.prepare.result == 'success'"), 2)
+
+    def test_publish_prunes_hummingbird_owned_sources_from_its_seed(self) -> None:
+        text = uncommented(REBUILD)
+        self.assertIn('prune_sources: ${{ steps.matrix.outputs.prune_sources }}', text)
+        self.assertIn('PRUNE_SOURCES: ${{ needs.prepare.outputs.prune_sources }}', text)
+        self.assertIn('rpm -qp --qf \'%{SOURCERPM}\'', text)
+        self.assertIn("needs.prepare.outputs.prune_sources != '[]'", text)
 
 
 class IcuAgreementTests(unittest.TestCase):

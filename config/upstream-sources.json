@@ -117,16 +117,6 @@
       "stage": 1
     },
     {
-      "name": "bootc",
-      "version": "1.16.10",
-      "url": "https://github.com/bootc-dev/bootc/releases/download/v1.16.10/bootc-1.16.10.tar.zstd",
-      "filename": "bootc-1.16.10.tar.zstd",
-      "sha512": "9ede03ec8d24d359a69a2522cf0658eefb4273a2b611558c5d672a235bce49cdadf9c0908fda79c756ccf6e6ef37dff9a758a03e75fdc8a9528120e437cbb522",
-      "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/bootc/bootc-1.16.10.tar.zstd/sha512/9ede03ec8d24d359a69a2522cf0658eefb4273a2b611558c5d672a235bce49cdadf9c0908fda79c756ccf6e6ef37dff9a758a03e75fdc8a9528120e437cbb522/bootc-1.16.10.tar.zstd"
-      ]
-    },
-    {
       "name": "cairo",
       "version": "1.18.4",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/cairo/cairo-1.18.4.tar.xz/sha512/863679f817ed67dc2c916c035d740916e27e7e69c04fca63936e37d274e7f4c79848d16c8f7c481798864602e8847c489f698df89b785cbc576c925dbd513316/cairo-1.18.4.tar.xz",
@@ -229,16 +219,6 @@
       "sha512": "9a6f43497a772c78660d0c0f9bc42902f5cb99066a08f0ab50345db37ddf62bb491ae7f5ca45819251e3a1d41282e5646b269e912cbd24eca6b440a31409712f"
     },
     {
-      "name": "dracut",
-      "version": "111",
-      "url": "https://github.com/dracut-ng/dracut/archive/refs/tags/111.tar.gz",
-      "filename": "111.tar.gz",
-      "sha512": "4c8a3e1e82bfc1dbe155241564bc93bedc2b321566002ccc643697b50173b8e564d03b1bbff4f49602e0cb7abbee21dfb14aadc453ac9703a846c160d070b4bc",
-      "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/dracut/111.tar.gz/sha512/4c8a3e1e82bfc1dbe155241564bc93bedc2b321566002ccc643697b50173b8e564d03b1bbff4f49602e0cb7abbee21dfb14aadc453ac9703a846c160d070b4bc/111.tar.gz"
-      ]
-    },
-    {
       "name": "enchant2",
       "version": "2.8.19",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/enchant2/enchant-2.8.19.tar.gz/sha512/0aebd255d589637d0947f8832a194457f561e6000fbfdcff57e487f85203b5ddc77458d1eaad84fd8765052264ff2d9b1dbaf5fbce0ca194aa097f4944b302db/enchant-2.8.19.tar.gz",
@@ -298,16 +278,6 @@
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/ffmpeg/ffmpeg-9.0.1.tar.xz/sha512/be8cdfca64886f2ec5cd2359f8db6a998ee759d105b10ade9b2a7b640356ad56ab0ff50218fce7b6312462f15f98d90ac9d197a3b02a23771754d2714fec628d/ffmpeg-9.0.1.tar.xz",
       "filename": "ffmpeg-9.0.1.tar.xz",
       "sha512": "be8cdfca64886f2ec5cd2359f8db6a998ee759d105b10ade9b2a7b640356ad56ab0ff50218fce7b6312462f15f98d90ac9d197a3b02a23771754d2714fec628d"
-    },
-    {
-      "name": "firewalld",
-      "version": "2.5.1",
-      "url": "https://github.com/firewalld/firewalld/releases/download/v2.5.1/firewalld-2.5.1.tar.bz2",
-      "filename": "firewalld-2.5.1.tar.bz2",
-      "sha512": "9b7d61cef7dc016e55ea3493c2566cb516f40446029a1d74805411e1a91d15848d69740d5d2182ea5448118ec59ebc20c78c941fdb4c003628769cb0f0976114",
-      "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/firewalld/firewalld-2.5.1.tar.bz2/sha512/9b7d61cef7dc016e55ea3493c2566cb516f40446029a1d74805411e1a91d15848d69740d5d2182ea5448118ec59ebc20c78c941fdb4c003628769cb0f0976114/firewalld-2.5.1.tar.bz2"
-      ]
     },
     {
       "name": "fish",
@@ -1733,16 +1703,6 @@
       "sha512": "e93db0f32d9e83f7f5f87753f1afb70add90bc033bc71e92fbe551608153a8ae7f1fe5c2900523445cb473ea7c1e26a8296f11a8cf248a816f3c5bf450a7b99c"
     },
     {
-      "name": "libxcrypt",
-      "version": "4.5.2",
-      "url": "https://github.com/besser82/libxcrypt/releases/download/v4.5.2/libxcrypt-4.5.2.tar.xz",
-      "filename": "libxcrypt-4.5.2.tar.xz",
-      "sha512": "87b363e2bdc03ea993a9d154eb59a75ef77edd0490a9b58d443de4e1b4eec5196408a1eb9b739718fd92f565fe5157469c1ea3d336a4a54ac0947750b16c44c1",
-      "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/libxcrypt/libxcrypt-4.5.2.tar.xz/sha512/87b363e2bdc03ea993a9d154eb59a75ef77edd0490a9b58d443de4e1b4eec5196408a1eb9b739718fd92f565fe5157469c1ea3d336a4a54ac0947750b16c44c1/libxcrypt-4.5.2.tar.xz"
-      ]
-    },
-    {
       "name": "libxcvt",
       "version": "0.1.2",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/libxcvt/libxcvt-0.1.2.tar.xz/sha512/3f6b2baca712a4608780686932f8881255c07bb74b1a788f9b07d4e22975c038d75111cd6b452257882a0b2bad57eebb2002f80a3e435d2e2d16936597f039b0/libxcvt-0.1.2.tar.xz",
@@ -1812,16 +1772,6 @@
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/lttng-ust/lttng-ust-2.16.0.tar.bz2/sha512/d41e40e6a8a079491f9f832455f242a085676de722d8752fe598e614b7d28f655e125c3012b02159e197bb1aa72e3a65a5f6aa2ecde79ce28843b8e92f5ed78c/lttng-ust-2.16.0.tar.bz2",
       "filename": "lttng-ust-2.16.0.tar.bz2",
       "sha512": "d41e40e6a8a079491f9f832455f242a085676de722d8752fe598e614b7d28f655e125c3012b02159e197bb1aa72e3a65a5f6aa2ecde79ce28843b8e92f5ed78c"
-    },
-    {
-      "name": "make",
-      "version": "4.4.1",
-      "url": "https://ftp.gnu.org/gnu/make/make-4.4.1.tar.gz",
-      "filename": "make-4.4.1.tar.gz",
-      "sha512": "145260cbd6a8226cef3dfef0c8baba31847beaebc7e6b65d39d02715fd4f4cab9b139b6c3772e550088d4f9ae80c6d3ed20b9a7664c693644dfb96b4cb60e67c",
-      "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/make/make-4.4.1.tar.gz/sha512/145260cbd6a8226cef3dfef0c8baba31847beaebc7e6b65d39d02715fd4f4cab9b139b6c3772e550088d4f9ae80c6d3ed20b9a7664c693644dfb96b4cb60e67c/make-4.4.1.tar.gz"
-      ]
     },
     {
       "name": "malcontent",
@@ -1996,16 +1946,6 @@
       "sha512": "7b0805040bc5f31870155fbfc8d273e7cd0df692816b4ad7f3ff1da492365c015dfddbc8299444a1f7315eebb0e8663ddf5a8ccf023b6cd2648ee8a85159fe0d",
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/openrgb/OpenRGB-74cbdcce55711f57b3ca4439d3136f5bb7068db7.tar.bz2/sha512/7b0805040bc5f31870155fbfc8d273e7cd0df692816b4ad7f3ff1da492365c015dfddbc8299444a1f7315eebb0e8663ddf5a8ccf023b6cd2648ee8a85159fe0d/OpenRGB-74cbdcce55711f57b3ca4439d3136f5bb7068db7.tar.bz2"
-      ]
-    },
-    {
-      "name": "openssh",
-      "version": "10.5p1",
-      "url": "https://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-10.5p1.tar.gz",
-      "filename": "openssh-10.5p1.tar.gz",
-      "sha512": "5336c1945527b29ed59cc500fa8bfbd918f5ba97e85512daad9ab7241418929bf7152d300e5f3c5f9a8c8d699dfde5a64c5faa4fc33b2758ab52dd04040d6284",
-      "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/openssh/openssh-10.5p1.tar.gz/sha512/5336c1945527b29ed59cc500fa8bfbd918f5ba97e85512daad9ab7241418929bf7152d300e5f3c5f9a8c8d699dfde5a64c5faa4fc33b2758ab52dd04040d6284/openssh-10.5p1.tar.gz"
       ]
     },
     {
@@ -2216,16 +2156,6 @@
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/runc/runc-1.5.1.tar.gz/sha512/4a96870af3146203a001e08d9a0330f6234f8f0b2efe62e123a4f9b131b73967482954f658d53258e19444630c18981b5d7ef805ab736ca16a69f783f39db182/runc-1.5.1.tar.gz",
       "filename": "runc-1.5.1.tar.gz",
       "sha512": "4a96870af3146203a001e08d9a0330f6234f8f0b2efe62e123a4f9b131b73967482954f658d53258e19444630c18981b5d7ef805ab736ca16a69f783f39db182"
-    },
-    {
-      "name": "rust-bootupd",
-      "version": "0.2.36",
-      "url": "https://crates.io/api/v1/crates/bootupd/0.2.36/download#/bootupd-0.2.36.crate",
-      "filename": "bootupd-0.2.36.crate",
-      "sha512": "2ee451f486ef35a1978731657fcbbd964f525e29b73a603b72250f84518bfc1afb13acb0ef9b2ae96ac4be4efb586c516d4c7f88605c990ed241b57c1edd6d7e",
-      "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/rust-bootupd/bootupd-0.2.36.crate/sha512/2ee451f486ef35a1978731657fcbbd964f525e29b73a603b72250f84518bfc1afb13acb0ef9b2ae96ac4be4efb586c516d4c7f88605c990ed241b57c1edd6d7e/bootupd-0.2.36.crate"
-      ]
     },
     {
       "name": "rust-just",

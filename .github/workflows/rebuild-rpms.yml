@@ -19,33 +19,6 @@ on:
         options:
           - container
           - mock
-  push:
-    branches: [main]
-    paths:
-      - config/**
-      - packages/**
-      - tools/source_pipeline.py
-      - tools/generated_sources.py
-      - tools/rebuild_matrix.py
-      - tools/rebuild_plan.py
-      - tools/mock_config.py
-      - tools/runtime_contract.py
-      - tests/**
-      - .github/workflows/rebuild-rpms.yml
-      - .github/workflows/build-stage.yml
-  pull_request:
-    paths:
-      - config/**
-      - packages/**
-      - tools/source_pipeline.py
-      - tools/generated_sources.py
-      - tools/rebuild_matrix.py
-      - tools/rebuild_plan.py
-      - tools/mock_config.py
-      - tools/runtime_contract.py
-      - tests/**
-      - .github/workflows/rebuild-rpms.yml
-      - .github/workflows/build-stage.yml
   schedule:
     - cron: '41 6 * * *'
 
@@ -59,19 +32,9 @@ permissions:
 # at `publish`, and publish refuses to replace an image that advanced while the
 # run was building.  That keeps an older run from overwriting newer artifacts.
 #
-# A pull request is the exception: a push to it supersedes the run before,
-# and that run used to carry on for hours anyway -- 369, 370 and 374 were all
-# cancelled by hand, one of them four hours in. Nothing on main or a schedule
-# is cancelled, because there a run in flight is the one that publishes.
-# The group is pull-request-only for the same reason. A group covering every
-# ref would also queue main and schedule runs behind one another and let GitHub
-# drop a superseded *pending* run -- a behaviour change the comment above
-# explicitly says is not wanted, since concurrent waves are safe by design.
-concurrency:
-  group: ${{ github.event_name == 'pull_request'
-    && format('utah-packages-rebuild-{0}-{1}', github.workflow, github.ref)
-    || format('utah-packages-rebuild-{0}-{1}-{2}', github.workflow, github.ref, github.run_id) }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+# Pull requests and merges run the validation workflow, not this
+# several-hundred-job factory. Only the daily schedule or an explicit dispatch
+# may consume the build queue. Publication itself remains serialized below.
 
 jobs:
   prepare:
@@ -124,6 +87,7 @@ jobs:
       stage10_chunks: ${{ steps.matrix.outputs.stage10_chunks }}
       build_list: ${{ steps.matrix.outputs.build_list }}
       cacheable: ${{ steps.matrix.outputs.cacheable }}
+      prune_sources: ${{ steps.matrix.outputs.prune_sources }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -226,7 +190,7 @@ jobs:
       - id: matrix
         env:
           FULL: ${{ github.event_name == 'workflow_dispatch' && inputs.full == true && '1' || '0' }}
-          BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+          BASE_SHA: ${{ github.event.before }}
           FACTORY_URL: ${{ steps.factory.outputs.url }}
         run: |
           # The action reports the path as the build container sees it under
@@ -632,16 +596,14 @@ jobs:
     # use. A registry has no such rule, so the mirror was a second publication
     # path that nothing consumed and every change had to be made twice in.
     #
-    # A pull request from a fork is the exception, and it has to be stated
-    # rather than assumed: GitHub gives those a read-only GITHUB_TOKEN, so the
-    # GHCR login and push would fail however the rest of the run went. Skipping
-    # is honest; failing on a permission that was never going to be granted is
-    # noise that reads like a broken pipeline.
     if: >-
       ${{ !cancelled()
           && needs.prepare.result == 'success'
-          && needs.prepare.outputs.build_list != '[]'
-          && needs.precedence.result == 'success'
+          && (needs.prepare.outputs.build_list != '[]'
+              || needs.prepare.outputs.prune_sources != '[]')
+          && (needs.precedence.result == 'success'
+              || (needs.prepare.outputs.build_list == '[]'
+                  && needs.precedence.result == 'skipped'))
           && (needs.rebuild0.result == 'success' || needs.rebuild0.result == 'skipped')
           && (needs.rebuild1.result == 'success' || needs.rebuild1.result == 'skipped')
           && (needs.rebuild2.result == 'success' || needs.rebuild2.result == 'skipped')
@@ -652,9 +614,7 @@ jobs:
           && (needs.rebuild7.result == 'success' || needs.rebuild7.result == 'skipped')
           && (needs.rebuild8.result == 'success' || needs.rebuild8.result == 'skipped')
           && (needs.rebuild9.result == 'success' || needs.rebuild9.result == 'skipped')
-          && (needs.rebuild10.result == 'success' || needs.rebuild10.result == 'skipped')
-          && (github.event_name != 'pull_request'
-              || github.event.pull_request.head.repo.full_name == github.repository) }}
+          && (needs.rebuild10.result == 'success' || needs.rebuild10.result == 'skipped') }}
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8, rebuild9, rebuild10, precedence]
     # Build waves can overlap, but the consumer tag is an atomic input. Queue
     # only this critical section per ref. The seed step verifies that the image
@@ -726,13 +686,34 @@ jobs:
             podman rm "$container"
           fi
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        if: needs.prepare.outputs.build_list != '[]'
         with:
           pattern: rpm-*
           path: repository
           merge-multiple: true
       - name: Create and keylessly sign repository metadata
+        env:
+          PRUNE_SOURCES: ${{ needs.prepare.outputs.prune_sources }}
         run: |
-          sudo apt-get update && sudo apt-get install -y createrepo-c
+          sudo apt-get update && sudo apt-get install -y createrepo-c rpm
+          # A recipe removal does not remove its RPMs from the previous OCI
+          # repository we seed above. Drop every binary whose source package is
+          # now owned by Hummingbird before regenerating metadata. The prepare
+          # step computes this list from the repository it actually witnessed,
+          # so cleanup-only runs are both retryable and idempotent.
+          mapfile -t prune_sources < <(jq -r '.[]' <<<"$PRUNE_SOURCES")
+          while IFS= read -r -d '' rpm_file; do
+            source_rpm=$(rpm -qp --qf '%{SOURCERPM}' "$rpm_file" 2>/dev/null || true)
+            for source in "${prune_sources[@]}"; do
+              case "$source_rpm" in
+                "$source"-*)
+                  echo "remove Hummingbird-owned $rpm_file ($source_rpm)"
+                  rm -f "$rpm_file"
+                  break
+                  ;;
+              esac
+            done
+          done < <(find repository -type f -name '*.rpm' -print0)
           # The malcontent bootstrap pass exists only to give the next stage a
           # malcontent-libs linked against accountsservice 26, breaking the
           # flatpak-libs -> libmalcontent-0.so.0 cycle. It has no parental

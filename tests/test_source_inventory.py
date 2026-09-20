@@ -66,13 +66,13 @@ class MergeCandidatesTests(unittest.TestCase):
 
 class TargetSelectionTests(unittest.TestCase):
     def test_hummingbird_supplied_packages_are_skipped_by_default(self):
-        targets = plan_targets(ROOT / "packages", {"dracut": ["dracut"]})
-        self.assertNotIn("dracut", [path.name for path in targets])
-        self.assertEqual(len(targets), 348)
+        targets = plan_targets(ROOT / "packages", {"mesa": ["mesa"]})
+        self.assertNotIn("mesa", [path.name for path in targets])
+        self.assertEqual(len(targets), 341)
 
     def test_explicit_selection_processes_a_hummingbird_supplied_package(self):
-        targets = plan_targets(ROOT / "packages", {"dracut": ["dracut"]}, only="dracut")
-        self.assertEqual([path.name for path in targets], ["dracut"])
+        targets = plan_targets(ROOT / "packages", {"mesa": ["mesa"]}, only="mesa")
+        self.assertEqual([path.name for path in targets], ["mesa"])
 
     def test_explicit_selection_requires_an_existing_recipe(self):
         with self.assertRaisesRegex(ValueError, "no package recipe"):

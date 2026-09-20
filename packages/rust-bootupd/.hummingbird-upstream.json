@@ -1,8 +1,0 @@
-{
-  "package": "rust-bootupd",
-  "branch": "rawhide",
-  "remote": "https://src.fedoraproject.org/rpms/rust-bootupd.git",
-  "commit": "4ddb9068221689f572b7ceef9b16392b7058171b",
-  "tree": "8c575969b06ce755a0f7b1fd6f1af05921417754",
-  "imported_at": "2026-08-29T06:03:04.215111+00:00"
-}

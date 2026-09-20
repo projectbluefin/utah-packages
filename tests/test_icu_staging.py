@@ -72,10 +72,11 @@ class IcuStagingTests(unittest.TestCase):
         """Moving a package earlier must not outrun what it is built from.
 
         samba BuildRequires the factory's libtevent, libtalloc, libtdb and icu.
-        Pulling samba forward is only correct if those still precede it.
+        (libxcrypt now comes directly from Hummingbird.) Pulling samba forward
+        is only correct if the factory-owned dependencies still precede it.
         """
         required_before = {
-            "samba": ("libtevent", "libtalloc", "libtdb", "icu", "libxcrypt"),
+            "samba": ("libtevent", "libtalloc", "libtdb", "icu"),
             # gvfs moved from stage 1 to 3 to land after samba; everything else
             # it is built from is stage 0, so nothing else constrains it.
             "gvfs": ("samba", "libnfs", "libsoup3", "libsecret", "udisks2"),

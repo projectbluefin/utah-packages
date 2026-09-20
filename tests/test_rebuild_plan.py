@@ -12,6 +12,7 @@ from tools.rebuild_plan import (
     is_published,
     overflow,
     plan,
+    prunable_sources,
     provides_from_primary,
     published_from_primary,
     reverse_closure,
@@ -430,6 +431,20 @@ class StageOutputTests(unittest.TestCase):
             overflow([{"name": "late", "stage": 11}, {"name": "fine", "stage": 10}]),
             ["late"],
         )
+
+
+class HummingbirdOwnershipTests(unittest.TestCase):
+    def test_only_published_overlaps_need_pruning(self) -> None:
+        published = {
+            "openssh": ("10.5p1", "1.hum1.bfin"),
+            "mesa": ("26.1.0", "1.hum1.bfin"),
+        }
+        self.assertEqual(
+            prunable_sources(published, {"openssh", "bootc"}), ["openssh"]
+        )
+
+    def test_cleanup_is_idempotent_after_overlap_is_gone(self) -> None:
+        self.assertEqual(prunable_sources({}, {"openssh"}), [])
 
 
 def icu_primary() -> bytes:

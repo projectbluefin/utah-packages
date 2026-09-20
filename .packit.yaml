@@ -94,12 +94,6 @@ packages:
     downstream_package_name: bluez
     paths:
       - packages/bluez
-  bootc:
-    specfile_path: bootc.spec
-    upstream_package_name: bootc
-    downstream_package_name: bootc
-    paths:
-      - packages/bootc
   cairo:
     specfile_path: cairo.spec
     upstream_package_name: cairo
@@ -184,12 +178,6 @@ packages:
     downstream_package_name: double-conversion
     paths:
       - packages/double-conversion
-  dracut:
-    specfile_path: dracut.spec
-    upstream_package_name: dracut
-    downstream_package_name: dracut
-    paths:
-      - packages/dracut
   enchant2:
     specfile_path: enchant2.spec
     upstream_package_name: enchant2
@@ -232,12 +220,6 @@ packages:
     downstream_package_name: ffmpeg
     paths:
       - packages/ffmpeg
-  firewalld:
-    specfile_path: firewalld.spec
-    upstream_package_name: firewalld
-    downstream_package_name: firewalld
-    paths:
-      - packages/firewalld
   fish:
     specfile_path: fish.spec
     upstream_package_name: fish
@@ -1306,12 +1288,6 @@ packages:
     downstream_package_name: libx86emu
     paths:
       - packages/libx86emu
-  libxcrypt:
-    specfile_path: libxcrypt.spec
-    upstream_package_name: libxcrypt
-    downstream_package_name: libxcrypt
-    paths:
-      - packages/libxcrypt
   libxcvt:
     specfile_path: libxcvt.spec
     upstream_package_name: libxcvt
@@ -1372,12 +1348,6 @@ packages:
     downstream_package_name: lttng-ust
     paths:
       - packages/lttng-ust
-  make:
-    specfile_path: make.spec
-    upstream_package_name: make
-    downstream_package_name: make
-    paths:
-      - packages/make
   malcontent:
     specfile_path: malcontent.spec
     upstream_package_name: malcontent
@@ -1504,12 +1474,6 @@ packages:
     downstream_package_name: openrgb
     paths:
       - packages/openrgb
-  openssh:
-    specfile_path: openssh.spec
-    upstream_package_name: openssh
-    downstream_package_name: openssh
-    paths:
-      - packages/openssh
   opus:
     specfile_path: opus.spec
     upstream_package_name: opus
@@ -1678,12 +1642,6 @@ packages:
     downstream_package_name: runc
     paths:
       - packages/runc
-  rust-bootupd:
-    specfile_path: rust-bootupd.spec
-    upstream_package_name: rust-bootupd
-    downstream_package_name: rust-bootupd
-    paths:
-      - packages/rust-bootupd
   rust-just:
     specfile_path: rust-just.spec
     upstream_package_name: rust-just

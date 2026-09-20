@@ -1,8 +1,0 @@
-{
-  "package": "firewalld",
-  "branch": "rawhide",
-  "remote": "https://src.fedoraproject.org/rpms/firewalld.git",
-  "commit": "4c18519ae432381e9cb18e105f0f15c46537e81c",
-  "tree": "55117cce2d8ab80471067459180e16732d4acd20",
-  "imported_at": "2026-08-29T06:02:26.314865+00:00"
-}

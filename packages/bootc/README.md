@@ -1,3 +1,0 @@
-# bootc
-
-The bootc package
