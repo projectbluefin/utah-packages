@@ -33,19 +33,6 @@ on:
       - tests/**
       - .github/workflows/rebuild-rpms.yml
       - .github/workflows/build-stage.yml
-  pull_request:
-    paths:
-      - config/**
-      - packages/**
-      - tools/source_pipeline.py
-      - tools/generated_sources.py
-      - tools/rebuild_matrix.py
-      - tools/rebuild_plan.py
-      - tools/mock_config.py
-      - tools/runtime_contract.py
-      - tests/**
-      - .github/workflows/rebuild-rpms.yml
-      - .github/workflows/build-stage.yml
   schedule:
     - cron: '41 6 * * *'
 
@@ -59,19 +46,9 @@ permissions:
 # at `publish`, and publish refuses to replace an image that advanced while the
 # run was building.  That keeps an older run from overwriting newer artifacts.
 #
-# A pull request is the exception: a push to it supersedes the run before,
-# and that run used to carry on for hours anyway -- 369, 370 and 374 were all
-# cancelled by hand, one of them four hours in. Nothing on main or a schedule
-# is cancelled, because there a run in flight is the one that publishes.
-# The group is pull-request-only for the same reason. A group covering every
-# ref would also queue main and schedule runs behind one another and let GitHub
-# drop a superseded *pending* run -- a behaviour change the comment above
-# explicitly says is not wanted, since concurrent waves are safe by design.
-concurrency:
-  group: ${{ github.event_name == 'pull_request'
-    && format('utah-packages-rebuild-{0}-{1}', github.workflow, github.ref)
-    || format('utah-packages-rebuild-{0}-{1}-{2}', github.workflow, github.ref, github.run_id) }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+# Pull requests run the validation workflow, not this several-hundred-job
+# factory. A main push, schedule or explicit dispatch is the only event allowed
+# to consume the build queue. Publication itself remains serialized below.
 
 jobs:
   prepare:
@@ -227,7 +204,7 @@ jobs:
       - id: matrix
         env:
           FULL: ${{ github.event_name == 'workflow_dispatch' && inputs.full == true && '1' || '0' }}
-          BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+          BASE_SHA: ${{ github.event.before }}
           FACTORY_URL: ${{ steps.factory.outputs.url }}
         run: |
           # The action reports the path as the build container sees it under
@@ -633,11 +610,6 @@ jobs:
     # use. A registry has no such rule, so the mirror was a second publication
     # path that nothing consumed and every change had to be made twice in.
     #
-    # A pull request from a fork is the exception, and it has to be stated
-    # rather than assumed: GitHub gives those a read-only GITHUB_TOKEN, so the
-    # GHCR login and push would fail however the rest of the run went. Skipping
-    # is honest; failing on a permission that was never going to be granted is
-    # noise that reads like a broken pipeline.
     if: >-
       ${{ !cancelled()
           && needs.prepare.result == 'success'
@@ -656,9 +628,7 @@ jobs:
           && (needs.rebuild7.result == 'success' || needs.rebuild7.result == 'skipped')
           && (needs.rebuild8.result == 'success' || needs.rebuild8.result == 'skipped')
           && (needs.rebuild9.result == 'success' || needs.rebuild9.result == 'skipped')
-          && (needs.rebuild10.result == 'success' || needs.rebuild10.result == 'skipped')
-          && (github.event_name != 'pull_request'
-              || github.event.pull_request.head.repo.full_name == github.repository) }}
+          && (needs.rebuild10.result == 'success' || needs.rebuild10.result == 'skipped') }}
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8, rebuild9, rebuild10, precedence]
     # Build waves can overlap, but the consumer tag is an atomic input. Queue
     # only this critical section per ref. The seed step verifies that the image

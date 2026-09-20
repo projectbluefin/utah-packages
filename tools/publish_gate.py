@@ -32,8 +32,8 @@ REBUILD_WORKFLOW = (
     Path(__file__).resolve().parent.parent / ".github" / "workflows" / "rebuild-rpms.yml"
 )
 
-# The five build waves the publish job waits on, in wave order.
-STAGES = ("rebuild0", "rebuild1", "rebuild2", "rebuild3", "rebuild4")
+# Every build wave the publish job waits on, in wave order.
+STAGES = tuple(f"rebuild{stage}" for stage in range(11))
 
 
 def publish_allowed(
@@ -90,9 +90,14 @@ def assert_gate_enforced(workflow: dict) -> None:
     if "needs.precedence.result == 'success'" not in gate:
         raise AssertionError("publish gate must require precedence to succeed")
 
-    # A fork pull request has a read-only GITHUB_TOKEN and cannot push; the gate
-    # must say so rather than let the push fail noisily later.
-    if "pull_request.head.repo.full_name" not in gate:
+    # Pull requests do not trigger this expensive workflow. If that ever
+    # changes, the publish gate must again explicitly exclude fork PRs, whose
+    # read-only token cannot push.
+    triggers = workflow.get("on", workflow.get(True, {}))
+    if (
+        "pull_request" in triggers
+        and "pull_request.head.repo.full_name" not in gate
+    ):
         raise AssertionError("publish gate must exclude fork pull requests")
 
     _assert_transaction_before_publish(publish)
