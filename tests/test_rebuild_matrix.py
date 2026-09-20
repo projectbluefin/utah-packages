@@ -71,6 +71,9 @@ def write_root(root: Path, packages: list[dict], *, specs: set[str] | None = Non
     (root / "config" / "hummingbird.repo").write_text(
         "[hummingbird]\nbaseurl=https://example.invalid/hummingbird/\n"
     )
+    (root / "config" / "hummingbird-provided-sources.json").write_text(
+        json.dumps({"schema": 1, "sources": []})
+    )
     for entry in packages:
         name = entry["name"]
         package_dir = root / "packages" / name
@@ -367,8 +370,8 @@ class MainTest(unittest.TestCase):
         self.stderr = err.getvalue()
         return code, out.getvalue(), outputs
 
-    def test_full_run_never_reads_the_published_repository(self):
-        with mock.patch.object(rebuild_matrix, "fetch_primary") as fetch:
+    def test_full_run_reads_repo_for_pruning_but_rebuilds_all(self):
+        with mock.patch.object(rebuild_matrix, "fetch_primary", return_value=b"") as fetch:
             write_root(self.root, self.PACKAGES)
             with mock.patch.object(
                 rebuild_matrix, "ROOT", self.root
@@ -385,7 +388,7 @@ class MainTest(unittest.TestCase):
             ):
                 with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
                     code = rebuild_matrix.main()
-        fetch.assert_not_called()
+        fetch.assert_called_once_with("file:///repo/")
         self.assertEqual(code, 0)
         outputs = dict(
             line.split("=", 1) for line in self.output.read_text().splitlines()
