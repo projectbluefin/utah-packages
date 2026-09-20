@@ -142,6 +142,13 @@ class FactoryWitnessTests(unittest.TestCase):
         text = uncommented(REBUILD)
         self.assertEqual(text.count("needs.prepare.result == 'success'"), 2)
 
+    def test_publish_prunes_hummingbird_owned_sources_from_its_seed(self) -> None:
+        text = uncommented(REBUILD)
+        self.assertIn('prune_sources: ${{ steps.matrix.outputs.prune_sources }}', text)
+        self.assertIn('PRUNE_SOURCES: ${{ needs.prepare.outputs.prune_sources }}', text)
+        self.assertIn('rpm -qp --qf \'%{SOURCERPM}\'', text)
+        self.assertIn("needs.prepare.outputs.prune_sources != '[]'", text)
+
 
 class IcuAgreementTests(unittest.TestCase):
     """The build root must keep the ICU 77 provider the consumer side refuses.

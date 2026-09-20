@@ -5,7 +5,7 @@ The factory's only skip mechanism is the published consumer repository, and
 publication is atomic: it needs every stage, plus precedence, plus the
 Hummingbird-only transaction. So a failing gate freezes the witness, and
 everything outside it rebuilds from scratch on every run. The witness has been
-at 67 of 349 packages since 2026-08-30; webkitgtk, which is not in it, built 20
+at 67 packages since 2026-08-30; webkitgtk, which is not in it, built 20
 times on 19 September alone at 182 minutes a build, with byte-identical inputs
 (issue #177).
 
@@ -32,7 +32,7 @@ Why the chain holds across stages
 ---------------------------------
 It only works if an unchanged recipe yields an unchanged NEVR, or every stage's
 resolved root would differ from the last run's and nothing would ever hit. It
-does: 167 of 349 specs use %autorelease, which rpmautospec derives from the
+does: many specs use %autorelease, which rpmautospec derives from the
 committed packages/<name>/changelog and not from a build counter. Confirmed
 empirically -- libical-3.0.20-1.hum1.bfin came out with the identical NEVR in
 run 35413902261 and run 35445712318, twelve hours and many commits apart.

@@ -28,6 +28,7 @@ from tools.rebuild_plan import (
     dependents_from_primary,
     overflow,
     plan,
+    prunable_sources,
     published_from_primary,
     stage_outputs,
 )
@@ -35,6 +36,7 @@ from tools.rebuild_plan import (
 ROOT = Path(__file__).resolve().parent.parent
 PUBLISHED_REPO_TIMEOUT = 120
 INVENTORY = "config/upstream-sources.json"
+HUMMINGBIRD_OWNED = "config/hummingbird-provided-sources.json"
 
 
 def changed_recipes(base_sha: str) -> set[str]:
@@ -122,6 +124,9 @@ def fetch_published(base_url: str) -> dict[str, tuple[str, str]]:
 
 def main() -> int:
     config = json.loads((ROOT / INVENTORY).read_text())
+    hummingbird_owned = set(
+        json.loads((ROOT / HUMMINGBIRD_OWNED).read_text())["sources"]
+    )
     full = os.environ.get("FULL") == "1"
     factory_repo = os.environ.get("FACTORY_REPO", "")
 
@@ -131,18 +136,19 @@ def main() -> int:
     published: dict[str, tuple[str, str]] = {}
     dependents: dict[str, set[str]] = {}
     stale: dict[str, set[str]] = {}
-    if not full:
-        primary = b""
+    primary = b""
+    if factory_repo:
         try:
             primary = fetch_primary(factory_repo)
             published = published_from_primary(primary)
-            dependents = dependents_from_primary(primary) if primary else {}
             print(f"published repo has {len(published)} source packages")
         except Exception as error:  # noqa: BLE001 - availability, not correctness
             print(
                 f"WARNING: could not read published repo, rebuilding all: {error}",
                 file=sys.stderr,
             )
+    if not full:
+        dependents = dependents_from_primary(primary) if primary else {}
         # A published package whose binaries require something that neither
         # the published repository nor Hummingbird provides is stale: it was
         # built against a build root that has since moved. Without the
@@ -203,6 +209,9 @@ def main() -> int:
 
     outputs = stage_outputs(build)
     outputs["cacheable"] = json.dumps(cacheable(build, changed, set(stale)))
+    outputs["prune_sources"] = json.dumps(
+        prunable_sources(published, hummingbird_owned)
+    )
     for stage in range(11):
         chunks = json.loads(outputs[f"stage{stage}_chunks"])
         if len(chunks) > 1:

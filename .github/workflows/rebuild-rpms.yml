@@ -124,6 +124,7 @@ jobs:
       stage10_chunks: ${{ steps.matrix.outputs.stage10_chunks }}
       build_list: ${{ steps.matrix.outputs.build_list }}
       cacheable: ${{ steps.matrix.outputs.cacheable }}
+      prune_sources: ${{ steps.matrix.outputs.prune_sources }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -640,8 +641,11 @@ jobs:
     if: >-
       ${{ !cancelled()
           && needs.prepare.result == 'success'
-          && needs.prepare.outputs.build_list != '[]'
-          && needs.precedence.result == 'success'
+          && (needs.prepare.outputs.build_list != '[]'
+              || needs.prepare.outputs.prune_sources != '[]')
+          && (needs.precedence.result == 'success'
+              || (needs.prepare.outputs.build_list == '[]'
+                  && needs.precedence.result == 'skipped'))
           && (needs.rebuild0.result == 'success' || needs.rebuild0.result == 'skipped')
           && (needs.rebuild1.result == 'success' || needs.rebuild1.result == 'skipped')
           && (needs.rebuild2.result == 'success' || needs.rebuild2.result == 'skipped')
@@ -726,13 +730,34 @@ jobs:
             podman rm "$container"
           fi
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        if: needs.prepare.outputs.build_list != '[]'
         with:
           pattern: rpm-*
           path: repository
           merge-multiple: true
       - name: Create and keylessly sign repository metadata
+        env:
+          PRUNE_SOURCES: ${{ needs.prepare.outputs.prune_sources }}
         run: |
-          sudo apt-get update && sudo apt-get install -y createrepo-c
+          sudo apt-get update && sudo apt-get install -y createrepo-c rpm
+          # A recipe removal does not remove its RPMs from the previous OCI
+          # repository we seed above. Drop every binary whose source package is
+          # now owned by Hummingbird before regenerating metadata. The prepare
+          # step computes this list from the repository it actually witnessed,
+          # so cleanup-only runs are both retryable and idempotent.
+          mapfile -t prune_sources < <(jq -r '.[]' <<<"$PRUNE_SOURCES")
+          while IFS= read -r -d '' rpm_file; do
+            source_rpm=$(rpm -qp --qf '%{SOURCERPM}' "$rpm_file" 2>/dev/null || true)
+            for source in "${prune_sources[@]}"; do
+              case "$source_rpm" in
+                "$source"-*)
+                  echo "remove Hummingbird-owned $rpm_file ($source_rpm)"
+                  rm -f "$rpm_file"
+                  break
+                  ;;
+              esac
+            done
+          done < <(find repository -type f -name '*.rpm' -print0)
           # The malcontent bootstrap pass exists only to give the next stage a
           # malcontent-libs linked against accountsservice 26, breaking the
           # flatpak-libs -> libmalcontent-0.so.0 cycle. It has no parental

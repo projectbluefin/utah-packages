@@ -1,6 +1,6 @@
 """A cache hit must be indistinguishable from a build, or it is not safe.
 
-The factory rebuilds ~282 of 349 packages every run because its only skip
+The factory used to rebuild most of its 342 packages every run because its only skip
 mechanism is the atomically-published consumer repository, whose witness has
 been frozen at 67 packages since 2026-08-30 (issue #177). webkitgtk alone built
 20 times on 19 September at 182 minutes a build, with byte-identical inputs.
@@ -96,7 +96,7 @@ class RecipeDigestTests(unittest.TestCase):
     def test_the_changelog_is_part_of_the_recipe(self):
         """%autorelease reads it, so it decides the Release and the NEVR.
 
-        167 of 349 specs use %autorelease. A digest that ignored the changelog
+        Many specs use %autorelease. A digest that ignored the changelog
         would treat two different releases as the same build.
         """
         a = self.recipe({"p.spec": b"spec", "changelog": b"* one\n"})

@@ -393,6 +393,20 @@ def cacheable(build: list[dict], changed: set[str], stale: set[str]) -> list[str
     return [entry["name"] for entry in build if entry["name"] not in excluded]
 
 
+def prunable_sources(
+    published: dict[str, tuple[str, str]], hummingbird_owned: set[str]
+) -> list[str]:
+    """Hummingbird-owned sources still carried by the factory repository.
+
+    Removing a recipe stops future builds, but publish starts by copying the
+    previous repository.  Without this explicit intersection, every RPM from
+    the removed source would survive forever.  Returning only witnessed
+    overlaps also makes cleanup idempotent: once publication removes them, a
+    no-op run does not republish the same repository.
+    """
+    return sorted(set(published) & hummingbird_owned)
+
+
 def stage_outputs(build: list[dict]) -> dict[str, str]:
     """Per-stage package lists and their <=250-package chunks."""
     outputs: dict[str, str] = {

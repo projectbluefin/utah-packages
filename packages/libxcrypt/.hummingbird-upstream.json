@@ -1,8 +1,0 @@
-{
-  "package": "libxcrypt",
-  "branch": "rawhide",
-  "remote": "https://src.fedoraproject.org/rpms/libxcrypt.git",
-  "commit": "7313a047b4b8d7956913c3236c6273aea5d16a55",
-  "tree": "2ab7f5a1b7e665869d2fe10fc98b9c540379d094",
-  "imported_at": "2026-08-29T06:02:55.852004+00:00"
-}
