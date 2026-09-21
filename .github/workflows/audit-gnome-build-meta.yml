@@ -1,0 +1,40 @@
+name: GNOME build-meta audit report
+
+# Non-gating. Regenerates the deterministic GNOME-vs-gnome-build-meta audit
+# against the pinned gnome-build-meta commit and uploads the report as an
+# artifact. It never gates the build: the output is evidence for review, and a
+# newer GNOME release is audited by bumping config/gnome-build-meta.json and
+# re-running this (or the tool locally) — no tool rewrite required.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '42 3 * * 1'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gnome-build-meta-audit
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Install PyYAML
+        run: pip install --disable-pip-version-check pyyaml
+      - name: Checkout pinned gnome-build-meta
+        run: |
+          commit="$(python3 -c "import json;print(json.load(open('config/gnome-build-meta.json'))['source']['release_commit'])")"
+          git clone --quiet https://gitlab.gnome.org/GNOME/gnome-build-meta.git /tmp/gnome-build-meta
+          git -C /tmp/gnome-build-meta checkout --quiet "$commit"
+      - name: Run the audit
+        run: python3 tools/audit_gnome_build_meta.py --gbm-dir /tmp/gnome-build-meta
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: gnome-build-meta-audit
+          path: |
+            reports/audit-gnome-build-meta.json
+            reports/audit-gnome-build-meta.md

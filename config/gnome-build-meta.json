@@ -1,0 +1,53 @@
+{
+  "schema": 1,
+  "source": {
+    "name": "gnome-build-meta",
+    "url": "https://gitlab.gnome.org/GNOME/gnome-build-meta.git",
+    "docs": "GNOME's BuildStream recipes for the GNOME release integration. Authoritative for GNOME release intent; this factory inherits Fedora RPM recipes and must be able to diff against it.",
+    "release_tag": "51.0",
+    "release_commit": "a50b8c9de35f51c6a646c8178cde3c2c176725b6"
+  },
+  "element_path": {
+    "project_conf": "project.conf",
+    "root": "elements"
+  },
+  "factory_alias": {
+    "gvfs-client": "gvfs",
+    "gvfs-daemon": "gvfs",
+    "tinysparql": "localsearch"
+  },
+  "mapping": {
+    "mutter": "core/mutter.bst",
+    "gnome-shell": "core/gnome-shell.bst",
+    "gnome-control-center": "core/gnome-control-center.bst",
+    "gnome-session": "core/gnome-session.bst",
+    "gnome-settings-daemon": "core/gnome-settings-daemon.bst",
+    "gnome-desktop3": "core/gnome-desktop.bst",
+    "gnome-bluetooth": "core/gnome-bluetooth.bst",
+    "nautilus": "core/nautilus.bst",
+    "gjs": "sdk/gjs.bst",
+    "gtk3": "sdk/gtk+-3.bst",
+    "gtk4": "sdk/gtk.bst",
+    "libadwaita": "sdk/libadwaita.bst",
+    "gdk-pixbuf2": "sdk/gdk-pixbuf.bst",
+    "pango": "sdk/pango.bst",
+    "cairo": "sdk/cairo.bst",
+    "librsvg2": "sdk/librsvg.bst",
+    "gsettings-desktop-schemas": "sdk/gsettings-desktop-schemas.bst",
+    "glib-networking": "sdk/glib-networking.bst",
+    "gvfs": "sdk-deps/gvfs.bst",
+    "gvfs-client": "sdk/gvfs-client.bst",
+    "gvfs-daemon": "core/gvfs-daemon.bst",
+    "gnome-online-accounts": "core-deps/gnome-online-accounts.bst",
+    "evolution-data-server": "core-deps/evolution-data-server.bst",
+    "localsearch": "core-deps/localsearch.bst",
+    "tinysparql": "core-deps/localsearch.bst",
+    "xdg-desktop-portal-gnome": "core-deps/xdg-desktop-portal-gnome.bst"
+  },
+  "unmapped": [
+    {
+      "name": "adw-gtk3-theme",
+      "reason": "Third-party libadwaita-for-GTK3 theme; not a GNOME core/sdk component tracked by gnome-build-meta (issue #201 initial scope)."
+    }
+  ]
+}
