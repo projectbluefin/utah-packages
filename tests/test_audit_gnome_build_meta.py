@@ -20,12 +20,14 @@ from tools.audit_gnome_build_meta import (
     UNMAPPED,
     Loader,
     _aliases,
+    _secondary_sources,
     classify,
     element_patch_sources,
     meson_options,
     release_line,
     resolve_element,
     same_release_line,
+    spec_dependencies,
     spec_patches,
     _rpm_base_name,
     build_report,
@@ -85,6 +87,17 @@ runtime-depends:
 - sdk/glib.bst
 """
 
+MOZJS_BST = """\
+kind: manual
+
+sources:
+- kind: tar
+  url: gnome_downloads:mozjs/128/mozjs-128.0.tar.xz
+  ref: 0d28f3ae225692428fcafb96500d673f34328b698b86960c9c1460d0b1d983b3
+- kind: patch
+  path: files/mozjs/fix-build.patch
+"""
+
 PIN = {
     "schema": 1,
     "source": {
@@ -115,6 +128,7 @@ def make_gbm_tree(root: Path) -> Path:
     write(root, "include/gcc-for-recc.yml", GCC_FOR_RECC)
     write(root, "elements/core/mutter.bst", MUTTER_BST)
     write(root, "elements/core/gvfs-daemon.bst", GVFS_DAEMON_BST)
+    write(root, "elements/sdk/mozjs.bst", MOZJS_BST)
     return root
 
 
@@ -200,6 +214,78 @@ class ExtractionTests(unittest.TestCase):
         self.assertEqual(el.kind, "filter")
         self.assertEqual(el.sources, [])
 
+    def test_patch_source_uses_path_key(self) -> None:
+        # BuildStream's patch plugin declares its file in `path:`, not
+        # `local:`/`url:`; reading the wrong key recorded an empty patch name.
+        el = resolve_element(self.loader, self.aliases, "elements/sdk/mozjs.bst")
+        self.assertEqual(
+            element_patch_sources(el, self.aliases),
+            ["files/mozjs/fix-build.patch"],
+        )
+
+    def test_patch_source_is_not_a_secondary_source(self) -> None:
+        el = resolve_element(self.loader, self.aliases, "elements/sdk/mozjs.bst")
+        self.assertEqual(_secondary_sources(el, self.aliases), [])
+
+    def test_meson_options_ignore_cflags_defines_and_prose(self) -> None:
+        # -D tokens outside a meson invocation are not feature flags.
+        spec = (
+            "Name: gtk4\nVersion: 4.20.0\n"
+            "License: LGPL-2.1-or-later AND Unicode-DFS-2016\n"
+            "export CFLAGS=\"$CFLAGS -DG_DISABLE_ASSERT -DG_DISABLE_CAST_CHECKS\"\n"
+            "%meson \\\n"
+            "  -Dbroadway-backend=true \\\n"
+            "%if %{with wayland}\n"
+            "  -Dwayland-backend=true \\\n"
+            "%endif\n"
+            "  %{nil}\n"
+        )
+        self.assertEqual(
+            meson_options(spec),
+            {"broadway-backend": "true", "wayland-backend": "true"},
+        )
+
+    def test_meson_options_strip_rpm_macro_closing_brace(self) -> None:
+        spec = "Name: librsvg2\n%meson %{?rhel:-Davif=disabled}\n"
+        self.assertEqual(meson_options(spec), {"avif": "disabled"})
+
+    def test_cmake_flag_macros_are_expanded(self) -> None:
+        # evolution-data-server builds CMake flags in %define macros and passes
+        # them to %cmake; reading only the invocation block would drop them.
+        spec = (
+            "Name: evolution-data-server\n"
+            "%if %{ldap_support}\n"
+            "%define ldap_flags -DWITH_OPENLDAP=ON\n"
+            "%else\n"
+            "%define ldap_flags -DWITH_OPENLDAP=OFF\n"
+            "%endif\n"
+            "export CFLAGS=\"$RPM_OPT_FLAGS -DLDAP_DEPRECATED\"\n"
+            "%cmake -DENABLE_SMIME=ON \\\n"
+            "  %ldap_flags \\\n"
+            "  %{nil}\n"
+        )
+        opts = meson_options(spec)
+        self.assertEqual(opts.get("ENABLE_SMIME"), "ON")
+        self.assertEqual(opts.get("WITH_OPENLDAP"), "ON")
+        self.assertNotIn("LDAP_DEPRECATED", opts)
+
+    def test_spec_dependency_edges_are_extracted(self) -> None:
+        spec = (
+            "Name: mutter\nVersion: 51.beta\n"
+            "BuildRequires: meson >= 1.4.0\n"
+            "BuildRequires: pkgconfig(glib-2.0), pkgconfig(gtk4)\n"
+            "Requires: gsettings-desktop-schemas\n"
+            "Requires(post): /sbin/ldconfig\n"
+        )
+        deps = spec_dependencies(spec)
+        self.assertEqual(
+            deps["build_requires"],
+            ["meson", "pkgconfig(glib-2.0)", "pkgconfig(gtk4)"],
+        )
+        self.assertEqual(
+            deps["requires"], ["/sbin/ldconfig", "gsettings-desktop-schemas"]
+        )
+
     def test_spec_features_and_patches(self) -> None:
         spec = (
             "Name: mutter\nVersion: 51.beta\n"
@@ -229,7 +315,7 @@ class ClassifyTests(unittest.TestCase):
     def test_aligned_same_line(self) -> None:
         el = resolve_element(self.loader, self.aliases, "elements/core/mutter.bst")
         cls, reason = classify(
-            el, {"name": "mutter", "patches": []}, "51.beta", []
+            el, {"name": "mutter", "patches": []}, "51.beta"
         )
         self.assertEqual(cls, ALIGNED)
         self.assertIn("51", reason)
@@ -237,23 +323,23 @@ class ClassifyTests(unittest.TestCase):
     def test_patch_drift_is_needs_review(self) -> None:
         el = resolve_element(self.loader, self.aliases, "elements/core/mutter.bst")
         cls, reason = classify(
-            el, {"name": "mutter", "patches": ["local.patch"]}, "51.beta", []
+            el, {"name": "mutter", "patches": ["local.patch"]}, "51.beta"
         )
         self.assertEqual(cls, NEEDS_REVIEW)
         self.assertIn("patch", reason)
 
     def test_line_mismatch_is_needs_review(self) -> None:
         el = resolve_element(self.loader, self.aliases, "elements/core/mutter.bst")
-        cls, _ = classify(el, {"name": "mutter", "patches": []}, "45.0", [])
+        cls, _ = classify(el, {"name": "mutter", "patches": []}, "45.0")
         self.assertEqual(cls, NEEDS_REVIEW)
 
     def test_missing_element_is_unmapped(self) -> None:
-        cls, _ = classify(None, {"name": "mutter", "patches": []}, "51.0", [])
+        cls, _ = classify(None, {"name": "mutter", "patches": []}, "51.0")
         self.assertEqual(cls, UNMAPPED)
 
     def test_filter_element_aligned_membership(self) -> None:
         el = resolve_element(self.loader, self.aliases, "elements/core/gvfs-daemon.bst")
-        cls, _ = classify(el, {"name": "gvfs", "patches": []}, "1.61.91", [])
+        cls, _ = classify(el, {"name": "gvfs", "patches": []}, "1.61.91")
         self.assertEqual(cls, ALIGNED)
 
 

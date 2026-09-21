@@ -134,7 +134,7 @@ class Loader:
         self.root = root                       # repository root of the checkout
         self.seen: set[str] = set()            # include files resolved (repo-relative)
 
-    def _resolve_path(self, raw: str, current: Path) -> Path:
+    def _resolve_path(self, raw: str) -> Path:
         # BuildStream include paths are repo-relative: both `include/x.yml` and
         # `elements/core/foo.inc` resolve against the repository root, never
         # against the including element's directory.
@@ -182,7 +182,7 @@ class Loader:
         return out
 
     def _open_include(self, raw: str, current: Path) -> dict:
-        p = self._resolve_path(raw, current)
+        p = self._resolve_path(raw)
         self._note_include(p)
         return self._file(p)
 
@@ -219,7 +219,7 @@ class Loader:
         for item in items:
             if isinstance(item, dict) and "(@)" in item:
                 raw = item["(@)"]
-                p = self._resolve_path(raw, path)
+                p = self._resolve_path(raw)
                 self._note_include(p)
                 loaded = self._file(p)
                 if isinstance(loaded, list):
@@ -314,33 +314,154 @@ def _collect_extensions(node: dict) -> set[str]:
 
 
 def element_patch_sources(element: Element, aliases: dict) -> list[str]:
-    """Patch sources (kind: patch / patch local path) carried by the element."""
+    """Patch sources (``kind: patch``) carried by the element.
+
+    BuildStream's patch plugin names the file in ``path:``, relative to the
+    project directory (``patches/mozjs/python-3.14.patch`` in
+    ``elements/sdk/mozjs.bst`` at the pinned commit). Reading ``local``/``url``
+    instead recorded every gbm patch as an empty string, so the patches axis
+    compared nothing; those two keys are kept only as a fallback for a source
+    that spells the reference differently.
+    """
     patches = []
     for source in element.sources:
         if source.get("kind") == "patch":
-            local = source.get("local") or source.get("url") or ""
-            patches.append(_expand_alias(str(local), aliases))
+            ref = (
+                source.get("path")
+                or source.get("local")
+                or source.get("url")
+                or ""
+            )
+            patches.append(_expand_alias(str(ref), aliases))
     return patches
 
 
-def meson_options(text: str) -> dict[str, str]:
-    """Extract Meson ``-Dname=value`` options from spec text (any line).
+_MESON_INVOCATION = re.compile(
+    r"^\s*(?:%(?:meson|cmake)(?![_A-Za-z0-9])"
+    r"|(?:meson\s+(?:setup|configure)|cmake)\b)"
+)
+_RPM_CONDITIONAL = re.compile(r"^%(?:if|ifarch|ifnarch|ifos|else|elif|endif)\b")
+# -D immediately preceded by a word character or hyphen is not an option flag:
+# that is how `Unicode-DFS-2016` produced the option `FS-2016`.
+_MESON_OPTION = re.compile(r"(?<![\w-])-D([A-Za-z0-9][\w.+:-]*)(?:=(\S*))?")
+_MACRO_REF = re.compile(r"%\{?(\w+)\}?")
+_MACRO_DEFINE = re.compile(
+    r"^\s*%(?:define|global)\s+(\w+)\s+(.*)$", flags=re.MULTILINE
+)
 
-    Fedora GNOME specs spread Meson options across ``%meson \\`` continuation
-    lines, so the whole file is scanned, not just the ``%meson`` directive.
+
+def _unbalanced_brace(token: str) -> str:
+    """Drop the closing brace an RPM macro wrapper leaves on an option.
+
+    ``%meson %{?rhel:-Davif=disabled}`` puts the macro's own ``}`` inside the
+    option value, which would be recorded as ``disabled}``.
+    """
+    while token.endswith("}") and token.count("}") > token.count("{"):
+        token = token[:-1]
+    return token
+
+
+def _expanded_flag_macros(block: str, text: str) -> list[str]:
+    """Bodies of the spec macros a configure invocation expands.
+
+    evolution-data-server builds its CMake flags in ``%define ldap_flags
+    -DWITH_OPENLDAP=ON`` and passes ``%ldap_flags`` to ``%cmake``. Reading only
+    the invocation block would drop those real options, so every macro the
+    block references is looked up and its body scanned too. A macro defined in
+    both branches of an ``%if`` contributes both, consistent with how the
+    conditional lines inside a block are handled.
+    """
+    bodies: dict[str, list[str]] = {}
+    for name, body in _MACRO_DEFINE.findall(text):
+        if "-D" in body:
+            bodies.setdefault(name, []).append(body)
+    out: list[str] = []
+    for name in dict.fromkeys(_MACRO_REF.findall(block)):
+        out.extend(bodies.get(name, []))
+    return out
+
+
+def meson_options(text: str) -> dict[str, str]:
+    """Extract ``-Dname=value`` options from a spec's configure invocations.
+
+    ``%meson`` and ``%cmake`` are both read: a handful of GNOME components
+    (evolution-data-server, for one) are CMake-built and their ``-D`` flags are
+    the same feature evidence this axis exists to record.
+
+    Fedora GNOME specs spread options across ``%meson \\`` continuation
+    lines, so each invocation is followed to the end of its continuation block
+    -- but only that block is read. Scanning the whole file reported anything
+    that looked like ``-D`` as a feature flag: ``gtk4``'s
+    ``CFLAGS='... -DG_DISABLE_CAST_CHECKS -DG_DISABLE_ASSERT'`` are C
+    preprocessor defines, not meson options, and ``librsvg2``'s licence string
+    ``Unicode-DFS-2016`` is not an option at all. That noise sat in the
+    committed report, which exists to be reviewable evidence.
+
+    RPM conditionals (``%if``/``%endif``) inside a continuation block are kept:
+    the options they guard are real options, and the audit records what the
+    recipe can pass, not what one build configuration resolved to.
     """
     out: dict[str, str] = {}
-    for token in re.findall(r"-D([^\s]+)", text):
-        token = token.rstrip("\\").strip()
-        if "=" in token:
-            name, _, value = token.partition("=")
-        else:
-            name, value = token, ""
-        name = name.strip("-").strip()
-        value = value.strip().strip("'\"")
-        if name and name not in out:
-            out[name] = value
+    lines = text.splitlines()
+    index = 0
+    while index < len(lines):
+        if not _MESON_INVOCATION.match(lines[index]):
+            index += 1
+            continue
+        block: list[str] = []
+        cursor = index
+        while cursor < len(lines):
+            line = lines[cursor]
+            block.append(line)
+            if _RPM_CONDITIONAL.match(line.strip()):
+                cursor += 1
+                continue
+            if line.rstrip().endswith("\\"):
+                cursor += 1
+                continue
+            break
+        block.extend(_expanded_flag_macros("\n".join(block), text))
+        for match in _MESON_OPTION.finditer("\n".join(block)):
+            name = _unbalanced_brace(match.group(1).strip("-").strip())
+            value = (match.group(2) or "").strip().strip("'\"").rstrip("\\")
+            value = _unbalanced_brace(value)
+            if name and name not in out:
+                out[name] = value
+        index = cursor + 1
     return out
+
+
+_SPEC_REQUIRES = re.compile(
+    r"^(BuildRequires|Requires(?:\([^)]*\))?)\s*:\s*(.+)$",
+    flags=re.MULTILINE | re.IGNORECASE,
+)
+
+
+def spec_dependencies(text: str) -> dict[str, list[str]]:
+    """Build-time and runtime dependency edges declared by a Fedora spec.
+
+    The gbm side of this comparison (``build-depends``/``runtime-depends``/
+    ``depends``) was already recorded while the spec side was not, so the
+    report carried one half of an axis the skill doc claimed it compared.
+
+    Version constraints are dropped and names are returned sorted and unique:
+    these are edges for a human to compare against gbm element names, not a
+    resolvable dependency set. Names that are still an unexpanded RPM macro are
+    kept verbatim -- the audit reports what the recipe declares, and no macro
+    is expanded anywhere else in this tool either.
+    """
+    build: set[str] = set()
+    runtime: set[str] = set()
+    for match in _SPEC_REQUIRES.finditer(text):
+        field = match.group(1).lower()
+        bucket = build if field.startswith("buildrequires") else runtime
+        for clause in match.group(2).split(","):
+            name = clause.strip().split()[0] if clause.strip() else ""
+            name = name.strip()
+            if not name or name in (">=", "<=", "=", ">", "<"):
+                continue
+            bucket.add(name)
+    return {"build_requires": sorted(build), "requires": sorted(runtime)}
 
 
 def spec_patches(text: str) -> list[str]:
@@ -397,8 +518,8 @@ def _gbm_version(primary: dict) -> str | None:
     return None
 
 
-def classify(gbm: Element | None, factory: dict | None, factory_version: str | None,
-             notes: list[str]) -> tuple[str, str]:
+def classify(gbm: Element | None, factory: dict | None,
+             factory_version: str | None) -> tuple[str, str]:
     """Classify the difference for one mapped source.
 
     Returns ``(classification, reason)``. The classifier is deliberately
@@ -501,20 +622,28 @@ def build_report(pin: dict, loader: Loader, aliases: dict,
             spec_path = packages_dir / factory_name / spec_name
             if spec_path.exists():
                 spec_text = spec_path.read_text()
+                spec_deps = spec_dependencies(spec_text)
                 factory_spec = {
                     "sources": spec_sources(spec_text),
                     "patches": spec_patches(spec_text),
                     "meson_options": meson_options(spec_text),
+                    "build_requires": spec_deps["build_requires"],
+                    "requires": spec_deps["requires"],
                     "version": factory_version,
                 }
             else:
-                factory_spec = {"version": factory_version, "meson_options": {}}
+                factory_spec = {
+                    "version": factory_version,
+                    "meson_options": {},
+                    "build_requires": [],
+                    "requires": [],
+                }
                 notes.append(f"no spec file found at {spec_path}")
 
         classify_factory = dict(pkg) if pkg else None
         if classify_factory is not None:
             classify_factory["patches"] = factory_spec.get("patches", [])
-        classification, reason = classify(gbm, classify_factory, factory_version, list(notes))
+        classification, reason = classify(gbm, classify_factory, factory_version)
 
         entry = {
             "rpm_name": rpm,
@@ -529,6 +658,8 @@ def build_report(pin: dict, loader: Loader, aliases: dict,
                 "patches": factory_spec.get("patches", []),
                 "features": factory_spec.get("meson_options", {}),
                 "source_urls": factory_spec.get("sources", []),
+                "build_requires": factory_spec.get("build_requires", []),
+                "requires": factory_spec.get("requires", []),
             },
             "gnome_build_meta": {
                 "kind": gbm.kind if gbm else None,
@@ -558,7 +689,13 @@ def build_report(pin: dict, loader: Loader, aliases: dict,
 
 
 def _secondary_sources(gbm: Element | None, aliases: dict) -> list[dict]:
-    """Element sources other than the primary (secondary sources, wraps)."""
+    """Element sources other than the primary (secondary sources, wraps).
+
+    Patch sources are excluded: they carry no ``url``, so expanding theirs
+    yielded ``""`` which never equalled the primary, and every patch was
+    reported a second time as a secondary source. They are reported by
+    ``element_patch_sources`` under ``patches``.
+    """
     if gbm is None:
         return []
     primary = gbm.primary_source
@@ -567,6 +704,8 @@ def _secondary_sources(gbm: Element | None, aliases: dict) -> list[dict]:
     primary_expanded = primary.get("url")
     out = []
     for source in gbm.sources:
+        if source.get("kind") == "patch":
+            continue
         if _expand_alias(str(source.get("url", "")), aliases) == primary_expanded:
             continue
         out.append(source)

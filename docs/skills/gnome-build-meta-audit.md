@@ -66,7 +66,10 @@ For every mapped GNOME-owned factory source the audit reports:
 - **feature flags**: gbm `variables` (e.g. `meson-local`) vs spec `-D...`
   options.
 - **dependency categories**: gbm `build-depends` / `runtime-depends` / `depends`
-  vs the spec's build and runtime edges.
+  are recorded alongside the spec's `BuildRequires:` and `Requires:` edges. Both
+  sides are reported; the tool does not diff them, because a gbm element path
+  and an RPM name are not mechanically comparable — the comparison is the
+  reviewer's, and the report exists to put both lists in front of them.
 - **component membership**: whether the gbm element exists and is a core/sdk/
   core-deps component, and whether the factory source is tracked at all.
 

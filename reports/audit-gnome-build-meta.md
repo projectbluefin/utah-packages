@@ -1,7 +1,7 @@
 # GNOME recipes vs gnome-build-meta audit
 
 - GNOME release: `51.0` @ `a50b8c9de35f51c6a646c8178cde3c2c176725b6`
-- factory revision audited: `a567795575129ea75573c20e9dad77d1e5cebe07`
+- factory revision audited: `b77cd7cd5b885880006e21b9d705459ccc5b9bda`
 
 Every difference is classified, not treated as an automatic defect. `needs_review` entries carry evidence for a human to re-classify as intentional Fedora/RPM integration, intentional Hummingbird/downstream policy, or actionable drift.
 

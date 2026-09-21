@@ -3,7 +3,7 @@
   "generated_for": {
     "release_tag": "51.0",
     "release_commit": "a50b8c9de35f51c6a646c8178cde3c2c176725b6",
-    "factory_base": "a567795575129ea75573c20e9dad77d1e5cebe07"
+    "factory_base": "b77cd7cd5b885880006e21b9d705459ccc5b9bda"
   },
   "unmapped_factory_sources": [
     {
@@ -26,6 +26,73 @@
         "features": {},
         "source_urls": [
           "http://download.gnome.org/sources/%{name}/%{gnome_major_version}/%{name}-%{gnome_tarball_version}.tar.xz"
+        ],
+        "build_requires": [
+          "cvt",
+          "desktop-file-utils",
+          "gettext-devel",
+          "mesa-libEGL-devel",
+          "mesa-libGL-devel",
+          "mesa-libGLES-devel",
+          "mesa-libgbm-devel",
+          "meson",
+          "pam-devel",
+          "pkgconfig(bash-completion)",
+          "pkgconfig(colord)",
+          "pkgconfig(gbm)",
+          "pkgconfig(glesv2)",
+          "pkgconfig(glib-2.0)",
+          "pkgconfig(glycin-2)",
+          "pkgconfig(gnome-desktop-4)",
+          "pkgconfig(gnome-settings-daemon)",
+          "pkgconfig(gobject-introspection-1.0)",
+          "pkgconfig(graphene-gobject-1.0)",
+          "pkgconfig(gsettings-desktop-schemas)",
+          "pkgconfig(gtk4)",
+          "pkgconfig(gudev-1.0)",
+          "pkgconfig(lcms2)",
+          "pkgconfig(libadwaita-1)",
+          "pkgconfig(libcanberra)",
+          "pkgconfig(libdisplay-info)",
+          "pkgconfig(libdrm)",
+          "pkgconfig(libei-1.0)",
+          "pkgconfig(libeis-1.0)",
+          "pkgconfig(libinput)",
+          "pkgconfig(libpipewire-0.3)",
+          "pkgconfig(libstartup-notification-1.0)",
+          "pkgconfig(libsystemd)",
+          "pkgconfig(libwacom)",
+          "pkgconfig(pixman-1)",
+          "pkgconfig(sm)",
+          "pkgconfig(sysprof-capture-4)",
+          "pkgconfig(umockdev-1.0)",
+          "pkgconfig(wayland-protocols)",
+          "pkgconfig(wayland-server)",
+          "pkgconfig(xkbcommon)",
+          "pkgconfig(xwayland)",
+          "python3-argcomplete",
+          "python3-dbusmock",
+          "python3-docutils",
+          "sysprof-devel"
+        ],
+        "requires": [
+          "%{name}%{?_isa}",
+          "%{name}-common",
+          "%{name}-devel%{?_isa}",
+          "dbus",
+          "glib2%{?_isa}",
+          "gnome-control-center-filesystem",
+          "gnome-settings-daemon",
+          "gsettings-desktop-schemas%{?_isa}",
+          "gtk3%{?_isa}",
+          "gtk4%{?_isa}",
+          "libei%{?_isa}",
+          "libeis%{?_isa}",
+          "libinput%{?_isa}",
+          "mesa-libEGL-devel",
+          "pipewire%{_isa}",
+          "python3-argcomplete",
+          "startup-notification"
         ]
       },
       "gnome_build_meta": {
@@ -110,6 +177,71 @@
         },
         "source_urls": [
           "https://download.gnome.org/sources/%{name}/%{gnome_major_version}/%{name}-%{gnome_tarball_version}.tar.xz"
+        ],
+        "build_requires": [
+          "desktop-file-utils",
+          "gcc",
+          "gettext",
+          "git-core",
+          "gnome-bluetooth-libs-devel",
+          "gtk-doc",
+          "libXfixes-devel",
+          "librsvg2-devel",
+          "mesa-libEGL-devel",
+          "mesa-libGL-devel",
+          "meson",
+          "mutter-devel",
+          "pkgconfig(bash-completion)",
+          "pkgconfig(gcr-4)",
+          "pkgconfig(gio-2.0)",
+          "pkgconfig(gjs-1.0)",
+          "pkgconfig(gnome-autoar-0)",
+          "pkgconfig(gnome-desktop-4)",
+          "pkgconfig(gstreamer-base-1.0)",
+          "pkgconfig(gtk4)",
+          "pkgconfig(libedataserver-1.2)",
+          "pkgconfig(libnm)",
+          "pkgconfig(libpipewire-0.3)",
+          "pkgconfig(libpulse)",
+          "pkgconfig(libstartup-notification-1.0)",
+          "pkgconfig(libsystemd)",
+          "pkgconfig(polkit-agent-1)",
+          "python3",
+          "python3-docutils"
+        ],
+        "requires": [
+          "%{name}-common",
+          "accountsservice-libs%{?_isa}",
+          "at-spi2-atk%{?_isa}",
+          "gcr%{?_isa}",
+          "gdm-libs%{?_isa}",
+          "geoclue2-libs%{?_isa}",
+          "gettext",
+          "gjs%{?_isa}",
+          "glib2%{?_isa}",
+          "gnome-control-center",
+          "gnome-desktop4%{?_isa}",
+          "gnome-settings-daemon%{?_isa}",
+          "gsettings-desktop-schemas%{?_isa}",
+          "gstreamer1%{?_isa}",
+          "gstreamer1-plugins-good%{?_isa}",
+          "gtk4%{?_isa}",
+          "ibus-libs%{?_isa}",
+          "libadwaita%{_isa}",
+          "libgweather4%{?_isa}",
+          "libnma-gtk4%{?_isa}",
+          "librsvg2%{?_isa}",
+          "mutter%{?_isa}",
+          "pipewire-gstreamer%{?_isa}",
+          "polkit%{?_isa}",
+          "python3%{_isa}",
+          "switcheroo-control",
+          "tecla",
+          "upower%{?_isa}",
+          "webkitgtk6.0%{?_isa}",
+          "xdg-desktop-portal-gnome",
+          "xdg-desktop-portal-gtk",
+          "xdg-user-dirs-gtk"
         ]
       },
       "gnome_build_meta": {
@@ -201,6 +333,71 @@
         },
         "source_urls": [
           "https://download.gnome.org/sources/%{name}/%{gnome_major_version}/%{name}-%{gnome_tarball_version}.tar.xz"
+        ],
+        "build_requires": [
+          "blueprint-compiler",
+          "desktop-file-utils",
+          "docbook-style-xsl",
+          "gcc",
+          "gettext",
+          "meson",
+          "pkgconfig(accountsservice)",
+          "pkgconfig(colord)",
+          "pkgconfig(colord-gtk4)",
+          "pkgconfig(cups)",
+          "pkgconfig(gcr-4)",
+          "pkgconfig(gdk-pixbuf-2.0)",
+          "pkgconfig(gdk-wayland-3.0)",
+          "pkgconfig(gio-2.0)",
+          "pkgconfig(gnome-bluetooth-3.0)",
+          "pkgconfig(gnome-desktop-4)",
+          "pkgconfig(gnome-settings-daemon)",
+          "pkgconfig(goa-1.0)",
+          "pkgconfig(goa-backend-1.0)",
+          "pkgconfig(gsettings-desktop-schemas)",
+          "pkgconfig(gsound)",
+          "pkgconfig(gtk4)",
+          "pkgconfig(gudev-1.0)",
+          "pkgconfig(ibus-1.0)",
+          "pkgconfig(libadwaita-1)",
+          "pkgconfig(libgtop-2.0)",
+          "pkgconfig(libnm)",
+          "pkgconfig(libnma-gtk4)",
+          "pkgconfig(libpulse)",
+          "pkgconfig(libpulse-mainloop-glib)",
+          "pkgconfig(libsecret-1)",
+          "pkgconfig(libsoup-3.0)",
+          "pkgconfig(libwacom)",
+          "pkgconfig(libxml-2.0)",
+          "pkgconfig(malcontent-0)",
+          "pkgconfig(mm-glib)",
+          "pkgconfig(polkit-gobject-1)",
+          "pkgconfig(pwquality)",
+          "pkgconfig(smbclient)",
+          "pkgconfig(tecla)",
+          "pkgconfig(udisks2)",
+          "pkgconfig(upower-glib)",
+          "pkgconfig(x11)",
+          "pkgconfig(xi)"
+        ],
+        "requires": [
+          "%{name}-filesystem",
+          "/usr/bin/tecla",
+          "accountsservice",
+          "alsa-lib",
+          "colord",
+          "cups-pk-helper",
+          "dbus",
+          "glib2%{?_isa}",
+          "gnome-desktop4%{?_isa}",
+          "gnome-online-accounts%{?_isa}",
+          "gnome-settings-daemon%{?_isa}",
+          "gsettings-desktop-schemas%{?_isa}",
+          "gtk4%{?_isa}",
+          "iso-codes",
+          "libadwaita%{?_isa}",
+          "malcontent",
+          "upower%{?_isa}"
         ]
       },
       "gnome_build_meta": {
@@ -287,6 +484,25 @@
         "features": {},
         "source_urls": [
           "https://download.gnome.org/sources/%{name}/%{gnome_major_version}/%{name}-%{gnome_tarball_version}.tar.xz"
+        ],
+        "build_requires": [
+          "/usr/bin/xsltproc",
+          "gcc",
+          "gettext",
+          "meson",
+          "pkgconfig(gnome-desktop-4)",
+          "pkgconfig(libsystemd)",
+          "pkgconfig(systemd)",
+          "xmlto"
+        ],
+        "requires": [
+          "%{name}%{?_isa}",
+          "dbus",
+          "dconf",
+          "gnome-shell",
+          "gsettings-desktop-schemas",
+          "shared-mime-info",
+          "xorg-x11-server-Xwayland%{?_isa}"
         ]
       },
       "gnome_build_meta": {
@@ -338,6 +554,56 @@
           "https://download.gnome.org/sources/%{name}/%{gnome_major_version}/%{name}-%{gnome_tarball_version}.tar.xz",
           "org.gnome.settings-daemon.plugins.housekeeping.gschema.override",
           "org.gnome.settings-daemon.plugins.power.gschema.override"
+        ],
+        "build_requires": [
+          "gcc",
+          "gettext",
+          "meson",
+          "perl-interpreter",
+          "pkgconfig(alsa)",
+          "pkgconfig(colord)",
+          "pkgconfig(cups)",
+          "pkgconfig(fontconfig)",
+          "pkgconfig(gck-2)",
+          "pkgconfig(gcr-4)",
+          "pkgconfig(geoclue-2.0)",
+          "pkgconfig(geocode-glib-2.0)",
+          "pkgconfig(glib-2.0)",
+          "pkgconfig(gnome-desktop-4)",
+          "pkgconfig(gsettings-desktop-schemas)",
+          "pkgconfig(gtk4)",
+          "pkgconfig(gudev-1.0)",
+          "pkgconfig(gweather4)",
+          "pkgconfig(lcms2)",
+          "pkgconfig(libcanberra-gtk3)",
+          "pkgconfig(libgeoclue-2.0)",
+          "pkgconfig(libnm)",
+          "pkgconfig(libnotify)",
+          "pkgconfig(libpulse)",
+          "pkgconfig(libpulse-mainloop-glib)",
+          "pkgconfig(librsvg-2.0)",
+          "pkgconfig(mm-glib)",
+          "pkgconfig(nss)",
+          "pkgconfig(polkit-gobject-1)",
+          "pkgconfig(upower-glib)",
+          "pkgconfig(wayland-client)",
+          "pkgconfig(x11)",
+          "pkgconfig(xfixes)",
+          "pkgconfig(xi)",
+          "systemd-rpm-macros"
+        ],
+        "requires": [
+          "%{name}",
+          "%{name}%{?_isa}",
+          "colord",
+          "geoclue2",
+          "geocode-glib2%{?_isa}",
+          "glib2%{?_isa}",
+          "gnome-desktop4%{?_isa}",
+          "gsettings-desktop-schemas%{?_isa}",
+          "gtk4%{?_isa}",
+          "iio-sensor-proxy",
+          "libgweather4%{?_isa}"
         ]
       },
       "gnome_build_meta": {
@@ -403,6 +669,34 @@
         },
         "source_urls": [
           "https://download.gnome.org/sources/gnome-desktop/%{gnome_major_version}/gnome-desktop-%{gnome_tarball_version}.tar.xz"
+        ],
+        "build_requires": [
+          "gcc",
+          "gettext",
+          "gtk-doc",
+          "itstool",
+          "meson",
+          "pkgconfig(gdk-pixbuf-2.0)",
+          "pkgconfig(gio-2.0)",
+          "pkgconfig(glib-2.0)",
+          "pkgconfig(gobject-introspection-1.0)",
+          "pkgconfig(gsettings-desktop-schemas)",
+          "pkgconfig(gtk+-3.0)",
+          "pkgconfig(gtk4)",
+          "pkgconfig(iso-codes)",
+          "pkgconfig(libseccomp)",
+          "pkgconfig(libudev)",
+          "pkgconfig(xkeyboard-config)",
+          "python3",
+          "python3dist(langtable)"
+        ],
+        "requires": [
+          "%{name}%{?_isa}",
+          "bubblewrap",
+          "gdk-pixbuf2%{?_isa}",
+          "glib2%{?_isa}",
+          "gnome-desktop4%{?_isa}",
+          "gsettings-desktop-schemas"
         ]
       },
       "gnome_build_meta": {
@@ -466,6 +760,28 @@
         },
         "source_urls": [
           "https://download.gnome.org/sources/%{name}/%{gnome_major_version}/%{name}-%{gnome_tarball_version}.tar.xz"
+        ],
+        "build_requires": [
+          "gettext",
+          "gobject-introspection-devel",
+          "gtk-doc",
+          "meson",
+          "pkgconfig(gsound)",
+          "pkgconfig(gtk4)",
+          "pkgconfig(libadwaita-1)",
+          "pkgconfig(libnotify)",
+          "pkgconfig(libudev)",
+          "pkgconfig(upower-glib)",
+          "python3-dbusmock"
+        ],
+        "requires": [
+          "%{name}%{?_isa}",
+          "%{name}-libs%{?_isa}",
+          "bluez",
+          "bluez-obexd",
+          "gtk4",
+          "libadwaita",
+          "pulseaudio-module-bluetooth"
         ]
       },
       "gnome_build_meta": {
@@ -526,6 +842,46 @@
         },
         "source_urls": [
           "https://download.gnome.org/sources/%{name}/%{gnome_major_version}/%{name}-%{gnome_tarball_version}.tar.xz"
+        ],
+        "build_requires": [
+          "/usr/bin/appstream-util",
+          "desktop-file-utils",
+          "gcc",
+          "gettext",
+          "localsearch",
+          "meson",
+          "pkgconfig(blueprint-compiler)",
+          "pkgconfig(cloudproviders)",
+          "pkgconfig(gexiv2-0.16)",
+          "pkgconfig(gi-docgen)",
+          "pkgconfig(glib-2.0)",
+          "pkgconfig(glycin-gtk4-2)",
+          "pkgconfig(gnome-autoar-0)",
+          "pkgconfig(gnome-desktop-4)",
+          "pkgconfig(gobject-introspection-1.0)",
+          "pkgconfig(gsettings-desktop-schemas)",
+          "pkgconfig(gstreamer-pbutils-1.0)",
+          "pkgconfig(gstreamer-tag-1.0)",
+          "pkgconfig(gtk4)",
+          "pkgconfig(libadwaita-1)",
+          "pkgconfig(libportal)",
+          "pkgconfig(libportal-gtk4)",
+          "pkgconfig(libseccomp)",
+          "pkgconfig(libselinux)",
+          "pkgconfig(libxml-2.0)",
+          "pkgconfig(tracker-sparql-3.0)",
+          "pkgconfig(x11)"
+        ],
+        "requires": [
+          "%{name}%{_isa}",
+          "%{name}-extensions%{_isa}",
+          "glib2%{_isa}",
+          "gnome-autoar%{_isa}",
+          "gsettings-desktop-schemas%{_isa}",
+          "gtk4%{_isa}",
+          "gvfs%{_isa}",
+          "libadwaita%{_isa}",
+          "localsearch"
         ]
       },
       "gnome_build_meta": {
@@ -593,6 +949,30 @@
         "features": {},
         "source_urls": [
           "https://download.gnome.org/sources/%{name}/%{gnome_major_minor_version}/%{name}-%{version}.tar.xz"
+        ],
+        "build_requires": [
+          "/usr/bin/dbus-run-session",
+          "dbus-x11",
+          "gcc-c++",
+          "gettext",
+          "gtk3",
+          "mesa-dri-drivers",
+          "meson",
+          "mutter",
+          "pkgconfig(cairo-gobject)",
+          "pkgconfig(gio-2.0)",
+          "pkgconfig(gobject-introspection-1.0)",
+          "pkgconfig(gtk4)",
+          "pkgconfig(mozjs-140)",
+          "pkgconfig(sysprof-capture-4)",
+          "readline-devel",
+          "xwayland-run"
+        ],
+        "requires": [
+          "%{name}%{?_isa}",
+          "glib2%{?_isa}",
+          "gobject-introspection%{?_isa}",
+          "mozjs140%{?_isa}"
         ]
       },
       "gnome_build_meta": {
@@ -656,6 +1036,58 @@
         },
         "source_urls": [
           "https://download.gnome.org/sources/gtk/%{gnome_major_minor_version}/gtk-%{version}.tar.xz"
+        ],
+        "build_requires": [
+          "cups-devel",
+          "desktop-file-utils",
+          "gettext",
+          "gtk-doc",
+          "meson",
+          "pkgconfig(atk)",
+          "pkgconfig(atk-bridge-2.0)",
+          "pkgconfig(avahi-gobject)",
+          "pkgconfig(cairo)",
+          "pkgconfig(cairo-gobject)",
+          "pkgconfig(cloudproviders)",
+          "pkgconfig(colord)",
+          "pkgconfig(egl)",
+          "pkgconfig(epoxy)",
+          "pkgconfig(gdk-pixbuf-2.0)",
+          "pkgconfig(glib-2.0)",
+          "pkgconfig(gobject-introspection-1.0)",
+          "pkgconfig(pango)",
+          "pkgconfig(sysprof-capture-4)",
+          "pkgconfig(tracker-sparql-3.0)",
+          "pkgconfig(wayland-client)",
+          "pkgconfig(wayland-cursor)",
+          "pkgconfig(wayland-egl)",
+          "pkgconfig(wayland-protocols)",
+          "pkgconfig(xcomposite)",
+          "pkgconfig(xcursor)",
+          "pkgconfig(xdamage)",
+          "pkgconfig(xfixes)",
+          "pkgconfig(xi)",
+          "pkgconfig(xinerama)",
+          "pkgconfig(xkbcommon)",
+          "pkgconfig(xrandr)",
+          "pkgconfig(xrender)"
+        ],
+        "requires": [
+          "%{name}%{?_isa}",
+          "adwaita-icon-theme",
+          "atk%{?_isa}",
+          "cairo%{?_isa}",
+          "cairo-gobject%{?_isa}",
+          "glib2%{?_isa}",
+          "gtk-update-icon-cache",
+          "gtk3",
+          "gtk3%{?_isa}",
+          "hicolor-icon-theme",
+          "libXrandr%{?_isa}",
+          "libepoxy%{?_isa}",
+          "libwayland-client%{?_isa}",
+          "libwayland-cursor%{?_isa}",
+          "pango%{?_isa}"
         ]
       },
       "gnome_build_meta": {
@@ -721,8 +1153,6 @@
         "filename": "gtk-4.23.3.tar.xz",
         "patches": [],
         "features": {
-          "G_DISABLE_CAST_CHECKS": "",
-          "G_DISABLE_ASSERT": "",
           "broadway-backend": "true",
           "sysprof": "enabled",
           "tracker": "enabled",
@@ -735,6 +1165,72 @@
         },
         "source_urls": [
           "https://download.gnome.org/sources/gtk/%{gnome_major_minor_version}/gtk-%{version}.tar.xz"
+        ],
+        "build_requires": [
+          "/usr/bin/appstream-util",
+          "/usr/bin/rst2man",
+          "cups-devel",
+          "desktop-file-utils",
+          "docbook-style-xsl",
+          "gcc",
+          "gcc-c++",
+          "gettext",
+          "gi-docgen",
+          "glslc",
+          "meson",
+          "pkgconfig(avahi-gobject)",
+          "pkgconfig(cairo)",
+          "pkgconfig(cairo-gobject)",
+          "pkgconfig(colord)",
+          "pkgconfig(egl)",
+          "pkgconfig(epoxy)",
+          "pkgconfig(gdk-pixbuf-2.0)",
+          "pkgconfig(glib-2.0)",
+          "pkgconfig(gobject-introspection-1.0)",
+          "pkgconfig(graphene-gobject-1.0)",
+          "pkgconfig(gstreamer-player-1.0)",
+          "pkgconfig(harfbuzz)",
+          "pkgconfig(json-glib-1.0)",
+          "pkgconfig(libdrm)",
+          "pkgconfig(libjpeg)",
+          "pkgconfig(libpng)",
+          "pkgconfig(librsvg-2.0)",
+          "pkgconfig(libtiff-4)",
+          "pkgconfig(pango)",
+          "pkgconfig(sysprof-capture-4)",
+          "pkgconfig(tracker-sparql-3.0)",
+          "pkgconfig(vulkan)",
+          "pkgconfig(wayland-client)",
+          "pkgconfig(wayland-cursor)",
+          "pkgconfig(wayland-egl)",
+          "pkgconfig(wayland-protocols)",
+          "pkgconfig(xcomposite)",
+          "pkgconfig(xcursor)",
+          "pkgconfig(xdamage)",
+          "pkgconfig(xfixes)",
+          "pkgconfig(xi)",
+          "pkgconfig(xinerama)",
+          "pkgconfig(xkbcommon)",
+          "pkgconfig(xrandr)",
+          "pkgconfig(xrender)",
+          "python3-gobject"
+        ],
+        "requires": [
+          "adwaita-icon-theme",
+          "cairo%{?_isa}",
+          "cairo-gobject%{?_isa}",
+          "glib2%{?_isa}",
+          "gstreamer1-plugins-bad-free-libs%{?_isa}",
+          "gtk-update-icon-cache",
+          "gtk4",
+          "gtk4%{?_isa}",
+          "harfbuzz%{?_isa}",
+          "hicolor-icon-theme",
+          "libepoxy%{?_isa}",
+          "libwayland-client%{?_isa}",
+          "libwayland-cursor%{?_isa}",
+          "pango%{?_isa}",
+          "shared-mime-info"
         ]
       },
       "gnome_build_meta": {
@@ -806,6 +1302,26 @@
         },
         "source_urls": [
           "https://download.gnome.org/sources/%{name}/%{gnome_major_minor_version}/%{name}-%{gnome_tarball_version}.tar.xz"
+        ],
+        "build_requires": [
+          "desktop-file-utils",
+          "gcc",
+          "gettext",
+          "gi-docgen",
+          "libappstream-glib",
+          "meson",
+          "pkgconfig(appstream)",
+          "pkgconfig(fribidi)",
+          "pkgconfig(glib-2.0)",
+          "pkgconfig(gobject-introspection-1.0)",
+          "pkgconfig(gtk4)",
+          "vala"
+        ],
+        "requires": [
+          "%{name}",
+          "%{name}%{?_isa}",
+          "gtk4%{?_isa}",
+          "vala"
         ]
       },
       "gnome_build_meta": {
@@ -863,6 +1379,25 @@
         },
         "source_urls": [
           "https://download.gnome.org/sources/gdk-pixbuf/%{gnome_major_minor_version}/gdk-pixbuf-%{version}.tar.xz"
+        ],
+        "build_requires": [
+          "/usr/bin/rst2man",
+          "docbook-style-xsl",
+          "gettext",
+          "gi-docgen",
+          "libxslt",
+          "meson",
+          "pkgconfig(gio-2.0)",
+          "pkgconfig(glycin-2)",
+          "pkgconfig(gobject-introspection-1.0)",
+          "shared-mime-info"
+        ],
+        "requires": [
+          "%{name}%{?_isa}",
+          "glib2%{?_isa}",
+          "glib2-devel%{?_isa}",
+          "glycin-libs%{?_isa}",
+          "shared-mime-info"
         ]
       },
       "gnome_build_meta": {
@@ -918,6 +1453,38 @@
         },
         "source_urls": [
           "https://download.gnome.org/sources/%{name}/%{gnome_major_minor_version}/%{name}-%{version}.tar.xz"
+        ],
+        "build_requires": [
+          "gcc",
+          "gi-docgen",
+          "help2man",
+          "meson",
+          "pkgconfig(cairo)",
+          "pkgconfig(cairo-gobject)",
+          "pkgconfig(fontconfig)",
+          "pkgconfig(freetype2)",
+          "pkgconfig(fribidi)",
+          "pkgconfig(glib-2.0)",
+          "pkgconfig(gobject-introspection-1.0)",
+          "pkgconfig(harfbuzz)",
+          "pkgconfig(libthai)",
+          "pkgconfig(xft)",
+          "python3-docutils"
+        ],
+        "requires": [
+          "cairo%{?_isa}",
+          "cairo-devel%{?_isa}",
+          "fontconfig%{?_isa}",
+          "fontconfig-devel%{?_isa}",
+          "freetype%{?_isa}",
+          "freetype-devel%{?_isa}",
+          "fribidi%{?_isa}",
+          "glib2%{?_isa}",
+          "glib2-devel%{?_isa}",
+          "harfbuzz%{?_isa}",
+          "libXft%{?_isa}",
+          "libthai%{?_isa}",
+          "pango%{?_isa}"
         ]
       },
       "gnome_build_meta": {
@@ -985,6 +1552,28 @@
         },
         "source_urls": [
           "https://cairographics.org/releases/%{name}-%{version}.tar.xz"
+        ],
+        "build_requires": [
+          "gcc",
+          "gcc-c++",
+          "gtk-doc",
+          "meson",
+          "pkgconfig(expat)",
+          "pkgconfig(fontconfig)",
+          "pkgconfig(freetype2)",
+          "pkgconfig(gobject-2.0)",
+          "pkgconfig(libpng)",
+          "pkgconfig(librsvg-2.0)",
+          "pkgconfig(lzo2)",
+          "pkgconfig(pixman-1)",
+          "pkgconfig(xcb-render)",
+          "pkgconfig(xext)",
+          "pkgconfig(xrender)"
+        ],
+        "requires": [
+          "%{name}%{?_isa}",
+          "%{name}-devel%{?_isa}",
+          "%{name}-gobject%{?_isa}"
         ]
       },
       "gnome_build_meta": {
@@ -1037,16 +1626,39 @@
           "0003-Fedora-Drop-windows-specific-dependencies.patch"
         ],
         "features": {
-          "FS-2016": "",
-          "rop-dependencies-required-for-benchmarking.patch": "",
-          "rop-dependencies-and-references-to-mutation-.patch": "",
-          "rop-windows-specific-dependencies.patch": "",
-          "avif": "disabled}"
+          "avif": "disabled"
         },
         "source_urls": [
           "LGPL-2.1-or-later",
           "https://download.gnome.org/sources/librsvg/%{gnome_major_minor_version}/librsvg-%{version}.tar.xz",
           "librsvg-%{version}-vendor.tar.xz"
+        ],
+        "build_requires": [
+          "/usr/bin/rst2man",
+          "cargo-c",
+          "cargo-rpm-macros",
+          "gcc",
+          "gi-docgen",
+          "meson",
+          "pkgconfig(cairo)",
+          "pkgconfig(cairo-gobject)",
+          "pkgconfig(cairo-png)",
+          "pkgconfig(fontconfig)",
+          "pkgconfig(gdk-pixbuf-2.0)",
+          "pkgconfig(gio-2.0)",
+          "pkgconfig(gio-unix-2.0)",
+          "pkgconfig(glib-2.0)",
+          "pkgconfig(gobject-introspection-1.0)",
+          "pkgconfig(libxml-2.0)",
+          "pkgconfig(pangocairo)",
+          "pkgconfig(pangoft2)",
+          "rust-toolset",
+          "vala"
+        ],
+        "requires": [
+          "%{name}%{?_isa}",
+          "cairo%{?_isa}",
+          "cairo-gobject%{?_isa}"
         ]
       },
       "gnome_build_meta": {
@@ -3209,6 +3821,16 @@
         "source_urls": [
           "https://download.gnome.org/sources/%{name}/%{gnome_major_version}/%{name}-%{gnome_tarball_version}.tar.xz",
           "org.gnome.desktop.interface.rhel.gschema.override"
+        ],
+        "build_requires": [
+          "gettext",
+          "glib2-devel",
+          "gobject-introspection-devel",
+          "meson"
+        ],
+        "requires": [
+          "%{name}%{?_isa}",
+          "glib2"
         ]
       },
       "gnome_build_meta": {
@@ -3254,6 +3876,25 @@
         },
         "source_urls": [
           "https://download.gnome.org/sources/glib-networking/%{gnome_major_minor_version}/%{name}-%{gnome_tarball_version}.tar.xz"
+        ],
+        "build_requires": [
+          "ca-certificates",
+          "gcc",
+          "gettext",
+          "meson",
+          "pkgconfig(gio-2.0)",
+          "pkgconfig(glib-2.0)",
+          "pkgconfig(gnutls)",
+          "pkgconfig(gsettings-desktop-schemas)",
+          "pkgconfig(libproxy-1.0)",
+          "pkgconfig(p11-kit-1)",
+          "systemd-rpm-macros"
+        ],
+        "requires": [
+          "%{name}%{?_isa}",
+          "ca-certificates",
+          "glib2%{?_isa}",
+          "gsettings-desktop-schemas"
         ]
       },
       "gnome_build_meta": {
@@ -3311,6 +3952,53 @@
         },
         "source_urls": [
           "https://download.gnome.org/sources/%{name}/%{gnome_major_minor_version}/%{name}-%{version}.tar.xz"
+        ],
+        "build_requires": [
+          "/usr/bin/ssh",
+          "docbook-style-xsl",
+          "gcc",
+          "gettext-devel",
+          "libexif-devel",
+          "libgcrypt-devel",
+          "libsmbclient-devel",
+          "meson",
+          "pkgconfig(avahi-client)",
+          "pkgconfig(avahi-glib)",
+          "pkgconfig(dbus-1)",
+          "pkgconfig(fuse3)",
+          "pkgconfig(gcr-4)",
+          "pkgconfig(glib-2.0)",
+          "pkgconfig(goa-1.0)",
+          "pkgconfig(gsettings-desktop-schemas)",
+          "pkgconfig(gudev-1.0)",
+          "pkgconfig(libbluray)",
+          "pkgconfig(libcap)",
+          "pkgconfig(libcdio_paranoia)",
+          "pkgconfig(libgphoto2)",
+          "pkgconfig(libimobiledevice-1.0)",
+          "pkgconfig(libmtp)",
+          "pkgconfig(libnfs)",
+          "pkgconfig(libplist-2.0)",
+          "pkgconfig(libsecret-1)",
+          "pkgconfig(libsoup-3.0)",
+          "pkgconfig(libusb-1.0)",
+          "pkgconfig(libxslt)",
+          "pkgconfig(msgraph-1)",
+          "pkgconfig(polkit-gobject-1)",
+          "pkgconfig(talloc)",
+          "pkgconfig(udisks2)",
+          "systemd-devel"
+        ],
+        "requires": [
+          "%{name}%{?_isa}",
+          "%{name}-client%{?_isa}",
+          "/usr/bin/wsdd",
+          "fuse3",
+          "glib2%{?_isa}",
+          "gsettings-desktop-schemas",
+          "polkit",
+          "udisks2",
+          "usbmuxd"
         ]
       },
       "gnome_build_meta": {
@@ -3388,6 +4076,53 @@
         },
         "source_urls": [
           "https://download.gnome.org/sources/%{name}/%{gnome_major_minor_version}/%{name}-%{version}.tar.xz"
+        ],
+        "build_requires": [
+          "/usr/bin/ssh",
+          "docbook-style-xsl",
+          "gcc",
+          "gettext-devel",
+          "libexif-devel",
+          "libgcrypt-devel",
+          "libsmbclient-devel",
+          "meson",
+          "pkgconfig(avahi-client)",
+          "pkgconfig(avahi-glib)",
+          "pkgconfig(dbus-1)",
+          "pkgconfig(fuse3)",
+          "pkgconfig(gcr-4)",
+          "pkgconfig(glib-2.0)",
+          "pkgconfig(goa-1.0)",
+          "pkgconfig(gsettings-desktop-schemas)",
+          "pkgconfig(gudev-1.0)",
+          "pkgconfig(libbluray)",
+          "pkgconfig(libcap)",
+          "pkgconfig(libcdio_paranoia)",
+          "pkgconfig(libgphoto2)",
+          "pkgconfig(libimobiledevice-1.0)",
+          "pkgconfig(libmtp)",
+          "pkgconfig(libnfs)",
+          "pkgconfig(libplist-2.0)",
+          "pkgconfig(libsecret-1)",
+          "pkgconfig(libsoup-3.0)",
+          "pkgconfig(libusb-1.0)",
+          "pkgconfig(libxslt)",
+          "pkgconfig(msgraph-1)",
+          "pkgconfig(polkit-gobject-1)",
+          "pkgconfig(talloc)",
+          "pkgconfig(udisks2)",
+          "systemd-devel"
+        ],
+        "requires": [
+          "%{name}%{?_isa}",
+          "%{name}-client%{?_isa}",
+          "/usr/bin/wsdd",
+          "fuse3",
+          "glib2%{?_isa}",
+          "gsettings-desktop-schemas",
+          "polkit",
+          "udisks2",
+          "usbmuxd"
         ]
       },
       "gnome_build_meta": {
@@ -3434,6 +4169,53 @@
         },
         "source_urls": [
           "https://download.gnome.org/sources/%{name}/%{gnome_major_minor_version}/%{name}-%{version}.tar.xz"
+        ],
+        "build_requires": [
+          "/usr/bin/ssh",
+          "docbook-style-xsl",
+          "gcc",
+          "gettext-devel",
+          "libexif-devel",
+          "libgcrypt-devel",
+          "libsmbclient-devel",
+          "meson",
+          "pkgconfig(avahi-client)",
+          "pkgconfig(avahi-glib)",
+          "pkgconfig(dbus-1)",
+          "pkgconfig(fuse3)",
+          "pkgconfig(gcr-4)",
+          "pkgconfig(glib-2.0)",
+          "pkgconfig(goa-1.0)",
+          "pkgconfig(gsettings-desktop-schemas)",
+          "pkgconfig(gudev-1.0)",
+          "pkgconfig(libbluray)",
+          "pkgconfig(libcap)",
+          "pkgconfig(libcdio_paranoia)",
+          "pkgconfig(libgphoto2)",
+          "pkgconfig(libimobiledevice-1.0)",
+          "pkgconfig(libmtp)",
+          "pkgconfig(libnfs)",
+          "pkgconfig(libplist-2.0)",
+          "pkgconfig(libsecret-1)",
+          "pkgconfig(libsoup-3.0)",
+          "pkgconfig(libusb-1.0)",
+          "pkgconfig(libxslt)",
+          "pkgconfig(msgraph-1)",
+          "pkgconfig(polkit-gobject-1)",
+          "pkgconfig(talloc)",
+          "pkgconfig(udisks2)",
+          "systemd-devel"
+        ],
+        "requires": [
+          "%{name}%{?_isa}",
+          "%{name}-client%{?_isa}",
+          "/usr/bin/wsdd",
+          "fuse3",
+          "glib2%{?_isa}",
+          "gsettings-desktop-schemas",
+          "polkit",
+          "udisks2",
+          "usbmuxd"
         ]
       },
       "gnome_build_meta": {
@@ -3498,6 +4280,38 @@
         },
         "source_urls": [
           "https://download.gnome.org/sources/%{name}/%{gnome_major_minor_version}/%{name}-%{version}.tar.xz"
+        ],
+        "build_requires": [
+          "/usr/bin/desktop-file-validate",
+          "/usr/bin/gi-docgen",
+          "/usr/bin/xsltproc",
+          "docbook-style-xsl",
+          "gettext",
+          "meson",
+          "pkgconfig(dbus-1)",
+          "pkgconfig(gcr-4)",
+          "pkgconfig(gio-2.0)",
+          "pkgconfig(glib-2.0)",
+          "pkgconfig(gobject-2.0)",
+          "pkgconfig(gobject-introspection-1.0)",
+          "pkgconfig(gtk4)",
+          "pkgconfig(json-glib-1.0)",
+          "pkgconfig(krb5)",
+          "pkgconfig(libadwaita-1)",
+          "pkgconfig(libkeyutils)",
+          "pkgconfig(libsecret-1)",
+          "pkgconfig(libsoup-3.0)",
+          "pkgconfig(libxml-2.0)",
+          "pkgconfig(rest-1.0)",
+          "vala"
+        ],
+        "requires": [
+          "%{name}-libs%{?_isa}",
+          "glib2%{?_isa}",
+          "gtk4%{?_isa}",
+          "gvfs-goa",
+          "libadwaita%{?_isa}",
+          "libsoup3%{?_isa}"
         ]
       },
       "gnome_build_meta": {
@@ -3549,17 +4363,6 @@
           "Make-DBUS_SERVICES_PREFIX-runtime-configurable.patch"
         ],
         "features": {
-          "BUS_SERVICES_PREFIX-runtime-configurable.patch": "",
-          "WITH_OPENLDAP": "ON",
-          "WITH_STATIC_LDAP": "ON",
-          "WITH_KRB5": "ON",
-          "ENABLE_LARGEFILE": "ON",
-          "WITH_PHONENUMBER": "ON",
-          "ENABLE_SMIME": "ON",
-          "ENABLE_GTK_DOC": "ON",
-          "ENABLE_OAUTH2_WEBKITGTK": "ON",
-          "ENABLE_OAUTH2_WEBKITGTK4": "ON",
-          "LDAP_DEPRECATED": "",
           "ENABLE_MAINTAINER_MODE": "OFF",
           "ENABLE_FILE_LOCKING": "fcntl",
           "ENABLE_DOT_LOCKING": "OFF",
@@ -3572,10 +4375,72 @@
           "LIB_INSTALL_DIR:PATH": "%{_libdir}",
           "SYSCONF_INSTALL_DIR:PATH": "%{_sysconfdir}",
           "SHARE_INSTALL_PREFIX:PATH": "%{_datadir}",
-          "LIB_SUFFIX": "64"
+          "LIB_SUFFIX": "64",
+          "WITH_OPENLDAP": "ON",
+          "WITH_STATIC_LDAP": "ON",
+          "WITH_KRB5": "ON",
+          "ENABLE_SMIME": "ON",
+          "ENABLE_OAUTH2_WEBKITGTK": "ON",
+          "ENABLE_OAUTH2_WEBKITGTK4": "ON",
+          "ENABLE_LARGEFILE": "ON",
+          "ENABLE_GTK_DOC": "ON",
+          "WITH_PHONENUMBER": "ON"
         },
         "source_urls": [
           "http://download.gnome.org/sources/%{name}/%{gnome_major_minor_version}/%{name}-%{version}.tar.xz"
+        ],
+        "build_requires": [
+          "abseil-cpp-devel",
+          "boost-devel",
+          "cmake",
+          "gcc",
+          "gcc-c++",
+          "gettext",
+          "gperf",
+          "gtk-doc",
+          "krb5-devel",
+          "libphonenumber-devel",
+          "openldap-devel",
+          "pkgconfig(gio-2.0)",
+          "pkgconfig(gio-unix-2.0)",
+          "pkgconfig(gmodule-2.0)",
+          "pkgconfig(goa-1.0)",
+          "pkgconfig(gtk+-3.0)",
+          "pkgconfig(gtk4)",
+          "pkgconfig(gweather4)",
+          "pkgconfig(icu-i18n)",
+          "pkgconfig(json-glib-1.0)",
+          "pkgconfig(libcanberra-gtk3)",
+          "pkgconfig(libical-glib)",
+          "pkgconfig(libsecret-unstable)",
+          "pkgconfig(libsoup-3.0)",
+          "pkgconfig(libxml-2.0)",
+          "pkgconfig(nspr)",
+          "pkgconfig(nss)",
+          "pkgconfig(openssl)",
+          "pkgconfig(sqlite3)",
+          "pkgconfig(uuid)",
+          "pkgconfig(webkit2gtk-4.1)",
+          "pkgconfig(webkitgtk-6.0)",
+          "protobuf-devel",
+          "systemd",
+          "vala"
+        ],
+        "requires": [
+          "%{name}",
+          "%{name}%{?_isa}",
+          "%{name}-langpacks",
+          "libical-glib",
+          "perl-interpreter",
+          "pkgconfig(goa-1.0)",
+          "pkgconfig(gweather4)",
+          "pkgconfig(json-glib-1.0)",
+          "pkgconfig(libical-glib)",
+          "pkgconfig(libsecret-unstable)",
+          "pkgconfig(libsoup-3.0)",
+          "pkgconfig(sqlite3)",
+          "pkgconfig(webkit2gtk-4.1)",
+          "pkgconfig(webkitgtk-6.0)"
         ]
       },
       "gnome_build_meta": {
@@ -3644,7 +4509,47 @@
         },
         "source_urls": [
           "https://download.gnome.org/sources/%{name}/%{gnome_major_minor_version}/%{name}-%{gnome_tarball_version}.tar.xz"
-        ]
+        ],
+        "build_requires": [
+          "asciidoc",
+          "gcc",
+          "gcc-c++",
+          "giflib-devel",
+          "meson",
+          "pkgconfig(dbus-1)",
+          "pkgconfig(enca)",
+          "pkgconfig(exempi-2.0)",
+          "pkgconfig(flac)",
+          "pkgconfig(gexiv2-0.16)",
+          "pkgconfig(gobject-introspection-1.0)",
+          "pkgconfig(gstreamer-1.0)",
+          "pkgconfig(gstreamer-pbutils-1.0)",
+          "pkgconfig(gstreamer-tag-1.0)",
+          "pkgconfig(icu-i18n)",
+          "pkgconfig(icu-uc)",
+          "pkgconfig(libavformat)",
+          "pkgconfig(libcue)",
+          "pkgconfig(libexif)",
+          "pkgconfig(libgsf-1)",
+          "pkgconfig(libgxps)",
+          "pkgconfig(libjpeg)",
+          "pkgconfig(libmediainfo)",
+          "pkgconfig(libnm)",
+          "pkgconfig(libosinfo-1.0)",
+          "pkgconfig(libpng)",
+          "pkgconfig(libseccomp)",
+          "pkgconfig(libtiff-4)",
+          "pkgconfig(libxml-2.0)",
+          "pkgconfig(libzip)",
+          "pkgconfig(poppler-glib)",
+          "pkgconfig(tinysparql-3.0)",
+          "pkgconfig(totem-plparser)",
+          "pkgconfig(upower-glib)",
+          "pkgconfig(vorbisfile)",
+          "python3-dbusmock",
+          "systemd-rpm-macros"
+        ],
+        "requires": []
       },
       "gnome_build_meta": {
         "kind": "meson",
@@ -3724,7 +4629,47 @@
         },
         "source_urls": [
           "https://download.gnome.org/sources/%{name}/%{gnome_major_minor_version}/%{name}-%{gnome_tarball_version}.tar.xz"
-        ]
+        ],
+        "build_requires": [
+          "asciidoc",
+          "gcc",
+          "gcc-c++",
+          "giflib-devel",
+          "meson",
+          "pkgconfig(dbus-1)",
+          "pkgconfig(enca)",
+          "pkgconfig(exempi-2.0)",
+          "pkgconfig(flac)",
+          "pkgconfig(gexiv2-0.16)",
+          "pkgconfig(gobject-introspection-1.0)",
+          "pkgconfig(gstreamer-1.0)",
+          "pkgconfig(gstreamer-pbutils-1.0)",
+          "pkgconfig(gstreamer-tag-1.0)",
+          "pkgconfig(icu-i18n)",
+          "pkgconfig(icu-uc)",
+          "pkgconfig(libavformat)",
+          "pkgconfig(libcue)",
+          "pkgconfig(libexif)",
+          "pkgconfig(libgsf-1)",
+          "pkgconfig(libgxps)",
+          "pkgconfig(libjpeg)",
+          "pkgconfig(libmediainfo)",
+          "pkgconfig(libnm)",
+          "pkgconfig(libosinfo-1.0)",
+          "pkgconfig(libpng)",
+          "pkgconfig(libseccomp)",
+          "pkgconfig(libtiff-4)",
+          "pkgconfig(libxml-2.0)",
+          "pkgconfig(libzip)",
+          "pkgconfig(poppler-glib)",
+          "pkgconfig(tinysparql-3.0)",
+          "pkgconfig(totem-plparser)",
+          "pkgconfig(upower-glib)",
+          "pkgconfig(vorbisfile)",
+          "python3-dbusmock",
+          "systemd-rpm-macros"
+        ],
+        "requires": []
       },
       "gnome_build_meta": {
         "kind": "meson",
@@ -3795,6 +4740,25 @@
         },
         "source_urls": [
           "https://download.gnome.org/sources/%{name}/%{gnome_major_version}/%{name}-%{gnome_tarball_version}.tar.xz"
+        ],
+        "build_requires": [
+          "desktop-file-utils",
+          "gcc",
+          "gettext",
+          "meson",
+          "pkgconfig(fontconfig)",
+          "pkgconfig(gnome-bg-4)",
+          "pkgconfig(gnome-desktop-4)",
+          "pkgconfig(gsettings-desktop-schemas)",
+          "pkgconfig(gtk4)",
+          "pkgconfig(libadwaita-1)",
+          "pkgconfig(xdg-desktop-portal)",
+          "systemd-rpm-macros"
+        ],
+        "requires": [
+          "dbus",
+          "dbus-common",
+          "xdg-desktop-portal"
         ]
       },
       "gnome_build_meta": {
