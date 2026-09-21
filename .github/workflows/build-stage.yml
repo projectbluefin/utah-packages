@@ -184,8 +184,22 @@ jobs:
           # container, which only sees config/ and packages/.
           DIST_BUMP="$(python3 tools/dist_bump.py "$PACKAGE")"
           export DIST_BUMP
+          # Whether the build root may admit Hummingbird libicu-77. By default
+          # every factory package excludes it so nothing links .so.77 -- the
+          # runtime carries only libicu 78. A package that genuinely needs it
+          # (e.g. libvdpau, which pulls in TeX Live for doxygen) opts in with
+          # "buildroot_icu77": true in config/upstream-sources.json.
+          BUILDROOT_ICU77="$(python3 - "$PACKAGE" <<'PYEOF'
+import json, sys
+name = sys.argv[1]
+pkgs = json.loads(open("config/upstream-sources.json").read()).get("packages", [])
+entry = next((p for p in pkgs if p.get("name") == name), {})
+print("true" if entry.get("buildroot_icu77", False) else "false")
+PYEOF
+)"
+          export BUILDROOT_ICU77
           docker run --rm --privileged \
-            -e PACKAGE -e FACTORY_REPO -e DIST_BUMP \
+            -e PACKAGE -e FACTORY_REPO -e DIST_BUMP -e BUILDROOT_ICU77 \
             -v "$PWD/work:/work:Z" \
             -v "$PWD/packages:/packages:ro,Z" \
             -v "$PWD/config:/repos:ro,Z" \
@@ -288,40 +302,37 @@ jobs:
               # Exclude the legacy default-gems from the Hummingbird repository so
               # ruby4.0 alone answers for default gems.
               #
-              # libicu does NOT join that list, and the attempt to add it is worth
-              # recording because the reasoning looked airtight and was not.
+              # libicu-77 and libicu-devel-77 from Hummingbird are excluded from
+              # every build root by default. This prevents our factory-built
+              # packages (which link .so.78) from conflicting with the pre-installed
+              # libicu-77 when their runtime deps land in the build root:
               #
-              # Hummingbird has migrated to ICU 78: read against its primary.xml,
-              # every current build links libicuuc.so.78 and only superseded ones
-              # link .so.77. From that it seemed to follow that excluding
-              # libicu-77 from the Hummingbird repository could not strand
-              # anything, since no current Hummingbird build needs it.
+              #   localsearch-3.12~beta-1.hum1.bfin requires libicui18n.so.78()(64bit)
+              #   cannot install both libicu-78.3-*hum1 and libicu-77.1-2.1.hum1
               #
-              # The build root is not only Hummingbird. It also carries Fedora
-              # binaries that Hummingbird has never rebuilt, and those link
-              # whatever ICU Fedora built them against -- libical-3.0.20-7.fc44
-              # requires libicuuc.so.77 outright. HB_EXCLUDE above already keeps
-              # Fedora libicu out, so Hummingbird superseded libicu-77 is the
-              # only remaining provider of .so.77. Excluding it too leaves none,
-              # and the root stops resolving:
+              # This was the exact failure blocking nautilus-python: installing
+              # our factory nautilus dragged in our factory localsearch (Requires:
+              # localsearch), which requires .so.78, but libicu-77 was already
+              # installed in the root satisfying Fedora libical .so.77 dep.
+              # The solver could not install both and gave up.
               #
-              #   package libical-3.0.20-7.fc44 from fedora requires
-              #   libicuuc.so.77, but none of the providers can be installed
-              #   - package libicu-77.1-2.1.hum1 is filtered out by exclude filtering
+              # Packages whose Fedora build-only deps genuinely require .so.77
+              # (e.g. libvdpau, which pulls in TeX Live for doxygen formulas)
+              # opt in with "buildroot_icu77": true in upstream-sources.json.
+              # That value is read outside the container and passed in as
+              # BUILDROOT_ICU77; see the build step env block above.
               #
-              # bluez failed exactly that way in run 35443117478, at stage 0,
-              # which is worse than the publish failure the exclusion was meant to
-              # fix: it loses all 331 builds instead of one gate. 012cb6a reverted
-              # a blanket libicu exclusion for the same underlying reason, and
-              # scoping it to the Hummingbird repository did not change the
-              # reason -- it only changed which repository the last provider of
-              # .so.77 happened to live in.
-              #
-              # The real problem is still open: a factory package can link ICU 77
-              # because Fedora build deps pull it into the root, and the consumer
-              # transaction then refuses that package. It has to be solved without
-              # removing the .so.77 provider the root legitimately needs.
+              # Spelled with release as its own field: dnf splits a package
+              # spec on its dashes before globbing each field, so
+              # libicu-77.*hum1 parses its version as 77.*hum1 and matches
+              # nothing. libicu-77.*-*hum1 makes dnf answer correctly.
               HB_REPO_EXCLUDE="ruby3.3-default-gems,ruby3.4-default-gems"
+              if [ "${BUILDROOT_ICU77:-false}" != true ]; then
+                HB_REPO_EXCLUDE="${HB_REPO_EXCLUDE},libicu-77.*-*hum1,libicu-devel-77.*-*hum1"
+                echo "build root excludes Hummingbird libicu-77 (default; set buildroot_icu77 to opt in)"
+              else
+                echo "build root admits Hummingbird libicu-77 (buildroot_icu77 opt-in)"
+              fi
               echo "hummingbird repo exclusions: $HB_REPO_EXCLUDE"
               if [ -n "${FACTORY_REPO:-}" ]; then
                 printf "[factory]\nname=factory\nbaseurl=%s\nenabled=1\ngpgcheck=0\npriority=5\n" \
