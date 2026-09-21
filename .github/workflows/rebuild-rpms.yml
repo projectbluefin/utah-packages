@@ -59,7 +59,7 @@ jobs:
       # correct when the run started. So the tag is pulled once here and the
       # bytes are shared with every job; a mismatch against this digest is
       # reported, not fatal, because failing on it recreates that outage.
-      BUILDROOT_IMAGE: quay.io/fedora/fedora:44@sha256:a65912511863a7d25139928fb283da04367f2224f37313e1cbb59d44fa02e755
+      BUILDROOT_IMAGE: quay.io/fedora/fedora:44@sha256:dee2b968c71a167b08a6e0027db0380fc2f037796aeed620556a4fcbc6a1ed7f
     outputs:
       buildroot_digest: ${{ steps.buildroot.outputs.digest }}
       factory_image: ${{ steps.factory_image.outputs.image }}
