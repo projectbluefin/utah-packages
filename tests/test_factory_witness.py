@@ -219,5 +219,26 @@ class IcuAgreementTests(unittest.TestCase):
                 self.assertNotIn("libicu-77", line)
 
 
+class WorkflowSyntaxTests(unittest.TestCase):
+    def test_every_workflow_is_parseable_yaml(self) -> None:
+        """A workflow that does not parse runs nothing, and said so nowhere.
+
+        db689f1 embedded a shell heredoc in build-stage.yml with its body at
+        column 0, which ends the enclosing block scalar: the file stopped
+        parsing and every build-stage run died in 0s with "workflow file
+        issue". Nothing here caught it -- run_scripts only ever loads
+        rebuild-rpms.yml, and the other tests read build-stage.yml as text --
+        so the validate job stayed green while the factory could not build.
+        Use `python3 -c` for inline scripts; a heredoc cannot be indented into
+        a block scalar without its terminator leaving the block.
+        """
+        for path in sorted(WORKFLOWS.glob("*.yml")):
+            with self.subTest(workflow=path.name):
+                try:
+                    yaml.safe_load(path.read_text())
+                except yaml.YAMLError as error:
+                    self.fail(f"{path.name} is not parseable YAML: {error}")
+
+
 if __name__ == "__main__":
     unittest.main()

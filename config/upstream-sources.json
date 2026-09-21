@@ -1789,7 +1789,9 @@
       "sha512": "7a3e931c47651f7a2acc646120f9a8172c2177d1c6b2267a1a0249c0b3c97ef5c4e93c4e213c455984ec2adf3eaebaab34d489dd27161425fa1c5bcd483fa7a3",
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/linux-atm/linux-atm-2.5.1.tgz/sha512/7a3e931c47651f7a2acc646120f9a8172c2177d1c6b2267a1a0249c0b3c97ef5c4e93c4e213c455984ec2adf3eaebaab34d489dd27161425fa1c5bcd483fa7a3/linux-atm-2.5.1.tgz"
-      ]
+      ],
+      "dist_bump": {"count": 1, "baseline": "47"},
+      "rebuild_reason": "Drop the glibc-kernheaders virtual provide for kernel-headers < 7: kernel-headers 7 no longer ships linux/atmsvc.h, so the published 2.5.1-47 build is the one that failed on it and the one ppp's build root resolves linux-atm-libs-devel from. Release does not move, so without this counter the published NEVR still matches the recipe and the fix is skipped."
     },
     {
       "name": "linux-firmware",

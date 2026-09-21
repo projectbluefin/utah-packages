@@ -14,13 +14,23 @@ BuildRequires: automake
 BuildRequires: byacc
 BuildRequires: flex
 BuildRequires: flex-static
-# Fedora kernel-headers 7.2.4-200.fc44 dropped linux/atmsvc.h (ATM removed in
-# kernel 6.x); 6.19.6-300.fc44 still ships it — pin to a version that provides
-# the header so ppp's ppoatm plugin (Requires linux-atm-libs-devel) can build.
-# glibc-kernheaders is the virtual provide kernel-headers satisfies, but dnf5
-# would resolve it to 7.2.4 which lacks the file, so require the real package
-# with that version (still in Fedora 44's repository).
-BuildRequires: kernel-headers = 6.19.6-300.fc44
+# ATM was removed from the kernel, so kernel-headers 7 (7.2.4-200.fc44 in the
+# Fedora 44 build root) no longer ships linux/atmsvc.h; the 6 series still does
+# (6.19.6-300.fc44), and src/sigd/isp.c will not compile without it.
+#
+# glibc-kernheaders is the virtual provide kernel-headers satisfies, and it
+# carries no useful version, so dnf5 resolved the old
+# `glibc-kernheaders >= 2.4-9.1.88` to kernel-headers 7 and the build died on
+# `isp.c:19:10: fatal error: linux/atmsvc.h`. Name the real package and bound
+# it instead.
+#
+# An upper bound rather than an exact NVR on purpose: kernel-headers is not
+# multi-installable, so `= 6.19.6-300.fc44` is only satisfiable by that one
+# build, and its `.fc44` would stop matching anything the moment the build root
+# rebases to Fedora 45. `< 7` lets the solver pick whatever 6 series the build
+# root carries, which is the real requirement -- atmsvc.h, at any version that
+# still has it.
+BuildRequires: kernel-headers < 7
 BuildRequires: libtool
 BuildRequires: make
 
@@ -55,7 +65,12 @@ This package contains the ATM library required for user space ATM tools.
 %package libs-devel
 Summary: Development files for Linux ATM API library
 Requires: linux-atm-libs = %{version}-%{release}
-Requires: kernel-headers = 6.19.6-300.fc44
+# The installed headers include <linux/atmsvc.h>, so this subpackage is only
+# usable where kernel-headers still ships it -- see the BuildRequires above.
+# This is also what carries the bound into ppp's build root: ppp
+# BuildRequires linux-atm-libs-devel for ppoatm, and without this its solver
+# would pull kernel-headers 7 and fail on the same missing header.
+Requires: kernel-headers < 7
 
 %description libs-devel
 This package contains header files and libraries for development using the
@@ -120,6 +135,12 @@ rm -rf _doc/init-redhat/{CVS,.cvsignore}
 %{_libdir}/libatm.so
 
 %changelog
+* Sun Sep 21 2026 Utah package factory <noreply@projectbluefin.io> - 2.5.1-47
+- require kernel-headers < 7 rather than the unversioned glibc-kernheaders
+  provide: ATM is gone from the kernel and kernel-headers 7 no longer ships
+  linux/atmsvc.h, so isp.c failed to compile and ppp's ppoatm plugin, which
+  builds against linux-atm-libs-devel, failed with it
+
 * Thu Jul 16 2026 Fedora Release Engineering <releng@fedoraproject.org> - 2.5.1-47
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_45_Mass_Rebuild
 
