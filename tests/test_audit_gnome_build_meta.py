@@ -11,6 +11,8 @@ extraction, release-line comparison and classification.
 
 from pathlib import Path
 import json
+import os
+import subprocess
 import tempfile
 import unittest
 
@@ -20,6 +22,7 @@ from tools.audit_gnome_build_meta import (
     UNMAPPED,
     Loader,
     _aliases,
+    _factory_rev,
     _secondary_sources,
     classify,
     element_patch_sources,
@@ -341,6 +344,55 @@ class ClassifyTests(unittest.TestCase):
         el = resolve_element(self.loader, self.aliases, "elements/core/gvfs-daemon.bst")
         cls, _ = classify(el, {"name": "gvfs", "patches": []}, "1.61.91")
         self.assertEqual(cls, ALIGNED)
+
+
+class PatchDriftTests(unittest.TestCase):
+    """Both sides carrying *different* patches is drift, not alignment."""
+
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+        make_gbm_tree(self.root)
+        self.loader = Loader(self.root)
+        self.aliases = _aliases(self.loader)
+        self.el = resolve_element(self.loader, self.aliases, "elements/sdk/mozjs.bst")
+
+    def tearDown(self) -> None:
+        self.tmp.cleanup()
+
+    def test_differing_patch_sets_are_needs_review(self) -> None:
+        cls, reason = classify(
+            self.el, {"name": "mozjs", "patches": ["fedora-only.patch"]}, "128.0"
+        )
+        self.assertEqual(cls, NEEDS_REVIEW)
+        self.assertIn("both sides carry patches", reason)
+
+    def test_same_patch_basename_is_not_drift(self) -> None:
+        # gbm names a project-relative path, the spec a bare Patch: filename.
+        cls, _ = classify(
+            self.el, {"name": "mozjs", "patches": ["fix-build.patch"]}, "128.0"
+        )
+        self.assertEqual(cls, ALIGNED)
+
+
+class FactoryRevTests(unittest.TestCase):
+    """Provenance must name the factory checkout, not the caller's CWD."""
+
+    def test_rev_is_read_from_the_factory_checkout(self) -> None:
+        repo_root = Path(__file__).resolve().parent.parent
+        if not (repo_root / ".git").exists():
+            self.skipTest("factory checkout is not a git repository")
+        expected = subprocess.run(
+            ["git", "-C", str(repo_root), "rev-parse", "HEAD"],
+            capture_output=True, text=True, check=True,
+        ).stdout.strip()
+        with tempfile.TemporaryDirectory() as outside:
+            cwd = os.getcwd()
+            os.chdir(outside)
+            try:
+                self.assertEqual(_factory_rev(), expected)
+            finally:
+                os.chdir(cwd)
 
 
 class ReportTests(unittest.TestCase):

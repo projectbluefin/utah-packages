@@ -579,6 +579,18 @@ def classify(gbm: Element | None, factory: dict | None,
         drift.append(f"factory carries {len(spec_patch_list)} local patch(es); gbm none")
     if gbm_patch_list and not spec_patch_list:
         drift.append("gbm carries upstream patches; factory spec has none")
+    if gbm_patch_list and spec_patch_list:
+        # Both sides patch. gbm names a project-relative path and the spec names
+        # a Patch: filename, so only the basenames are comparable -- but two
+        # different patch sets are exactly the drift a reviewer needs to see,
+        # and the asymmetric checks above walked straight past it.
+        gbm_names = {name.rsplit("/", 1)[-1] for name in gbm_patch_list}
+        spec_names = {name.rsplit("/", 1)[-1] for name in spec_patch_list}
+        if gbm_names != spec_names:
+            drift.append(
+                "both sides carry patches and they differ: gbm "
+                f"{sorted(gbm_names)} vs factory {sorted(spec_names)}"
+            )
 
     if drift:
         return NEEDS_REVIEW, "; ".join(drift)
@@ -717,10 +729,19 @@ def _unmapped_observed(pin: dict, factory_sources: dict) -> list[dict]:
     return [dict(u) for u in pin.get("unmapped", [])]
 
 
-def _factory_rev() -> str:
+def _factory_rev(root: Path | None = None) -> str:
+    """HEAD of the factory checkout this tool ships in.
+
+    Resolved with ``git -C`` against the repository that contains this file,
+    the same way ``parse_args`` resolves every default path. Reading the
+    process CWD instead recorded whatever repository the caller happened to
+    stand in -- or ``unknown`` -- as the report's provenance.
+    """
+    root = root or Path(__file__).resolve().parent.parent
     try:
         rev = subprocess.run(
-            ["git", "rev-parse", "HEAD"], capture_output=True, text=True, check=True
+            ["git", "-C", str(root), "rev-parse", "HEAD"],
+            capture_output=True, text=True, check=True,
         ).stdout.strip()
         return rev or "unknown"
     except Exception:  # noqa: BLE001
@@ -742,7 +763,8 @@ def load_pin(path: Path) -> dict:
     return pin
 
 
-def _verify_checkout(loader: Loader, commit: str) -> None:
+def _verify_checkout(loader: Loader, commit: str) -> str:
+    """Return the verified HEAD of the gbm checkout, or exit non-zero."""
     try:
         proc = subprocess.run(
             ["git", "-C", str(loader.root), "rev-parse", "HEAD"],
