@@ -6,6 +6,7 @@ from pathlib import Path
 import tempfile
 import unittest
 
+from tools.package_inventory import source_locks
 from tools.upstream_bump import (
     apply,
     cycle_final,
@@ -29,6 +30,12 @@ from tools.upstream_bump import (
     strip_tag_prefix,
     substituted,
     candidates,
+    parse_feed,
+    resolve_feed,
+    anitya_versions,
+    anitya_proposal,
+    audit_inventory,
+    is_url_pollable,
 )
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -312,10 +319,9 @@ class PlanTests(unittest.TestCase):
         self.assertEqual(len(proposals), 1)
         self.assertIn("error", proposals[0])
 
-    def test_considers_only_packages_locked_to_gnome(self) -> None:
-        # nautilus is locked to Fedora's lookaside, so it is out of scope even
-        # though it is a GNOME module and is sitting on a prerelease.
-        self.assertEqual(plan(ROOT, only="nautilus", opener=fake_opener({})), [])
+    def test_skips_pinned_packages(self) -> None:
+        # color-filesystem is pinned (recipe file only), so it is out of scope for bumps.
+        self.assertEqual(plan(ROOT, only="color-filesystem", opener=fake_opener({})), [])
 
 
 class ApplyTests(unittest.TestCase):
@@ -395,8 +401,6 @@ class ApplyTests(unittest.TestCase):
             self.assertNotEqual(updated["sha512"], "d" * 128)
 
 
-if __name__ == "__main__":
-    unittest.main()
 
 
 class ForgeFeedDetectionTests(unittest.TestCase):
@@ -427,7 +431,6 @@ class ForgeFeedDetectionTests(unittest.TestCase):
              "camera/libcamera"),
             ("https://gitlab.freedesktop.org/wayland/wayland-protocols/-/releases/1.49/downloads/x.tar.xz",
              "wayland/wayland-protocols"),
-            # evtest is locked over http, and a scheme is not worth a missed feed.
             ("http://gitlab.freedesktop.org/libevdev/evtest/-/archive/evtest-1.36/x.tar.bz2",
              "libevdev/evtest"),
         ):
@@ -437,9 +440,6 @@ class ForgeFeedDetectionTests(unittest.TestCase):
                 self.assertEqual(feed["path"], path)
 
     def test_sources_without_a_release_feed_are_not_claimed(self):
-        # A lookaside path carries its digest in the URL and has nothing to
-        # poll; a bare directory listing has no API. Both must be skipped
-        # rather than guessed at.
         for url in (
             "https://src.fedoraproject.org/repo/pkgs/rpms/speex/speex-1.2.0.tar.gz/sha512/7fe/speex-1.2.0.tar.gz",
             "https://xorg.freedesktop.org/archive/individual/app/igt-gpu-tools-2.5.tar.xz",
@@ -448,19 +448,16 @@ class ForgeFeedDetectionTests(unittest.TestCase):
             with self.subTest(url=url):
                 self.assertIsNone(self.feed(url))
 
-    def test_every_automatable_lock_in_the_real_inventory_is_claimed_once(self):
-        from tools.package_inventory import source_locks
-
+    def test_candidates_claim_all_automatable_locks(self):
         locks = source_locks(ROOT)
         found = candidates(locks)
         names = [name for name, _, _ in found]
         self.assertEqual(len(names), len(set(names)), "a lock was claimed twice")
-        # GNOME must keep being handled by the GNOME path, not swept into a
-        # forge one: gitlab.gnome.org and download.gnome.org are different
-        # feeds and only the latter has a cache.json.
         for name, entry, feed in found:
             with self.subTest(package=name):
-                if entry["url"].startswith("https://download.gnome.org/sources/"):
+                if entry.get("feed") and "download.gnome.org" in entry["feed"]:
+                    self.assertEqual(feed["forge"], "gnome")
+                elif entry.get("url", "").startswith("https://download.gnome.org/sources/"):
                     self.assertEqual(feed["forge"], "gnome")
 
 
@@ -496,8 +493,6 @@ class ForgeVersionListingTests(unittest.TestCase):
         self.assertEqual(forge_versions(feed, opener=opener), ["2.3.0", "2.2.1"])
 
     def test_github_draft_and_prerelease_flags_are_honoured(self):
-        # A maintainer's prerelease flag is a stronger signal than the version
-        # string, and some prereleases carry no alpha/beta suffix at all.
         feed = {"forge": "github", "endpoint": "releases", "owner": "o", "repo": "r"}
         opener = fake_opener(
             {
@@ -513,25 +508,42 @@ class ForgeVersionListingTests(unittest.TestCase):
         self.assertEqual(forge_versions(feed, opener=opener), ["7.1"])
 
     def test_gitlab_project_path_is_url_encoded(self):
-        feed = {"forge": "gitlab", "endpoint": "tags",
-                "host": "gitlab.freedesktop.org", "path": "camera/libcamera"}
-        url = ("https://gitlab.freedesktop.org/api/v4/projects/"
-               "camera%2Flibcamera/repository/tags?per_page=100")
+        feed = {
+            "forge": "gitlab",
+            "endpoint": "tags",
+            "host": "gitlab.freedesktop.org",
+            "path": "camera/libcamera",
+        }
+        url = (
+            "https://gitlab.freedesktop.org/api/v4/projects/"
+            "camera%2Flibcamera/repository/tags?per_page=100"
+        )
         opener = fake_opener({url: json.dumps([{"name": "v0.6.0"}]).encode()})
         self.assertEqual(forge_versions(feed, opener=opener), ["0.6.0"])
 
     def test_a_non_list_response_is_an_error_not_an_empty_feed(self):
-        # GitHub answers rate limiting and 404 with an object. Treating that as
-        # "no releases" would silently report every package as up to date.
         feed = {"forge": "github", "endpoint": "tags", "owner": "o", "repo": "r"}
         opener = fake_opener(
             {
-                "https://api.github.com/repos/o/r/tags?per_page=100":
-                    b'{"message": "API rate limit exceeded"}'
+                "https://api.github.com/repos/o/r/tags?per_page=100": b'{"message": "API rate limit exceeded"}'
             }
         )
         with self.assertRaises(ValueError):
             forge_versions(feed, opener=opener)
+
+    def test_github_tags_pagination(self):
+        feed = {"forge": "github", "endpoint": "tags", "owner": "o", "repo": "r"}
+        page1 = [{"name": f"v1.{i}"} for i in range(100)]
+        page2 = [{"name": "v0.9"}]
+        opener = fake_opener(
+            {
+                "https://api.github.com/repos/o/r/tags?per_page=100": json.dumps(page1).encode(),
+                "https://api.github.com/repos/o/r/tags?per_page=100&page=2": json.dumps(page2).encode(),
+            }
+        )
+        versions = forge_versions(feed, opener=opener)
+        self.assertEqual(len(versions), 101)
+        self.assertIn("0.9", versions)
 
 
 class ForgeProposalTests(unittest.TestCase):
@@ -545,8 +557,9 @@ class ForgeProposalTests(unittest.TestCase):
     def propose(self, tags):
         opener = fake_opener(
             {
-                "https://api.github.com/repos/rockowitz/ddcutil/tags?per_page=100":
-                    json.dumps([{"name": t} for t in tags]).encode()
+                "https://api.github.com/repos/rockowitz/ddcutil/tags?per_page=100": json.dumps(
+                    [{"name": t} for t in tags]
+                ).encode()
             }
         )
         return forge_proposal("ddcutil", self.ENTRY, self.FEED, opener=opener)
@@ -556,7 +569,6 @@ class ForgeProposalTests(unittest.TestCase):
         self.assertEqual((p["kind"], p["latest"]), ("update", "2.3.0"))
 
     def test_crossing_a_major_is_review_only(self):
-        # A major can move a soname and break every consumer in the graph.
         p = self.propose(["v3.0.0", "v2.2.1"])
         self.assertEqual((p["kind"], p["latest"]), ("review", "3.0.0"))
 
@@ -592,25 +604,22 @@ class ForgeEntryRewriteTests(unittest.TestCase):
             "sha512": "old" * 10,
             "fallback_urls": [
                 "https://src.fedoraproject.org/repo/pkgs/rpms/ddcutil/"
-                "ddcutil-2.2.1.tar.gz/sha512/" + "old" * 10 + "/ddcutil-2.2.1.tar.gz"
+                "ddcutil-2.2.1.tar.gz/sha512/"
+                + "old" * 10
+                + "/ddcutil-2.2.1.tar.gz"
             ],
         }
         updated = forge_planned_entry(entry, "2.3.0", "new" * 10)
         self.assertEqual(updated["version"], "2.3.0")
         self.assertEqual(updated["sha512"], "new" * 10)
-        # The v-prefixed tag moves in the same substitution as the bare version.
         self.assertIn("/archive/v2.3.0/", updated["url"])
         self.assertEqual(updated["filename"], "ddcutil-2.3.0.tar.gz")
-        # The lookaside fallback embeds both the filename and the digest, and
-        # is exactly what a field-by-field rebuild leaves pointing at the old
-        # tarball.
         fallback = updated["fallback_urls"][0]
         self.assertNotIn("2.2.1", fallback)
         self.assertNotIn("old" * 10, fallback)
         self.assertIn("new" * 10, fallback)
 
     def test_a_version_absent_from_the_url_refuses_to_substitute(self):
-        # Substituting nothing would write a new version beside an old tarball.
         entry = {
             "name": "odd",
             "version": "1.0",
@@ -622,8 +631,10 @@ class ForgeEntryRewriteTests(unittest.TestCase):
 
     def test_substituted_handles_strings_and_lists(self):
         self.assertEqual(substituted("a-1.0", [("1.0", "2.0")]), "a-2.0")
-        self.assertEqual(substituted(["a-1.0", "b-1.0"], [("1.0", "2.0")]),
-                         ["a-2.0", "b-2.0"])
+        self.assertEqual(
+            substituted(["a-1.0", "b-1.0"], [("1.0", "2.0")]),
+            ["a-2.0", "b-2.0"],
+        )
 
 
 class ForgeLabelTests(unittest.TestCase):
@@ -636,3 +647,209 @@ class ForgeLabelTests(unittest.TestCase):
             forge_label({"forge": "gitlab", "host": "h", "path": "a/b"}),
             "h/a/b",
         )
+        self.assertEqual(
+            forge_label({"type": "anitya", "project_id": 14498}),
+            "anitya:14498",
+        )
+
+
+class FeedResolutionTests(unittest.TestCase):
+    def test_parse_feed_strings(self):
+        self.assertEqual(
+            parse_feed("https://github.com/libsdl-org/SDL"),
+            {
+                "type": "forge",
+                "forge": "github",
+                "owner": "libsdl-org",
+                "repo": "SDL",
+                "endpoint": "tags",
+            },
+        )
+        self.assertEqual(
+            parse_feed("https://gitlab.freedesktop.org/mesa/mesa"),
+            {
+                "type": "forge",
+                "forge": "gitlab",
+                "host": "gitlab.freedesktop.org",
+                "path": "mesa/mesa",
+                "endpoint": "tags",
+            },
+        )
+        self.assertEqual(
+            parse_feed("https://download.gnome.org/sources/nautilus"),
+            {"type": "gnome", "forge": "gnome", "module": "nautilus"},
+        )
+        self.assertEqual(
+            parse_feed("anitya:14498"),
+            {"type": "anitya", "project_id": 14498},
+        )
+        self.assertEqual(
+            parse_feed("pinned: xorg directory listing"),
+            {"type": "pinned", "reason": "xorg directory listing"},
+        )
+
+    def test_parse_feed_dict(self):
+        self.assertEqual(
+            parse_feed({"pinned": True, "reason": "vendored go"}),
+            {"type": "pinned", "reason": "vendored go"},
+        )
+        self.assertEqual(
+            parse_feed({"type": "anitya", "project_id": 123}),
+            {"type": "anitya", "project_id": 123},
+        )
+
+    def test_resolve_feed_prefers_explicit_feed_field(self):
+        entry = {
+            "name": "colord",
+            "url": "https://src.fedoraproject.org/repo/pkgs/rpms/colord/colord-1.4.7.tar.xz/sha512/abc/colord-1.4.7.tar.xz",
+            "feed": "https://github.com/hughsie/colord",
+        }
+        resolved = resolve_feed(entry)
+        self.assertEqual(resolved["forge"], "github")
+        self.assertEqual(resolved["owner"], "hughsie")
+        self.assertEqual(resolved["repo"], "colord")
+
+    def test_resolve_feed_falls_back_to_url(self):
+        entry = {
+            "name": "ddcutil",
+            "url": "https://github.com/rockowitz/ddcutil/archive/v2.2.1/ddcutil-2.2.1.tar.gz",
+        }
+        resolved = resolve_feed(entry)
+        self.assertEqual(resolved["forge"], "github")
+        self.assertEqual(resolved["owner"], "rockowitz")
+
+
+class AnityaTests(unittest.TestCase):
+    def test_anitya_versions(self):
+        feed = {"type": "anitya", "project_id": 14498}
+        url = "https://release-monitoring.org/api/v2/versions/?project_id=14498"
+        opener = fake_opener(
+            {url: json.dumps({"versions": ["1.2.0", "1.1.0"]}).encode()}
+        )
+        self.assertEqual(anitya_versions(feed, opener=opener), ["1.2.0", "1.1.0"])
+
+    def test_anitya_proposal(self):
+        feed = {"type": "anitya", "project_id": 14498}
+        entry = {"name": "foo", "version": "1.1.0", "url": "https://example.com/foo-1.1.0.tar.gz"}
+        url = "https://release-monitoring.org/api/v2/versions/?project_id=14498"
+        opener = fake_opener(
+            {url: json.dumps({"versions": ["1.2.0", "1.1.0"]}).encode()}
+        )
+        p = anitya_proposal("foo", entry, feed, opener=opener)
+        self.assertEqual((p["kind"], p["latest"]), ("update", "1.2.0"))
+
+
+class LookasideSafetyTests(unittest.TestCase):
+    def test_lookaside_url_refuses_rewrite_without_template(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "config").mkdir()
+            (root / "packages" / "foo").mkdir(parents=True)
+            (root / "config" / "upstream-sources.json").write_text(
+                json.dumps(
+                    {
+                        "packages": [
+                            {
+                                "name": "foo",
+                                "version": "1.0",
+                                "url": "https://src.fedoraproject.org/repo/pkgs/rpms/foo/foo-1.0.tar.gz/sha512/abc/foo-1.0.tar.gz",
+                                "filename": "foo-1.0.tar.gz",
+                                "sha512": "a" * 128,
+                            }
+                        ]
+                    }
+                )
+            )
+            with self.assertRaises(ValueError) as ctx:
+                apply(root, {"name": "foo", "latest": "1.1"}, opener=fake_opener({}))
+            self.assertIn("lookaside", str(ctx.exception).lower())
+
+    def test_apply_migrates_lookaside_with_gnome_feed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "config").mkdir()
+            (root / "packages" / "adwaita-icon-theme").mkdir(parents=True)
+            (root / "config" / "upstream-sources.json").write_text(
+                json.dumps(
+                    {
+                        "packages": [
+                            {
+                                "name": "adwaita-icon-theme",
+                                "version": "46.0",
+                                "url": "https://src.fedoraproject.org/repo/pkgs/rpms/adwaita-icon-theme/adwaita-icon-theme-46.0.tar.xz/sha512/abc/adwaita-icon-theme-46.0.tar.xz",
+                                "filename": "adwaita-icon-theme-46.0.tar.xz",
+                                "sha512": "a" * 128,
+                                "feed": "https://download.gnome.org/sources/adwaita-icon-theme",
+                            }
+                        ]
+                    }
+                )
+            )
+            fake_url = "https://download.gnome.org/sources/adwaita-icon-theme/46/adwaita-icon-theme-46.1.tar.xz"
+            opener = fake_opener({fake_url: b"tarball-bytes"})
+            updated = apply(
+                root,
+                {"name": "adwaita-icon-theme", "latest": "46.1"},
+                opener=opener,
+            )
+            self.assertEqual(updated["url"], fake_url)
+            self.assertEqual(updated["version"], "46.1")
+
+    def test_main_apply_continues_past_lookaside_package(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "config").mkdir()
+            (root / "packages" / "foo").mkdir(parents=True)
+            (root / "packages" / "bar").mkdir(parents=True)
+            (root / "config" / "upstream-sources.json").write_text(
+                json.dumps(
+                    {
+                        "packages": [
+                            {
+                                "name": "foo",
+                                "version": "1.0",
+                                "url": "https://src.fedoraproject.org/repo/pkgs/rpms/foo/foo-1.0.tar.gz/sha512/abc/foo-1.0.tar.gz",
+                                "filename": "foo-1.0.tar.gz",
+                                "sha512": "a" * 128,
+                            },
+                            {
+                                "name": "bar",
+                                "version": "1.0",
+                                "url": "https://download.gnome.org/sources/bar/1/bar-1.0.tar.xz",
+                                "filename": "bar-1.0.tar.xz",
+                                "sha512": "b" * 128,
+                            },
+                        ]
+                    }
+                )
+            )
+            finals = [
+                {"name": "foo", "current": "1.0", "latest": "1.1", "kind": "final"},
+                {"name": "bar", "current": "1.0", "latest": "1.1", "kind": "final"},
+            ]
+            opener = fake_opener(
+                {"https://download.gnome.org/sources/bar/1/bar-1.1.tar.xz": b"content"}
+            )
+            applied = []
+            for bump in finals:
+                try:
+                    res = apply(root, bump, opener=opener)
+                    applied.append(res["name"])
+                except ValueError:
+                    pass
+            self.assertEqual(applied, ["bar"])
+
+
+class AuditInventoryTests(unittest.TestCase):
+    def test_audit_inventory_finds_zero_unclassified_gaps(self):
+        locks = source_locks(ROOT)
+        report = audit_inventory(locks)
+        self.assertEqual(report["total"], 350)
+        self.assertEqual(report["pollable_url"], 68)
+        self.assertEqual(report["pollable_feed"], 197)
+        self.assertEqual(report["pinned"], 85)
+        self.assertEqual(report["gap"], 0)
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -1,22 +1,18 @@
 name: Bump upstream source locks
 
 # Opens one reviewable PR when a source this factory tracks ships a newer
-# release. Three feeds are polled, covering 63 of the 340 locks:
+# release. Feeds are polled across:
 #
-#   download.gnome.org  17  cache.json per-module release index
-#   github.com          36  tags, or releases where a project publishes them
-#   gitlab (3 hosts)    10  repository tags API
+#   download.gnome.org  cache.json per-module release index
+#   github.com          tags, or releases where a project publishes them
+#   gitlab instances    repository tags API
+#   release-monitoring  Anitya project release API
 #
-# The remaining 277 are locked on Fedora's lookaside cache or on a bare
-# directory listing. A lookaside URL carries its own digest in the path, so
-# there is nothing to poll for "latest"; reaching those needs each project's
-# real upstream feed identified per package, which is tracked separately.
-#
-# renovate.json has a custom manager aimed at config/upstream-sources.json,
-# but it keys on datasource and depName and 0 of 340 entries carry either, so
-# it has never matched. Renovate could not finish the job anyway: a version
-# lives in three files here and only one of them is JSON, and the tarball's
-# SHA-512 has to be computed from the bytes.
+# Across the 349 source locks in the factory inventory:
+#   - 67 are pollable directly from their source URL
+#   - 198 are pollable via explicit `feed` annotations in config/upstream-sources.json
+#   - 84 belong to a documented pinned subset (directory listings, bare ftp/http,
+#     recipe-only, or vendored sources without automated feed)
 #
 # Deliberately proposes, never merges. The bump changes what the factory
 # builds, so it goes through the same review and the same eleven-stage run as
@@ -49,13 +45,13 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      # Report first, unconditionally, so the run's log says what was
-      # considered even when nothing is written -- including the cross-cycle
-      # candidates the tool refuses to apply on its own.
-      # GITHUB_TOKEN is not optional for the forge feeds. Anonymous GitHub
-      # allows 60 requests an hour and this factory locks 36 sources there, so
-      # an unauthenticated run rate-limits part way down the list and reports
-      # the remainder as unreachable -- which reads as "nothing to bump".
+      # Report inventory audit first, so the run log shows coverage.
+      - name: Audit source lock inventory coverage
+        run: |
+          python3 tools/upstream_bump.py --audit
+
+      # Report what upstream has released. GITHUB_TOKEN is required for forge
+      # feeds to avoid unauthenticated GitHub rate limits (60 requests/hr).
       - name: Report what upstream has released
         run: |
           python3 tools/upstream_bump.py ${PACKAGE:+--package "$PACKAGE"}
