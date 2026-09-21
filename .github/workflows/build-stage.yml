@@ -189,14 +189,7 @@ jobs:
           # runtime carries only libicu 78. A package that genuinely needs it
           # (e.g. libvdpau, which pulls in TeX Live for doxygen) opts in with
           # "buildroot_icu77": true in config/upstream-sources.json.
-          BUILDROOT_ICU77="$(python3 - "$PACKAGE" <<'PYEOF'
-import json, sys
-name = sys.argv[1]
-pkgs = json.loads(open("config/upstream-sources.json").read()).get("packages", [])
-entry = next((p for p in pkgs if p.get("name") == name), {})
-print("true" if entry.get("buildroot_icu77", False) else "false")
-PYEOF
-)"
+          BUILDROOT_ICU77="$(python3 -c 'import json,sys;name=sys.argv[1];pkgs=json.loads(open("config/upstream-sources.json").read()).get("packages",[]);entry=next((p for p in pkgs if p.get("name")==name),{});print("true" if entry.get("buildroot_icu77",False) else "false")' "$PACKAGE")"
           export BUILDROOT_ICU77
           docker run --rm --privileged \
             -e PACKAGE -e FACTORY_REPO -e DIST_BUMP -e BUILDROOT_ICU77 \

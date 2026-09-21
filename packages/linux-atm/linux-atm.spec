@@ -14,8 +14,13 @@ BuildRequires: automake
 BuildRequires: byacc
 BuildRequires: flex
 BuildRequires: flex-static
-# Older kernel headers had broken ATM includes
-BuildRequires: glibc-kernheaders >= 2.4-9.1.88
+# Fedora kernel-headers 7.2.4-200.fc44 dropped linux/atmsvc.h (ATM removed in
+# kernel 6.x); 6.19.6-300.fc44 still ships it — pin to a version that provides
+# the header so ppp's ppoatm plugin (Requires linux-atm-libs-devel) can build.
+# glibc-kernheaders is the virtual provide kernel-headers satisfies, but dnf5
+# would resolve it to 7.2.4 which lacks the file, so require the real package
+# with that version (still in Fedora 44's repository).
+BuildRequires: kernel-headers = 6.19.6-300.fc44
 BuildRequires: libtool
 BuildRequires: make
 
@@ -50,7 +55,7 @@ This package contains the ATM library required for user space ATM tools.
 %package libs-devel
 Summary: Development files for Linux ATM API library
 Requires: linux-atm-libs = %{version}-%{release}
-Requires: glibc-kernheaders >= 2.4-9.1.88
+Requires: kernel-headers = 6.19.6-300.fc44
 
 %description libs-devel
 This package contains header files and libraries for development using the
