@@ -2162,6 +2162,18 @@
       "sha512": "8f92242f2be8e1bbfba41341c87709ad91ad83b8b3e3df88bb430411541d3399295f49291fd52b50e3487b0fce33181cb4d175685fd25aac72adfaee26a612d4"
     },
     {
+      "name": "ptyxis",
+      "version": "50.1",
+      "url": "https://download.gnome.org/sources/ptyxis/50/ptyxis-50.1.tar.xz",
+      "filename": "ptyxis-50.1.tar.xz",
+      "sha512": "34fafdcfa5c51155ebc026814daf5bbb82e24a6565a621a268cce0042d209dc633095ab148c2198b43fb612f995efc46426361b8b8eb616d94b319ec6b170977",
+      "sha256_url": "https://download.gnome.org/sources/ptyxis/50/ptyxis-50.1.sha256sum",
+      "stage": 7,
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/ptyxis/ptyxis-50.1.tar.xz/sha512/34fafdcfa5c51155ebc026814daf5bbb82e24a6565a621a268cce0042d209dc633095ab148c2198b43fb612f995efc46426361b8b8eb616d94b319ec6b170977/ptyxis-50.1.tar.xz"
+      ]
+    },
+    {
       "name": "pulseaudio",
       "stage": 4,
       "version": "17.0",
@@ -2501,6 +2513,18 @@
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/volume_key/volume_key-0.3.12.tar.xz/sha512/d056154c9b9d23e4eb661946dd59ed97e116903a3afcff9d9e29258408082f33dcbb69958724143f6bf191a3da488a03b6c02af287790990ed6459e29d66553c/volume_key-0.3.12.tar.xz",
       "filename": "volume_key-0.3.12.tar.xz",
       "sha512": "d056154c9b9d23e4eb661946dd59ed97e116903a3afcff9d9e29258408082f33dcbb69958724143f6bf191a3da488a03b6c02af287790990ed6459e29d66553c"
+    },
+    {
+      "name": "vte291",
+      "version": "0.84.1",
+      "url": "https://download.gnome.org/sources/vte/0.84/vte-0.84.1.tar.xz",
+      "filename": "vte-0.84.1.tar.xz",
+      "sha512": "34ac77e712b12b62518a09122ce36c816e4c14a53b01be55f233c8749dd234b6b60a9ab47730e34be44fef1994364002a5f31a0af937e95ed1804752a8dd645e",
+      "sha256_url": "https://download.gnome.org/sources/vte/0.84/vte-0.84.1.sha256sum",
+      "stage": 5,
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/vte291/vte-0.84.1.tar.xz/sha512/34ac77e712b12b62518a09122ce36c816e4c14a53b01be55f233c8749dd234b6b60a9ab47730e34be44fef1994364002a5f31a0af937e95ed1804752a8dd645e/vte-0.84.1.tar.xz"
+      ]
     },
     {
       "name": "vulkan-headers",

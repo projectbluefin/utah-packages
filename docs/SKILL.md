@@ -25,6 +25,7 @@ Both are indexed below. A skill that exists but is not listed here fails
 | Change a stage, a container pin, a bcond, the rebuild workflow, or drop a recipe, without repeating a fix the history already reverted | [`skills/repeated-mistakes.md`](skills/repeated-mistakes.md) |
 | Change package-cache keys, eligibility, restore/publish ordering, or cache storage | [`skills/package-build-cache.md`](skills/package-build-cache.md) |
 | Import, configure, or verify font package recipes | [`skills/font-package-recipes.md`](skills/font-package-recipes.md) |
+| Import a terminal emulator (ptyxis, gnome-console, kgx) or its vte291 stack | [`skills/terminal-emulator-recipes.md`](skills/terminal-emulator-recipes.md) |
 
 ## Reference docs (load on demand)
 

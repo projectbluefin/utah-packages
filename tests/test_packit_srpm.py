@@ -35,7 +35,7 @@ class PackitSrpmTests(unittest.TestCase):
             for package in json.loads(SOURCE_CONFIG.read_text())["packages"]
         }
 
-        self.assertEqual(len(config_packages), 373)
+        self.assertEqual(len(config_packages), 375)
         self.assertEqual(config_packages - source_packages, set())
         self.assertTrue(
             {"adw-gtk3-theme", "igt-gpu-tools", "mesa", "runc", "webkitgtk"}

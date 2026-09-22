@@ -1,0 +1,8 @@
+{
+  "package": "ptyxis",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/ptyxis.git",
+  "commit": "f8738e97d6a22862c7f683a54af49050e8935ec6",
+  "tree": "7f45f174d2cff345687f03c848c75c4e509ba019",
+  "imported_at": "2026-09-22T20:23:22.783989+00:00"
+}
