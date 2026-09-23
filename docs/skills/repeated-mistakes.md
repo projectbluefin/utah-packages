@@ -356,6 +356,21 @@ reads `$DOCKER_CONFIG/config.json`, not podman's own auth file, so a
 "Publish the repository" step hit the same split; see its comment on
 `DOCKER_CONFIG`).
 
+## 20. Bypassing the source-lock contract with direct JSON parsing
+
+**What happened.** `prepare` originally ran an inline heredoc that parsed
+`config/upstream-sources.json` directly (`#101`). When the rebuild plan logic
+was extracted into `tools/rebuild_matrix.py`, `main()` continued parsing
+`config/upstream-sources.json` via `json.loads` instead of using
+`tools.package_inventory.source_locks`. Consequently, validation against
+duplicate lock entries and out-of-range stage assignments was bypassed at matrix
+planning time.
+
+**Rule.** Every factory tool and workflow step must consume
+`tools.package_inventory.source_locks` or `inventory` rather than parsing
+`config/upstream-sources.json` directly. The lock file is parsed and validated
+in exactly one place.
+
 ## Quick checks before pushing a fix
 
 - [ ] Does `git log --oneline -- <file>` show this file being fixed for the

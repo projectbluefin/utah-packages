@@ -20,6 +20,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from tools.package_inventory import source_locks
 from tools.rebuild_plan import (
     cacheable,
     stale_from_primary,
@@ -123,7 +124,8 @@ def fetch_published(base_url: str) -> dict[str, tuple[str, str]]:
 
 
 def main() -> int:
-    config = json.loads((ROOT / INVENTORY).read_text())
+    locks = source_locks(ROOT)
+    config = {"packages": list(locks.values())}
     hummingbird_owned = set(
         json.loads((ROOT / HUMMINGBIRD_OWNED).read_text())["sources"]
     )

@@ -68,6 +68,11 @@ class FactoryWitnessTests(unittest.TestCase):
         self.assertIn("./.github/actions/load-factory-repo", text)
         self.assertIn('export FACTORY_REPO="file://$PWD/work/factory"', text)
 
+    def test_prepare_matrix_delegates_to_rebuild_matrix_tool(self) -> None:
+        text = uncommented(REBUILD)
+        self.assertIn("python3 tools/rebuild_matrix.py", text)
+        self.assertNotIn("python3 - <<'PY'", text)
+
     def test_every_build_wave_is_handed_the_same_image(self) -> None:
         text = uncommented(REBUILD)
         waves = re.findall(r"(?m)^  rebuild\d+:$", text)
