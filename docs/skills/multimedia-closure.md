@@ -64,21 +64,22 @@ manufacture a gap.
 ## Codec closure sourcing from negativo17 and RPM Fusion
 
 Utah cannot enable third-party repositories at runtime or build time. Under
-issue `projectbluefin/utah-packages#230` (parent goal `#24`), every multimedia
-override binary and codec component maps to an in-factory recipe with a named
-upstream spec source:
+issue `projectbluefin/utah-packages#230` (parent goal `#24`), the multimedia
+closure inventory tracks target upstream spec sources for every multimedia
+override binary and codec component:
 
-- **negativo17 fedora-multimedia** specs provide the upstream source material
+- **negativo17 fedora-multimedia** specs are the target upstream spec source
   for the mesa, libva, Intel media stack, and libheif binaries:
   `intel-gmmlib`, `intel-mediasdk`, `intel-vpl-gpu-rt`, `libheif`, `libva`,
   `libva-intel-media-driver` (`intel-media-driver`), and all six `mesa-*` binaries.
-- **RPM Fusion free + nonfree** specs provide the upstream source material
+- **RPM Fusion free + nonfree** specs are the target upstream spec source
   for codec packages that Fedora cannot ship directly: full `ffmpeg`,
-  `gstreamer1-plugins-ugly`, `gstreamer1-plugins-bad-freeworld`,
-  `gstreamer1-plugin-libav`, and `libfdk-aac`.
+  `gstreamer1-plugins-ugly-free`, `gstreamer1-plugin-libav`, and `libfdk-aac`.
 
-This contract ensures that Utah installs the functional codec surface with no
-third-party repository enabled at build or runtime.
+This contract and mapping inventory track target parity for Utah to install the
+functional codec surface without third-party repositories enabled at build or runtime.
+The report surfaces both the declared target upstream spec source and the current recipe
+provenance from `.hummingbird-upstream.json`, making migration progress visible.
 
 ## Before claiming a requirement is satisfied
 

@@ -88,7 +88,7 @@ overrides_section = "multimedia_overrides"
 codecs = []
 
 [policy]
-codec_parity = "negativo17-multimedia-rpmfusion-nonfree"
+codec_parity = "negativo17-multimedia-rpmfusion-nonfree (target)"
 
 [upstream_spec_sources]
 mesa-libGL = "https://github.com/negativo17/mesa"
@@ -143,8 +143,25 @@ class ResolveTests(unittest.TestCase):
         self.assertEqual(entry["recipe"], "packages/mesa")
         self.assertEqual(entry["version"], "26.2.1")
         self.assertEqual(entry["upstream_spec_source"], "https://github.com/negativo17/mesa")
+        self.assertIsNone(entry["recipe_provenance"])
         self.assertEqual(report["counts"]["built"], 1)
         self.assertNotIn("published", report["counts"])
+
+    def test_recipe_provenance_is_loaded_from_hummingbird_upstream_json(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            factory(root, CLOSURE)
+            (root / "packages" / "mesa" / ".hummingbird-upstream.json").write_text(json.dumps({
+                "package": "mesa",
+                "branch": "rawhide",
+                "remote": "https://src.fedoraproject.org/rpms/mesa.git",
+                "commit": "abc1234",
+                "tree": "def5678",
+                "imported_at": "2026-08-29T00:00:00+00:00",
+            }))
+            report = resolve(root)
+        entry = report["requirements"][0]
+        self.assertEqual(entry["recipe_provenance"], "https://src.fedoraproject.org/rpms/mesa.git")
 
     def test_an_unclaimed_requirement_fails(self) -> None:
         with self.assertRaisesRegex(ClosureError, "mesa-libGL"):
@@ -153,6 +170,14 @@ class ResolveTests(unittest.TestCase):
     def test_a_claim_the_transaction_does_not_ask_for_fails(self) -> None:
         with self.assertRaisesRegex(ClosureError, "does not ask for"):
             self.resolve(CLOSURE + 'mesa-libOSMesa = "mesa"\n')
+
+    def test_stale_upstream_spec_sources_fail(self) -> None:
+        closure = CLOSURE.replace(
+            '[upstream_spec_sources]\n',
+            '[upstream_spec_sources]\nstale-package = "https://github.com/negativo17/stale"\n',
+        )
+        with self.assertRaisesRegex(ClosureError, r"\[upstream_spec_sources\] maps names the transaction does not ask for"):
+            self.resolve(closure)
 
     def test_two_tables_claiming_one_requirement_fail(self) -> None:
         closure = CLOSURE + (
@@ -179,6 +204,14 @@ class ResolveTests(unittest.TestCase):
     def test_an_override_without_an_upstream_spec_source_fails(self) -> None:
         closure = CLOSURE.replace('mesa-libGL = "https://github.com/negativo17/mesa"\n', "")
         with self.assertRaisesRegex(ClosureError, "no named upstream spec source"):
+            self.resolve(closure)
+
+    def test_an_override_with_non_negativo17_rpmfusion_upstream_spec_source_fails(self) -> None:
+        closure = CLOSURE.replace(
+            'https://github.com/negativo17/mesa',
+            'https://src.fedoraproject.org/rpms/mesa.git',
+        )
+        with self.assertRaisesRegex(ClosureError, "must be from negativo17 or rpmfusion"):
             self.resolve(closure)
 
 
@@ -325,10 +358,11 @@ class RepositoryClosureTests(unittest.TestCase):
         self.assertEqual([entry for entry in overrides if entry["recipe"] is None], [])
 
     def test_every_multimedia_override_binary_has_a_named_upstream_spec_source(self) -> None:
-        """AC1 of projectbluefin/utah-packages#230, as an assertion.
+        """Target upstream spec source mapping and provenance for multimedia overrides.
 
-        Every Bluefin multimedia-override binary must map to a factory recipe
-        with a named upstream spec source from negativo17 or RPM Fusion.
+        Every Bluefin multimedia-override binary must map to a target upstream spec
+        source from negativo17 or RPM Fusion declared in config/multimedia-closure.toml,
+        while resolve() records both the target and current recipe provenance.
         """
         report = resolve(ROOT)
         overrides = [
@@ -347,6 +381,8 @@ class RepositoryClosureTests(unittest.TestCase):
                 "negativo17" in upstream or "rpmfusion" in upstream,
                 f"{entry['requirement']} upstream source {upstream} is not from negativo17 or rpmfusion",
             )
+            self.assertIn("recipe_provenance", entry)
+            self.assertTrue(entry["recipe_provenance"])
 
 
 if __name__ == "__main__":

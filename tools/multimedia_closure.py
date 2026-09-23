@@ -269,6 +269,12 @@ def resolve(root: Path, repodata: Path | None = None) -> dict:
             "config/multimedia-closure.toml claims requirements the transaction "
             "does not ask for: " + ", ".join(stale)
         )
+    stale_sources = sorted(set(upstream_sources) - {name for name, _ in wanted})
+    if stale_sources:
+        raise ClosureError(
+            "config/multimedia-closure.toml [upstream_spec_sources] maps names the "
+            "transaction does not ask for: " + ", ".join(stale_sources)
+        )
 
     resolved = []
     for name, origin in wanted:
@@ -287,6 +293,7 @@ def resolve(root: Path, repodata: Path | None = None) -> dict:
             "stage": None,
             "version": None,
             "nevra": None,
+            "recipe_provenance": None,
         }
         if "note" in claim:
             entry["note"] = claim["note"]
@@ -305,6 +312,14 @@ def resolve(root: Path, repodata: Path | None = None) -> dict:
             entry["recipe"] = f"packages/{source}"
             entry["stage"] = record.stage
             entry["version"] = locks[source].get("version")
+            upstream_json = root / "packages" / source / ".hummingbird-upstream.json"
+            if upstream_json.is_file():
+                try:
+                    entry["recipe_provenance"] = json.loads(
+                        upstream_json.read_text()
+                    ).get("remote")
+                except Exception:
+                    entry["recipe_provenance"] = None
         if claim["factory_binary"]:
             entry["nevra"] = nevra.get(claim["factory_binary"])
 
@@ -316,6 +331,11 @@ def resolve(root: Path, repodata: Path | None = None) -> dict:
             if not upstream_spec_source:
                 raise ClosureError(
                     f"multimedia override binary '{name}' has no named upstream spec source"
+                )
+            if not any(domain in upstream_spec_source for domain in ("negativo17", "rpmfusion")):
+                raise ClosureError(
+                    f"multimedia override binary '{name}' upstream spec source '{upstream_spec_source}' "
+                    "must be from negativo17 or rpmfusion"
                 )
 
         resolved.append(entry)

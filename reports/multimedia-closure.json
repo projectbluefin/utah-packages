@@ -6,10 +6,10 @@
     "codecs": "config/multimedia-closure.toml [transaction].codecs"
   },
   "policy": {
-    "codec_parity": "negativo17-multimedia-rpmfusion-nonfree",
+    "codec_parity": "negativo17-multimedia-rpmfusion-nonfree (target)",
     "target": "projectbluefin/utah-packages#230",
     "escalation": "projectbluefin/utah-packages#24",
-    "closure_contract": "Every Bluefin multimedia-override binary maps to a factory recipe with a named upstream\nspec source from negativo17/fedora-multimedia or RPM Fusion. Utah installs the same\nfunctional codec surface with no third-party repository enabled at build or runtime.\n"
+    "closure_contract": "Target contract: every Bluefin multimedia-override binary maps to a factory recipe with a named upstream\nspec source from negativo17/fedora-multimedia or RPM Fusion. Utah aims to install the same\nfunctional codec surface with no third-party repository enabled at build or runtime.\n"
   },
   "counts": {
     "requirements": 38,
@@ -29,7 +29,8 @@
       "recipe": "packages/intel-gmmlib",
       "stage": 0,
       "version": "22.10.1",
-      "nevra": null
+      "nevra": null,
+      "recipe_provenance": "https://src.fedoraproject.org/rpms/intel-gmmlib.git"
     },
     {
       "requirement": "intel-mediasdk",
@@ -41,7 +42,8 @@
       "recipe": "packages/intel-mediasdk",
       "stage": 0,
       "version": "23.2.2",
-      "nevra": null
+      "nevra": null,
+      "recipe_provenance": "https://src.fedoraproject.org/rpms/intel-mediasdk.git"
     },
     {
       "requirement": "intel-vpl-gpu-rt",
@@ -53,7 +55,8 @@
       "recipe": "packages/intel-vpl-gpu-rt",
       "stage": 0,
       "version": "26.1.6",
-      "nevra": null
+      "nevra": null,
+      "recipe_provenance": "https://src.fedoraproject.org/rpms/intel-vpl-gpu-rt.git"
     },
     {
       "requirement": "libheif",
@@ -65,7 +68,8 @@
       "recipe": "packages/libheif",
       "stage": 1,
       "version": "1.23.1",
-      "nevra": null
+      "nevra": null,
+      "recipe_provenance": "https://src.fedoraproject.org/rpms/libheif.git"
     },
     {
       "requirement": "libva",
@@ -77,7 +81,8 @@
       "recipe": "packages/libva",
       "stage": 0,
       "version": "2.24.1",
-      "nevra": null
+      "nevra": null,
+      "recipe_provenance": "https://src.fedoraproject.org/rpms/libva.git"
     },
     {
       "requirement": "libva-intel-media-driver",
@@ -89,7 +94,8 @@
       "recipe": "packages/intel-media-driver-free",
       "stage": 0,
       "version": "26.2.4",
-      "nevra": null
+      "nevra": null,
+      "recipe_provenance": "https://src.fedoraproject.org/rpms/intel-media-driver-free.git"
     },
     {
       "requirement": "mesa-dri-drivers",
@@ -101,7 +107,8 @@
       "recipe": "packages/mesa",
       "stage": 0,
       "version": "26.2.1",
-      "nevra": null
+      "nevra": null,
+      "recipe_provenance": "https://src.fedoraproject.org/rpms/mesa.git"
     },
     {
       "requirement": "mesa-filesystem",
@@ -113,7 +120,8 @@
       "recipe": "packages/mesa",
       "stage": 0,
       "version": "26.2.1",
-      "nevra": null
+      "nevra": null,
+      "recipe_provenance": "https://src.fedoraproject.org/rpms/mesa.git"
     },
     {
       "requirement": "mesa-libEGL",
@@ -125,7 +133,8 @@
       "recipe": "packages/mesa",
       "stage": 0,
       "version": "26.2.1",
-      "nevra": null
+      "nevra": null,
+      "recipe_provenance": "https://src.fedoraproject.org/rpms/mesa.git"
     },
     {
       "requirement": "mesa-libGL",
@@ -137,7 +146,8 @@
       "recipe": "packages/mesa",
       "stage": 0,
       "version": "26.2.1",
-      "nevra": null
+      "nevra": null,
+      "recipe_provenance": "https://src.fedoraproject.org/rpms/mesa.git"
     },
     {
       "requirement": "mesa-libgbm",
@@ -149,7 +159,8 @@
       "recipe": "packages/mesa",
       "stage": 0,
       "version": "26.2.1",
-      "nevra": null
+      "nevra": null,
+      "recipe_provenance": "https://src.fedoraproject.org/rpms/mesa.git"
     },
     {
       "requirement": "mesa-vulkan-drivers",
@@ -161,7 +172,8 @@
       "recipe": "packages/mesa",
       "stage": 0,
       "version": "26.2.1",
-      "nevra": null
+      "nevra": null,
+      "recipe_provenance": "https://src.fedoraproject.org/rpms/mesa.git"
     },
     {
       "requirement": "ffmpeg",
@@ -174,6 +186,7 @@
       "stage": 3,
       "version": "9.0.1",
       "nevra": null,
+      "recipe_provenance": "https://src.fedoraproject.org/rpms/ffmpeg.git",
       "note": "negativo17 builds Fedora's ffmpeg source with every codec on and no package suffix, so its command-line tool is `ffmpeg`. The same source built the way Fedora builds it sets `%global pkg_suffix -free` and names the tool `ffmpeg-free`. Same recipe, same binaries, different name; the free flavour carries no `Provides: ffmpeg`, so a transaction asking for the literal name still needs this mapping read."
     },
     {
@@ -187,6 +200,7 @@
       "stage": 3,
       "version": "9.0.1",
       "nevra": null,
+      "recipe_provenance": "https://src.fedoraproject.org/rpms/ffmpeg.git",
       "note": "`ffmpeg-libs` is negativo17's single bundle of the FFmpeg shared libraries. Fedora splits the same libraries into libavcodec-free, libavdevice-free, libavfilter-free, libavformat-free, libavutil-free, libswresample-free and libswscale-free, every one of them from `packages/ffmpeg`. Nothing links `ffmpeg-libs` by name -- consumers link the sonames -- so the split satisfies it. The binary recorded here is libavcodec-free because it is the member every other one requires."
     },
     {
@@ -200,6 +214,7 @@
       "stage": 3,
       "version": "9.0.1",
       "nevra": null,
+      "recipe_provenance": "https://src.fedoraproject.org/rpms/ffmpeg.git",
       "note": "The same rename as `ffmpeg`, one layer down: Fedora's suffixed build provides libavcodec.so.62 from libavcodec-free. Bluefin names `libavcodec` on the install line so negativo17's build wins over Fedora's; in a transaction of factory plus Hummingbird alone there is no second candidate to beat."
     },
     {
@@ -212,7 +227,8 @@
       "recipe": "packages/gstreamer1-plugins-bad-free",
       "stage": 4,
       "version": "1.28.6",
-      "nevra": null
+      "nevra": null,
+      "recipe_provenance": "https://src.fedoraproject.org/rpms/gstreamer1-plugins-bad-free.git"
     },
     {
       "requirement": "gstreamer1-plugins-bad-free-libs",
@@ -224,7 +240,8 @@
       "recipe": "packages/gstreamer1-plugins-bad-free",
       "stage": 4,
       "version": "1.28.6",
-      "nevra": null
+      "nevra": null,
+      "recipe_provenance": "https://src.fedoraproject.org/rpms/gstreamer1-plugins-bad-free.git"
     },
     {
       "requirement": "gstreamer1-plugins-good",
@@ -236,7 +253,8 @@
       "recipe": "packages/gstreamer1-plugins-good",
       "stage": 3,
       "version": "1.28.6",
-      "nevra": null
+      "nevra": null,
+      "recipe_provenance": "https://src.fedoraproject.org/rpms/gstreamer1-plugins-good.git"
     },
     {
       "requirement": "gstreamer1-plugins-base",
@@ -248,7 +266,8 @@
       "recipe": "packages/gstreamer1-plugins-base",
       "stage": 0,
       "version": "1.28.6",
-      "nevra": null
+      "nevra": null,
+      "recipe_provenance": "https://src.fedoraproject.org/rpms/gstreamer1-plugins-base.git"
     },
     {
       "requirement": "lame",
@@ -260,7 +279,8 @@
       "recipe": "packages/lame",
       "stage": 0,
       "version": "4.0",
-      "nevra": null
+      "nevra": null,
+      "recipe_provenance": "https://src.fedoraproject.org/rpms/lame.git"
     },
     {
       "requirement": "lame-libs",
@@ -272,7 +292,8 @@
       "recipe": "packages/lame",
       "stage": 0,
       "version": "4.0",
-      "nevra": null
+      "nevra": null,
+      "recipe_provenance": "https://src.fedoraproject.org/rpms/lame.git"
     },
     {
       "requirement": "libfdk-aac",
@@ -285,6 +306,7 @@
       "stage": null,
       "version": null,
       "nevra": null,
+      "recipe_provenance": null,
       "note": "negativo17's `libfdk-aac` is the complete Fraunhofer FDK AAC library, sourced from RPM Fusion's fdk-aac spec. Fedora ships `fdk-aac-free`, the subset with patent-encumbered profiles removed, built by `packages/fdk-aac-free`. Decoding comes from the FFmpeg libraries above; encoding uses fdk-aac-free."
     },
     {
@@ -297,7 +319,8 @@
       "recipe": "packages/jpegxl",
       "stage": 0,
       "version": "0.11.2",
-      "nevra": null
+      "nevra": null,
+      "recipe_provenance": "https://src.fedoraproject.org/rpms/jpegxl.git"
     },
     {
       "requirement": "ffmpegthumbnailer",
@@ -309,7 +332,8 @@
       "recipe": "packages/ffmpegthumbnailer",
       "stage": 4,
       "version": "2.3.0",
-      "nevra": null
+      "nevra": null,
+      "recipe_provenance": "https://src.fedoraproject.org/rpms/ffmpegthumbnailer.git"
     },
     {
       "requirement": "@multimedia",
@@ -322,6 +346,7 @@
       "stage": null,
       "version": null,
       "nevra": null,
+      "recipe_provenance": null,
       "note": "A comps group is not a package. Groups are defined by repository metadata, and a repository assembled with `createrepo_c` and no comps file has none, so `@multimedia` cannot resolve against the factory however many of its members are built. Its members are expanded into requirements of their own above, which is the measurable half; publishing a comps file alongside the repository is a publication-format change and belongs to a human."
     },
     {
@@ -335,6 +360,7 @@
       "stage": null,
       "version": null,
       "nevra": null,
+      "recipe_provenance": null,
       "note": "ALSA use-case-manager configuration, data only. Hummingbird ships the ALSA runtime this factory builds against -- `packages/` carries alsa-firmware, alsa-sof-firmware and alsa-tools and deliberately not alsa-lib -- so the configuration belongs on the same side as the library, not forked here. Confirm against Hummingbird's repodata before importing it."
     },
     {
@@ -348,6 +374,7 @@
       "stage": null,
       "version": null,
       "nevra": null,
+      "recipe_provenance": null,
       "note": "Command-line ALSA tools (alsamixer, aplay). Same side of the seam as alsa-ucm and not linked by anything in the Utah transaction; comps pulls it in for a desktop that manages sound from the command line, which Utah does through PipeWire and GNOME."
     },
     {
@@ -361,6 +388,7 @@
       "stage": null,
       "version": null,
       "nevra": null,
+      "recipe_provenance": null,
       "note": "The AV1 decoder plugin. It is neither a subpackage of any recipe here nor a dist-git repository under its own name, so resolving its source is the first step, and it needs Fedora's dav1d in the factory underneath it. Nothing in Utah's desktop transaction requires it today; it is listed so the count of what `@multimedia` asks for is honest."
     },
     {
@@ -374,6 +402,7 @@
       "stage": null,
       "version": null,
       "nevra": null,
+      "recipe_provenance": null,
       "note": "The GStreamer-to-FFmpeg bridge, sourced upstream from RPM Fusion gstreamer1-libav. Fedora's source package is `gstreamer1-plugin-libav` (singular `plugin`), it is at 1.28.7, and it carries `BuildRequires: gstreamer1-devel >= %{version}`. This factory's gstreamer1 family is pinned at 1.28.6, so importing the current recipe would add a BuildRequires nothing in the build root satisfies -- `docs/skills/repeated-mistakes.md` #2, a package and the family it is released with pinned separately. Bump gstreamer1, gstreamer1-plugins-base, gstreamer1-plugins-good and gstreamer1-plugins-bad-free to 1.28.7 in one change, then import this at a stage above ffmpeg's."
     },
     {
@@ -386,7 +415,8 @@
       "recipe": "packages/gstreamer1-plugins-bad-free",
       "stage": 4,
       "version": "1.28.6",
-      "nevra": null
+      "nevra": null,
+      "recipe_provenance": "https://src.fedoraproject.org/rpms/gstreamer1-plugins-bad-free.git"
     },
     {
       "requirement": "gstreamer1-plugins-ugly-free",
@@ -399,6 +429,7 @@
       "stage": null,
       "version": null,
       "nevra": null,
+      "recipe_provenance": null,
       "note": "The free subset of GStreamer's `ugly` plugin set (with RPM Fusion carrying nonfree plugins); no recipe here yet. It is a plain Fedora dist-git import at the gstreamer1 family version, so it is import-ready once that family moves -- see gstreamer1-plugin-libav, which has to move with it."
     },
     {
@@ -412,6 +443,7 @@
       "stage": null,
       "version": null,
       "nevra": null,
+      "recipe_provenance": null,
       "note": "Not a gap at all: the same `dnf5 install` line that names `@multimedia` passes `-x PackageKit*`, so Bluefin excludes this member of the group it just asked for. It is inventoried so the exclusion is visible rather than looking like an oversight, and so a future comps change cannot quietly turn it into one."
     },
     {
@@ -424,7 +456,8 @@
       "recipe": "packages/pipewire",
       "stage": 6,
       "version": "1.6.8",
-      "nevra": null
+      "nevra": null,
+      "recipe_provenance": "https://src.fedoraproject.org/rpms/pipewire.git"
     },
     {
       "requirement": "pipewire-config-raop",
@@ -436,7 +469,8 @@
       "recipe": "packages/pipewire",
       "stage": 6,
       "version": "1.6.8",
-      "nevra": null
+      "nevra": null,
+      "recipe_provenance": "https://src.fedoraproject.org/rpms/pipewire.git"
     },
     {
       "requirement": "pipewire-gstreamer",
@@ -448,7 +482,8 @@
       "recipe": "packages/pipewire",
       "stage": 6,
       "version": "1.6.8",
-      "nevra": null
+      "nevra": null,
+      "recipe_provenance": "https://src.fedoraproject.org/rpms/pipewire.git"
     },
     {
       "requirement": "pipewire-pulseaudio",
@@ -460,7 +495,8 @@
       "recipe": "packages/pipewire",
       "stage": 6,
       "version": "1.6.8",
-      "nevra": null
+      "nevra": null,
+      "recipe_provenance": "https://src.fedoraproject.org/rpms/pipewire.git"
     },
     {
       "requirement": "pipewire-utils",
@@ -472,7 +508,8 @@
       "recipe": "packages/pipewire",
       "stage": 6,
       "version": "1.6.8",
-      "nevra": null
+      "nevra": null,
+      "recipe_provenance": "https://src.fedoraproject.org/rpms/pipewire.git"
     },
     {
       "requirement": "wireplumber",
@@ -484,7 +521,8 @@
       "recipe": "packages/wireplumber",
       "stage": 4,
       "version": "0.5.14",
-      "nevra": null
+      "nevra": null,
+      "recipe_provenance": "https://src.fedoraproject.org/rpms/wireplumber.git"
     }
   ]
 }

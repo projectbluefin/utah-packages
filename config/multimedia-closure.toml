@@ -84,24 +84,24 @@ members = [
 conditional_members = ["gstreamer-plugins-espeak"]
 
 [policy]
-# Full codec closure sourced from negativo17 multimedia + RPM Fusion nonfree specs.
-# Addresses projectbluefin/utah-packages#230, parent goal projectbluefin/utah-packages#24.
+# Target parity: full codec closure sourced from negativo17 multimedia + RPM Fusion nonfree specs.
+# Tracks projectbluefin/utah-packages#230, parent goal projectbluefin/utah-packages#24.
 #
-# Every Bluefin multimedia override binary maps to a factory recipe with a named
+# Every Bluefin multimedia override binary maps to a factory recipe with a named target
 # upstream spec source from negativo17/fedora-multimedia or RPM Fusion.
-# Utah installs the functional codec surface with no third-party repository
+# Utah aims to install the functional codec surface with no third-party repository
 # enabled at build or runtime.
-codec_parity = "negativo17-multimedia-rpmfusion-nonfree"
+codec_parity = "negativo17-multimedia-rpmfusion-nonfree (target)"
 target = "projectbluefin/utah-packages#230"
 escalation = "projectbluefin/utah-packages#24"
 closure_contract = """
-Every Bluefin multimedia-override binary maps to a factory recipe with a named upstream
-spec source from negativo17/fedora-multimedia or RPM Fusion. Utah installs the same
+Target contract: every Bluefin multimedia-override binary maps to a factory recipe with a named upstream
+spec source from negativo17/fedora-multimedia or RPM Fusion. Utah aims to install the same
 functional codec surface with no third-party repository enabled at build or runtime.
 """
 
 [upstream_spec_sources]
-# Named upstream spec sources for all 12 Bluefin multimedia override binaries
+# Named target upstream spec sources for all 12 Bluefin multimedia override binaries
 # (negativo17/fedora-multimedia) and nonfree/freeworld codec components (RPM Fusion).
 intel-gmmlib = "https://github.com/negativo17/intel-gmmlib"
 intel-mediasdk = "https://github.com/negativo17/intel-mediasdk"
@@ -120,9 +120,7 @@ ffmpeg-libs = "https://github.com/rpmfusion/ffmpeg"
 libavcodec = "https://github.com/rpmfusion/ffmpeg"
 libfdk-aac = "https://github.com/rpmfusion/fdk-aac"
 gstreamer1-plugin-libav = "https://github.com/rpmfusion/gstreamer1-libav"
-gstreamer1-plugins-ugly = "https://github.com/rpmfusion/gstreamer1-plugins-ugly"
 gstreamer1-plugins-ugly-free = "https://github.com/rpmfusion/gstreamer1-plugins-ugly"
-gstreamer1-plugins-bad-freeworld = "https://github.com/rpmfusion/gstreamer1-plugins-bad-freeworld"
 
 [built]
 # requirement = the factory source recipe under `packages/` that emits a binary
