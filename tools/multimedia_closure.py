@@ -58,6 +58,38 @@ def load_closure(path: Path) -> dict:
     return tomllib.loads(path.read_text())
 
 
+def _normalise_source(url: str) -> str:
+    """One spelling for two URLs naming the same repository.
+
+    `.hummingbird-upstream.json` records a clone URL (`....git`), the closure
+    file names a browsable one. Comparing them raw would report every entry as
+    a mismatch and make the parity field meaningless.
+    """
+    return url.strip().rstrip("/").removesuffix(".git").lower()
+
+
+def codec_parity(upstream_spec_source: str | None, recipe_provenance: str | None) -> str | None:
+    """Whether the recipe that builds a requirement is the named upstream one.
+
+    `status = "built"` says only that a factory recipe emits a binary of that
+    name; it says nothing about which spec built it. Every override recipe is
+    currently a Fedora dist-git import, and Fedora's specs are codec-restricted
+    -- `mesa` builds with no `-Dvideo-codecs`, `libheif` disables HEVC,
+    `intel-media-driver-free` is the free variant -- so `built` alone overstates
+    parity with negativo17/RPM Fusion. This is the field that does not.
+    `codec_parity` on a requirement with no factory source is `None`: an
+    `[exception]` entry is not built here at all, so there is no spec to
+    compare against the named upstream one.
+    """
+    if not upstream_spec_source:
+        return None
+    if not recipe_provenance:
+        return "unknown"
+    if _normalise_source(recipe_provenance) == _normalise_source(upstream_spec_source):
+        return "upstream"
+    return "fedora-restricted"
+
+
 def requirements(manifest: dict, closure: dict) -> list[tuple[str, str]]:
     """Every name Bluefin's multimedia transaction asks for, with its origin.
 
@@ -257,6 +289,7 @@ def resolve(root: Path, repodata: Path | None = None) -> dict:
     locks = source_locks(root)
     claims = _claims(closure)
     upstream_sources = closure.get("upstream_spec_sources", {})
+    parity_declarations = closure.get("parity", {})
     nevra = published_nevra(repodata) if repodata else {}
 
     wanted = requirements(manifest, closure)
@@ -278,6 +311,15 @@ def resolve(root: Path, repodata: Path | None = None) -> dict:
             "config/multimedia-closure.toml [upstream_spec_sources] maps names the "
             "transaction does not ask for: " + ", ".join(stale_sources)
         )
+    known_keys = {name for name, _ in wanted} | {
+        claim["factory_source"] for claim in claims.values() if claim.get("factory_source")
+    }
+    stale_parity = sorted(set(parity_declarations) - known_keys)
+    if stale_parity:
+        raise ClosureError(
+            "config/multimedia-closure.toml [parity] declares names the transaction "
+            "does not ask for: " + ", ".join(stale_parity)
+        )
 
     resolved = []
     for name, origin in wanted:
@@ -292,6 +334,8 @@ def resolve(root: Path, repodata: Path | None = None) -> dict:
             "factory_source": claim["factory_source"],
             "factory_binary": claim["factory_binary"],
             "upstream_spec_source": upstream_spec_source,
+            "codec_parity": None,
+            "parity_note": None,
             "recipe": None,
             "stage": None,
             "version": None,
@@ -326,6 +370,22 @@ def resolve(root: Path, repodata: Path | None = None) -> dict:
         if claim["factory_binary"]:
             entry["nevra"] = nevra.get(claim["factory_binary"])
 
+        entry["codec_parity"] = (
+            codec_parity(upstream_spec_source, entry["recipe_provenance"])
+            if source is not None else None
+        )
+        if entry["codec_parity"] == "fedora-restricted":
+            declaration = parity_declarations.get(name) or (
+                parity_declarations.get(source) if source else None
+            )
+            if not declaration or not declaration.get("reason"):
+                raise ClosureError(
+                    f"{name} is built from {entry['recipe_provenance']}, which is not the "
+                    f"named upstream spec source {upstream_spec_source}; declare the "
+                    f"restriction in [parity.{source or name}] with a reason"
+                )
+            entry["parity_note"] = " ".join(declaration["reason"].split())
+
         if origin == "multimedia-override":
             if not claim.get("factory_source"):
                 raise ClosureError(
@@ -352,6 +412,10 @@ def resolve(root: Path, repodata: Path | None = None) -> dict:
         "equivalent": sum(1 for entry in resolved if entry["status"] == "equivalent"),
         "exception": sum(1 for entry in resolved if entry["status"] == "exception"),
         "sources": len({entry["factory_source"] for entry in resolved if entry["factory_source"]}),
+        "upstream_parity": sum(1 for entry in resolved if entry["codec_parity"] == "upstream"),
+        "fedora_restricted": sum(
+            1 for entry in resolved if entry["codec_parity"] == "fedora-restricted"
+        ),
     }
     report = {
         "schema": SCHEMA,
@@ -395,6 +459,19 @@ def main(argv: list[str] | None = None) -> int:
     summary = ", ".join(f"{value} {key}" for key, value in counts.items())
     if args.check:
         print(f"multimedia closure inventoried: {summary}")
+        restricted = [
+            entry["requirement"] for entry in report["requirements"]
+            if entry["codec_parity"] == "fedora-restricted"
+        ]
+        if restricted:
+            # Reported, not failed: every override is a Fedora import today, so
+            # failing here would gate the tree on a migration that has not run
+            # yet (utah-packages#230). The contract the gate does enforce is
+            # that each one carries a declared reason in [parity].
+            print(
+                "codec parity not yet at the named upstream spec source for: "
+                + ", ".join(restricted)
+            )
     else:
         print(json.dumps(counts, indent=2))
     return 0

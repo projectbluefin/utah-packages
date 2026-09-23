@@ -150,7 +150,10 @@ class ResolveTests(unittest.TestCase):
     def test_recipe_provenance_is_loaded_from_hummingbird_upstream_json(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            factory(root, CLOSURE)
+            factory(root, CLOSURE + (
+                '\n[parity.mesa]\nstatus = "fedora-restricted"\n'
+                'reason = "Fedora import."\n'
+            ))
             (root / "packages" / "mesa" / ".hummingbird-upstream.json").write_text(json.dumps({
                 "package": "mesa",
                 "branch": "rawhide",
@@ -221,6 +224,63 @@ class ResolveTests(unittest.TestCase):
         )
         with self.assertRaisesRegex(ClosureError, "must be from negativo17 or rpmfusion"):
             self.resolve(closure)
+
+
+class CodecParityTests(unittest.TestCase):
+    """`built` is a label; parity is measured against the recorded provenance."""
+
+    def resolve(self, closure: str, provenance: str | None) -> dict:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            factory(root, closure)
+            if provenance is not None:
+                (root / "packages" / "mesa" / ".hummingbird-upstream.json").write_text(
+                    json.dumps({"package": "mesa", "remote": provenance})
+                )
+            return resolve(root)
+
+    def test_provenance_matching_the_named_upstream_is_upstream_parity(self) -> None:
+        report = self.resolve(CLOSURE, "https://github.com/negativo17/mesa.git")
+        entry = report["requirements"][0]
+        self.assertEqual(entry["codec_parity"], "upstream")
+        self.assertIsNone(entry["parity_note"])
+        self.assertEqual(report["counts"]["upstream_parity"], 1)
+        self.assertEqual(report["counts"]["fedora_restricted"], 0)
+
+    def test_a_fedora_import_is_not_upstream_parity_even_when_built(self) -> None:
+        closure = CLOSURE + (
+            '\n[parity.mesa]\nstatus = "fedora-restricted"\n'
+            'reason = "Fedora\'s spec passes no -Dvideo-codecs."\n'
+        )
+        report = self.resolve(closure, "https://src.fedoraproject.org/rpms/mesa.git")
+        entry = report["requirements"][0]
+        self.assertEqual(entry["status"], "built")
+        self.assertEqual(entry["codec_parity"], "fedora-restricted")
+        self.assertEqual(entry["parity_note"], "Fedora's spec passes no -Dvideo-codecs.")
+        self.assertEqual(report["counts"]["fedora_restricted"], 1)
+        self.assertEqual(report["counts"]["upstream_parity"], 0)
+
+    def test_an_undeclared_provenance_divergence_fails_the_gate(self) -> None:
+        with self.assertRaisesRegex(ClosureError, r"\[parity\.mesa\]"):
+            self.resolve(CLOSURE, "https://src.fedoraproject.org/rpms/mesa.git")
+
+    def test_a_recipe_with_no_recorded_provenance_is_not_upstream_parity(self) -> None:
+        # Not a gate failure -- a recipe carrying no `.hummingbird-upstream.json`
+        # has nothing to compare -- but it is not parity either, and the
+        # repository-level test requires provenance on every override.
+        report = self.resolve(CLOSURE, None)
+        self.assertEqual(report["requirements"][0]["codec_parity"], "unknown")
+        self.assertEqual(report["counts"]["upstream_parity"], 0)
+
+    def test_a_parity_entry_without_a_reason_fails(self) -> None:
+        closure = CLOSURE + '\n[parity.mesa]\nstatus = "fedora-restricted"\nreason = ""\n'
+        with self.assertRaisesRegex(ClosureError, r"\[parity\.mesa\]"):
+            self.resolve(closure, "https://src.fedoraproject.org/rpms/mesa.git")
+
+    def test_a_parity_entry_for_an_unasked_name_fails(self) -> None:
+        closure = CLOSURE + '\n[parity.not-asked-for]\nreason = "stale"\n'
+        with self.assertRaisesRegex(ClosureError, r"\[parity\] declares names"):
+            self.resolve(closure, "https://github.com/negativo17/mesa")
 
 
 class PublishedNevraTests(unittest.TestCase):
@@ -413,6 +473,36 @@ class RepositoryClosureTests(unittest.TestCase):
             )
             self.assertIn("recipe_provenance", entry)
             self.assertTrue(entry["recipe_provenance"])
+
+    def test_every_override_declares_parity_against_its_named_upstream(self) -> None:
+        """`built` is not codec parity, and the report must not read as if it is.
+
+        Every override recipe is a Fedora dist-git import today, so each one has
+        to resolve to `fedora-restricted` with a stated reason rather than to
+        `upstream` -- and the moment one is actually migrated, its provenance
+        matches and it flips to `upstream` with no edit here.
+        """
+        report = resolve(ROOT)
+        overrides = [
+            entry for entry in report["requirements"]
+            if entry["origin"] == "multimedia-override"
+        ]
+        for entry in overrides:
+            self.assertIn(
+                entry["codec_parity"], ("upstream", "fedora-restricted"),
+                f"{entry['requirement']} has no measured codec parity",
+            )
+            if entry["codec_parity"] == "fedora-restricted":
+                self.assertTrue(
+                    entry["parity_note"],
+                    f"{entry['requirement']} diverges from its named upstream spec "
+                    "source with no reason recorded in [parity]",
+                )
+        self.assertEqual(
+            report["counts"]["upstream_parity"] + report["counts"]["fedora_restricted"],
+            sum(1 for entry in report["requirements"]
+                if entry["codec_parity"] in ("upstream", "fedora-restricted")),
+        )
 
 
 if __name__ == "__main__":

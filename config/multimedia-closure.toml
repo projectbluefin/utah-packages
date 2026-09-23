@@ -122,6 +122,82 @@ libfdk-aac = "https://github.com/rpmfusion/fdk-aac"
 gstreamer1-plugin-libav = "https://github.com/rpmfusion/gstreamer1-libav"
 gstreamer1-plugins-ugly-free = "https://github.com/rpmfusion/gstreamer1-plugins-ugly"
 
+# Why a requirement is built from something other than the upstream spec source
+# named above. `[built]` says only that a factory recipe emits a binary of that
+# name; it says nothing about which spec built it, and every recipe here is a
+# Fedora dist-git import whose codec set is narrower than negativo17's or RPM
+# Fusion's. `tools/multimedia_closure.py` derives `codec_parity` per requirement
+# by comparing the recipe's `.hummingbird-upstream.json` provenance against the
+# source named above, and fails when a divergence carries no entry here -- so a
+# Fedora-restricted build cannot pass as upstream parity by wearing the `built`
+# label. Keys are factory source recipes (or requirement names).
+[parity.mesa]
+status = "fedora-restricted"
+reason = """
+Imported from src.fedoraproject.org/rpms/mesa. The Fedora spec passes no
+`-Dvideo-codecs`, so the build is free-codecs-only: no H.264, H.265 or VC-1
+hardware decode through the Gallium/VA-API frontends. negativo17's mesa builds
+the same source with the full codec list, which is the parity #230 tracks.
+"""
+
+[parity.libheif]
+status = "fedora-restricted"
+reason = """
+Imported from src.fedoraproject.org/rpms/libheif, which disables the HEVC
+encoder and decoder plugins. HEIC files therefore do not decode. negativo17's
+libheif enables them.
+"""
+
+[parity.intel-media-driver-free]
+status = "fedora-restricted"
+reason = """
+Imported from src.fedoraproject.org/rpms/intel-media-driver-free, the free
+variant: the restricted-codec entrypoints Fedora cannot ship are compiled out,
+so VA-API hardware decode of H.264/H.265 is absent. negativo17's
+intel-media-driver is the full build.
+"""
+
+[parity.intel-gmmlib]
+status = "fedora-restricted"
+reason = """
+Imported from Fedora dist-git rather than negativo17's spec. The library itself
+is codec-neutral, but it is version-coupled to the media driver and media SDK
+it is built against, so it is listed here until the Intel stack moves together.
+"""
+
+[parity.intel-mediasdk]
+status = "fedora-restricted"
+reason = """
+Imported from Fedora dist-git rather than negativo17's spec, and built against
+the free media driver, so the restricted codec paths it exposes are only as
+complete as that driver. Moves with the rest of the Intel stack.
+"""
+
+[parity.intel-vpl-gpu-rt]
+status = "fedora-restricted"
+reason = """
+Imported from Fedora dist-git rather than negativo17's spec, and, like
+intel-mediasdk, limited by the free media driver underneath it. Moves with the
+rest of the Intel stack.
+"""
+
+[parity.libva]
+status = "fedora-restricted"
+reason = """
+Imported from Fedora dist-git rather than negativo17's spec. libva is the
+dispatch layer and carries no codec itself; what it can dispatch to is decided
+by the driver, which is the free variant today.
+"""
+
+[parity.ffmpeg]
+status = "fedora-restricted"
+reason = """
+Imported from src.fedoraproject.org/rpms/ffmpeg, which builds with
+`%global pkg_suffix -free` and the encoders and decoders Fedora cannot ship
+switched off. RPM Fusion's ffmpeg is the same source with the full codec set,
+which is what `ffmpeg`, `ffmpeg-libs` and `libavcodec` are mapped to.
+"""
+
 [built]
 # requirement = the factory source recipe under `packages/` that emits a binary
 # of exactly this name.

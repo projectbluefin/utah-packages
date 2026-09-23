@@ -2,8 +2,9 @@
 name: multimedia-closure
 description: >-
   How Bluefin's multimedia override and codec transaction is inventoried here,
-  how the full codec closure is sourced from negativo17 multimedia and RPM Fusion
-  specs, why half of it is invisible to the manifest, and what to check before
+  how the full codec closure is mapped to target negativo17 multimedia and RPM
+  Fusion specs (the recipes themselves are Fedora imports today), why half of it
+  is invisible to the manifest, and what to check before
   claiming a codec requirement is satisfied. Load before adding a recipe for a
   codec, syncing config/bluefin-packages.toml, or answering "does the factory
   cover Bluefin's multimedia?".
@@ -80,6 +81,34 @@ This contract and mapping inventory track target parity for Utah to install the
 functional codec surface without third-party repositories enabled at build or runtime.
 The report surfaces both the declared target upstream spec source and the current recipe
 provenance from `.hummingbird-upstream.json`, making migration progress visible.
+
+### `built` is a label, `codec_parity` is the measurement
+
+`[built]` says only that a factory recipe emits a binary of that name. It says
+nothing about which spec built it, and today every one of them is a Fedora
+dist-git import whose codec set is deliberately narrower: `packages/mesa`
+passes no `-Dvideo-codecs`, `packages/libheif` disables the HEVC plugins,
+`intel-media-driver-free` is the free variant. Reading `built` as codec parity
+with negativo17 or RPM Fusion is the mistake the `[equivalent]` rule already
+warns about, one layer up.
+
+So every requirement carries a separate `codec_parity` in the report, derived
+by comparing the recipe's `.hummingbird-upstream.json` provenance against the
+target source named in `[upstream_spec_sources]`:
+
+- `upstream` — built from the named negativo17 or RPM Fusion spec.
+- `fedora-restricted` — built from something else, today always a Fedora
+  import; the restriction is stated in `[parity.<recipe>].reason` in
+  `config/multimedia-closure.toml` and copied into the report as `parity_note`.
+- `unknown` — built from a recipe with no recorded provenance.
+- `null` — an `[exception]`, which this factory does not build at all.
+
+`--check` fails when a divergence carries no `[parity]` entry, so a
+Fedora-restricted build cannot pass as upstream parity by wearing the `built`
+label, and it prints the requirements still short of parity. It does not fail
+on the divergence itself: the migration under `#230` has not run, so `0
+upstream_parity, 15 fedora_restricted` is the honest current state, not a
+regression to block on.
 
 ## Before claiming a requirement is satisfied
 
