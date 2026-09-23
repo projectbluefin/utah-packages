@@ -214,6 +214,14 @@ class ResolveTests(unittest.TestCase):
         with self.assertRaisesRegex(ClosureError, "must be from negativo17 or rpmfusion"):
             self.resolve(closure)
 
+    def test_an_override_with_fork_upstream_spec_source_fails(self) -> None:
+        closure = CLOSURE.replace(
+            'https://github.com/negativo17/mesa',
+            'https://github.com/evil/negativo17-fork',
+        )
+        with self.assertRaisesRegex(ClosureError, "must be from negativo17 or rpmfusion"):
+            self.resolve(closure)
+
 
 class PublishedNevraTests(unittest.TestCase):
     def test_epoch_is_carried_and_the_highest_release_wins(self) -> None:
@@ -399,7 +407,8 @@ class RepositoryClosureTests(unittest.TestCase):
                 f"{entry['requirement']} has no upstream spec source",
             )
             self.assertTrue(
-                "negativo17" in upstream or "rpmfusion" in upstream,
+                upstream.startswith("https://github.com/negativo17/")
+                or upstream.startswith("https://github.com/rpmfusion/"),
                 f"{entry['requirement']} upstream source {upstream} is not from negativo17 or rpmfusion",
             )
             self.assertIn("recipe_provenance", entry)

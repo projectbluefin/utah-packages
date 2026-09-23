@@ -335,7 +335,10 @@ def resolve(root: Path, repodata: Path | None = None) -> dict:
                 raise ClosureError(
                     f"multimedia override binary '{name}' has no named upstream spec source"
                 )
-            if not any(domain in upstream_spec_source for domain in ("negativo17", "rpmfusion")):
+            if not (
+                upstream_spec_source.startswith("https://github.com/negativo17/")
+                or upstream_spec_source.startswith("https://github.com/rpmfusion/")
+            ):
                 raise ClosureError(
                     f"multimedia override binary '{name}' upstream spec source '{upstream_spec_source}' "
                     "must be from negativo17 or rpmfusion"
