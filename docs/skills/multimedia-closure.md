@@ -57,10 +57,11 @@ holds to the current tree.
   tracked exceptions; `PackageKit-gstreamer-plugin` is excluded by the very
   install line that asks for the group, via `-x PackageKit*`.
 
-Conditional members are not requirements. `gstreamer-plugins-espeak` is
-conditional on espeak, which Utah does not install, so it is recorded in
-`conditional_members` and inventoried nowhere else — counting it would
-manufacture a gap.
+Conditional members are not requirements. comps declares
+`gstreamer-plugins-espeak` as `type="conditional" requires="gstreamer"`, so it
+arrives only when the legacy `gstreamer` package is already in the
+transaction, which on Utah it is not; it is recorded in `conditional_members`
+and inventoried nowhere else — counting it would manufacture a gap.
 
 ## Codec closure sourcing from negativo17 and RPM Fusion
 
@@ -101,7 +102,13 @@ target source named in `[upstream_spec_sources]`:
   import; the restriction is stated in `[parity.<recipe>].reason` in
   `config/multimedia-closure.toml` and copied into the report as `parity_note`.
 - `unknown` — built from a recipe with no recorded provenance.
-- `null` — an `[exception]`, which this factory does not build at all.
+- `null` — no upstream spec source is named for it in
+  `[upstream_spec_sources]`, so there is nothing to measure against. That is
+  every `[exception]`, which this factory does not build at all, and also the
+  `built` entries outside the override set — `lame{,-libs}`, the
+  `gstreamer1-plugins-*` family, the `pipewire-*` binaries. `null` is "not
+  measured", not "not at parity"; only the 16 named sources are counted in
+  `upstream_parity` and `fedora_restricted`.
 
 `--check` fails when a divergence carries no `[parity]` entry, so a
 Fedora-restricted build cannot pass as upstream parity by wearing the `built`
@@ -109,6 +116,11 @@ label, and it prints the requirements still short of parity. It does not fail
 on the divergence itself: the migration under `#230` has not run, so `0
 upstream_parity, 15 fedora_restricted` is the honest current state, not a
 regression to block on.
+
+The inventory maps the targets; it does not source anything from negativo17 or
+RPM Fusion yet. Every override recipe still carries `src.fedoraproject.org`
+provenance, so `#230` stays open until `upstream_parity` starts rising — this
+contract is the measurement that will show it, not the work it measures.
 
 ## Before claiming a requirement is satisfied
 

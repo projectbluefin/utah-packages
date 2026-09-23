@@ -55,7 +55,7 @@ codecs = [
 groups = ["@multimedia"]
 
 [groups."@multimedia"]
-definition = "https://pagure.io/fedora-comps/blob/main/f/comps-f44.xml.in"
+definition = "https://forge.fedoraproject.org/releng/fedora-comps/src/branch/main/comps-f44.xml.in"
 # The unconditional members, verbatim from comps-f44.xml.in. Members already
 # named by the two lists above are not repeated as requirements; the resolver
 # keeps the first origin it saw.
@@ -77,10 +77,12 @@ members = [
     "pipewire-utils",
     "wireplumber",
 ]
-# `gstreamer-plugins-espeak` is a conditional member: comps installs it only
-# when espeak is already in the transaction, which on Bluefin it is not. A
-# conditional member is not a requirement, so it is recorded here and nowhere
-# else rather than inventoried as a gap that does not exist.
+# `gstreamer-plugins-espeak` is a conditional member: comps declares it
+# `type="conditional" requires="gstreamer"`, so it is pulled in only when the
+# legacy `gstreamer` (0.10) package is already in the transaction, which on
+# Bluefin it is not. A conditional member is not a requirement, so it is
+# recorded here and nowhere else rather than inventoried as a gap that does
+# not exist.
 conditional_members = ["gstreamer-plugins-espeak"]
 
 [policy]

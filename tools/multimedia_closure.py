@@ -77,9 +77,12 @@ def codec_parity(upstream_spec_source: str | None, recipe_provenance: str | None
     -- `mesa` builds with no `-Dvideo-codecs`, `libheif` disables HEVC,
     `intel-media-driver-free` is the free variant -- so `built` alone overstates
     parity with negativo17/RPM Fusion. This is the field that does not.
-    `codec_parity` on a requirement with no factory source is `None`: an
-    `[exception]` entry is not built here at all, so there is no spec to
-    compare against the named upstream one.
+    `codec_parity` on a requirement with no named upstream spec source is
+    `None`, which is "not measured here" rather than "not at parity": an
+    `[exception]` is not built here at all, and a `built` entry outside the
+    override set -- `lame`, the `gstreamer1-plugins-*` family, the
+    `pipewire-*` binaries -- has no negativo17 or RPM Fusion spec named for
+    it in `[upstream_spec_sources]`, so there is nothing to compare against.
     """
     if not upstream_spec_source:
         return None
@@ -244,7 +247,15 @@ def primary_xml(repodata: Path) -> bytes:
                 "not installed; add `pip install zstandard` to this job"
             ) from error
 
-        return zstandard.ZstdDecompressor().stream_reader(io.BytesIO(raw)).read()
+        try:
+            return zstandard.ZstdDecompressor().stream_reader(io.BytesIO(raw)).read()
+        except zstandard.ZstdError as error:
+            # Same reason as the ImportError above: ZstdError is not an
+            # OSError or a ValueError, so main() would not catch it and the
+            # continue-on-error publish step would swallow the traceback.
+            raise ClosureError(
+                f"{path.name} is not readable as zstd: {error}"
+            ) from error
     if path.suffix == ".xml":
         return raw
     raise ClosureError(f"unsupported primary.xml compression: {path.name}")
@@ -261,7 +272,16 @@ def published_nevra(repodata: Path) -> dict[str, str]:
     primary = primary_xml(repodata)
     best: dict[str, tuple] = {}
     found: dict[str, str] = {}
-    for package in ElementTree.fromstring(primary).iter(f"{{{COMMON_NS}}}package"):
+    try:
+        root = ElementTree.fromstring(primary)
+    except ElementTree.ParseError as error:
+        # ParseError subclasses SyntaxError, not ValueError, so main() would
+        # let a truncated or half-written primary.xml traceback out of the
+        # continue-on-error publish step as if there were nothing to report.
+        raise ClosureError(
+            f"{repodata} has an unreadable primary.xml: {error}"
+        ) from error
+    for package in root.iter(f"{{{COMMON_NS}}}package"):
         name = package.findtext(f"{{{COMMON_NS}}}name") or ""
         version = package.find(f"{{{COMMON_NS}}}version")
         architecture = package.findtext(f"{{{COMMON_NS}}}arch") or ""
