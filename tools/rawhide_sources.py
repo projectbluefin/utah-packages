@@ -17,6 +17,11 @@ grammar lives here once; see the accompanying issue for the separate,
 policy-level divergence between *this* grammar and the two other section
 grammars used by ``tools/runtime_contract.py`` and
 ``tools/recalculate_hummingbird_gaps.py``.
+
+``tools/multimedia_closure.py`` is a fourth reader, and deliberately not a
+fifth grammar: it takes exactly one section, ``multimedia_overrides``, named
+by ``config/multimedia-closure.toml`` rather than hardcoded, because the rest
+of Bluefin's multimedia transaction is not in this manifest at all.
 """
 
 from __future__ import annotations

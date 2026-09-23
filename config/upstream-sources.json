@@ -305,6 +305,14 @@
       "sha512": "be8cdfca64886f2ec5cd2359f8db6a998ee759d105b10ade9b2a7b640356ad56ab0ff50218fce7b6312462f15f98d90ac9d197a3b02a23771754d2714fec628d"
     },
     {
+      "name": "ffmpegthumbnailer",
+      "stage": 4,
+      "version": "2.3.0",
+      "url": "https://github.com/dirkvdb/ffmpegthumbnailer/archive/v2.3.0/ffmpegthumbnailer-2.3.0.tar.gz",
+      "filename": "ffmpegthumbnailer-2.3.0.tar.gz",
+      "sha512": "1eaa5446fc4388638a7b90600e1408c62d3d677bced5ba18b6f5be4745795fee2f5f084e9d315cbdfc963fd9ae7e655fb4b61a34d8e8558eb0f891334e2637e8"
+    },
+    {
       "name": "fish",
       "version": "4.6.0",
       "url": "https://github.com/fish-shell/fish-shell/releases/download/4.6.0/fish-4.6.0.tar.xz",
