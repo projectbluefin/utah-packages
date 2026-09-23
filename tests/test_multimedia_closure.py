@@ -317,6 +317,27 @@ class PublishedNevraTests(unittest.TestCase):
             found = published_nevra(repodata)
         self.assertEqual(found["libjxl"], "libjxl-1:0.11.2-3.hum1.bfin.x86_64")
 
+    def test_repomd_anchors_on_data_type_primary_ignoring_primary_db(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            repodata = Path(directory)
+            (repodata / "primary.sqlite.bz2").write_bytes(b"not really bz2")
+            (repodata / "real-primary.xml.gz").write_bytes(
+                gzip.compress(PRIMARY.encode())
+            )
+            (repodata / "repomd.xml").write_text(
+                '<?xml version="1.0" encoding="UTF-8"?>\n'
+                '<repomd xmlns="http://linux.duke.edu/metadata/repo">\n'
+                '  <data type="primary_db">\n'
+                '    <location href="repodata/primary.sqlite.bz2"/>\n'
+                "  </data>\n"
+                '  <data type="primary">\n'
+                '    <location href="repodata/real-primary.xml.gz"/>\n'
+                "  </data>\n"
+                "</repomd>\n"
+            )
+            found = published_nevra(repodata)
+        self.assertEqual(found["libjxl"], "libjxl-1:0.11.2-3.hum1.bfin.x86_64")
+
     def test_an_unreadable_compression_is_named_rather_than_guessed(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             repodata = Path(directory)

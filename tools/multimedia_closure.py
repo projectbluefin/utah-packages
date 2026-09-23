@@ -182,9 +182,12 @@ def primary_xml(repodata: Path) -> bytes:
     index = repodata / "repomd.xml"
     candidates: list[Path] = []
     if index.is_file():
-        href = re.search(r'<location href="([^"]*primary[^"]*)"', index.read_text())
-        if href:
-            named = repodata / Path(href.group(1)).name
+        text = index.read_text()
+        match = re.search(r'<data\s+type="primary">.*?<location\s+href="([^"]+)"', text, re.DOTALL)
+        if not match:
+            match = re.search(r'<location href="([^"]*primary[^"]*)"', text)
+        if match:
+            named = repodata / Path(match.group(1)).name
             if named.is_file():
                 candidates = [named]
     if not candidates:
