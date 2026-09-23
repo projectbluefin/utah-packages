@@ -24,7 +24,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Install PyYAML
-        run: pip install --disable-pip-version-check pyyaml
+        run: pip install --disable-pip-version-check pyyaml==6.0.3
       - name: Checkout pinned gnome-build-meta
         run: |
           commit="$(python3 -c "import json;print(json.load(open('config/gnome-build-meta.json'))['source']['release_commit'])")"

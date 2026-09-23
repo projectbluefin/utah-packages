@@ -28,5 +28,5 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - run: pip install --disable-pip-version-check pytest==8.3.5
+      - run: pip install --disable-pip-version-check pytest==8.3.5 pyyaml==6.0.3
       - run: python3 -m pytest tests -q
