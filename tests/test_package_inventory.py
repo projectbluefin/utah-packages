@@ -76,10 +76,22 @@ class RebuildMatrixContractTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "unknown stage"):
                 rebuild_matrix.main()
 
+    def test_duplicate_lock_aborts_changed_inventory(self):
+        entry = {"name": "demo", "sha512": "0" * 128}
+        root = self._create_root([entry, dict(entry)])
+        with mock.patch.object(rebuild_matrix, "ROOT", root):
+            with mock.patch(
+                "subprocess.check_output",
+                return_value=json.dumps({"packages": []}),
+            ):
+                with self.assertRaisesRegex(ValueError, "duplicate source lock"):
+                    rebuild_matrix.changed_inventory("a" * 40, [rebuild_matrix.INVENTORY])
+
     def test_decision_routes_through_source_locks(self):
         source = (ROOT / "tools" / "rebuild_matrix.py").read_text()
         self.assertIn("from tools.package_inventory import source_locks", source)
         self.assertIn("source_locks(ROOT)", source)
+        self.assertNotIn("(ROOT / INVENTORY).read_text()", source)
 
 
 if __name__ == "__main__":

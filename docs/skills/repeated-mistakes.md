@@ -368,8 +368,9 @@ planning time.
 
 **Rule.** Every factory tool and workflow step must consume
 `tools.package_inventory.source_locks` or `inventory` rather than parsing
-`config/upstream-sources.json` directly. The lock file is parsed and validated
-in exactly one place.
+`config/upstream-sources.json` directly from the working tree. (Historical reads
+across git ranges, such as `git show ${base_sha}:...`, remain raw JSON.) The lock
+file is parsed and validated in exactly one place.
 
 ## Quick checks before pushing a fix
 

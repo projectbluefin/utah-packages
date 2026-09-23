@@ -77,7 +77,7 @@ def changed_inventory(base_sha: str, paths: list[str]) -> set[str]:
         # Nothing can be proven unchanged, so prove nothing and let the
         # published comparison decide on its own.
         return set()
-    after = json.loads((ROOT / INVENTORY).read_text())
+    after = {"packages": list(source_locks(ROOT).values())}
     return changed_entries(before, after)
 
 
