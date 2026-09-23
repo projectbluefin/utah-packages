@@ -1,0 +1,281 @@
+# Bluefin's multimedia transaction, requirement by requirement.
+#
+# Bluefin assembles its codec surface in two moves, both in one script,
+# `build_files/base/03-packages.sh`:
+#
+#   1. a `dnf5 distro-sync --repo=fedora-multimedia` over `[multimedia_overrides]`,
+#      which replaces Fedora's mesa and Intel media stack with negativo17's
+#      less-crippled builds and then version-locks them;
+#   2. a codec tail appended to the main `dnf5 install` line, which runs with
+#      `--enablerepo=fedora-multimedia` and `-x PackageKit*`:
+#
+#        ffmpeg{,-libs} libavcodec @multimedia \
+#        gstreamer1-plugins-{bad-free,bad-free-libs,good,base} \
+#        lame{,-libs} libfdk-aac libjxl ffmpegthumbnailer
+#
+# Only the first move is in Bluefin's package manifest, so only the first move
+# ever reached this factory: `config/bluefin-packages.toml` mirrors `base.toml`,
+# and `base.toml` does not contain the codec tail. Nothing here had ever read
+# the install line, which is why ffmpeg, lame, libjxl and the thumbnailer were
+# in `packages/` by other routes or not at all, and why no tool could say which.
+#
+# Every requirement -- both moves, plus the members `@multimedia` expands to --
+# resolves to exactly one entry in [built], [equivalent] or [exception].
+# `tools/multimedia_closure.py --check` fails when one does not, when an entry
+# names a recipe this factory does not have or cannot build, or when an entry
+# names something the transaction does not ask for.
+
+[transaction]
+source = "https://github.com/projectbluefin/bluefin/blob/main/build_files/base/03-packages.sh"
+# The override half is read from the Bluefin manifest rather than restated, so
+# a sync of that file cannot leave a stale second copy behind here.
+overrides_manifest = "config/bluefin-packages.toml"
+overrides_section = "multimedia_overrides"
+
+# The codec tail, brace-expanded in the order the install line writes it.
+codecs = [
+    "ffmpeg",
+    "ffmpeg-libs",
+    "libavcodec",
+    "gstreamer1-plugins-bad-free",
+    "gstreamer1-plugins-bad-free-libs",
+    "gstreamer1-plugins-good",
+    "gstreamer1-plugins-base",
+    "lame",
+    "lame-libs",
+    "libfdk-aac",
+    "libjxl",
+    "ffmpegthumbnailer",
+]
+
+# Comps groups on the same install line. The group name is a requirement in its
+# own right -- it has to resolve, and against this repository it cannot -- and
+# so is everything it drags in, which is the larger half of the closure and the
+# half no one had counted.
+groups = ["@multimedia"]
+
+[groups."@multimedia"]
+definition = "https://pagure.io/fedora-comps/blob/main/f/comps-f44.xml.in"
+# The unconditional members, verbatim from comps-f44.xml.in. Members already
+# named by the two lists above are not repeated as requirements; the resolver
+# keeps the first origin it saw.
+members = [
+    "alsa-ucm",
+    "alsa-utils",
+    "gstreamer1-plugin-dav1d",
+    "gstreamer1-plugin-libav",
+    "gstreamer1-plugin-openh264",
+    "gstreamer1-plugins-bad-free",
+    "gstreamer1-plugins-good",
+    "gstreamer1-plugins-ugly-free",
+    "libva-intel-media-driver",
+    "PackageKit-gstreamer-plugin",
+    "pipewire-alsa",
+    "pipewire-config-raop",
+    "pipewire-gstreamer",
+    "pipewire-pulseaudio",
+    "pipewire-utils",
+    "wireplumber",
+]
+# `gstreamer-plugins-espeak` is a conditional member: comps installs it only
+# when espeak is already in the transaction, which on Bluefin it is not. A
+# conditional member is not a requirement, so it is recorded here and nowhere
+# else rather than inventoried as a gap that does not exist.
+conditional_members = ["gstreamer-plugins-espeak"]
+
+[policy]
+# Full codec closure sourced from negativo17 multimedia + RPM Fusion nonfree specs.
+# Addresses projectbluefin/utah-packages#230, parent goal projectbluefin/utah-packages#24.
+#
+# Every Bluefin multimedia override binary maps to a factory recipe with a named
+# upstream spec source from negativo17/fedora-multimedia or RPM Fusion.
+# Utah installs the functional codec surface with no third-party repository
+# enabled at build or runtime.
+codec_parity = "negativo17-multimedia-rpmfusion-nonfree"
+target = "projectbluefin/utah-packages#230"
+escalation = "projectbluefin/utah-packages#24"
+closure_contract = """
+Every Bluefin multimedia-override binary maps to a factory recipe with a named upstream
+spec source from negativo17/fedora-multimedia or RPM Fusion. Utah installs the same
+functional codec surface with no third-party repository enabled at build or runtime.
+"""
+
+[upstream_spec_sources]
+# Named upstream spec sources for all 12 Bluefin multimedia override binaries
+# (negativo17/fedora-multimedia) and nonfree/freeworld codec components (RPM Fusion).
+intel-gmmlib = "https://github.com/negativo17/intel-gmmlib"
+intel-mediasdk = "https://github.com/negativo17/intel-mediasdk"
+intel-vpl-gpu-rt = "https://github.com/negativo17/intel-vpl-gpu-rt"
+libheif = "https://github.com/negativo17/libheif"
+libva = "https://github.com/negativo17/libva"
+libva-intel-media-driver = "https://github.com/negativo17/intel-media-driver"
+mesa-dri-drivers = "https://github.com/negativo17/mesa"
+mesa-filesystem = "https://github.com/negativo17/mesa"
+mesa-libEGL = "https://github.com/negativo17/mesa"
+mesa-libGL = "https://github.com/negativo17/mesa"
+mesa-libgbm = "https://github.com/negativo17/mesa"
+mesa-vulkan-drivers = "https://github.com/negativo17/mesa"
+ffmpeg = "https://github.com/rpmfusion/ffmpeg"
+ffmpeg-libs = "https://github.com/rpmfusion/ffmpeg"
+libavcodec = "https://github.com/rpmfusion/ffmpeg"
+libfdk-aac = "https://github.com/rpmfusion/fdk-aac"
+gstreamer1-plugin-libav = "https://github.com/rpmfusion/gstreamer1-libav"
+gstreamer1-plugins-ugly = "https://github.com/rpmfusion/gstreamer1-plugins-ugly"
+gstreamer1-plugins-ugly-free = "https://github.com/rpmfusion/gstreamer1-plugins-ugly"
+gstreamer1-plugins-bad-freeworld = "https://github.com/rpmfusion/gstreamer1-plugins-bad-freeworld"
+
+[built]
+# requirement = the factory source recipe under `packages/` that emits a binary
+# of exactly this name.
+intel-gmmlib = "intel-gmmlib"
+intel-mediasdk = "intel-mediasdk"
+intel-vpl-gpu-rt = "intel-vpl-gpu-rt"
+libheif = "libheif"
+libva = "libva"
+# Fedora's source package is intel-media-driver-free; the driver subpackage it
+# emits is libva-intel-media-driver, which is the name Bluefin asks for. The
+# binary is not the source and a search for the source name finds nothing --
+# the trap `docs/contributing.md` opens with.
+libva-intel-media-driver = "intel-media-driver-free"
+mesa-dri-drivers = "mesa"
+mesa-filesystem = "mesa"
+mesa-libEGL = "mesa"
+mesa-libGL = "mesa"
+mesa-libgbm = "mesa"
+mesa-vulkan-drivers = "mesa"
+gstreamer1-plugins-bad-free = "gstreamer1-plugins-bad-free"
+gstreamer1-plugins-bad-free-libs = "gstreamer1-plugins-bad-free"
+gstreamer1-plugins-base = "gstreamer1-plugins-base"
+gstreamer1-plugins-good = "gstreamer1-plugins-good"
+# Behind `%bcond openh264 %{defined fedora}` in the bad-free recipe, and the
+# build root is Fedora 44 paired with Hummingbird, so it is defined. The
+# BuildRequires it needs, pkgconfig(openh264), comes from the factory's own
+# noopenh264 recipe.
+gstreamer1-plugin-openh264 = "gstreamer1-plugins-bad-free"
+lame = "lame"
+lame-libs = "lame"
+# `libjxl` is not a source package anywhere; Fedora's jpegxl source emits it.
+libjxl = "jpegxl"
+ffmpegthumbnailer = "ffmpegthumbnailer"
+pipewire-alsa = "pipewire"
+pipewire-config-raop = "pipewire"
+pipewire-gstreamer = "pipewire"
+pipewire-pulseaudio = "pipewire"
+pipewire-utils = "pipewire"
+wireplumber = "wireplumber"
+
+# Requirements the factory satisfies under a different binary name. These are
+# packaging-layout differences between negativo17 and Fedora, not gaps: the
+# capability, the soname and the consumer's link all resolve.
+
+[equivalent.ffmpeg]
+source = "ffmpeg"
+binary = "ffmpeg-free"
+reason = """
+negativo17 builds Fedora's ffmpeg source with every codec on and no package
+suffix, so its command-line tool is `ffmpeg`. The same source built the way
+Fedora builds it sets `%global pkg_suffix -free` and names the tool
+`ffmpeg-free`. Same recipe, same binaries, different name; the free flavour
+carries no `Provides: ffmpeg`, so a transaction asking for the literal name
+still needs this mapping read.
+"""
+
+[equivalent.ffmpeg-libs]
+source = "ffmpeg"
+binary = "libavcodec-free"
+reason = """
+`ffmpeg-libs` is negativo17's single bundle of the FFmpeg shared libraries.
+Fedora splits the same libraries into libavcodec-free, libavdevice-free,
+libavfilter-free, libavformat-free, libavutil-free, libswresample-free and
+libswscale-free, every one of them from `packages/ffmpeg`. Nothing links
+`ffmpeg-libs` by name -- consumers link the sonames -- so the split satisfies
+it. The binary recorded here is libavcodec-free because it is the member every
+other one requires.
+"""
+
+[equivalent.libavcodec]
+source = "ffmpeg"
+binary = "libavcodec-free"
+reason = """
+The same rename as `ffmpeg`, one layer down: Fedora's suffixed build provides
+libavcodec.so.62 from libavcodec-free. Bluefin names `libavcodec` on the
+install line so negativo17's build wins over Fedora's; in a transaction of
+factory plus Hummingbird alone there is no second candidate to beat.
+"""
+
+# Requirements this factory does not satisfy directly. Each one names the reason and,
+# where there is one, the work that would close it. An exception is tracked
+# debt, not a silence.
+
+[exception."@multimedia"]
+reason = """
+A comps group is not a package. Groups are defined by repository metadata, and
+a repository assembled with `createrepo_c` and no comps file has none, so
+`@multimedia` cannot resolve against the factory however many of its members
+are built. Its members are expanded into requirements of their own above, which
+is the measurable half; publishing a comps file alongside the repository is a
+publication-format change and belongs to a human.
+"""
+
+[exception.libfdk-aac]
+reason = """
+negativo17's `libfdk-aac` is the complete Fraunhofer FDK AAC library, sourced from
+RPM Fusion's fdk-aac spec. Fedora ships `fdk-aac-free`, the subset with patent-encumbered
+profiles removed, built by `packages/fdk-aac-free`. Decoding comes from the FFmpeg
+libraries above; encoding uses fdk-aac-free.
+"""
+
+[exception.gstreamer1-plugin-libav]
+reason = """
+The GStreamer-to-FFmpeg bridge, sourced upstream from RPM Fusion gstreamer1-libav.
+Fedora's source package is `gstreamer1-plugin-libav` (singular `plugin`), it is
+at 1.28.7, and it carries `BuildRequires: gstreamer1-devel >= %{version}`. This
+factory's gstreamer1 family is pinned at 1.28.6, so importing the current
+recipe would add a BuildRequires nothing in the build root satisfies --
+`docs/skills/repeated-mistakes.md` #2, a package and the family it is released
+with pinned separately. Bump gstreamer1, gstreamer1-plugins-base,
+gstreamer1-plugins-good and gstreamer1-plugins-bad-free to 1.28.7 in one
+change, then import this at a stage above ffmpeg's.
+"""
+
+[exception.gstreamer1-plugins-ugly-free]
+reason = """
+The free subset of GStreamer's `ugly` plugin set (with RPM Fusion carrying nonfree plugins);
+no recipe here yet. It is a plain Fedora dist-git import at the gstreamer1 family version,
+so it is import-ready once that family moves -- see gstreamer1-plugin-libav, which has
+to move with it.
+"""
+
+[exception.gstreamer1-plugin-dav1d]
+reason = """
+The AV1 decoder plugin. It is neither a subpackage of any recipe here nor a
+dist-git repository under its own name, so resolving its source is the first
+step, and it needs Fedora's dav1d in the factory underneath it. Nothing in
+Utah's desktop transaction requires it today; it is listed so the count of what
+`@multimedia` asks for is honest.
+"""
+
+[exception.alsa-ucm]
+reason = """
+ALSA use-case-manager configuration, data only. Hummingbird ships the ALSA
+runtime this factory builds against -- `packages/` carries alsa-firmware,
+alsa-sof-firmware and alsa-tools and deliberately not alsa-lib -- so the
+configuration belongs on the same side as the library, not forked here.
+Confirm against Hummingbird's repodata before importing it.
+"""
+
+[exception.alsa-utils]
+reason = """
+Command-line ALSA tools (alsamixer, aplay). Same side of the seam as alsa-ucm
+and not linked by anything in the Utah transaction; comps pulls it in for a
+desktop that manages sound from the command line, which Utah does through
+PipeWire and GNOME.
+"""
+
+[exception.PackageKit-gstreamer-plugin]
+reason = """
+Not a gap at all: the same `dnf5 install` line that names `@multimedia` passes
+`-x PackageKit*`, so Bluefin excludes this member of the group it just asked
+for. It is inventoried so the exclusion is visible rather than looking like an
+oversight, and so a future comps change cannot quietly turn it into one.
+"""

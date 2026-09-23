@@ -640,6 +640,17 @@ jobs:
           curl -fsSL https://github.com/sigstore/cosign/releases/download/v2.4.1/cosign-linux-amd64 -o cosign
           echo '8b24b946dd5809c6bd93de08033bcf6bc0ed7d336b7785787c080f574b89249b  cosign' | sha256sum -c -
           sudo install -m 0755 cosign /usr/local/bin/cosign
+      # The multimedia closure report below reads this repository's
+      # primary.xml, whose compression is createrepo_c's choice. Today
+      # ubuntu-24.04 ships createrepo_c 0.17.3 and writes gzip, so the zstd
+      # branch of primary_xml() is dormant -- but createrepo_c >= 1.0 defaults
+      # to zstd, and `createrepo-c` is installed unpinned from apt below, so a
+      # runner-image bump reaches it. Without this the report would then die
+      # on ModuleNotFoundError under `continue-on-error: true`, i.e. silently,
+      # which is the one thing the report must not do. `prepare` installs the
+      # same pin for the same reason.
+      - name: Install zstandard
+        run: pip install --disable-pip-version-check --quiet 'zstandard==0.25.0'
       - name: Verify and seed repository from the prepare-time factory image
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -769,6 +780,30 @@ jobs:
           echo '8b24b946dd5809c6bd93de08033bcf6bc0ed7d336b7785787c080f574b89249b  cosign' | sha256sum -c -
           sudo install -m 0755 cosign /usr/local/bin/cosign
           cosign sign-blob --yes --bundle repository/repodata/repomd.xml.bundle repository/repodata/repomd.xml
+      # Which factory source, and which published NEVRA, answers each Bluefin
+      # multimedia requirement (utah-packages#24). The committed report carries
+      # the mapping; only a real repository can carry the NEVRAs, so it is
+      # filled in here and published beside the RPMs rather than committed
+      # stale. Reporting only: the inventory itself is gated in validate.yml,
+      # and widening what blocks a publish is a decision for a human.
+      #
+      # `continue-on-error` is what makes that true. Without it the step's exit
+      # code gates the publish job, which would put the whole publish behind a
+      # failure mode no PR check can catch: the --repodata half runs only here,
+      # and published_nevra raises when it cannot read the repository's
+      # primary.xml. A report that can stop a publish is not a report.
+      - name: Report the Bluefin multimedia closure against this repository
+        continue-on-error: true
+        run: |
+          {
+            echo "### Bluefin multimedia closure"
+            echo
+            echo '```json'
+            python3 tools/multimedia_closure.py \
+              --repodata repository/repodata \
+              --output repository/reports/multimedia-closure.json
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
       - name: Validate Hummingbird-only consumer transaction
         run: |
           CONTRACT=$(python3 tools/runtime_contract.py \

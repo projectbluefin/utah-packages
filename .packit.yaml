@@ -256,6 +256,12 @@ packages:
     downstream_package_name: ffmpeg
     paths:
       - packages/ffmpeg
+  ffmpegthumbnailer:
+    specfile_path: ffmpegthumbnailer.spec
+    upstream_package_name: ffmpegthumbnailer
+    downstream_package_name: ffmpegthumbnailer
+    paths:
+      - packages/ffmpegthumbnailer
   fish:
     specfile_path: fish.spec
     upstream_package_name: fish
