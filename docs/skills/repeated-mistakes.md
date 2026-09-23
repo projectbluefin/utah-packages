@@ -315,6 +315,21 @@ libcupsfilters), and `cups-filters` / `cups-browsed` (stage 2, depending on both
 libraries). Do not pull `braille-printer-app` into the core printing closure
 unless Braille printing is explicitly required.
 
+## 18. Broad credential or tool exposure across build matrix jobs
+
+**What happened.** `setup-sccache` ran unconditionally for every matrix package
+in `build-stage.yml`, writing `ACTIONS_RUNTIME_TOKEN` and cache credentials into
+`$GITHUB_WORKSPACE/work/tools/sccache.env`. Because `/work` is mounted into every
+package's build container, untrusted upstream build code (`%build` / `%check`)
+across all packages had access to the live Actions runtime token and cache service,
+even though `mozjs140` was the sole consumer of sccache.
+
+**Rule.** Gate any workflow tool setup that exposes credentials or sensitive
+tokens to the specific matrix package that requires it
+(`if: matrix.package == 'mozjs140'`). Never mount live Actions credentials or
+compiler cache credentials into build environments for packages that do not
+consume them.
+
 ## Quick checks before pushing a fix
 
 - [ ] Does `git log --oneline -- <file>` show this file being fixed for the
