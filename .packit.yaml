@@ -418,6 +418,12 @@ packages:
     downstream_package_name: gnome-desktop3
     paths:
       - packages/gnome-desktop3
+  gnome-initial-setup:
+    specfile_path: gnome-initial-setup.spec
+    upstream_package_name: gnome-initial-setup
+    downstream_package_name: gnome-initial-setup
+    paths:
+      - packages/gnome-initial-setup
   gnome-keyring:
     specfile_path: gnome-keyring.spec
     upstream_package_name: gnome-keyring

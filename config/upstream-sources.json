@@ -618,6 +618,18 @@
       ]
     },
     {
+      "name": "gnome-initial-setup",
+      "version": "51.0",
+      "url": "https://download.gnome.org/sources/gnome-initial-setup/51/gnome-initial-setup-51.0.tar.xz",
+      "filename": "gnome-initial-setup-51.0.tar.xz",
+      "sha512": "94c9d552519343c59d74a92b45fe4b3c04f73ea43a92bf4874faf33fbd76b487583300b4f99f219a1317ed3530a03c17e825c7d8723dc4a239f43be89e4b3a1b",
+      "sha256_url": "https://download.gnome.org/sources/gnome-initial-setup/51/gnome-initial-setup-51.0.sha256sum",
+      "stage": 9,
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/gnome-initial-setup/gnome-initial-setup-51.0.tar.xz/sha512/94c9d552519343c59d74a92b45fe4b3c04f73ea43a92bf4874faf33fbd76b487583300b4f99f219a1317ed3530a03c17e825c7d8723dc4a239f43be89e4b3a1b/gnome-initial-setup-51.0.tar.xz"
+      ]
+    },
+    {
       "name": "gnome-keyring",
       "version": "50.0",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/gnome-keyring/gnome-keyring-50.0.tar.xz/sha512/20786486655c2188d8d0eae129d1c14a61d995d55a2339b166aa914287cf5ddd29b67d6a2fbc9d4b3d73705459cd3d17c696369500e4a0f0d12087aac78a8c15/gnome-keyring-50.0.tar.xz",

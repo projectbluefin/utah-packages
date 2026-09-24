@@ -68,7 +68,7 @@ class TargetSelectionTests(unittest.TestCase):
     def test_hummingbird_supplied_packages_are_skipped_by_default(self):
         targets = plan_targets(ROOT / "packages", {"mesa": ["mesa"]})
         self.assertNotIn("mesa", [path.name for path in targets])
-        self.assertEqual(len(targets), 385)
+        self.assertEqual(len(targets), 386)
 
     def test_explicit_selection_processes_a_hummingbird_supplied_package(self):
         targets = plan_targets(ROOT / "packages", {"mesa": ["mesa"]}, only="mesa")
