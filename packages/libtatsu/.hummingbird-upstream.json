@@ -1,0 +1,8 @@
+{
+  "package": "libtatsu",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libtatsu.git",
+  "commit": "d74e267176472a18a13a762ec7a02301d7b18d82",
+  "tree": "dcb0f346ece6f8d7ca97af6c6f7648322597e015",
+  "imported_at": "2026-09-24T23:38:35.316699+00:00"
+}

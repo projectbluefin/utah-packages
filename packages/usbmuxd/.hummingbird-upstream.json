@@ -1,0 +1,8 @@
+{
+  "package": "usbmuxd",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/usbmuxd.git",
+  "commit": "c96080967420a09ce885d68e90c677e4aff56d71",
+  "tree": "0b11cae1f03ed219099b6679d35e02c3c7de9f73",
+  "imported_at": "2026-09-24T23:38:34.794529+00:00"
+}

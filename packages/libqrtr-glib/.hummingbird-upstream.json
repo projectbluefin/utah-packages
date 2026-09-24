@@ -1,0 +1,8 @@
+{
+  "package": "libqrtr-glib",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libqrtr-glib.git",
+  "commit": "2792b3bbc12d96a96aa19bdafd4eb72d60ff9e58",
+  "tree": "bab98b54d1169ccd889a87275f74da8a95c9d149",
+  "imported_at": "2026-09-24T23:38:35.856099+00:00"
+}

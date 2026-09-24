@@ -1,0 +1,8 @@
+{
+  "package": "libqmi",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libqmi.git",
+  "commit": "f5dde7dea90b95967c193d17a2505da15d8ca737",
+  "tree": "2db60648c5b7621f1aecab71991d2c46fbc0ba93",
+  "imported_at": "2026-09-24T23:38:36.518902+00:00"
+}

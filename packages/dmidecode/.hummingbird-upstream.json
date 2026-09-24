@@ -1,0 +1,8 @@
+{
+  "package": "dmidecode",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/dmidecode.git",
+  "commit": "664a85584b0c954a87be99006a45bdc2235bb025",
+  "tree": "1bf6571d29638ac31342e1033fc055daf380a157",
+  "imported_at": "2026-09-24T23:38:39.331566+00:00"
+}

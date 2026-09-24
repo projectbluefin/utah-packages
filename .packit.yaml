@@ -196,6 +196,12 @@ packages:
     downstream_package_name: distrobox
     paths:
       - packages/distrobox
+  dmidecode:
+    specfile_path: dmidecode.spec
+    upstream_package_name: dmidecode
+    downstream_package_name: dmidecode
+    paths:
+      - packages/dmidecode
   double-conversion:
     specfile_path: double-conversion.spec
     upstream_package_name: double-conversion
@@ -490,6 +496,12 @@ packages:
     downstream_package_name: google-noto-sans-cjk-vf-fonts
     paths:
       - packages/google-noto-sans-cjk-vf-fonts
+  gpm:
+    specfile_path: gpm.spec
+    upstream_package_name: gpm
+    downstream_package_name: gpm
+    paths:
+      - packages/gpm
   graphene:
     specfile_path: graphene.spec
     upstream_package_name: graphene
@@ -1108,6 +1120,12 @@ packages:
     downstream_package_name: libglvnd
     paths:
       - packages/libglvnd
+  libgphoto2:
+    specfile_path: libgphoto2.spec
+    upstream_package_name: libgphoto2
+    downstream_package_name: libgphoto2
+    paths:
+      - packages/libgphoto2
   libgsf:
     specfile_path: libgsf.spec
     upstream_package_name: libgsf
@@ -1210,6 +1228,12 @@ packages:
     downstream_package_name: libmanette
     paths:
       - packages/libmanette
+  libmbim:
+    specfile_path: libmbim.spec
+    upstream_package_name: libmbim
+    downstream_package_name: libmbim
+    paths:
+      - packages/libmbim
   libmediainfo:
     specfile_path: libmediainfo.spec
     upstream_package_name: libmediainfo
@@ -1222,6 +1246,12 @@ packages:
     downstream_package_name: libmodplug
     paths:
       - packages/libmodplug
+  libmtp:
+    specfile_path: libmtp.spec
+    upstream_package_name: libmtp
+    downstream_package_name: libmtp
+    paths:
+      - packages/libmtp
   libmysofa:
     specfile_path: libmysofa.spec
     upstream_package_name: libmysofa
@@ -1324,6 +1354,18 @@ packages:
     downstream_package_name: libproxy
     paths:
       - packages/libproxy
+  libqmi:
+    specfile_path: libqmi.spec
+    upstream_package_name: libqmi
+    downstream_package_name: libqmi
+    paths:
+      - packages/libqmi
+  libqrtr-glib:
+    specfile_path: libqrtr-glib.spec
+    upstream_package_name: libqrtr-glib
+    downstream_package_name: libqrtr-glib
+    paths:
+      - packages/libqrtr-glib
   libratbag:
     specfile_path: libratbag.spec
     upstream_package_name: libratbag
@@ -1384,6 +1426,12 @@ packages:
     downstream_package_name: libtalloc
     paths:
       - packages/libtalloc
+  libtatsu:
+    specfile_path: libtatsu.spec
+    upstream_package_name: libtatsu
+    downstream_package_name: libtatsu
+    paths:
+      - packages/libtatsu
   libtdb:
     specfile_path: libtdb.spec
     upstream_package_name: libtdb
@@ -2020,6 +2068,12 @@ packages:
     downstream_package_name: tinyxml2
     paths:
       - packages/tinyxml2
+  totem-pl-parser:
+    specfile_path: totem-pl-parser.spec
+    upstream_package_name: totem-pl-parser
+    downstream_package_name: totem-pl-parser
+    paths:
+      - packages/totem-pl-parser
   twolame:
     specfile_path: twolame.spec
     upstream_package_name: twolame
@@ -2038,6 +2092,12 @@ packages:
     downstream_package_name: upower
     paths:
       - packages/upower
+  usbmuxd:
+    specfile_path: usbmuxd.spec
+    upstream_package_name: usbmuxd
+    downstream_package_name: usbmuxd
+    paths:
+      - packages/usbmuxd
   v4l-utils:
     specfile_path: v4l-utils.spec
     upstream_package_name: v4l-utils

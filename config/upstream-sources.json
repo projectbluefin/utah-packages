@@ -3129,6 +3129,115 @@
       "url": "http://dl.cihar.com/enca/enca-1.19.tar.xz",
       "filename": "enca-1.19.tar.xz",
       "sha512": "6678639992685180457bbef7b0da6e475071ec6935dfd672188fc242ef80b906e75eff9a206e07989893d0ef4ae5eb500f1d0bbd6b4d58146c94bb143b5fb296"
+    },
+    {
+      "name": "dmidecode",
+      "version": "3.7",
+      "url": "https://download.savannah.gnu.org/releases/dmidecode/dmidecode-3.7.tar.xz",
+      "filename": "dmidecode-3.7.tar.xz",
+      "sha512": "faa8f5975340241b4c4a6ae4b538bf7f88f55b2ab0e97ffeaae9a3a20c40fbf95e8310f69d06963f9fb34c7715e55ecfda039e1391a7a27a0be463ac3a1cc8fb",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/dmidecode/dmidecode-3.7.tar.xz/sha512/faa8f5975340241b4c4a6ae4b538bf7f88f55b2ab0e97ffeaae9a3a20c40fbf95e8310f69d06963f9fb34c7715e55ecfda039e1391a7a27a0be463ac3a1cc8fb/dmidecode-3.7.tar.xz"
+      ]
+    },
+    {
+      "name": "gpm",
+      "version": "1.20.7",
+      "filename": "gpm-1.20.7.tar.xz",
+      "sha512": "0ceb3bf481f1d08923be5ccb8f4b88f1124fb6e667bf99603e3a465320a0114b824a0d570375c1a6dff517dacd2385b9a1768c56393f60ecac17451f356b3b9d",
+      "generate": {
+        "script": "tools/generated_sources.py",
+        "input": "https://www.nico.schottelius.org/software/gpm/archives/gpm-1.20.7.tar.lzma (sha512-pinned)",
+        "method": "remove doc/specs (unclear licensing, per gpm.spec) from the upstream release and repack deterministically as gpm-1.20.7.tar.xz"
+      }
+    },
+    {
+      "name": "libgphoto2",
+      "version": "2.5.33",
+      "url": "https://github.com/gphoto/libgphoto2/releases/download/v2.5.33/libgphoto2-2.5.33.tar.bz2",
+      "filename": "libgphoto2-2.5.33.tar.bz2",
+      "sha512": "5a987fb712c704bbb276d4ff5319d96b9096a6e4be303d38f97e0eafc01b47def93ab4b6d3acb76cb7597edd846d2dac4b0227a3e8d2ec8634f5e52de69a6da4",
+      "fallback_urls": [
+        "https://downloads.sourceforge.net/gphoto/libgphoto2-2.5.33.tar.bz2",
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libgphoto2/libgphoto2-2.5.33.tar.bz2/sha512/5a987fb712c704bbb276d4ff5319d96b9096a6e4be303d38f97e0eafc01b47def93ab4b6d3acb76cb7597edd846d2dac4b0227a3e8d2ec8634f5e52de69a6da4/libgphoto2-2.5.33.tar.bz2"
+      ]
+    },
+    {
+      "name": "libmbim",
+      "version": "1.32.0",
+      "url": "https://gitlab.freedesktop.org/mobile-broadband/libmbim/-/archive/1.32.0/libmbim-1.32.0.tar.bz2",
+      "filename": "libmbim-1.32.0.tar.bz2",
+      "sha512": "dfb8dfda323f693f1aced5013c0d0a27ad2e23660b5edb7445150388819defe21f1aec257c19238c9870480968ca464a13f8c53e7fe65abc03ae23900127c88b",
+      "stage": 1,
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libmbim/libmbim-1.32.0.tar.bz2/sha512/dfb8dfda323f693f1aced5013c0d0a27ad2e23660b5edb7445150388819defe21f1aec257c19238c9870480968ca464a13f8c53e7fe65abc03ae23900127c88b/libmbim-1.32.0.tar.bz2"
+      ]
+    },
+    {
+      "name": "libmtp",
+      "version": "1.1.22",
+      "url": "https://github.com/libmtp/libmtp/releases/download/v1.1.22/libmtp-1.1.22.tar.gz",
+      "filename": "libmtp-1.1.22.tar.gz",
+      "sha512": "97094b29073681da0c714b6c4aea2e5f35253a8d06229e60c0af46727413470e9da6be422d873449fc4dec6f9b8efce6d3edc657b9251182cc0a709859e99baa",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libmtp/libmtp-1.1.22.tar.gz/sha512/97094b29073681da0c714b6c4aea2e5f35253a8d06229e60c0af46727413470e9da6be422d873449fc4dec6f9b8efce6d3edc657b9251182cc0a709859e99baa/libmtp-1.1.22.tar.gz"
+      ]
+    },
+    {
+      "name": "libqmi",
+      "version": "1.36.0",
+      "url": "https://gitlab.freedesktop.org/mobile-broadband/libqmi/-/archive/1.36.0/libqmi-1.36.0.tar.bz2",
+      "filename": "libqmi-1.36.0.tar.bz2",
+      "sha512": "345b1e44f1601ea1781de61f21a2c229e9912f7270976059f0de7456b23eee15e9b5709e0f59d83a8d25a5c7f9a5105213a7c6fde85e11f19ac0446e678b9794",
+      "stage": 2,
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libqmi/libqmi-1.36.0.tar.bz2/sha512/345b1e44f1601ea1781de61f21a2c229e9912f7270976059f0de7456b23eee15e9b5709e0f59d83a8d25a5c7f9a5105213a7c6fde85e11f19ac0446e678b9794/libqmi-1.36.0.tar.bz2"
+      ]
+    },
+    {
+      "name": "libqrtr-glib",
+      "version": "1.2.2",
+      "url": "https://gitlab.freedesktop.org/mobile-broadband/libqrtr-glib/-/archive/1.2.2/libqrtr-glib-1.2.2.tar.bz2",
+      "filename": "libqrtr-glib-1.2.2.tar.bz2",
+      "sha512": "b21df1685c2474c1124e6f6bf12c552a06a28986284fde876210a3a6db8c19872a5458cae622bb22020ffd278167f52eba38d763ba633e783fa708863832bade",
+      "stage": 1,
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libqrtr-glib/libqrtr-glib-1.2.2.tar.bz2/sha512/b21df1685c2474c1124e6f6bf12c552a06a28986284fde876210a3a6db8c19872a5458cae622bb22020ffd278167f52eba38d763ba633e783fa708863832bade/libqrtr-glib-1.2.2.tar.bz2"
+      ]
+    },
+    {
+      "name": "libtatsu",
+      "version": "1.0.5",
+      "url": "https://github.com/libimobiledevice/libtatsu/releases/download/1.0.5/libtatsu-1.0.5.tar.bz2",
+      "filename": "libtatsu-1.0.5.tar.bz2",
+      "sha512": "5d683f9ee153f0958d2461f12017abccaf2f92d20dea6b219042f91a28daa5434df9a01315831a882acddbf6e0af1eb106c088f48efabff1c9f38c50f55a323f",
+      "stage": 1,
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libtatsu/libtatsu-1.0.5.tar.bz2/sha512/5d683f9ee153f0958d2461f12017abccaf2f92d20dea6b219042f91a28daa5434df9a01315831a882acddbf6e0af1eb106c088f48efabff1c9f38c50f55a323f/libtatsu-1.0.5.tar.bz2"
+      ]
+    },
+    {
+      "name": "totem-pl-parser",
+      "version": "3.26.7",
+      "url": "https://download.gnome.org/sources/totem-pl-parser/3.26/totem-pl-parser-3.26.7.tar.xz",
+      "filename": "totem-pl-parser-3.26.7.tar.xz",
+      "sha512": "e1c348d672414559f0816560ad40047abebc39ef403cb4bb058efc33b5a5920ff13a17ad4d1c004af1c430d0d816c3e104f8fe02eda8f844d888a1c066889385",
+      "sha256_url": "https://download.gnome.org/sources/totem-pl-parser/3.26/totem-pl-parser-3.26.7.sha256sum",
+      "stage": 1,
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/totem-pl-parser/totem-pl-parser-3.26.7.tar.xz/sha512/e1c348d672414559f0816560ad40047abebc39ef403cb4bb058efc33b5a5920ff13a17ad4d1c004af1c430d0d816c3e104f8fe02eda8f844d888a1c066889385/totem-pl-parser-3.26.7.tar.xz"
+      ]
+    },
+    {
+      "name": "usbmuxd",
+      "version": "1.1.1^20251205git3ded00c",
+      "url": "https://github.com/libimobiledevice/usbmuxd/archive/3ded00c9985a5108cfc7591a309f9a23d57a8cba/usbmuxd-3ded00c9985a5108cfc7591a309f9a23d57a8cba.tar.gz",
+      "filename": "usbmuxd-3ded00c9985a5108cfc7591a309f9a23d57a8cba.tar.gz",
+      "sha512": "2c5bd94ee1cf484507c3582a101d04a32a94b33296632992f99cf4a08bc87c56e71570cd5855fb20d285344cb6e382afa8c2b1aa0be50b693b229fd25069814b",
+      "stage": 1,
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/usbmuxd/usbmuxd-3ded00c9985a5108cfc7591a309f9a23d57a8cba.tar.gz/sha512/2c5bd94ee1cf484507c3582a101d04a32a94b33296632992f99cf4a08bc87c56e71570cd5855fb20d285344cb6e382afa8c2b1aa0be50b693b229fd25069814b/usbmuxd-3ded00c9985a5108cfc7591a309f9a23d57a8cba.tar.gz"
+      ]
     }
   ]
 }

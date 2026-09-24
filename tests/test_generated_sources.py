@@ -9,6 +9,7 @@ double-run gate covers the network path.
 
 import gzip
 import io
+import lzma
 from pathlib import Path
 import tarfile
 import unittest
@@ -101,6 +102,65 @@ class IntelMediaDriverFreeTransformTests(unittest.TestCase):
         with tarfile.open(fileobj=io.BytesIO(result), mode="r:gz") as tar:
             names = tar.getnames()
         self.assertEqual(names, sorted(names))
+
+
+def build_gpm_archive(version: str) -> bytes:
+    """A synthetic upstream gpm .tar.lzma carrying doc/specs."""
+    top = f"gpm-{version}"
+    members = {
+        f"{top}/README": b"readme",
+        f"{top}/doc/gpm.texinfo": b"kept",
+        f"{top}/doc/specs/ps2.pdf": b"unclear licence",
+        f"{top}/doc/specs-not/kept.txt": b"kept: only doc/specs itself goes",
+        f"{top}/src/daemon/gpm.c": b"kept",
+    }
+    directories = {top, f"{top}/doc", f"{top}/doc/specs", f"{top}/doc/specs-not", f"{top}/src", f"{top}/src/daemon"}
+    raw = io.BytesIO()
+    with tarfile.open(fileobj=raw, mode="w", format=tarfile.GNU_FORMAT) as tar:
+        for name in sorted(directories, reverse=True):
+            info = tarfile.TarInfo(name)
+            info.type = tarfile.DIRTYPE
+            info.mtime, info.uid, info.gid, info.uname, info.gname = 1351286460, 1000, 1000, "jcapik", "jcapik"
+            tar.addfile(info)
+        for name in sorted(members, reverse=True):
+            info = tarfile.TarInfo(name)
+            info.size = len(members[name])
+            info.mtime, info.uid, info.gid, info.uname, info.gname = 1351286460, 1000, 1000, "jcapik", "jcapik"
+            tar.addfile(info, io.BytesIO(members[name]))
+    return lzma.compress(raw.getvalue(), format=lzma.FORMAT_ALONE)
+
+
+class GpmTransformTests(unittest.TestCase):
+    VERSION = "1.20.7"
+
+    def members(self, payload: bytes) -> list[tarfile.TarInfo]:
+        with tarfile.open(fileobj=io.BytesIO(payload), mode="r:xz") as tar:
+            return tar.getmembers()
+
+    def test_removes_exactly_doc_specs(self):
+        result = generated_sources._gpm_transform(build_gpm_archive(self.VERSION), self.VERSION)
+        names = {member.name for member in self.members(result)}
+        self.assertNotIn("gpm-1.20.7/doc/specs", names)
+        self.assertNotIn("gpm-1.20.7/doc/specs/ps2.pdf", names)
+        self.assertIn("gpm-1.20.7/doc/specs-not/kept.txt", names)
+        self.assertIn("gpm-1.20.7/doc/gpm.texinfo", names)
+        self.assertIn("gpm-1.20.7/src/daemon/gpm.c", names)
+
+    def test_transform_is_byte_reproducible_sorted_and_ownerless(self):
+        archive = build_gpm_archive(self.VERSION)
+        first = generated_sources._gpm_transform(archive, self.VERSION)
+        self.assertEqual(first, generated_sources._gpm_transform(archive, self.VERSION))
+        members = self.members(first)
+        self.assertEqual([m.name for m in members], sorted(m.name for m in members))
+        for member in members:
+            self.assertEqual((member.uid, member.gid, member.uname, member.gname), (0, 0, "", ""))
+            self.assertEqual(member.mtime, 1351286460)
+
+    def test_metadata_names_the_recipe_source_and_pinned_input(self):
+        metadata = generated_sources.metadata_for("gpm", ROOT / "packages" / "gpm")
+        self.assertEqual(metadata["filename"], "gpm-1.20.7.tar.xz")
+        self.assertIn("gpm-1.20.7.tar.lzma", metadata["generate"]["input"])
+        self.assertIn("1.20.7", generated_sources.GPM_INPUT_SHA512)
 
 
 class GeneratedMetadataTests(unittest.TestCase):

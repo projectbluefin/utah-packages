@@ -1,0 +1,37 @@
+# See the documentation for more information:
+# https://packit.dev/docs/configuration/
+
+specfile_path: dmidecode.spec
+
+# add or remove files that should be synced
+files_to_sync:
+    - dmidecode.spec
+
+# name in upstream package repository or registry (e.g. in PyPI)
+upstream_package_name: dmidecode
+# downstream (Fedora) RPM package name
+downstream_package_name: dmidecode
+
+upstream_tag_template: v{version}
+
+
+jobs:
+  # This is triggered by https://release-monitoring.org/
+  - job: pull_from_upstream
+    trigger: release
+    dist_git_branches:
+      - fedora-all
+
+  # This is triggered at Fedora dist-git for creating koji build after
+  # PR in src.fedoraproject.org been merged.
+  - job: koji_build
+    trigger: commit
+    allowed_pr_authors: ["all_committers", "packit"]
+    dist_git_branches:
+      - fedora-all
+
+  # This is triggered at Fedora messaging bus about koji build finished.
+  - job: bodhi_update
+    trigger: commit
+    allowed_builders: ["all_committers", "packit"]
+    dist_git_branches:

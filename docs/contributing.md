@@ -19,6 +19,15 @@ payload comes from. `tools/bootstrap_upstream_sources.py` proposes candidates
 by resolving `Source0`, and accepts one only when it is an upstream HTTP(S)
 URL whose bytes download directly — never Fedora's lookaside cache.
 
+Some Fedora `Source0` archives exist only in the lookaside because a packager
+repacked them by hand: `gpm` removes `doc/specs` from the upstream release for
+licensing reasons, and its `sources` file pins that hand-made tarball by MD5.
+No upstream URL serves those bytes. Do not lock the lookaside copy as `url`;
+add a deterministic transformation from the SHA-512-pinned upstream release to
+`tools/generated_sources.py`, lock it as a `generate` entry, and repin
+`packages/<name>/sources` to the generated digest. Diff the unpacked tree
+against Fedora's archive first: for `gpm` they are identical.
+
 If it needs to build after something else this factory builds, give it a
 `stage`. Stage N resolves against everything in stages below N, and there is
 no stage above 4.

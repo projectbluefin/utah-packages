@@ -1,0 +1,8 @@
+{
+  "package": "libgphoto2",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libgphoto2.git",
+  "commit": "1fe4527a73aebca01647d7fd32a54fe4112da1a4",
+  "tree": "dc656655ba73753de8f045df3b7772ce31695345",
+  "imported_at": "2026-09-24T23:38:34.205341+00:00"
+}

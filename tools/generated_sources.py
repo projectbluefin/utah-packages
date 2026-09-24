@@ -2,12 +2,14 @@
 """Deterministic first-party Source0 generation.
 
 The factory contract is that source payloads come from upstream releases and
-Fedora dist-git supplies the recipe only. Two recipes consume an archive
+Fedora dist-git supplies the recipe only. These recipes consume an archive
 that no upstream publishes verbatim:
 
 - intel-media-driver-free: the upstream tag archive with non-free kernel
   files removed (packages/intel-media-driver-free/strip.py)
 - tailscale: a go-vendored bundle (packages/tailscale/create-vendor-tarball.sh)
+- gpm: the upstream release with doc/specs removed, because those PDFs carry
+  unclear licensing (the recipe's own comment above its Source line)
 - python-pydantic-core: the PyPI sdist plus its Cargo.lock dependencies
   vendored, because neither Fedora 44 nor Hummingbird ships Rust crate RPMs
 
@@ -53,6 +55,10 @@ INTEL_MEDIA_INPUT_SHA512 = {
 # The annotated tag is mutable; the commit it resolves to is not. Pin it.
 TAILSCALE_COMMITS = {
     "1.98.8": "05a91829316e055517a1e84f7b00016846ef4107",
+}
+
+GPM_INPUT_SHA512 = {
+    "1.20.7": "a502741e2f457b47e41c6d155b1f7ef7c95384fd394503f82ddacf80cde9cdc286c906c77be12b6af8565ef1c3ab24d226379c1dcebcfcd15d64bcf3e94b63b9",
 }
 
 PYDANTIC_CORE_INPUT_SHA512 = {
@@ -282,6 +288,68 @@ def _tailscale_generate(package_dir: Path, out_dir: Path) -> Path:
         return target
 
 
+# --- gpm ---------------------------------------------------------------------
+
+
+def _gpm_transform(archive: bytes, version: str) -> bytes:
+    """Repack the upstream .tar.lzma without doc/specs, as Fedora's recipe does.
+
+    packages/gpm/gpm.spec documents the transformation above its Source line:
+    unpack the upstream tarball, remove doc/specs (PDFs with unclear
+    licensing), and recompress as .tar.xz. Fedora's lookaside copy is that
+    tarball made by hand, so its bytes cannot be reproduced; this makes the
+    same tree deterministically. Members keep the archive's own modes and
+    mtimes, are sorted by name with ownership zeroed, and are compressed as a
+    single xz stream.
+    """
+    doomed = f"gpm-{version}/doc/specs"
+    raw = io.BytesIO()
+    with tarfile.open(fileobj=io.BytesIO(lzma.decompress(archive)), mode="r:") as source:
+        members = sorted(source.getmembers(), key=lambda m: m.name.rstrip("/"))
+        with tarfile.open(fileobj=raw, mode="w", format=tarfile.PAX_FORMAT) as result:
+            for member in members:
+                name = member.name.rstrip("/")
+                if name == doomed or name.startswith(doomed + "/"):
+                    continue
+                member.uid = member.gid = 0
+                member.uname = member.gname = ""
+                result.addfile(member, source.extractfile(member) if member.isreg() else None)
+    out = io.BytesIO()
+    _xz_compress_stream(iter([raw.getvalue()]), out)
+    return out.getvalue()
+
+
+def _gpm_metadata(package_dir: Path) -> dict:
+    version = spec_version(package_dir, "gpm.spec")
+    return {
+        "name": "gpm",
+        "version": version,
+        "filename": f"gpm-{version}.tar.xz",
+        "generate": {
+            "script": SCRIPT_PATH,
+            "input": f"https://www.nico.schottelius.org/software/gpm/archives/gpm-{version}.tar.lzma (sha512-pinned)",
+            "method": f"remove doc/specs (unclear licensing, per gpm.spec) from the upstream release and repack deterministically as gpm-{version}.tar.xz",
+        },
+    }
+
+
+def _gpm_generate(package_dir: Path, out_dir: Path) -> Path:
+    version = spec_version(package_dir, "gpm.spec")
+    pin = GPM_INPUT_SHA512.get(version)
+    if pin is None:
+        raise RuntimeError(f"no pinned input SHA-512 for gpm {version}")
+    url = f"https://www.nico.schottelius.org/software/gpm/archives/gpm-{version}.tar.lzma"
+    request = urllib.request.Request(url, headers={"User-Agent": "utah-packages-generated-source/1"})
+    with urllib.request.urlopen(request, timeout=300) as response:
+        payload = response.read()
+    actual = hashlib.sha512(payload).hexdigest()
+    if actual != pin:
+        raise RuntimeError(f"input archive mismatch for {url}: expected {pin}, got {actual}")
+    target = out_dir / f"gpm-{version}.tar.xz"
+    target.write_bytes(_gpm_transform(payload, version))
+    return target
+
+
 # --- python-pydantic-core ------------------------------------------------------
 
 CRATES_IO_INDEX = "registry+https://github.com/rust-lang/crates.io-index"
@@ -442,12 +510,14 @@ METADATA = {
     "intel-media-driver-free": _imd_metadata,
     "tailscale": _tailscale_metadata,
     "python-pydantic-core": _pydantic_core_metadata,
+    "gpm": _gpm_metadata,
 }
 
 GENERATORS = {
     "intel-media-driver-free": _imd_generate,
     "tailscale": _tailscale_generate,
     "python-pydantic-core": _pydantic_core_generate,
+    "gpm": _gpm_generate,
 }
 
 
