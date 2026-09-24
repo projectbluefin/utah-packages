@@ -12,11 +12,19 @@ Source0:        https://github.com/Haivision/srt/archive/v%{version}%{rc}/%{name
 BuildRequires:  cmake
 BuildRequires:  gcc-c++
 BuildRequires:  gmock-devel
-BuildRequires:  gnutls-devel
 BuildRequires:  gtest-devel
 BuildRequires:  make
-# https://github.com/Haivision/srt/issues/3316
-BuildRequires:  nettle3.10-devel
+# Fedora builds srt against gnutls and pins nettle3.10-devel because srt's
+# gnutls backend does not build with nettle 4
+# (https://github.com/Haivision/srt/issues/3316). nettle3.10-devel is a
+# Rawhide compat package that neither Fedora 44 nor Hummingbird ships, and
+# Hummingbird's nettle 4.0 and the gnutls built on it shadow Fedora 44's
+# nettle 3.10, so builddep stopped on
+#   No match for argument: nettle3.10-devel
+# Use the OpenSSL EVP backend instead: upstream's own default USE_ENCLIB,
+# Hummingbird owns OpenSSL, and OpenSSL 3 (Apache-2.0) is compatible with
+# srt's MPL-2.0.
+BuildRequires:  openssl-devel
 
 Requires: srt-libs%{?_isa} = %{version}-%{release}
 
@@ -51,7 +59,7 @@ Secure Reliable Transport protocol development libraries and header files
   -DENABLE_GETNAMEINFO=ON \
   -DENABLE_BONDING=ON \
   -DENABLE_PKTINFO=ON \
-  -DUSE_ENCLIB=gnutls
+  -DUSE_ENCLIB=openssl-evp
 
 %cmake_build
 
