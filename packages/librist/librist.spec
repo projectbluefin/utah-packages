@@ -15,6 +15,11 @@ Source0:        %{url}/-/archive/v%{version}/librist-v%{version}.tar.gz
 
 # upstream: https://code.videolan.org/rist/librist/-/merge_requests/287
 Patch0:         gcc16-fix-const-correctness.patch
+# Factory patch: Hummingbird ships nettle 4.0, which removed struct aes_ctx
+# and the length argument of sha256_digest, so %%build failed on
+#   src/crypto/psk.h:41:24: error: field nettle_ctx has incomplete type
+# Backport of upstream eccf426a86d9 (librist 0.2.19) to 0.2.11.
+Patch1:         librist-nettle4.patch
 
 BuildRequires:  gcc
 BuildRequires:  meson
