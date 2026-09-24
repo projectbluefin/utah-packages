@@ -121,6 +121,11 @@ jobs:
                 printf "[factory]\nname=factory\nbaseurl=%s\nenabled=1\ngpgcheck=0\npriority=5\n" "$FACTORY_REPO" > /etc/yum.repos.d/factory.repo
               fi
               dnf -y $disable install dnf-plugins-core mock rpm-build @buildsys-build
+              # Same upgrade as the build step below; see the comment there.
+              for split in libxml2; do
+                rpm -q "$split" >/dev/null 2>&1 || continue
+                dnf -y $disable upgrade "$split"
+              done
               dnf -y $disable swap sqlite-libs sqlite-libs --allowerasing || true
               DISTTAG=".$(rpm -qa --qf "%{RELEASE}\n" | grep -oE "hum[0-9]+$" | sort -u | head -n1).bfin${DIST_BUMP:-}"
               test "$DISTTAG" != ".bfin"
@@ -337,6 +342,27 @@ jobs:
               # them in transitively; squashfs-tools calls echo directly from its
               # manpage installer and fails without it.
               dnf -y $disable install dnf-plugins-core mock rpm-build @buildsys-build
+              # Hummingbird split libxml2 at 2.15.4-1.1: the library moved to a
+              # new libxml2-16 package and libxml2 kept only xmllint. The new
+              # package neither Obsoletes nor Conflicts the old one, and the
+              # base install above upgrades Fedora libxml2 to the pre-split
+              # 2.15.4-1.hum1 (the provider of libxml2.so.16 that is an update
+              # of an installed name). builddep then pulls libxml2-devel, which
+              # needs libxml2-16 of the new release, dnf never touches the
+              # installed libxml2, and rpm dies after "Running transaction":
+              #   file /usr/lib64/libxml2.so.16.1.4 from install of
+              #     libxml2-16-2.15.4-1.1.hum1 conflicts with file from package
+              #     libxml2-2.15.4-1.hum1
+              # That took out gstreamer1, libwacom, shared-mime-info, pycairo,
+              # libglvnd and nine more in run 36032253217. Upgrading the name
+              # explicitly moves it to the split release and pulls libxml2-16
+              # in the same transaction, so the old owner of the file is gone
+              # before anything else asks for it.
+              for split in libxml2; do
+                rpm -q "$split" >/dev/null 2>&1 || continue
+                dnf -y $disable upgrade "$split"
+              done
+              rpm -q --qf "buildroot libxml2: %{NAME}-%{VERSION}-%{RELEASE}\n" libxml2 libxml2-16 || true
               rpm -q --qf "buildroot openssl: %{VERSION}-%{RELEASE}\n" openssl-libs || true
               # Excluding a repository does not touch a package that is already
               # installed, and the base image arrives with some of these. Fedora
