@@ -18,6 +18,12 @@ Summary:        Library for retro-fitting legacy printer drivers
 License:        Apache-2.0 WITH LLVM-exception
 URL:            https://github.com/OpenPrinting/libppd
 Source0:        %{URL}/releases/download/%{upstream_version}/%{name}-%{upstream_version}.tar.gz
+# Factory patch: ppd-collection.cxx includes cups/transcode.h, which uses
+# uint32_t without including <stdint.h>. Against Hummingbird cups-devel
+# 2.4.19 and GCC 16 the build stopped on
+#   /usr/include/cups/transcode.h:37:9: error: 'uint32_t' does not name a type
+# libppd is a BuildRequires of cups-filters and cups-browsed.
+Patch0:         libppd-cstdint.patch
 
 
 # for autogen.sh

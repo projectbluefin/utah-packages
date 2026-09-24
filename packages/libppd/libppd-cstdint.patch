@@ -1,0 +1,27 @@
+From 6222293b9f9b29c13440c89e2eb5d79adf9c0e37 Mon Sep 17 00:00:00 2001
+From: Project Bluefin <bot@projectbluefin.io>
+Date: Thu, 24 Sep 2026 23:11:11 +0000
+Subject: [PATCH] ppd-collection: include <cstdint> before cups/transcode.h
+
+cups/transcode.h (CUPS 2.4) uses uint16_t and uint32_t without including
+<stdint.h>. Against Hummingbird's cups-devel 2.4.19 and GCC 16 nothing
+earlier in this translation unit provides them, so ppd-collection.cxx
+fails with "'uint32_t' does not name a type" inside the CUPS header.
+---
+ ppd/ppd-collection.cxx | 5 +++++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/ppd/ppd-collection.cxx b/ppd/ppd-collection.cxx
+index 7485411..60e1d00 100644
+--- a/ppd/ppd-collection.cxx
++++ b/ppd/ppd-collection.cxx
+@@ -16,6 +16,9 @@
+ // Include necessary headers...
+ //
+ 
++// cups/transcode.h uses uint16_t/uint32_t without including <stdint.h>
++// itself, and nothing earlier in this file provides them. Include it first.
++#include <cstdint>
+ #include <cups/dir.h>
+ #include <cups/transcode.h>
+ #include <ppd/ppd.h>
