@@ -107,7 +107,7 @@ cp -av docs/* %{buildroot}%{_docdir}/%{name}
 * Thu Jul 16 2026 Fedora Release Engineering <releng@fedoraproject.org> - 0.2.11-2
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_45_Mass_Rebuild
 
-* Fri Jan 30 2025 Bill Roberts <bill.roberts@arm.com> - 0.2.11-1
+* Fri Jan 30 2026 Bill Roberts <bill.roberts@arm.com> - 0.2.11-1
 - Use gnutls over mbedtls
 - Update to 0.2.11
 
