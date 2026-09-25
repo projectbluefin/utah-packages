@@ -12,13 +12,16 @@ on:
         description: >
           How to build. container is the hand-simulated build root every
           published RPM was built in. mock is a real mock root, the way Packit
-          builds locally; it is unproven here, so it is dispatch-only.
+          builds locally. hermetic locks the mock root from real
+          BuildRequires and builds offline from the lock, the way Hummingbird
+          does. mock and hermetic are opt-in until a full run proves them.
         required: false
         default: container
         type: choice
         options:
           - container
           - mock
+          - hermetic
   # A merge that changes a recipe or config builds it, plus everything that
   # BuildRequires it, and publishes -- the way Fedora and Hummingbird build a
   # package when it changes. Pipeline-only changes are proven by the canary

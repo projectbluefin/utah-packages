@@ -157,7 +157,7 @@ class FactoryWitnessTests(unittest.TestCase):
     def test_the_build_root_installs_from_the_extracted_repository(self) -> None:
         text = uncommented(BUILD_STAGE)
         self.assertIn("./.github/actions/load-factory-repo", text)
-        self.assertEqual(text.count("FACTORY_REPO: ${{ steps.factory.outputs.url }}"), 3)
+        self.assertEqual(text.count("FACTORY_REPO: ${{ steps.factory.outputs.url }}"), 4)
         # The container mounts $PWD/work at /work, so that is the only path
         # the repository can be enabled under.
         self.assertIn("url=file:///$TARGET", LOAD_ACTION.read_text())

@@ -111,7 +111,9 @@ dependency actually changed.
   both paths and in a regression test.
 - The mock backend is not cache-enabled until it records and keys its own mock
   root. A container-lane entry must not be reused by mock merely because the
-  source recipe matches.
+  source recipe matches. The hermetic lane does record its root -- the
+  NEVRAs in `buildroot_lock.json` -- and keys on them under the salt
+  `hermetic`, so its entries and the container lane's can never meet.
 
 ## Proving progress survives
 

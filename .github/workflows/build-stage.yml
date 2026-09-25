@@ -27,8 +27,11 @@ on:
         description: >
           container (default) builds with bare rpmbuild in a Fedora container
           that hand-simulates a build root. mock builds the SRPM in a real mock
-          root, which is what Packit does (packit build in-mock). mock is opt-in
-          until a full run has proven it: the container path is what the
+          root, which is what Packit does (packit build in-mock). hermetic
+          locks the mock root from real BuildRequires (buildroot_lock.json)
+          and builds offline from exactly that lock, the way Hummingbird
+          does (tools/hermetic_build.sh). mock and hermetic are opt-in until
+          a full run has proven them: the container path is what the
           published repository was built with.
         required: false
         default: container
@@ -163,6 +166,59 @@ jobs:
           PACKAGE: ${{ matrix.package }}
         run: |
           python3 tools/source_pipeline.py "$PACKAGE" --output work/sources --report-dir work/reports
+      # The hermetic lane, phase one, online: mock resolves every
+      # BuildRequires -- %generate_buildrequires included -- in a real mock
+      # root and records the result, NEVRA by NEVRA with its URL, in
+      # buildroot_lock.json. That lock is the build root: the cache key is
+      # computed from it below, and the offline build installs exactly it.
+      # This is the design review's "rpmspec --buildrequires -> DNF solve ->
+      # buildroot_lock.json -> build offline", done by mock itself, as
+      # Hummingbird's ci/build_rpms.sh --hermetic does.
+      - name: Lock the build root from its BuildRequires (hermetic)
+        id: hermetic_lock
+        if: inputs.backend == 'hermetic'
+        env:
+          PACKAGE: ${{ matrix.package }}
+          FACTORY_REPO: ${{ steps.factory.outputs.url }}
+        run: |
+          set -euo pipefail
+          DIST_BUMP="$(python3 tools/dist_bump.py "$PACKAGE")"
+          BUILDROOT_ICU77="$(python3 -c 'import json,sys;name=sys.argv[1];pkgs=json.loads(open("config/upstream-sources.json").read()).get("packages",[]);entry=next((p for p in pkgs if p.get("name")==name),{});print("true" if entry.get("buildroot_icu77",False) else "false")' "$PACKAGE")"
+          # The factory's own pinned build root doubles as mock's bootstrap
+          # image, so the bootstrap is the same bytes every job builds with.
+          BOOTSTRAP_IMAGE="$(tr -d '[:space:]' < config/buildroot-image)"
+          export DIST_BUMP BUILDROOT_ICU77 BOOTSTRAP_IMAGE
+          # podman (inside, for the bootstrap image) and mock both need a
+          # real filesystem, not the container's overlay.
+          mkdir -p "$RUNNER_TEMP/containers" "$RUNNER_TEMP/mock"
+          docker run --rm --privileged \
+            -e PACKAGE -e FACTORY_REPO -e DIST_BUMP -e BUILDROOT_ICU77 -e BOOTSTRAP_IMAGE \
+            -v "$PWD/work:/work:Z" \
+            -v "$PWD/packages:/packages:ro,Z" \
+            -v "$PWD/config:/repos:ro,Z" \
+            -v "$PWD/tools:/tools:ro,Z" \
+            -v "$RUNNER_TEMP/containers:/var/lib/containers:Z" \
+            -v "$RUNNER_TEMP/mock:/var/lib/mock:Z" \
+            utah-buildroot:run bash /tools/hermetic_build.sh lock
+          sudo chown -R "$(id -u):$(id -g)" work/cache work/hermetic
+          echo "locked root: $(wc -l < work/cache/root) packages, disttag $(cat work/cache/disttag)"
+      # The hermetic lane keys the cache on its lock, in its own namespace:
+      # a container-lane entry must never be restored into a hermetic build.
+      - name: Key the package cache from the lock (hermetic)
+        id: package_cache_lock
+        if: inputs.backend == 'hermetic' && contains(fromJSON(inputs.cacheable_packages), matrix.package)
+        env:
+          PACKAGE: ${{ matrix.package }}
+          BUILDROOT_DIGEST: ${{ inputs.buildroot_digest }}
+          CACHE_SALT: ${{ inputs.cache_salt }}
+        run: |
+          set -euo pipefail
+          key=$(python3 tools/package_cache_key.py "$PACKAGE" \
+            --buildroot-digest "$BUILDROOT_DIGEST" \
+            --disttag "$(cat work/cache/disttag)" \
+            --resolved-root work/cache/root \
+            --salt "hermetic${CACHE_SALT:+-$CACHE_SALT}")
+          echo "key=$key" >> "$GITHUB_OUTPUT"
       # A cache key includes the root dnf actually resolved. Resolve it before
       # asking GHCR so a hit cannot cross a build-root boundary. This is cheap
       # beside an RPM compile; a cache hit skips the compile entirely.
@@ -222,10 +278,10 @@ jobs:
           echo "key=$key" >> "$GITHUB_OUTPUT"
       - name: Restore package RPM cache
         id: package_cache_restore
-        if: inputs.backend == 'container' && contains(fromJSON(inputs.cacheable_packages), matrix.package) && !contains(fromJSON(inputs.flaky_check || '[]'), matrix.package)
+        if: (inputs.backend == 'container' || inputs.backend == 'hermetic') && contains(fromJSON(inputs.cacheable_packages), matrix.package) && !contains(fromJSON(inputs.flaky_check || '[]'), matrix.package)
         env:
           GITHUB_TOKEN: ${{ github.token }}
-          KEY: ${{ steps.package_cache.outputs.key }}
+          KEY: ${{ steps.package_cache.outputs.key || steps.package_cache_lock.outputs.key }}
           OWNER: ${{ github.repository_owner }}
         run: |
           set -euo pipefail
@@ -248,7 +304,7 @@ jobs:
             echo "cache miss: $KEY"
           fi
       - name: Build the verified source with its RPM recipe
-        if: inputs.backend != 'mock' && steps.package_cache_restore.outputs.hit != 'true'
+        if: inputs.backend == 'container' && steps.package_cache_restore.outputs.hit != 'true'
         env:
           PACKAGE: ${{ matrix.package }}
           # `prepare` skips any package the published repository already
@@ -729,10 +785,10 @@ jobs:
               test -n "$(find /work/result -name "*.rpm" -type f -print -quit)"
             '
       - name: Publish package RPM cache
-        if: success() && inputs.backend == 'container' && contains(fromJSON(inputs.cacheable_packages), matrix.package) && !contains(fromJSON(inputs.flaky_check || '[]'), matrix.package) && steps.package_cache_restore.outputs.hit != 'true'
+        if: success() && (inputs.backend == 'container' || inputs.backend == 'hermetic') && contains(fromJSON(inputs.cacheable_packages), matrix.package) && !contains(fromJSON(inputs.flaky_check || '[]'), matrix.package) && steps.package_cache_restore.outputs.hit != 'true'
         env:
           GITHUB_TOKEN: ${{ github.token }}
-          KEY: ${{ steps.package_cache.outputs.key }}
+          KEY: ${{ steps.package_cache.outputs.key || steps.package_cache_lock.outputs.key }}
           OWNER: ${{ github.repository_owner }}
         run: |
           set -euo pipefail
@@ -851,6 +907,39 @@ jobs:
           if [ -f work/reports/flaky-check ]; then
             echo "- \`$PACKAGE\` failed \`%check\` once and passed on retry; its RPMs are from the retry" >> "$GITHUB_STEP_SUMMARY"
           fi
+      # The hermetic lane, phase two: materialize the lock into a local
+      # repository, then build in a network namespace with no interface but
+      # loopback. Nothing the build installs or fetches can come from
+      # anywhere but the lock.
+      - name: Build offline from the lock (hermetic)
+        if: inputs.backend == 'hermetic' && steps.package_cache_restore.outputs.hit != 'true'
+        env:
+          PACKAGE: ${{ matrix.package }}
+        run: |
+          set -euo pipefail
+          docker run --rm --privileged \
+            -e PACKAGE \
+            -v "$PWD/work:/work:Z" \
+            -v "$PWD/packages:/packages:ro,Z" \
+            -v "$PWD/config:/repos:ro,Z" \
+            -v "$PWD/tools:/tools:ro,Z" \
+            -v "$RUNNER_TEMP/containers:/var/lib/containers:Z" \
+            -v "$RUNNER_TEMP/mock:/var/lib/mock:Z" \
+            utah-buildroot:run bash /tools/hermetic_build.sh build
+      # What went into the package, recorded: every NEVRA with its source URL
+      # and header digest, the bootstrap image by digest, and the mock
+      # config with its hash. Kept even when the build fails.
+      - name: Upload the build-root lock (hermetic)
+        if: always() && steps.hermetic_lock.outcome == 'success'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: ${{ inputs.artifact_prefix }}lock-s${{ inputs.stage }}-${{ matrix.package }}
+          path: |
+            work/hermetic/lock/buildroot_lock.json
+            work/hermetic/mock.cfg
+            work/hermetic/mock.cfg.sha256
+          if-no-files-found: error
+          retention-days: 30
       # Its own upload, and only on failure: the RPM artifact below declares
       # if-no-files-found: error, so a build that produced nothing cannot carry
       # this out with it.

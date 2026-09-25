@@ -201,6 +201,58 @@ class StateAndIncrementalTests(unittest.TestCase):
         self.assertTrue(canary.incremental_problems([], [], expected, "pass5"))
 
 
+class HermeticVerdictTests(unittest.TestCase):
+    @staticmethod
+    def lock(*rpms):
+        return {"buildroot": {"rpms": [{"name": n, "url": u} for n, u in rpms]},
+                "bootstrap": {"pull_digest": "sha256:" + "a" * 64}}
+
+    def locks(self):
+        return {
+            "libical": self.lock(("gcc", "https://x/gcc.rpm")),
+            "vulkan-headers": self.lock(("cmake", "https://x/cmake.rpm")),
+            "vulkan-loader": self.lock(
+                ("vulkan-headers", "file:///work/prior/result/noarch/vulkan-headers.rpm")),
+        }
+
+    def test_a_locked_offline_build_of_the_set_passes(self) -> None:
+        outcomes = {"libical": "compiled", "vulkan-headers": "cache hit", "vulkan-loader": "compiled"}
+        self.assertEqual(canary.hermetic_problems(
+            outcomes, self.locks(), SET, {"vulkan-loader": "vulkan-headers"}), [])
+
+    def test_a_stage_provider_from_the_network_is_refused(self) -> None:
+        locks = self.locks()
+        locks["vulkan-loader"] = self.lock(("vulkan-headers", "https://fedora/vulkan-headers.rpm"))
+        outcomes = dict.fromkeys(SET, "compiled")
+        self.assertTrue(canary.hermetic_problems(
+            outcomes, locks, SET, {"vulkan-loader": "vulkan-headers"}))
+
+    def test_a_missing_lock_or_bootstrap_pin_is_refused(self) -> None:
+        outcomes = dict.fromkeys(SET, "compiled")
+        locks = self.locks()
+        del locks["libical"]
+        self.assertTrue(canary.hermetic_problems(outcomes, locks, SET, {}))
+        locks = self.locks()
+        locks["libical"]["bootstrap"] = {}
+        self.assertTrue(canary.hermetic_problems(outcomes, locks, SET, {}))
+
+    def test_read_locks_from_downloaded_artifacts(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for name in ("p6-lock-s0-vulkan-headers", "p6-lock-s1-vulkan-loader"):
+                (root / name / "lock").mkdir(parents=True)
+                (root / name / "lock" / "buildroot_lock.json").write_text(json.dumps({"n": name}))
+            locks = canary.read_locks(root)
+        self.assertEqual(sorted(locks), ["vulkan-headers", "vulkan-loader"])
+
+    def test_a_hermetic_offline_build_counts_as_compiled(self) -> None:
+        jobs = [{"name": 'pass6 / rebuild0 (["libical"]) / build (libical)', "conclusion": "success",
+                 "steps": [{"name": canary.RESTORE_STEP, "conclusion": "success"},
+                           {"name": canary.BUILD_STEP, "conclusion": "skipped"},
+                           {"name": canary.HERMETIC_BUILD_STEP, "conclusion": "success"}]}]
+        self.assertEqual(canary.build_outcomes(jobs)["pass6"]["libical"], "compiled")
+
+
 class WorkflowShapeTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
