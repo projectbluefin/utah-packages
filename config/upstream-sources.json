@@ -2839,12 +2839,12 @@
     },
     {
       "name": "xdg-terminal-exec",
-      "version": "0.14.2",
-      "url": "https://github.com/Vladimir-csp/xdg-terminal-exec/archive/v0.14.2/xdg-terminal-exec-0.14.2.tar.gz",
-      "filename": "xdg-terminal-exec-0.14.2.tar.gz",
-      "sha512": "b7bbfbc3dd96952b389b28d68440e9e265ea08f8af0e700f40305c8f4277ffd4d49bacb2b41af41c9bce5451d16be56edb5eecaf62add3692181778dd119d315",
+      "version": "0.14.3",
+      "url": "https://github.com/Vladimir-csp/xdg-terminal-exec/archive/v0.14.3/xdg-terminal-exec-0.14.3.tar.gz",
+      "filename": "xdg-terminal-exec-0.14.3.tar.gz",
+      "sha512": "65f1b633571b782cfffeac35890da372747e805d6dde659d68c568e9fd0e9a556bd792a80c6e8fc8b8fd4361adba9a761686c6daf9e94aa5512ebfe1f352ac70",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/xdg-terminal-exec/xdg-terminal-exec-0.14.2.tar.gz/sha512/b7bbfbc3dd96952b389b28d68440e9e265ea08f8af0e700f40305c8f4277ffd4d49bacb2b41af41c9bce5451d16be56edb5eecaf62add3692181778dd119d315/xdg-terminal-exec-0.14.2.tar.gz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/xdg-terminal-exec/xdg-terminal-exec-0.14.3.tar.gz/sha512/65f1b633571b782cfffeac35890da372747e805d6dde659d68c568e9fd0e9a556bd792a80c6e8fc8b8fd4361adba9a761686c6daf9e94aa5512ebfe1f352ac70/xdg-terminal-exec-0.14.3.tar.gz"
       ]
     },
     {
