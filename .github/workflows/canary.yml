@@ -18,7 +18,8 @@
 #   pass4  the same set with vulkan-loader failing on purpose, published to
 #          the same canary tag: the image must move, still carry pass1's
 #          vulkan-loader, and the run must report it as failed. Proves the
-#          incremental publish rule.
+#          incremental publish rule. libical's %check also fails once on
+#          purpose: it must compile, be retried, and publish.
 #   pass3  the same set plus python-typing-inspection with its recipe
 #          perturbed in the checkout: that one compiles, every canary package
 #          must still hit. Proves a change to one package does not
@@ -224,6 +225,9 @@ jobs:
       artifact_prefix: p4-
       cache_salt: ${{ needs.changes.outputs.salt }}
       inject_failure: '["vulkan-loader"]'
+      # And libical's %check fails once: the retry must rebuild it and
+      # publish, with a flaky %check warning.
+      flaky_check: '["libical"]'
 
   verify-failure:
     needs: [changes, pass1, pass4]
@@ -239,6 +243,10 @@ jobs:
           DIGEST: ${{ needs.pass4.outputs.digest }}
           FAILED: ${{ needs.pass4.outputs.failed }}
           SET: ${{ needs.changes.outputs.set }}
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
         run: |
           set -euo pipefail
           echo "pass4 failed: ${FAILED:-<none>}"
@@ -248,6 +256,11 @@ jobs:
           test "$DIGEST" != "$PASS1_DIGEST"
           curl -fsSL https://raw.githubusercontent.com/projectbluefin/utah/main/scripts/check-repo-availability.py \
             -o check-repo-availability.py
+          # libical's %check failed once on purpose; it must have compiled,
+          # been retried, and published.
+          gh api --paginate "repos/$REPOSITORY/actions/runs/$RUN_ID/attempts/$RUN_ATTEMPT/jobs?per_page=100" \
+            --jq '.jobs[]' | jq -s . > jobs.json
+          python3 tools/canary.py verify-flaky jobs.json --pass pass4 --package libical
           # vulkan-loader is still there: pass1's build, kept.
           python3 tools/canary.py verify-image "${IMAGE%:*}@${DIGEST}" \
             --utah-reader check-repo-availability.py --expect "$SET"

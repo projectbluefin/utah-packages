@@ -155,6 +155,25 @@ class CacheVerdictTests(unittest.TestCase):
         self.assertIn("| pass2 | `vulkan-headers` | cache hit |", text)
 
 
+class FlakyCheckVerdictTests(unittest.TestCase):
+    JOBS = [job('pass4 / rebuild0 (["libical"]) / build (libical)', "success", "success")]
+    GOOD = [
+        {"title": "flaky %check retry", "message": "libical failed in %check (exit 1); retrying the build once"},
+        {"title": "flaky %check", "message": "libical failed %check once and passed on retry"},
+    ]
+
+    def test_a_retried_compile_passes(self) -> None:
+        self.assertEqual(canary.flaky_problems(self.JOBS, "pass4", "libical", self.GOOD), [])
+
+    def test_a_cache_hit_proves_nothing(self) -> None:
+        hit = [job('pass4 / rebuild0 (["libical"]) / build (libical)', "skipped", "success")]
+        self.assertTrue(canary.flaky_problems(hit, "pass4", "libical", self.GOOD))
+
+    def test_a_missing_retry_annotation_fails(self) -> None:
+        self.assertTrue(canary.flaky_problems(self.JOBS, "pass4", "libical", self.GOOD[1:]))
+        self.assertTrue(canary.flaky_problems(self.JOBS, "pass4", "libical", self.GOOD[:1]))
+
+
 class WorkflowShapeTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:

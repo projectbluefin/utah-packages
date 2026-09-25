@@ -79,6 +79,13 @@ on:
         required: false
         default: ''
         type: string
+      flaky_check:
+        description: >
+          Canary only: JSON names whose %check fails once and passes on the
+          retry, to prove build-stage.yml retries a flaky %check.
+        required: false
+        default: ''
+        type: string
       inject_failure:
         description: >
           Canary only: JSON names whose build job fails on purpose, to prove
@@ -456,6 +463,7 @@ jobs:
       cache_salt: ${{ inputs.cache_salt }}
       perturb: ${{ inputs.perturb }}
       inject_failure: ${{ inputs.inject_failure }}
+      flaky_check: ${{ inputs.flaky_check }}
 
   rebuild1:
     needs: [prepare, rebuild0]
@@ -476,6 +484,7 @@ jobs:
       cache_salt: ${{ inputs.cache_salt }}
       perturb: ${{ inputs.perturb }}
       inject_failure: ${{ inputs.inject_failure }}
+      flaky_check: ${{ inputs.flaky_check }}
 
   rebuild2:
     needs: [prepare, rebuild0, rebuild1]
@@ -496,6 +505,7 @@ jobs:
       cache_salt: ${{ inputs.cache_salt }}
       perturb: ${{ inputs.perturb }}
       inject_failure: ${{ inputs.inject_failure }}
+      flaky_check: ${{ inputs.flaky_check }}
 
   rebuild3:
     needs: [prepare, rebuild0, rebuild1, rebuild2]
@@ -516,6 +526,7 @@ jobs:
       cache_salt: ${{ inputs.cache_salt }}
       perturb: ${{ inputs.perturb }}
       inject_failure: ${{ inputs.inject_failure }}
+      flaky_check: ${{ inputs.flaky_check }}
 
   rebuild4:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3]
@@ -536,6 +547,7 @@ jobs:
       cache_salt: ${{ inputs.cache_salt }}
       perturb: ${{ inputs.perturb }}
       inject_failure: ${{ inputs.inject_failure }}
+      flaky_check: ${{ inputs.flaky_check }}
 
   rebuild5:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4]
@@ -556,6 +568,7 @@ jobs:
       cache_salt: ${{ inputs.cache_salt }}
       perturb: ${{ inputs.perturb }}
       inject_failure: ${{ inputs.inject_failure }}
+      flaky_check: ${{ inputs.flaky_check }}
 
   rebuild6:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5]
@@ -576,6 +589,7 @@ jobs:
       cache_salt: ${{ inputs.cache_salt }}
       perturb: ${{ inputs.perturb }}
       inject_failure: ${{ inputs.inject_failure }}
+      flaky_check: ${{ inputs.flaky_check }}
 
   rebuild7:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6]
@@ -596,6 +610,7 @@ jobs:
       cache_salt: ${{ inputs.cache_salt }}
       perturb: ${{ inputs.perturb }}
       inject_failure: ${{ inputs.inject_failure }}
+      flaky_check: ${{ inputs.flaky_check }}
 
   rebuild8:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7]
@@ -616,6 +631,7 @@ jobs:
       cache_salt: ${{ inputs.cache_salt }}
       perturb: ${{ inputs.perturb }}
       inject_failure: ${{ inputs.inject_failure }}
+      flaky_check: ${{ inputs.flaky_check }}
 
   rebuild9:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8]
@@ -636,6 +652,7 @@ jobs:
       cache_salt: ${{ inputs.cache_salt }}
       perturb: ${{ inputs.perturb }}
       inject_failure: ${{ inputs.inject_failure }}
+      flaky_check: ${{ inputs.flaky_check }}
 
   rebuild10:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8, rebuild9]
@@ -656,6 +673,7 @@ jobs:
       cache_salt: ${{ inputs.cache_salt }}
       perturb: ${{ inputs.perturb }}
       inject_failure: ${{ inputs.inject_failure }}
+      flaky_check: ${{ inputs.flaky_check }}
 
   precedence:
     # Every wave, not the first five. See publish below.

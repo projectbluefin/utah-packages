@@ -86,3 +86,37 @@ class CheckRetryTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class CanaryFlakyCheckTests(unittest.TestCase):
+    """The canary proves the retry by failing a %check once on purpose."""
+
+    def test_the_injection_is_canary_only_and_edits_the_staged_copy(self) -> None:
+        script = step(LANES["container"])["run"]
+        self.assertIn('if [ -n "${FLAKY_CHECK:-}" ]; then', script)
+        self.assertIn('spec="$staged/$(basename "$spec")"', script)
+        workflow = yaml.safe_load(BUILD_STAGE.read_text())
+        triggers = workflow.get("on", workflow.get(True))
+        self.assertEqual(triggers["workflow_call"]["inputs"]["flaky_check"]["default"], "")
+
+    def test_the_injected_line_fails_once_then_passes(self) -> None:
+        """Run the workflow's own sed on a spec, then the %check line twice."""
+        script = step(LANES["container"])["run"]
+        sed = re.search(r'sed -i ("0,/\^%check/[^"]+") "\$spec"', script).group(1)
+        with tempfile.TemporaryDirectory() as directory:
+            spec = Path(directory) / "demo.spec"
+            spec.write_text("Name: demo\n%build\ntrue\n%check\nmake check\n")
+            marker = Path(directory) / "marker"
+            program = sed.replace("\\/tmp\\/canary-flaky-check", str(marker).replace("/", "\\/"))
+            subprocess.run(["bash", "-c", f'sed -i {program} "$0"', str(spec)], check=True)
+            injected = spec.read_text().splitlines()[4]
+            self.assertIn("exit 1", injected)
+            first = subprocess.run(["bash", "-c", injected])
+            second = subprocess.run(["bash", "-c", injected])
+        self.assertEqual((first.returncode, second.returncode), (1, 0))
+
+    def test_a_flaky_package_never_restores_from_the_cache(self) -> None:
+        text = BUILD_STAGE.read_text()
+        self.assertEqual(
+            text.count("!contains(fromJSON(inputs.flaky_check || '[]'), matrix.package)"), 3
+        )

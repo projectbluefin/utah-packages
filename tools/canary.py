@@ -17,6 +17,7 @@ import gzip
 import hashlib
 import importlib.util
 import json
+import os
 import re
 import subprocess
 import sys
@@ -189,6 +190,21 @@ def cache_problems(
     return problems
 
 
+def flaky_problems(jobs: list[dict], pass_name: str, package: str,
+                   annotations: list[dict]) -> list[str]:
+    """The package compiled, failed %check once, was retried, and succeeded."""
+    outcome = build_outcomes(jobs).get(pass_name, {}).get(package)
+    problems = []
+    if outcome != "compiled":
+        problems.append(f"{pass_name}: {package} was {outcome}; it must compile to retry %check")
+    messages = [str(a.get("title", "")) + " " + str(a.get("message", "")) for a in annotations]
+    if not any("flaky %check retry" in m and package in m for m in messages):
+        problems.append(f"{pass_name}: no 'flaky %check retry' annotation for {package}")
+    if not any(m.startswith("flaky %check ") and "passed on retry" in m for m in messages):
+        problems.append(f"{pass_name}: no 'passed on retry' annotation for {package}")
+    return problems
+
+
 def summary(outcomes: dict[str, dict[str, str]], problems: list[str]) -> str:
     lines = ["### Canary cache", "", "| pass | package | outcome |", "| --- | --- | --- |"]
     for name in sorted(outcomes):
@@ -211,6 +227,10 @@ def main(argv: list[str] | None = None) -> int:
     image.add_argument("image")
     image.add_argument("--utah-reader", type=Path, required=True)
     image.add_argument("--expect", required=True)
+    flaky = commands.add_parser("verify-flaky")
+    flaky.add_argument("jobs", type=Path)
+    flaky.add_argument("--pass", dest="pass_name", required=True)
+    flaky.add_argument("--package", required=True)
     cache = commands.add_parser("verify-cache")
     cache.add_argument("jobs", type=Path)
     cache.add_argument("--set", required=True)
@@ -229,6 +249,23 @@ def main(argv: list[str] | None = None) -> int:
         if not problems:
             print(f"{args.image}: two layers, repodata first, Utah's reader accepts it, "
                   "and it carries exactly the canary set")
+        return 1 if problems else 0
+    if args.command == "verify-flaky":
+        jobs = json.loads(args.jobs.read_text())
+        job = next((j for j in jobs if BUILD_JOB.match(j.get("name", ""))
+                    and BUILD_JOB.match(j["name"])["pass"] == args.pass_name
+                    and BUILD_JOB.match(j["name"])["package"] == args.package), None)
+        annotations = []
+        if job is not None:
+            annotations = json.loads(subprocess.run(
+                ["gh", "api", f"repos/{os.environ['REPOSITORY']}/check-runs/{job['id']}/annotations"],
+                check=True, capture_output=True, text=True,
+            ).stdout)
+        problems = flaky_problems(jobs, args.pass_name, args.package, annotations)
+        for problem in problems:
+            print(f"::error title=canary flaky check::{problem}", file=sys.stderr)
+        if not problems:
+            print(f"{args.pass_name}: {args.package} failed %check once, was retried, and built")
         return 1 if problems else 0
     if args.command == "verify-cache":
         outcomes = build_outcomes(json.loads(args.jobs.read_text()))

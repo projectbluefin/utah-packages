@@ -70,6 +70,13 @@ on:
         required: false
         default: ''
         type: string
+      flaky_check:
+        description: >
+          Canary only: JSON names whose %check fails on its first run and
+          passes on the retry, to prove the retry. They always compile.
+        required: false
+        default: ''
+        type: string
       inject_failure:
         description: >
           Canary only: JSON names whose build fails on purpose, before any
@@ -157,7 +164,7 @@ jobs:
       # beside an RPM compile; a cache hit skips the compile entirely.
       - name: Resolve the package cache key
         id: package_cache
-        if: inputs.backend == 'container' && contains(fromJSON(inputs.cacheable_packages), matrix.package)
+        if: inputs.backend == 'container' && contains(fromJSON(inputs.cacheable_packages), matrix.package) && !contains(fromJSON(inputs.flaky_check || '[]'), matrix.package)
         env:
           PACKAGE: ${{ matrix.package }}
           FACTORY_REPO: ${{ steps.factory.outputs.url }}
@@ -211,7 +218,7 @@ jobs:
           echo "key=$key" >> "$GITHUB_OUTPUT"
       - name: Restore package RPM cache
         id: package_cache_restore
-        if: inputs.backend == 'container' && contains(fromJSON(inputs.cacheable_packages), matrix.package)
+        if: inputs.backend == 'container' && contains(fromJSON(inputs.cacheable_packages), matrix.package) && !contains(fromJSON(inputs.flaky_check || '[]'), matrix.package)
         env:
           GITHUB_TOKEN: ${{ github.token }}
           KEY: ${{ steps.package_cache.outputs.key }}
@@ -259,6 +266,8 @@ jobs:
           # container, which only sees config/ and packages/.
           DIST_BUMP="$(python3 tools/dist_bump.py "$PACKAGE")"
           export DIST_BUMP
+          FLAKY_CHECK="${{ inputs.flaky_check != '' && contains(fromJSON(inputs.flaky_check), matrix.package) && '1' || '' }}"
+          export FLAKY_CHECK
           # Whether the build root may admit Hummingbird libicu-77. By default
           # every factory package excludes it so nothing links .so.77 -- the
           # runtime carries only libicu 78. A package that genuinely needs it
@@ -267,7 +276,7 @@ jobs:
           BUILDROOT_ICU77="$(python3 -c 'import json,sys;name=sys.argv[1];pkgs=json.loads(open("config/upstream-sources.json").read()).get("packages",[]);entry=next((p for p in pkgs if p.get("name")==name),{});print("true" if entry.get("buildroot_icu77",False) else "false")' "$PACKAGE")"
           export BUILDROOT_ICU77
           docker run --rm --privileged \
-            -e PACKAGE -e FACTORY_REPO -e DIST_BUMP -e BUILDROOT_ICU77 \
+            -e PACKAGE -e FACTORY_REPO -e DIST_BUMP -e BUILDROOT_ICU77 -e FLAKY_CHECK \
             -v "$PWD/work:/work:Z" \
             -v "$PWD/packages:/packages:ro,Z" \
             -v "$PWD/config:/repos:ro,Z" \
@@ -552,6 +561,14 @@ jobs:
               mkdir -p "$staged"
               cp -a "/packages/$PACKAGE/." "$staged/"
               cp -a "/work/sources/$PACKAGE/." "$staged/"
+              # Canary only (flaky_check): the first run of %check fails, the
+              # retry passes, so the canary proves the retry below retries.
+              # Edits the staged copy; the recipe is untouched.
+              if [ -n "${FLAKY_CHECK:-}" ]; then
+                spec="$staged/$(basename "$spec")"
+                sed -i "0,/^%check/s//%check\n[ -e \/tmp\/canary-flaky-check ] || { touch \/tmp\/canary-flaky-check; echo canary: failing this check once on purpose; exit 1; }/" "$spec"
+                grep -n -A1 "^%check" "$spec"
+              fi
               # A package that declares system users creates them from its %pre
               # at install time, which never happens to a buildroot -- so the
               # test suite runs without them. The openssh regress tests die with
@@ -706,7 +723,7 @@ jobs:
               test -n "$(find /work/result -name "*.rpm" -type f -print -quit)"
             '
       - name: Publish package RPM cache
-        if: success() && inputs.backend == 'container' && contains(fromJSON(inputs.cacheable_packages), matrix.package) && steps.package_cache_restore.outputs.hit != 'true'
+        if: success() && inputs.backend == 'container' && contains(fromJSON(inputs.cacheable_packages), matrix.package) && !contains(fromJSON(inputs.flaky_check || '[]'), matrix.package) && steps.package_cache_restore.outputs.hit != 'true'
         env:
           GITHUB_TOKEN: ${{ github.token }}
           KEY: ${{ steps.package_cache.outputs.key }}
