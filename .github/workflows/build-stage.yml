@@ -784,6 +784,25 @@ jobs:
               # reports success while shipping no packages at all.
               test -n "$(find /work/result -name "*.rpm" -type f -print -quit)"
             '
+      # The hermetic lane, phase two: materialize the lock into a local
+      # repository, then build in a network namespace with no interface but
+      # loopback. Nothing the build installs or fetches can come from
+      # anywhere but the lock.
+      - name: Build offline from the lock (hermetic)
+        if: inputs.backend == 'hermetic' && steps.package_cache_restore.outputs.hit != 'true'
+        env:
+          PACKAGE: ${{ matrix.package }}
+        run: |
+          set -euo pipefail
+          docker run --rm --privileged \
+            -e PACKAGE \
+            -v "$PWD/work:/work:Z" \
+            -v "$PWD/packages:/packages:ro,Z" \
+            -v "$PWD/config:/repos:ro,Z" \
+            -v "$PWD/tools:/tools:ro,Z" \
+            -v "$RUNNER_TEMP/containers:/var/lib/containers:Z" \
+            -v "$RUNNER_TEMP/mock:/var/lib/mock:Z" \
+            utah-buildroot:run bash /tools/hermetic_build.sh build
       - name: Publish package RPM cache
         if: success() && (inputs.backend == 'container' || inputs.backend == 'hermetic') && contains(fromJSON(inputs.cacheable_packages), matrix.package) && !contains(fromJSON(inputs.flaky_check || '[]'), matrix.package) && steps.package_cache_restore.outputs.hit != 'true'
         env:
@@ -907,25 +926,6 @@ jobs:
           if [ -f work/reports/flaky-check ]; then
             echo "- \`$PACKAGE\` failed \`%check\` once and passed on retry; its RPMs are from the retry" >> "$GITHUB_STEP_SUMMARY"
           fi
-      # The hermetic lane, phase two: materialize the lock into a local
-      # repository, then build in a network namespace with no interface but
-      # loopback. Nothing the build installs or fetches can come from
-      # anywhere but the lock.
-      - name: Build offline from the lock (hermetic)
-        if: inputs.backend == 'hermetic' && steps.package_cache_restore.outputs.hit != 'true'
-        env:
-          PACKAGE: ${{ matrix.package }}
-        run: |
-          set -euo pipefail
-          docker run --rm --privileged \
-            -e PACKAGE \
-            -v "$PWD/work:/work:Z" \
-            -v "$PWD/packages:/packages:ro,Z" \
-            -v "$PWD/config:/repos:ro,Z" \
-            -v "$PWD/tools:/tools:ro,Z" \
-            -v "$RUNNER_TEMP/containers:/var/lib/containers:Z" \
-            -v "$RUNNER_TEMP/mock:/var/lib/mock:Z" \
-            utah-buildroot:run bash /tools/hermetic_build.sh build
       # What went into the package, recorded: every NEVRA with its source URL
       # and header digest, the bootstrap image by digest, and the mock
       # config with its hash. Kept even when the build fails.

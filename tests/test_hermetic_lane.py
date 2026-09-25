@@ -46,6 +46,13 @@ class HermeticLaneTests(unittest.TestCase):
             "inputs.backend == 'hermetic' && steps.package_cache_restore.outputs.hit != 'true'",
         )
 
+    def test_the_offline_build_runs_before_its_result_is_cached(self) -> None:
+        # The first canary run published the cache before the hermetic build
+        # step had produced anything, and failed on an empty work/result.
+        self.assertLess(index(self.BUILD), index("Publish package RPM cache"))
+        self.assertLess(index("Build the verified source with its RPM recipe"),
+                        index("Publish package RPM cache"))
+
     def test_the_cache_key_comes_from_the_lock_in_its_own_namespace(self) -> None:
         run = steps()[index(self.KEY)]["run"]
         self.assertIn("--resolved-root work/cache/root", run)
