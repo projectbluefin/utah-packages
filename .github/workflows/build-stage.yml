@@ -93,7 +93,6 @@ jobs:
           PACKAGE: ${{ matrix.package }}
           FACTORY_REPO: ${{ steps.factory.outputs.url }}
           BUILDROOT_DIGEST: ${{ inputs.buildroot_digest }}
-          FACTORY_DIGEST: ${{ inputs.factory_image }}
         run: |
           set -euo pipefail
           mkdir -p work/cache
@@ -136,7 +135,6 @@ jobs:
             '
           key=$(python3 tools/package_cache_key.py "$PACKAGE" \
             --buildroot-digest "$BUILDROOT_DIGEST" \
-            --factory-digest "$FACTORY_DIGEST" \
             --disttag "$(cat work/cache/disttag)" \
             --resolved-root work/cache/root)
           echo "key=$key" >> "$GITHUB_OUTPUT"

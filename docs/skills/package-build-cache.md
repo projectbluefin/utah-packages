@@ -59,9 +59,14 @@ JSON containing:
 - source-package name;
 - digest of every file and relative path in `packages/<name>/`;
 - prepared build-root image digest;
-- prepare-time factory image digest;
 - sorted, de-duplicated resolved build-root NEVRAs;
 - complete disttag, including any local rebuild suffix.
+
+The published factory image digest is deliberately not a field (schema 2). The
+resolved root already records the exact NEVR of every package the build took
+from the factory, so a factory change that matters reaches the key through it.
+Keying on the digest as well made every publish invalidate every entry, and the
+run after a successful publish (36159982139) rebuilt unchanged packages cold.
 
 Every field can change the binary. Removing one can serve an RPM built from a
 different recipe or ABI. An empty resolved root is therefore an error, never a
@@ -94,8 +99,8 @@ dependency actually changed.
 - Never let cache presence decide the rebuild plan.
 - Never restore stale or directly changed packages.
 - Never compute a key before dependency resolution or from an empty root.
-- Never omit recipe paths, the build-root digest, factory digest, resolved
-  NEVRAs, or disttag from the key.
+- Never omit recipe paths, the build-root digest, resolved NEVRAs, or disttag
+  from the key. Do not add the factory image digest back (see above).
 - Never treat a cache outage as a package-build failure.
 - Never delay cache publication until the final atomic publish job.
 - Never remove the final precedence and Hummingbird-only transaction gates for
