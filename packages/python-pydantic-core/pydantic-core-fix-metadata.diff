@@ -1,0 +1,12 @@
+diff -Naur ./pydantic_core-2.46.4-original/Cargo.toml pydantic_core-2.46.4/Cargo.toml
+--- ./pydantic_core-2.46.4-original/Cargo.toml	2006-07-24 02:21:28.000000000 +0100
++++ pydantic_core-2.46.4/Cargo.toml	2026-05-19 14:00:21.288887358 +0100
+@@ -45,7 +45,7 @@
+ num-bigint = "0.4.6"
+ num-traits = "0.2.19"
+ uuid = "1.23.0"
+-jiter = { version = "0.14.0", features = ["python"] }
++jiter = { version = ">=0.14.0, <0.17.0", features = ["python"] }
+ hex = "0.4.3"
+ percent-encoding = "2.3.2"
+ hashbrown = { version = "0.16", default-features = false, features = ["inline-more"] }

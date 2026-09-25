@@ -1,0 +1,39 @@
+diff -Naur pydantic_core-2.46.4-original/Cargo.toml pydantic_core-2.46.4/Cargo.toml
+--- pydantic_core-2.46.4-original/Cargo.toml	2006-07-24 02:21:28.000000000 +0100
++++ pydantic_core-2.46.4/Cargo.toml	2026-06-20 09:58:15.258108604 +0100
+@@ -27,7 +27,7 @@
+ [dependencies]
+ # TODO it would be very nice to remove the "py-clone" feature as it can panic,
+ # but needs a bit of work to make sure it's not used in the codebase
+-pyo3 = { version = "0.28", features = ["generate-import-lib", "num-bigint", "py-clone", "smallvec"] }
++pyo3 = { version = "0.29", features = ["generate-import-lib", "num-bigint", "py-clone", "smallvec"] }
+ regex = "1.12.3"
+ lru = "0.16.3"
+ strum = { version = "0.27", features = ["derive"] }
+@@ -71,12 +71,12 @@
+ strip = false
+ 
+ [dev-dependencies]
+-pyo3 = { version = "0.28", features = ["auto-initialize"] }
++pyo3 = { version = "0.29", features = ["auto-initialize"] }
+ 
+ [build-dependencies]
+ version_check = "0.9.5"
+ # used where logic has to be version/distribution specific, e.g. pypy
+-pyo3-build-config = { version = "0.28" }
++pyo3-build-config = { version = "0.29" }
+ 
+ [lints.clippy]
+ dbg_macro = "warn"
+diff -Naur pydantic_core-2.46.4-original/tests/test_errors.py pydantic_core-2.46.4/tests/test_errors.py
+--- pydantic_core-2.46.4-original/tests/test_errors.py	2006-07-24 02:21:28.000000000 +0100
++++ pydantic_core-2.46.4/tests/test_errors.py	2026-06-20 09:59:21.679427429 +0100
+@@ -107,7 +107,7 @@
+ 
+     v = SchemaValidator(core_schema.with_info_plain_validator_function(f))
+ 
+-    with pytest.raises(TypeError, match="argument 'context': 'list' object is not an instance of 'dict'"):
++    with pytest.raises(TypeError, match="'list' object is not an instance of 'dict'"):
+         v.validate_python(42)
+ 
+ 

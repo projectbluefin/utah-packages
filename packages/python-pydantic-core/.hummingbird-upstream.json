@@ -1,0 +1,8 @@
+{
+  "package": "python-pydantic-core",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/python-pydantic-core.git",
+  "commit": "3fb9a8fb1f9c4e11e26b7285652dfc63ab70f92b",
+  "tree": "747cac82cd373bb26f609abfaad7ab024f9682be",
+  "imported_at": "2026-08-30T16:25:29.667626+00:00"
+}

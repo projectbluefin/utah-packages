@@ -41,11 +41,7 @@ same four places an import writes to, or the next `just check` fails:
 - `.packit.yaml` -- delete the package's block.
 - `packages/<name>/` -- delete the whole directory (recipe, patches, sources).
 - Any generator special-casing in `tools/generated_sources.py` and the
-  hardcoded package-count assertions in `tests/` that track the set size:
-  `test_render_packit_config.py`, `test_package_inventory.py`,
-  `test_packit_srpm.py`, and `test_source_inventory.py` (which counts the set
-  minus one, because `mesa` is Hummingbird-supplied), plus the counts quoted
-  in `docs/architecture.md`.
+  hardcoded package-count assertions in `tests/` that track the set size.
 
 The image manifest (`config/bluefin-packages.toml`) and
 `config/hummingbird-provided-sources.json` are intentionally left alone: the

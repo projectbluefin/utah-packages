@@ -1774,6 +1774,18 @@ packages:
     downstream_package_name: python-psutil
     paths:
       - packages/python-psutil
+  python-pydantic:
+    specfile_path: python-pydantic.spec
+    upstream_package_name: python-pydantic
+    downstream_package_name: python-pydantic
+    paths:
+      - packages/python-pydantic
+  python-pydantic-core:
+    specfile_path: python-pydantic-core.spec
+    upstream_package_name: python-pydantic-core
+    downstream_package_name: python-pydantic-core
+    paths:
+      - packages/python-pydantic-core
   python-typing-inspection:
     specfile_path: python-typing-inspection.spec
     upstream_package_name: python-typing-inspection

@@ -1,0 +1,34 @@
+From 78dabebff357b256d3f8d7c992f542794e1a8bde Mon Sep 17 00:00:00 2001
+From: Maxwell G <maxwell@gtmx.me>
+Date: Thu, 4 Jun 2026 15:13:45 -0500
+Subject: [PATCH] Fix test assertion to account for change in rust-uuid
+
+The error format for invalid uuids emitted by rust-uuid changed in
+https://github.com/uuid-rs/uuid/pull/882. pydantic-core code apparently
+passes along this error message, and then the tests fail since they
+expect the old format.
+
+The issue here is that uuid strings are now zero-indexed in the error
+message. Since this test apparatus doesn't allow a regex like `(0|1)`, I
+just removed the index and left a trailing space. I didn't want to break
+compatibility with older uuid versions with this patch.
+---
+ tests/validators/test_uuid.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/tests/validators/test_uuid.py b/tests/validators/test_uuid.py
+index 49ccf0b..04a48e2 100644
+--- a/tests/validators/test_uuid.py
++++ b/tests/validators/test_uuid.py
+@@ -38,7 +38,7 @@ class MyStr(str): ...
+         (UUID('12345678-1234-5678-1234-567812345678'), UUID('12345678-1234-5678-1234-567812345678')),
+         (UUID('550e8400-e29b-41d4-a716-446655440000'), UUID('550e8400-e29b-41d4-a716-446655440000')),
+         # Invalid UUIDs
+-        ('not-a-valid-uuid', Err('Input should be a valid UUID, invalid character: found `n` at 1')),
++        ('not-a-valid-uuid', Err('Input should be a valid UUID, invalid character: found `n` at ')),
+         (
+             '12345678-1234-5678-1234-5678123456789',
+             Err('Input should be a valid UUID, invalid group length in group 4: expected 12, found 13'),
+-- 
+2.54.0
+
