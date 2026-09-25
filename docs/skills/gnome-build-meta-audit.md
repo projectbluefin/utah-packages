@@ -36,7 +36,12 @@ packaging and not a one-time spreadsheet.
 - `factory_alias` — subpackages/renames that resolve to a real factory source
   registry name (`gvfs-client`, `gvfs-daemon` -> `gvfs`; `tinysparql` ->
   `localsearch`).
-- `unmapped` — GNOME-tangential factory sources deliberately out of scope.
+- `unmapped` — GNOME-owned or GNOME-tangential factory sources deliberately
+  out of scope, each with the reason it is not mapped. Every GNOME-owned
+  factory source must be either mapped or listed here: the report's
+  `unaccounted_gnome_sources` lists any that are in neither list (a gnome.org
+  url in the factory lock, or a matching gbm element that builds the module
+  from gnome.org), so a forgotten source is visible rather than silent.
 
 ## Command
 
@@ -60,7 +65,10 @@ For every mapped GNOME-owned factory source the audit reports:
   lock version/filename.
 - **release line**: GNOME single-number cycles (>= 40) vs library `major.minor`
   lines are compared with `release_line()`; a same-line dev/rawhide bump is
-  informational, a true line mismatch is `needs_review`.
+  informational, a true line mismatch is `needs_review`. The gbm version comes
+  from the tar url, or from a `git_repo` element's `git describe` `ref`
+  (`1.18.4-0-g4541e0c` -> `1.18.4`); when no version can be read the reason
+  says the release line was **NOT compared** instead of reporting alignment.
 - **patches**: gbm `kind: patch` sources vs Fedora spec `Patch:`/`PatchN:`
   references.
 - **feature flags**: gbm `variables` (e.g. `meson-local`) vs spec `-D...`
@@ -74,7 +82,9 @@ For every mapped GNOME-owned factory source the audit reports:
   core-deps component, and whether the factory source is tracked at all.
 
 BuildStream `(@)` includes are resolved deliberately (see the `Loader`), and
-unresolved merge operators (`(>)`, `(<)`, ...) are recorded per element.
+unresolved merge operators (`(>)`, `(<)`, ...) are recorded per element. The
+resolved-include set is reset per element, so a shared include
+(`include/gcc-for-recc.yml`) is reported for every element that pulls it in.
 
 ## Classification
 

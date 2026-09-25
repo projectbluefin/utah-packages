@@ -23,7 +23,9 @@ from tools.audit_gnome_build_meta import (
     Loader,
     _aliases,
     _factory_rev,
+    _gbm_version,
     _secondary_sources,
+    _unaccounted_gnome_sources,
     classify,
     element_patch_sources,
     meson_options,
@@ -574,6 +576,165 @@ class IncludeIsolationTests(unittest.TestCase):
             # Each element should only report its own include, not the accumulated set.
             self.assertEqual(by_name["a"]["gnome_build_meta"]["includes"], ["include/one.yml"])
             self.assertEqual(by_name["b"]["gnome_build_meta"]["includes"], ["include/two.yml"])
+
+    def test_shared_include_is_reported_for_every_element(self) -> None:
+        # A include both elements pull in must appear on both, not only on the
+        # first element that happened to resolve it.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write(root, "include/aliases.yml", ALIASES)
+            write(root, "include/gcc-for-recc.yml", GCC_FOR_RECC)
+            for name in ("a", "b"):
+                write(root, f"elements/core/{name}.bst",
+                      "kind: meson\nbuild-depends:\n- (@): include/gcc-for-recc.yml\n")
+            pin = {
+                "schema": 1,
+                "source": {"release_tag": "51.0", "release_commit": "a50b8c9"},
+                "element_path": {"project_conf": "project.conf", "root": "elements"},
+                "mapping": {"a": "core/a.bst", "b": "core/b.bst"},
+                "factory_alias": {},
+            }
+            sources = {"a": {"name": "a", "version": "1.0"},
+                       "b": {"name": "b", "version": "1.0"}}
+            loader = Loader(root)
+            report = build_report(pin, loader, _aliases(loader), sources, root / "packages")
+            by_name = {e["rpm_name"]: e for e in report["packages"]}
+            for name in ("a", "b"):
+                self.assertEqual(
+                    by_name[name]["gnome_build_meta"]["includes"],
+                    ["include/gcc-for-recc.yml"],
+                )
+
+
+class GitRefVersionTests(unittest.TestCase):
+    """git_repo elements must not skip the release-line comparison silently."""
+
+    def test_version_read_from_git_describe_ref(self) -> None:
+        primary = {
+            "kind": "git_repo",
+            "url": "https://gitlab.freedesktop.org/cairo/cairo.git",
+            "ref": "1.18.4-0-g4541e0cd3a751b85e52e2a83d02ac6145a5efa85",
+        }
+        self.assertEqual(_gbm_version(primary), "1.18.4")
+
+    def test_version_read_from_plain_tag_ref(self) -> None:
+        primary = {"kind": "git_repo", "url": "gnome:gvdb.git", "ref": "v4.23.0"}
+        self.assertEqual(_gbm_version(primary), "4.23.0")
+
+    def test_bare_commit_sha_is_not_a_version(self) -> None:
+        primary = {
+            "kind": "git_repo",
+            "url": "gnome:gvdb.git",
+            "ref": "b54bc5da25127ef416858a3ad92e57159ff565b3",
+        }
+        self.assertIsNone(_gbm_version(primary))
+
+    def test_git_repo_line_mismatch_is_drift(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write(root, "include/aliases.yml", ALIASES)
+            write(
+                root, "elements/sdk/cairo.bst",
+                "kind: meson\n"
+                "sources:\n"
+                "- kind: git_repo\n"
+                "  url: https://gitlab.freedesktop.org/cairo/cairo.git\n"
+                "  ref: 1.18.4-0-g4541e0cd3a751b85e52e2a83d02ac6145a5efa85\n",
+            )
+            loader = Loader(root)
+            el = resolve_element(loader, _aliases(loader), "elements/sdk/cairo.bst")
+            cls, reason = classify(el, {"name": "cairo", "patches": []}, "1.20.0")
+            self.assertEqual(cls, NEEDS_REVIEW)
+            self.assertIn("release line", reason)
+
+    def test_unversioned_source_says_not_compared(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write(root, "include/aliases.yml", ALIASES)
+            write(
+                root, "elements/sdk/gvdb.bst",
+                "kind: meson\n"
+                "sources:\n"
+                "- kind: git_repo\n"
+                "  url: gnome:gvdb.git\n"
+                "  ref: b54bc5da25127ef416858a3ad92e57159ff565b3\n",
+            )
+            loader = Loader(root)
+            el = resolve_element(loader, _aliases(loader), "elements/sdk/gvdb.bst")
+            cls, reason = classify(el, {"name": "gvdb", "patches": []}, "0.9")
+            self.assertEqual(cls, ALIGNED)
+            self.assertIn("NOT compared", reason)
+
+
+class GnomeOwnershipTests(unittest.TestCase):
+    """Every GNOME-owned factory source is mapped or explicitly unmapped."""
+
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+        make_gbm_tree(self.root)
+        # A Fedora-mirrored but GNOME-owned module: the factory url points at
+        # the lookaside, the gbm element pulls from download.gnome.org.
+        write(
+            self.root, "elements/sdk/libsecret.bst",
+            "kind: meson\nsources:\n- kind: tar\n"
+            "  url: gnome_downloads:libsecret/0.21/libsecret-0.21.7.tar.xz\n"
+            "  ref: deadbeef\n",
+        )
+        self.loader = Loader(self.root)
+        self.aliases = _aliases(self.loader)
+        self.sources = {
+            "mutter": {"name": "mutter", "version": "51.beta"},
+            "gdm": {
+                "name": "gdm", "version": "51.beta",
+                "url": "https://download.gnome.org/sources/gdm/51/gdm-51.beta.tar.xz",
+            },
+            "libsecret": {
+                "name": "libsecret", "version": "0.21.7",
+                "url": "https://src.fedoraproject.org/repo/pkgs/rpms/libsecret/x.tar.xz",
+            },
+            "fish": {
+                "name": "fish", "version": "4.6.0",
+                "url": "https://github.com/fish-shell/fish-shell/releases/4.6.0.tar.xz",
+            },
+        }
+
+    def tearDown(self) -> None:
+        self.tmp.cleanup()
+
+    def test_gnome_sources_missing_from_both_lists_are_reported(self) -> None:
+        found = _unaccounted_gnome_sources(
+            PIN, self.sources, self.loader, self.aliases
+        )
+        names = {item["name"] for item in found}
+        self.assertIn("gdm", names)            # gnome.org url in the factory lock
+        self.assertIn("libsecret", names)      # Fedora-mirrored, gbm builds from gnome.org
+        self.assertNotIn("mutter", names)      # mapped
+        self.assertNotIn("fish", names)        # not GNOME-owned
+
+    def test_explicitly_unmapped_sources_are_accounted_for(self) -> None:
+        pin = dict(PIN)
+        pin["unmapped"] = [
+            {"name": "gdm", "reason": "outside the initial mapping scope"},
+            {"name": "libsecret", "reason": "outside the initial mapping scope"},
+        ]
+        found = _unaccounted_gnome_sources(
+            pin, self.sources, self.loader, self.aliases
+        )
+        self.assertEqual(found, [])
+
+    def test_committed_pin_accounts_for_every_listed_gnome_source(self) -> None:
+        repo_root = Path(__file__).resolve().parent.parent
+        pin = json.loads((repo_root / "config" / "gnome-build-meta.json").read_text())
+        accounted = set(pin["mapping"]) | {u["name"] for u in pin["unmapped"]}
+        for name in ("adwaita-fonts", "gdm", "gnome-tweaks", "zenity",
+                     "libcloudproviders", "libgexiv2", "gnome-ponytail-daemon",
+                     "gcr", "gnome-keyring", "libsecret", "libsoup3", "json-glib",
+                     "graphene", "adwaita-icon-theme", "gobject-introspection",
+                     "tecla", "libgweather"):
+            self.assertIn(name, accounted)
+        for entry in pin["unmapped"]:
+            self.assertTrue(entry.get("reason"), entry["name"])
 
 
 class MergeTests(unittest.TestCase):

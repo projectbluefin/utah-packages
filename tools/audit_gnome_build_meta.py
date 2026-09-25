@@ -181,7 +181,7 @@ class Loader:
                 out[key] = value
         return out
 
-    def _open_include(self, raw: str, current: Path) -> dict:
+    def _open_include(self, raw: str) -> dict:
         p = self._resolve_path(raw)
         self._note_include(p)
         return self._file(p)
@@ -201,7 +201,7 @@ class Loader:
             items = inc if isinstance(inc, list) else [inc]
             merged: dict = {}
             for raw in items:
-                part = self._open_include(raw, path)
+                part = self._open_include(raw)
                 merged = self._merge(merged, part)
             node = self._merge(merged, node)
 
@@ -254,6 +254,9 @@ def _aliases(loader: Loader) -> dict:
 
 
 def resolve_element(loader: Loader, aliases: dict, relpath: str) -> Element:
+    # Includes are reported per element, so the resolved-include set starts
+    # empty for every element even when one Loader resolves many of them.
+    loader.seen = set()
     node = loader.load(relpath)
     bs = node.get("bst") or {}
     depends = node.get("depends", []) or []
@@ -318,10 +321,8 @@ def element_patch_sources(element: Element, aliases: dict) -> list[str]:
 
     BuildStream's patch plugin names the file in ``path:``, relative to the
     project directory (``patches/mozjs/python-3.14.patch`` in
-    ``elements/sdk/mozjs.bst`` at the pinned commit). Reading ``local``/``url``
-    instead recorded every gbm patch as an empty string, so the patches axis
-    compared nothing; those two keys are kept only as a fallback for a source
-    that spells the reference differently.
+    ``elements/sdk/mozjs.bst`` at the pinned commit). ``local`` and ``url`` are
+    accepted as a fallback for a source that spells the reference differently.
     """
     patches = []
     for source in element.sources:
@@ -365,11 +366,10 @@ def _expanded_flag_macros(block: str, text: str) -> list[str]:
     """Bodies of the spec macros a configure invocation expands.
 
     evolution-data-server builds its CMake flags in ``%define ldap_flags
-    -DWITH_OPENLDAP=ON`` and passes ``%ldap_flags`` to ``%cmake``. Reading only
-    the invocation block would drop those real options, so every macro the
-    block references is looked up and its body scanned too. A macro defined in
-    both branches of an ``%if`` contributes both, consistent with how the
-    conditional lines inside a block are handled.
+    -DWITH_OPENLDAP=ON`` and passes ``%ldap_flags`` to ``%cmake``, so every
+    macro the invocation block references is looked up and its body scanned
+    too. A macro defined in both branches of an ``%if`` contributes both,
+    consistent with how the conditional lines inside a block are handled.
     """
     bodies: dict[str, list[str]] = {}
     for name, body in _MACRO_DEFINE.findall(text):
@@ -390,12 +390,10 @@ def meson_options(text: str) -> dict[str, str]:
 
     Fedora GNOME specs spread options across ``%meson \\`` continuation
     lines, so each invocation is followed to the end of its continuation block
-    -- but only that block is read. Scanning the whole file reported anything
-    that looked like ``-D`` as a feature flag: ``gtk4``'s
-    ``CFLAGS='... -DG_DISABLE_CAST_CHECKS -DG_DISABLE_ASSERT'`` are C
-    preprocessor defines, not meson options, and ``librsvg2``'s licence string
-    ``Unicode-DFS-2016`` is not an option at all. That noise sat in the
-    committed report, which exists to be reviewable evidence.
+    -- and only that block is read, because a ``-D`` elsewhere in the file is
+    not a feature flag: ``gtk4``'s ``CFLAGS='... -DG_DISABLE_CAST_CHECKS'`` are
+    C preprocessor defines and ``librsvg2``'s licence string
+    ``Unicode-DFS-2016`` is not an option at all.
 
     RPM conditionals (``%if``/``%endif``) inside a continuation block are kept:
     the options they guard are real options, and the audit records what the
@@ -440,9 +438,8 @@ _SPEC_REQUIRES = re.compile(
 def spec_dependencies(text: str) -> dict[str, list[str]]:
     """Build-time and runtime dependency edges declared by a Fedora spec.
 
-    The gbm side of this comparison (``build-depends``/``runtime-depends``/
-    ``depends``) was already recorded while the spec side was not, so the
-    report carried one half of an axis the skill doc claimed it compared.
+    This is the spec half of the dependency axis; the gbm half is
+    ``build-depends``/``runtime-depends``/``depends`` on the element.
 
     Version constraints are dropped and names are returned sorted and unique:
     these are edges for a human to compare against gbm element names, not a
@@ -480,10 +477,6 @@ def spec_sources(text: str) -> list[str]:
     return sources
 
 
-def factory_package(sources: dict, name: str) -> dict | None:
-    return sources.get(name)
-
-
 def _gbm_module(primary: dict) -> str | None:
     """The GNOME module name a primary source belongs to.
 
@@ -510,11 +503,34 @@ def _rpm_base_name(name: str) -> str:
     return re.sub(r"\d+$", "", name).lower()
 
 
+_GIT_REF_VERSION_RE = re.compile(
+    r"^v?(\d[\w.~]*?)(?:-\d+-g[0-9a-f]{4,})?$"
+)
+
+
 def _gbm_version(primary: dict) -> str | None:
-    """The version encoded in a gbm tar source url."""
+    """The version a gbm primary source encodes.
+
+    ``tar`` sources carry it in the url (``mutter-51.0.tar.xz``). ``git_repo``
+    sources have no version in the url, but their ``ref`` is a ``git describe``
+    string (``1.18.4-0-g0ee7c10a0`` for cairo, ``4.23.0`` for a plain tag), so
+    the leading tag component is read from ``ref`` -- otherwise the release-line
+    comparison would be skipped for every git-tracked element.
+    """
     m = re.search(r"-(\d[\w.~-]*)\.tar(?:\.(?:gz|bz2|xz|zst))?$", primary.get("url", "") or "")
     if m:
         return m.group(1)
+    for key in ("ref", "track"):
+        raw = primary.get(key)
+        if not isinstance(raw, str):
+            continue
+        raw = raw.strip()
+        if re.fullmatch(r"[0-9a-f]{7,}", raw):
+            # A bare commit sha (or a tar checksum), not a version.
+            continue
+        m = _GIT_REF_VERSION_RE.match(raw)
+        if m and numeric_components(m.group(1)):
+            return m.group(1)
     return None
 
 
@@ -534,7 +550,7 @@ def classify(gbm: Element | None, factory: dict | None,
     if not gbm.sources:
         if gbm.kind in ("filter", "stack", "compose"):
             return ALIGNED, (
-                f"gbm element is an {gbm.kind} aggregating shared sources; "
+                f"gbm element is a {gbm.kind} aggregating shared sources; "
                 "membership aligned (no independent source identity to compare)"
             )
         return NEEDS_REVIEW, "element present but has no analysable sources"
@@ -572,6 +588,14 @@ def classify(gbm: Element | None, factory: dict | None,
                 f"release line {release_line(factory_version)} (factory) vs "
                 f"{release_line(gbm_version)} (gbm)"
             )
+    elif factory_version and not gbm_version:
+        # Silence here would read as "release line aligned" for a comparison
+        # that never happened (a git_repo pinned to a bare commit, for one).
+        info.append(
+            f"release line NOT compared: gbm source (kind '{primary.get('kind')}', "
+            f"ref '{primary.get('ref')}') encodes no version; factory is "
+            f"{factory_version}"
+        )
 
     gbm_patch_list = element_patch_sources(gbm, {})
     spec_patch_list = factory.get("patches", [])
@@ -580,10 +604,9 @@ def classify(gbm: Element | None, factory: dict | None,
     if gbm_patch_list and not spec_patch_list:
         drift.append("gbm carries upstream patches; factory spec has none")
     if gbm_patch_list and spec_patch_list:
-        # Both sides patch. gbm names a project-relative path and the spec names
-        # a Patch: filename, so only the basenames are comparable -- but two
-        # different patch sets are exactly the drift a reviewer needs to see,
-        # and the asymmetric checks above walked straight past it.
+        # Both sides patch. gbm names a project-relative path and the spec
+        # names a Patch: filename, so only the basenames are comparable -- and
+        # two different patch sets are the drift a reviewer needs to see.
         gbm_names = {name.rsplit("/", 1)[-1] for name in gbm_patch_list}
         spec_names = {name.rsplit("/", 1)[-1] for name in spec_patch_list}
         if gbm_names != spec_names:
@@ -603,7 +626,6 @@ def build_report(pin: dict, loader: Loader, aliases: dict,
     alias = pin.get("factory_alias", {}) or {}
     entries = []
     for rpm, elem_path in mapping.items():
-        seen_before = set(loader.seen)
         # Subpackages (gvfs-client, gvfs-daemon) and rename aliases (tinysparql)
         # resolve to a real factory source registry name.
         factory_name = alias.get(rpm, rpm)
@@ -617,10 +639,6 @@ def build_report(pin: dict, loader: Loader, aliases: dict,
         if (loader.root / elem_path_full).exists():
             try:
                 gbm = resolve_element(loader, aliases, elem_path_full)
-                # Fix cross-element contamination: Loader.seen accumulates across
-                # elements when one Loader is reused. Keep per-element includes.
-                if gbm is not None:
-                    gbm.includes = sorted(set(gbm.includes) - seen_before)
             except Exception as exc:  # noqa: BLE001 - report, never abort the audit
                 notes.append(f"gbm element failed to parse: {exc}")
         else:
@@ -695,7 +713,10 @@ def build_report(pin: dict, loader: Loader, aliases: dict,
             "release_commit": pin["source"]["release_commit"],
             "factory_base": _factory_rev(),
         },
-        "unmapped_factory_sources": _unmapped_observed(pin, factory_sources),
+        "unmapped_factory_sources": _unmapped_observed(pin),
+        "unaccounted_gnome_sources": _unaccounted_gnome_sources(
+            pin, factory_sources, loader, aliases
+        ),
         "packages": entries,
     }
 
@@ -703,10 +724,8 @@ def build_report(pin: dict, loader: Loader, aliases: dict,
 def _secondary_sources(gbm: Element | None, aliases: dict) -> list[dict]:
     """Element sources other than the primary (secondary sources, wraps).
 
-    Patch sources are excluded: they carry no ``url``, so expanding theirs
-    yielded ``""`` which never equalled the primary, and every patch was
-    reported a second time as a secondary source. They are reported by
-    ``element_patch_sources`` under ``patches``.
+    Patch sources are excluded -- they carry no ``url`` to compare against the
+    primary and are reported by ``element_patch_sources`` under ``patches``.
     """
     if gbm is None:
         return []
@@ -724,18 +743,114 @@ def _secondary_sources(gbm: Element | None, aliases: dict) -> list[dict]:
     return out
 
 
-def _unmapped_observed(pin: dict, factory_sources: dict) -> list[dict]:
+def _unmapped_observed(pin: dict) -> list[dict]:
     """GNOME-owned factory sources the mapping deliberately does not track."""
     return [dict(u) for u in pin.get("unmapped", [])]
+
+
+_GNOME_HOSTS = ("download.gnome.org", "ftp.gnome.org", "gitlab.gnome.org")
+
+
+def _host(url: str) -> str:
+    m = re.match(r"[a-zA-Z][\w+.-]*://([^/]+)", url or "")
+    return m.group(1).lower() if m else ""
+
+
+def _is_gnome_url(url: str) -> bool:
+    host = _host(url)
+    return any(host == h or host.endswith("." + h) for h in _GNOME_HOSTS)
+
+
+def _gnome_aliases(aliases: dict) -> list[str]:
+    """Alias names from ``include/aliases.yml`` that expand to a GNOME host."""
+    return sorted(name for name, base in aliases.items()
+                  if isinstance(base, str) and _is_gnome_url(base))
+
+
+def _gbm_gnome_modules(loader: Loader, pin: dict, aliases: dict) -> dict[str, str]:
+    """Element stems in the pinned tree whose sources come from a GNOME host.
+
+    A factory source can be GNOME-owned while its recorded url points at the
+    Fedora lookaside mirror (``gcr``, ``libsecret``, ``json-glib``...), so url
+    inspection alone cannot decide ownership. The pinned gbm tree is the
+    authority: an element whose own source url is on ``*.gnome.org`` (directly
+    or through a ``gnome_downloads:``/``gnome:`` alias) names a GNOME-owned
+    module. ``.inc`` fragments are scanned too, because several elements
+    (``sdk/gobject-introspection.bst``) keep their ``sources:`` there.
+    Returns ``{module stem: element path}``.
+    """
+    root = loader.root / pin["element_path"]["root"]
+    if not root.is_dir():
+        return {}
+    alias_prefixes = tuple(f"{name}:" for name in _gnome_aliases(aliases))
+    out: dict[str, str] = {}
+    for path in sorted(root.rglob("*")):
+        if path.suffix not in (".bst", ".inc") or not path.is_file():
+            continue
+        try:
+            text = path.read_text()
+        except OSError:
+            continue
+        urls = re.findall(r"^\s*url:\s*(\S+)", text, flags=re.MULTILINE)
+        if not any(_is_gnome_url(u) or u.startswith(alias_prefixes) for u in urls):
+            continue
+        stem = path.stem.lower()
+        rel = str(path.relative_to(loader.root))
+        # Prefer the element file over the .inc fragment it includes.
+        if stem not in out or (rel.endswith(".bst") and out[stem].endswith(".inc")):
+            out[stem] = rel
+    return out
+
+
+def _unaccounted_gnome_sources(pin: dict, factory_sources: dict,
+                               loader: Loader, aliases: dict) -> list[dict]:
+    """GNOME-owned factory sources that are neither mapped nor listed unmapped.
+
+    Issue #201 requires every GNOME-owned factory source to be either mapped to
+    a gbm element or explicitly recorded as unmapped with a reason. Echoing the
+    pin's ``unmapped`` list cannot show a source that was simply forgotten, so
+    ownership is derived from evidence -- a gnome.org url in the factory lock,
+    or a matching element in the pinned gbm tree that pulls from gnome.org --
+    and anything unaccounted for is reported here for a human to resolve.
+    """
+    mapping = pin.get("mapping", {}) or {}
+    alias = pin.get("factory_alias", {}) or {}
+    accounted = set(mapping)
+    accounted |= {alias.get(rpm, rpm) for rpm in mapping}
+    accounted |= {u.get("name") for u in pin.get("unmapped", []) or []}
+
+    gbm_modules = _gbm_gnome_modules(loader, pin, aliases)
+    out: list[dict] = []
+    for name, pkg in sorted(factory_sources.items()):
+        if name in accounted:
+            continue
+        url = pkg.get("url") or ""
+        if _is_gnome_url(url):
+            evidence = f"factory source url is on {_host(url)}"
+        else:
+            module = name.lower() if name.lower() in gbm_modules else _rpm_base_name(name)
+            element = gbm_modules.get(module)
+            if not element:
+                continue
+            evidence = (
+                f"gnome-build-meta builds module '{module}' from gnome.org "
+                f"({element})"
+            )
+        out.append({
+            "name": name,
+            "version": pkg.get("version"),
+            "url": url,
+            "evidence": evidence,
+        })
+    return out
 
 
 def _factory_rev(root: Path | None = None) -> str:
     """HEAD of the factory checkout this tool ships in.
 
     Resolved with ``git -C`` against the repository that contains this file,
-    the same way ``parse_args`` resolves every default path. Reading the
-    process CWD instead recorded whatever repository the caller happened to
-    stand in -- or ``unknown`` -- as the report's provenance.
+    the same way ``parse_args`` resolves every default path, so the report's
+    provenance does not depend on the caller's working directory.
     """
     root = root or Path(__file__).resolve().parent.parent
     try:
@@ -806,6 +921,33 @@ def render_markdown(report: dict) -> str:
     lines.append("")
     for classification in sorted(totals):
         lines.append(f"- **{classification}**: {totals[classification]}")
+    lines.append("")
+
+    unmapped = report.get("unmapped_factory_sources", [])
+    lines.append("## GNOME-owned factory sources not mapped")
+    lines.append("")
+    if unmapped:
+        for item in unmapped:
+            lines.append(f"- `{item.get('name')}`: {item.get('reason', '')}")
+    else:
+        lines.append("- none")
+    lines.append("")
+
+    unaccounted = report.get("unaccounted_gnome_sources", [])
+    lines.append("## Unaccounted GNOME-owned factory sources")
+    lines.append("")
+    if unaccounted:
+        lines.append("These are neither mapped nor listed as unmapped with a reason; "
+                     "each needs a mapping or an explicit `unmapped` entry in "
+                     "`config/gnome-build-meta.json`.")
+        lines.append("")
+        for item in unaccounted:
+            lines.append(
+                f"- `{item.get('name')}` {item.get('version')} — {item.get('evidence')}"
+            )
+    else:
+        lines.append("- none: every GNOME-owned factory source is mapped or "
+                     "explicitly unmapped with a reason.")
     lines.append("")
 
     for entry in report["packages"]:

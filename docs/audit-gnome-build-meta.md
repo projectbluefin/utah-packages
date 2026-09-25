@@ -19,7 +19,10 @@ membership.
 
 `config/gnome-build-meta.json` pins the authoritative GNOME input by full commit
 (not mutable `master`) and records the corresponding release tag, the explicit
-source-name mapping, subpackage/rename aliases, and deliberate exclusions.
+source-name mapping, subpackage/rename aliases, and deliberate exclusions. Every
+GNOME-owned factory source is either mapped or listed under `unmapped` with a
+reason; the report's `unaccounted_gnome_sources` names any that are in neither
+list.
 
 ## Running
 

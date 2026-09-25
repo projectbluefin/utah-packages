@@ -48,6 +48,158 @@
     {
       "name": "adw-gtk3-theme",
       "reason": "Third-party libadwaita-for-GTK3 theme; not a GNOME core/sdk component tracked by gnome-build-meta (issue #201 initial scope)."
+    },
+    {
+      "name": "adwaita-fonts",
+      "reason": "GNOME-owned module outside issue #201's initial core/sdk mapping scope; gnome-build-meta builds it as elements/sdk/adwaita-fonts.bst \u2014 candidate for a follow-up mapping pass."
+    },
+    {
+      "name": "adwaita-icon-theme",
+      "reason": "GNOME-owned module outside issue #201's initial core/sdk mapping scope; gnome-build-meta builds it as elements/sdk/adwaita-icon-theme.bst \u2014 candidate for a follow-up mapping pass."
+    },
+    {
+      "name": "at-spi2-core",
+      "reason": "GNOME-owned module outside issue #201's initial core/sdk mapping scope; gnome-build-meta builds it as elements/sdk/at-spi2-core.bst \u2014 candidate for a follow-up mapping pass."
+    },
+    {
+      "name": "dconf",
+      "reason": "GNOME-owned module outside issue #201's initial core/sdk mapping scope; gnome-build-meta builds it as elements/core-deps/dconf.bst \u2014 candidate for a follow-up mapping pass."
+    },
+    {
+      "name": "gcr",
+      "reason": "GNOME-owned module outside issue #201's initial core/sdk mapping scope; gnome-build-meta builds it as elements/sdk/gcr.bst \u2014 candidate for a follow-up mapping pass."
+    },
+    {
+      "name": "gcr3",
+      "reason": "GNOME-owned module outside issue #201's initial core/sdk mapping scope; gnome-build-meta builds the 'gcr' module as elements/sdk/gcr.bst while Fedora ships it as 'gcr3' \u2014 candidate for a follow-up mapping pass once the release lines are confirmed to correspond."
+    },
+    {
+      "name": "gdm",
+      "reason": "GNOME-owned module outside issue #201's initial core/sdk mapping scope; gnome-build-meta builds it as elements/core/gdm.bst \u2014 candidate for a follow-up mapping pass."
+    },
+    {
+      "name": "geocode-glib",
+      "reason": "GNOME-owned module outside issue #201's initial core/sdk mapping scope; gnome-build-meta builds it as elements/core-deps/geocode-glib.bst \u2014 candidate for a follow-up mapping pass."
+    },
+    {
+      "name": "glycin",
+      "reason": "GNOME-owned module outside issue #201's initial core/sdk mapping scope; gnome-build-meta builds it as elements/sdk/glycin.inc \u2014 candidate for a follow-up mapping pass."
+    },
+    {
+      "name": "gnome-autoar",
+      "reason": "GNOME-owned module outside issue #201's initial core/sdk mapping scope; gnome-build-meta builds it as elements/core-deps/gnome-autoar.bst \u2014 candidate for a follow-up mapping pass."
+    },
+    {
+      "name": "gnome-keyring",
+      "reason": "GNOME-owned module with no gnome-build-meta element at the pinned release (GNOME 51.0 integrates gcr/libsecret instead), so there is nothing to audit against."
+    },
+    {
+      "name": "gnome-ponytail-daemon",
+      "reason": "GNOME-owned factory source with no gnome-build-meta element at the pinned release (not part of the GNOME 51.0 core/sdk build), so there is nothing to audit against."
+    },
+    {
+      "name": "gnome-tweaks",
+      "reason": "GNOME-owned factory source with no gnome-build-meta element at the pinned release (not part of the GNOME 51.0 core/sdk build), so there is nothing to audit against."
+    },
+    {
+      "name": "gobject-introspection",
+      "reason": "GNOME-owned module outside issue #201's initial core/sdk mapping scope; gnome-build-meta builds it as elements/sdk/gobject-introspection.inc \u2014 candidate for a follow-up mapping pass."
+    },
+    {
+      "name": "graphene",
+      "reason": "GNOME-owned module outside issue #201's initial core/sdk mapping scope; gnome-build-meta builds it as elements/sdk/graphene.bst from github:ebassi/graphene.git \u2014 candidate for a follow-up mapping pass."
+    },
+    {
+      "name": "gsound",
+      "reason": "GNOME-owned module outside issue #201's initial core/sdk mapping scope; gnome-build-meta builds it as elements/core-deps/gsound.bst \u2014 candidate for a follow-up mapping pass."
+    },
+    {
+      "name": "gssdp",
+      "reason": "GNOME-owned module outside issue #201's initial core/sdk mapping scope; gnome-build-meta builds it as elements/core-deps/gssdp.bst \u2014 candidate for a follow-up mapping pass."
+    },
+    {
+      "name": "gtk2",
+      "reason": "GNOME-owned module outside issue #201's initial core/sdk mapping scope; gnome-build-meta builds the 'gtk' module as elements/sdk/gtk.bst while Fedora ships it as 'gtk2' \u2014 candidate for a follow-up mapping pass once the release lines are confirmed to correspond."
+    },
+    {
+      "name": "gtksourceview4",
+      "reason": "GNOME-owned module outside issue #201's initial core/sdk mapping scope; gnome-build-meta builds the 'gtksourceview' module as elements/sdk/gtksourceview.bst while Fedora ships it as 'gtksourceview4' \u2014 candidate for a follow-up mapping pass once the release lines are confirmed to correspond."
+    },
+    {
+      "name": "gupnp",
+      "reason": "GNOME-owned module outside issue #201's initial core/sdk mapping scope; gnome-build-meta builds it as elements/core-deps/gupnp.bst \u2014 candidate for a follow-up mapping pass."
+    },
+    {
+      "name": "gweather-locations",
+      "reason": "GNOME-owned module outside issue #201's initial core/sdk mapping scope; gnome-build-meta builds it as elements/core-deps/gweather-locations.bst \u2014 candidate for a follow-up mapping pass."
+    },
+    {
+      "name": "json-glib",
+      "reason": "GNOME-owned module outside issue #201's initial core/sdk mapping scope; gnome-build-meta builds it as elements/sdk/json-glib.bst \u2014 candidate for a follow-up mapping pass."
+    },
+    {
+      "name": "libcloudproviders",
+      "reason": "GNOME-owned module outside issue #201's initial core/sdk mapping scope; gnome-build-meta builds it as elements/core-deps/libcloudproviders.bst \u2014 candidate for a follow-up mapping pass."
+    },
+    {
+      "name": "libgexiv2",
+      "reason": "GNOME-owned factory source with no gnome-build-meta element at the pinned release (not part of the GNOME 51.0 core/sdk build), so there is nothing to audit against."
+    },
+    {
+      "name": "libgtop2",
+      "reason": "GNOME-owned module outside issue #201's initial core/sdk mapping scope; gnome-build-meta builds the 'libgtop' module as elements/core-deps/libgtop.bst while Fedora ships it as 'libgtop2' \u2014 candidate for a follow-up mapping pass once the release lines are confirmed to correspond."
+    },
+    {
+      "name": "libgweather",
+      "reason": "GNOME-owned module outside issue #201's initial core/sdk mapping scope; gnome-build-meta builds it as elements/core-deps/libgweather.bst \u2014 candidate for a follow-up mapping pass."
+    },
+    {
+      "name": "libmanette",
+      "reason": "GNOME-owned module outside issue #201's initial core/sdk mapping scope; gnome-build-meta builds it as elements/sdk/libmanette.bst \u2014 candidate for a follow-up mapping pass."
+    },
+    {
+      "name": "libnma",
+      "reason": "GNOME-owned module outside issue #201's initial core/sdk mapping scope; gnome-build-meta builds it as elements/core-deps/libnma.bst \u2014 candidate for a follow-up mapping pass."
+    },
+    {
+      "name": "libnotify",
+      "reason": "GNOME-owned module outside issue #201's initial core/sdk mapping scope; gnome-build-meta builds it as elements/sdk/libnotify.bst \u2014 candidate for a follow-up mapping pass."
+    },
+    {
+      "name": "libsecret",
+      "reason": "GNOME-owned module outside issue #201's initial core/sdk mapping scope; gnome-build-meta builds it as elements/sdk/libsecret.bst \u2014 candidate for a follow-up mapping pass."
+    },
+    {
+      "name": "libsoup3",
+      "reason": "GNOME-owned module outside issue #201's initial core/sdk mapping scope; gnome-build-meta builds the 'libsoup' module as elements/sdk/libsoup.bst while Fedora ships it as 'libsoup3' \u2014 candidate for a follow-up mapping pass once the release lines are confirmed to correspond."
+    },
+    {
+      "name": "malcontent",
+      "reason": "GNOME-owned module outside issue #201's initial core/sdk mapping scope; gnome-build-meta builds it as elements/core-deps/malcontent.bst \u2014 candidate for a follow-up mapping pass."
+    },
+    {
+      "name": "mobile-broadband-provider-info",
+      "reason": "GNOME-owned module outside issue #201's initial core/sdk mapping scope; gnome-build-meta builds it as elements/core-deps/mobile-broadband-provider-info.bst \u2014 candidate for a follow-up mapping pass."
+    },
+    {
+      "name": "msgraph",
+      "reason": "GNOME-owned module outside issue #201's initial core/sdk mapping scope; gnome-build-meta builds it as elements/core-deps/msgraph.bst \u2014 candidate for a follow-up mapping pass."
+    },
+    {
+      "name": "startup-notification",
+      "reason": "GNOME-owned module outside issue #201's initial core/sdk mapping scope; gnome-build-meta builds it as elements/core-deps/startup-notification.bst \u2014 candidate for a follow-up mapping pass."
+    },
+    {
+      "name": "tecla",
+      "reason": "GNOME-owned module outside issue #201's initial core/sdk mapping scope; gnome-build-meta builds it as elements/core/tecla.bst \u2014 candidate for a follow-up mapping pass."
+    },
+    {
+      "name": "xdg-user-dirs-gtk",
+      "reason": "GNOME-owned module outside issue #201's initial core/sdk mapping scope; gnome-build-meta builds it as elements/core-deps/xdg-user-dirs-gtk.bst \u2014 candidate for a follow-up mapping pass."
+    },
+    {
+      "name": "zenity",
+      "reason": "GNOME-owned module outside issue #201's initial core/sdk mapping scope; gnome-build-meta builds it as elements/core-deps/zenity.bst \u2014 candidate for a follow-up mapping pass."
     }
   ]
 }
