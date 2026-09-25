@@ -1,0 +1,8 @@
+{
+  "package": "vte291",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/vte291.git",
+  "commit": "1c4e5b9266aa6ac71c630eaa7f2ac6c8f778100a",
+  "tree": "a69c695c537f033b34075bfa3c51bf58f022ef00",
+  "imported_at": "2026-09-22T20:23:24.089415+00:00"
+}
