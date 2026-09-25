@@ -1113,7 +1113,7 @@ jobs:
           # everything in one 2 GB layer and Utah refused 9e17ca2c with
           #   Package image lacks a small leading metadata layer
           # The repodata is repeated in the second layer; a few MB is cheaper
-          # than depending on COPY --exclude. tests/test_atomic_publish.py
+          # than depending on COPY --exclude. tests/test_incremental_publish.py
           # holds the order.
           printf "FROM scratch\nCOPY repository/repodata /repository/repodata\nCOPY repository /repository\n" > Containerfile.repo
           # cosign signs by pushing to the same registry, but it reads the
