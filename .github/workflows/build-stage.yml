@@ -630,11 +630,42 @@ jobs:
               # Captured explicitly: inside `if ! cmd`, $? is the status of the
               # negation, which is 0, so exiting with it would turn every failed
               # build green.
+              #
+              # A %check that fails once is retried once, from scratch. fish,
+              # among others, has timing-sensitive tests that fail a clean
+              # build now and then and pass on the next -- and with one flaky
+              # test able to hold back a whole run, a single retry is cheaper
+              # than a lost publication. Only %check: a failure in %prep,
+              # %build or %install is deterministic and retrying it wastes a
+              # runner. The retry is the whole of rpmbuild -ba, because
+              # --short-circuit binaries carry rpmlib(ShortCircuited) and cannot
+              # be installed. A retry that passes is reported, never silent:
+              # a warning annotation plus the flaky-check marker below, which
+              # the job summary reads. tests/test_check_retry.py holds both
+              # lanes to this.
+              build_ba() {
+                ( set -o pipefail
+                  build_rpm -ba "$spec" \
+                    --define "_sourcedir $staged" \
+                    --define "dist $DISTTAG" \
+                    --define "_rpmdir /work/result" 2>&1 | tee /work/reports/rpmbuild.log )
+              }
               status=0
-              build_rpm -ba "$spec" \
-                --define "_sourcedir $staged" \
-                --define "dist $DISTTAG" \
-                --define "_rpmdir /work/result" || status=$?
+              build_ba || status=$?
+              if [ "$status" -ne 0 ] && grep -qE "Bad exit status from .*\(%check\)" /work/reports/rpmbuild.log; then
+                echo "::warning title=flaky %check retry::$PACKAGE failed in %check (exit $status); retrying the build once"
+                mkdir -p "/work/reports/check/$PACKAGE/attempt-1"
+                cp /work/reports/rpmbuild.log "/work/reports/check/$PACKAGE/attempt-1/" || true
+                find /builddir -maxdepth 8 -type f \( -name "*.log" -o -name "testlog*.txt" \) \
+                  -exec cp --parents {} "/work/reports/check/$PACKAGE/attempt-1/" \; 2>/dev/null || true
+                rm -rf /work/result/*
+                status=0
+                build_ba || status=$?
+                if [ "$status" -eq 0 ]; then
+                  echo "::warning title=flaky %check::$PACKAGE failed %check once and passed on retry"
+                  printf "%s\n" "$PACKAGE" > /work/reports/flaky-check
+                fi
+              fi
               if [ "$status" -ne 0 ]; then
                 mkdir -p "/work/reports/check/$PACKAGE"
                 find /builddir -maxdepth 8 -type d \
@@ -759,18 +790,44 @@ jobs:
                 /packages/$PACKAGE/*.spec
               # No debuginfo, for the reasons the container lane gives --
               # both defines, or the MinGW specs fail on orphaned .debug files.
-              mock --root /work/mock/utah.cfg \
-                --resultdir /work/result \
-                --define "dist $DISTTAG" \
-                --define "debug_package %{nil}" \
-                --define "__debug_install_post %{nil}" \
-                --rebuild /work/srpm/*.src.rpm
+              # A failed %check is retried once, as in the container lane;
+              # mock writes the rpmbuild output to build.log in the resultdir.
+              mock_rebuild() {
+                mock --root /work/mock/utah.cfg \
+                  --resultdir /work/result \
+                  --define "dist $DISTTAG" \
+                  --define "debug_package %{nil}" \
+                  --define "__debug_install_post %{nil}" \
+                  --rebuild /work/srpm/*.src.rpm
+              }
+              status=0
+              mock_rebuild || status=$?
+              if [ "$status" -ne 0 ] && grep -qE "Bad exit status from .*\(%check\)" /work/result/build.log; then
+                echo "::warning title=flaky %check retry::$PACKAGE failed in %check (exit $status); retrying the build once"
+                mkdir -p "/work/reports/check/$PACKAGE/attempt-1"
+                cp /work/result/*.log "/work/reports/check/$PACKAGE/attempt-1/" || true
+                status=0
+                mock_rebuild || status=$?
+                if [ "$status" -eq 0 ]; then
+                  echo "::warning title=flaky %check::$PACKAGE failed %check once and passed on retry"
+                  printf "%s\n" "$PACKAGE" > /work/reports/flaky-check
+                fi
+              fi
+              test "$status" -eq 0
               find /work/result -name "*.rpm" -type f -print0 | \
                 xargs -0 -r rpm -qp --qf "%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n"
               # Same guard as the container path: an upload that finds no RPM
               # still succeeds, because the artifact also carries reports.
               test -n "$(find /work/result -name "*.rpm" -type f -print -quit)"
             '
+      - name: Report a %check that passed only on its retry
+        if: always()
+        env:
+          PACKAGE: ${{ matrix.package }}
+        run: |
+          if [ -f work/reports/flaky-check ]; then
+            echo "- \`$PACKAGE\` failed \`%check\` once and passed on retry; its RPMs are from the retry" >> "$GITHUB_STEP_SUMMARY"
+          fi
       # Its own upload, and only on failure: the RPM artifact below declares
       # if-no-files-found: error, so a build that produced nothing cannot carry
       # this out with it.
