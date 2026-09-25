@@ -26,8 +26,9 @@ to Fedora, or to the build environment.
 - The job is `preflight`. It is `continue-on-error` and its output is a
   worklist, not a gate; a package it flags as unsatisfied may simply be built
   by a later wave.
-- The failure is `prepare` reporting a stage above 4. That is a configuration
-  error with a one-line fix, not a build failure.
+- The failure is `prepare` reporting a wave with no job. The solved
+  BuildRequires chain got deeper than `rebuild-rpms.yml`'s fourteen waves;
+  add a wave, it is not a build failure.
 - Nothing failed and the question is what the factory *should* do. That is
   `docs/architecture.md`, not this skill.
 
@@ -166,7 +167,7 @@ When a later stage cannot see what an earlier stage built, check in this order:
 
 | What the log shows | What it means | What to do |
 | --- | --- | --- |
-| `No match for argument: <pkg>` where `<pkg>` is in `config/upstream-sources.json` | Build ordering. The matrix has not built it yet. | Raise its `stage` in `upstream-sources.json` above the package that needs it |
+| `No match for argument: <pkg>` where `<pkg>` is in `config/upstream-sources.json` | Build ordering: the graph did not see this edge, so the provider was not in an earlier wave. Usually a `%generate_buildrequires` requirement, which rpmspec cannot see, or a spec rpmspec failed to parse (`spec not parsed` warning in `prepare`) | Check the `build-graph` artifact for both packages. A missing generated edge is a `tools/build_graph.py` gap; do not paper over it with a `stage`, which only orders cycle members |
 | `Found X but need: '>= Y'` where the package is one of ours | Same — ordering, not a missing dependency | As above |
 | `Failed to resolve the transaction`, naming a Fedora package that a same-stage recipe BuildRequires and an earlier stage's output in the same chain | Ordering again, with no `No match` line to give it away. The earlier stage's RPM is excluded from Fedora by name and pins a soname (ICU is the recurring one), so Fedora's copy of the *same-stage* package can no longer install | Raise the consumer's `stage` above the package it BuildRequires, and add the pair to `tests/test_icu_staging.py` |
 | `No match for argument: <pkg>` where `<pkg>` is a Fedora package | Genuine gap: Fedora predates what the source needs | Import and pin it, like `wayland-protocols` and `accountsservice` |

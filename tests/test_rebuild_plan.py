@@ -429,9 +429,17 @@ class StageOutputTests(unittest.TestCase):
 
     def test_reports_a_stage_that_has_no_job(self) -> None:
         self.assertEqual(
-            overflow([{"name": "late", "stage": 11}, {"name": "fine", "stage": 10}]),
+            overflow([{"name": "late", "stage": 14}, {"name": "fine", "stage": 13}]),
             ["late"],
         )
+
+    def test_solved_waves_override_the_config_stage(self) -> None:
+        build = [{"name": "gnome-shell", "stage": 10}, {"name": "mutter", "stage": 6}]
+        outputs = stage_outputs(build, {"mutter": 0, "gnome-shell": 1})
+        self.assertEqual(json.loads(outputs["stage0"]), ["mutter"])
+        self.assertEqual(json.loads(outputs["stage1"]), ["gnome-shell"])
+        self.assertEqual(json.loads(outputs["stage10"]), [])
+        self.assertEqual(overflow(build, {"mutter": 0, "gnome-shell": 14}), ["gnome-shell"])
 
 
 class HummingbirdOwnershipTests(unittest.TestCase):
@@ -503,6 +511,33 @@ class ExcludedExternalTests(unittest.TestCase):
     def test_the_exclusion_is_declared_once_and_names_libicu_77(self) -> None:
         from tools.rebuild_plan import EXCLUDED_EXTERNAL
         self.assertIn(("libicu", "77."), EXCLUDED_EXTERNAL)
+
+
+class ClosureDepthTests(unittest.TestCase):
+    DEPENDENTS = {"git": {"fish", "mutter"}, "mutter": {"gnome-shell"}}
+
+    def test_transitive_by_default(self) -> None:
+        self.assertEqual(
+            reverse_closure({"git"}, self.DEPENDENTS), {"fish", "mutter", "gnome-shell"}
+        )
+
+    def test_depth_one_takes_only_direct_dependents(self) -> None:
+        self.assertEqual(reverse_closure({"git"}, self.DEPENDENTS, 1), {"fish", "mutter"})
+
+    def test_state_mode_selects_the_change_and_its_direct_dependents(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            names = ["git", "fish", "mutter", "gnome-shell", "unrelated"]
+            for name in names:
+                recipe(root, name, "1")
+            config = {"packages": [{"name": n, "version": "1.0"} for n in names]}
+            build = plan(
+                config, root,
+                published={n: ("1.0", "1.hum1.bfin") for n in names},
+                changed={"git"}, full=False, factory_repo="file:///repo",
+                dependents=self.DEPENDENTS, trust_state=True, closure_depth=1,
+            )
+            self.assertEqual([e["name"] for e in build], ["git", "fish", "mutter"])
 
 
 class RestrictTests(unittest.TestCase):

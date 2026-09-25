@@ -20,6 +20,9 @@
 #          vulkan-loader, and the run must report it as failed. Proves the
 #          incremental publish rule. libical's %check also fails once on
 #          purpose: it must compile, be retried, and publish.
+#   pass5  an incremental run against pass1's image: vulkan-headers
+#          changes, and exactly vulkan-headers and vulkan-loader (which
+#          BuildRequires it) are selected, in solved waves 0 and 1.
 #   pass3  the same set plus python-typing-inspection with its recipe
 #          perturbed in the checkout: that one compiles, every canary package
 #          must still hit. Proves a change to one package does not
@@ -168,7 +171,7 @@ jobs:
           curl -fsSL https://raw.githubusercontent.com/projectbluefin/utah/main/scripts/check-repo-availability.py \
             -o check-repo-availability.py
           python3 tools/canary.py verify-image "${IMAGE%:*}@${DIGEST}" \
-            --utah-reader check-repo-availability.py --expect "$SET"
+            --utah-reader check-repo-availability.py --expect "$SET" --expect-state
       - name: Verify the signature and provenance of the canary image
         env:
           GH_TOKEN: ${{ github.token }}
@@ -265,6 +268,43 @@ jobs:
           python3 tools/canary.py verify-image "${IMAGE%:*}@${DIGEST}" \
             --utah-reader check-repo-availability.py --expect "$SET"
 
+  # An incremental run, the way a merge to main runs: pass1's image, pinned
+  # by digest, is the published factory, and vulkan-headers' recipe changes.
+  # prepare must select exactly vulkan-headers and the package that
+  # BuildRequires it -- vulkan-loader, in the next solved wave rather than at
+  # its config stage 4 -- and leave libical alone. Selection comes from the
+  # state label pass1 recorded; without it (a diff with no range, and a NEVR
+  # that did not move) nothing would be selected at all.
+  pass5:
+    needs: [changes, pass1]
+    uses: ./.github/workflows/rebuild-rpms.yml
+    with:
+      packages: ${{ needs.changes.outputs.set }}
+      factory_tag: ${{ needs.pass1.outputs.digest }}
+      skip_publish: true
+      artifact_prefix: p5-
+      cache_salt: ${{ needs.changes.outputs.salt }}
+      perturb: '["vulkan-headers"]'
+
+  verify-incremental:
+    needs: [changes, pass5]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Only the change and its reverse dependency were built
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+          BUILD_LIST: ${{ needs.pass5.outputs.build_list }}
+        run: |
+          set -euo pipefail
+          gh api --paginate "repos/$REPOSITORY/actions/runs/$RUN_ID/attempts/$RUN_ATTEMPT/jobs?per_page=100" \
+            --jq '.jobs[]' | jq -s . > jobs.json
+          python3 tools/canary.py verify-incremental jobs.json --build-list "$BUILD_LIST" \
+            --expect '{"vulkan-headers": 0, "vulkan-loader": 1}' >> "$GITHUB_STEP_SUMMARY"
+
   verify-cache:
     needs: [changes, pass1, pass2, pass3]
     runs-on: ubuntu-24.04
@@ -286,7 +326,7 @@ jobs:
 
   canary:
     name: Canary
-    needs: [changes, pass1, verify-publish, pass2, pass3, verify-cache, pass4, verify-failure]
+    needs: [changes, pass1, verify-publish, pass2, pass3, verify-cache, pass4, verify-failure, pass5, verify-incremental]
     if: always()
     runs-on: ubuntu-24.04
     steps:

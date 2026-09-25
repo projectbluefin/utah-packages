@@ -124,8 +124,26 @@ def load_utah_reader(path: Path):
     return module
 
 
-def verify_image(image: str, utah_reader: Path, expected: set[str]) -> list[str]:
-    problems = check_layers(registry_json(image, "manifests", image.split("@", 1)[1]))
+def check_state(config: dict, expected: set[str]) -> list[str]:
+    """The state label tools/factory_state.py writes records every package."""
+    labels = (config.get("config") or {}).get("Labels") or {}
+    raw = labels.get("org.projectbluefin.factory.state")
+    if not raw:
+        return ["the image carries no org.projectbluefin.factory.state label"]
+    recorded = set(json.loads(raw).get("inputs", {}))
+    if recorded != expected:
+        return [f"the state label records {sorted(recorded)}, expected {sorted(expected)}"]
+    return []
+
+
+def verify_image(
+    image: str, utah_reader: Path, expected: set[str], expect_state: bool = False
+) -> list[str]:
+    manifest = registry_json(image, "manifests", image.split("@", 1)[1])
+    problems = check_layers(manifest)
+    if expect_state:
+        config = registry_json(image, "blobs", manifest["config"]["digest"])
+        problems += check_state(config, expected)
     reader = load_utah_reader(utah_reader)
     with tempfile.TemporaryDirectory(prefix="canary-repodata-") as tmp:
         try:
@@ -205,6 +223,24 @@ def flaky_problems(jobs: list[dict], pass_name: str, package: str,
     return problems
 
 
+def incremental_problems(
+    jobs: list[dict], build_list: list[str] | None, expected: dict[str, int], name: str
+) -> list[str]:
+    """The incremental pass selected exactly `expected`, each in its wave."""
+    problems = []
+    if sorted(build_list or []) != sorted(expected):
+        problems.append(f"{name} selected {build_list}, expected {sorted(expected)}")
+    waves: dict[str, int] = {}
+    for job in jobs:
+        match = re.match(rf"^{name} / rebuild(\d+) .*/ build \((?P<package>[^)]+)\)$",
+                         job.get("name", ""))
+        if match:
+            waves[match["package"]] = int(match.group(1))
+    if waves != expected:
+        problems.append(f"{name} built in waves {waves}, expected {expected}")
+    return problems
+
+
 def summary(outcomes: dict[str, dict[str, str]], problems: list[str]) -> str:
     lines = ["### Canary cache", "", "| pass | package | outcome |", "| --- | --- | --- |"]
     for name in sorted(outcomes):
@@ -231,6 +267,11 @@ def main(argv: list[str] | None = None) -> int:
     flaky.add_argument("jobs", type=Path)
     flaky.add_argument("--pass", dest="pass_name", required=True)
     flaky.add_argument("--package", required=True)
+    image.add_argument("--expect-state", action="store_true")
+    incremental = commands.add_parser("verify-incremental")
+    incremental.add_argument("jobs", type=Path)
+    incremental.add_argument("--build-list", required=True)
+    incremental.add_argument("--expect", required=True, help="JSON package -> wave")
     cache = commands.add_parser("verify-cache")
     cache.add_argument("jobs", type=Path)
     cache.add_argument("--set", required=True)
@@ -243,7 +284,8 @@ def main(argv: list[str] | None = None) -> int:
         print(salt())
         return 0
     if args.command == "verify-image":
-        problems = verify_image(args.image, args.utah_reader, set(json.loads(args.expect)))
+        problems = verify_image(args.image, args.utah_reader, set(json.loads(args.expect)),
+                                args.expect_state)
         for problem in problems:
             print(f"::error title=canary image::{problem}", file=sys.stderr)
         if not problems:
@@ -266,6 +308,17 @@ def main(argv: list[str] | None = None) -> int:
             print(f"::error title=canary flaky check::{problem}", file=sys.stderr)
         if not problems:
             print(f"{args.pass_name}: {args.package} failed %check once, was retried, and built")
+        return 1 if problems else 0
+    if args.command == "verify-incremental":
+        problems = incremental_problems(
+            json.loads(args.jobs.read_text()), json.loads(args.build_list or "null"),
+            json.loads(args.expect), "pass5",
+        )
+        print("### Canary incremental selection\n")
+        print("\n".join(f"- {p}" for p in problems) or "Selected exactly the change and "
+              "its reverse dependency, in solved waves.")
+        for problem in problems:
+            print(f"::error title=canary incremental::{problem}", file=sys.stderr)
         return 1 if problems else 0
     if args.command == "verify-cache":
         outcomes = build_outcomes(json.loads(args.jobs.read_text()))

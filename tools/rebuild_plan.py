@@ -50,8 +50,8 @@ PUBLISHED_RELEASE = re.compile(r"^(?P<base>.+)\.hum\d+\.bfin(?P<bump>(?:\.\d+)?)
 # against an empty buildroot. Hand each stage over in chunks instead.
 CHUNK = 250
 
-# The job chain in rebuild-rpms.yml is eleven deep and GitHub needs it static.
-STAGES = 11
+# The job chain in rebuild-rpms.yml is fourteen deep and GitHub needs it static.
+STAGES = 14
 
 
 def published_from_primary(primary: bytes) -> dict[str, tuple[str, str]]:
@@ -171,6 +171,35 @@ def provides_from_primary(
     return provided
 
 
+def provides_by_source(primary: bytes) -> dict[str, set[str]]:
+    """Source package name -> every capability its published binaries provide.
+
+    Provides entries plus shipped files, like provides_from_primary, but kept
+    per source: tools/build_graph.py maps a BuildRequires on a generated
+    capability (a soname, pkgconfig(), python3dist()) to the recipe that
+    produces it, which rpmspec alone cannot see.
+    """
+    result: dict[str, set[str]] = {}
+    root = ElementTree.fromstring(primary)
+    for package in root.iter(f"{{{COMMON_NS}}}package"):
+        fmt = package.find(f"{{{COMMON_NS}}}format")
+        if fmt is None:
+            continue
+        source = source_name(fmt.findtext(f"{{{RPM_NS}}}sourcerpm") or "")
+        if source is None:
+            continue
+        provided = result.setdefault(source, set())
+        name = package.findtext(f"{{{COMMON_NS}}}name")
+        if name:
+            provided.add(name)
+        for entry in fmt.iterfind(f"{{{RPM_NS}}}provides/{{{RPM_NS}}}entry"):
+            provided.add(entry.get("name", ""))
+        for file in fmt.iterfind(f"{{{COMMON_NS}}}file"):
+            provided.add(file.text or "")
+        provided.discard("")
+    return result
+
+
 def stale_from_primary(primary: bytes, external: set[str]) -> dict[str, set[str]]:
     """Source name -> the Requires of its published binaries that nothing provides.
 
@@ -228,16 +257,24 @@ def source_name(sourcerpm: str) -> str | None:
     return name or None
 
 
-def reverse_closure(names: set[str], dependents: dict[str, set[str]]) -> set[str]:
-    """Every published package that transitively depends on one of `names`."""
+def reverse_closure(
+    names: set[str], dependents: dict[str, set[str]], depth: int | None = None
+) -> set[str]:
+    """Every package that depends on one of `names`, within `depth` hops.
+
+    `depth=None` follows the edges transitively; `depth=1` takes only the
+    direct dependents.
+    """
     closure: set[str] = set()
-    frontier = list(names)
+    frontier = [(name, 0) for name in names]
     while frontier:
-        current = frontier.pop()
+        current, hops = frontier.pop()
+        if depth is not None and hops >= depth:
+            continue
         for dependent in dependents.get(current, ()):
             if dependent not in closure and dependent not in names:
                 closure.add(dependent)
-                frontier.append(dependent)
+                frontier.append((dependent, hops + 1))
     return closure
 
 
@@ -332,8 +369,15 @@ def plan(
     factory_repo: str,
     dependents: dict[str, set[str]] | None = None,
     stale: set[str] = frozenset(),
+    trust_state: bool = False,
+    closure_depth: int | None = None,
 ) -> list[dict]:
     """The recipes to build, in inventory order.
+
+    `trust_state` is set when `changed` came from the state label on the
+    published image (tools/factory_state.py): it already compared every
+    recipe against the build that is published, so a package outside
+    `changed` and `stale` is up to date and the NEVR comparison is not needed.
 
     `dependents` is the reverse dependency map of the published repository
     (see dependents_from_primary). Whatever is rebuilt drags its published
@@ -351,13 +395,15 @@ def plan(
         name = entry["name"]
         if full or name in changed or name in stale or not trust_published:
             build.append(entry)
+        elif trust_state:
+            continue
         elif is_published(root, entry, published):
             continue
         else:
             build.append(entry)
     if dependents:
         building = {entry["name"] for entry in build}
-        dragged = reverse_closure(building, dependents)
+        dragged = reverse_closure(building, dependents, closure_depth)
         build = [
             entry
             for entry in config["packages"]
@@ -407,15 +453,23 @@ def prunable_sources(
     return sorted(set(published) & hummingbird_owned)
 
 
-def stage_outputs(build: list[dict]) -> dict[str, str]:
-    """Per-stage package lists and their <=250-package chunks."""
+def stage_outputs(build: list[dict], waves: dict[str, int] | None = None) -> dict[str, str]:
+    """Per-wave package lists and their <=250-package chunks.
+
+    `waves` is the solved order from tools/build_graph.py. Without it the
+    hand-assigned config stage is used, which is what every run did before
+    the graph existed.
+    """
+    def wave(entry: dict) -> int:
+        if waves is not None and entry["name"] in waves:
+            return waves[entry["name"]]
+        return entry.get("stage") or 0
+
     outputs: dict[str, str] = {
         "build_list": json.dumps([entry["name"] for entry in build]),
     }
     for stage in range(STAGES):
-        names = [
-            entry["name"] for entry in build if (entry.get("stage") or 0) == stage
-        ]
+        names = [entry["name"] for entry in build if wave(entry) == stage]
         outputs[f"stage{stage}"] = json.dumps(names)
         chunks = [names[i : i + CHUNK] for i in range(0, len(names), CHUNK)]
         outputs[f"stage{stage}_chunks"] = json.dumps(
@@ -445,12 +499,15 @@ def restrict(config: dict, only: list[str]) -> dict:
     }
 
 
-def overflow(build: list[dict]) -> list[str]:
+def overflow(build: list[dict], waves: dict[str, int] | None = None) -> list[str]:
     """Recipes asking for a wave that has no job.
 
     These used to fall out of every stage list while staying in build_list, so
     the run published a repository that was quietly missing them.
     """
-    return sorted(
-        entry["name"] for entry in build if (entry.get("stage") or 0) >= STAGES
-    )
+    def wave(entry: dict) -> int:
+        if waves is not None and entry["name"] in waves:
+            return waves[entry["name"]]
+        return entry.get("stage") or 0
+
+    return sorted(entry["name"] for entry in build if wave(entry) >= STAGES)

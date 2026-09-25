@@ -43,11 +43,53 @@ def run_scripts(path: Path) -> str:
 
 
 class FactoryWitnessTests(unittest.TestCase):
-    def test_only_schedule_and_dispatch_launch_the_full_factory(self) -> None:
+    def test_a_merge_builds_what_changed_and_never_cancels_a_run(self) -> None:
         workflow = yaml.safe_load(REBUILD.read_text())
         # PyYAML 1.1 treats the plain scalar ``on`` as boolean true.
         triggers = workflow.get("on", workflow.get(True, {}))
-        self.assertEqual(set(triggers), {"schedule", "workflow_dispatch", "workflow_call"})
+        self.assertEqual(
+            set(triggers), {"push", "schedule", "workflow_dispatch", "workflow_call"}
+        )
+        self.assertEqual(triggers["push"]["branches"], ["main"])
+        self.assertEqual(set(triggers["push"]["paths"]), {"packages/**", "config/**"})
+        self.assertNotIn("pull_request", triggers)
+        concurrency = workflow["concurrency"]
+        self.assertFalse(concurrency["cancel-in-progress"])
+        self.assertIn("github.ref", concurrency["group"])
+        self.assertIn("inputs.artifact_prefix", concurrency["group"])
+
+    def test_prepare_solves_the_graph_in_the_build_root_and_reads_the_state(self) -> None:
+        workflow = yaml.safe_load(REBUILD.read_text())
+        steps = workflow["jobs"]["prepare"]["steps"]
+        extract = next(s for s in steps if s.get("name") == "Extract BuildRequires from every recipe")
+        self.assertIn("utah-buildroot:run bash /extract.sh", extract["run"])
+        self.assertIn("tools/extract_buildrequires.sh:/extract.sh", extract["run"])
+        matrix = next(s for s in steps if s.get("id") == "matrix")
+        self.assertEqual(matrix["env"]["GRAPH_ROWS"], "work/graph/rows")
+        self.assertEqual(matrix["env"]["FACTORY_LABELS"], "work/factory-labels.json")
+        self.assertEqual(matrix["env"]["EVENT"], "${{ github.event_name }}")
+        resolve = next(s for s in steps if s.get("id") == "factory_image")
+        self.assertIn("{{json .Config.Labels}}", resolve["run"])
+        order = [s.get("name") or s.get("id") for s in steps]
+        self.assertLess(order.index("Extract BuildRequires from every recipe"), order.index("matrix"))
+
+    def test_publish_records_the_state_without_adding_a_layer(self) -> None:
+        workflow = yaml.safe_load(REBUILD.read_text())
+        oci = next(s for s in workflow["jobs"]["publish"]["steps"] if s.get("id") == "oci")
+        self.assertIn('--label "org.projectbluefin.factory.state=${state}"', oci["run"])
+        self.assertIn("python3 tools/factory_state.py merge", oci["run"])
+        self.assertEqual(oci["env"]["TRUSTED"], "${{ needs.prepare.outputs.trusted || '[]' }}")
+
+    def test_the_schedule_is_daily_plus_a_weekly_full_rebuild(self) -> None:
+        workflow = yaml.safe_load(REBUILD.read_text())
+        triggers = workflow.get("on", workflow.get(True, {}))
+        crons = [entry["cron"] for entry in triggers["schedule"]]
+        self.assertEqual(len(crons), 2)
+        bump = yaml.safe_load((WORKFLOWS / "bump-upstream-sources.yml").read_text())
+        bump_crons = {e["cron"] for e in bump.get("on", bump.get(True))["schedule"]}
+        self.assertFalse(set(crons) & bump_crons, "the factory and the bump job must not collide")
+        weekly = next(c for c in crons if not c.endswith("* * *"))
+        self.assertIn(f"github.event.schedule == '{weekly}'", REBUILD.read_text())
 
     def test_only_the_canary_calls_the_factory_and_never_for_latest(self) -> None:
         callers = [
@@ -95,11 +137,22 @@ class FactoryWitnessTests(unittest.TestCase):
     def test_every_build_wave_is_handed_the_same_image(self) -> None:
         text = uncommented(REBUILD)
         waves = re.findall(r"(?m)^  rebuild\d+:$", text)
-        self.assertEqual(len(waves), 11)
+        self.assertEqual(len(waves), 14)
         self.assertEqual(
             text.count("factory_image: ${{ needs.prepare.outputs.factory_image }}"),
             len(waves),
         )
+
+    def test_every_wave_passes_every_build_stage_input(self) -> None:
+        # A wave added by copying an older one silently dropped a canary
+        # input once; build-stage.yml then ran it with the default.
+        workflow = yaml.safe_load(REBUILD.read_text())
+        stage = yaml.safe_load(BUILD_STAGE.read_text())
+        declared = set(stage.get("on", stage.get(True))["workflow_call"]["inputs"])
+        for name, job in workflow["jobs"].items():
+            if job.get("uses") == "./.github/workflows/build-stage.yml":
+                with self.subTest(wave=name):
+                    self.assertEqual(set(job["with"]), declared)
 
     def test_the_build_root_installs_from_the_extracted_repository(self) -> None:
         text = uncommented(BUILD_STAGE)

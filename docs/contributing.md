@@ -28,9 +28,13 @@ add a deterministic transformation from the SHA-512-pinned upstream release to
 `packages/<name>/sources` to the generated digest. Diff the unpacked tree
 against Fedora's archive first: for `gpm` they are identical.
 
-If it needs to build after something else this factory builds, give it a
-`stage`. Stage N resolves against everything in stages below N, and there is
-no stage above 4.
+Build order is solved from the recipe's BuildRequires: a package builds after
+every factory package it BuildRequires, and a merge that changes it rebuilds it
+plus everything that BuildRequires it. You do not assign a `stage`. The one
+exception is a BuildRequires cycle that has to be broken on purpose, like
+`malcontent-bootstrap` -> `flatpak` -> `malcontent`: give the members distinct
+stages and the lower one builds first. The `prepare` job's summary shows the
+solved wave and the reason for every package it selects.
 
 Do not hand-edit `.hummingbird-upstream.json`. Re-import instead; it is
 provenance, and editing it makes the recipe claim an origin it does not have.

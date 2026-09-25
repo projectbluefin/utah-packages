@@ -19,8 +19,23 @@ on:
         options:
           - container
           - mock
+  # A merge that changes a recipe or config builds it, plus everything that
+  # BuildRequires it, and publishes -- the way Fedora and Hummingbird build a
+  # package when it changes. Pipeline-only changes are proven by the canary
+  # on their pull request instead, and reach the next scheduled run.
+  push:
+    branches: [main]
+    paths:
+      - 'packages/**'
+      - 'config/**'
   schedule:
-    - cron: '41 6 * * *'
+    # Daily: whatever changed, plus a retry of every package whose last
+    # attempt failed. It used to run at 06:41, the same minute as
+    # bump-upstream-sources.yml; the bump now reaches the factory through the
+    # push above when its pull request merges.
+    - cron: '17 3 * * *'
+    # Weekly safety net: every package, whatever the state label says.
+    - cron: '23 1 * * 0'
   # The canary (.github/workflows/canary.yml) calls this same workflow, so a
   # pipeline change is proven on the real jobs in minutes, over a fixed
   # handful of packages, before any full run. Every input below defaults to
@@ -86,6 +101,14 @@ on:
         required: false
         default: ''
         type: string
+      factory_tag:
+        description: >
+          Read this tag as the published factory instead of latest or the
+          branch tag. The canary points it at its own tag to exercise
+          incremental selection against a state it published itself.
+        required: false
+        default: ''
+        type: string
       inject_failure:
         description: >
           Canary only: JSON names whose build job fails on purpose, to prove
@@ -94,6 +117,9 @@ on:
         default: ''
         type: string
     outputs:
+      build_list:
+        description: JSON names prepare selected
+        value: ${{ jobs.prepare.outputs.build_list }}
       ref:
         description: The published tag
         value: ${{ jobs.publish.outputs.ref }}
@@ -110,13 +136,19 @@ permissions:
   packages: write
   attestations: write
 
-# Build waves may run concurrently.  The consumer tag itself remains serialized
-# at `publish`, and publish refuses to replace an image that advanced while the
-# run was building.  That keeps an older run from overwriting newer artifacts.
+# One run per ref at a time, and a merge never cancels one in flight: each
+# run's builds finish and publish. GitHub keeps at most one run pending
+# behind it and replaces an older pending run with a newer one; nothing is
+# lost by that, because prepare selects against the state label on the
+# published image -- every change since the last publication -- not against
+# the previous push. The canary's passes each have their own prefix, so they
+# are not serialized behind main or one another.
 #
-# Pull requests and merges run the validation workflow, not this
-# several-hundred-job factory. Only the daily schedule or an explicit dispatch
-# may consume the build queue. Publication itself remains serialized below.
+# Publication stays serialized below as well, and publish still refuses to
+# replace an image that advanced while the run was building.
+concurrency:
+  group: rebuild-rpms-${{ github.ref }}-${{ inputs.artifact_prefix || 'factory' }}
+  cancel-in-progress: false
 
 jobs:
   prepare:
@@ -179,13 +211,33 @@ jobs:
       stage8_chunks: ${{ steps.matrix.outputs.stage8_chunks }}
       stage9_chunks: ${{ steps.matrix.outputs.stage9_chunks }}
       stage10_chunks: ${{ steps.matrix.outputs.stage10_chunks }}
+      stage11: ${{ steps.matrix.outputs.stage11 }}
+      stage11_chunks: ${{ steps.matrix.outputs.stage11_chunks }}
+      stage12: ${{ steps.matrix.outputs.stage12 }}
+      stage12_chunks: ${{ steps.matrix.outputs.stage12_chunks }}
+      stage13: ${{ steps.matrix.outputs.stage13 }}
+      stage13_chunks: ${{ steps.matrix.outputs.stage13_chunks }}
       build_list: ${{ steps.matrix.outputs.build_list }}
       cacheable: ${{ steps.matrix.outputs.cacheable }}
       prune_sources: ${{ steps.matrix.outputs.prune_sources }}
+      trusted: ${{ steps.matrix.outputs.trusted }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
+      # The same perturbation build-stage.yml applies, so the plan sees the
+      # recipe the build jobs will build.
+      - name: Perturb recipes for the canary
+        if: inputs.perturb != ''
+        env:
+          PERTURB: ${{ inputs.perturb }}
+        run: |
+          for name in $(jq -r '.[]' <<<"$PERTURB"); do
+            spec=$(find "packages/$name" -maxdepth 1 -name '*.spec' -print -quit)
+            test -n "$spec"
+            printf '\n# canary perturbation %s\n' "$GITHUB_RUN_ID" >> "$spec"
+            echo "perturbed $spec"
+          done
       - name: Validate factory policy and tests
         run: |
           python3 tools/check_workflow_quoting.py
@@ -239,6 +291,25 @@ jobs:
           path: buildroot.tar.zst
           if-no-files-found: error
           retention-days: 1
+      # The waves and the reverse dependencies an incremental run drags along
+      # come from real BuildRequires: rpmspec, in this build root, over every
+      # recipe (tools/build_graph.py). This used to be discarded: preflight
+      # resolved BuildRequires and then left the waves to a hand-assigned
+      # stage integer, two of which were discovered by a build failing.
+      - name: Extract BuildRequires from every recipe
+        run: |
+          mkdir -p work/graph/rows
+          docker run --rm \
+            -v "$PWD/packages:/packages:ro,Z" \
+            -v "$PWD/work/graph/rows:/out:Z" \
+            -v "$PWD/tools/extract_buildrequires.sh:/extract.sh:ro,Z" \
+            utah-buildroot:run bash /extract.sh
+          sudo chown -R "$(id -u):$(id -g)" work/graph
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: ${{ inputs.artifact_prefix }}build-graph
+          path: work/graph
+          retention-days: 7
       # The published repository is the witness for what may be skipped, and
       # it lives in one place: the OCI image publish writes. It used to be
       # read over HTTP from a GitHub Pages mirror that had been retired but
@@ -268,6 +339,7 @@ jobs:
           ACTOR: ${{ github.actor }}
           NO_FACTORY: ${{ inputs.no_factory == true && '1' || '' }}
           PUBLISH_TAG: ${{ inputs.publish_tag }}
+          FACTORY_TAG: ${{ inputs.factory_tag }}
         run: |
           set -euo pipefail
           owner=$(printf '%s' "$REPOSITORY_OWNER" | tr "[:upper:]" "[:lower:]")
@@ -279,21 +351,30 @@ jobs:
           else
             candidates="$branch latest"
           fi
+          if [ -n "$FACTORY_TAG" ]; then
+            candidates="$FACTORY_TAG"
+          fi
           if [ -n "$NO_FACTORY" ]; then
             candidates=
           fi
           echo "${GITHUB_TOKEN}" | docker login ghcr.io -u "$ACTOR" --password-stdin \
             || echo "::warning title=ghcr login failed::resolving the factory image anonymously"
+          # A tag, or a digest (sha256:...) -- the canary pins one run's
+          # published image by digest so another pass cannot move it.
           resolve() {
             for tag in "$@"; do
-              if docker pull --quiet "${image}:${tag}" >&2; then
-                digest=$(docker image inspect "${image}:${tag}" \
+              case "$tag" in
+                sha256:*) ref="${image}@${tag}" ;;
+                *) ref="${image}:${tag}" ;;
+              esac
+              if docker pull --quiet "$ref" >&2; then
+                digest=$(docker image inspect "$ref" \
                   --format '{{index .RepoDigests 0}}' | sed 's/.*@//')
-                echo "${image}:${tag} -> ${image}@${digest}" >&2
+                echo "$ref -> ${image}@${digest}" >&2
                 echo "${image}@${digest}"
                 return
               fi
-              echo "no image at ${image}:${tag}" >&2
+              echo "no image at $ref" >&2
             done
           }
           # shellcheck disable=SC2086 # candidates is a word list
@@ -311,13 +392,24 @@ jobs:
           echo "publish seed:       ${seed:-<none>}"
           echo "image=${resolved}" >> "$GITHUB_OUTPUT"
           echo "seed=${seed}" >> "$GITHUB_OUTPUT"
+          # The state label (tools/factory_state.py) is what prepare selects
+          # against: the inputs every published build was made from.
+          mkdir -p work
+          if [ -n "$resolved" ]; then
+            docker image inspect "$resolved" --format '{{json .Config.Labels}}' > work/factory-labels.json
+          else
+            echo null > work/factory-labels.json
+          fi
       - uses: ./.github/actions/load-factory-repo
         id: factory
         with:
           image: ${{ steps.factory_image.outputs.image }}
       - id: matrix
         env:
-          FULL: ${{ inputs.full == true && '1' || '0' }}
+          FULL: ${{ (inputs.full == true || github.event.schedule == '23 1 * * 0') && '1' || '0' }}
+          EVENT: ${{ github.event_name }}
+          FACTORY_LABELS: work/factory-labels.json
+          GRAPH_ROWS: work/graph/rows
           # Only a push has a range worth diffing. A pull_request event also
           # carries `before` -- the previous head of the branch, which a force
           # push makes unreachable, and git diff then kills prepare.
@@ -437,12 +529,14 @@ jobs:
           path: work/reports/preflight.txt
           if-no-files-found: warn
 
-  # Five waves of the same build, ordered so a package can resolve a
+  # Fourteen waves of the same build, ordered so a package can resolve a
   # BuildRequires against something an earlier wave produced. The wave
   # itself lives in build-stage.yml; only the ordering is here.
   #
-  # GitHub needs the chain to be static, so the count is fixed at five. A
-  # sixth wave is a real decision, not a silent overflow: `prepare` fails
+  # GitHub needs the chain to be static, so the count is fixed at fourteen:
+  # the deepest BuildRequires chain tools/build_graph.py solves is twelve
+  # (hwdata -> libdisplay-info -> mesa -> ... -> nautilus-python). A
+  # fifteenth wave is a real decision, not a silent overflow: `prepare` fails
   # rather than dropping a package that does not fit.
   rebuild0:
     needs: prepare
@@ -675,9 +769,72 @@ jobs:
       inject_failure: ${{ inputs.inject_failure }}
       flaky_check: ${{ inputs.flaky_check }}
 
+  rebuild11:
+    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8, rebuild9, rebuild10]
+    if: ${{ !cancelled() && needs.prepare.outputs.stage11 != '[]' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        chunk: ${{ fromJSON(needs.prepare.outputs.stage11_chunks) }}
+    uses: ./.github/workflows/build-stage.yml
+    with:
+      stage: '11'
+      packages: ${{ matrix.chunk }}
+      backend: ${{ inputs.backend || 'container' }}
+      factory_image: ${{ needs.prepare.outputs.factory_image }}
+      buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
+      cacheable_packages: ${{ needs.prepare.outputs.cacheable }}
+      artifact_prefix: ${{ inputs.artifact_prefix }}
+      cache_salt: ${{ inputs.cache_salt }}
+      perturb: ${{ inputs.perturb }}
+      inject_failure: ${{ inputs.inject_failure }}
+      flaky_check: ${{ inputs.flaky_check }}
+
+  rebuild12:
+    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8, rebuild9, rebuild10, rebuild11]
+    if: ${{ !cancelled() && needs.prepare.outputs.stage12 != '[]' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        chunk: ${{ fromJSON(needs.prepare.outputs.stage12_chunks) }}
+    uses: ./.github/workflows/build-stage.yml
+    with:
+      stage: '12'
+      packages: ${{ matrix.chunk }}
+      backend: ${{ inputs.backend || 'container' }}
+      factory_image: ${{ needs.prepare.outputs.factory_image }}
+      buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
+      cacheable_packages: ${{ needs.prepare.outputs.cacheable }}
+      artifact_prefix: ${{ inputs.artifact_prefix }}
+      cache_salt: ${{ inputs.cache_salt }}
+      perturb: ${{ inputs.perturb }}
+      inject_failure: ${{ inputs.inject_failure }}
+      flaky_check: ${{ inputs.flaky_check }}
+
+  rebuild13:
+    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8, rebuild9, rebuild10, rebuild11, rebuild12]
+    if: ${{ !cancelled() && needs.prepare.outputs.stage13 != '[]' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        chunk: ${{ fromJSON(needs.prepare.outputs.stage13_chunks) }}
+    uses: ./.github/workflows/build-stage.yml
+    with:
+      stage: '13'
+      packages: ${{ matrix.chunk }}
+      backend: ${{ inputs.backend || 'container' }}
+      factory_image: ${{ needs.prepare.outputs.factory_image }}
+      buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
+      cacheable_packages: ${{ needs.prepare.outputs.cacheable }}
+      artifact_prefix: ${{ inputs.artifact_prefix }}
+      cache_salt: ${{ inputs.cache_salt }}
+      perturb: ${{ inputs.perturb }}
+      inject_failure: ${{ inputs.inject_failure }}
+      flaky_check: ${{ inputs.flaky_check }}
+
   precedence:
     # Every wave, not the first five. See publish below.
-    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8, rebuild9, rebuild10]
+    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8, rebuild9, rebuild10, rebuild11, rebuild12, rebuild13]
     # `!cancelled()` is what lets this run after a failed wave, which is the
     # point: it has to see every RPM that did build. It also let it run after
     # a failed prepare, where there is no build root artifact to load, so a
@@ -813,7 +970,7 @@ jobs:
     #   nothing provides libGL.so.1()(64bit) needed by libva ... from factory
     #
     # -- with libepoxy and libglvnd both at stage 6, behind the gate. The
-    # dependency now covers all eleven waves, which is what makes the check
+    # dependency now covers every wave, which is what makes the check
     # meaningful: it can finally see the whole repository it is judging.
     #
     # This is not main-only. The repository is published as an OCI image, and
@@ -833,7 +990,7 @@ jobs:
           && (needs.precedence.result == 'success'
               || (needs.prepare.outputs.build_list == '[]'
                   && needs.precedence.result == 'skipped')) }}
-    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8, rebuild9, rebuild10, precedence]
+    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8, rebuild9, rebuild10, rebuild11, rebuild12, rebuild13, precedence]
     # Build waves can overlap, but the consumer tag is an atomic input. Queue
     # only this critical section per ref. The seed step verifies that the image
     # seen by `prepare` is still current; an older run therefore cannot publish
@@ -919,6 +1076,8 @@ jobs:
             echo "refusing to overwrite the newer repository; rerun this commit" >&2
             exit 1
           fi
+          mkdir -p work
+          echo null > work/seed-labels.json
           if [ -z "$current" ]; then
             echo "prepare witnessed no published image; publishing a new repository"
           else
@@ -940,6 +1099,8 @@ jobs:
             container=$(podman create "$current" /bin/true)
             podman cp "$container:/repository/." repository/
             podman rm "$container"
+            # The state it was published with, which this publish extends.
+            podman image inspect "$current" --format '{{json .Labels}}' > work/seed-labels.json
           fi
       # Into built/, not straight into the seed. Copying on top of the seed
       # left a package's old subpackages in place whenever a build renamed or
@@ -1108,10 +1269,21 @@ jobs:
           REF: ${{ github.ref }}
           ACTOR: ${{ github.actor }}
           PUBLISH_TAG: ${{ inputs.publish_tag }}
+          TRUSTED: ${{ needs.prepare.outputs.trusted || '[]' }}
+          PRUNE_SOURCES: ${{ needs.prepare.outputs.prune_sources }}
         run: |
           set -euo pipefail
           owner=$(printf '%s' "$REPOSITORY_OWNER" | tr "[:upper:]" "[:lower:]")
           image="ghcr.io/${owner}/utah-packages"
+          # What every published build was made from, per package
+          # (tools/factory_state.py): the next run selects against it, so a
+          # run is the union of every change since this publication. A label
+          # adds no layer; the layout below is untouched.
+          state=$(python3 tools/factory_state.py merge \
+            --seed-labels work/seed-labels.json \
+            --plan "$(jq -cn --argjson t "$TRUSTED" '{trusted: $t}')" \
+            --report work/publish-report.json --pruned "$PRUNE_SOURCES")
+          echo "state label: $(jq '.inputs | length' <<<"$state") packages recorded, $(jq '.failed | length' <<<"$state") failing"
           # main publishes the tag consumers follow; every other ref publishes
           # under its own name so it can be tested without touching main.
           # The canary names its own tag, and never latest.
@@ -1141,7 +1313,9 @@ jobs:
           mkdir -p "${DOCKER_CONFIG}"
           echo "${GITHUB_TOKEN}" | podman login ghcr.io -u "$ACTOR" \
             --password-stdin --authfile "${DOCKER_CONFIG}/config.json"
-          podman build --tag "${image}:${tag}" --file Containerfile.repo .
+          podman build --tag "${image}:${tag}" --file Containerfile.repo \
+            --label "org.projectbluefin.factory.state=${state}" \
+            --label "org.opencontainers.image.revision=${GITHUB_SHA}" .
           podman push "${image}:${tag}" --digestfile /tmp/digest \
             --authfile "${DOCKER_CONFIG}/config.json"
           digest=$(cat /tmp/digest)
@@ -1226,7 +1400,7 @@ jobs:
   # list -- build-stage.yml uploads rpm-s<stage>-<package> only for a package
   # that produced RPMs -- so a publish that never started still gets a report.
   report:
-    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8, rebuild9, rebuild10, precedence, publish]
+    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8, rebuild9, rebuild10, rebuild11, rebuild12, rebuild13, precedence, publish]
     if: ${{ always() && needs.prepare.result == 'success' && needs.prepare.outputs.build_list != '[]' }}
     runs-on: ubuntu-24.04
     permissions:

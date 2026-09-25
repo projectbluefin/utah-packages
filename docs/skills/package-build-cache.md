@@ -131,28 +131,29 @@ A full matrix containing cache-hit jobs is acceptable; a full recompilation is
 not. The distinction is the compile step and cache-hit evidence, not the number
 of matrix jobs GitHub displays.
 
-## Merge queue rollout and batching
+## Triggers, queueing and batching
 
-Do not use the several-hundred-job factory as a pull-request or merge-group
-check. PRs and merges run the fast validation workflow; the package factory
-runs once daily or by explicit dispatch. This prevents N ready changes from
-creating N competing matrices when one repository publication can incorporate
-all N commits.
+A merge to `main` that changes `packages/**` or `config/**` runs the factory,
+and that run builds only what changed since the published image plus the
+direct BuildRequires dependents of what changed. It is not a several-hundred-job
+matrix any more, which is what made per-merge triggers affordable:
+the state label on the published image (`tools/factory_state.py`) says what
+every published build was made from, so a run compares recipes, not commits.
 
-Enable GitHub's merge queue only after repeated runs demonstrate both sides of
-the cache contract: unchanged packages restore without compiling, and a failed
-run's successful packages restore on its retry. At that point the merge queue
-should gate merge groups with the fast validation workflow, not with the full
-factory.
+Runs on one ref are serialized and never cancelled. GitHub keeps one run
+pending behind the running one and replaces an older pending run with a
+newer one; that is safe, because the newer run selects against the published
+state and so covers every change the replaced run would have built. N
+merges in quick succession therefore cost at most two runs, and the second
+builds the union.
 
-After a batch drains from the merge queue, dispatch one factory run at the
-batch's final `main` commit (or let the next daily run do so). Its prepare-time
-factory witness covers the previously published repository, and its package
-caches cover completed work that never reached publication. The final OCI tag
-moves once, with every package that built, only after the candidate passes the
-Hummingbird-only consumer transaction.
+Pull requests do not run the factory. Pipeline changes are proven by the
+canary (`.github/workflows/canary.yml`) on their pull request, and recipe
+changes are validated there and built on merge.
 
-Do not reintroduce per-PR, per-merge, or per-merge-group factory triggers as a
-shortcut. If a batch run fails, fix or revert the responsible commit and rerun
-the final `main` commit; successful package work from the failed run is already
-preserved per package.
+A failed run's successful packages are published (incremental publication)
+and also cached, so a retry recompiles only what failed. The daily scheduled
+run retries every package whose last attempt failed; push runs hold a
+package that failed at exactly its current inputs, since rebuilding it
+unchanged on every merge buys nothing. The weekly scheduled run rebuilds
+everything, against the cache, as a safety net.

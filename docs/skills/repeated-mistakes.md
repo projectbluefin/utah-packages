@@ -76,10 +76,15 @@ happened to finish first included. The `prior` step now names
 `rpm-s{0,...,N-1}-*` explicitly.
 
 **Rule.** A consumer of a library this factory rebuilds goes in a strictly
-later stage than the provider. A failure naming a soname the factory used to
-provide, or that Hummingbird provides at a different major, is a staging
-question before it is a recipe question. The stage assignment lives in
-`config/upstream-sources.json`.
+later wave than the provider. Waves are now solved from real BuildRequires by
+`tools/build_graph.py`, which puts every consumer after its provider by
+construction; a hand-assigned `stage` only orders the members of a
+BuildRequires cycle. The hand stages had missed real edges: the solved graph
+is twelve waves deep where the config went to ten, and put 194 packages in
+the first wave where config put 321. A failure naming a soname the factory used to
+provide, or that Hummingbird provides at a different major, is an ordering
+question before it is a recipe question: check the `build-graph` artifact
+for the edge.
 
 ## 4. A config change that alters a build has to invalidate the published copy
 
@@ -95,6 +100,13 @@ changed: spec, patches, sources, stage, source URL, checksum, dist_bump
 counter, and now the satisfiability of its Requires. Extending what the plan
 considers "changed" is the fix; bumping Release by hand to force a rebuild is
 not.
+
+This is now structural. Each published image carries
+`org.projectbluefin.factory.state`, the input digest (recipe files, inventory
+entry, build-root pin and Hummingbird repo) of every build in it
+(`tools/factory_state.py`), and `prepare` rebuilds exactly the packages whose
+digest moved, plus their direct BuildRequires dependents. A change to
+anything that decides how a package is built belongs in that digest.
 
 ## 5. A global exclusion fights a local dependency
 

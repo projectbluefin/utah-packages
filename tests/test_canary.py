@@ -174,6 +174,33 @@ class FlakyCheckVerdictTests(unittest.TestCase):
         self.assertTrue(canary.flaky_problems(self.JOBS, "pass4", "libical", self.GOOD[:1]))
 
 
+class StateAndIncrementalTests(unittest.TestCase):
+    def test_the_state_label_must_record_the_set(self) -> None:
+        label = json.dumps({"inputs": {name: "0" * 16 for name in SET}, "failed": {}})
+        config = {"config": {"Labels": {"org.projectbluefin.factory.state": label}}}
+        self.assertEqual(canary.check_state(config, SET), [])
+        self.assertTrue(canary.check_state({"config": {"Labels": {}}}, SET))
+        self.assertTrue(canary.check_state(config, SET | {"extra"}))
+
+    def test_incremental_selection_and_waves(self) -> None:
+        jobs = [
+            job('pass5 / rebuild0 (["vulkan-headers"]) / build (vulkan-headers)', "success", "success"),
+            job('pass5 / rebuild1 (["vulkan-loader"]) / build (vulkan-loader)', "skipped", "success"),
+        ]
+        expected = {"vulkan-headers": 0, "vulkan-loader": 1}
+        self.assertEqual(canary.incremental_problems(
+            jobs, ["vulkan-headers", "vulkan-loader"], expected, "pass5"), [])
+        # libical selected too: not incremental.
+        self.assertTrue(canary.incremental_problems(
+            jobs, ["libical", "vulkan-headers", "vulkan-loader"], expected, "pass5"))
+        # vulkan-loader at its config stage 4: waves not solved.
+        staged = [dict(jobs[0]), dict(jobs[1], name='pass5 / rebuild4 (["vulkan-loader"]) / build (vulkan-loader)')]
+        self.assertTrue(canary.incremental_problems(
+            staged, ["vulkan-headers", "vulkan-loader"], expected, "pass5"))
+        # Nothing selected at all -- what a missing state label produces.
+        self.assertTrue(canary.incremental_problems([], [], expected, "pass5"))
+
+
 class WorkflowShapeTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
@@ -237,6 +264,16 @@ class WorkflowShapeTests(unittest.TestCase):
         self.assertIn('test "$DIGEST" != "$PASS1_DIGEST"', script)
         gate = self.jobs["canary"]["steps"][0]["run"]
         self.assertIn('.key != "pass4"', gate)
+
+    def test_pass5_is_incremental_against_pass1s_digest(self) -> None:
+        pass5 = self.jobs["pass5"]
+        self.assertEqual(pass5["needs"], ["changes", "pass1"])
+        self.assertNotIn("full", pass5["with"])
+        self.assertEqual(pass5["with"]["factory_tag"], "${{ needs.pass1.outputs.digest }}")
+        self.assertEqual(pass5["with"]["perturb"], '["vulkan-headers"]')
+        self.assertTrue(pass5["with"]["skip_publish"])
+        spec = (ROOT / "packages" / "vulkan-loader" / "vulkan-loader.spec").read_text()
+        self.assertIn("vulkan-headers", spec)
 
     def test_every_pass_shares_one_salt_and_its_own_artifact_prefix(self) -> None:
         passes = [n for n, j in self.jobs.items() if j.get("uses")]

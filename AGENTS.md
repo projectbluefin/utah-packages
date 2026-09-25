@@ -152,8 +152,11 @@ tooling arrives; do not copy them as-is.
 - Sources come from **upstream releases**, verified and SHA-512 locked. Fedora
   dist-git supplies the **recipe only**, pinned by commit in
   `.hummingbird-upstream.json`.
-- Packages that BuildRequire each other need a `stage` in
-  `config/upstream-sources.json`. Stage N resolves against stages `< N`.
+- Build order is solved from real BuildRequires (`tools/build_graph.py`):
+  a package builds in a later wave than every factory package it
+  BuildRequires. A `stage` in `config/upstream-sources.json` only orders the
+  members of a BuildRequires cycle, such as `malcontent-bootstrap` before
+  `flatpak` before `malcontent`; anywhere else it is ignored.
 - Hummingbird's disttag is `hum1`, and it bumps `Release` with a `.N` suffix
   immediately before `%{?dist}` so a rebuild sorts above the Fedora build it
   derives from. **This repository does not do that yet** — its RPMs still carry

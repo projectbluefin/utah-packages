@@ -153,12 +153,19 @@ validated 397 source RPMs
 
 | job | verified behavior |
 | --- | --- |
-| `prepare` | Selects the packages that are new, changed, or requested by a full rebuild, then emits five stage lists. A package declaring a stage above 4 has no job to run in, so this fails and names it rather than dropping it. |
-| `preflight` | Resolves BuildRequires for the selected packages in the real build root and uploads a worklist; it is `continue-on-error`. Its output is advisory: the waves are still driven by the hand-assigned `stage` in config, not by what this resolves. |
-| `rebuild0` through `rebuild4` | Five calls to the reusable `build-stage.yml`, one per wave, each a `fail-fast: false` package matrix. Each later stage downloads the earlier workflow artifacts, creates a local `[stages]` dnf repository with `createrepo_c`, and resolves against it. |
+| `prepare` | Runs `rpmspec` over every recipe in the build root (`tools/extract_buildrequires.sh`) and solves the BuildRequires graph (`tools/build_graph.py`). Selects every package whose input digest differs from the one recorded on the published image (`tools/factory_state.py`), every stale published build, and the direct BuildRequires dependents of both; a full rebuild selects everything. Orders the selection into waves by longest path over the graph, a config `stage` only ordering the members of a cycle, and writes the plan with the reason for each package to the job summary. A chain deeper than the fourteen waves fails and names the package rather than dropping it. |
+| `preflight` | Resolves BuildRequires for the selected packages with dnf in the real build root and uploads a worklist of unsatisfiable ones; it is `continue-on-error` and advisory. The graph that orders the waves comes from `prepare`. |
+| `rebuild0` through `rebuild13` | Fourteen calls to the reusable `build-stage.yml`, one per wave, each a `fail-fast: false` package matrix. Each later wave downloads the artifacts of strictly earlier waves, creates a local `[stages]` dnf repository with `createrepo_c`, and resolves against it. |
 | `precedence` | Checks that each produced RPM outranks what Fedora 44 and Hummingbird already offer, and reports any name Hummingbird also provides. A source package with a losing RPM is named in its `losers` output and kept out of the repository; it does not fail the job. |
 | `publish` | Seeds from the verified previous image, replaces the RPMs of each source package this run built (and did not lose precedence) by source name, removes the bootstrap RPM, creates and signs repository metadata, validates the Hummingbird-only transaction over the whole candidate, and publishes a GHCR OCI image that is both cosign-signed and provenance-attested. A failed package keeps its previous build. |
 | `report` | Runs whether or not publish did. Names every selected package that did not publish -- from the run's own artifact list -- in the job summary, and on `main` opens, updates or closes the tracking issue *Factory: packages failing on main*. |
+
+87 of 397 packages carry a hand-assigned `stage` in
+`config/upstream-sources.json`. Since waves are solved from BuildRequires it is
+consulted only between members of one BuildRequires cycle, to decide which
+builds first -- `malcontent-bootstrap` before `flatpak` before `malcontent`.
+Elsewhere it is ignored; the solved order is twelve waves deep, where the hand
+stages went to ten and had missed real edges.
 
 `.github/workflows/build-stage.yml` is the wave itself, and the only place a
 package is built. It takes a stage number and a JSON list of packages; it
@@ -208,20 +215,30 @@ authoritative: directly changed and stale packages are excluded from reuse.
 The full rationale and invariants are in
 [`docs/skills/package-build-cache.md`](skills/package-build-cache.md).
 
-### Trigger and merge-queue policy
+### Triggers: incremental on merge, daily retry, weekly full
 
-The full factory runs daily at `06:41 UTC` or by manual dispatch. Pull requests
-and pushes to `main` do not launch it; they run the validation workflow below.
-This deliberately batches multiple merges into one coherent repository build
-instead of flooding the Actions queue with one package matrix per commit.
+| trigger | builds |
+| --- | --- |
+| push to `main` touching `packages/**` or `config/**` | what changed since the published image, plus its direct BuildRequires dependents |
+| daily, `03:17 UTC` | the same, plus every package whose last attempt failed |
+| weekly, Sunday `01:23 UTC` | everything, against the cache |
+| dispatch | the same as daily, or everything with `full` |
 
-Merge queue is the next step only after repeated factory runs prove that cache
-hits skip compilation and that successful packages survive a failed run. When
-enabled, merge groups should require the fast validation workflow. After a
-batch merges, run the factory once at the final `main` commit (or use the next
-daily run), then publish that batch. The operational rationale is
-part of the cache contract in
-[`docs/skills/package-build-cache.md`](skills/package-build-cache.md#merge-queue-rollout-and-batching).
+What changed is read from the `org.projectbluefin.factory.state` label on the
+published image: the input digest of every build in it -- recipe files,
+inventory entry, build-root pin and Hummingbird repository. A git diff from
+the previous push cannot answer that once runs queue, and a NEVR comparison
+misses a recipe fix that does not move the release. An image without the
+label (the first run after this landed) falls back to both.
+
+Runs on one ref are serialized and never cancelled: GitHub keeps one run
+pending and replaces an older pending run with a newer one, which is safe
+because the newer run selects against the published state and so builds the
+union. The daily run moved off `06:41 UTC`, where it collided with
+`bump-upstream-sources.yml`; a merged bump now builds through the push
+trigger. Pull requests run validation and the canary, never the factory.
+The rationale is part of the cache contract in
+[`docs/skills/package-build-cache.md`](skills/package-build-cache.md#triggers-queueing-and-batching).
 
 ### The pipeline canary
 
@@ -294,7 +311,6 @@ here as a list of completed work.
 | **Hummingbird overlap** | `precedence` reports any shared package name as a mistake | Allowed, but declared per package in `config/upstream-sources.json` | A general factory legitimately rebuilds things Hummingbird also ships. Undeclared overlap is still a mistake. |
 | **Build engine** | Bare `rpmbuild -br` then `-ba`, in a container that hand-simulates a build root | Mock, hermetic where possible | `build-stage.yml` installs `mock` and never invokes it, then reimplements it: *"mirroring Hummingbird mock.cfg"*, *"mock defines USER in its build root; a bare container does not"*. Hummingbird builds in mock, and so does the approved design in `docs/superpowers/specs/`, which this review reached independently. Whether Packit drives it is the open part — [#43](https://github.com/projectbluefin/utah-packages/issues/43). |
 | **Buildroot** | Solved live against whatever the repos serve at that moment | Resolve once, write `buildroot_lock.json` as a run artifact, build offline from it | Hummingbird's mechanism: `rpmspec --buildrequires` → DNF solve → `buildroot_lock.json` → hermetic repo → `--network=none` (`ci/build_rpms.sh`). Records EVR, arch, repo ID, URL, checksum and source RPM — not names. It is why the ABI question has an answer instead of a log grep. |
-| **Stage assignment** | 87 of 397 packages carry a hand-assigned `stage` | Solve waves from real BuildRequires; config `stage` demotes to an override for cycle-breakers such as `malcontent-bootstrap` | `preflight` already resolves every recipe's BuildRequires and then discards the result. Hand integers are a manual cache of a computed value; two of them were discovered by a build failing. Hummingbird has no stage numbers at all — it is solver-driven plus a reverse-dependency impact scanner. |
 | **Compiler cache** | `sccache` against the Actions cache service, over the network | Mock's `ccache` plugin plus `actions/cache`; delete `.github/actions/setup-sccache` | Hermetic mock is network-isolated. sccache would degrade to a total miss and look like "builds got slower" rather than failing. |
 | **Architecture** | `x86_64` hardcoded in the Hummingbird repository id and the sccache URL | Stay x86_64 only | Deferred deliberately, not overlooked. |
 | **Fork state** | `.hummingbird-upstream.json` pins a Fedora commit and tree; drift is invisible | Compute drift against the pinned commit in CI; an undeclared diff fails | Hummingbird labels every package `clean`, `modified` or `independent` and requires a reason for `modified`. Computed rather than declared, so it cannot rot the way the stage integers did. The recorded `tree` cannot be recomputed offline: the import drops files dist-git carries, so pango records tree `bdf8be16` while its three imported files hash to `f80aca67`, the difference being `.gitignore`. Drift detection has to fetch the pinned commit rather than rehash the working tree. |

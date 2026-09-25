@@ -55,7 +55,7 @@ REBUILD_WORKFLOW = (
 # Every build wave the publish job waits on, in wave order. This restates what
 # rebuild-rpms.yml declares, so that the decision functions can be exercised
 # without reading the workflow; ``assert_gate_enforced`` proves the two agree.
-STAGES = tuple(f"rebuild{stage}" for stage in range(11))
+STAGES = tuple(f"rebuild{stage}" for stage in range(14))
 
 STAGE_JOB = re.compile(r"^rebuild(\d+)$")
 
