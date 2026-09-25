@@ -200,7 +200,10 @@ jobs:
             -v "$RUNNER_TEMP/containers:/var/lib/containers:Z" \
             -v "$RUNNER_TEMP/mock:/var/lib/mock:Z" \
             utah-buildroot:run bash /tools/hermetic_build.sh lock
-          sudo chown -R "$(id -u):$(id -g)" work/cache work/hermetic
+          # The container hands its directories to its own mockbuilder user;
+          # give them back, or the cache restore below cannot write
+          # work/result (podman cp failed exactly so on the first cache hit).
+          sudo chown -R "$(id -u):$(id -g)" work
           echo "locked root: $(wc -l < work/cache/root) packages, disttag $(cat work/cache/disttag)"
       # The hermetic lane keys the cache on its lock, in its own namespace:
       # a container-lane entry must never be restored into a hermetic build.
@@ -803,6 +806,7 @@ jobs:
             -v "$RUNNER_TEMP/containers:/var/lib/containers:Z" \
             -v "$RUNNER_TEMP/mock:/var/lib/mock:Z" \
             utah-buildroot:run bash /tools/hermetic_build.sh build
+          sudo chown -R "$(id -u):$(id -g)" work
       - name: Publish package RPM cache
         if: success() && (inputs.backend == 'container' || inputs.backend == 'hermetic') && contains(fromJSON(inputs.cacheable_packages), matrix.package) && !contains(fromJSON(inputs.flaky_check || '[]'), matrix.package) && steps.package_cache_restore.outputs.hit != 'true'
         env:

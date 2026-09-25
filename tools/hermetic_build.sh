@@ -28,6 +28,14 @@ mkdir -p "$H" /work/cache /work/result /work/reports
 
 install_tools() {
   dnf -y -q install mock createrepo_c rpm-build python3 >/dev/null
+  # mock builds as the user who invoked it. Invoked as root, the whole
+  # build ran as root, and flac's %check refused it -- "iterator claims file
+  # is writable when tester thinks it should not be; are you running as
+  # root?" -- exactly the failure the container lane's mockbuild user fixed.
+  # Hummingbird runs its mock as mockbuilder for the same reason.
+  id -u mockbuilder >/dev/null 2>&1 || useradd -m -G mock mockbuilder
+  mkdir -p "$H" /work/result /work/cache /work/staged
+  chown -R mockbuilder:mock "$H" /work/result /work/cache /work/staged
   # mock pulls the bootstrap image with podman inside this container. The
   # container root is overlayfs, which podman cannot stack overlay on, so
   # its storage lives on the volume build-stage.yml mounts there.
@@ -71,7 +79,8 @@ lock() {
   # The disttag is Hummingbird's release tag, which a fresh mock root only
   # knows after it has resolved. Resolve with the shape of it, read the real
   # tag from the lock, and build with that.
-  mock -r "$H/mock.cfg" --calculate-build-dependencies \
+  chown -R mockbuilder:mock "$staged"
+  runuser -u mockbuilder -- mock -r "$H/mock.cfg" --calculate-build-dependencies \
     --spec "$spec" --sources "$staged" --resultdir "$H/lock" \
     --define "dist .hum1.bfin${DIST_BUMP:-}"
   test -s "$H/lock/buildroot_lock.json"
@@ -130,7 +139,7 @@ build() {
   # --hermetic-build itself installs only from the local repository.
   build_offline() {
     rm -rf /work/result/*
-    unshare --net -- mock --hermetic-build "$H/lock/buildroot_lock.json" "$H/repo" \
+    unshare --net -- runuser -u mockbuilder -- mock --hermetic-build "$H/lock/buildroot_lock.json" "$H/repo" \
       --resultdir /work/result \
       --define "dist $disttag" \
       --define "debug_package %{nil}" \

@@ -53,6 +53,17 @@ class HermeticLaneTests(unittest.TestCase):
         self.assertLess(index("Build the verified source with its RPM recipe"),
                         index("Publish package RPM cache"))
 
+    def test_the_workspace_is_handed_back_after_each_container(self) -> None:
+        # A cache hit writes work/result from the host; the container had
+        # given it to its mockbuilder user.
+        for name in (self.LOCK, self.BUILD):
+            self.assertIn('sudo chown -R "$(id -u):$(id -g)" work', steps()[index(name)]["run"])
+
+    def test_mock_runs_as_an_unprivileged_user(self) -> None:
+        script = SCRIPT.read_text()
+        self.assertIn("runuser -u mockbuilder -- mock -r", script)
+        self.assertIn("unshare --net -- runuser -u mockbuilder -- mock --hermetic-build", script)
+
     def test_the_cache_key_comes_from_the_lock_in_its_own_namespace(self) -> None:
         run = steps()[index(self.KEY)]["run"]
         self.assertIn("--resolved-root work/cache/root", run)
@@ -76,7 +87,7 @@ class HermeticLaneTests(unittest.TestCase):
 
     def test_the_build_has_no_network(self) -> None:
         script = SCRIPT.read_text()
-        self.assertIn("unshare --net -- mock --hermetic-build", script)
+        self.assertIn("unshare --net -- runuser -u mockbuilder -- mock --hermetic-build", script)
         # Materializing the lock is the last thing allowed to reach out.
         self.assertLess(script.index("materialize\n"), script.index("unshare --net"))
 
