@@ -1,0 +1,245 @@
+#!/usr/bin/env python3
+"""The decisions and assertions behind .github/workflows/canary.yml.
+
+The canary runs rebuild-rpms.yml itself over a fixed handful of packages. The
+workflow is plumbing; what it concludes lives here, where it is under test:
+
+    canary.py touches-pipeline < changed-paths   exit 0 when the canary must run
+    canary.py salt                               the cache namespace for pass1
+    canary.py verify-image REF@DIGEST --utah-reader PATH --expect JSON
+    canary.py verify-cache JOBS.json --set JSON --perturbed NAME
+"""
+
+from __future__ import annotations
+
+import argparse
+import gzip
+import hashlib
+import importlib.util
+import json
+import re
+import subprocess
+import sys
+import tempfile
+import urllib.parse
+import urllib.request
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+
+# A change under any of these can break a factory run without touching a
+# recipe, so a pull request carrying one must pass the canary. Recipes
+# themselves are not here: they are proven by building them.
+PIPELINE_PATHS = (
+    ".github/workflows/",
+    ".github/actions/",
+    "tools/",
+    "config/",
+    "Containerfile",
+)
+
+# What decides how a package is compiled. pass1 compiles for real whenever
+# one of these changed since the last canary, and reuses its builds otherwise.
+BUILD_PATH = (
+    ".github/workflows/build-stage.yml",
+    ".github/actions/load-buildroot/action.yml",
+    ".github/actions/load-factory-repo/action.yml",
+    "config/hummingbird.repo",
+    "tools/source_pipeline.py",
+    "tools/dist_bump.py",
+    "tools/package_cache_key.py",
+)
+
+BUILD_STEP = "Build the verified source with its RPM recipe"
+RESTORE_STEP = "Restore package RPM cache"
+BUILD_JOB = re.compile(r"^(?P<pass>pass\d+) / rebuild\d+ .*/ build \((?P<package>[^)]+)\)$")
+
+
+def touches_pipeline(paths: list[str]) -> bool:
+    return any(path.startswith(PIPELINE_PATHS) for path in paths if path)
+
+
+def salt(root: Path = ROOT) -> str:
+    digest = hashlib.sha256()
+    for relative in BUILD_PATH:
+        digest.update(relative.encode() + b"\0")
+        digest.update((root / relative).read_bytes())
+        digest.update(b"\0")
+    return "canary-" + digest.hexdigest()[:16]
+
+
+# ---------------------------------------------------------------------------
+# The published image
+
+
+def registry_json(image: str, kind: str, reference: str) -> dict:
+    registry, rest = image.split("/", 1)
+    repository = rest.split("@", 1)[0].split(":", 1)[0]
+    query = urllib.parse.urlencode({"service": registry, "scope": f"repository:{repository}:pull"})
+    with urllib.request.urlopen(f"https://{registry}/token?{query}", timeout=120) as response:
+        token = json.load(response)["token"]
+    request = urllib.request.Request(
+        f"https://{registry}/v2/{repository}/{kind}/{reference}",
+        headers={
+            "Authorization": f"Bearer {token}",
+            "Accept": "application/vnd.oci.image.manifest.v1+json",
+        },
+    )
+    with urllib.request.urlopen(request, timeout=120) as response:
+        return json.load(response)
+
+
+def check_layers(manifest: dict) -> list[str]:
+    """The two-layer, repodata-first layout Utah depends on (#254)."""
+    problems = []
+    layers = manifest.get("layers", [])
+    if len(layers) != 2:
+        problems.append(f"expected 2 layers (repodata, then repository), found {len(layers)}")
+    elif layers[0]["size"] >= layers[1]["size"]:
+        problems.append("the leading layer is not the small metadata one")
+    return problems
+
+
+def primary_sources(repodata: Path) -> set[str]:
+    """Source package names in a repodata directory's primary.xml."""
+    from tools.rebuild_plan import published_from_primary
+
+    candidates = sorted(repodata.glob("*primary.xml*"))
+    if not candidates:
+        raise ValueError(f"no primary.xml in {repodata}")
+    path = candidates[0]
+    raw = path.read_bytes()
+    if path.name.endswith(".gz"):
+        raw = gzip.decompress(raw)
+    elif path.name.endswith(".zst"):
+        raw = subprocess.run(["zstd", "-dc", str(path)], check=True, capture_output=True).stdout
+    return set(published_from_primary(raw))
+
+
+def load_utah_reader(path: Path):
+    spec = importlib.util.spec_from_file_location("utah_check_repo_availability", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def verify_image(image: str, utah_reader: Path, expected: set[str]) -> list[str]:
+    problems = check_layers(registry_json(image, "manifests", image.split("@", 1)[1]))
+    reader = load_utah_reader(utah_reader)
+    with tempfile.TemporaryDirectory(prefix="canary-repodata-") as tmp:
+        try:
+            # Utah's own function: reads manifest.layers[0] only, refuses one
+            # over 64 MiB or holding anything outside repository/repodata.
+            reader.repository_metadata(image, Path(tmp))
+        except Exception as error:  # noqa: BLE001 - reported, not swallowed
+            problems.append(f"Utah's metadata reader refused the image: {error}")
+            return problems
+        found = primary_sources(Path(tmp) / "repodata")
+    if found != expected:
+        problems.append(
+            f"repository carries {sorted(found)}, expected exactly {sorted(expected)}"
+        )
+    return problems
+
+
+# ---------------------------------------------------------------------------
+# The cache
+
+
+def build_outcomes(jobs: list[dict]) -> dict[str, dict[str, str]]:
+    """pass -> package -> 'compiled' | 'cache hit' | 'failed' | other."""
+    outcomes: dict[str, dict[str, str]] = {}
+    for job in jobs:
+        match = BUILD_JOB.match(job.get("name", ""))
+        if not match:
+            continue
+        steps = {step["name"]: step.get("conclusion") for step in job.get("steps", [])}
+        build = steps.get(BUILD_STEP)
+        restore = steps.get(RESTORE_STEP)
+        if job.get("conclusion") != "success":
+            outcome = "failed"
+        elif build == "success":
+            outcome = "compiled"
+        elif build == "skipped" and restore == "success":
+            outcome = "cache hit"
+        else:
+            outcome = f"unclear (build {build}, restore {restore})"
+        outcomes.setdefault(match["pass"], {})[match["package"]] = outcome
+    return outcomes
+
+
+def cache_problems(
+    outcomes: dict[str, dict[str, str]], canary_set: set[str], perturbed: str
+) -> list[str]:
+    problems = []
+    for name, expected in (("pass2", canary_set), ("pass3", canary_set | {perturbed})):
+        seen = outcomes.get(name, {})
+        if set(seen) != expected:
+            problems.append(f"{name} built {sorted(seen)}, expected {sorted(expected)}")
+    for package in sorted(canary_set):
+        for name in ("pass2", "pass3"):
+            outcome = outcomes.get(name, {}).get(package)
+            if outcome is not None and outcome != "cache hit":
+                problems.append(f"{name}: {package} was {outcome}, not a cache hit")
+    perturbed_outcome = outcomes.get("pass3", {}).get(perturbed)
+    if perturbed_outcome is not None and perturbed_outcome != "compiled":
+        problems.append(
+            f"pass3: {perturbed} was {perturbed_outcome}; its recipe changed, so it must compile"
+        )
+    return problems
+
+
+def summary(outcomes: dict[str, dict[str, str]], problems: list[str]) -> str:
+    lines = ["### Canary cache", "", "| pass | package | outcome |", "| --- | --- | --- |"]
+    for name in sorted(outcomes):
+        for package, outcome in sorted(outcomes[name].items()):
+            lines.append(f"| {name} | `{package}` | {outcome} |")
+    lines.append("")
+    if problems:
+        lines += ["**Failed:**", ""] + [f"- {problem}" for problem in problems]
+    else:
+        lines.append("pass2 compiled nothing; pass3 compiled only the perturbed package.")
+    return "\n".join(lines) + "\n"
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser()
+    commands = parser.add_subparsers(dest="command", required=True)
+    commands.add_parser("touches-pipeline")
+    commands.add_parser("salt")
+    image = commands.add_parser("verify-image")
+    image.add_argument("image")
+    image.add_argument("--utah-reader", type=Path, required=True)
+    image.add_argument("--expect", required=True)
+    cache = commands.add_parser("verify-cache")
+    cache.add_argument("jobs", type=Path)
+    cache.add_argument("--set", required=True)
+    cache.add_argument("--perturbed", required=True)
+    args = parser.parse_args(argv)
+
+    if args.command == "touches-pipeline":
+        return 0 if touches_pipeline(sys.stdin.read().splitlines()) else 1
+    if args.command == "salt":
+        print(salt())
+        return 0
+    if args.command == "verify-image":
+        problems = verify_image(args.image, args.utah_reader, set(json.loads(args.expect)))
+        for problem in problems:
+            print(f"::error title=canary image::{problem}", file=sys.stderr)
+        if not problems:
+            print(f"{args.image}: two layers, repodata first, Utah's reader accepts it, "
+                  "and it carries exactly the canary set")
+        return 1 if problems else 0
+    if args.command == "verify-cache":
+        outcomes = build_outcomes(json.loads(args.jobs.read_text()))
+        problems = cache_problems(outcomes, set(json.loads(args.set)), args.perturbed)
+        print(summary(outcomes, problems))
+        for problem in problems:
+            print(f"::error title=canary cache::{problem}", file=sys.stderr)
+        return 1 if problems else 0
+    return 2
+
+
+if __name__ == "__main__":
+    sys.path.insert(0, str(ROOT))
+    raise SystemExit(main())

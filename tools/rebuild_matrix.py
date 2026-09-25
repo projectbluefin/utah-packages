@@ -31,6 +31,7 @@ from tools.rebuild_plan import (
     plan,
     prunable_sources,
     published_from_primary,
+    restrict,
     stage_outputs,
 )
 
@@ -126,6 +127,11 @@ def fetch_published(base_url: str) -> dict[str, tuple[str, str]]:
 def main() -> int:
     locks = source_locks(ROOT)
     config = {"packages": list(locks.values())}
+    # The canary names its fixed package set; every other run leaves it empty.
+    only = json.loads(os.environ.get("ONLY_PACKAGES") or "[]")
+    if only:
+        config = restrict(config, only)
+        print(f"restricted to {len(config['packages'])} named packages: {', '.join(only)}")
     hummingbird_owned = set(
         json.loads((ROOT / HUMMINGBIRD_OWNED).read_text())["sources"]
     )

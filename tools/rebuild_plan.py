@@ -424,6 +424,27 @@ def stage_outputs(build: list[dict]) -> dict[str, str]:
     return outputs
 
 
+def restrict(config: dict, only: list[str]) -> dict:
+    """The inventory narrowed to `only`, for the canary workflow.
+
+    The canary runs the real pipeline over a handful of named recipes. An
+    unknown name is an error rather than a silent drop: a canary that quietly
+    builds nothing proves nothing. Order follows the inventory, so the waves
+    come out exactly as a full run would order them.
+    """
+    if not only:
+        return config
+    known = {entry["name"] for entry in config["packages"]}
+    unknown = sorted(set(only) - known)
+    if unknown:
+        raise ValueError(f"not in the inventory: {', '.join(unknown)}")
+    wanted = set(only)
+    return {
+        **config,
+        "packages": [entry for entry in config["packages"] if entry["name"] in wanted],
+    }
+
+
 def overflow(build: list[dict]) -> list[str]:
     """Recipes asking for a wave that has no job.
 

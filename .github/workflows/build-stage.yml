@@ -49,6 +49,27 @@ on:
         description: JSON names allowed to reuse an exact package-cache entry.
         required: true
         type: string
+      # The three inputs below exist for .github/workflows/canary.yml, which
+      # runs this pipeline several times in one workflow run. Every production
+      # caller leaves them empty, and empty means exactly the old behaviour.
+      artifact_prefix:
+        description: Prefix for every artifact name, so canary passes cannot collide.
+        required: false
+        default: ''
+        type: string
+      cache_salt:
+        description: Canary cache namespace; empty for production keys.
+        required: false
+        default: ''
+        type: string
+      perturb:
+        description: >
+          JSON names whose recipe is altered in this checkout only (a comment
+          appended to the spec), so the canary can prove a change to one
+          package leaves every other cache key where it was.
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: read
@@ -63,13 +84,46 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Perturb recipes for the canary
+        if: inputs.perturb != ''
+        env:
+          PERTURB: ${{ inputs.perturb }}
+        run: |
+          for name in $(jq -r '.[]' <<<"$PERTURB"); do
+            spec=$(find "packages/$name" -maxdepth 1 -name '*.spec' -print -quit)
+            test -n "$spec"
+            printf '\n# canary perturbation %s\n' "$GITHUB_RUN_ID" >> "$spec"
+            echo "perturbed $spec"
+          done
       - uses: ./.github/actions/setup-sccache
         if: matrix.package == 'mozjs140'
       - uses: ./.github/actions/load-buildroot
+        with:
+          artifact: ${{ inputs.artifact_prefix }}buildroot-image
       - uses: ./.github/actions/load-factory-repo
         id: factory
         with:
           image: ${{ inputs.factory_image }}
+      # Only strictly earlier waves: a same-stage sibling does not exist for
+      # this build (repeated mistake 3). This step used to be missing while
+      # the download below still read its output, so the pattern was empty
+      # and download-artifact fetched EVERY artifact of the run so far --
+      # same-stage siblings that happened to finish first, and the build
+      # root tarball -- into work/prior.
+      - name: Name the artifacts of earlier stages
+        id: prior
+        if: inputs.stage != '0'
+        env:
+          STAGE: ${{ inputs.stage }}
+          PREFIX: ${{ inputs.artifact_prefix }}
+        run: |
+          if [ "$STAGE" -eq 1 ]; then
+            stages=0
+          else
+            stages="{$(seq -s, 0 $((STAGE - 1)))}"
+          fi
+          echo "pattern=${PREFIX}rpm-s${stages}-*" >> "$GITHUB_OUTPUT"
+          echo "earlier stages: ${PREFIX}rpm-s${stages}-*"
       - name: Collect RPMs built by earlier stages
         if: inputs.stage != '0'
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
@@ -93,6 +147,7 @@ jobs:
           PACKAGE: ${{ matrix.package }}
           FACTORY_REPO: ${{ steps.factory.outputs.url }}
           BUILDROOT_DIGEST: ${{ inputs.buildroot_digest }}
+          CACHE_SALT: ${{ inputs.cache_salt }}
         run: |
           set -euo pipefail
           mkdir -p work/cache
@@ -136,7 +191,8 @@ jobs:
           key=$(python3 tools/package_cache_key.py "$PACKAGE" \
             --buildroot-digest "$BUILDROOT_DIGEST" \
             --disttag "$(cat work/cache/disttag)" \
-            --resolved-root work/cache/root)
+            --resolved-root work/cache/root \
+            --salt "$CACHE_SALT")
           echo "key=$key" >> "$GITHUB_OUTPUT"
       - name: Restore package RPM cache
         id: package_cache_restore
@@ -707,14 +763,14 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: check-s${{ inputs.stage }}-${{ matrix.package }}
+          name: ${{ inputs.artifact_prefix }}check-s${{ inputs.stage }}-${{ matrix.package }}
           path: work/reports/check/**
           if-no-files-found: ignore
           retention-days: 7
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: rpm-s${{ inputs.stage }}-${{ matrix.package }}
+          name: ${{ inputs.artifact_prefix }}rpm-s${{ inputs.stage }}-${{ matrix.package }}
           # Debuginfo and debugsource are excluded deliberately. No
           # BuildRequires ever names one, so a later stage has no use for them,
           # and they are more than half the bytes. Uploading them cost the run

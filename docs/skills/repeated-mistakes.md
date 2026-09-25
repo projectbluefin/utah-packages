@@ -68,6 +68,13 @@ because the ordering-dependent buildroot made the failing set move between
 runs of one commit. libheif linked Fedora openjph 0.25 for the same reason
 (`6940ae0`, `4d05fe0`).
 
+The rule then regressed without anyone deciding it should. `build-stage.yml`
+downloaded earlier stages with `pattern: ${{ steps.prior.outputs.pattern }}`
+while no step had that id, so the pattern was empty and download-artifact
+fetched every artifact the run had produced so far -- same-stage siblings that
+happened to finish first included. The `prior` step now names
+`rpm-s{0,...,N-1}-*` explicitly.
+
 **Rule.** A consumer of a library this factory rebuilds goes in a strictly
 later stage than the provider. A failure naming a soname the factory used to
 provide, or that Hummingbird provides at a different major, is a staging

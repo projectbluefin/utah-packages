@@ -1,0 +1,238 @@
+# The pipeline canary: the real rebuild workflow, end to end, over a fixed
+# handful of small packages, in minutes rather than hours into a full run.
+#
+# A change to the pipeline used to be proven by dispatching the full factory
+# and reading it five to ten hours later. Most of what broke -- a publish step
+# with no checkout, a seed image nobody could create, an attestation with no
+# credentials, a cache key that moved on every publish -- would have failed in
+# the first few minutes on three packages. This runs rebuild-rpms.yml itself
+# (workflow_call), not a copy of it, so it cannot drift from what main runs.
+#
+#   pass1  builds libtalloc and libtdb (stage 0) and libtevent (stage 1,
+#          BuildRequires libtalloc-devel from stage 0), publishes them to
+#          utah-packages:canary-<pr> -- never latest -- then verify-publish
+#          checks the image the way Utah will consume it.
+#   pass2  the same set again: every build must be a cache hit, zero compiles.
+#          Proves the cache key is stable from one run to the next.
+#   pass3  the same set plus python-typing-inspection with its recipe
+#          perturbed in the checkout: that one compiles, every canary package
+#          must still hit. Proves a change to one package does not
+#          invalidate the cache wholesale.
+#
+# pass2 and pass3 need only pass1's cache entries, so they run side by side.
+# Neither publishes; pass1 already proved that path.
+#
+# The cache is salted with a digest of the build path (build-stage.yml and
+# the actions), so a PR that changes how packages are built compiles for real
+# in pass1, and one that does not reuses the previous canary's builds.
+# Dispatch with compile=true to force a compile regardless.
+#
+# The job named "Canary" is the required check. It always runs, and passes
+# without building anything when a pull request touches no pipeline path.
+name: Canary
+
+on:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      compile:
+        description: Force pass1 to compile every package, ignoring earlier canary builds
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+  id-token: write
+  packages: write
+  attestations: write
+  actions: read
+
+concurrency:
+  group: canary-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  CANARY_SET: '["libtalloc", "libtdb", "libtevent"]'
+
+jobs:
+  changes:
+    runs-on: ubuntu-24.04
+    outputs:
+      run: ${{ steps.paths.outputs.run }}
+      fork: ${{ steps.paths.outputs.fork }}
+      tag: ${{ steps.name.outputs.tag }}
+      salt: ${{ steps.name.outputs.salt }}
+      set: ${{ steps.name.outputs.set }}
+      set_plus: ${{ steps.name.outputs.set_plus }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Does this change touch the pipeline?
+        id: paths
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          PR: ${{ github.event.pull_request.number }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT" != pull_request ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            echo "fork=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          gh api --paginate "repos/$REPO/pulls/$PR/files" --jq '.[].filename' > files.txt
+          if python3 tools/canary.py touches-pipeline < files.txt; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
+          if [ "$HEAD_REPO" = "$REPO" ]; then
+            echo "fork=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "fork=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Name the canary tag and cache salt
+        id: name
+        env:
+          PR: ${{ github.event.pull_request.number }}
+          REF_NAME: ${{ github.ref_name }}
+          FORCE: ${{ inputs.compile == true && github.run_id || '' }}
+        run: |
+          set -euo pipefail
+          if [ -n "$PR" ]; then
+            tag="canary-pr${PR}"
+          else
+            tag="canary-$(printf '%s' "$REF_NAME" | tr '/' '-' | tr -cd '[:alnum:]._-' | cut -c1-80)"
+          fi
+          test "$tag" != latest
+          salt="$(python3 tools/canary.py salt)${FORCE:+-$FORCE}"
+          {
+            echo "tag=$tag"
+            echo "salt=$salt"
+            echo "set=$CANARY_SET"
+            echo "set_plus=$(jq -c '. + ["python-typing-inspection"]' <<<"$CANARY_SET")"
+          } >> "$GITHUB_OUTPUT"
+          echo "canary tag $tag, cache salt $salt"
+
+  pass1:
+    needs: changes
+    if: needs.changes.outputs.run == 'true' && needs.changes.outputs.fork != 'true'
+    uses: ./.github/workflows/rebuild-rpms.yml
+    with:
+      full: true
+      packages: ${{ needs.changes.outputs.set }}
+      publish_tag: ${{ needs.changes.outputs.tag }}
+      no_factory: true
+      consumer: built
+      artifact_prefix: p1-
+      cache_salt: ${{ needs.changes.outputs.salt }}
+
+  verify-publish:
+    needs: [changes, pass1]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Install cosign
+        run: |
+          set -euo pipefail
+          curl -fsSL https://github.com/sigstore/cosign/releases/download/v2.4.1/cosign-linux-amd64 -o cosign
+          echo '8b24b946dd5809c6bd93de08033bcf6bc0ed7d336b7785787c080f574b89249b  cosign' | sha256sum -c -
+          sudo install -m 0755 cosign /usr/local/bin/cosign
+      # Utah's own reader, fetched from its main branch at run time, so this
+      # is the consumer's code and not a restatement of it.
+      - name: Read the image with Utah's check-repo-availability.py
+        env:
+          IMAGE: ${{ needs.pass1.outputs.ref }}
+          DIGEST: ${{ needs.pass1.outputs.digest }}
+          SET: ${{ needs.changes.outputs.set }}
+        run: |
+          set -euo pipefail
+          test -n "$DIGEST"
+          curl -fsSL https://raw.githubusercontent.com/projectbluefin/utah/main/scripts/check-repo-availability.py \
+            -o check-repo-availability.py
+          python3 tools/canary.py verify-image "${IMAGE%:*}@${DIGEST}" \
+            --utah-reader check-repo-availability.py --expect "$SET"
+      - name: Verify the signature and provenance of the canary image
+        env:
+          GH_TOKEN: ${{ github.token }}
+          IMAGE: ${{ needs.pass1.outputs.ref }}
+          DIGEST: ${{ needs.pass1.outputs.digest }}
+          REPOSITORY: ${{ github.repository }}
+          REF: ${{ github.ref }}
+        run: |
+          set -euo pipefail
+          cosign verify "${IMAGE%:*}@${DIGEST}" \
+            --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+            --certificate-identity "https://github.com/${REPOSITORY}/.github/workflows/rebuild-rpms.yml@${REF}" \
+            > /dev/null
+          echo "cosign signature verified"
+          gh attestation verify "oci://${IMAGE%:*}@${DIGEST}" --repo "$REPOSITORY"
+
+  pass2:
+    needs: [changes, pass1]
+    uses: ./.github/workflows/rebuild-rpms.yml
+    with:
+      full: true
+      packages: ${{ needs.changes.outputs.set }}
+      no_factory: true
+      skip_publish: true
+      artifact_prefix: p2-
+      cache_salt: ${{ needs.changes.outputs.salt }}
+
+  pass3:
+    needs: [changes, pass1]
+    uses: ./.github/workflows/rebuild-rpms.yml
+    with:
+      full: true
+      packages: ${{ needs.changes.outputs.set_plus }}
+      no_factory: true
+      skip_publish: true
+      artifact_prefix: p3-
+      cache_salt: ${{ needs.changes.outputs.salt }}
+      perturb: '["python-typing-inspection"]'
+
+  verify-cache:
+    needs: [changes, pass1, pass2, pass3]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Count compiles and cache hits in every pass
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+          SET: ${{ needs.changes.outputs.set }}
+        run: |
+          set -euo pipefail
+          gh api --paginate "repos/$REPOSITORY/actions/runs/$RUN_ID/attempts/$RUN_ATTEMPT/jobs?per_page=100" \
+            --jq '.jobs[]' | jq -s . > jobs.json
+          python3 tools/canary.py verify-cache jobs.json --set "$SET" \
+            --perturbed python-typing-inspection >> "$GITHUB_STEP_SUMMARY"
+
+  canary:
+    name: Canary
+    needs: [changes, pass1, verify-publish, pass2, pass3, verify-cache]
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Decide
+        env:
+          RUN: ${{ needs.changes.outputs.run }}
+          FORK: ${{ needs.changes.outputs.fork }}
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          set -euo pipefail
+          if [ "$RUN" != true ]; then
+            echo "no pipeline path changed; nothing to prove"
+            exit 0
+          fi
+          if [ "$FORK" = true ]; then
+            echo "::error::a fork pull request cannot publish the canary image; a maintainer must push this branch to the repository" >&2
+            exit 1
+          fi
+          echo "$RESULTS" | jq -r 'to_entries[] | "\(.key): \(.value.result)"'
+          failed=$(echo "$RESULTS" | jq -r '[to_entries[] | select(.value.result != "success")] | length')
+          test "$failed" -eq 0

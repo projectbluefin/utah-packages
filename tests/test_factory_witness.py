@@ -47,7 +47,26 @@ class FactoryWitnessTests(unittest.TestCase):
         workflow = yaml.safe_load(REBUILD.read_text())
         # PyYAML 1.1 treats the plain scalar ``on`` as boolean true.
         triggers = workflow.get("on", workflow.get(True, {}))
-        self.assertEqual(set(triggers), {"schedule", "workflow_dispatch"})
+        self.assertEqual(set(triggers), {"schedule", "workflow_dispatch", "workflow_call"})
+
+    def test_only_the_canary_calls_the_factory_and_never_for_latest(self) -> None:
+        callers = [
+            path.name
+            for path in sorted(WORKFLOWS.glob("*.yml"))
+            if "uses: ./.github/workflows/rebuild-rpms.yml" in path.read_text()
+        ]
+        self.assertEqual(callers, ["canary.yml"])
+        canary = yaml.safe_load((WORKFLOWS / "canary.yml").read_text())
+        for name, job in canary["jobs"].items():
+            if job.get("uses") != "./.github/workflows/rebuild-rpms.yml":
+                continue
+            with self.subTest(job=name):
+                inputs = job["with"]
+                # Never the consumer tag, and every pass that does not publish
+                # says so explicitly.
+                self.assertNotEqual(inputs.get("publish_tag"), "latest")
+                self.assertTrue(inputs.get("publish_tag") or inputs.get("skip_publish"))
+                self.assertTrue(inputs.get("artifact_prefix"))
 
     def test_no_workflow_reads_the_retired_pages_mirror(self) -> None:
         offenders = [
@@ -110,7 +129,11 @@ class FactoryWitnessTests(unittest.TestCase):
         newer image with artifacts built against an older witness.
         """
         text = uncommented(REBUILD)
-        self.assertIn('EXPECTED_IMAGE: ${{ needs.prepare.outputs.factory_image }}', text)
+        self.assertIn('EXPECTED_IMAGE: ${{ needs.prepare.outputs.seed_image }}', text)
+        # Outside the canary the seed is exactly the factory image prepare
+        # read; the canary may only ever seed from its own tag.
+        self.assertIn('seed="$resolved"', text)
+        self.assertIn('seed=$(resolve "$PUBLISH_TAG")', text)
         self.assertIn('if [ "$current" != "$EXPECTED_IMAGE" ]; then', text)
         self.assertIn("refusing to overwrite the newer repository", text)
         self.assertNotIn('utah-packages:latest"', text)

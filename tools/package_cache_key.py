@@ -121,6 +121,7 @@ def cache_key(
     buildroot_digest: str,
     resolved_root: list[str],
     disttag: str,
+    salt: str = "",
 ) -> str:
     """The cache tag for one package built under one exact set of inputs.
 
@@ -138,16 +139,24 @@ def cache_key(
     on the digest as well, every publish invalidated every entry, and the run
     after a successful publish (36159982139, 9cb66729 -> 9e17ca2c) rebuilt
     packages whose inputs had not changed at all.
+
+    `salt` is for the canary workflow only: it namespaces a canary's entries
+    away from production ones so the canary can force a real compile and then
+    prove the next pass hits. It is left out of the payload entirely when
+    empty, so a production key is byte-for-byte what it was without it.
     """
+    fields = {
+        "schema": SCHEMA,
+        "package": package,
+        "recipe": recipe,
+        "buildroot": buildroot_digest,
+        "root": normalise_root(resolved_root),
+        "disttag": disttag,
+    }
+    if salt:
+        fields["salt"] = salt
     payload = json.dumps(
-        {
-            "schema": SCHEMA,
-            "package": package,
-            "recipe": recipe,
-            "buildroot": buildroot_digest,
-            "root": normalise_root(resolved_root),
-            "disttag": disttag,
-        },
+        fields,
         sort_keys=True,
         separators=(",", ":"),
     ).encode()
@@ -159,6 +168,11 @@ def main() -> int:
     parser.add_argument("package")
     parser.add_argument("--buildroot-digest", required=True)
     parser.add_argument("--disttag", required=True)
+    parser.add_argument(
+        "--salt",
+        default="",
+        help="Canary namespace; empty (the default) for every production key",
+    )
     parser.add_argument(
         "--resolved-root",
         required=True,
@@ -191,6 +205,7 @@ def main() -> int:
         buildroot_digest=args.buildroot_digest,
         resolved_root=nevras,
         disttag=args.disttag,
+        salt=args.salt,
     )
     print(key)
     return 0

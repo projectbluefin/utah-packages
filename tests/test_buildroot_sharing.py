@@ -99,8 +99,18 @@ class BuildRootSharingTests(unittest.TestCase):
         self.assertNotIn("exit 1", prepare.split("docker pull")[1].split("digest=")[0])
 
     def test_the_shared_image_is_uploaded_and_downloaded_under_one_name(self) -> None:
-        self.assertIn("name: buildroot-image", jobs(REBUILD)["prepare"])
-        self.assertIn("name: buildroot-image", LOAD_ACTION.read_text())
+        # One name, optionally prefixed: the canary runs the pipeline several
+        # times in one workflow run and artifact names are unique per run.
+        self.assertIn("name: ${{ inputs.artifact_prefix }}buildroot-image", jobs(REBUILD)["prepare"])
+        self.assertIn("default: buildroot-image", LOAD_ACTION.read_text())
+        self.assertIn("name: ${{ inputs.artifact }}", LOAD_ACTION.read_text())
+        for workflow in (REBUILD, BUILD_STAGE):
+            text = workflow.read_text()
+            self.assertEqual(
+                text.count("- uses: ./.github/actions/load-buildroot"),
+                text.count("artifact: ${{ inputs.artifact_prefix }}buildroot-image"),
+                f"{workflow.name}: every load names the prefixed artifact",
+            )
 
     def test_the_load_action_asserts_the_image_arrived(self) -> None:
         # Without this, a failed download surfaces as a confusing docker error

@@ -15,6 +15,7 @@ from tools.rebuild_plan import (
     prunable_sources,
     provides_from_primary,
     published_from_primary,
+    restrict,
     reverse_closure,
     stage_outputs,
     stale_from_primary,
@@ -502,6 +503,37 @@ class ExcludedExternalTests(unittest.TestCase):
     def test_the_exclusion_is_declared_once_and_names_libicu_77(self) -> None:
         from tools.rebuild_plan import EXCLUDED_EXTERNAL
         self.assertIn(("libicu", "77."), EXCLUDED_EXTERNAL)
+
+
+class RestrictTests(unittest.TestCase):
+    """The canary narrows the inventory to a named set."""
+
+    CONFIG = {
+        "schema": 1,
+        "packages": [
+            {"name": "libtalloc", "stage": 0},
+            {"name": "libtdb"},
+            {"name": "libtevent", "stage": 1},
+            {"name": "webkitgtk", "stage": 5},
+        ],
+    }
+
+    def test_empty_means_everything(self) -> None:
+        self.assertIs(restrict(self.CONFIG, []), self.CONFIG)
+
+    def test_keeps_inventory_order_and_stages(self) -> None:
+        narrowed = restrict(self.CONFIG, ["libtevent", "libtalloc"])
+        self.assertEqual(
+            [entry["name"] for entry in narrowed["packages"]], ["libtalloc", "libtevent"]
+        )
+        outputs = stage_outputs(narrowed["packages"])
+        self.assertEqual(json.loads(outputs["stage0"]), ["libtalloc"])
+        self.assertEqual(json.loads(outputs["stage1"]), ["libtevent"])
+
+    def test_an_unknown_name_is_an_error_not_a_silent_drop(self) -> None:
+        with self.assertRaises(ValueError) as caught:
+            restrict(self.CONFIG, ["libtalloc", "no-such-package"])
+        self.assertIn("no-such-package", str(caught.exception))
 
 
 if __name__ == "__main__":

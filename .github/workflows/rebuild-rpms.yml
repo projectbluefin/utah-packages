@@ -21,6 +21,71 @@ on:
           - mock
   schedule:
     - cron: '41 6 * * *'
+  # The canary (.github/workflows/canary.yml) calls this same workflow, so a
+  # pipeline change is proven on the real jobs in minutes, over a fixed
+  # handful of packages, before any full run. Every input below defaults to
+  # what a production run does; booleans are phrased negatively so that a
+  # schedule or dispatch run, where they are null, reads as false.
+  workflow_call:
+    inputs:
+      full:
+        description: Rebuild every selected package, ignoring what is already published
+        required: false
+        default: false
+        type: boolean
+      backend:
+        required: false
+        default: container
+        type: string
+      packages:
+        description: JSON array restricting the inventory to these recipes
+        required: false
+        default: ''
+        type: string
+      publish_tag:
+        description: >
+          Tag to seed from and publish to instead of latest or the branch tag.
+          The canary uses canary-<pr>; it never names latest.
+        required: false
+        default: ''
+        type: string
+      no_factory:
+        description: Build without the published factory repository in the build root
+        required: false
+        default: false
+        type: boolean
+      skip_publish:
+        description: Build, check precedence, and stop before publish
+        required: false
+        default: false
+        type: boolean
+      consumer:
+        description: >
+          What the Hummingbird-only transaction installs. contract (default)
+          is the runtime contract; built is every binary RPM in the candidate
+          repository, for a canary set too small to satisfy the contract.
+        required: false
+        default: contract
+        type: string
+      artifact_prefix:
+        required: false
+        default: ''
+        type: string
+      cache_salt:
+        required: false
+        default: ''
+        type: string
+      perturb:
+        required: false
+        default: ''
+        type: string
+    outputs:
+      ref:
+        description: The published tag
+        value: ${{ jobs.publish.outputs.ref }}
+      digest:
+        description: The published digest
+        value: ${{ jobs.publish.outputs.digest }}
 
 permissions:
   contents: read
@@ -74,6 +139,7 @@ jobs:
     outputs:
       buildroot_digest: ${{ steps.buildroot.outputs.digest }}
       factory_image: ${{ steps.factory_image.outputs.image }}
+      seed_image: ${{ steps.factory_image.outputs.seed }}
       stage0: ${{ steps.matrix.outputs.stage0 }}
       stage1: ${{ steps.matrix.outputs.stage1 }}
       stage2: ${{ steps.matrix.outputs.stage2 }}
@@ -152,7 +218,7 @@ jobs:
           ls -l buildroot.tar.zst
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: buildroot-image
+          name: ${{ inputs.artifact_prefix }}buildroot-image
           path: buildroot.tar.zst
           if-no-files-found: error
           retention-days: 1
@@ -170,6 +236,11 @@ jobs:
       # push to a pull request skips what the first push built; main only ever
       # reads latest. No image at all is not an error: it means nothing can
       # be skipped, which is what rebuild_plan.py does with an empty witness.
+      #
+      # The seed is what publish will start from and must still find
+      # unchanged (repeated mistake 14). It is the factory image itself
+      # unless the canary names its own publish tag, whose previous image is
+      # then the only thing it may seed from -- never latest.
       - name: Resolve the published factory image
         id: factory_image
         env:
@@ -178,6 +249,8 @@ jobs:
           REF_NAME: ${{ github.ref_name }}
           REF: ${{ github.ref }}
           ACTOR: ${{ github.actor }}
+          NO_FACTORY: ${{ inputs.no_factory == true && '1' || '' }}
+          PUBLISH_TAG: ${{ inputs.publish_tag }}
         run: |
           set -euo pipefail
           owner=$(printf '%s' "$REPOSITORY_OWNER" | tr "[:upper:]" "[:lower:]")
@@ -189,31 +262,47 @@ jobs:
           else
             candidates="$branch latest"
           fi
+          if [ -n "$NO_FACTORY" ]; then
+            candidates=
+          fi
           echo "${GITHUB_TOKEN}" | docker login ghcr.io -u "$ACTOR" --password-stdin \
             || echo "::warning title=ghcr login failed::resolving the factory image anonymously"
-          resolved=
-          for tag in $candidates; do
-            if docker pull "${image}:${tag}"; then
-              digest=$(docker image inspect "${image}:${tag}" \
-                --format '{{index .RepoDigests 0}}' | sed 's/.*@//')
-              resolved="${image}@${digest}"
-              echo "factory repository: ${image}:${tag} -> ${resolved}"
-              break
-            fi
-            echo "no factory image at ${image}:${tag}"
-          done
-          if [ -z "$resolved" ]; then
+          resolve() {
+            for tag in "$@"; do
+              if docker pull --quiet "${image}:${tag}" >&2; then
+                digest=$(docker image inspect "${image}:${tag}" \
+                  --format '{{index .RepoDigests 0}}' | sed 's/.*@//')
+                echo "${image}:${tag} -> ${image}@${digest}" >&2
+                echo "${image}@${digest}"
+                return
+              fi
+              echo "no image at ${image}:${tag}" >&2
+            done
+          }
+          # shellcheck disable=SC2086 # candidates is a word list
+          resolved=$(resolve $candidates)
+          if [ -z "$resolved" ] && [ -z "$NO_FACTORY" ]; then
             echo "::warning title=no factory image::nothing is published for this ref or main, so nothing can be skipped as already built"
           fi
+          if [ -n "$PUBLISH_TAG" ]; then
+            test "$PUBLISH_TAG" != latest
+            seed=$(resolve "$PUBLISH_TAG")
+          else
+            seed="$resolved"
+          fi
+          echo "factory repository: ${resolved:-<none>}"
+          echo "publish seed:       ${seed:-<none>}"
           echo "image=${resolved}" >> "$GITHUB_OUTPUT"
+          echo "seed=${seed}" >> "$GITHUB_OUTPUT"
       - uses: ./.github/actions/load-factory-repo
         id: factory
         with:
           image: ${{ steps.factory_image.outputs.image }}
       - id: matrix
         env:
-          FULL: ${{ github.event_name == 'workflow_dispatch' && inputs.full == true && '1' || '0' }}
+          FULL: ${{ inputs.full == true && '1' || '0' }}
           BASE_SHA: ${{ github.event.before }}
+          ONLY_PACKAGES: ${{ inputs.packages }}
           FACTORY_URL: ${{ steps.factory.outputs.url }}
         run: |
           # The action reports the path as the build container sees it under
@@ -245,6 +334,8 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: ./.github/actions/load-buildroot
+        with:
+          artifact: ${{ inputs.artifact_prefix }}buildroot-image
       - uses: ./.github/actions/load-factory-repo
         id: factory
         with:
@@ -322,7 +413,7 @@ jobs:
             '
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: preflight-buildrequires
+          name: ${{ inputs.artifact_prefix }}preflight-buildrequires
           path: work/reports/preflight.txt
           if-no-files-found: warn
 
@@ -348,6 +439,9 @@ jobs:
       factory_image: ${{ needs.prepare.outputs.factory_image }}
       buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
       cacheable_packages: ${{ needs.prepare.outputs.cacheable }}
+      artifact_prefix: ${{ inputs.artifact_prefix }}
+      cache_salt: ${{ inputs.cache_salt }}
+      perturb: ${{ inputs.perturb }}
 
   rebuild1:
     needs: [prepare, rebuild0]
@@ -364,6 +458,9 @@ jobs:
       factory_image: ${{ needs.prepare.outputs.factory_image }}
       buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
       cacheable_packages: ${{ needs.prepare.outputs.cacheable }}
+      artifact_prefix: ${{ inputs.artifact_prefix }}
+      cache_salt: ${{ inputs.cache_salt }}
+      perturb: ${{ inputs.perturb }}
 
   rebuild2:
     needs: [prepare, rebuild0, rebuild1]
@@ -380,6 +477,9 @@ jobs:
       factory_image: ${{ needs.prepare.outputs.factory_image }}
       buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
       cacheable_packages: ${{ needs.prepare.outputs.cacheable }}
+      artifact_prefix: ${{ inputs.artifact_prefix }}
+      cache_salt: ${{ inputs.cache_salt }}
+      perturb: ${{ inputs.perturb }}
 
   rebuild3:
     needs: [prepare, rebuild0, rebuild1, rebuild2]
@@ -396,6 +496,9 @@ jobs:
       factory_image: ${{ needs.prepare.outputs.factory_image }}
       buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
       cacheable_packages: ${{ needs.prepare.outputs.cacheable }}
+      artifact_prefix: ${{ inputs.artifact_prefix }}
+      cache_salt: ${{ inputs.cache_salt }}
+      perturb: ${{ inputs.perturb }}
 
   rebuild4:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3]
@@ -412,6 +515,9 @@ jobs:
       factory_image: ${{ needs.prepare.outputs.factory_image }}
       buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
       cacheable_packages: ${{ needs.prepare.outputs.cacheable }}
+      artifact_prefix: ${{ inputs.artifact_prefix }}
+      cache_salt: ${{ inputs.cache_salt }}
+      perturb: ${{ inputs.perturb }}
 
   rebuild5:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4]
@@ -428,6 +534,9 @@ jobs:
       factory_image: ${{ needs.prepare.outputs.factory_image }}
       buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
       cacheable_packages: ${{ needs.prepare.outputs.cacheable }}
+      artifact_prefix: ${{ inputs.artifact_prefix }}
+      cache_salt: ${{ inputs.cache_salt }}
+      perturb: ${{ inputs.perturb }}
 
   rebuild6:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5]
@@ -444,6 +553,9 @@ jobs:
       factory_image: ${{ needs.prepare.outputs.factory_image }}
       buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
       cacheable_packages: ${{ needs.prepare.outputs.cacheable }}
+      artifact_prefix: ${{ inputs.artifact_prefix }}
+      cache_salt: ${{ inputs.cache_salt }}
+      perturb: ${{ inputs.perturb }}
 
   rebuild7:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6]
@@ -460,6 +572,9 @@ jobs:
       factory_image: ${{ needs.prepare.outputs.factory_image }}
       buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
       cacheable_packages: ${{ needs.prepare.outputs.cacheable }}
+      artifact_prefix: ${{ inputs.artifact_prefix }}
+      cache_salt: ${{ inputs.cache_salt }}
+      perturb: ${{ inputs.perturb }}
 
   rebuild8:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7]
@@ -476,6 +591,9 @@ jobs:
       factory_image: ${{ needs.prepare.outputs.factory_image }}
       buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
       cacheable_packages: ${{ needs.prepare.outputs.cacheable }}
+      artifact_prefix: ${{ inputs.artifact_prefix }}
+      cache_salt: ${{ inputs.cache_salt }}
+      perturb: ${{ inputs.perturb }}
 
   rebuild9:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8]
@@ -492,6 +610,9 @@ jobs:
       factory_image: ${{ needs.prepare.outputs.factory_image }}
       buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
       cacheable_packages: ${{ needs.prepare.outputs.cacheable }}
+      artifact_prefix: ${{ inputs.artifact_prefix }}
+      cache_salt: ${{ inputs.cache_salt }}
+      perturb: ${{ inputs.perturb }}
 
   rebuild10:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8, rebuild9]
@@ -508,6 +629,9 @@ jobs:
       factory_image: ${{ needs.prepare.outputs.factory_image }}
       buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
       cacheable_packages: ${{ needs.prepare.outputs.cacheable }}
+      artifact_prefix: ${{ inputs.artifact_prefix }}
+      cache_salt: ${{ inputs.cache_salt }}
+      perturb: ${{ inputs.perturb }}
 
   precedence:
     # Every wave, not the first five. See publish below.
@@ -522,9 +646,11 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: ./.github/actions/load-buildroot
+        with:
+          artifact: ${{ inputs.artifact_prefix }}buildroot-image
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
-          pattern: rpm-*
+          pattern: ${{ inputs.artifact_prefix }}rpm-*
           path: built
           merge-multiple: true
       - name: Assert our builds outrank Fedora and Hummingbird
@@ -622,6 +748,7 @@ jobs:
     if: >-
       ${{ !cancelled()
           && needs.prepare.result == 'success'
+          && inputs.skip_publish != true
           && (needs.prepare.outputs.build_list != '[]'
               || needs.prepare.outputs.prune_sources != '[]')
           && (needs.precedence.result == 'success'
@@ -666,7 +793,8 @@ jobs:
       - name: Verify and seed repository from the prepare-time factory image
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          EXPECTED_IMAGE: ${{ needs.prepare.outputs.factory_image }}
+          EXPECTED_IMAGE: ${{ needs.prepare.outputs.seed_image }}
+          PUBLISH_TAG: ${{ inputs.publish_tag }}
           REPOSITORY: ${{ github.repository }}
           REPOSITORY_OWNER: ${{ github.repository_owner }}
           REF_NAME: ${{ github.ref_name }}
@@ -679,7 +807,9 @@ jobs:
           image="ghcr.io/${owner}/utah-packages"
           branch=$(printf '%s' "$REF_NAME" \
             | tr "/" "-" | tr -cd "[:alnum:]._-" | cut -c1-96)
-          if [ "$REF" = "refs/heads/main" ]; then
+          if [ -n "$PUBLISH_TAG" ]; then
+            candidates="$PUBLISH_TAG"
+          elif [ "$REF" = "refs/heads/main" ]; then
             candidates="latest"
           else
             candidates="$branch latest"
@@ -745,7 +875,7 @@ jobs:
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         if: needs.prepare.outputs.build_list != '[]'
         with:
-          pattern: rpm-*
+          pattern: ${{ inputs.artifact_prefix }}rpm-*
           path: repository
           merge-multiple: true
       - name: Create and keylessly sign repository metadata
@@ -793,9 +923,18 @@ jobs:
           sudo install -m 0755 cosign /usr/local/bin/cosign
           cosign sign-blob --yes --bundle repository/repodata/repomd.xml.bundle repository/repodata/repomd.xml
       - name: Validate Hummingbird-only consumer transaction
+        env:
+          CONSUMER: ${{ inputs.consumer || 'contract' }}
         run: |
-          CONTRACT=$(python3 tools/runtime_contract.py \
-            config/bluefin-packages.toml config/runtime-contract.toml)
+          if [ "$CONSUMER" = built ]; then
+            # The canary: every binary in the candidate repository must
+            # install from it plus Hummingbird alone.
+            CONTRACT=$(find repository -name '*.rpm' ! -name '*.src.rpm' -print0 \
+              | xargs -0 -r rpm -qp --qf '%{NAME}\n' | sort -u)
+          else
+            CONTRACT=$(python3 tools/runtime_contract.py \
+              config/bluefin-packages.toml config/runtime-contract.toml)
+          fi
           BASE_IMAGE=$(python3 tools/runtime_contract.py \
             config/bluefin-packages.toml config/runtime-contract.toml --base-image)
           export CONTRACT
@@ -871,13 +1010,18 @@ jobs:
           REF_NAME: ${{ github.ref_name }}
           REF: ${{ github.ref }}
           ACTOR: ${{ github.actor }}
+          PUBLISH_TAG: ${{ inputs.publish_tag }}
         run: |
           set -euo pipefail
           owner=$(printf '%s' "$REPOSITORY_OWNER" | tr "[:upper:]" "[:lower:]")
           image="ghcr.io/${owner}/utah-packages"
           # main publishes the tag consumers follow; every other ref publishes
           # under its own name so it can be tested without touching main.
-          if [ "$REF" = "refs/heads/main" ]; then
+          # The canary names its own tag, and never latest.
+          if [ -n "$PUBLISH_TAG" ]; then
+            test "$PUBLISH_TAG" != latest
+            tag="$PUBLISH_TAG"
+          elif [ "$REF" = "refs/heads/main" ]; then
             tag=latest
           else
             tag=$(printf '%s' "$REF_NAME" | tr "/" "-" | tr -cd "[:alnum:]._-" | cut -c1-96)

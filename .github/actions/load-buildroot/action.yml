@@ -10,12 +10,21 @@ description: >
   the run began. One pull per run, shared as an artifact, removes the race and
   makes every job provably use the same bytes.
 
+inputs:
+  artifact:
+    description: >
+      The artifact prepare uploaded the image under. Only the canary changes
+      it, because it runs the pipeline several times in one workflow run and
+      artifact names are unique per run.
+    required: false
+    default: buildroot-image
+
 runs:
   using: composite
   steps:
     - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
       with:
-        name: buildroot-image
+        name: ${{ inputs.artifact }}
     - name: Load and verify the build root is present
       shell: bash
       run: |

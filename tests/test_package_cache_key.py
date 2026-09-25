@@ -67,6 +67,31 @@ class KeySensitivityTests(unittest.TestCase):
         doubled = dict(BASE, resolved_root=BASE["resolved_root"] + BASE["resolved_root"])
         self.assertEqual(pck.cache_key(**BASE), pck.cache_key(**doubled))
 
+    def test_an_empty_salt_leaves_the_production_key_unchanged(self):
+        """The canary salt must not move a single production cache entry."""
+        import hashlib
+        import json
+
+        unsalted = hashlib.sha256(json.dumps(
+            {
+                "schema": pck.SCHEMA,
+                "package": BASE["package"],
+                "recipe": BASE["recipe"],
+                "buildroot": BASE["buildroot_digest"],
+                "root": pck.normalise_root(BASE["resolved_root"]),
+                "disttag": BASE["disttag"],
+            },
+            sort_keys=True, separators=(",", ":"),
+        ).encode()).hexdigest()[:32]
+        self.assertEqual(pck.cache_key(**BASE), unsalted)
+        self.assertEqual(pck.cache_key(**BASE, salt=""), unsalted)
+
+    def test_a_canary_salt_namespaces_the_key(self):
+        salted = pck.cache_key(**BASE, salt="canary-abc")
+        self.assertNotEqual(salted, pck.cache_key(**BASE))
+        self.assertEqual(salted, pck.cache_key(**BASE, salt="canary-abc"))
+        self.assertNotEqual(salted, pck.cache_key(**BASE, salt="canary-abd"))
+
     def test_every_input_changes_the_key(self):
         """The whole safety argument. A missed input serves a wrong RPM."""
         variants = {

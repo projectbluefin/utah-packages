@@ -204,6 +204,32 @@ daily run), then atomically publish that batch. The operational rationale is
 part of the cache contract in
 [`docs/skills/package-build-cache.md`](skills/package-build-cache.md#merge-queue-rollout-and-batching).
 
+### The pipeline canary
+
+`.github/workflows/canary.yml` proves a pipeline change in minutes instead of
+hours into a full run. It calls `rebuild-rpms.yml` itself through
+`workflow_call`, so it runs the real jobs, over a fixed set: `libtalloc` and
+`libtdb` at stage 0 and `libtevent` at stage 1, which BuildRequires
+`libtalloc-devel` from stage 0.
+
+| pass | what it proves |
+| --- | --- |
+| `pass1` | The set builds, passes precedence and a Hummingbird-only transaction over every binary it produced, and publishes, signs and attests `utah-packages:canary-<pr>`. Never `latest`. `verify-publish` then reads that digest with Utah's own `scripts/check-repo-availability.py`, fetched from Utah's `main`, asserts two layers with repodata first, and verifies the signature and provenance. |
+| `pass2` | The same set again compiles nothing: every build is a cache hit, so the key is stable from one run to the next. |
+| `pass3` | The same set plus `python-typing-inspection` with its recipe perturbed in the checkout: that one compiles and every other package still hits, so one package's change does not invalidate the cache wholesale. |
+
+The cache is salted with a digest of the build path (`tools/canary.py
+salt`), so a change to how packages are compiled compiles for real in
+`pass1`, and any other change reuses the previous canary's builds. Canary
+entries never share a key with production ones: an empty salt leaves the
+production key unchanged, which `tests/test_package_cache_key.py` asserts.
+
+It runs on every pull request. The `Canary` job is the required check and
+passes without building anything when no pipeline path changed
+(`.github/workflows/`, `.github/actions/`, `tools/`, `config/`,
+`Containerfile*`). Do not dispatch a full run to prove a pipeline change
+before the canary is green on it.
+
 It is not a mock build, and this is the most misleading thing about the file:
 `build-stage.yml` installs `mock` and never invokes it, then hand-simulates
 what mock would have set up. Its own comments say so — *"mirroring Hummingbird
