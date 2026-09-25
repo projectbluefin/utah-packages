@@ -263,6 +263,10 @@ jobs:
           # local file:// repo, so they cannot disagree and nothing is fetched
           # over HTTP mid-build.
           FACTORY_REPO: ${{ steps.factory.outputs.url }}
+          # Canary only; see the flaky_check input. An expression inside the
+          # run script below would make GitHub evaluate the whole script as
+          # one expression, which is over its 21000-character limit.
+          FLAKY_CHECK: ${{ inputs.flaky_check != '' && contains(fromJSON(inputs.flaky_check), matrix.package) && '1' || '' }}
         run: |
           test -d "packages/$PACKAGE"
           mkdir -p work/result
@@ -270,8 +274,6 @@ jobs:
           # container, which only sees config/ and packages/.
           DIST_BUMP="$(python3 tools/dist_bump.py "$PACKAGE")"
           export DIST_BUMP
-          FLAKY_CHECK="${{ inputs.flaky_check != '' && contains(fromJSON(inputs.flaky_check), matrix.package) && '1' || '' }}"
-          export FLAKY_CHECK
           # Whether the build root may admit Hummingbird libicu-77. By default
           # every factory package excludes it so nothing links .so.77 -- the
           # runtime carries only libicu 78. A package that genuinely needs it
