@@ -301,7 +301,10 @@ jobs:
       - id: matrix
         env:
           FULL: ${{ inputs.full == true && '1' || '0' }}
-          BASE_SHA: ${{ github.event.before }}
+          # Only a push has a range worth diffing. A pull_request event also
+          # carries `before` -- the previous head of the branch, which a force
+          # push makes unreachable, and git diff then kills prepare.
+          BASE_SHA: ${{ github.event_name == 'push' && github.event.before || '' }}
           ONLY_PACKAGES: ${{ inputs.packages }}
           FACTORY_URL: ${{ steps.factory.outputs.url }}
         run: |

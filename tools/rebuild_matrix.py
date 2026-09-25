@@ -50,9 +50,17 @@ def changed_recipes(base_sha: str) -> set[str]:
     """
     if not re.fullmatch(r"[0-9a-f]{40}", base_sha or "") or set(base_sha) == {"0"}:
         return set()
-    paths = subprocess.check_output(
-        ["git", "diff", "--name-only", f"{base_sha}..HEAD"], text=True
-    ).splitlines()
+    try:
+        paths = subprocess.check_output(
+            ["git", "diff", "--name-only", f"{base_sha}..HEAD"], text=True
+        ).splitlines()
+    except subprocess.CalledProcessError:
+        # The base is not in this clone: a force push dropped it, or the
+        # range was never fetched. No range means no diff-derived changes,
+        # which is what a scheduled run already works with.
+        print(f"WARNING: cannot diff from {base_sha}; treating the range as unknown",
+              file=sys.stderr)
+        return set()
     changed = {
         match.group(1)
         for path in paths
