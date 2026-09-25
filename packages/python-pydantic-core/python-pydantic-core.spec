@@ -39,6 +39,12 @@ Patch:          fix-pytest-9.1.patch
 
 BuildRequires:  cargo-rpm-macros
 BuildRequires:  tomcli
+# Factory: %%pyproject_patch_dependency runs in %%prep, before the generated
+# BuildRequires are installed, and the script behind it imports packaging. A
+# bare rpmbuild root does not carry it (mock does), so %%prep died on
+#   ModuleNotFoundError: No module named packaging
+# Same fix as python-typing-inspection.
+BuildRequires:  python3-packaging
 
 %global _description %{expand:
 The pydantic-core project provides the core validation logic for pydantic
