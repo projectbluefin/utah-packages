@@ -710,7 +710,7 @@ jobs:
             cosign verify "$current" \
               --certificate-oidc-issuer https://token.actions.githubusercontent.com \
               --certificate-identity "https://github.com/${REPOSITORY}/.github/workflows/rebuild-rpms.yml@${current_ref}"
-            # The factory image is FROM scratch with one COPY and no CMD or
+            # The factory image is FROM scratch with only COPY layers, no CMD or
             # ENTRYPOINT, so a bare create exits 125 with "no command or
             # entrypoint provided". A command is only recorded here, never run
             # -- the container exists to be copied out of -- so naming one that
@@ -859,7 +859,17 @@ jobs:
           else
             tag=$(printf '%s' "$REF_NAME" | tr "/" "-" | tr -cd "[:alnum:]._-" | cut -c1-96)
           fi
-          printf "FROM scratch\nCOPY repository /repository\n" > Containerfile.repo
+          # Two layers, and the order is a contract with Utah. Its check-repos
+          # (projectbluefin/utah scripts/check-repo-availability.py) reads only
+          # manifest.layers[0], requires it under 64 MiB, and accepts nothing
+          # in it but repository/repodata/* -- so it can resolve dependencies
+          # without pulling the multi-GB RPM payload. A single COPY put
+          # everything in one 2 GB layer and Utah refused 9e17ca2c with
+          #   Package image lacks a small leading metadata layer
+          # The repodata is repeated in the second layer; a few MB is cheaper
+          # than depending on COPY --exclude. tests/test_atomic_publish.py
+          # holds the order.
+          printf "FROM scratch\nCOPY repository/repodata /repository/repodata\nCOPY repository /repository\n" > Containerfile.repo
           # cosign signs by pushing to the same registry, but it reads the
           # Docker config rather than podman own auth file, so the login has to
           # land somewhere both of them look. DOCKER_CONFIG is set on this step

@@ -95,6 +95,29 @@ class PublishGateWorkflowTests(unittest.TestCase):
     def test_workflow_gate_matches_decision(self):
         assert_gate_enforced(self.workflow)
 
+    def rendered_containerfile(self):
+        """The Containerfile.repo the publish step writes, as printf renders it."""
+        import re
+
+        steps = self.workflow["jobs"]["publish"]["steps"]
+        run = next(step for step in steps if step.get("id") == "oci")["run"]
+        match = re.search(r'printf "([^"]*)" > Containerfile\.repo', run)
+        self.assertIsNotNone(match, "publish no longer writes Containerfile.repo with printf")
+        return match.group(1).replace("\\n", "\n").splitlines()
+
+    def test_first_image_layer_is_repodata_only(self):
+        # A contract with projectbluefin/utah: check-repo-availability.py reads
+        # only manifest.layers[0], requires it under 64 MiB, and rejects any
+        # entry outside repository/repodata. 9e17ca2c shipped one 2 GB layer
+        # and Utah could not consume it.
+        lines = self.rendered_containerfile()
+        copies = [line for line in lines if line.startswith("COPY")]
+        self.assertEqual(lines[0], "FROM scratch")
+        self.assertEqual(copies[0], "COPY repository/repodata /repository/repodata")
+        self.assertEqual(copies[1:], ["COPY repository /repository"])
+        # Nothing may add a layer ahead of the metadata one.
+        self.assertTrue(all(line.startswith(("FROM", "COPY")) for line in lines), lines)
+
     def test_transaction_validated_before_publish(self):
         names = [
             str(step.get("name", ""))
