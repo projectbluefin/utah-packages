@@ -24,21 +24,21 @@ def job(name: str, build: str | None, restore: str | None, conclusion="success")
     return {"name": name, "conclusion": conclusion, "steps": steps}
 
 
-SET = {"libtalloc", "libtdb", "libtevent"}
+SET = {"libical", "vulkan-headers", "vulkan-loader"}
 
 
 def healthy_jobs() -> list[dict]:
     jobs = [
-        job('pass1 / rebuild0 (["libtalloc", "libtdb"]) / build (libtalloc)', "success", "success"),
-        job('pass1 / rebuild0 (["libtalloc", "libtdb"]) / build (libtdb)', "success", "success"),
-        job('pass1 / rebuild1 (["libtevent"]) / build (libtevent)', "success", "success"),
+        job('pass1 / rebuild0 (["libical", "vulkan-headers"]) / build (libical)', "success", "success"),
+        job('pass1 / rebuild0 (["libical", "vulkan-headers"]) / build (vulkan-headers)', "success", "success"),
+        job('pass1 / rebuild4 (["vulkan-loader"]) / build (vulkan-loader)', "success", "success"),
         job("pass1 / precedence", None, None),
     ]
     for name in ("pass2", "pass3"):
         jobs += [
-            job(f'{name} / rebuild0 (["libtalloc"]) / build (libtalloc)', "skipped", "success"),
-            job(f'{name} / rebuild0 (["libtdb"]) / build (libtdb)', "skipped", "success"),
-            job(f'{name} / rebuild1 (["libtevent"]) / build (libtevent)', "skipped", "success"),
+            job(f'{name} / rebuild0 (["libical"]) / build (libical)', "skipped", "success"),
+            job(f'{name} / rebuild0 (["vulkan-headers"]) / build (vulkan-headers)', "skipped", "success"),
+            job(f'{name} / rebuild4 (["vulkan-loader"]) / build (vulkan-loader)', "skipped", "success"),
         ]
     jobs.append(job(
         'pass3 / rebuild0 (["python-typing-inspection"]) / build (python-typing-inspection)',
@@ -102,14 +102,14 @@ class LayerTests(unittest.TestCase):
         body = (
             '<metadata xmlns="http://linux.duke.edu/metadata/common" '
             'xmlns:rpm="http://linux.duke.edu/metadata/rpm">'
-            "<package><name>libtalloc</name><format>"
-            "<rpm:sourcerpm>libtalloc-2.5.0-1.hum1.bfin.src.rpm</rpm:sourcerpm>"
+            "<package><name>libical</name><format>"
+            "<rpm:sourcerpm>libical-2.5.0-1.hum1.bfin.src.rpm</rpm:sourcerpm>"
             "</format></package></metadata>"
         )
         with tempfile.TemporaryDirectory() as directory:
             repodata = Path(directory)
             (repodata / "abc-primary.xml.gz").write_bytes(gzip.compress(body.encode()))
-            self.assertEqual(canary.primary_sources(repodata), {"libtalloc"})
+            self.assertEqual(canary.primary_sources(repodata), {"libical"})
 
 
 class CacheVerdictTests(unittest.TestCase):
@@ -120,25 +120,25 @@ class CacheVerdictTests(unittest.TestCase):
 
     def test_a_healthy_canary_passes(self) -> None:
         outcomes = canary.build_outcomes(healthy_jobs())
-        self.assertEqual(outcomes["pass1"]["libtevent"], "compiled")
-        self.assertEqual(outcomes["pass2"]["libtevent"], "cache hit")
+        self.assertEqual(outcomes["pass1"]["vulkan-loader"], "compiled")
+        self.assertEqual(outcomes["pass2"]["vulkan-loader"], "cache hit")
         self.assertEqual(self.verdict(healthy_jobs()), [])
 
     def test_a_compile_in_pass2_fails(self) -> None:
         jobs = healthy_jobs()
         for entry in jobs:
-            if entry["name"].startswith("pass2") and entry["name"].endswith("(libtdb)"):
+            if entry["name"].startswith("pass2") and entry["name"].endswith("(vulkan-headers)"):
                 entry["steps"][1]["conclusion"] = "success"
         problems = self.verdict(jobs)
         self.assertEqual(len(problems), 1)
-        self.assertIn("pass2: libtdb was compiled", problems[0])
+        self.assertIn("pass2: vulkan-headers was compiled", problems[0])
 
     def test_a_miss_caused_by_the_perturbation_fails(self) -> None:
         jobs = healthy_jobs()
         for entry in jobs:
-            if entry["name"].startswith("pass3") and entry["name"].endswith("(libtalloc)"):
+            if entry["name"].startswith("pass3") and entry["name"].endswith("(libical)"):
                 entry["steps"][1]["conclusion"] = "success"
-        self.assertIn("pass3: libtalloc was compiled, not a cache hit", self.verdict(jobs))
+        self.assertIn("pass3: libical was compiled, not a cache hit", self.verdict(jobs))
 
     def test_the_perturbed_package_must_compile(self) -> None:
         jobs = healthy_jobs()
@@ -152,7 +152,7 @@ class CacheVerdictTests(unittest.TestCase):
     def test_the_summary_names_every_outcome(self) -> None:
         outcomes = canary.build_outcomes(healthy_jobs())
         text = canary.summary(outcomes, [])
-        self.assertIn("| pass2 | `libtdb` | cache hit |", text)
+        self.assertIn("| pass2 | `vulkan-headers` | cache hit |", text)
 
 
 class WorkflowShapeTests(unittest.TestCase):
@@ -169,9 +169,21 @@ class WorkflowShapeTests(unittest.TestCase):
         locks = source_locks(ROOT)
         stages = {name: locks[name].get("stage") or 0 for name in members}
         self.assertGreater(len(set(stages.values())), 1)
-        spec = (ROOT / "packages" / "libtevent" / "libtevent.spec").read_text()
-        self.assertIn("BuildRequires: libtalloc-devel", spec)
-        self.assertLess(stages["libtalloc"], stages["libtevent"])
+        spec = (ROOT / "packages" / "vulkan-loader" / "vulkan-loader.spec").read_text()
+        self.assertRegex(spec, r"(?m)^BuildRequires:\s+vulkan-headers = %\{version\}$")
+        self.assertLess(stages["vulkan-headers"], stages["vulkan-loader"])
+
+    def test_every_canary_source_is_on_the_lookaside(self) -> None:
+        from tools.package_inventory import source_locks
+
+        locks = source_locks(ROOT)
+        members = json.loads(self.workflow["env"]["CANARY_SET"]) + ["python-typing-inspection"]
+        for name in members:
+            with self.subTest(name=name):
+                self.assertTrue(
+                    locks[name]["url"].startswith("https://src.fedoraproject.org/repo/pkgs/"),
+                    "a canary must not depend on a flaky upstream host",
+                )
 
     def test_it_runs_on_every_pull_request_and_the_gate_always_reports(self) -> None:
         triggers = self.workflow.get("on", self.workflow.get(True))

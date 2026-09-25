@@ -208,9 +208,11 @@ part of the cache contract in
 
 `.github/workflows/canary.yml` proves a pipeline change in minutes instead of
 hours into a full run. It calls `rebuild-rpms.yml` itself through
-`workflow_call`, so it runs the real jobs, over a fixed set: `libtalloc` and
-`libtdb` at stage 0 and `libtevent` at stage 1, which BuildRequires
-`libtalloc-devel` from stage 0.
+`workflow_call`, so it runs the real jobs, over a fixed set: `libical` and
+`vulkan-headers` at stage 0 and `vulkan-loader` at stage 4, which
+BuildRequires `vulkan-headers = %{version}` -- only stage 0's output satisfies
+it. Every source in the set is on the Fedora lookaside, so the canary fails on
+the pipeline and not on a flaky upstream host.
 
 | pass | what it proves |
 | --- | --- |

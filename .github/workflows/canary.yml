@@ -8,8 +8,9 @@
 # the first few minutes on three packages. This runs rebuild-rpms.yml itself
 # (workflow_call), not a copy of it, so it cannot drift from what main runs.
 #
-#   pass1  builds libtalloc and libtdb (stage 0) and libtevent (stage 1,
-#          BuildRequires libtalloc-devel from stage 0), publishes them to
+#   pass1  builds libical and vulkan-headers (stage 0) and vulkan-loader
+#          (stage 4, BuildRequires vulkan-headers = its own version, which
+#          only stage 0's output satisfies), publishes them to
 #          utah-packages:canary-<pr> -- never latest -- then verify-publish
 #          checks the image the way Utah will consume it.
 #   pass2  the same set again: every build must be a cache hit, zero compiles.
@@ -26,6 +27,12 @@
 # the actions), so a PR that changes how packages are built compiles for real
 # in pass1, and one that does not reuses the previous canary's builds.
 # Dispatch with compile=true to force a compile regardless.
+#
+# Every source in the set is locked on the Fedora lookaside. The first set
+# used samba.org, which answered a GitHub runner with bytes that did not
+# match the lock while serving the right tarball elsewhere; the source
+# pipeline rightly refuses that, and a canary must fail on the pipeline, not
+# on a flaky upstream host.
 #
 # The job named "Canary" is the required check. It always runs, and passes
 # without building anything when a pull request touches no pipeline path.
@@ -53,7 +60,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  CANARY_SET: '["libtalloc", "libtdb", "libtevent"]'
+  CANARY_SET: '["libical", "vulkan-headers", "vulkan-loader"]'
 
 jobs:
   changes:
