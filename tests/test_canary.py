@@ -209,12 +209,12 @@ class WorkflowShapeTests(unittest.TestCase):
 
     def test_pass4_fails_one_package_on_purpose_and_is_judged_separately(self) -> None:
         pass4 = self.jobs["pass4"]["with"]
-        self.assertEqual(pass4["inject_failure"], '["libical"]')
+        self.assertEqual(pass4["inject_failure"], '["vulkan-loader"]')
         self.assertEqual(pass4["publish_tag"], "${{ needs.changes.outputs.tag }}")
         verify = self.jobs["verify-failure"]
         self.assertIn("always()", verify["if"])
         script = verify["steps"][-1]["run"]
-        self.assertIn("\'[\"libical\"]\'", script)
+        self.assertIn("\'[\"vulkan-loader\"]\'", script)
         self.assertIn('test "$DIGEST" != "$PASS1_DIGEST"', script)
         gate = self.jobs["canary"]["steps"][0]["run"]
         self.assertIn('.key != "pass4"', gate)

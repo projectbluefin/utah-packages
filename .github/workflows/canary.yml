@@ -15,9 +15,9 @@
 #          checks the image the way Utah will consume it.
 #   pass2  the same set again: every build must be a cache hit, zero compiles.
 #          Proves the cache key is stable from one run to the next.
-#   pass4  the same set with libical failing on purpose, published to the
-#          same canary tag: the image must move, still carry pass1's
-#          libical, and the run must report libical as failed. Proves the
+#   pass4  the same set with vulkan-loader failing on purpose, published to
+#          the same canary tag: the image must move, still carry pass1's
+#          vulkan-loader, and the run must report it as failed. Proves the
 #          incremental publish rule.
 #   pass3  the same set plus python-typing-inspection with its recipe
 #          perturbed in the checkout: that one compiles, every canary package
@@ -207,9 +207,11 @@ jobs:
       cache_salt: ${{ needs.changes.outputs.salt }}
       perturb: '["python-typing-inspection"]'
 
-  # A deliberately failing package: libical's build job fails before it
-  # produces anything. Incremental publish must still publish the rest to
-  # the canary tag, keep libical at pass1's build, and name it as failed.
+  # A deliberately failing package: vulkan-loader's build job fails before
+  # it produces anything. Incremental publish must still publish the rest to
+  # the canary tag, keep vulkan-loader at pass1's build, and name it as
+  # failed. It is the stage-4 consumer on purpose: its provider,
+  # vulkan-headers, still publishes around it.
   pass4:
     needs: [changes, pass1]
     uses: ./.github/workflows/rebuild-rpms.yml
@@ -221,7 +223,7 @@ jobs:
       consumer: built
       artifact_prefix: p4-
       cache_salt: ${{ needs.changes.outputs.salt }}
-      inject_failure: '["libical"]'
+      inject_failure: '["vulkan-loader"]'
 
   verify-failure:
     needs: [changes, pass1, pass4]
@@ -240,13 +242,13 @@ jobs:
         run: |
           set -euo pipefail
           echo "pass4 failed: ${FAILED:-<none>}"
-          test "$(jq -c . <<<"${FAILED:-null}")" = '["libical"]'
+          test "$(jq -c . <<<"${FAILED:-null}")" = '["vulkan-loader"]'
           # Published anyway, and not simply the old image again.
           test -n "$DIGEST"
           test "$DIGEST" != "$PASS1_DIGEST"
           curl -fsSL https://raw.githubusercontent.com/projectbluefin/utah/main/scripts/check-repo-availability.py \
             -o check-repo-availability.py
-          # libical is still there: pass1's build, kept.
+          # vulkan-loader is still there: pass1's build, kept.
           python3 tools/canary.py verify-image "${IMAGE%:*}@${DIGEST}" \
             --utah-reader check-repo-availability.py --expect "$SET"
 
