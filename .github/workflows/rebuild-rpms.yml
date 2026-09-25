@@ -1442,7 +1442,11 @@ jobs:
             echo "::error title=package not published::$name failed this run and was not replaced"
           done
       - name: Open, update or close the tracking issue
-        if: github.ref == 'refs/heads/main' && inputs.publish_tag == ''
+        # Production runs only. A canary pass leaves publish_tag empty when
+        # it does not publish, and a canary dispatched on main runs with
+        # refs/heads/main, so the artifact prefix -- which every canary pass
+        # sets and no production run does -- is what tells them apart.
+        if: github.ref == 'refs/heads/main' && inputs.publish_tag == '' && inputs.artifact_prefix == ''
         env:
           GH_TOKEN: ${{ github.token }}
           REPOSITORY: ${{ github.repository }}

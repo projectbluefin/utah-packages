@@ -334,6 +334,8 @@ class PublishGateWorkflowTests(unittest.TestCase):
         issue = next(s for s in report["steps"] if "tracking issue" in str(s.get("name")))
         self.assertIn("refs/heads/main", issue["if"])
         self.assertIn("inputs.publish_tag == ''", issue["if"])
+        # A canary dispatched on main must not touch the tracking issue.
+        self.assertIn("inputs.artifact_prefix == ''", issue["if"])
 
     def test_transaction_validation_is_not_skippable(self):
         steps = self.workflow["jobs"]["publish"]["steps"]
