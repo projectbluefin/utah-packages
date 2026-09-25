@@ -178,9 +178,18 @@ the local `[stages]` repository there, and uses that repository for the
 transaction; the artifact handoff and the dnf repository are both part of
 the dependency mechanism.
 
-Inside the Fedora 44 container, the workflow stages the verified source and
-runs `rpmbuild -br` to resolve generated BuildRequires, followed by
-`rpmbuild -ba` to produce the binary RPMs.
+A package builds in the hermetic mock lane unless it declares `build_lane:
+container`. `tools/hermetic_build.sh` renders the mock config
+(`tools/mock_config.py`), lets `mock --calculate-build-dependencies` resolve
+every BuildRequires into `buildroot_lock.json`, keys the package cache on the
+locked NEVRAs, materializes the lock into a local repository and runs `mock
+--hermetic-build` under `unshare --net`, as an unprivileged `mockbuilder`.
+The lock, the mock config and its hash are uploaded per package
+(`lock-s<N>-<pkg>`).
+
+On the container lane, the workflow stages the verified source inside the
+Fedora 44 container and runs `rpmbuild -br` to resolve generated
+BuildRequires, followed by `rpmbuild -ba` to produce the binary RPMs.
 
 ### Incremental publication
 
@@ -309,7 +318,7 @@ here as a list of completed work.
 | --- | --- | --- | --- |
 | **Scope** | "the desktop stack Hummingbird does not ship" | Everything above the base OS that Bluefin's contract needs; never Hummingbird's toolchain | Utah is Bluefin recreated on Hummingbird, and we package it ourselves. Owning an ABI inside a six-hour runner is not a job worth taking from people who do it well. |
 | **Hummingbird overlap** | `precedence` reports any shared package name as a mistake | Allowed, but declared per package in `config/upstream-sources.json` | A general factory legitimately rebuilds things Hummingbird also ships. Undeclared overlap is still a mistake. |
-| **Build engine** | Bare `rpmbuild -br` then `-ba`, in a container that hand-simulates a build root, by default; a hermetic mock lane exists behind `backend: hermetic` and is proven by the canary's `pass6` | Mock, hermetic, as the default | `build-stage.yml` reimplements mock by hand: *"mirroring Hummingbird mock.cfg"*, *"mock defines USER in its build root; a bare container does not"*. Hummingbird builds in mock, and so does the approved design in `docs/superpowers/specs/`. The default moves once a full run on the hermetic lane shows the gaps the hand-built root papers over (a system bus for libratbag, staged sysusers for openssh). Whether Packit drives it is the open part -- [#43](https://github.com/projectbluefin/utah-packages/issues/43). |
+| **Build engine** | The hermetic mock lane by default (`backend: hermetic`); packages with `build_lane: container` in `config/upstream-sources.json` stay on the hand-built container root, each with a `build_lane_reason` | Mock, hermetic | Built. The container lane reimplemented mock by hand (*"mirroring Hummingbird mock.cfg"*, *"mock defines USER in its build root; a bare container does not"*). It remains for declared exceptions -- none yet: a 24-package subset (Rust and Python with generated BuildRequires, meson/cmake C, `%check`-heavy git, fish, flac, libratbag, pipewire) built on the hermetic lane -- and the canary's `pass6` keeps it proven. Whether Packit drives mock is still [#43](https://github.com/projectbluefin/utah-packages/issues/43). |
 | **Buildroot** | Solved live against whatever the repos serve at that moment, except on the hermetic lane | Resolve once, write `buildroot_lock.json` as a run artifact, build offline from it | Built as the hermetic lane (`tools/hermetic_build.sh`): `mock --calculate-build-dependencies` resolves every BuildRequires, dynamic ones included, into `buildroot_lock.json`, which records EVR, arch, URL and header digest per package and the bootstrap image by digest; the lock is materialized into a local repository and the build runs under `unshare --net`. The lock is uploaded per package (`lock-s<N>-<pkg>`) and is the cache key's root. Hummingbird's `ci/build_rpms.sh --hermetic` is the same mechanism. |
 | **Compiler cache** | `sccache` against the Actions cache service, over the network | Mock's `ccache` plugin plus `actions/cache`; delete `.github/actions/setup-sccache` | Hermetic mock is network-isolated. sccache would degrade to a total miss and look like "builds got slower" rather than failing. |
 | **Architecture** | `x86_64` hardcoded in the Hummingbird repository id and the sccache URL | Stay x86_64 only | Deferred deliberately, not overlooked. |

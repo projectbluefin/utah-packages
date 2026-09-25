@@ -10,18 +10,19 @@ on:
         type: boolean
       backend:
         description: >
-          How to build. container is the hand-simulated build root every
-          published RPM was built in. mock is a real mock root, the way Packit
-          builds locally. hermetic locks the mock root from real
+          How to build. hermetic (the default) locks a mock root from real
           BuildRequires and builds offline from the lock, the way Hummingbird
-          does. mock and hermetic are opt-in until a full run proves them.
+          does; a package with build_lane container in
+          config/upstream-sources.json stays on the container lane.
+          container is the hand-simulated build root every package was built
+          in before. mock is a plain networked mock root.
         required: false
-        default: container
+        default: hermetic
         type: choice
         options:
+          - hermetic
           - container
           - mock
-          - hermetic
   # A merge that changes a recipe or config builds it, plus everything that
   # BuildRequires it, and publishes -- the way Fedora and Hummingbird build a
   # package when it changes. Pipeline-only changes are proven by the canary
@@ -53,7 +54,7 @@ on:
         type: boolean
       backend:
         required: false
-        default: container
+        default: hermetic
         type: string
       packages:
         description: JSON array restricting the inventory to these recipes
@@ -224,6 +225,7 @@ jobs:
       cacheable: ${{ steps.matrix.outputs.cacheable }}
       prune_sources: ${{ steps.matrix.outputs.prune_sources }}
       trusted: ${{ steps.matrix.outputs.trusted }}
+      container_lane: ${{ steps.matrix.outputs.container_lane }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -552,7 +554,7 @@ jobs:
     with:
       stage: '0'
       packages: ${{ matrix.chunk }}
-      backend: ${{ inputs.backend || 'container' }}
+      backend: ${{ inputs.backend || 'hermetic' }}
       factory_image: ${{ needs.prepare.outputs.factory_image }}
       buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
       cacheable_packages: ${{ needs.prepare.outputs.cacheable }}
@@ -561,6 +563,7 @@ jobs:
       perturb: ${{ inputs.perturb }}
       inject_failure: ${{ inputs.inject_failure }}
       flaky_check: ${{ inputs.flaky_check }}
+      container_packages: ${{ needs.prepare.outputs.container_lane }}
 
   rebuild1:
     needs: [prepare, rebuild0]
@@ -573,7 +576,7 @@ jobs:
     with:
       stage: '1'
       packages: ${{ matrix.chunk }}
-      backend: ${{ inputs.backend || 'container' }}
+      backend: ${{ inputs.backend || 'hermetic' }}
       factory_image: ${{ needs.prepare.outputs.factory_image }}
       buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
       cacheable_packages: ${{ needs.prepare.outputs.cacheable }}
@@ -582,6 +585,7 @@ jobs:
       perturb: ${{ inputs.perturb }}
       inject_failure: ${{ inputs.inject_failure }}
       flaky_check: ${{ inputs.flaky_check }}
+      container_packages: ${{ needs.prepare.outputs.container_lane }}
 
   rebuild2:
     needs: [prepare, rebuild0, rebuild1]
@@ -594,7 +598,7 @@ jobs:
     with:
       stage: '2'
       packages: ${{ matrix.chunk }}
-      backend: ${{ inputs.backend || 'container' }}
+      backend: ${{ inputs.backend || 'hermetic' }}
       factory_image: ${{ needs.prepare.outputs.factory_image }}
       buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
       cacheable_packages: ${{ needs.prepare.outputs.cacheable }}
@@ -603,6 +607,7 @@ jobs:
       perturb: ${{ inputs.perturb }}
       inject_failure: ${{ inputs.inject_failure }}
       flaky_check: ${{ inputs.flaky_check }}
+      container_packages: ${{ needs.prepare.outputs.container_lane }}
 
   rebuild3:
     needs: [prepare, rebuild0, rebuild1, rebuild2]
@@ -615,7 +620,7 @@ jobs:
     with:
       stage: '3'
       packages: ${{ matrix.chunk }}
-      backend: ${{ inputs.backend || 'container' }}
+      backend: ${{ inputs.backend || 'hermetic' }}
       factory_image: ${{ needs.prepare.outputs.factory_image }}
       buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
       cacheable_packages: ${{ needs.prepare.outputs.cacheable }}
@@ -624,6 +629,7 @@ jobs:
       perturb: ${{ inputs.perturb }}
       inject_failure: ${{ inputs.inject_failure }}
       flaky_check: ${{ inputs.flaky_check }}
+      container_packages: ${{ needs.prepare.outputs.container_lane }}
 
   rebuild4:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3]
@@ -636,7 +642,7 @@ jobs:
     with:
       stage: '4'
       packages: ${{ matrix.chunk }}
-      backend: ${{ inputs.backend || 'container' }}
+      backend: ${{ inputs.backend || 'hermetic' }}
       factory_image: ${{ needs.prepare.outputs.factory_image }}
       buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
       cacheable_packages: ${{ needs.prepare.outputs.cacheable }}
@@ -645,6 +651,7 @@ jobs:
       perturb: ${{ inputs.perturb }}
       inject_failure: ${{ inputs.inject_failure }}
       flaky_check: ${{ inputs.flaky_check }}
+      container_packages: ${{ needs.prepare.outputs.container_lane }}
 
   rebuild5:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4]
@@ -657,7 +664,7 @@ jobs:
     with:
       stage: '5'
       packages: ${{ matrix.chunk }}
-      backend: ${{ inputs.backend || 'container' }}
+      backend: ${{ inputs.backend || 'hermetic' }}
       factory_image: ${{ needs.prepare.outputs.factory_image }}
       buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
       cacheable_packages: ${{ needs.prepare.outputs.cacheable }}
@@ -666,6 +673,7 @@ jobs:
       perturb: ${{ inputs.perturb }}
       inject_failure: ${{ inputs.inject_failure }}
       flaky_check: ${{ inputs.flaky_check }}
+      container_packages: ${{ needs.prepare.outputs.container_lane }}
 
   rebuild6:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5]
@@ -678,7 +686,7 @@ jobs:
     with:
       stage: '6'
       packages: ${{ matrix.chunk }}
-      backend: ${{ inputs.backend || 'container' }}
+      backend: ${{ inputs.backend || 'hermetic' }}
       factory_image: ${{ needs.prepare.outputs.factory_image }}
       buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
       cacheable_packages: ${{ needs.prepare.outputs.cacheable }}
@@ -687,6 +695,7 @@ jobs:
       perturb: ${{ inputs.perturb }}
       inject_failure: ${{ inputs.inject_failure }}
       flaky_check: ${{ inputs.flaky_check }}
+      container_packages: ${{ needs.prepare.outputs.container_lane }}
 
   rebuild7:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6]
@@ -699,7 +708,7 @@ jobs:
     with:
       stage: '7'
       packages: ${{ matrix.chunk }}
-      backend: ${{ inputs.backend || 'container' }}
+      backend: ${{ inputs.backend || 'hermetic' }}
       factory_image: ${{ needs.prepare.outputs.factory_image }}
       buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
       cacheable_packages: ${{ needs.prepare.outputs.cacheable }}
@@ -708,6 +717,7 @@ jobs:
       perturb: ${{ inputs.perturb }}
       inject_failure: ${{ inputs.inject_failure }}
       flaky_check: ${{ inputs.flaky_check }}
+      container_packages: ${{ needs.prepare.outputs.container_lane }}
 
   rebuild8:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7]
@@ -720,7 +730,7 @@ jobs:
     with:
       stage: '8'
       packages: ${{ matrix.chunk }}
-      backend: ${{ inputs.backend || 'container' }}
+      backend: ${{ inputs.backend || 'hermetic' }}
       factory_image: ${{ needs.prepare.outputs.factory_image }}
       buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
       cacheable_packages: ${{ needs.prepare.outputs.cacheable }}
@@ -729,6 +739,7 @@ jobs:
       perturb: ${{ inputs.perturb }}
       inject_failure: ${{ inputs.inject_failure }}
       flaky_check: ${{ inputs.flaky_check }}
+      container_packages: ${{ needs.prepare.outputs.container_lane }}
 
   rebuild9:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8]
@@ -741,7 +752,7 @@ jobs:
     with:
       stage: '9'
       packages: ${{ matrix.chunk }}
-      backend: ${{ inputs.backend || 'container' }}
+      backend: ${{ inputs.backend || 'hermetic' }}
       factory_image: ${{ needs.prepare.outputs.factory_image }}
       buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
       cacheable_packages: ${{ needs.prepare.outputs.cacheable }}
@@ -750,6 +761,7 @@ jobs:
       perturb: ${{ inputs.perturb }}
       inject_failure: ${{ inputs.inject_failure }}
       flaky_check: ${{ inputs.flaky_check }}
+      container_packages: ${{ needs.prepare.outputs.container_lane }}
 
   rebuild10:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8, rebuild9]
@@ -762,7 +774,7 @@ jobs:
     with:
       stage: '10'
       packages: ${{ matrix.chunk }}
-      backend: ${{ inputs.backend || 'container' }}
+      backend: ${{ inputs.backend || 'hermetic' }}
       factory_image: ${{ needs.prepare.outputs.factory_image }}
       buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
       cacheable_packages: ${{ needs.prepare.outputs.cacheable }}
@@ -771,6 +783,7 @@ jobs:
       perturb: ${{ inputs.perturb }}
       inject_failure: ${{ inputs.inject_failure }}
       flaky_check: ${{ inputs.flaky_check }}
+      container_packages: ${{ needs.prepare.outputs.container_lane }}
 
   rebuild11:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8, rebuild9, rebuild10]
@@ -783,7 +796,7 @@ jobs:
     with:
       stage: '11'
       packages: ${{ matrix.chunk }}
-      backend: ${{ inputs.backend || 'container' }}
+      backend: ${{ inputs.backend || 'hermetic' }}
       factory_image: ${{ needs.prepare.outputs.factory_image }}
       buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
       cacheable_packages: ${{ needs.prepare.outputs.cacheable }}
@@ -792,6 +805,7 @@ jobs:
       perturb: ${{ inputs.perturb }}
       inject_failure: ${{ inputs.inject_failure }}
       flaky_check: ${{ inputs.flaky_check }}
+      container_packages: ${{ needs.prepare.outputs.container_lane }}
 
   rebuild12:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8, rebuild9, rebuild10, rebuild11]
@@ -804,7 +818,7 @@ jobs:
     with:
       stage: '12'
       packages: ${{ matrix.chunk }}
-      backend: ${{ inputs.backend || 'container' }}
+      backend: ${{ inputs.backend || 'hermetic' }}
       factory_image: ${{ needs.prepare.outputs.factory_image }}
       buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
       cacheable_packages: ${{ needs.prepare.outputs.cacheable }}
@@ -813,6 +827,7 @@ jobs:
       perturb: ${{ inputs.perturb }}
       inject_failure: ${{ inputs.inject_failure }}
       flaky_check: ${{ inputs.flaky_check }}
+      container_packages: ${{ needs.prepare.outputs.container_lane }}
 
   rebuild13:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8, rebuild9, rebuild10, rebuild11, rebuild12]
@@ -825,7 +840,7 @@ jobs:
     with:
       stage: '13'
       packages: ${{ matrix.chunk }}
-      backend: ${{ inputs.backend || 'container' }}
+      backend: ${{ inputs.backend || 'hermetic' }}
       factory_image: ${{ needs.prepare.outputs.factory_image }}
       buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
       cacheable_packages: ${{ needs.prepare.outputs.cacheable }}
@@ -834,6 +849,7 @@ jobs:
       perturb: ${{ inputs.perturb }}
       inject_failure: ${{ inputs.inject_failure }}
       flaky_check: ${{ inputs.flaky_check }}
+      container_packages: ${{ needs.prepare.outputs.container_lane }}
 
   precedence:
     # Every wave, not the first five. See publish below.

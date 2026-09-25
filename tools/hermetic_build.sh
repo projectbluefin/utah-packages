@@ -27,7 +27,7 @@ H=/work/hermetic
 mkdir -p "$H" /work/cache /work/result /work/reports
 
 install_tools() {
-  dnf -y -q install mock createrepo_c rpm-build python3 >/dev/null
+  dnf -y -q install mock createrepo_c rpm-build python3 iproute >/dev/null
   # mock builds as the user who invoked it. Invoked as root, the whole
   # build ran as root, and flac's %check refused it -- "iterator claims file
   # is writable when tester thinks it should not be; are you running as
@@ -76,6 +76,13 @@ lock() {
   cp -a "/packages/$PACKAGE/." "$staged/"
   cp -a "/work/sources/$PACKAGE/." "$staged/"
   spec=$(find "$staged" -maxdepth 1 -name "*.spec" -print -quit)
+  # Canary only (flaky_check): %check fails unless the build defines
+  # canary_flaky_attempt 2, which only the retry below does. A marker file
+  # cannot carry this lane's state: each attempt gets a fresh mock root.
+  if [ -n "${FLAKY_CHECK:-}" ]; then
+    sed -i "0,/^%check/s//%check\n[ \"%{?canary_flaky_attempt}\" = 2 ] || { echo canary: failing this check once on purpose; exit 1; }/" "$spec"
+    grep -n -A1 "^%check" "$spec"
+  fi
   # The disttag is Hummingbird's release tag, which a fresh mock root only
   # knows after it has resolved. Resolve with the shape of it, read the real
   # tag from the lock, and build with that.
@@ -137,24 +144,34 @@ build() {
   # No network from here on: a new network namespace has no interface but
   # loopback, so neither mock nor anything in %build can reach out. mock
   # --hermetic-build itself installs only from the local repository.
+  #
+  # Loopback has to be brought up by hand -- a new namespace starts with lo
+  # down -- or every test that serves on 127.0.0.1 fails: git's HTTP tests
+  # (t0611 "serving ls-remote", t0410 "fetching of missing objects from an
+  # HTTP server") did exactly that on the first wider-subset run.
+  offline() {
+    unshare --net -- bash -c 'ip link set lo up && exec "$@"' offline "$@"
+  }
   build_offline() {
+    attempt=$1
     rm -rf /work/result/*
-    unshare --net -- runuser -u mockbuilder -- mock --hermetic-build "$H/lock/buildroot_lock.json" "$H/repo" \
+    offline runuser -u mockbuilder -- mock --hermetic-build "$H/lock/buildroot_lock.json" "$H/repo" \
       --resultdir /work/result \
       --define "dist $disttag" \
       --define "debug_package %{nil}" \
       --define "__debug_install_post %{nil}" \
+      --define "canary_flaky_attempt $attempt" \
       "$srpm"
   }
   # A failed %check is retried once, as in the other lanes.
   status=0
-  build_offline || status=$?
+  build_offline 1 || status=$?
   if [ "$status" -ne 0 ] && grep -qE "Bad exit status from .*\(%check\)" /work/result/build.log 2>/dev/null; then
     echo "::warning title=flaky %check retry::$PACKAGE failed in %check (exit $status); retrying the build once"
     mkdir -p "/work/reports/check/$PACKAGE/attempt-1"
     cp /work/result/*.log "/work/reports/check/$PACKAGE/attempt-1/" || true
     status=0
-    build_offline || status=$?
+    build_offline 2 || status=$?
     if [ "$status" -eq 0 ]; then
       echo "::warning title=flaky %check::$PACKAGE failed %check once and passed on retry"
       printf "%s\n" "$PACKAGE" > /work/reports/flaky-check

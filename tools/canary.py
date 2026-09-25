@@ -244,6 +244,17 @@ def incremental_problems(
     return problems
 
 
+def built_problems(outcomes: dict[str, str], expected: set[str], name: str = "pass6") -> list[str]:
+    """Every expected package built or restored, and nothing else."""
+    problems = []
+    if set(outcomes) != expected:
+        problems.append(f"{name} built {sorted(outcomes)}, expected {sorted(expected)}")
+    for package in sorted(expected):
+        if outcomes.get(package) not in ("compiled", "cache hit"):
+            problems.append(f"{name}: {package} was {outcomes.get(package)}")
+    return problems
+
+
 LOCK_ARTIFACT = re.compile(r"lock-s\d+-(?P<package>.+)$")
 
 
@@ -260,31 +271,27 @@ def read_locks(directory: Path) -> dict[str, dict]:
 
 def hermetic_problems(
     outcomes: dict[str, str], locks: dict[str, dict], canary_set: set[str],
-    stage_dependencies: dict[str, str],
+    stage_dependencies: dict[str, str], name: str = "pass6",
 ) -> list[str]:
     """Every package locked, built offline or restored, stages via the lock."""
-    problems = []
-    if set(outcomes) != canary_set:
-        problems.append(f"pass6 built {sorted(outcomes)}, expected {sorted(canary_set)}")
+    problems = [p.replace("pass6", name) for p in built_problems(outcomes, canary_set)]
     for package in sorted(canary_set):
-        if outcomes.get(package) not in ("compiled", "cache hit"):
-            problems.append(f"pass6: {package} was {outcomes.get(package)}")
         lock = locks.get(package)
         if lock is None:
-            problems.append(f"pass6: no buildroot_lock.json for {package}")
+            problems.append(f"{name}: no buildroot_lock.json for {package}")
             continue
         rpms = lock.get("buildroot", {}).get("rpms", [])
         if not rpms:
-            problems.append(f"pass6: {package}'s lock records no packages")
+            problems.append(f"{name}: {package}'s lock records no packages")
         if not (lock.get("bootstrap") or {}).get("pull_digest"):
-            problems.append(f"pass6: {package}'s lock does not pin the bootstrap image")
+            problems.append(f"{name}: {package}'s lock does not pin the bootstrap image")
     for consumer, provider in stage_dependencies.items():
         rpms = (locks.get(consumer) or {}).get("buildroot", {}).get("rpms", [])
         staged = [r for r in rpms if r.get("name", "").startswith(provider)
                   and str(r.get("url", "")).startswith("file:///work/prior/")]
         if not staged:
             problems.append(
-                f"pass6: {consumer}'s lock does not take {provider} from the earlier stage"
+                f"{name}: {consumer}'s lock does not take {provider} from the earlier stage"
             )
     return problems
 
@@ -322,10 +329,15 @@ def main(argv: list[str] | None = None) -> int:
     incremental.add_argument("--expect", required=True, help="JSON package -> wave")
     hermetic = commands.add_parser("verify-hermetic")
     hermetic.add_argument("jobs", type=Path)
+    hermetic.add_argument("--pass", dest="pass_name", default="pass6")
     hermetic.add_argument("--locks", type=Path, required=True)
     hermetic.add_argument("--set", required=True)
     hermetic.add_argument("--stage-dependency", action="append", default=[],
                           help="consumer=provider the consumer's lock must take from a stage")
+    built = commands.add_parser("verify-built")
+    built.add_argument("jobs", type=Path)
+    built.add_argument("--pass", dest="pass_name", required=True)
+    built.add_argument("--set", required=True)
     cache = commands.add_parser("verify-cache")
     cache.add_argument("jobs", type=Path)
     cache.add_argument("--set", required=True)
@@ -375,16 +387,26 @@ def main(argv: list[str] | None = None) -> int:
             print(f"::error title=canary incremental::{problem}", file=sys.stderr)
         return 1 if problems else 0
     if args.command == "verify-hermetic":
-        outcomes = build_outcomes(json.loads(args.jobs.read_text())).get("pass6", {})
+        outcomes = build_outcomes(json.loads(args.jobs.read_text())).get(args.pass_name, {})
         locks = read_locks(args.locks)
         dependencies = dict(item.split("=", 1) for item in args.stage_dependency)
-        problems = hermetic_problems(outcomes, locks, set(json.loads(args.set)), dependencies)
+        problems = hermetic_problems(outcomes, locks, set(json.loads(args.set)), dependencies,
+                                     args.pass_name)
         print("### Canary hermetic lane\n")
         for package in sorted(locks):
             rpms = locks[package]["buildroot"]["rpms"]
             print(f"- `{package}`: {outcomes.get(package)}, {len(rpms)} locked packages")
         for problem in problems:
             print(f"::error title=canary hermetic::{problem}", file=sys.stderr)
+        return 1 if problems else 0
+    if args.command == "verify-built":
+        outcomes = build_outcomes(json.loads(args.jobs.read_text())).get(args.pass_name, {})
+        problems = built_problems(outcomes, set(json.loads(args.set)), args.pass_name)
+        print(f"### Canary {args.pass_name}\n")
+        for package, outcome in sorted(outcomes.items()):
+            print(f"- `{package}`: {outcome}")
+        for problem in problems:
+            print(f"::error title=canary {args.pass_name}::{problem}", file=sys.stderr)
         return 1 if problems else 0
     if args.command == "verify-cache":
         outcomes = build_outcomes(json.loads(args.jobs.read_text()))

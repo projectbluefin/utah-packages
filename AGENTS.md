@@ -161,6 +161,11 @@ tooling arrives; do not copy them as-is.
   immediately before `%{?dist}` so a rebuild sorts above the Fedora build it
   derives from. **This repository does not do that yet** — its RPMs still carry
   Fedora's disttag.
+- Packages build in a hermetic mock root by default: the root is locked
+  from BuildRequires (`buildroot_lock.json`) and the build runs offline from
+  the lock. A package that cannot, stays on the container lane with
+  `build_lane: container` and a `build_lane_reason` in
+  `config/upstream-sources.json`; do not add one without the reason.
 - Run package builds, source-generation and reproducibility probes, and other
   environment-sensitive validation in GitHub Actions on GitHub-hosted
   `ubuntu-26.04` runners, inside the digest-pinned

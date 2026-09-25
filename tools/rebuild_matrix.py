@@ -304,6 +304,10 @@ def main() -> int:
     # What publish records on the image for packages this run did not touch:
     # everything prepare judged up to date at its current inputs.
     outputs["trusted"] = json.dumps(sorted(set(names) - building - held))
+    # Packages that stay on the container lane when the run is hermetic.
+    outputs["container_lane"] = json.dumps(sorted(
+        entry["name"] for entry in build if entry.get("build_lane") == "container"
+    ))
     for stage in range(STAGES):
         chunks = json.loads(outputs[f"stage{stage}_chunks"])
         if len(chunks) > 1:

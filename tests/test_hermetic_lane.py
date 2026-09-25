@@ -28,6 +28,48 @@ def index(name: str) -> int:
     return next(i for i, step in enumerate(steps()) if step.get("name") == name)
 
 
+class LaneChoiceTests(unittest.TestCase):
+    """hermetic is the default; build_lane container is the declared exception."""
+
+    def test_hermetic_is_the_default_everywhere(self) -> None:
+        stage = yaml.safe_load(BUILD_STAGE.read_text())
+        inputs = stage.get("on", stage.get(True))["workflow_call"]["inputs"]
+        self.assertEqual(inputs["backend"]["default"], "hermetic")
+        rebuild = (ROOT / ".github" / "workflows" / "rebuild-rpms.yml").read_text()
+        self.assertEqual(rebuild.count("backend: ${{ inputs.backend || 'hermetic' }}"), 14)
+        self.assertNotIn("inputs.backend || 'container'", rebuild)
+        workflow = yaml.safe_load(rebuild)
+        triggers = workflow.get("on", workflow.get(True))
+        self.assertEqual(triggers["workflow_dispatch"]["inputs"]["backend"]["default"], "hermetic")
+
+    def test_every_step_follows_the_chosen_lane(self) -> None:
+        for step in steps():
+            condition = str(step.get("if", ""))
+            self.assertNotIn("inputs.backend", condition, step.get("name"))
+        lane = steps()[index("Choose the build lane")]
+        self.assertIn('if [ "$BACKEND" = hermetic ] && [ -n "$EXCEPTION" ]; then', lane["run"])
+
+    def test_an_exception_needs_a_reason(self) -> None:
+        import json
+        import tempfile
+
+        from tools.package_inventory import load_source_locks
+
+        with tempfile.TemporaryDirectory() as directory:
+            config = Path(directory) / "upstream-sources.json"
+            config.write_text(json.dumps({"packages": [{"name": "libratbag", "build_lane": "container"}]}))
+            with self.assertRaises(ValueError):
+                load_source_locks(config)
+            config.write_text(json.dumps({"packages": [
+                {"name": "libratbag", "build_lane": "container",
+                 "build_lane_reason": "%check needs a system bus"}]}))
+            self.assertIn("libratbag", load_source_locks(config))
+            config.write_text(json.dumps({"packages": [
+                {"name": "x", "build_lane": "hermetic", "build_lane_reason": "r"}]}))
+            with self.assertRaises(ValueError):
+                load_source_locks(config)
+
+
 class HermeticLaneTests(unittest.TestCase):
     LOCK = "Lock the build root from its BuildRequires (hermetic)"
     KEY = "Key the package cache from the lock (hermetic)"
@@ -43,7 +85,7 @@ class HermeticLaneTests(unittest.TestCase):
         self.assertIn("hermetic_build.sh build", steps()[index(self.BUILD)]["run"])
         self.assertEqual(
             steps()[index(self.BUILD)]["if"],
-            "inputs.backend == 'hermetic' && steps.package_cache_restore.outputs.hit != 'true'",
+            "steps.lane.outputs.backend == 'hermetic' && steps.package_cache_restore.outputs.hit != 'true'",
         )
 
     def test_the_offline_build_runs_before_its_result_is_cached(self) -> None:
@@ -62,7 +104,7 @@ class HermeticLaneTests(unittest.TestCase):
     def test_mock_runs_as_an_unprivileged_user(self) -> None:
         script = SCRIPT.read_text()
         self.assertIn("runuser -u mockbuilder -- mock -r", script)
-        self.assertIn("unshare --net -- runuser -u mockbuilder -- mock --hermetic-build", script)
+        self.assertIn("offline runuser -u mockbuilder -- mock --hermetic-build", script)
 
     def test_the_cache_key_comes_from_the_lock_in_its_own_namespace(self) -> None:
         run = steps()[index(self.KEY)]["run"]
@@ -73,7 +115,7 @@ class HermeticLaneTests(unittest.TestCase):
 
     def test_only_the_container_lane_runs_the_hand_built_root(self) -> None:
         container = steps()[index("Build the verified source with its RPM recipe")]
-        self.assertTrue(container["if"].startswith("inputs.backend == 'container'"))
+        self.assertTrue(container["if"].startswith("steps.lane.outputs.backend == 'container'"))
 
     def test_the_lock_is_kept_as_an_artifact(self) -> None:
         upload = steps()[index(self.UPLOAD)]
@@ -87,9 +129,10 @@ class HermeticLaneTests(unittest.TestCase):
 
     def test_the_build_has_no_network(self) -> None:
         script = SCRIPT.read_text()
-        self.assertIn("unshare --net -- runuser -u mockbuilder -- mock --hermetic-build", script)
+        self.assertIn("unshare --net -- bash -c 'ip link set lo up && exec \"$@\"'", script)
+        self.assertIn("offline runuser -u mockbuilder -- mock --hermetic-build", script)
         # Materializing the lock is the last thing allowed to reach out.
-        self.assertLess(script.index("materialize\n"), script.index("unshare --net"))
+        self.assertLess(script.index("  materialize\n"), script.index("build_offline 1"))
 
     def test_local_stage_rpms_are_materialized_by_copy(self) -> None:
         # mock-hermetic-repo cannot read file:// URLs; earlier stages and the

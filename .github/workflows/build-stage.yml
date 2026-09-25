@@ -34,7 +34,14 @@ on:
           a full run has proven them: the container path is what the
           published repository was built with.
         required: false
-        default: container
+        default: hermetic
+        type: string
+      container_packages:
+        description: >
+          JSON names that build on the container lane even when backend is
+          hermetic: build_lane container in config/upstream-sources.json.
+        required: false
+        default: ''
         type: string
       factory_image:
         description: >
@@ -106,6 +113,22 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      # The lane this package builds on: the run's backend, unless the
+      # package is one of the declared container-lane exceptions.
+      - name: Choose the build lane
+        id: lane
+        env:
+          BACKEND: ${{ inputs.backend }}
+          PACKAGE: ${{ matrix.package }}
+          EXCEPTION: ${{ inputs.container_packages != '' && contains(fromJSON(inputs.container_packages), matrix.package) && '1' || '' }}
+        run: |
+          lane="$BACKEND"
+          if [ "$BACKEND" = hermetic ] && [ -n "$EXCEPTION" ]; then
+            lane=container
+            echo "::notice title=container lane::$PACKAGE builds on the container lane (build_lane in config/upstream-sources.json)"
+          fi
+          echo "backend=$lane" >> "$GITHUB_OUTPUT"
+          echo "build lane: $lane"
       - name: Fail this package on purpose for the canary
         if: inputs.inject_failure != '' && contains(fromJSON(inputs.inject_failure), matrix.package)
         env:
@@ -176,10 +199,11 @@ jobs:
       # Hummingbird's ci/build_rpms.sh --hermetic does.
       - name: Lock the build root from its BuildRequires (hermetic)
         id: hermetic_lock
-        if: inputs.backend == 'hermetic'
+        if: steps.lane.outputs.backend == 'hermetic'
         env:
           PACKAGE: ${{ matrix.package }}
           FACTORY_REPO: ${{ steps.factory.outputs.url }}
+          FLAKY_CHECK: ${{ inputs.flaky_check != '' && contains(fromJSON(inputs.flaky_check), matrix.package) && '1' || '' }}
         run: |
           set -euo pipefail
           DIST_BUMP="$(python3 tools/dist_bump.py "$PACKAGE")"
@@ -187,12 +211,12 @@ jobs:
           # The factory's own pinned build root doubles as mock's bootstrap
           # image, so the bootstrap is the same bytes every job builds with.
           BOOTSTRAP_IMAGE="$(tr -d '[:space:]' < config/buildroot-image)"
-          export DIST_BUMP BUILDROOT_ICU77 BOOTSTRAP_IMAGE
+          export DIST_BUMP BUILDROOT_ICU77 BOOTSTRAP_IMAGE FLAKY_CHECK
           # podman (inside, for the bootstrap image) and mock both need a
           # real filesystem, not the container's overlay.
           mkdir -p "$RUNNER_TEMP/containers" "$RUNNER_TEMP/mock"
           docker run --rm --privileged \
-            -e PACKAGE -e FACTORY_REPO -e DIST_BUMP -e BUILDROOT_ICU77 -e BOOTSTRAP_IMAGE \
+            -e PACKAGE -e FACTORY_REPO -e DIST_BUMP -e BUILDROOT_ICU77 -e BOOTSTRAP_IMAGE -e FLAKY_CHECK \
             -v "$PWD/work:/work:Z" \
             -v "$PWD/packages:/packages:ro,Z" \
             -v "$PWD/config:/repos:ro,Z" \
@@ -209,7 +233,7 @@ jobs:
       # a container-lane entry must never be restored into a hermetic build.
       - name: Key the package cache from the lock (hermetic)
         id: package_cache_lock
-        if: inputs.backend == 'hermetic' && contains(fromJSON(inputs.cacheable_packages), matrix.package)
+        if: steps.lane.outputs.backend == 'hermetic' && contains(fromJSON(inputs.cacheable_packages), matrix.package)
         env:
           PACKAGE: ${{ matrix.package }}
           BUILDROOT_DIGEST: ${{ inputs.buildroot_digest }}
@@ -227,7 +251,7 @@ jobs:
       # beside an RPM compile; a cache hit skips the compile entirely.
       - name: Resolve the package cache key
         id: package_cache
-        if: inputs.backend == 'container' && contains(fromJSON(inputs.cacheable_packages), matrix.package) && !contains(fromJSON(inputs.flaky_check || '[]'), matrix.package)
+        if: steps.lane.outputs.backend == 'container' && contains(fromJSON(inputs.cacheable_packages), matrix.package) && !contains(fromJSON(inputs.flaky_check || '[]'), matrix.package)
         env:
           PACKAGE: ${{ matrix.package }}
           FACTORY_REPO: ${{ steps.factory.outputs.url }}
@@ -281,7 +305,7 @@ jobs:
           echo "key=$key" >> "$GITHUB_OUTPUT"
       - name: Restore package RPM cache
         id: package_cache_restore
-        if: (inputs.backend == 'container' || inputs.backend == 'hermetic') && contains(fromJSON(inputs.cacheable_packages), matrix.package) && !contains(fromJSON(inputs.flaky_check || '[]'), matrix.package)
+        if: (steps.lane.outputs.backend == 'container' || steps.lane.outputs.backend == 'hermetic') && contains(fromJSON(inputs.cacheable_packages), matrix.package) && !contains(fromJSON(inputs.flaky_check || '[]'), matrix.package)
         env:
           GITHUB_TOKEN: ${{ github.token }}
           KEY: ${{ steps.package_cache.outputs.key || steps.package_cache_lock.outputs.key }}
@@ -307,7 +331,7 @@ jobs:
             echo "cache miss: $KEY"
           fi
       - name: Build the verified source with its RPM recipe
-        if: inputs.backend == 'container' && steps.package_cache_restore.outputs.hit != 'true'
+        if: steps.lane.outputs.backend == 'container' && steps.package_cache_restore.outputs.hit != 'true'
         env:
           PACKAGE: ${{ matrix.package }}
           # `prepare` skips any package the published repository already
@@ -792,7 +816,7 @@ jobs:
       # loopback. Nothing the build installs or fetches can come from
       # anywhere but the lock.
       - name: Build offline from the lock (hermetic)
-        if: inputs.backend == 'hermetic' && steps.package_cache_restore.outputs.hit != 'true'
+        if: steps.lane.outputs.backend == 'hermetic' && steps.package_cache_restore.outputs.hit != 'true'
         env:
           PACKAGE: ${{ matrix.package }}
         run: |
@@ -808,7 +832,7 @@ jobs:
             utah-buildroot:run bash /tools/hermetic_build.sh build
           sudo chown -R "$(id -u):$(id -g)" work
       - name: Publish package RPM cache
-        if: success() && (inputs.backend == 'container' || inputs.backend == 'hermetic') && contains(fromJSON(inputs.cacheable_packages), matrix.package) && !contains(fromJSON(inputs.flaky_check || '[]'), matrix.package) && steps.package_cache_restore.outputs.hit != 'true'
+        if: success() && (steps.lane.outputs.backend == 'container' || steps.lane.outputs.backend == 'hermetic') && contains(fromJSON(inputs.cacheable_packages), matrix.package) && !contains(fromJSON(inputs.flaky_check || '[]'), matrix.package) && steps.package_cache_restore.outputs.hit != 'true'
         env:
           GITHUB_TOKEN: ${{ github.token }}
           KEY: ${{ steps.package_cache.outputs.key || steps.package_cache_lock.outputs.key }}
@@ -838,7 +862,7 @@ jobs:
       # single quotes, so it must not contain one -- tools/check_workflow_quoting.py
       # fails the run if it does, and only covers this form.
       - name: Build the verified source in a mock root
-        if: inputs.backend == 'mock'
+        if: steps.lane.outputs.backend == 'mock'
         env:
           PACKAGE: ${{ matrix.package }}
           FACTORY_REPO: ${{ steps.factory.outputs.url }}
