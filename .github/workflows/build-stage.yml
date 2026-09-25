@@ -92,6 +92,10 @@ permissions:
 
 jobs:
   build:
+    # A canary-injected failure is a real failed job, but an expected one:
+    # the canary judges it through verify-failure, so it must not turn the
+    # whole canary run red. Every production run leaves inject_failure empty.
+    continue-on-error: ${{ inputs.inject_failure != '' && contains(fromJSON(inputs.inject_failure), matrix.package) }}
     strategy:
       fail-fast: false
       matrix:
