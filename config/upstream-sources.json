@@ -2247,9 +2247,13 @@
     {
       "name": "python-pydantic-core",
       "version": "2.46.5",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/python-pydantic-core/pydantic_core-2.46.5.tar.gz/sha512/7af13f280d74ab0ded8e9299820930b0257502017f6a688d7d598e72351e127e178db11aeab987decaf95ca8619e151f244392ad9638ea184625728dcbb7cfff/pydantic_core-2.46.5.tar.gz",
-      "filename": "pydantic_core-2.46.5.tar.gz",
-      "sha512": "7af13f280d74ab0ded8e9299820930b0257502017f6a688d7d598e72351e127e178db11aeab987decaf95ca8619e151f244392ad9638ea184625728dcbb7cfff",
+      "filename": "pydantic_core-2.46.5-vendored.tar.xz",
+      "sha512": "b20f43b51737f63f5c3fd9c373e9e97dc3d0f47aad99235ef884fb081f750a88f8e60a173bc5e83383f03e73cfe37ecfe56ee3d9e3c3068e9c313d02dc3420d5",
+      "generate": {
+        "script": "tools/generated_sources.py",
+        "input": "https://files.pythonhosted.org/packages/source/p/pydantic_core/pydantic_core-2.46.5.tar.gz (sha512-pinned) and every crates.io crate its Cargo.lock pins (sha256-pinned by Cargo.lock)",
+        "method": "add vendor/<crate>-<version> for each Cargo.lock crate with .cargo-checksum.json, as cargo vendor --versioned-dirs lays it out, and repack deterministically as pydantic_core-2.46.5-vendored.tar.xz"
+      },
       "stage": 0
     },
     {

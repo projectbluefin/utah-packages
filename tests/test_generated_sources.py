@@ -132,5 +132,71 @@ class TailscaleToolchainGapTests(unittest.TestCase):
                 generated_sources.generate("tailscale", ROOT / "packages" / "tailscale", Path("/tmp"))
 
 
+def _targz(members: dict[str, bytes], mtime: int = 1700000000) -> bytes:
+    raw = io.BytesIO()
+    with tarfile.open(fileobj=raw, mode="w:gz") as archive:
+        for name, data in members.items():
+            info = tarfile.TarInfo(name)
+            info.size = len(data)
+            info.mtime = mtime
+            archive.addfile(info, io.BytesIO(data))
+    return raw.getvalue()
+
+
+class PydanticCoreVendorTests(unittest.TestCase):
+    VERSION = "9.9.9"
+
+    def fixture(self):
+        import hashlib
+
+        crate = _targz({"tinycrate-1.0.0/Cargo.toml": b"[package]", "tinycrate-1.0.0/src/lib.rs": b"//"})
+        checksum = hashlib.sha256(crate).hexdigest()
+        lock = (
+            'version = 4\n\n[[package]]\nname = "pydantic-core"\nversion = "9.9.9"\n\n'
+            '[[package]]\nname = "tinycrate"\nversion = "1.0.0"\n'
+            'source = "registry+https://github.com/rust-lang/crates.io-index"\n'
+            f'checksum = "{checksum}"\n'
+        )
+        top = f"pydantic_core-{self.VERSION}"
+        sdist = _targz({f"{top}/Cargo.lock": lock.encode(), f"{top}/Cargo.toml": b"[package]"})
+        return sdist, {("tinycrate", "1.0.0"): crate}, lock
+
+    def test_lock_parsing_skips_the_workspace_root(self):
+        _, _, lock = self.fixture()
+        crates = generated_sources.cargo_lock_packages(lock)
+        self.assertEqual([(c["name"], c["version"]) for c in crates], [("tinycrate", "1.0.0")])
+
+    def test_lock_parsing_refuses_git_sources(self):
+        lock = '[[package]]\nname = "x"\nversion = "1"\nsource = "git+https://example.com/x"\n'
+        with self.assertRaisesRegex(RuntimeError, "not crates.io"):
+            generated_sources.cargo_lock_packages(lock)
+
+    def test_vendor_layout_and_checksum_file(self):
+        import json
+        import lzma
+
+        sdist, crates, _ = self.fixture()
+        out = generated_sources._pydantic_core_transform(sdist, self.VERSION, crates)
+        with tarfile.open(fileobj=io.BytesIO(lzma.decompress(out))) as archive:
+            names = archive.getnames()
+            vendored = f"pydantic_core-{self.VERSION}/vendor/tinycrate-1.0.0"
+            self.assertIn(f"{vendored}/src/lib.rs", names)
+            checksum = json.loads(archive.extractfile(f"{vendored}/.cargo-checksum.json").read())
+        self.assertEqual(set(checksum["files"]), {"Cargo.toml", "src/lib.rs"})
+
+    def test_transform_is_byte_reproducible(self):
+        sdist, crates, _ = self.fixture()
+        self.assertEqual(
+            generated_sources._pydantic_core_transform(sdist, self.VERSION, crates),
+            generated_sources._pydantic_core_transform(sdist, self.VERSION, crates),
+        )
+
+    def test_a_substituted_crate_fails_closed(self):
+        sdist, crates, _ = self.fixture()
+        crates[("tinycrate", "1.0.0")] = _targz({"tinycrate-1.0.0/Cargo.toml": b"evil"})
+        with self.assertRaisesRegex(RuntimeError, "expected sha256"):
+            generated_sources._pydantic_core_transform(sdist, self.VERSION, crates)
+
+
 if __name__ == "__main__":
     unittest.main()

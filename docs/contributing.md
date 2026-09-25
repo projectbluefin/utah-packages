@@ -41,7 +41,11 @@ same four places an import writes to, or the next `just check` fails:
 - `.packit.yaml` -- delete the package's block.
 - `packages/<name>/` -- delete the whole directory (recipe, patches, sources).
 - Any generator special-casing in `tools/generated_sources.py` and the
-  hardcoded package-count assertions in `tests/` that track the set size.
+  hardcoded package-count assertions in `tests/` that track the set size:
+  `test_render_packit_config.py`, `test_package_inventory.py`,
+  `test_packit_srpm.py`, and `test_source_inventory.py` (which counts the set
+  minus one, because `mesa` is Hummingbird-supplied), plus the counts quoted
+  in `docs/architecture.md`.
 
 The image manifest (`config/bluefin-packages.toml`) and
 `config/hummingbird-provided-sources.json` are intentionally left alone: the
@@ -54,6 +58,15 @@ their builds is insufficient: the OCI repository is seeded from its prior
 digest, so an explicit prune is what prevents removed RPMs from surviving
 forever. The rebuild plan only requests a cleanup publication while such an
 overlap is actually present, making the operation retryable and idempotent.
+
+Before removing a package as unneeded, prove nothing in the consumer
+transaction reaches it at runtime: `publish` installs every name in
+`config/bluefin-packages.toml` from this repository plus Hummingbird, so run
+`dnf repoquery --whatrequires` on each of its binary packages and check the
+result against that contract, transitively. #244 dropped python-pydantic after
+checking only BuildRequires and Utah's own manifests; `input-remapper`, which
+is in the contract, requires it at runtime, and the next publish failed on
+`nothing provides python3.14dist(pydantic)`.
 
 Leaving one of these behind is what makes `main` red: the other three sources
 end up at different set sizes, which surfaces later as an unrelated failing
