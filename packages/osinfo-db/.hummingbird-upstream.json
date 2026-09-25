@@ -1,0 +1,8 @@
+{
+  "package": "osinfo-db",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/osinfo-db.git",
+  "commit": "ff11ff5604efc3c8761e4348b3d14f364ded6c6d",
+  "tree": "0b63c0fca12b2d7605aca29ed612f7a16075db42",
+  "imported_at": "2026-09-25T08:04:23.072815+00:00"
+}

@@ -1,0 +1,5 @@
+/osinfo-db-*.tar.xz
+/osinfo-db-*.tar.xz.asc
+/x86_64
+/.build-*.log
+*.rpm

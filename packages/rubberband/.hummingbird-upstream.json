@@ -1,0 +1,8 @@
+{
+  "package": "rubberband",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/rubberband.git",
+  "commit": "44de35b4c6dbd99c9f4897b6ea48feaadf35bb63",
+  "tree": "3ca02eefa8c37562199cb2dc352a70c484ace80a",
+  "imported_at": "2026-09-25T08:04:30.252433+00:00"
+}

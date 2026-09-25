@@ -1,0 +1,8 @@
+{
+  "package": "openpgm",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/openpgm.git",
+  "commit": "5149e8ba221bbc5e7f041cb86ae27007e6fc4fc5",
+  "tree": "b6d825b80ce8b4b43d82f6093d8b3f17726af25a",
+  "imported_at": "2026-09-25T08:13:40.264898+00:00"
+}

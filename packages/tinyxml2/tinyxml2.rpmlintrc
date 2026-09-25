@@ -1,0 +1,7 @@
+# These are not real spelling errors...
+# - doesn is part of doesn’t
+# - eXtensible emphasizes the meaning of the X in XML
+addFilter(r' spelling-error .* en_US (doesn|eXtensible) ')
+# Other than the Doxygen-generated API documentation, which we do not ship,
+# there is no -devel-specific documentation.
+addFilter(r'^tinyxml2-devel\..+: W: no-documentation$')

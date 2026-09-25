@@ -57,7 +57,12 @@
 %bcond dc1394 0
 %bcond ffnvcodec 0
 %else
-%bcond dc1394 1
+# Off on every arch here. libdc1394, libiec61883, libavc1394 and libraw1394
+# are in neither Hummingbird nor this factory, so libavdevice would link
+# sonames the publish gate's Hummingbird-only consumer transaction cannot
+# resolve. Importing them would add four recipes for IIDC and FireWire DV
+# capture, which was never in the Utah contract.
+%bcond dc1394 0
 %bcond ffnvcodec 1
 %endif
 
@@ -193,7 +198,9 @@ BuildRequires:  gsm-devel
 BuildRequires:  ladspa-devel
 BuildRequires:  lame-devel
 BuildRequires:  libgcrypt-devel
-BuildRequires:  libklvanc-devel
+# libklvanc is in neither Hummingbird nor this factory, so libavdevice would
+# link a soname the publish gate cannot resolve. Dropped with its --enable
+# flag below; DeckLink VANC data was never in the Utah contract.
 BuildRequires:  libmysofa-devel
 BuildRequires:  libX11-devel
 BuildRequires:  libXext-devel
@@ -205,7 +212,9 @@ BuildRequires:  pkgconfig(alsa)
 BuildRequires:  pkgconfig(aom)
 BuildRequires:  pkgconfig(aribb24) >= 1.0.3
 BuildRequires:  pkgconfig(bzip2)
-BuildRequires:  pkgconfig(caca)
+# libcaca is not in Hummingbird, and importing it would add three recipes
+# (libcaca, slang, freeglut). Dropped with its --enable flag below; the ASCII
+# art output device was never in the Utah contract.
 BuildRequires:  pkgconfig(codec2)
 BuildRequires:  pkgconfig(dav1d)
 BuildRequires:  pkgconfig(dvdnav)
@@ -245,7 +254,10 @@ BuildRequires:  pkgconfig(libopenmpt)
 BuildRequires:  pkgconfig(libplacebo) >= 4.192.0
 %endif
 BuildRequires:  pkgconfig(libpulse)
-BuildRequires:  pkgconfig(libqrencode)
+# No upstream URL serves qrencode 4.1.1's release tarball any more (fukuchi.org
+# answers 404 and the GitHub releases carry no assets), so the factory cannot
+# lock a source for it and Hummingbird does not ship it. Dropped with its
+# --enable flag below; the qrencode filter was never in the Utah contract.
 # rabbitmq-c is retired from Fedora Rawhide (no dist-git repo), so the AMQP
 # protocol support it backs cannot build here. Dropped with its --enable flag
 # below; AMQP output was never in the Utah contract.
@@ -259,11 +271,16 @@ BuildRequires:  pkgconfig(libva-x11)
 BuildRequires:  pkgconfig(libwebp)
 BuildRequires:  pkgconfig(libxml-2.0)
 BuildRequires:  pkgconfig(libzmq)
-BuildRequires:  pkgconfig(lilv-0)
-BuildRequires:  pkgconfig(lv2)
+# lilv is not in Hummingbird, and importing the LV2 host would add five
+# recipes (lilv, serd, sord, sratom, zix). Dropped, and lv2 with it since only
+# the lv2 filter uses its headers, alongside --disable-lv2 below; LV2 plugin
+# hosting was never in the Utah contract.
 BuildRequires:  pkgconfig(oapv)
 BuildRequires:  pkgconfig(ogg)
-BuildRequires:  pkgconfig(openal)
+# No upstream URL serves openal-soft's Source0: Fedora repacks the upstream
+# tarball by hand (make_tarball.sh drops the bundled fmt and non-free
+# utils/*.def), and Hummingbird does not ship it. Dropped with --disable-openal
+# below; OpenAL capture was never in the Utah contract.
 BuildRequires:  pkgconfig(opencore-amrnb)
 BuildRequires:  pkgconfig(OpenCL)
 BuildRequires:  pkgconfig(openh264)
@@ -277,7 +294,10 @@ BuildRequires:  pkgconfig(soxr)
 BuildRequires:  pkgconfig(speex)
 BuildRequires:  pkgconfig(srt)
 BuildRequires:  pkgconfig(SvtAv1Enc) >= 0.9.0
-BuildRequires:  pkgconfig(tesseract)
+# tesseract is not in Hummingbird, and importing the OCR filter's library
+# would add at least three recipes (tesseract, leptonica and the
+# tesseract-tessdata language data it is useless without). Dropped with its
+# --enable flag below; OCR was never in the Utah contract.
 BuildRequires:  pkgconfig(theora)
 BuildRequires:  pkgconfig(twolame)
 %if %{with vapoursynth}
@@ -801,7 +821,7 @@ cp -a doc/examples/{*.c,Makefile,README} _doc/examples/
     --disable-libbluray \
 %endif
     --enable-libbs2b \
-    --enable-libcaca \
+    --disable-libcaca \
     --enable-libcdio \
     --enable-libcodec2 \
     --enable-libdav1d \
@@ -827,7 +847,7 @@ cp -a doc/examples/{*.c,Makefile,README} _doc/examples/
     --enable-libilbc \
     --enable-libjack \
     --enable-libjxl \
-    --enable-libklvanc \
+    --disable-libklvanc \
     --disable-liblensfun \
     --disable-liblcevc-dec \
     --enable-liblc3 \
@@ -847,7 +867,7 @@ cp -a doc/examples/{*.c,Makefile,README} _doc/examples/
     --enable-libplacebo \
 %endif
     --enable-libpulse \
-    --enable-libqrencode \
+    --disable-libqrencode \
     --disable-libquirc \
     --disable-librabbitmq \
     --enable-librav1e \
@@ -866,7 +886,7 @@ cp -a doc/examples/{*.c,Makefile,README} _doc/examples/
     --enable-libsrt \
     --enable-libssh \
     --disable-libtensorflow \
-    --enable-libtesseract \
+    --disable-libtesseract \
     --enable-libtheora \
     --disable-libtorch \
     --disable-libuavs3d \
@@ -910,14 +930,14 @@ cp -a doc/examples/{*.c,Makefile,README} _doc/examples/
 %if %{with lto}
     --enable-lto \
 %endif
-    --enable-lv2 \
+    --disable-lv2 \
     --enable-lzma \
     --enable-manpages \
 %if %{with ffnvcodec}
     --enable-nvdec \
     --enable-nvenc \
 %endif
-    --enable-openal \
+    --disable-openal \
     --disable-openssl \
     --enable-pthreads \
     --enable-sdl2 \

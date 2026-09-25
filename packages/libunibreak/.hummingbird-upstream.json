@@ -1,0 +1,8 @@
+{
+  "package": "libunibreak",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libunibreak.git",
+  "commit": "4f65e5dbee53f61edca35e0eb104aae3dc9bc4f4",
+  "tree": "226f78ee711e2d884f2e4e7615cb4fb452fe46a1",
+  "imported_at": "2026-09-25T08:04:27.106783+00:00"
+}

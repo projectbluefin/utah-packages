@@ -1,0 +1,3 @@
+# libmysofa
+
+The libmysofa package

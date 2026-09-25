@@ -1,0 +1,8 @@
+{
+  "package": "vid.stab",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/vid.stab.git",
+  "commit": "76d525456b0ec5c35444f64e097b1fa84c4d6265",
+  "tree": "e2925ac6c1fc12becf25847545b05405edce138d",
+  "imported_at": "2026-09-25T08:04:52.555867+00:00"
+}

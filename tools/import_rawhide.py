@@ -17,8 +17,18 @@ def run(*args: str, cwd: Path | None = None) -> str:
 
 
 def validate_package(name: str) -> None:
-    if not name or not name.replace("-", "").replace("_", "").isalnum() or name.startswith("-"):
-        raise ValueError("package name must contain only letters, numbers, '_' or '-' and cannot start with '-'")
+    # Fedora package names may contain dots (vid.stab), so allow '.' but never
+    # a leading one or '..', which would let the name escape packages/.
+    if (
+        not name
+        or not name.replace("-", "").replace("_", "").replace(".", "").isalnum()
+        or name[0] in "-."
+        or ".." in name
+    ):
+        raise ValueError(
+            "package name must contain only letters, numbers, '_', '-' or '.', "
+            "cannot start with '-' or '.', and cannot contain '..'"
+        )
 
 
 def validate_branch(branch: str) -> None:

@@ -1,0 +1,8 @@
+{
+  "package": "libass",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libass.git",
+  "commit": "9eb6670fef2233fab7dad0a1b8e7abfd970beafb",
+  "tree": "cf46f1e47fb689119089ebb15641eca6381b8107",
+  "imported_at": "2026-09-25T08:04:26.107572+00:00"
+}

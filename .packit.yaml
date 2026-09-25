@@ -892,6 +892,12 @@ packages:
     downstream_package_name: libaribcaption
     paths:
       - packages/libaribcaption
+  libass:
+    specfile_path: libass.spec
+    upstream_package_name: libass
+    downstream_package_name: libass
+    paths:
+      - packages/libass
   libasyncns:
     specfile_path: libasyncns.spec
     upstream_package_name: libasyncns
@@ -928,6 +934,12 @@ packages:
     downstream_package_name: libblockdev
     paths:
       - packages/libblockdev
+  libbs2b:
+    specfile_path: libbs2b.spec
+    upstream_package_name: libbs2b
+    downstream_package_name: libbs2b
+    paths:
+      - packages/libbs2b
   libburn:
     specfile_path: libburn.spec
     upstream_package_name: libburn
@@ -1204,6 +1216,12 @@ packages:
     downstream_package_name: libmodplug
     paths:
       - packages/libmodplug
+  libmysofa:
+    specfile_path: libmysofa.spec
+    upstream_package_name: libmysofa
+    downstream_package_name: libmysofa
+    paths:
+      - packages/libmysofa
   libnfs:
     specfile_path: libnfs.spec
     upstream_package_name: libnfs
@@ -1318,6 +1336,12 @@ packages:
     downstream_package_name: librsvg2
     paths:
       - packages/librsvg2
+  libsamplerate:
+    specfile_path: libsamplerate.spec
+    upstream_package_name: libsamplerate
+    downstream_package_name: libsamplerate
+    paths:
+      - packages/libsamplerate
   libsass:
     specfile_path: libsass.spec
     upstream_package_name: libsass
@@ -1378,6 +1402,12 @@ packages:
     downstream_package_name: libtheora
     paths:
       - packages/libtheora
+  libunibreak:
+    specfile_path: libunibreak.spec
+    upstream_package_name: libunibreak
+    downstream_package_name: libunibreak
+    paths:
+      - packages/libunibreak
   libusbmuxd:
     specfile_path: libusbmuxd.spec
     upstream_package_name: libusbmuxd
@@ -1636,6 +1666,12 @@ packages:
     downstream_package_name: openjpeg
     paths:
       - packages/openjpeg
+  openpgm:
+    specfile_path: openpgm.spec
+    upstream_package_name: openpgm
+    downstream_package_name: openpgm
+    paths:
+      - packages/openpgm
   openrgb:
     specfile_path: openrgb.spec
     upstream_package_name: openrgb
@@ -1654,6 +1690,18 @@ packages:
     downstream_package_name: orc
     paths:
       - packages/orc
+  osinfo-db:
+    specfile_path: osinfo-db.spec
+    upstream_package_name: osinfo-db
+    downstream_package_name: osinfo-db
+    paths:
+      - packages/osinfo-db
+  osinfo-db-tools:
+    specfile_path: osinfo-db-tools.spec
+    upstream_package_name: osinfo-db-tools
+    downstream_package_name: osinfo-db-tools
+    paths:
+      - packages/osinfo-db-tools
   pango:
     specfile_path: pango.spec
     upstream_package_name: pango
@@ -1696,6 +1744,12 @@ packages:
     downstream_package_name: pixman
     paths:
       - packages/pixman
+  poppler-data:
+    specfile_path: poppler-data.spec
+    upstream_package_name: poppler-data
+    downstream_package_name: poppler-data
+    paths:
+      - packages/poppler-data
   ppp:
     specfile_path: ppp.spec
     upstream_package_name: ppp
@@ -1810,6 +1864,12 @@ packages:
     downstream_package_name: rtkit
     paths:
       - packages/rtkit
+  rubberband:
+    specfile_path: rubberband.spec
+    upstream_package_name: rubberband
+    downstream_package_name: rubberband
+    paths:
+      - packages/rubberband
   runc:
     specfile_path: runc.spec
     upstream_package_name: runc
@@ -1948,6 +2008,12 @@ packages:
     downstream_package_name: tecla
     paths:
       - packages/tecla
+  tinyxml2:
+    specfile_path: tinyxml2.spec
+    upstream_package_name: tinyxml2
+    downstream_package_name: tinyxml2
+    paths:
+      - packages/tinyxml2
   twolame:
     specfile_path: twolame.spec
     upstream_package_name: twolame
@@ -1972,6 +2038,12 @@ packages:
     downstream_package_name: v4l-utils
     paths:
       - packages/v4l-utils
+  vid.stab:
+    specfile_path: vid.stab.spec
+    upstream_package_name: vid.stab
+    downstream_package_name: vid.stab
+    paths:
+      - packages/vid.stab
   vo-amrwbenc:
     specfile_path: vo-amrwbenc.spec
     upstream_package_name: vo-amrwbenc
@@ -2230,6 +2302,12 @@ packages:
     downstream_package_name: zenity
     paths:
       - packages/zenity
+  zimg:
+    specfile_path: zimg.spec
+    upstream_package_name: zimg
+    downstream_package_name: zimg
+    paths:
+      - packages/zimg
   zsh:
     specfile_path: zsh.spec
     upstream_package_name: zsh

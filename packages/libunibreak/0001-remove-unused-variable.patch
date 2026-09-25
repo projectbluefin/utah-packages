@@ -1,0 +1,40 @@
+diff -rU4 libunibreak-libunibreak_8_0--orig/src/tests.c libunibreak-libunibreak_7_0/src/tests.c
+--- libunibreak-libunibreak_8_0--orig/src/tests.c	2026-04-10 09:33:13.000000000 +0200
++++ libunibreak-libunibreak_8_0/src/tests.c	2026-09-21 17:01:01.010101010 +0200
+@@ -56,9 +56,9 @@
+     Test_Type testType;
+     clock_t t1;
+     clock_t t2;
+ 
+-    char noBreak, mustBreak, insideChar;
++    char noBreak, mustBreak;
+     const unsigned int *testSkips; /* Zero terminated array of line numbers
+                                       to skip in the test. */
+ 
+     if (argc != 2)
+@@ -72,25 +72,22 @@
+         filename = "LineBreakTest.txt";
+         testType = TEST_TYPE_LINE;
+         noBreak = LINEBREAK_NOBREAK;
+         mustBreak = LINEBREAK_MUSTBREAK;
+-        insideChar = LINEBREAK_INSIDEACHAR;
+         testSkips = testSkipsLine;
+         break;
+     case 'w':
+         filename = "WordBreakTest.txt";
+         testType = TEST_TYPE_WORD;
+         noBreak = WORDBREAK_NOBREAK;
+         mustBreak = WORDBREAK_BREAK;
+-        insideChar = WORDBREAK_INSIDEACHAR;
+         testSkips = testSkipsWord;
+         break;
+     case 'g':
+         filename = "GraphemeBreakTest.txt";
+         testType = TEST_TYPE_GRAPHEME;
+         noBreak = GRAPHEMEBREAK_NOBREAK;
+         mustBreak = GRAPHEMEBREAK_BREAK;
+-        insideChar = GRAPHEMEBREAK_INSIDEACHAR;
+         testSkips = testSkipsGrapheme;
+         break;
+     default:
+         return 1;

@@ -1,0 +1,12 @@
+diff -up a/src/zimg/colorspace/x86/operation_impl_x86.cpp b/src/zimg/colorspace/x86/operation_impl_x86.cpp
+--- a/src/zimg/colorspace/x86/operation_impl_x86.cpp
++++ b/src/zimg/colorspace/x86/operation_impl_x86.cpp
+@@ -19,7 +19,7 @@ std::unique_ptr<Operation> create_matrix
+ 		if (!ret && cpu == CPUClass::AUTO_64B && caps.avx512f)
+ 			ret = create_matrix_operation_avx512(m);
+ #endif
+-		if (!ret && caps.avx && !cpu_has_slow_avx(caps))
++		if (!ret && caps.avx2 && !cpu_has_slow_avx(caps))
+ 			ret = create_matrix_operation_avx(m);
+ 		if (!ret && caps.sse)
+ 			ret = create_matrix_operation_sse(m);

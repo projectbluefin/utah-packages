@@ -1,0 +1,8 @@
+{
+  "package": "tinyxml2",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/tinyxml2.git",
+  "commit": "2dfa3f621eeb4d8e945f3c39e547349ff36693a4",
+  "tree": "b5ff6e26b9fa0220b0d64979cb9f45571461689a",
+  "imported_at": "2026-09-25T08:13:37.318410+00:00"
+}

@@ -1,0 +1,8 @@
+{
+  "package": "poppler-data",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/poppler-data.git",
+  "commit": "6fc4bcbdf33a6d1dd896f9f288e2beba2b22493f",
+  "tree": "51729237c15b51e0f1213b2dad200b11147706ae",
+  "imported_at": "2026-09-25T08:13:36.407175+00:00"
+}
