@@ -274,6 +274,12 @@ prepare-time witness inside the critical section. If they differ, refuse to
 publish and rerun the newer commit. The lock protects the check and the copy
 together; it does not make a stale build current.
 
+The one image that may differ from the witness is one published by an
+earlier attempt of the same run (`org.projectbluefin.factory.run`). Once
+publication became incremental, a run with failures still publishes, and a
+"re-run failed jobs" -- which keeps the first attempt's prepare outputs --
+otherwise always refused over its own first attempt.
+
 ## 15. A failed package must not discard successful build work
 
 **What happened.** The published repository was the only witness and the only

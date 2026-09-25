@@ -1072,7 +1072,21 @@ jobs:
             fi
             echo "no factory image at ${image}:${tag}"
           done
-          if [ "$current" != "$EXPECTED_IMAGE" ]; then
+          # Incremental publication means a run whose builds partly failed
+          # still publishes, so "re-run failed jobs" -- which keeps prepare's
+          # outputs from the first attempt -- found the tag moved by its own
+          # first attempt and refused (canary run 36189640622). An image
+          # published by an earlier attempt of this same run is not newer
+          # work from elsewhere: same commit, same plan. It is accepted as
+          # the seed, still subject to the signature check below.
+          moved_by=
+          if [ -n "$current" ] && [ "$current" != "$EXPECTED_IMAGE" ]; then
+            moved_by=$(podman image inspect "$current" \
+              --format '{{ index .Labels "org.projectbluefin.factory.run" }}' 2>/dev/null || true)
+          fi
+          if [ "$current" != "$EXPECTED_IMAGE" ] && [ "$moved_by" = "$GITHUB_RUN_ID" ]; then
+            echo "the tag moved only by an earlier attempt of this run ($GITHUB_RUN_ID); seeding from it"
+          elif [ "$current" != "$EXPECTED_IMAGE" ]; then
             echo "factory image advanced while this run was building" >&2
             echo "  prepare witnessed: ${EXPECTED_IMAGE:-<none>}" >&2
             echo "  publish sees:      ${current:-<none>}" >&2
@@ -1318,7 +1332,8 @@ jobs:
             --password-stdin --authfile "${DOCKER_CONFIG}/config.json"
           podman build --tag "${image}:${tag}" --file Containerfile.repo \
             --label "org.projectbluefin.factory.state=${state}" \
-            --label "org.opencontainers.image.revision=${GITHUB_SHA}" .
+            --label "org.opencontainers.image.revision=${GITHUB_SHA}" \
+            --label "org.projectbluefin.factory.run=${GITHUB_RUN_ID}" .
           podman push "${image}:${tag}" --digestfile /tmp/digest \
             --authfile "${DOCKER_CONFIG}/config.json"
           digest=$(cat /tmp/digest)

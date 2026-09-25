@@ -187,7 +187,11 @@ class FactoryWitnessTests(unittest.TestCase):
         # read; the canary may only ever seed from its own tag.
         self.assertIn('seed="$resolved"', text)
         self.assertIn('seed=$(resolve "$PUBLISH_TAG")', text)
-        self.assertIn('if [ "$current" != "$EXPECTED_IMAGE" ]; then', text)
+        self.assertIn('elif [ "$current" != "$EXPECTED_IMAGE" ]; then', text)
+        # The one exception is this run's own earlier attempt, recognised by
+        # the run id label publish writes.
+        self.assertIn('[ "$moved_by" = "$GITHUB_RUN_ID" ]', text)
+        self.assertIn('--label "org.projectbluefin.factory.run=${GITHUB_RUN_ID}"', text)
         self.assertIn("refusing to overwrite the newer repository", text)
         self.assertNotIn('utah-packages:latest"', text)
 
