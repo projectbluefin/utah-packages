@@ -118,33 +118,40 @@ class BuildRootSharingTests(unittest.TestCase):
 class BuildRootPinTests(unittest.TestCase):
     PIN = "ghcr.io/projectbluefin/utah-buildroot:44-20260925-94e175d9796d@sha256:" + "a" * 64
 
-    def test_the_workflow_has_exactly_one_readable_pin(self) -> None:
+    def test_the_committed_pin_is_a_mirror_digest_pin(self) -> None:
         from tools import buildroot_pin
 
-        self.assertTrue(buildroot_pin.get(REBUILD.read_text()))
+        self.assertTrue(buildroot_pin.is_mirror_pin(buildroot_pin.get()))
 
-    def test_set_moves_only_the_pin(self) -> None:
+    def test_the_pin_lives_outside_workflow_files(self) -> None:
+        # The workflow token cannot push workflow edits, so a pin inside a
+        # workflow could never be moved by refresh-buildroot.yml.
+        for path in sorted(WORKFLOWS.glob("*.yml")):
+            self.assertNotRegex(path.read_text(), r"(?m)^\s*BUILDROOT_IMAGE:\s*\S", path.name)
+        self.assertIn("python3 tools/buildroot_pin.py get", jobs(REBUILD)["prepare"])
+
+    def test_set_then_get_round_trips(self) -> None:
+        import tempfile
         from tools import buildroot_pin
 
-        text = REBUILD.read_text()
-        moved = buildroot_pin.set_pin(text, self.PIN)
-        self.assertEqual(buildroot_pin.get(moved), self.PIN)
-        self.assertEqual(
-            [line for line in moved.splitlines() if "BUILDROOT_IMAGE:" not in line],
-            [line for line in text.splitlines() if "BUILDROOT_IMAGE:" not in line],
-        )
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "buildroot-image"
+            buildroot_pin.set_pin(self.PIN, path)
+            self.assertEqual(buildroot_pin.get(path), self.PIN)
 
     def test_set_refuses_anything_but_a_mirror_digest_pin(self) -> None:
+        import tempfile
         from tools import buildroot_pin
 
-        text = REBUILD.read_text()
-        for bad in (
-            "quay.io/fedora/fedora:44@sha256:" + "a" * 64,  # prunable upstream
-            "ghcr.io/projectbluefin/utah-buildroot:44",  # no digest
-            "ghcr.io/projectbluefin/utah-buildroot@sha256:" + "a" * 64,  # no tag
-        ):
-            with self.assertRaises(ValueError):
-                buildroot_pin.set_pin(text, bad)
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "buildroot-image"
+            for bad in (
+                "quay.io/fedora/fedora:44@sha256:" + "a" * 64,  # prunable upstream
+                "ghcr.io/projectbluefin/utah-buildroot:44",  # no digest
+                "ghcr.io/projectbluefin/utah-buildroot@sha256:" + "a" * 64,  # no tag
+            ):
+                with self.assertRaises(ValueError):
+                    buildroot_pin.set_pin(bad, path)
 
     def test_the_refresh_workflow_writes_the_pin_through_the_tool(self) -> None:
         refresh = (WORKFLOWS / "refresh-buildroot.yml").read_text()

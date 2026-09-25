@@ -135,7 +135,7 @@ commit claimed Renovate would track it; Renovate cannot run faster than the
 rot.
 
 **Rule.** The build root is pulled once, in `prepare`, and shared with every
-job as an artifact. `BUILDROOT_IMAGE` records the expected digest and a
+job as an artifact. `config/buildroot-image` records the expected digest and a
 mismatch warns. `tests/test_buildroot_sharing.py` fails any workflow that
 pulls the build root from a registry per job. Do not add a per-job pull, and
 do not "fix" an exit 125 `manifest unknown` on the build root by editing a
@@ -148,7 +148,7 @@ two consecutive runs because fedora:44 moved from `2cdfedd` to `94e175d`
 between them. The fix is not pulling quay by digest (that is this section's
 failure again) but owning the bytes: `refresh-buildroot.yml` copies fedora:44
 weekly to `ghcr.io/projectbluefin/utah-buildroot` under a dated tag, which
-nothing prunes, and opens a PR moving `BUILDROOT_IMAGE` there
+nothing prunes, and opens a PR moving the pin in `config/buildroot-image`
 (`tools/buildroot_pin.py`). A mirror pin is pulled by its digest, fatally,
 because that digest cannot rot. Do not add a cleanup policy to that package.
 

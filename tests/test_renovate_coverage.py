@@ -75,20 +75,26 @@ class RenovateCoverageTests(unittest.TestCase):
         for path in workflow_files():
             for match in pattern.finditer(path.read_text()):
                 found[match.group("depName")] = match.group("currentValue")
-        self.assertIn("quay.io/fedora/fedora", found)
+        # quay.io/fedora/fedora is no longer pinned in a workflow: the factory
+        # mirrors it (refresh-buildroot.yml, config/buildroot-image).
         self.assertIn("quay.io/packit/packit", found)
 
     def test_the_fedora_build_root_tracks_a_release_not_latest(self) -> None:
         # Following :latest here would carry the factory to a new Fedora major
         # on somebody else's schedule. The build root is a deliberate choice.
+        # It is refreshed by refresh-buildroot.yml from fedora:44 into the
+        # factory mirror rather than by Renovate: a quay.io digest pin rots.
+        refresh = (WORKFLOWS / "refresh-buildroot.yml").read_text()
+        self.assertRegex(refresh, r"(?m)^\s*UPSTREAM: quay\.io/fedora/fedora:44\s*$")
         pattern = manager_pattern(build_root_manager())
-        tags = {
-            m.group("currentValue")
-            for path in workflow_files()
-            for m in pattern.finditer(path.read_text())
-            if m.group("depName") == "quay.io/fedora/fedora"
-        }
-        self.assertEqual(tags, {"44"})
+        self.assertFalse(
+            any(
+                m.group("depName") == "quay.io/fedora/fedora"
+                for path in workflow_files()
+                for m in pattern.finditer(path.read_text())
+            ),
+            "the Fedora build root is pinned in config/buildroot-image via the mirror",
+        )
 
     def test_the_manually_pinned_image_is_left_alone(self) -> None:
         # bootc-os moves with runtime-contract.toml, not on its own.

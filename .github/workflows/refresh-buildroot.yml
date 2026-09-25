@@ -11,7 +11,7 @@ name: Refresh the build-root mirror
 #
 # The factory therefore owns its build root. Once a week this copies the
 # current fedora:44 to ghcr.io/projectbluefin/utah-buildroot under a dated tag
-# and opens a pull request that moves BUILDROOT_IMAGE to that tag's digest.
+# and opens a pull request that moves config/buildroot-image to that digest.
 # Nothing prunes that repository, so a pin written here stays pullable, every
 # job of every run builds on the same bytes until the pin moves on purpose,
 # and the cache chain survives from one run to the next.
@@ -71,7 +71,7 @@ jobs:
             echo "upstream=$UPSTREAM@$upstream_digest"
             echo "tag=$tag"
           } >> "$GITHUB_OUTPUT"
-      - name: Move the BUILDROOT_IMAGE pin
+      - name: Move the build-root pin
         env:
           PIN: ${{ steps.mirror.outputs.pin }}
         run: |

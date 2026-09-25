@@ -39,10 +39,9 @@ permissions:
 jobs:
   prepare:
     runs-on: ubuntu-24.04
-    env:
-      # The build root this factory intends to use, recorded so the choice is
-      # auditable and so Renovate keeps the digest current through the
-      # build-root-image manager in renovate.json.
+      # The build root this factory uses is pinned in config/buildroot-image
+      # (read by tools/buildroot_pin.py in the "Pull the build root" step).
+      # History of why it is pinned the way it is:
       #
       # It is the EXPECTED value, not the pull target. quay.io/fedora/fedora:44
       # is republished several times a day and each previous digest is
@@ -66,11 +65,12 @@ jobs:
       # factory now owns the root: refresh-buildroot.yml copies fedora:44 to
       # ghcr.io/projectbluefin/utah-buildroot weekly under a dated tag, which
       # nothing prunes, and opens a PR moving this pin
-      # (tools/buildroot_pin.py). A mirror pin is pulled by digest and a
-      # failure is fatal: that digest cannot rot. A quay.io value is the
-      # legacy form and keeps the old pull-the-tag-and-warn behaviour until
-      # the first mirror PR lands.
-      BUILDROOT_IMAGE: quay.io/fedora/fedora:44@sha256:94e175d9796d3582d4d3cdcff1004bd67cc51dc45df452d3b16f76f071c7c487
+      # (tools/buildroot_pin.py). The pin lives in config/buildroot-image, not
+      # here: the workflow token may not edit workflow files, so a pin in this
+      # file could never be moved by the refresh job (run 36167595383).
+      # A mirror pin is pulled by digest and a failure is fatal: that digest
+      # cannot rot. A quay.io value is the legacy form and keeps the old
+      # pull-the-tag-and-warn behaviour.
     outputs:
       buildroot_digest: ${{ steps.buildroot.outputs.digest }}
       factory_image: ${{ steps.factory_image.outputs.image }}
@@ -120,6 +120,7 @@ jobs:
       - name: Pull the build root once and record what it resolved to
         id: buildroot
         run: |
+          BUILDROOT_IMAGE=$(python3 tools/buildroot_pin.py get)
           tag="${BUILDROOT_IMAGE%@*}"
           expected="${BUILDROOT_IMAGE##*@}"
           case "$BUILDROOT_IMAGE" in
