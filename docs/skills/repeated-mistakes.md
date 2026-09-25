@@ -262,7 +262,7 @@ prepare-time witness inside the critical section. If they differ, refuse to
 publish and rerun the newer commit. The lock protects the check and the copy
 together; it does not make a stale build current.
 
-## 15. Atomic publication must not discard successful build work
+## 15. A failed package must not discard successful build work
 
 **What happened.** The published repository was the only witness and the only
 reuse mechanism. When any late package or final gate failed, the repository
@@ -276,6 +276,15 @@ then restore it into the ordinary stage artifact on a later exact-key hit. The
 cache never replaces rebuild selection or final repository gates, and stale or
 directly changed packages never reuse it. Read
 [`package-build-cache.md`](package-build-cache.md) before changing this path.
+
+The cache kept the work but not the result: the repository still moved only
+when every selected package built, and one flaky test (fish) held back all of
+them -- 3 of 117 full runs published in four weeks. Publication is now
+incremental (`tools/publish_gate.py`): each package this run built replaces
+its own previous build, a failed one keeps its previous build and is named in
+the tracking issue, and only the Hummingbird-only consumer transaction over
+the whole candidate can stop the tag. Do not reintroduce a wave result into
+the publish job's `if:`; `assert_gate_enforced` rejects it.
 
 ## 16. An observability tool that parses one line of external output crashes the whole run
 

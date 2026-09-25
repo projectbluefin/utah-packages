@@ -15,6 +15,10 @@
 #          checks the image the way Utah will consume it.
 #   pass2  the same set again: every build must be a cache hit, zero compiles.
 #          Proves the cache key is stable from one run to the next.
+#   pass4  the same set with libical failing on purpose, published to the
+#          same canary tag: the image must move, still carry pass1's
+#          libical, and the run must report libical as failed. Proves the
+#          incremental publish rule.
 #   pass3  the same set plus python-typing-inspection with its recipe
 #          perturbed in the checkout: that one compiles, every canary package
 #          must still hit. Proves a change to one package does not
@@ -54,6 +58,9 @@ permissions:
   packages: write
   attestations: write
   actions: read
+  # rebuild-rpms.yml's report job asks for it; it only opens the tracking
+  # issue on main, never from the canary.
+  issues: write
 
 concurrency:
   group: canary-${{ github.event.pull_request.number || github.ref }}
@@ -200,6 +207,49 @@ jobs:
       cache_salt: ${{ needs.changes.outputs.salt }}
       perturb: '["python-typing-inspection"]'
 
+  # A deliberately failing package: libical's build job fails before it
+  # produces anything. Incremental publish must still publish the rest to
+  # the canary tag, keep libical at pass1's build, and name it as failed.
+  pass4:
+    needs: [changes, pass1]
+    uses: ./.github/workflows/rebuild-rpms.yml
+    with:
+      full: true
+      packages: ${{ needs.changes.outputs.set }}
+      publish_tag: ${{ needs.changes.outputs.tag }}
+      no_factory: true
+      consumer: built
+      artifact_prefix: p4-
+      cache_salt: ${{ needs.changes.outputs.salt }}
+      inject_failure: '["libical"]'
+
+  verify-failure:
+    needs: [changes, pass1, pass4]
+    # pass4 is red by design: one of its packages failed.
+    if: ${{ always() && needs.pass1.result == 'success' }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: The failed package kept its previous build and was reported
+        env:
+          PASS1_DIGEST: ${{ needs.pass1.outputs.digest }}
+          IMAGE: ${{ needs.pass4.outputs.ref }}
+          DIGEST: ${{ needs.pass4.outputs.digest }}
+          FAILED: ${{ needs.pass4.outputs.failed }}
+          SET: ${{ needs.changes.outputs.set }}
+        run: |
+          set -euo pipefail
+          echo "pass4 failed: ${FAILED:-<none>}"
+          test "$(jq -c . <<<"${FAILED:-null}")" = '["libical"]'
+          # Published anyway, and not simply the old image again.
+          test -n "$DIGEST"
+          test "$DIGEST" != "$PASS1_DIGEST"
+          curl -fsSL https://raw.githubusercontent.com/projectbluefin/utah/main/scripts/check-repo-availability.py \
+            -o check-repo-availability.py
+          # libical is still there: pass1's build, kept.
+          python3 tools/canary.py verify-image "${IMAGE%:*}@${DIGEST}" \
+            --utah-reader check-repo-availability.py --expect "$SET"
+
   verify-cache:
     needs: [changes, pass1, pass2, pass3]
     runs-on: ubuntu-24.04
@@ -221,7 +271,7 @@ jobs:
 
   canary:
     name: Canary
-    needs: [changes, pass1, verify-publish, pass2, pass3, verify-cache]
+    needs: [changes, pass1, verify-publish, pass2, pass3, verify-cache, pass4, verify-failure]
     if: always()
     runs-on: ubuntu-24.04
     steps:
@@ -241,5 +291,6 @@ jobs:
             exit 1
           fi
           echo "$RESULTS" | jq -r 'to_entries[] | "\(.key): \(.value.result)"'
-          failed=$(echo "$RESULTS" | jq -r '[to_entries[] | select(.value.result != "success")] | length')
+          # pass4 fails on purpose; verify-failure is what judges it.
+          failed=$(echo "$RESULTS" | jq -r '[to_entries[] | select(.key != "pass4" and .value.result != "success")] | length')
           test "$failed" -eq 0

@@ -10,9 +10,10 @@ metadata:
 
 # Per-package RPM cache contract
 
-The package cache preserves completed work across factory runs. It exists
-because publication is intentionally atomic: one failed package or final
-transaction gate must not advance the consumer repository, but that must not
+The package cache preserves completed work across factory runs. Publication is
+incremental -- a failed package keeps its previous build and the rest publish
+-- but the whole candidate still has to pass the Hummingbird-only consumer
+transaction, and a run that fails that gate publishes nothing. That must not
 force every successful package to compile again on the next attempt.
 
 This is a correctness mechanism with a performance benefit, not a second
@@ -102,7 +103,7 @@ dependency actually changed.
 - Never omit recipe paths, the build-root digest, resolved NEVRAs, or disttag
   from the key. Do not add the factory image digest back (see above).
 - Never treat a cache outage as a package-build failure.
-- Never delay cache publication until the final atomic publish job.
+- Never delay cache publication until the final publish job.
 - Never remove the final precedence and Hummingbird-only transaction gates for
   cached RPMs.
 - Keep the dependency-resolution probe aligned with the actual container build
@@ -148,7 +149,7 @@ After a batch drains from the merge queue, dispatch one factory run at the
 batch's final `main` commit (or let the next daily run do so). Its prepare-time
 factory witness covers the previously published repository, and its package
 caches cover completed work that never reached publication. The final OCI tag
-moves once, atomically, only after the batch passes precedence and the
+moves once, with every package that built, only after the candidate passes the
 Hummingbird-only consumer transaction.
 
 Do not reintroduce per-PR, per-merge, or per-merge-group factory triggers as a

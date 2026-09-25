@@ -197,14 +197,27 @@ class WorkflowShapeTests(unittest.TestCase):
             {name for name in self.jobs if name != "canary"},
         )
 
-    def test_only_pass1_publishes_and_passes_2_and_3_follow_it(self) -> None:
+    def test_only_pass1_and_pass4_publish_and_passes_2_and_3_follow_pass1(self) -> None:
         self.assertNotIn("skip_publish", self.jobs["pass1"]["with"])
+        self.assertNotIn("skip_publish", self.jobs["pass4"]["with"])
         for name in ("pass2", "pass3"):
             self.assertTrue(self.jobs[name]["with"]["skip_publish"])
             self.assertIn("pass1", self.jobs[name]["needs"])
         self.assertEqual(
             self.jobs["pass3"]["with"]["perturb"], '["python-typing-inspection"]'
         )
+
+    def test_pass4_fails_one_package_on_purpose_and_is_judged_separately(self) -> None:
+        pass4 = self.jobs["pass4"]["with"]
+        self.assertEqual(pass4["inject_failure"], '["libical"]')
+        self.assertEqual(pass4["publish_tag"], "${{ needs.changes.outputs.tag }}")
+        verify = self.jobs["verify-failure"]
+        self.assertIn("always()", verify["if"])
+        script = verify["steps"][-1]["run"]
+        self.assertIn("\'[\"libical\"]\'", script)
+        self.assertIn('test "$DIGEST" != "$PASS1_DIGEST"', script)
+        gate = self.jobs["canary"]["steps"][0]["run"]
+        self.assertIn('.key != "pass4"', gate)
 
     def test_every_pass_shares_one_salt_and_its_own_artifact_prefix(self) -> None:
         passes = [n for n, j in self.jobs.items() if j.get("uses")]

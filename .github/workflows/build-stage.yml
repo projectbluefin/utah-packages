@@ -70,6 +70,14 @@ on:
         required: false
         default: ''
         type: string
+      inject_failure:
+        description: >
+          Canary only: JSON names whose build fails on purpose, before any
+          RPM is produced, so the canary can prove a failed package keeps its
+          previous published build and is reported.
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: read
@@ -84,6 +92,13 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Fail this package on purpose for the canary
+        if: inputs.inject_failure != '' && contains(fromJSON(inputs.inject_failure), matrix.package)
+        env:
+          PACKAGE: ${{ matrix.package }}
+        run: |
+          echo "::error title=canary::failing $PACKAGE on purpose (inject_failure)"
+          exit 1
       - name: Perturb recipes for the canary
         if: inputs.perturb != ''
         env:

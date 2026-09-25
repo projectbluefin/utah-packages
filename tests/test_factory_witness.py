@@ -168,13 +168,14 @@ class FactoryWitnessTests(unittest.TestCase):
             "Never share the consumer image's tag namespace with cache entries.",
             "Never let cache presence decide the rebuild plan.",
             "Never restore stale or directly changed packages.",
-            "Never delay cache publication until the final atomic publish job.",
+            "Never delay cache publication until the final publish job.",
         ):
             self.assertIn(rule, text)
 
     def test_a_failed_prepare_stops_precedence_and_publish(self) -> None:
         text = uncommented(REBUILD)
-        self.assertEqual(text.count("needs.prepare.result == 'success'"), 2)
+        # precedence, publish, and the report job
+        self.assertEqual(text.count("needs.prepare.result == 'success'"), 3)
 
     def test_publish_prunes_hummingbird_owned_sources_from_its_seed(self) -> None:
         text = uncommented(REBUILD)

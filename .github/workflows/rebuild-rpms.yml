@@ -79,6 +79,13 @@ on:
         required: false
         default: ''
         type: string
+      inject_failure:
+        description: >
+          Canary only: JSON names whose build job fails on purpose, to prove
+          a failed package keeps its previous build and is reported.
+        required: false
+        default: ''
+        type: string
     outputs:
       ref:
         description: The published tag
@@ -86,6 +93,9 @@ on:
       digest:
         description: The published digest
         value: ${{ jobs.publish.outputs.digest }}
+      failed:
+        description: JSON names of the selected packages that did not publish
+        value: ${{ jobs.report.outputs.failed }}
 
 permissions:
   contents: read
@@ -445,6 +455,7 @@ jobs:
       artifact_prefix: ${{ inputs.artifact_prefix }}
       cache_salt: ${{ inputs.cache_salt }}
       perturb: ${{ inputs.perturb }}
+      inject_failure: ${{ inputs.inject_failure }}
 
   rebuild1:
     needs: [prepare, rebuild0]
@@ -464,6 +475,7 @@ jobs:
       artifact_prefix: ${{ inputs.artifact_prefix }}
       cache_salt: ${{ inputs.cache_salt }}
       perturb: ${{ inputs.perturb }}
+      inject_failure: ${{ inputs.inject_failure }}
 
   rebuild2:
     needs: [prepare, rebuild0, rebuild1]
@@ -483,6 +495,7 @@ jobs:
       artifact_prefix: ${{ inputs.artifact_prefix }}
       cache_salt: ${{ inputs.cache_salt }}
       perturb: ${{ inputs.perturb }}
+      inject_failure: ${{ inputs.inject_failure }}
 
   rebuild3:
     needs: [prepare, rebuild0, rebuild1, rebuild2]
@@ -502,6 +515,7 @@ jobs:
       artifact_prefix: ${{ inputs.artifact_prefix }}
       cache_salt: ${{ inputs.cache_salt }}
       perturb: ${{ inputs.perturb }}
+      inject_failure: ${{ inputs.inject_failure }}
 
   rebuild4:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3]
@@ -521,6 +535,7 @@ jobs:
       artifact_prefix: ${{ inputs.artifact_prefix }}
       cache_salt: ${{ inputs.cache_salt }}
       perturb: ${{ inputs.perturb }}
+      inject_failure: ${{ inputs.inject_failure }}
 
   rebuild5:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4]
@@ -540,6 +555,7 @@ jobs:
       artifact_prefix: ${{ inputs.artifact_prefix }}
       cache_salt: ${{ inputs.cache_salt }}
       perturb: ${{ inputs.perturb }}
+      inject_failure: ${{ inputs.inject_failure }}
 
   rebuild6:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5]
@@ -559,6 +575,7 @@ jobs:
       artifact_prefix: ${{ inputs.artifact_prefix }}
       cache_salt: ${{ inputs.cache_salt }}
       perturb: ${{ inputs.perturb }}
+      inject_failure: ${{ inputs.inject_failure }}
 
   rebuild7:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6]
@@ -578,6 +595,7 @@ jobs:
       artifact_prefix: ${{ inputs.artifact_prefix }}
       cache_salt: ${{ inputs.cache_salt }}
       perturb: ${{ inputs.perturb }}
+      inject_failure: ${{ inputs.inject_failure }}
 
   rebuild8:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7]
@@ -597,6 +615,7 @@ jobs:
       artifact_prefix: ${{ inputs.artifact_prefix }}
       cache_salt: ${{ inputs.cache_salt }}
       perturb: ${{ inputs.perturb }}
+      inject_failure: ${{ inputs.inject_failure }}
 
   rebuild9:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8]
@@ -616,6 +635,7 @@ jobs:
       artifact_prefix: ${{ inputs.artifact_prefix }}
       cache_salt: ${{ inputs.cache_salt }}
       perturb: ${{ inputs.perturb }}
+      inject_failure: ${{ inputs.inject_failure }}
 
   rebuild10:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8, rebuild9]
@@ -635,6 +655,7 @@ jobs:
       artifact_prefix: ${{ inputs.artifact_prefix }}
       cache_salt: ${{ inputs.cache_salt }}
       perturb: ${{ inputs.perturb }}
+      inject_failure: ${{ inputs.inject_failure }}
 
   precedence:
     # Every wave, not the first five. See publish below.
@@ -646,6 +667,14 @@ jobs:
     # here (runs 372 and 379). prepare has to have succeeded.
     if: ${{ !cancelled() && needs.prepare.result == 'success' && needs.prepare.outputs.build_list != '[]' }}
     runs-on: ubuntu-24.04
+    # A build that does not outrank Fedora or Hummingbird is kept out of the
+    # repository -- dnf would install the other one anyway -- and reported as
+    # a failed package. It no longer fails the job: under incremental publish
+    # one losing package must not hold back the rest. publish reads `losers`
+    # (source package names); a job that could not run at all still fails,
+    # and publish then refuses, because nothing was judged.
+    outputs:
+      losers: ${{ steps.losers.outputs.losers }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: ./.github/actions/load-buildroot
@@ -658,8 +687,10 @@ jobs:
           merge-multiple: true
       - name: Assert our builds outrank Fedora and Hummingbird
         run: |
+          mkdir -p work
           docker run --rm \
             -v "$PWD/built:/built:ro,Z" \
+            -v "$PWD/work:/work:Z" \
             -v "$PWD/config:/repos:ro,Z" \
             utah-buildroot:run bash -exc '
               dnf -y install rpmdevtools >/dev/null
@@ -686,7 +717,10 @@ jobs:
                 rc=0; rpmdev-vercmp "$ours" "$theirs" >/dev/null 2>&1 || rc=$?
                 # 11 means the first argument is newer, which is what we need.
                 # 0 (equal) and 12 (theirs newer) both mean ours will not win.
-                [ "$rc" = 11 ] || echo "  $name: ours $ours, $repo has $theirs" >> /tmp/losers
+                if [ "$rc" != 11 ]; then
+                  echo "  $name: ours $ours, $repo has $theirs" >> /tmp/losers
+                  rpm -qp --qf "%{SOURCERPM}\n" "$rpm" >> /tmp/loser-sources
+                fi
                 # .hum1.bfin outranks .hum1 at equal release by construction, so
                 # a package the base OS also ships no longer appears as a loser.
                 # It is still worth knowing about: this factory is for the
@@ -711,7 +745,12 @@ jobs:
                 echo "instead. That appends .N after .bfin, which is what AlmaLinux does"
                 echo "with .alma.1. It cannot help with a release bump, because the"
                 echo "leading segment comes from the spec."
-                exit 1
+                echo
+                echo "Their source packages keep their previous published build."
+                sed -e "s/-[^-]*-[^-]*\.src\.rpm$//" /tmp/loser-sources | sort -u > /work/precedence-losers
+                while read -r source; do
+                  echo "::warning title=precedence::$source does not outrank Fedora or Hummingbird and is not published"
+                done < /work/precedence-losers
               fi
               if [ -s /tmp/overlap ]; then
                 echo "Note: Hummingbird also ships these, and we outrank it:"
@@ -719,16 +758,35 @@ jobs:
                 echo "The remit is the desktop stack Hummingbird does not ship, so each of"
                 echo "these is worth checking. Not a failure."
               fi
-              echo "every build outranks what Fedora 44 and Hummingbird offer"
+              [ -s /tmp/losers ] || echo "every build outranks what Fedora 44 and Hummingbird offer"
             '
+      - name: Name the losing source packages
+        id: losers
+        run: |
+          if [ -s work/precedence-losers ]; then
+            echo "losers=$(jq -R . work/precedence-losers | jq -sc .)" >> "$GITHUB_OUTPUT"
+          else
+            echo "losers=[]" >> "$GITHUB_OUTPUT"
+          fi
 
   publish:
-    # The consumer tag is atomic. Successful artifacts from a failed matrix are
-    # still retained by Actions for diagnosis, but they never replace the
-    # coherent repository Utah consumes. Publication requires every selected
-    # stage plus precedence and the Hummingbird-only transaction below.
+    # Incremental, the way Fedora and Hummingbird publish: each package this
+    # run built replaces its own previous build, and nothing else changes. A
+    # package that failed -- or lost precedence -- keeps its previous
+    # published build, or stays absent if it never built; the report job
+    # names every one of them. It used to be atomic: one failed package held
+    # back the rest, and over four weeks 3 of 117 full runs published while
+    # fish's one flaky test blocked every package behind it.
     #
-    # "Every selected stage" was what this said and not what it did: needs
+    # What still gates the tag is the Hummingbird-only consumer transaction
+    # over the whole candidate. If the new set does not resolve, nothing
+    # moves. tools/publish_gate.py encodes the rule and checks this job
+    # against it.
+    #
+    # The job still waits for every wave to FINISH (needs), so it can never
+    # publish around a wave that is still building. Before this was
+    # incremental, "every selected stage" was also what this said and not
+    # what it did: needs
     # stopped at rebuild4, so publication ran while stages 5 to 10 were still
     # building and validated a repository that could not yet contain their
     # output. The first run to reach the transaction check said so plainly --
@@ -756,18 +814,7 @@ jobs:
               || needs.prepare.outputs.prune_sources != '[]')
           && (needs.precedence.result == 'success'
               || (needs.prepare.outputs.build_list == '[]'
-                  && needs.precedence.result == 'skipped'))
-          && (needs.rebuild0.result == 'success' || needs.rebuild0.result == 'skipped')
-          && (needs.rebuild1.result == 'success' || needs.rebuild1.result == 'skipped')
-          && (needs.rebuild2.result == 'success' || needs.rebuild2.result == 'skipped')
-          && (needs.rebuild3.result == 'success' || needs.rebuild3.result == 'skipped')
-          && (needs.rebuild4.result == 'success' || needs.rebuild4.result == 'skipped')
-          && (needs.rebuild5.result == 'success' || needs.rebuild5.result == 'skipped')
-          && (needs.rebuild6.result == 'success' || needs.rebuild6.result == 'skipped')
-          && (needs.rebuild7.result == 'success' || needs.rebuild7.result == 'skipped')
-          && (needs.rebuild8.result == 'success' || needs.rebuild8.result == 'skipped')
-          && (needs.rebuild9.result == 'success' || needs.rebuild9.result == 'skipped')
-          && (needs.rebuild10.result == 'success' || needs.rebuild10.result == 'skipped') }}
+                  && needs.precedence.result == 'skipped')) }}
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8, rebuild9, rebuild10, precedence]
     # Build waves can overlap, but the consumer tag is an atomic input. Queue
     # only this critical section per ref. The seed step verifies that the image
@@ -780,6 +827,7 @@ jobs:
     outputs:
       ref: ${{ steps.oci.outputs.ref }}
       digest: ${{ steps.oci.outputs.digest }}
+      report: ${{ steps.assemble.outputs.report }}
     steps:
       # The consumer-transaction check below runs tools/runtime_contract.py
       # against config/, and the OCI step reads nothing else from the tree, so
@@ -875,17 +923,44 @@ jobs:
             podman cp "$container:/repository/." repository/
             podman rm "$container"
           fi
+      # Into built/, not straight into the seed. Copying on top of the seed
+      # left a package's old subpackages in place whenever a build renamed or
+      # dropped one; replacement has to be by source package.
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         if: needs.prepare.outputs.build_list != '[]'
         with:
           pattern: ${{ inputs.artifact_prefix }}rpm-*
-          path: repository
+          path: built
           merge-multiple: true
+      - name: Replace the packages this run built
+        id: assemble
+        env:
+          BUILD_LIST: ${{ needs.prepare.outputs.build_list }}
+          LOSERS: ${{ needs.precedence.outputs.losers || '[]' }}
+          PRUNE_SOURCES: ${{ needs.prepare.outputs.prune_sources }}
+        run: |
+          set -euo pipefail
+          sudo apt-get update && sudo apt-get install -y createrepo-c rpm
+          mkdir -p built
+          python3 tools/publish_gate.py assemble \
+            --seed repository --built built \
+            --build-list "$BUILD_LIST" --losers "$LOSERS" \
+            --report work/publish-report.json | tee -a "$GITHUB_STEP_SUMMARY"
+          replaced=$(jq '.replaced | length' work/publish-report.json)
+          pruned=$(jq 'length' <<<"$PRUNE_SOURCES")
+          # A run in which nothing built and nothing is pruned has nothing to
+          # publish; republishing the seed would only move the digest.
+          if [ $((replaced + pruned)) -gt 0 ]; then
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            echo "nothing built and nothing to prune: the published image stays as it is" | tee -a "$GITHUB_STEP_SUMMARY"
+          fi
+          echo "report=$(jq -c . work/publish-report.json)" >> "$GITHUB_OUTPUT"
       - name: Create and keylessly sign repository metadata
         env:
           PRUNE_SOURCES: ${{ needs.prepare.outputs.prune_sources }}
         run: |
-          sudo apt-get update && sudo apt-get install -y createrepo-c rpm
           # A recipe removal does not remove its RPMs from the previous OCI
           # repository we seed above. Drop every binary whose source package is
           # now owned by Hummingbird before regenerating metadata. The prepare
@@ -1006,6 +1081,7 @@ jobs:
       # rather than from an unsigned directory of RPMs over HTTPS.
       - name: Publish the repository as an OCI image
         id: oci
+        if: steps.assemble.outputs.publish == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DOCKER_CONFIG: ${{ runner.temp }}/.docker
@@ -1073,6 +1149,7 @@ jobs:
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
       - name: Sign the published image
+        if: steps.oci.outputs.digest != ''
         env:
           COSIGN_YES: "true"
           DOCKER_CONFIG: ${{ runner.temp }}/.docker
@@ -1091,6 +1168,7 @@ jobs:
       #   No credentials found for registry ghcr.io
       # Log in where the action looks.
       - name: Log in to GHCR for the provenance attestation
+        if: steps.oci.outputs.digest != ''
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ACTOR: ${{ github.actor }}
@@ -1104,6 +1182,7 @@ jobs:
       # missing for that digest, so it can be re-attested.
       - name: Attest build provenance
         id: attest
+        if: steps.oci.outputs.digest != ''
         continue-on-error: true
         uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4
         with:
@@ -1121,3 +1200,82 @@ jobs:
             echo
             echo "**Warning:** \`${IMAGE}@${DIGEST}\` is published and cosign-signed, but its build-provenance attestation failed."
           } >> "$GITHUB_STEP_SUMMARY"
+
+  # Names every package that did not publish, loudly, whether or not publish
+  # ran: in the job summary on every run, and on main in one tracking issue
+  # that is opened, updated as the failing set changes, and closed by the
+  # first run with no failures. Failures are read from the run's own artifact
+  # list -- build-stage.yml uploads rpm-s<stage>-<package> only for a package
+  # that produced RPMs -- so a publish that never started still gets a report.
+  report:
+    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8, rebuild9, rebuild10, precedence, publish]
+    if: ${{ always() && needs.prepare.result == 'success' && needs.prepare.outputs.build_list != '[]' }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: read
+      issues: write
+    outputs:
+      failed: ${{ steps.name.outputs.failed }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Name every package that did not publish
+        id: name
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          BUILD_LIST: ${{ needs.prepare.outputs.build_list }}
+          LOSERS: ${{ needs.precedence.outputs.losers || '[]' }}
+          PREFIX: ${{ inputs.artifact_prefix }}
+          PUBLISH_RESULT: ${{ needs.publish.result }}
+          PUBLISH_REPORT: ${{ needs.publish.outputs.report }}
+          DIGEST: ${{ needs.publish.outputs.digest }}
+        run: |
+          set -euo pipefail
+          gh api --paginate "repos/$REPOSITORY/actions/runs/$RUN_ID/artifacts?per_page=100" \
+            --jq '.artifacts[].name' | jq -R . | jq -s . > artifacts.json
+          python3 tools/publish_gate.py report \
+            --build-list "$BUILD_LIST" --artifacts artifacts.json --prefix "$PREFIX" \
+            --losers "$LOSERS" --publish-result "$PUBLISH_RESULT" \
+            --publish-report "$PUBLISH_REPORT" --digest "$DIGEST" --run-url "$RUN_URL" \
+            --output report.md --failed-output failed.json > /dev/null
+          cat report.md >> "$GITHUB_STEP_SUMMARY"
+          echo "failed=$(jq -c . failed.json)" >> "$GITHUB_OUTPUT"
+          for name in $(jq -r '.[]' failed.json); do
+            echo "::error title=package not published::$name failed this run and was not replaced"
+          done
+      - name: Open, update or close the tracking issue
+        if: github.ref == 'refs/heads/main' && inputs.publish_tag == ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          PUBLISH_RESULT: ${{ needs.publish.result }}
+        run: |
+          set -euo pipefail
+          title="Factory: packages failing on main"
+          number=$(gh issue list -R "$REPOSITORY" --state open --limit 50 \
+            --search "in:title \"$title\"" --json number,title \
+            --jq ".[] | select(.title == \"$title\") | .number" | head -n1)
+          healthy=false
+          if [ "$(jq length failed.json)" -eq 0 ] && [ "$PUBLISH_RESULT" != failure ]; then
+            healthy=true
+          fi
+          if [ "$healthy" = true ]; then
+            if [ -n "$number" ]; then
+              gh issue close "$number" -R "$REPOSITORY" --comment "Fixed: $RUN_URL built every selected package and published."
+            fi
+            exit 0
+          fi
+          if [ -z "$number" ]; then
+            gh issue create -R "$REPOSITORY" --title "$title" --body-file report.md
+            exit 0
+          fi
+          gh issue view "$number" -R "$REPOSITORY" --json body --jq .body > previous.md
+          previous=$(python3 tools/publish_gate.py marker previous.md)
+          gh issue edit "$number" -R "$REPOSITORY" --body-file report.md
+          if [ "$previous" != "$(jq -c . failed.json)" ]; then
+            gh issue comment "$number" -R "$REPOSITORY" --body-file report.md
+          fi

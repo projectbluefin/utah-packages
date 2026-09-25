@@ -156,8 +156,9 @@ validated 397 source RPMs
 | `prepare` | Selects the packages that are new, changed, or requested by a full rebuild, then emits five stage lists. A package declaring a stage above 4 has no job to run in, so this fails and names it rather than dropping it. |
 | `preflight` | Resolves BuildRequires for the selected packages in the real build root and uploads a worklist; it is `continue-on-error`. Its output is advisory: the waves are still driven by the hand-assigned `stage` in config, not by what this resolves. |
 | `rebuild0` through `rebuild4` | Five calls to the reusable `build-stage.yml`, one per wave, each a `fail-fast: false` package matrix. Each later stage downloads the earlier workflow artifacts, creates a local `[stages]` dnf repository with `createrepo_c`, and resolves against it. |
-| `precedence` | Checks that each produced RPM outranks what Fedora 44 and Hummingbird already offer, and reports any name Hummingbird also provides. |
-| `publish` | Merges the stage artifacts, removes the bootstrap RPM, creates and signs repository metadata, validates the Hummingbird-only transaction, and publishes a GHCR OCI image that is both cosign-signed and provenance-attested. |
+| `precedence` | Checks that each produced RPM outranks what Fedora 44 and Hummingbird already offer, and reports any name Hummingbird also provides. A source package with a losing RPM is named in its `losers` output and kept out of the repository; it does not fail the job. |
+| `publish` | Seeds from the verified previous image, replaces the RPMs of each source package this run built (and did not lose precedence) by source name, removes the bootstrap RPM, creates and signs repository metadata, validates the Hummingbird-only transaction over the whole candidate, and publishes a GHCR OCI image that is both cosign-signed and provenance-attested. A failed package keeps its previous build. |
+| `report` | Runs whether or not publish did. Names every selected package that did not publish -- from the run's own artifact list -- in the job summary, and on `main` opens, updates or closes the tracking issue *Factory: packages failing on main*. |
 
 `.github/workflows/build-stage.yml` is the wave itself, and the only place a
 package is built. It takes a stage number and a JSON list of packages; it
@@ -174,11 +175,29 @@ Inside the Fedora 44 container, the workflow stages the verified source and
 runs `rpmbuild -br` to resolve generated BuildRequires, followed by
 `rpmbuild -ba` to produce the binary RPMs.
 
+### Incremental publication
+
+Publication follows Fedora and Hummingbird: each good build goes into the
+repository. The candidate is the previous published image, verified, with
+every source package this run built replacing its own previous RPMs, by
+source name so a dropped subpackage leaves with it. A package that failed to
+build, or built but does not outrank Fedora or Hummingbird, keeps its
+previous published build, or stays absent if it never had one.
+
+What still gates the tag is the Hummingbird-only consumer transaction over the
+whole candidate: it is what protects Utah. If the new set does not resolve,
+the tag does not move, however many packages built. `tools/publish_gate.py`
+decides the replacement (`assemble`), models the gate (`publish_allowed`) and
+checks the publish job against both; `tests/test_incremental_publish.py`
+drives them through each failure mode.
+
+It used to be atomic: one failed package held back every other one, and over
+four weeks 3 of 117 full runs published while one flaky `fish` test blocked
+everything behind it.
+
 ### Preserving completed package builds
 
-Atomic repository publication and incremental work preservation are separate.
-The consumer image advances only after the complete repository passes its
-gates. Each successful package build is also written immediately to a
+Each successful package build is also written immediately to a
 content-keyed OCI cache, so a later run can restore completed RPMs even when
 the earlier run never published a repository. Restored RPMs follow the same
 stage-artifact and final-gate path as freshly compiled RPMs.
@@ -200,7 +219,7 @@ Merge queue is the next step only after repeated factory runs prove that cache
 hits skip compilation and that successful packages survive a failed run. When
 enabled, merge groups should require the fast validation workflow. After a
 batch merges, run the factory once at the final `main` commit (or use the next
-daily run), then atomically publish that batch. The operational rationale is
+daily run), then publish that batch. The operational rationale is
 part of the cache contract in
 [`docs/skills/package-build-cache.md`](skills/package-build-cache.md#merge-queue-rollout-and-batching).
 
@@ -250,7 +269,7 @@ The repository gates are enforced across CI workflows and collected in `Justfile
 | Package factory configuration | `tools/validate.py` | `.github/workflows/validate.yml` | Import provenance in `.hummingbird-upstream.json`, source-lock coverage, and Packit configuration for every recipe |
 | Workflow shell quoting | `tools/check_workflow_quoting.py` | `.github/workflows/rebuild-rpms.yml` (`prepare`) | Shell-quoting safety of build scripts embedded in GitHub Actions workflows |
 | Runtime contract | `tools/runtime_contract.py config/bluefin-packages.toml config/runtime-contract.toml --check` | `.github/workflows/rebuild-rpms.yml` (`prepare`) | Image manifest resolution against the pinned Hummingbird runtime contract |
-| Unit tests | `pytest tests` / `unittest discover` | `.github/workflows/validate.yml`, `.github/workflows/rebuild-rpms.yml` (`prepare`) | The tooling in `tools/`, including `tools/publish_gate.py`, whose regression test asserts the rebuild-rpms.yml publish job stays gated so a failed build, precedence, or unresolved Hummingbird-only transaction cannot partially replace the published factory |
+| Unit tests | `pytest tests` / `unittest discover` | `.github/workflows/validate.yml`, `.github/workflows/rebuild-rpms.yml` (`prepare`) | The tooling in `tools/`, including `tools/publish_gate.py`, whose regression test asserts the rebuild-rpms.yml publish job replaces only what a run built, keeps a failed or precedence-losing package at its previous build, and never publishes a candidate whose Hummingbird-only transaction does not resolve |
 
 `just check` runs all five gates (`factory-check`, `validate`, `workflow-quoting`,
 `runtime-contract`, `test`), and `tests/test_gate_catalog.py` structurally
