@@ -59,6 +59,17 @@ jobs:
       # correct when the run started. So the tag is pulled once here and the
       # bytes are shared with every job; a mismatch against this digest is
       # reported, not fatal, because failing on it recreates that outage.
+      #
+      # That still left the root moving under the factory several times a
+      # day, and the package cache key includes its digest, so every late
+      # stage missed (webkitgtk built cold twice, 2cdfedd -> 94e175d). The
+      # factory now owns the root: refresh-buildroot.yml copies fedora:44 to
+      # ghcr.io/projectbluefin/utah-buildroot weekly under a dated tag, which
+      # nothing prunes, and opens a PR moving this pin
+      # (tools/buildroot_pin.py). A mirror pin is pulled by digest and a
+      # failure is fatal: that digest cannot rot. A quay.io value is the
+      # legacy form and keeps the old pull-the-tag-and-warn behaviour until
+      # the first mirror PR lands.
       BUILDROOT_IMAGE: quay.io/fedora/fedora:44@sha256:94e175d9796d3582d4d3cdcff1004bd67cc51dc45df452d3b16f76f071c7c487
     outputs:
       buildroot_digest: ${{ steps.buildroot.outputs.digest }}
@@ -111,14 +122,25 @@ jobs:
         run: |
           tag="${BUILDROOT_IMAGE%@*}"
           expected="${BUILDROOT_IMAGE##*@}"
-          docker pull "$tag"
-          actual=$(docker image inspect "$tag" \
-            --format '{{index .RepoDigests 0}}' | sed 's/.*@//')
+          case "$BUILDROOT_IMAGE" in
+            ghcr.io/projectbluefin/utah-buildroot:*@sha256:*)
+              # The factory mirror: immutable and never pruned, so pull the
+              # exact pinned bytes and fail if they are not there.
+              docker pull "${tag%:*}@${expected}"
+              docker tag "${tag%:*}@${expected}" "$tag"
+              actual="$expected"
+              ;;
+            *)
+              docker pull "$tag"
+              actual=$(docker image inspect "$tag" \
+                --format '{{index .RepoDigests 0}}' | sed 's/.*@//')
+              if [ "$actual" != "$expected" ]; then
+                echo "::warning title=build root moved::$tag now resolves to $actual, not the recorded $expected. The run continues on what it resolved to; run refresh-buildroot.yml to pin the factory mirror." >&2
+              fi
+              ;;
+          esac
           echo "expected $expected"
           echo "actual   $actual"
-          if [ "$actual" != "$expected" ]; then
-            echo "::warning title=build root moved::$tag now resolves to $actual, not the recorded $expected. The run continues on what it resolved to; update BUILDROOT_IMAGE to re-record it." >&2
-          fi
           echo "digest=$actual" >> "$GITHUB_OUTPUT"
           # A bare name, deliberately. Every job runs this image by that name
           # with no registry behind it, so a job that failed to load the

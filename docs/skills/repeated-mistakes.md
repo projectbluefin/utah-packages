@@ -141,6 +141,17 @@ pulls the build root from a registry per job. Do not add a per-job pull, and
 do not "fix" an exit 125 `manifest unknown` on the build root by editing a
 digest.
 
+**Why the mirror exists.** Pulling the moving tag kept runs alive but let the
+root change under the factory several times a day, and the package cache key
+includes the root digest, so late stages never hit: webkitgtk built cold in
+two consecutive runs because fedora:44 moved from `2cdfedd` to `94e175d`
+between them. The fix is not pulling quay by digest (that is this section's
+failure again) but owning the bytes: `refresh-buildroot.yml` copies fedora:44
+weekly to `ghcr.io/projectbluefin/utah-buildroot` under a dated tag, which
+nothing prunes, and opens a PR moving `BUILDROOT_IMAGE` there
+(`tools/buildroot_pin.py`). A mirror pin is pulled by its digest, fatally,
+because that digest cannot rot. Do not add a cleanup policy to that package.
+
 ## 8. A gate that has never run has never proved anything
 
 **What happened.** The publish job's Hummingbird-only consumer transaction is

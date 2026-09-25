@@ -107,6 +107,51 @@ class BuildRootSharingTests(unittest.TestCase):
         # inside the build step instead of a clear one here.
         self.assertIn("docker image inspect utah-buildroot:run", LOAD_ACTION.read_text())
 
+    def test_a_mirror_pin_is_pulled_by_its_exact_digest(self) -> None:
+        # The factory mirror is never pruned, so its digest is the pull
+        # target; only the legacy quay.io form pulls a moving tag.
+        prepare = jobs(REBUILD)["prepare"]
+        self.assertIn("ghcr.io/projectbluefin/utah-buildroot:*@sha256:*)", prepare)
+        self.assertIn('docker pull "${tag%:*}@${expected}"', prepare)
+
+
+class BuildRootPinTests(unittest.TestCase):
+    PIN = "ghcr.io/projectbluefin/utah-buildroot:44-20260925-94e175d9796d@sha256:" + "a" * 64
+
+    def test_the_workflow_has_exactly_one_readable_pin(self) -> None:
+        from tools import buildroot_pin
+
+        self.assertTrue(buildroot_pin.get(REBUILD.read_text()))
+
+    def test_set_moves_only_the_pin(self) -> None:
+        from tools import buildroot_pin
+
+        text = REBUILD.read_text()
+        moved = buildroot_pin.set_pin(text, self.PIN)
+        self.assertEqual(buildroot_pin.get(moved), self.PIN)
+        self.assertEqual(
+            [line for line in moved.splitlines() if "BUILDROOT_IMAGE:" not in line],
+            [line for line in text.splitlines() if "BUILDROOT_IMAGE:" not in line],
+        )
+
+    def test_set_refuses_anything_but_a_mirror_digest_pin(self) -> None:
+        from tools import buildroot_pin
+
+        text = REBUILD.read_text()
+        for bad in (
+            "quay.io/fedora/fedora:44@sha256:" + "a" * 64,  # prunable upstream
+            "ghcr.io/projectbluefin/utah-buildroot:44",  # no digest
+            "ghcr.io/projectbluefin/utah-buildroot@sha256:" + "a" * 64,  # no tag
+        ):
+            with self.assertRaises(ValueError):
+                buildroot_pin.set_pin(text, bad)
+
+    def test_the_refresh_workflow_writes_the_pin_through_the_tool(self) -> None:
+        refresh = (WORKFLOWS / "refresh-buildroot.yml").read_text()
+        self.assertIn("python3 tools/buildroot_pin.py set", refresh)
+        self.assertIn("ghcr.io/projectbluefin/utah-buildroot", refresh)
+        self.assertIn("schedule:", refresh)
+
 
 if __name__ == "__main__":
     unittest.main()
