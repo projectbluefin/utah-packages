@@ -903,8 +903,41 @@ jobs:
       # A signature says this image came from here. Provenance says what built
       # it -- workflow, commit, runner -- which is the question asked after a
       # bad package ships, and the one a signature alone cannot answer.
-      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4
+      #
+      # push-to-registry reads credentials from the default docker config
+      # (~/.docker/config.json). The publish step logs in with podman into a
+      # separate DOCKER_CONFIG under runner.temp, so run 36117470974 published
+      # and signed the image and then failed here on
+      #   No credentials found for registry ghcr.io
+      # Log in where the action looks.
+      - name: Log in to GHCR for the provenance attestation
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ACTOR: ${{ github.actor }}
+        run: echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$ACTOR" --password-stdin
+      # By this point the consumer tag has already moved and the image is
+      # signed; an attestation cannot be made before the digest exists, and
+      # pushing is what creates it. So a failure here must not turn the job
+      # red over a repository that did publish -- that is what made 36117470974
+      # look unpublished. It is non-fatal and reported loudly instead: a
+      # warning annotation and a line in the job summary saying provenance is
+      # missing for that digest, so it can be re-attested.
+      - name: Attest build provenance
+        id: attest
+        continue-on-error: true
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4
         with:
           subject-name: ${{ steps.oci.outputs.image }}
           subject-digest: ${{ steps.oci.outputs.digest }}
           push-to-registry: true
+      - name: Report a missing provenance attestation
+        if: steps.attest.outcome == 'failure'
+        env:
+          DIGEST: ${{ steps.oci.outputs.digest }}
+          IMAGE: ${{ steps.oci.outputs.image }}
+        run: |
+          echo "::warning title=provenance not attested::${IMAGE}@${DIGEST} is published and signed, but its build-provenance attestation failed; see the Attest build provenance step."
+          {
+            echo
+            echo "**Warning:** \`${IMAGE}@${DIGEST}\` is published and cosign-signed, but its build-provenance attestation failed."
+          } >> "$GITHUB_STEP_SUMMARY"
