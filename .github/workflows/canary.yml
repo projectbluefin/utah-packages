@@ -57,6 +57,14 @@ on:
         required: false
         default: false
         type: boolean
+      hermetic_packages:
+        description: >
+          JSON array: run pass6 (the hermetic lane) over these packages
+          instead of the canary set, against the published factory, to
+          measure the lane on a wider subset before it becomes the default.
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: read
@@ -85,6 +93,7 @@ jobs:
       salt: ${{ steps.name.outputs.salt }}
       set: ${{ steps.name.outputs.set }}
       set_plus: ${{ steps.name.outputs.set_plus }}
+      hermetic_set: ${{ steps.name.outputs.hermetic_set }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Does this change touch the pipeline?
@@ -119,6 +128,7 @@ jobs:
           PR: ${{ github.event.pull_request.number }}
           REF_NAME: ${{ github.ref_name }}
           FORCE: ${{ inputs.compile == true && github.run_id || '' }}
+          HERMETIC_PACKAGES: ${{ inputs.hermetic_packages }}
         run: |
           set -euo pipefail
           if [ -n "$PR" ]; then
@@ -133,6 +143,7 @@ jobs:
             echo "salt=$salt"
             echo "set=$CANARY_SET"
             echo "set_plus=$(jq -c '. + ["python-typing-inspection"]' <<<"$CANARY_SET")"
+            echo "hermetic_set=$(jq -c . <<<"${HERMETIC_PACKAGES:-$CANARY_SET}")"
           } >> "$GITHUB_OUTPUT"
           echo "canary tag $tag, cache salt $salt"
 
@@ -318,8 +329,10 @@ jobs:
     uses: ./.github/workflows/rebuild-rpms.yml
     with:
       full: true
-      packages: ${{ needs.changes.outputs.set }}
-      no_factory: true
+      packages: ${{ needs.changes.outputs.hermetic_set }}
+      # A dispatched wider subset needs the published factory for the
+      # BuildRequires it does not build itself.
+      no_factory: ${{ inputs.hermetic_packages == '' }}
       skip_publish: true
       backend: hermetic
       artifact_prefix: p6-
@@ -340,13 +353,14 @@ jobs:
           REPOSITORY: ${{ github.repository }}
           RUN_ID: ${{ github.run_id }}
           RUN_ATTEMPT: ${{ github.run_attempt }}
-          SET: ${{ needs.changes.outputs.set }}
+          SET: ${{ needs.changes.outputs.hermetic_set }}
+          DEFAULT_SET: ${{ inputs.hermetic_packages == '' && 'true' || '' }}
         run: |
           set -euo pipefail
           gh api --paginate "repos/$REPOSITORY/actions/runs/$RUN_ID/attempts/$RUN_ATTEMPT/jobs?per_page=100" \
             --jq '.jobs[]' | jq -s . > jobs.json
           python3 tools/canary.py verify-hermetic jobs.json --locks locks --set "$SET" \
-            --stage-dependency vulkan-loader=vulkan-headers >> "$GITHUB_STEP_SUMMARY"
+            ${DEFAULT_SET:+--stage-dependency vulkan-loader=vulkan-headers} >> "$GITHUB_STEP_SUMMARY"
 
   verify-cache:
     needs: [changes, pass1, pass2, pass3]
