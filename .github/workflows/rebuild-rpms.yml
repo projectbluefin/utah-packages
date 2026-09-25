@@ -799,11 +799,23 @@ jobs:
             echo "### Bluefin multimedia closure"
             echo
             echo '```json'
-            python3 tools/multimedia_closure.py \
+            # The whole block runs under `bash -e`: a non-zero exit from the
+            # tool would abort it after the opening fence, leaving the summary
+            # malformed and silent about the cause while the ERROR line went to
+            # stderr alone. Capture the status, put the failure inside the
+            # fence, and close it either way.
+            status=0
+            output=$(python3 tools/multimedia_closure.py \
               --repodata repository/repodata \
-              --output repository/reports/multimedia-closure.json
+              --output repository/reports/multimedia-closure.json 2>&1) || status=$?
+            echo "$output"
             echo '```'
+            if [ "$status" -ne 0 ]; then
+              echo
+              echo "multimedia closure report failed with exit status $status"
+            fi
           } >> "$GITHUB_STEP_SUMMARY"
+          exit "$status"
       - name: Validate Hummingbird-only consumer transaction
         run: |
           CONTRACT=$(python3 tools/runtime_contract.py \

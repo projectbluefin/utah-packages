@@ -356,6 +356,16 @@ class PublishedNevraTests(unittest.TestCase):
                 "primary.xml would fail there with the module missing",
             )
 
+    def test_the_publish_summary_closes_its_fence_on_failure(self) -> None:
+        from tools.publish_gate import load_workflow
+
+        workflow = load_workflow()
+        publish_steps = workflow["jobs"]["publish"]["steps"]
+        step = next(s for s in publish_steps if "Report the Bluefin multimedia closure" in s.get("name", ""))
+        run = step["run"]
+        self.assertIn("|| status=$?", run)
+        self.assertIn('exit "$status"', run)
+
     def test_an_uncompressed_primary_is_read(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             repodata = Path(directory)
