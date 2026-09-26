@@ -303,9 +303,24 @@ files for developing applications that use JavaScript engine from webkit2gtk-4.1
 %global optflags %(echo %{optflags} | sed 's/-mbranch-protection=standard /-mbranch-protection=pac-ret /')
 %endif
 
+# The GitHub factory mounts a pinned sccache client in /work (the same one
+# mozjs140 uses). webkitgtk is the longest build in the factory: 3 to 5 hours
+# of a 6 hour job limit, twice over (gtk4 and gtk3 flavors). sccache writes each
+# object to the Actions cache as it compiles, so even an attempt that hits the
+# job limit leaves the next attempt mostly cache hits. Optional, so the
+# imported recipe stays directly buildable outside CI.
+launcher=
+if test -x /work/tools/sccache && test -r /work/tools/sccache.env; then
+  # rpmbuild traces %%build; source the short-lived cache credentials quietly.
+  case "$-" in *x*) sccache_restore_xtrace=1; set +x ;; *) sccache_restore_xtrace=0 ;; esac
+  . /work/tools/sccache.env
+  if test "$sccache_restore_xtrace" = 1; then set -x; fi
+  launcher="-DCMAKE_C_COMPILER_LAUNCHER=/work/tools/sccache -DCMAKE_CXX_COMPILER_LAUNCHER=/work/tools/sccache"
+fi
+
 mkdir webkitgtk-6.0
 pushd webkitgtk-6.0
-%cmake -S .. \
+%cmake -S .. $launcher \
   -GNinja \
   -DPORT=GTK \
   -DCMAKE_BUILD_TYPE=Release \
@@ -319,7 +334,7 @@ popd
 
 mkdir webkit2gtk-4.1
 pushd webkit2gtk-4.1
-%cmake -S .. \
+%cmake -S .. $launcher \
   -GNinja \
   -DPORT=GTK \
   -DCMAKE_BUILD_TYPE=Release \
@@ -341,6 +356,9 @@ pushd webkit2gtk-4.1
 export NINJA_STATUS="[2/2][%f/%t %es] "
 %cmake_build %limit_build -m 3072
 popd
+if test -x /work/tools/sccache; then
+  /work/tools/sccache --show-stats || true
+fi
 
 %install
 pushd webkitgtk-6.0

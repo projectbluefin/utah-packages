@@ -148,7 +148,7 @@ jobs:
             echo "perturbed $spec"
           done
       - uses: ./.github/actions/setup-sccache
-        if: matrix.package == 'mozjs140'
+        if: contains(fromJSON('["mozjs140", "webkitgtk"]'), matrix.package)
       - uses: ./.github/actions/load-buildroot
         with:
           artifact: ${{ inputs.artifact_prefix }}buildroot-image
