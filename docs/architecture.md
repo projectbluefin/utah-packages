@@ -207,6 +207,18 @@ decides the replacement (`assemble`), models the gate (`publish_allowed`) and
 checks the publish job against both; `tests/test_incremental_publish.py`
 drives them through each failure mode.
 
+A second, advisory check follows it: what Utah actually installs. The gate's
+contract is about 78 packages; Utah installs about 120 -- Bluefin's
+`[fedora]` and `[fedora_v44]` plus Utah's `[gnome]`, `[parity]`, `[hardware]`,
+`[services]` and `[build]`, minus `[unavailable]`. `tools/utah_install_set.py`
+computes that set with Utah's own `scripts/install-packages.py`, fetched from
+Utah's `main` with its repository files, and resolves it in the Hummingbird
+base image against the candidate plus Hummingbird, naming every package that
+does not resolve. It warns rather than blocks, so one gap cannot freeze every
+other package: the job summary lists them, and on `main` the report job keeps
+one *Utah install set: <package> does not resolve* issue per package, closing
+each on the first run in which it resolves.
+
 It used to be atomic: one failed package held back every other one, and over
 four weeks 3 of 117 full runs published while one flaky `fish` test blocked
 everything behind it.

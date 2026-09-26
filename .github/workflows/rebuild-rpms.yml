@@ -133,6 +133,9 @@ on:
       failed:
         description: JSON names of the selected packages that did not publish
         value: ${{ jobs.report.outputs.failed }}
+      utah_report:
+        description: JSON verdict of resolving what Utah installs against the candidate
+        value: ${{ jobs.publish.outputs.utah_report }}
 
 permissions:
   contents: read
@@ -1022,6 +1025,7 @@ jobs:
       ref: ${{ steps.oci.outputs.ref }}
       digest: ${{ steps.oci.outputs.digest }}
       report: ${{ steps.assemble.outputs.report }}
+      utah_report: ${{ steps.utah.outputs.report }}
     steps:
       # The consumer-transaction check below runs tools/runtime_contract.py
       # against config/, and the OCI step reads nothing else from the tree, so
@@ -1281,6 +1285,34 @@ jobs:
               fi
               echo "Hummingbird-only consumer transaction resolves ${#packages[@]} packages"
             '
+      # What Utah actually installs, which is more than the contract above:
+      # Bluefin's [fedora] and [fedora_v44] plus Utah's [gnome], [parity],
+      # [hardware], [services] and [build], minus [unavailable] -- computed
+      # by Utah's own scripts/install-packages.py and resolved with Utah's
+      # own repository files, fetched from projectbluefin/utah main. Utah
+      # found libgphoto2 -> libexif/lockdev and libppd -> ghostscript one
+      # image build at a time; this names every such gap on every run.
+      #
+      # Advisory, by decision: under incremental publication one package's
+      # gap must not freeze every other package. It warns, fills the job
+      # summary, and the report job keeps one issue per package on main.
+      - name: Resolve what Utah installs (advisory)
+        id: utah
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          BASE_IMAGE=$(python3 tools/runtime_contract.py \
+            config/bluefin-packages.toml config/runtime-contract.toml --base-image)
+          python3 tools/utah_install_set.py fetch --dir work/utah
+          docker run --rm \
+            -v "$PWD/repository:/etc/utah-packages:ro,Z" \
+            -v "$PWD/work/utah:/utah:Z" \
+            -v "$PWD/tools:/tools:ro,Z" \
+            "$BASE_IMAGE" python3 /tools/utah_install_set.py resolve --dir /utah --report /utah/report.json
+          python3 tools/utah_install_set.py summary work/utah/report.json >> "$GITHUB_STEP_SUMMARY"
+          jq -r '.unresolved | to_entries[] | "::warning title=Utah cannot install \(.key)::\(.value)"' \
+            work/utah/report.json
+          echo "report=$(jq -c . work/utah/report.json)" >> "$GITHUB_OUTPUT"
       # The repository as an OCI image, which is how everything else in this
       # ecosystem ships build output: Utah Containerfile already pulls
       # projectbluefin/common and ublue-os/brew this way, pinned by digest.
@@ -1472,6 +1504,43 @@ jobs:
           for name in $(jq -r '.[]' failed.json); do
             echo "::error title=package not published::$name failed this run and was not replaced"
           done
+      # One issue per package Utah cannot install from the published
+      # repository, opened when it appears and closed by the first run in
+      # which it resolves. Only when the check actually ran.
+      - name: Track each package Utah cannot install
+        if: github.ref == 'refs/heads/main' && inputs.publish_tag == '' && inputs.artifact_prefix == '' && needs.publish.outputs.utah_report != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          UTAH_REPORT: ${{ needs.publish.outputs.utah_report }}
+        run: |
+          set -euo pipefail
+          prefix="Utah install set: "
+          gh issue list -R "$REPOSITORY" --state open --limit 200 \
+            --search "in:title \"$prefix\"" --json number,title > open.json
+          jq -r '.unresolved | keys[]' <<<"$UTAH_REPORT" > unresolved.txt
+          while read -r package; do
+            [ -n "$package" ] || continue
+            title="${prefix}${package} does not resolve"
+            why=$(jq -r --arg p "$package" '.unresolved[$p]' <<<"$UTAH_REPORT")
+            fence='```'
+            body=$(printf "Utah installs %s (projectbluefin/utah packages/*.toml), and it does not resolve against the published factory repository plus Hummingbird:\n\n%s\n%s\n%s\n\nLast seen: %s\n\nThis issue closes itself on the first run in which it resolves.\n" "$package" "$fence" "$why" "$fence" "$RUN_URL")
+            number=$(jq -r --arg t "$title" '.[] | select(.title == $t) | .number' open.json | head -n1)
+            if [ -z "$number" ]; then
+              gh issue create -R "$REPOSITORY" --title "$title" --body "$body"
+            else
+              gh issue edit "$number" -R "$REPOSITORY" --body "$body"
+            fi
+          done < unresolved.txt
+          jq -r --arg prefix "$prefix" '.[] | select(.title | startswith($prefix)) | "\(.number)\t\(.title)"' open.json \
+            | while IFS=$'\t' read -r number title; do
+                package=${title#"$prefix"}
+                package=${package% does not resolve}
+                if ! grep -qxF "$package" unresolved.txt; then
+                  gh issue close "$number" -R "$REPOSITORY" --comment "Resolves as of $RUN_URL."
+                fi
+              done
       - name: Open, update or close the tracking issue
         # Production runs only. A canary pass leaves publish_tag empty when
         # it does not publish, and a canary dispatched on main runs with

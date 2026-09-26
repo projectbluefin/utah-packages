@@ -194,6 +194,17 @@ jobs:
             -o check-repo-availability.py
           python3 tools/canary.py verify-image "${IMAGE%:*}@${DIGEST}" \
             --utah-reader check-repo-availability.py --expect "$SET" --expect-state
+      # The canary's repository is three packages, so most of what Utah
+      # installs cannot resolve against it; what this proves is that the
+      # advisory check ran, with Utah's own code, over Utah's whole set.
+      - name: The Utah install-set check ran
+        env:
+          UTAH_REPORT: ${{ needs.pass1.outputs.utah_report }}
+        run: |
+          set -euo pipefail
+          requested=$(jq -r '.requested' <<<"${UTAH_REPORT:-null}")
+          echo "Utah install set checked: $requested packages, $(jq '.unresolved | length' <<<"$UTAH_REPORT") unresolved against the canary repository"
+          test "$requested" -ge 100
       - name: Verify the signature and provenance of the canary image
         env:
           GH_TOKEN: ${{ github.token }}
