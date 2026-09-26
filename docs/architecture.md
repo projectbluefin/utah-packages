@@ -141,7 +141,7 @@ The root Packit configuration and the source lock both cover all 400 recipes:
 `python3 tools/validate.py` reports:
 
 ```text
-validated 400 source RPMs
+validated 400 source RPMs (397 rawhide, 3 upstream)
 ```
 
 ## Current binary pipeline

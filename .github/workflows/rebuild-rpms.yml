@@ -487,6 +487,17 @@ jobs:
             -v "$PWD/config:/repos:ro,Z" \
             utah-buildroot:run bash -exc '
               disable=--disablerepo=fedora-cisco-openh264
+              # The pinned image as prepare pulled it, before anything below
+              # changes it: that is the set of packages the recorded digest
+              # names. It is not the root any wave builds in. The hermetic
+              # lane resolves the root of each package in mock and uploads it,
+              # NEVRA by NEVRA, as lock-s<N>-<package>; the container lane
+              # installs @buildsys-build and the BuildRequires on this image.
+              # Only rpm runs here: the root carries no interpreter this job is
+              # entitled to assume, and installing one to take its own
+              # inventory would change the thing being measured.
+              rpm -qa --qf "%{NAME}\t%|EPOCH?{%{EPOCH}:}|%{VERSION}-%{RELEASE}\t%{ARCH}\n" \
+                > /work/reports/buildroot-fedora-44.rpms
               # The Fedora container images set tsflags=nodocs, so every %doc file is
               # dropped at install time. rand_core ships its crate docs that way and
               # its lib.rs does #![doc = include_str!("../README.md")], so rust-just
@@ -545,10 +556,27 @@ jobs:
               echo "=== recipes with unresolved BuildRequires ==="
               cat /work/reports/preflight.txt
             '
+      # The snapshot is assembled on the runner, from the inventory the image
+      # printed, so the image itself needs nothing but rpm. It records the
+      # digest prepare resolved beside the digest the lock expects, and
+      # publish-repository.yml attests it only when those name this run's root.
+      - name: Snapshot the build root package set
+        env:
+          BUILDROOT_DIGEST: ${{ needs.prepare.outputs.buildroot_digest }}
+        run: |
+          python3 tools/buildroot_lock.py snapshot fedora-44 \
+            --packages-from work/reports/buildroot-fedora-44.rpms \
+            --digest "$BUILDROOT_DIGEST" \
+            --output work/reports/buildroot-fedora-44.json
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: ${{ inputs.artifact_prefix }}preflight-buildrequires
           path: work/reports/preflight.txt
+          if-no-files-found: warn
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: ${{ inputs.artifact_prefix }}preflight-buildroot
+          path: work/reports/buildroot-fedora-44.json
           if-no-files-found: warn
 
   # Fourteen waves of the same build, ordered so a package can resolve a
@@ -879,7 +907,7 @@ jobs:
   # each seeds from the image the previous one pushed -- allowed because it
   # carries this run's id.
   publish0:
-    needs: [prepare, rebuild0]
+    needs: [prepare, preflight, rebuild0]
     if: ${{ !cancelled() && needs.prepare.result == 'success' && inputs.skip_publish != true && contains(fromJSON(needs.prepare.outputs.early_waves), '0') }}
     uses: ./.github/workflows/publish-repository.yml
     with:
@@ -887,12 +915,13 @@ jobs:
       final: false
       build_list: ${{ needs.prepare.outputs.through0 }}
       seed_image: ${{ needs.prepare.outputs.seed_image }}
+      buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
       trusted: ${{ needs.prepare.outputs.trusted }}
       artifact_prefix: ${{ inputs.artifact_prefix }}
       publish_tag: ${{ inputs.publish_tag }}
       consumer: ${{ inputs.consumer || 'contract' }}
   publish1:
-    needs: [prepare, rebuild0, rebuild1, publish0]
+    needs: [prepare, preflight, rebuild0, rebuild1, publish0]
     if: ${{ !cancelled() && needs.prepare.result == 'success' && inputs.skip_publish != true && contains(fromJSON(needs.prepare.outputs.early_waves), '1') }}
     uses: ./.github/workflows/publish-repository.yml
     with:
@@ -900,12 +929,13 @@ jobs:
       final: false
       build_list: ${{ needs.prepare.outputs.through1 }}
       seed_image: ${{ needs.prepare.outputs.seed_image }}
+      buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
       trusted: ${{ needs.prepare.outputs.trusted }}
       artifact_prefix: ${{ inputs.artifact_prefix }}
       publish_tag: ${{ inputs.publish_tag }}
       consumer: ${{ inputs.consumer || 'contract' }}
   publish2:
-    needs: [prepare, rebuild0, rebuild1, rebuild2, publish0, publish1]
+    needs: [prepare, preflight, rebuild0, rebuild1, rebuild2, publish0, publish1]
     if: ${{ !cancelled() && needs.prepare.result == 'success' && inputs.skip_publish != true && contains(fromJSON(needs.prepare.outputs.early_waves), '2') }}
     uses: ./.github/workflows/publish-repository.yml
     with:
@@ -913,12 +943,13 @@ jobs:
       final: false
       build_list: ${{ needs.prepare.outputs.through2 }}
       seed_image: ${{ needs.prepare.outputs.seed_image }}
+      buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
       trusted: ${{ needs.prepare.outputs.trusted }}
       artifact_prefix: ${{ inputs.artifact_prefix }}
       publish_tag: ${{ inputs.publish_tag }}
       consumer: ${{ inputs.consumer || 'contract' }}
   publish3:
-    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, publish0, publish1, publish2]
+    needs: [prepare, preflight, rebuild0, rebuild1, rebuild2, rebuild3, publish0, publish1, publish2]
     if: ${{ !cancelled() && needs.prepare.result == 'success' && inputs.skip_publish != true && contains(fromJSON(needs.prepare.outputs.early_waves), '3') }}
     uses: ./.github/workflows/publish-repository.yml
     with:
@@ -926,6 +957,7 @@ jobs:
       final: false
       build_list: ${{ needs.prepare.outputs.through3 }}
       seed_image: ${{ needs.prepare.outputs.seed_image }}
+      buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
       trusted: ${{ needs.prepare.outputs.trusted }}
       artifact_prefix: ${{ inputs.artifact_prefix }}
       publish_tag: ${{ inputs.publish_tag }}
@@ -936,7 +968,7 @@ jobs:
   # FINISH, so nothing is published around a wave that is still building,
   # and no wave's result can veto it (tools/publish_gate.py).
   publish:
-    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8, rebuild9, rebuild10, rebuild11, rebuild12, rebuild13, publish0, publish1, publish2, publish3]
+    needs: [prepare, preflight, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8, rebuild9, rebuild10, rebuild11, rebuild12, rebuild13, publish0, publish1, publish2, publish3]
     if: >-
       ${{ !cancelled()
           && needs.prepare.result == 'success'
@@ -949,6 +981,7 @@ jobs:
       build_list: ${{ needs.prepare.outputs.build_list }}
       prune_sources: ${{ needs.prepare.outputs.prune_sources }}
       seed_image: ${{ needs.prepare.outputs.seed_image }}
+      buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
       trusted: ${{ needs.prepare.outputs.trusted }}
       artifact_prefix: ${{ inputs.artifact_prefix }}
       publish_tag: ${{ inputs.publish_tag }}

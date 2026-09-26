@@ -38,6 +38,20 @@ UPSTREAM_PROVENANCE = {
     "imported_at": "2026-08-30T15:46:53.402315+00:00",
 }
 
+DEFAULT_BUILDROOT_PIN = (
+    "ghcr.io/projectbluefin/utah-buildroot:44-20260925-000000000000@sha256:" + "0" * 64
+)
+
+DEFAULT_BUILDROOT_LOCK = {
+    "schema": 1,
+    "buildroots": {
+        "fedora-44": {
+            "image": DEFAULT_BUILDROOT_PIN,
+            "packages": [],
+        }
+    },
+}
+
 
 class ValidateScriptTests(unittest.TestCase):
     def build(
@@ -48,6 +62,8 @@ class ValidateScriptTests(unittest.TestCase):
         provenance=RAWHIDE_PROVENANCE,
         locked=None,
         packit=None,
+        buildroot_lock=DEFAULT_BUILDROOT_LOCK,
+        buildroot_pin=DEFAULT_BUILDROOT_PIN,
     ) -> None:
         """Write a factory tree validate.py accepts unless a case breaks one rule."""
         locked = packages if locked is None else locked
@@ -64,6 +80,12 @@ class ValidateScriptTests(unittest.TestCase):
         (root / "config" / "upstream-sources.json").write_text(
             json.dumps({"packages": [{"name": name} for name in locked]})
         )
+        if buildroot_lock is not None:
+            (root / "config" / "buildroot-lock.json").write_text(
+                json.dumps(buildroot_lock)
+            )
+        if buildroot_pin is not None:
+            (root / "config" / "buildroot-image").write_text(buildroot_pin + "\n")
         entries = "".join(
             f"  {name}:\n    specfile_path: {name}.spec\n" for name in packit
         )
@@ -125,15 +147,84 @@ class ValidateScriptTests(unittest.TestCase):
         assert result.returncode != 0
         assert "upstream import must not carry tree" in result.stderr
 
+    def test_rejects_an_upstream_import_with_an_empty_remote(self) -> None:
+        result = self.check(provenance={**UPSTREAM_PROVENANCE, "remote": ""})
+        assert result.returncode != 0
+        assert "upstream import must name its upstream remote" in result.stderr
+
     def test_rejects_a_rawhide_import_with_an_empty_commit(self) -> None:
         result = self.check(provenance={**RAWHIDE_PROVENANCE, "commit": ""})
         assert result.returncode != 0
         assert "rawhide import must carry commit" in result.stderr
 
+    def test_rejects_a_rawhide_import_with_a_short_commit(self) -> None:
+        result = self.check(provenance={**RAWHIDE_PROVENANCE, "commit": "abc1234"})
+        assert result.returncode != 0
+        assert "rawhide import must carry a full commit SHA" in result.stderr
+
     def test_rejects_a_rawhide_import_with_an_empty_tree(self) -> None:
         result = self.check(provenance={**RAWHIDE_PROVENANCE, "tree": ""})
         assert result.returncode != 0
         assert "rawhide import must carry tree" in result.stderr
+
+    def test_rejects_a_rawhide_import_with_a_short_tree(self) -> None:
+        result = self.check(provenance={**RAWHIDE_PROVENANCE, "tree": "def5678"})
+        assert result.returncode != 0
+        assert "rawhide import must carry a full tree SHA" in result.stderr
+
+    def test_rejects_missing_buildroot_lock(self) -> None:
+        result = self.check(buildroot_lock=None)
+        assert result.returncode != 0
+        assert "missing buildroot lock" in result.stderr
+
+    def test_rejects_unpinned_buildroot_image(self) -> None:
+        unpinned = {
+            "schema": 1,
+            "buildroots": {
+                "fedora-44": {
+                    "image": "quay.io/fedora/fedora:44",
+                    "packages": [],
+                }
+            },
+        }
+        result = self.check(buildroot_lock=unpinned)
+        assert result.returncode != 0
+        assert "image must be digest-pinned" in result.stderr
+
+    def test_rejects_invalid_buildroot_lock_schema(self) -> None:
+        invalid = {
+            "schema": 2,
+            "buildroots": {},
+        }
+        result = self.check(buildroot_lock=invalid)
+        assert result.returncode != 0
+        assert "invalid buildroot lock" in result.stderr
+
+    def test_detects_a_lock_that_names_a_different_root_from_the_pin(self) -> None:
+        # The lock and config/buildroot-image name one root twice. The weekly
+        # refresh moves both through buildroot_pin.py set; a hand edit to
+        # either one is what this catches.
+        moved = DEFAULT_BUILDROOT_PIN.rsplit("@", 1)[0] + "@sha256:" + "1" * 64
+        result = self.check(buildroot_pin=moved)
+        assert result.returncode != 0
+        assert "buildroot drift" in result.stderr
+        assert moved in result.stderr
+
+    def test_detects_a_lock_with_no_pin_behind_it(self) -> None:
+        # prepare pulls nothing but the pin, so a lock without one describes a
+        # root no run can have built in.
+        result = self.check(buildroot_pin=None)
+        assert result.returncode != 0
+        assert "buildroot drift" in result.stderr
+        assert "no pin" in result.stderr
+
+    def test_buildroot_drift_is_reported_even_when_a_recipe_is_unlocked(self) -> None:
+        # Drift used to hide behind the recipe tally: validate returned 1 for a
+        # missing Packit entry before it ever looked at the buildroot.
+        moved = DEFAULT_BUILDROOT_PIN.rsplit("@", 1)[0] + "@sha256:" + "1" * 64
+        result = self.check(packit=(), buildroot_pin=moved)
+        assert result.returncode != 0
+        assert "buildroot drift" in result.stderr
 
     def test_reports_a_package_with_no_source_lock(self) -> None:
         result = self.check(provenance=RAWHIDE_PROVENANCE, locked=())
@@ -162,6 +253,17 @@ class ValidateScriptTests(unittest.TestCase):
         )
         assert result.returncode == 0, result.stderr
         assert "validated 3 source RPMs" in result.stdout
+
+    def test_reports_the_provenance_form_every_recipe_carries(self) -> None:
+        # Direct-upstream recipes are the form that was easiest to leave
+        # unvalidated, so the count says how many of each kind passed rather
+        # than only how many there were.
+        result = self.check(packages=("one", "two"), provenance=RAWHIDE_PROVENANCE)
+        assert result.returncode == 0, result.stderr
+        assert "validated 2 source RPMs (2 rawhide)" in result.stdout
+        result = self.check(packages=("one",), provenance=UPSTREAM_PROVENANCE)
+        assert result.returncode == 0, result.stderr
+        assert "validated 1 source RPMs (1 upstream)" in result.stdout
 
     def test_returns_zero_when_packages_directory_is_absent(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

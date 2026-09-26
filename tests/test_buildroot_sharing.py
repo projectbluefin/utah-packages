@@ -163,6 +163,46 @@ class BuildRootPinTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     buildroot_pin.set_pin(bad, path)
 
+    def test_set_moves_the_lock_beside_the_pin_so_a_refresh_passes_validate(self) -> None:
+        # refresh-buildroot.yml runs only `set`, and validate.py fails when
+        # config/buildroot-lock.json names anything but the pin. A lock left
+        # behind would fail every weekly refresh pull request.
+        import json
+        import tempfile
+        from tools import buildroot_pin
+        from tools.validate import validate_buildroots
+
+        old = self.PIN.rsplit("@", 1)[0] + "@sha256:" + "b" * 64
+        locked = [{"nevra": "glibc-2.43-1.fc44.x86_64"}]
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "buildroot-image"
+            lock = Path(tmp) / "buildroot-lock.json"
+            path.write_text(old + "\n")
+            lock.write_text(json.dumps({
+                "schema": 1,
+                "buildroots": {"fedora-44": {"image": old, "packages": locked}},
+            }))
+            buildroot_pin.set_pin(self.PIN, path)
+            moved = json.loads(lock.read_text())["buildroots"]["fedora-44"]
+            self.assertEqual(moved["image"], self.PIN)
+            # The locked package list described the old root; it is kept so
+            # `snapshot --strict` reports the divergence, not silently emptied.
+            self.assertEqual(moved["packages"], locked)
+            validate_buildroots(lock)
+
+    def test_set_leaves_the_pin_alone_when_the_lock_cannot_follow(self) -> None:
+        import tempfile
+        from tools import buildroot_pin
+
+        old = self.PIN.rsplit("@", 1)[0] + "@sha256:" + "b" * 64
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "buildroot-image"
+            path.write_text(old + "\n")
+            (Path(tmp) / "buildroot-lock.json").write_text("{not json")
+            with self.assertRaises(ValueError):
+                buildroot_pin.set_pin(self.PIN, path)
+            self.assertEqual(buildroot_pin.get(path), old)
+
     def test_the_refresh_workflow_writes_the_pin_through_the_tool(self) -> None:
         refresh = (WORKFLOWS / "refresh-buildroot.yml").read_text()
         self.assertIn("python3 tools/buildroot_pin.py set", refresh)

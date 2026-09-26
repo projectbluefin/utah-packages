@@ -36,6 +36,13 @@ on:
         required: false
         default: ''
         type: string
+      buildroot_digest:
+        description: >
+          Digest of the build root prepare resolved. The factory manifest
+          attests a buildroot snapshot only when it recorded this digest.
+        required: false
+        default: ''
+        type: string
       trusted:
         required: false
         default: '[]'
@@ -364,6 +371,21 @@ jobs:
             # The state it was published with, which this publish extends.
             podman image inspect "$current" --format '{{json .Labels}}' > work/seed-labels.json
           fi
+          # The seed carries the previous run's reports back with it, and one
+          # of those is an attestation rather than a description: a buildroot
+          # snapshot says which root *this* run built in. The download below
+          # normally replaces it, but preflight is skipped outright on a
+          # cleanup-only run and the download is continue-on-error, so the
+          # stale file would survive into the manifest as a root nothing here
+          # measured. Drop it; only this run's artifact may put one back. The
+          # source reports stay: they describe the seeded RPMs, which are still
+          # in the repository being published.
+          rm -f repository/reports/buildroot-*.json
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: ${{ inputs.artifact_prefix }}preflight-buildroot
+          path: repository/reports
+        continue-on-error: true
       # Into built/, not straight into the seed. Copying on top of the seed
       # left a package's old subpackages in place whenever a build renamed or
       # dropped one; replacement has to be by source package.
@@ -404,6 +426,25 @@ jobs:
             echo "nothing built and nothing to prune: the published image stays as it is" | tee -a "$GITHUB_STEP_SUMMARY"
           fi
           echo "report=$(jq -c . work/publish-report.json)" >> "$GITHUB_OUTPUT"
+      # The manifest reads its sources from repository/reports, so they have
+      # to move the way the RPMs do: a package this publication replaced
+      # brings the report its build just wrote (built/reports, from its
+      # rpm-s<N>-<package> artifact), a failed or losing package keeps the one
+      # it was published with, and a pruned source takes its report with it.
+      - name: Carry the source reports of what this publication replaced
+        env:
+          PRUNE_SOURCES: ${{ inputs.prune_sources }}
+        run: |
+          set -euo pipefail
+          mkdir -p repository/reports
+          for name in $(jq -r '.replaced[]' work/publish-report.json); do
+            if [ -f "built/reports/$name.json" ]; then
+              cp "built/reports/$name.json" "repository/reports/$name.json"
+            fi
+          done
+          for name in $(jq -r '.[]' <<<"$PRUNE_SOURCES"); do
+            rm -f "repository/reports/$name.json"
+          done
       - name: Create and keylessly sign repository metadata
         env:
           PRUNE_SOURCES: ${{ inputs.prune_sources }}
@@ -572,6 +613,22 @@ jobs:
           jq -r '.unresolved | to_entries[] | "::warning title=Utah cannot install \(.key)::\(.value)"' \
             work/utah/report.json
           echo "report=$(jq -c . work/utah/report.json)" >> "$GITHUB_OUTPUT"
+      # Written into repository/ so it ships inside the image it describes,
+      # and again below once the digest exists. Workflow expressions go
+      # through env: and are read as "$BUILD_LIST": inlined in run: they would
+      # be substituted before bash parses the script, in a job that holds
+      # packages: write and id-token: write.
+      - name: Emit factory manifest before container build
+        env:
+          BUILD_LIST: ${{ inputs.build_list }}
+          BUILDROOT_DIGEST: ${{ inputs.buildroot_digest }}
+        run: |
+          python3 tools/factory_manifest.py \
+            --repository repository \
+            --build-list "$BUILD_LIST" \
+            --buildroot-lock config/buildroot-lock.json \
+            --buildroot-digest "$BUILDROOT_DIGEST" \
+            --output repository/manifest.json
       # The repository as an OCI image, which is how everything else in this
       # ecosystem ships build output: Utah Containerfile already pulls
       # projectbluefin/common and ublue-os/brew this way, pinned by digest.
@@ -717,6 +774,29 @@ jobs:
             echo
             echo "**Warning:** \`${IMAGE}@${DIGEST}\` is published and cosign-signed, but its build-provenance attestation failed."
           } >> "$GITHUB_STEP_SUMMARY"
+      - name: Record published OCI digest in factory manifest
+        if: steps.oci.outputs.digest != ''
+        env:
+          BUILD_LIST: ${{ inputs.build_list }}
+          BUILDROOT_DIGEST: ${{ inputs.buildroot_digest }}
+          OCI_REF: ${{ steps.oci.outputs.ref }}
+          OCI_DIGEST: ${{ steps.oci.outputs.digest }}
+        run: |
+          python3 tools/factory_manifest.py \
+            --repository repository \
+            --build-list "$BUILD_LIST" \
+            --buildroot-lock config/buildroot-lock.json \
+            --buildroot-digest "$BUILDROOT_DIGEST" \
+            --output repository/manifest.json \
+            --oci-ref "$OCI_REF" \
+            --oci-digest "$OCI_DIGEST"
+      # One per publication: an early one covers waves 0..wave, the final one
+      # every wave, and artifact names are unique within a run.
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: steps.oci.outputs.digest != ''
+        with:
+          name: ${{ inputs.artifact_prefix }}factory-manifest${{ inputs.wave != '' && format('-wave{0}', inputs.wave) || '' }}
+          path: repository/manifest.json
 
   # Names every package that did not publish, loudly, whether or not publish
   # ran: in the job summary on every run, and on main in one tracking issue
