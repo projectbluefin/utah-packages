@@ -1,8 +1,18 @@
 %bcond mingw %[%{undefined rhel} && %{undefined flatpak}]
+# Utah factory: no Nuspell backend. Fedora's nuspell links ICU 77, while this
+# factory ships ICU 78 (libicu-devel comes from an earlier build stage and
+# every consumer links libicuuc.so.78), so no build root can hold both
+# nuspell-devel and the factory's libicu-devel, and the published enchant2
+# ended up linked against ICU 77 -- stale against the Hummingbird-only
+# runtime. Hunspell, which Fedora and GNOME spell checking primarily use,
+# stays. Rebuilding nuspell against the factory's ICU is not worth it for a
+# backend nothing here selects. Turn this back on only together with such a
+# nuspell.
+%bcond nuspell 0
 
 Name:          enchant2
 Version:       2.8.19
-Release:       2%{?dist}
+Release:       3%{?dist}
 Summary:       An Enchanting Spell Checking Library
 
 License:       LGPL-2.0-or-later
@@ -28,7 +38,9 @@ BuildRequires: vala
 
 %if !0%{?rhel}
 BuildRequires: aspell-devel
+%if %{with nuspell}
 BuildRequires: nuspell-devel
+%endif
 %endif
 
 %if %{with mingw}
@@ -68,6 +80,7 @@ Supplements:   (enchant2 and aspell)
 %description aspell
 Libraries necessary to integrate applications using libenchant with aspell.
 
+%if %{with nuspell}
 %package nuspell
 Summary:       Integration with Nuspell for libenchant
 Requires:      enchant2%{?_isa} = %{version}-%{release}
@@ -75,6 +88,7 @@ Supplements:   (enchant2 and nuspell)
 
 %description nuspell
 Libraries necessary to integrate applications using libenchant with Nuspell.
+%endif
 %endif
 
 %package voikko
@@ -132,7 +146,11 @@ pushd build_native
 %configure \
 %if !0%{?rhel}
     --with-aspell \
+%if %{with nuspell}
     --with-nuspell \
+%else
+    --without-nuspell \
+%endif
 %endif
     --with-hunspell-dir=%{_datadir}/hunspell \
     --without-hspell \
@@ -193,8 +211,10 @@ find %{buildroot} -name '*.la' -delete
 %files aspell
 %{_libdir}/enchant-2/enchant_aspell.so*
 
+%if %{with nuspell}
 %files nuspell
 %{_libdir}/enchant-2/enchant_nuspell.so*
+%endif
 %endif
 
 %files voikko
@@ -240,6 +260,10 @@ find %{buildroot} -name '*.la' -delete
 
 
 %changelog
+* Sat Sep 26 2026 Utah package factory <noreply@anthropic.com> - 2.8.19-3
+- Build without the Nuspell backend: Fedora nuspell links ICU 77 and the
+  factory ships ICU 78
+
 * Wed Jul 15 2026 Fedora Release Engineering <releng@fedoraproject.org> - 2.8.19-2
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_45_Mass_Rebuild
 
