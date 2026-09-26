@@ -397,13 +397,36 @@ class PublishGateWorkflowTests(unittest.TestCase):
     def test_the_report_job_runs_even_when_publish_does_not(self):
         report = self.workflow["jobs"]["report"]
         self.assertIn("publish", report["needs"])
-        self.assertTrue(report["if"].replace("${{", "").strip().startswith("always()"))
+        gate = report["if"].replace("${{", "").strip()
+        # A failed wave or a failed publish gate still reports...
+        self.assertTrue(gate.startswith("!cancelled()"))
+        # ...but a run cancelled by hand has nothing to name: its waves
+        # uploaded nothing, so always() reported the whole build list as
+        # failed and filed a 215-package tracking issue (#267).
+        self.assertNotIn("always()", gate)
         self.assertEqual(report["permissions"]["issues"], "write")
         issue = next(s for s in report["steps"] if "tracking issue" in str(s.get("name")))
         self.assertIn("refs/heads/main", issue["if"])
         self.assertIn("inputs.publish_tag == ''", issue["if"])
         # A canary dispatched on main must not touch the tracking issue.
         self.assertIn("inputs.artifact_prefix == ''", issue["if"])
+
+    def test_a_report_job_on_always_is_rejected(self):
+        workflow = copy.deepcopy(self.workflow)
+        workflow["jobs"]["report"]["if"] = workflow["jobs"]["report"]["if"].replace(
+            "!cancelled()", "always()")
+        with self.assertRaises(AssertionError) as caught:
+            assert_gate_enforced(workflow)
+        self.assertIn("always()", str(caught.exception))
+
+    def test_a_report_job_that_does_not_wait_for_publish_is_rejected(self):
+        workflow = copy.deepcopy(self.workflow)
+        workflow["jobs"]["report"]["needs"] = [
+            need for need in workflow["jobs"]["report"]["needs"] if need != "publish"
+        ]
+        with self.assertRaises(AssertionError) as caught:
+            assert_gate_enforced(workflow)
+        self.assertIn("publish", str(caught.exception))
 
     def test_transaction_validation_is_not_skippable(self):
         steps = self.publication["jobs"]["publish"]["steps"]

@@ -945,9 +945,21 @@ jobs:
       publish_tag: ${{ inputs.publish_tag }}
       consumer: ${{ inputs.consumer || 'contract' }}
 
+  # Names every package that did not publish, loudly, whether or not publish
+  # ran: in the job summary on every run, and on main in one tracking issue
+  # that is opened, updated as the failing set changes, and closed by the
+  # first run with no failures. Failures are read from the run's own artifact
+  # list -- build-stage.yml uploads rpm-s<stage>-<package> only for a package
+  # that produced RPMs -- so a publish that never started still gets a report.
+  #
+  # `!cancelled()`, not `always()`: a run someone cancelled by hand has no
+  # verdict. Its waves stopped before uploading, so every selected package
+  # would look failed and the tracking issue would name the whole build list
+  # (#267). A failed wave still reports, because a failure is not a
+  # cancellation.
   report:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8, rebuild9, rebuild10, rebuild11, rebuild12, rebuild13, publish]
-    if: ${{ always() && needs.prepare.result == 'success' && needs.prepare.outputs.build_list != '[]' }}
+    if: ${{ !cancelled() && needs.prepare.result == 'success' && needs.prepare.outputs.build_list != '[]' }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read
