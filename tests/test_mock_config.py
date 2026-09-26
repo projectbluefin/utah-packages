@@ -106,5 +106,15 @@ class RenderTests(unittest.TestCase):
         self.assertIn("dnf.conf", namespace["config_opts"])
 
 
+class BestTests(unittest.TestCase):
+    def test_the_mock_root_resolves_like_the_container_lane(self) -> None:
+        # best=1 refused Hummingbird's superseded-but-consistent sets
+        # (python3-gpg only at gpgme 2.0.1-3.1); the container lane never
+        # asked for best.
+        rendered = render()
+        self.assertIn("\nbest=0\n", rendered)
+        self.assertNotIn("\nbest=1\n", rendered)
+
+
 if __name__ == "__main__":
     unittest.main()

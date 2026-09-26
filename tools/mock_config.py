@@ -96,7 +96,14 @@ gpgcheck=0
 assumeyes=1
 install_weak_deps=0
 metadata_expire=0
-best=1
+# Not best=1, although Hummingbird's own mock.cfg sets it. Its repository
+# is internally consistent; this root mixes it with Fedora and with a
+# Hummingbird that carries superseded builds -- python3-gpg exists only at
+# gpgme 2.0.1-3.1 while gpgme-devel is at 2.0.1-6 -- and best=1 refuses the
+# older consistent set: samba's hermetic lock failed on exactly that in run
+# 36207220192. The container lane, which built every published package,
+# resolves with dnf's default, best=0; the hermetic lane now matches it.
+best=0
 protected_packages=
 module_platform_id=platform:f{releasever}
 user_agent=utah-packages-mock/1
