@@ -175,6 +175,20 @@ class AssembleTests(unittest.TestCase):
             ])
 
 
+class BootstrapTests(unittest.TestCase):
+    def test_a_bootstrap_build_never_replaces_the_real_package(self):
+        from tools.publish_gate import publishable
+
+        seed = {"repository/result/x86_64/malcontent-libs-0.13-1.hum1.bfin.x86_64.rpm": "malcontent"}
+        built = publishable({
+            "built/result/x86_64/malcontent-libs-0.13-0.bootstrap.hum1.bfin.x86_64.rpm": "malcontent",
+            "built/result/x86_64/flatpak-1.19-1.hum1.bfin.x86_64.rpm": "flatpak",
+        })
+        assembly = assemble(seed=seed, built=built, build_list=["flatpak"], losers=set())
+        self.assertEqual(assembly.remove, [])
+        self.assertEqual(assembly.replaced, ["flatpak"])
+
+
 class FailureReportTests(unittest.TestCase):
     def test_failures_come_from_the_artifact_list(self):
         names = ["rpm-s0-mutter", "rpm-s0-libfoo", "check-s0-fish", "buildroot-image",

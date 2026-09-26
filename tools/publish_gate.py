@@ -167,6 +167,21 @@ def assemble(
     )
 
 
+# Recipes built only to feed a later wave, never to ship. malcontent-bootstrap
+# builds the SRPM "malcontent" at Release 0.bootstrap; publish deletes those
+# RPMs. Counted as a build of source "malcontent", it made publish remove the
+# real malcontent from the seed and then delete the bootstrap copies, leaving
+# no malcontent at all -- run 36206943088 failed its transaction on
+# "nothing provides libmalcontent-0.so.0 needed by gnome-control-center".
+BOOTSTRAP_RPM = re.compile(r"-0\.bootstrap\.")
+
+
+def publishable(built: dict[str, str]) -> dict[str, str]:
+    """The built RPMs that may enter the repository: no bootstrap builds."""
+    return {path: source for path, source in built.items()
+            if not BOOTSTRAP_RPM.search(Path(path).name)}
+
+
 def failures_from_artifacts(
     build_list: list[str], artifact_names: list[str], prefix: str, losers: set[str]
 ) -> list[str]:
@@ -415,15 +430,24 @@ def load_workflow(path: Path = REBUILD_WORKFLOW) -> dict:
 def _cli_assemble(args: argparse.Namespace) -> int:
     seed_root, built_root = args.seed, args.built
     seed = source_names(sorted(seed_root.rglob("*.rpm")))
-    built = source_names(sorted(built_root.rglob("*.rpm")))
+    everything = source_names(sorted(built_root.rglob("*.rpm")))
+    built = publishable(everything)
+    build_list = json.loads(args.build_list)
+    # A bootstrap recipe that built is done: its output is for later waves.
+    bootstrapped = sorted(
+        name for name in build_list
+        if name.endswith("-bootstrap") and any(
+            BOOTSTRAP_RPM.search(Path(path).name) for path in everything)
+    )
     assembly = assemble(
         seed=seed,
         built=built,
-        build_list=json.loads(args.build_list),
+        build_list=[name for name in build_list if name not in bootstrapped],
         losers=set(json.loads(args.losers or "[]")),
     )
     apply(assembly, seed_root, built_root)
     report = assembly.report()
+    report["bootstrapped"] = bootstrapped
     args.report.parent.mkdir(parents=True, exist_ok=True)
     args.report.write_text(json.dumps(report, indent=2) + "\n")
     print(summary(assembly))

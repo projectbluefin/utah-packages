@@ -159,7 +159,7 @@ def main(argv: list[str] | None = None) -> int:
         seed,
         digests,
         trusted=plan.get("trusted", []),
-        replaced=report.get("replaced", []),
+        replaced=report.get("replaced", []) + report.get("bootstrapped", []),
         failed=report.get("failed", []),
         pruned=json.loads(args.pruned),
     )
