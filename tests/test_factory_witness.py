@@ -81,6 +81,13 @@ class FactoryWitnessTests(unittest.TestCase):
         self.assertIn("python3 tools/factory_state.py merge", oci["run"])
         self.assertEqual(oci["env"]["TRUSTED"], "${{ inputs.trusted || '[]' }}")
 
+    def test_a_dispatch_can_name_its_packages(self) -> None:
+        workflow = yaml.safe_load(REBUILD.read_text())
+        triggers = workflow.get("on", workflow.get(True, {}))
+        self.assertIn("packages", triggers["workflow_dispatch"]["inputs"])
+        matrix = next(s for s in workflow["jobs"]["prepare"]["steps"] if s.get("id") == "matrix")
+        self.assertEqual(matrix["env"]["ONLY_PACKAGES"], "${{ inputs.packages }}")
+
     def test_the_schedule_is_daily_plus_a_weekly_full_rebuild(self) -> None:
         workflow = yaml.safe_load(REBUILD.read_text())
         triggers = workflow.get("on", workflow.get(True, {}))

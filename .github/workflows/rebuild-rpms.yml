@@ -23,6 +23,15 @@ on:
           - hermetic
           - container
           - mock
+      packages:
+        description: >
+          JSON array: build only these recipes (plus nothing else), and
+          publish them as usual. For getting a fix out without waiting for
+          an unrelated slow package the incremental plan would also select;
+          the next ordinary run picks up whatever this one left out.
+        required: false
+        default: ''
+        type: string
   # A merge that changes a recipe or config builds it, plus everything that
   # BuildRequires it, and publishes -- the way Fedora and Hummingbird build a
   # package when it changes. Pipeline-only changes are proven by the canary
