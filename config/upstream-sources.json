@@ -115,6 +115,16 @@
       ]
     },
     {
+      "name": "pdfio",
+      "version": "1.6.5",
+      "url": "https://github.com/michaelrsweet/pdfio/releases/download/v1.6.5/pdfio-1.6.5.tar.gz",
+      "filename": "pdfio-1.6.5.tar.gz",
+      "sha512": "f218777c8d9970984295c9c94524a6c456fb03322f729b14218409f87885afeba7a37ca9b1e2a4105aba3349f558bb1083f1503dbd9cc1ef4ce34a42724898c7",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/pdfio/pdfio-1.6.5.tar.gz/sha512/f218777c8d9970984295c9c94524a6c456fb03322f729b14218409f87885afeba7a37ca9b1e2a4105aba3349f558bb1083f1503dbd9cc1ef4ce34a42724898c7/pdfio-1.6.5.tar.gz"
+      ]
+    },
+    {
       "name": "poppler-data",
       "version": "0.4.11",
       "url": "https://poppler.freedesktop.org/poppler-data-0.4.11.tar.gz",

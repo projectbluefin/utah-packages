@@ -108,6 +108,13 @@ entry, build-root pin and Hummingbird repo) of every build in it
 digest moved, plus their direct BuildRequires dependents. A change to
 anything that decides how a package is built belongs in that digest.
 
+The first labelled image learned the state of every package it did not
+rebuild from the older NEVR comparison, and libgphoto2 slipped through: #269
+changed its recipe (dropping lockdev) at the same Release, the run that would
+have built it was cancelled, and the label then recorded the new recipe as
+published. Utah found `liblockdev.so.1` still required. Bump Release when a
+recipe change changes the binaries; the label catches everything after it.
+
 ## 5. A global exclusion fights a local dependency
 
 **What happened.** The ICU 77 versus 78 split was fought across fifteen

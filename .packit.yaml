@@ -1792,6 +1792,12 @@ packages:
     downstream_package_name: pciutils
     paths:
       - packages/pciutils
+  pdfio:
+    specfile_path: pdfio.spec
+    upstream_package_name: pdfio
+    downstream_package_name: pdfio
+    paths:
+      - packages/pdfio
   pipewire:
     specfile_path: pipewire.spec
     upstream_package_name: pipewire

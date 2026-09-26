@@ -1,0 +1,3 @@
+# pdfio
+
+The pdfio package
