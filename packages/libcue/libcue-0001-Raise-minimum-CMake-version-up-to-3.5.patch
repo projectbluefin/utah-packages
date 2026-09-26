@@ -1,0 +1,19 @@
+From: Peter Lemenkov <lemenkov@gmail.com>
+Date: Wed, 17 Dec 2025 19:15:39 +0100
+Subject: [PATCH] Raise minimum CMake version up to 3.5
+
+Signed-off-by: Peter Lemenkov <lemenkov@gmail.com>
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 2cc46a5..fadf394 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -3,7 +3,7 @@ SET(PACKAGE_NAME libcue)
+ SET(PACKAGE_VERSION 2.3.0)
+ SET(PACKAGE_SOVERSION 2)
+ 
+-CMAKE_MINIMUM_REQUIRED(VERSION 2.8 FATAL_ERROR)
++CMAKE_MINIMUM_REQUIRED(VERSION 3.5 FATAL_ERROR)
+ 
+ PROJECT(libcue C)
+ 

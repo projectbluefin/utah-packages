@@ -1,0 +1,8 @@
+{
+  "package": "cjson",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/cjson.git",
+  "commit": "28d14cc3736246b4526edafea3a0694676dbcd40",
+  "tree": "2455d5a547cc03edb82be6d373d9b3e543e76dcc",
+  "imported_at": "2026-09-23T03:42:36.109241+00:00"
+}

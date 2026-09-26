@@ -1,0 +1,11 @@
+summary: Test for libfprint
+require:
+    - cairo-devel
+    - libfprint-devel
+    - libfprint-tests
+    - umockdev-devel
+    - python3-cairo 
+    - python3-gobject-base
+    - python3-pip
+    - python3-packaging
+test: bash ./run-umockdev.sh

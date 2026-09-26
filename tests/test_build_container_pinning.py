@@ -69,6 +69,14 @@ class BuildContainerPinningTests(unittest.TestCase):
         assert "quay.io/fedora/fedora:44" in result.stderr
         assert "digest pin" in result.stderr
 
+    def test_exempts_only_the_mirror_refresh_source(self) -> None:
+        # refresh-buildroot.yml reads the moving tag on purpose, to copy it
+        # into the never-pruned mirror; the same line anywhere else fails.
+        assert self.run_guard({"refresh-buildroot.yml": MUTABLE_BLOCK}).returncode == 0
+        assert self.run_guard({"build-stage.yml": MUTABLE_BLOCK}).returncode == 1
+        other = MUTABLE_BLOCK.replace("fedora:44", "fedora:rawhide")
+        assert self.run_guard({"refresh-buildroot.yml": other}).returncode == 1
+
     def test_ignores_a_mutable_tag_mentioned_only_in_a_comment(self) -> None:
         """Documenting the pre-pin tag, as packit-srpm-pilot.yml does, is not a use."""
         comment_only = (

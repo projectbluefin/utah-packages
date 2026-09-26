@@ -16,21 +16,21 @@ Summary:        Core validation logic for pydantic written in rust
 
 License:        MIT
 URL:            https://github.com/pydantic/pydantic-core
-Source:         %{pypi_source pydantic_core}
+# Factory: Fedora builds this against system crate RPMs through
+# %%cargo_generate_buildrequires. Fedora 44 and Hummingbird ship none of them
+# (crate(ahash/default), crate(pyo3/default), ... all unresolvable), so the
+# build vendors instead. The Source is the PyPI sdist plus vendor/ holding every
+# crate its Cargo.lock pins, generated reproducibly by tools/generated_sources.py
+# and checked against the Cargo.lock SHA-256 of each crate.
+Source:         pydantic_core-%{version}-vendored.tar.xz
 
-# Manually created patch for downstream crate metadata changes
-# * Allow jiter 0.15 and 0.16. API changes from 0.14 to 0.16 are purely
-#   additive, plus switching to PyO3 0.29, which we are also doing here, so
-#   this is compatible. Downstream-only because jiter is developed by the
-#   Pydantic people, and we can reasonably assume that they will update in due
-#   course without prompting from us.
-Patch:          pydantic-core-fix-metadata.diff
+# Factory: Fedora's pydantic-core-fix-metadata.diff (jiter 0.15/0.16) and
+# pydantic_core-2.46.4-pyo3-0.29.patch (PyO3 0.29) exist to match Fedora's
+# crate RPMs. A vendored build uses exactly what upstream's Cargo.lock pins
+# (jiter 0.14.0, PyO3 0.28.3, which supports Python 3.14), so both are dropped.
 # Upstream thinks it's a good idea to rely on exact formatting of error messages in other projects. Meh.
 # See the commit message in the patch for more info.
 Patch:          0001-Fix-test-assertion-to-account-for-change-in-rust-uuid.patch
-# update to PyO3 0.29
-# https://github.com/pydantic/pydantic/pull/13301
-Patch:          pydantic_core-2.46.4-pyo3-0.29.patch
 
 # Compatibility with pytest 9.1
 # The patch is manually adjusted from the upstream
@@ -39,6 +39,12 @@ Patch:          fix-pytest-9.1.patch
 
 BuildRequires:  cargo-rpm-macros
 BuildRequires:  tomcli
+# Factory: %%pyproject_patch_dependency runs in %%prep, before the generated
+# BuildRequires are installed, and the script behind it imports packaging. A
+# bare rpmbuild root does not carry it (mock does), so %%prep died on
+#   ModuleNotFoundError: No module named packaging
+# Same fix as python-typing-inspection.
+BuildRequires:  python3-packaging
 
 %global _description %{expand:
 The pydantic-core project provides the core validation logic for pydantic
@@ -125,17 +131,17 @@ tomcli-set pyproject.toml list 'tool.pytest.ini_options.markers' \
 # Remove Windows-only dependencies
 tomcli-set Cargo.toml lists delitem 'dependencies.pyo3.features' 'generate-import-lib'
 
-%cargo_prep
+%cargo_prep -v vendor
 
 
 %generate_buildrequires
 %pyproject_buildrequires %{?with_tests:-g testing-extra}
-%cargo_generate_buildrequires
 
 
 %build
 %cargo_license_summary
 %{cargo_license} > LICENSES.dependencies
+%{cargo_vendor_manifest}
 
 %pyproject_wheel
 
@@ -162,6 +168,7 @@ warningsfilter="${warningsfilter-} -W ignore::pytest.PytestUnknownMarkWarning"
 
 %files -n python3-pydantic-core -f %{pyproject_files}
 %doc README.md
+%license cargo-vendor.txt
 
 
 %changelog

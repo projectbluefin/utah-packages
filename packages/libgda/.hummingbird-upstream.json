@@ -1,0 +1,8 @@
+{
+  "package": "libgda",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libgda.git",
+  "commit": "c07b668ff8c103dfc1a1f00b5c78e290748bcfc4",
+  "tree": "473c1060b6b7565c248c8bea921dfa72a0f4ddcf",
+  "imported_at": "2026-09-20T05:46:49.328172+00:00"
+}

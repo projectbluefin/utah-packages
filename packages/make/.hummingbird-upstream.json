@@ -1,8 +1,0 @@
-{
-  "package": "make",
-  "branch": "rawhide",
-  "remote": "https://src.fedoraproject.org/rpms/make.git",
-  "commit": "a0608cb9b4dce89d16b8bde3dc494afc165c8e78",
-  "tree": "65b878cd8f40267cbbff96c54e323a9dd288cfa4",
-  "imported_at": "2026-08-29T06:02:57.294297+00:00"
-}

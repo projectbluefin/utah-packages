@@ -1,0 +1,19 @@
+summary: Run all tests
+discover:
+  how: fmf
+  dist-git-source: true
+  dist-git-merge: true
+prepare:
+  - name: Disable installing everything from srpm
+    how: install
+    exclude: ".*"
+  - name: Install the main package
+    how: install
+    package:
+      - fprintd
+  - name: "%prep requires git"
+    how: install
+    package:
+      - git
+execute:
+  how: tmt

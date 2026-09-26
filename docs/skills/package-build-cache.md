@@ -10,9 +10,10 @@ metadata:
 
 # Per-package RPM cache contract
 
-The package cache preserves completed work across factory runs. It exists
-because publication is intentionally atomic: one failed package or final
-transaction gate must not advance the consumer repository, but that must not
+The package cache preserves completed work across factory runs. Publication is
+incremental -- a failed package keeps its previous build and the rest publish
+-- but the whole candidate still has to pass the Hummingbird-only consumer
+transaction, and a run that fails that gate publishes nothing. That must not
 force every successful package to compile again on the next attempt.
 
 This is a correctness mechanism with a performance benefit, not a second
@@ -59,9 +60,14 @@ JSON containing:
 - source-package name;
 - digest of every file and relative path in `packages/<name>/`;
 - prepared build-root image digest;
-- prepare-time factory image digest;
 - sorted, de-duplicated resolved build-root NEVRAs;
 - complete disttag, including any local rebuild suffix.
+
+The published factory image digest is deliberately not a field (schema 2). The
+resolved root already records the exact NEVR of every package the build took
+from the factory, so a factory change that matters reaches the key through it.
+Keying on the digest as well made every publish invalidate every entry, and the
+run after a successful publish (36159982139) rebuilt unchanged packages cold.
 
 Every field can change the binary. Removing one can serve an RPM built from a
 different recipe or ABI. An empty resolved root is therefore an error, never a
@@ -94,10 +100,10 @@ dependency actually changed.
 - Never let cache presence decide the rebuild plan.
 - Never restore stale or directly changed packages.
 - Never compute a key before dependency resolution or from an empty root.
-- Never omit recipe paths, the build-root digest, factory digest, resolved
-  NEVRAs, or disttag from the key.
+- Never omit recipe paths, the build-root digest, resolved NEVRAs, or disttag
+  from the key. Do not add the factory image digest back (see above).
 - Never treat a cache outage as a package-build failure.
-- Never delay cache publication until the final atomic publish job.
+- Never delay cache publication until the final publish job.
 - Never remove the final precedence and Hummingbird-only transaction gates for
   cached RPMs.
 - Keep the dependency-resolution probe aligned with the actual container build
@@ -105,7 +111,9 @@ dependency actually changed.
   both paths and in a regression test.
 - The mock backend is not cache-enabled until it records and keys its own mock
   root. A container-lane entry must not be reused by mock merely because the
-  source recipe matches.
+  source recipe matches. The hermetic lane does record its root -- the
+  NEVRAs in `buildroot_lock.json` -- and keys on them under the salt
+  `hermetic`, so its entries and the container lane's can never meet.
 
 ## Proving progress survives
 
@@ -124,3 +132,30 @@ The useful test is two runs of the same factory inputs, not one green build:
 A full matrix containing cache-hit jobs is acceptable; a full recompilation is
 not. The distinction is the compile step and cache-hit evidence, not the number
 of matrix jobs GitHub displays.
+
+## Triggers, queueing and batching
+
+A merge to `main` that changes `packages/**` or `config/**` runs the factory,
+and that run builds only what changed since the published image plus the
+direct BuildRequires dependents of what changed. It is not a several-hundred-job
+matrix any more, which is what made per-merge triggers affordable:
+the state label on the published image (`tools/factory_state.py`) says what
+every published build was made from, so a run compares recipes, not commits.
+
+Runs on one ref are serialized and never cancelled. GitHub keeps one run
+pending behind the running one and replaces an older pending run with a
+newer one; that is safe, because the newer run selects against the published
+state and so covers every change the replaced run would have built. N
+merges in quick succession therefore cost at most two runs, and the second
+builds the union.
+
+Pull requests do not run the factory. Pipeline changes are proven by the
+canary (`.github/workflows/canary.yml`) on their pull request, and recipe
+changes are validated there and built on merge.
+
+A failed run's successful packages are published (incremental publication)
+and also cached, so a retry recompiles only what failed. The daily scheduled
+run retries every package whose last attempt failed; push runs hold a
+package that failed at exactly its current inputs, since rebuilding it
+unchanged on every merge buys nothing. The weekly scheduled run rebuilds
+everything, against the cache, as a safety net.

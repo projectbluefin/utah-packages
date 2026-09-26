@@ -26,6 +26,12 @@ from pathlib import Path
 # image token, not the shell that follows it.
 IMAGE_REF = re.compile(r"quay\.io/[^\s\"'`#]+")
 
+# The one place a moving tag is the point. refresh-buildroot.yml copies the
+# current fedora:44 into the factory's own never-pruned mirror so builds can pin
+# a digest that cannot rot (repeated-mistakes section 7); it builds nothing
+# itself. Exempt by exact (workflow, ref), so any other use still fails.
+EXEMPT = {("refresh-buildroot.yml", "quay.io/fedora/fedora:44")}
+
 
 def unpinned_refs(workflows: Iterable[Path]) -> list[tuple[str, int, str]]:
     """Return (workflow, line, ref) for quay.io images not pinned by digest."""
@@ -37,7 +43,7 @@ def unpinned_refs(workflows: Iterable[Path]) -> list[tuple[str, int, str]]:
             if line.strip().startswith("#"):
                 continue
             for ref in IMAGE_REF.findall(line):
-                if "@sha256:" not in ref:
+                if "@sha256:" not in ref and (workflow.name, ref) not in EXEMPT:
                     offenders.append((workflow.name, number, ref))
     return offenders
 

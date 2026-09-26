@@ -22,6 +22,7 @@ ROOT = Path(__file__).resolve().parent.parent
 PACKAGES = ROOT / "packages"
 SOURCE_CONFIG = ROOT / "config" / "upstream-sources.json"
 PACKIT_CONFIG = ROOT / ".packit.yaml"
+HUMMINGBIRD_OWNED = ROOT / "config" / "hummingbird-provided-sources.json"
 
 
 def recipe_names() -> set[str]:
@@ -64,6 +65,10 @@ class RecipeSetAgreementTests(unittest.TestCase):
             f"(in locks only: {sorted(locks - packit)}; "
             f"in packit only: {sorted(packit - locks)})",
         )
+
+    def test_hummingbird_owned_sources_are_not_factory_recipes(self):
+        owned = set(json.loads(HUMMINGBIRD_OWNED.read_text())["sources"])
+        self.assertEqual(recipe_names() & owned, set())
 
 
 if __name__ == "__main__":

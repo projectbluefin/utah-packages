@@ -1,0 +1,8 @@
+{
+  "package": "libmysofa",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libmysofa.git",
+  "commit": "27111b300b88946ce57287536dd603b7ac3c2689",
+  "tree": "5d472ae9bffc9f8bdba6e09f61a92cfa068ffed5",
+  "imported_at": "2026-09-25T08:04:28.495964+00:00"
+}

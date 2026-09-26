@@ -1,0 +1,8 @@
+{
+  "package": "cups-filters",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/cups-filters.git",
+  "commit": "e7e612c27f51dae921e14d023af2e7dc715d093c",
+  "tree": "f1a24dd71780de5600cf282986f88a431b66ef99",
+  "imported_at": "2026-09-20T19:15:45.000827+00:00"
+}

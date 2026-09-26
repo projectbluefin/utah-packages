@@ -19,6 +19,7 @@ import yaml
 ROOT = Path(__file__).resolve().parent.parent
 WORKFLOWS = ROOT / ".github" / "workflows"
 REBUILD = WORKFLOWS / "rebuild-rpms.yml"
+PUBLISH = WORKFLOWS / "publish-repository.yml"
 BUILD_STAGE = WORKFLOWS / "build-stage.yml"
 LOAD_ACTION = ROOT / ".github" / "actions" / "load-factory-repo" / "action.yml"
 REBUILD_MATRIX = ROOT / "tools" / "rebuild_matrix.py"
@@ -43,6 +44,73 @@ def run_scripts(path: Path) -> str:
 
 
 class FactoryWitnessTests(unittest.TestCase):
+    def test_a_merge_builds_what_changed_and_never_cancels_a_run(self) -> None:
+        workflow = yaml.safe_load(REBUILD.read_text())
+        # PyYAML 1.1 treats the plain scalar ``on`` as boolean true.
+        triggers = workflow.get("on", workflow.get(True, {}))
+        self.assertEqual(
+            set(triggers), {"push", "schedule", "workflow_dispatch", "workflow_call"}
+        )
+        self.assertEqual(triggers["push"]["branches"], ["main"])
+        self.assertEqual(set(triggers["push"]["paths"]), {"packages/**", "config/**"})
+        self.assertNotIn("pull_request", triggers)
+        concurrency = workflow["concurrency"]
+        self.assertFalse(concurrency["cancel-in-progress"])
+        self.assertIn("github.ref", concurrency["group"])
+        self.assertIn("inputs.artifact_prefix", concurrency["group"])
+
+    def test_prepare_solves_the_graph_in_the_build_root_and_reads_the_state(self) -> None:
+        workflow = yaml.safe_load(REBUILD.read_text())
+        steps = workflow["jobs"]["prepare"]["steps"]
+        extract = next(s for s in steps if s.get("name") == "Extract BuildRequires from every recipe")
+        self.assertIn("utah-buildroot:run bash /extract.sh", extract["run"])
+        self.assertIn("tools/extract_buildrequires.sh:/extract.sh", extract["run"])
+        matrix = next(s for s in steps if s.get("id") == "matrix")
+        self.assertEqual(matrix["env"]["GRAPH_ROWS"], "work/graph/rows")
+        self.assertEqual(matrix["env"]["FACTORY_LABELS"], "work/factory-labels.json")
+        self.assertEqual(matrix["env"]["EVENT"], "${{ github.event_name }}")
+        resolve = next(s for s in steps if s.get("id") == "factory_image")
+        self.assertIn("{{json .Config.Labels}}", resolve["run"])
+        order = [s.get("name") or s.get("id") for s in steps]
+        self.assertLess(order.index("Extract BuildRequires from every recipe"), order.index("matrix"))
+
+    def test_publish_records_the_state_without_adding_a_layer(self) -> None:
+        workflow = yaml.safe_load(PUBLISH.read_text())
+        oci = next(s for s in workflow["jobs"]["publish"]["steps"] if s.get("id") == "oci")
+        self.assertIn('--label "org.projectbluefin.factory.state=${state}"', oci["run"])
+        self.assertIn("python3 tools/factory_state.py merge", oci["run"])
+        self.assertEqual(oci["env"]["TRUSTED"], "${{ inputs.trusted || '[]' }}")
+
+    def test_the_schedule_is_daily_plus_a_weekly_full_rebuild(self) -> None:
+        workflow = yaml.safe_load(REBUILD.read_text())
+        triggers = workflow.get("on", workflow.get(True, {}))
+        crons = [entry["cron"] for entry in triggers["schedule"]]
+        self.assertEqual(len(crons), 2)
+        bump = yaml.safe_load((WORKFLOWS / "bump-upstream-sources.yml").read_text())
+        bump_crons = {e["cron"] for e in bump.get("on", bump.get(True))["schedule"]}
+        self.assertFalse(set(crons) & bump_crons, "the factory and the bump job must not collide")
+        weekly = next(c for c in crons if not c.endswith("* * *"))
+        self.assertIn(f"github.event.schedule == '{weekly}'", REBUILD.read_text())
+
+    def test_only_the_canary_calls_the_factory_and_never_for_latest(self) -> None:
+        callers = [
+            path.name
+            for path in sorted(WORKFLOWS.glob("*.yml"))
+            if "uses: ./.github/workflows/rebuild-rpms.yml" in path.read_text()
+        ]
+        self.assertEqual(callers, ["canary.yml"])
+        canary = yaml.safe_load((WORKFLOWS / "canary.yml").read_text())
+        for name, job in canary["jobs"].items():
+            if job.get("uses") != "./.github/workflows/rebuild-rpms.yml":
+                continue
+            with self.subTest(job=name):
+                inputs = job["with"]
+                # Never the consumer tag, and every pass that does not publish
+                # says so explicitly.
+                self.assertNotEqual(inputs.get("publish_tag"), "latest")
+                self.assertTrue(inputs.get("publish_tag") or inputs.get("skip_publish"))
+                self.assertTrue(inputs.get("artifact_prefix"))
+
     def test_no_workflow_reads_the_retired_pages_mirror(self) -> None:
         offenders = [
             path.name
@@ -62,19 +130,35 @@ class FactoryWitnessTests(unittest.TestCase):
         self.assertIn("./.github/actions/load-factory-repo", text)
         self.assertIn('export FACTORY_REPO="file://$PWD/work/factory"', text)
 
+    def test_prepare_matrix_delegates_to_rebuild_matrix_tool(self) -> None:
+        text = uncommented(REBUILD)
+        self.assertIn("python3 tools/rebuild_matrix.py", text)
+        self.assertNotIn("python3 - <<'PY'", text)
+
     def test_every_build_wave_is_handed_the_same_image(self) -> None:
         text = uncommented(REBUILD)
         waves = re.findall(r"(?m)^  rebuild\d+:$", text)
-        self.assertEqual(len(waves), 11)
+        self.assertEqual(len(waves), 14)
         self.assertEqual(
             text.count("factory_image: ${{ needs.prepare.outputs.factory_image }}"),
             len(waves),
         )
 
+    def test_every_wave_passes_every_build_stage_input(self) -> None:
+        # A wave added by copying an older one silently dropped a canary
+        # input once; build-stage.yml then ran it with the default.
+        workflow = yaml.safe_load(REBUILD.read_text())
+        stage = yaml.safe_load(BUILD_STAGE.read_text())
+        declared = set(stage.get("on", stage.get(True))["workflow_call"]["inputs"])
+        for name, job in workflow["jobs"].items():
+            if job.get("uses") == "./.github/workflows/build-stage.yml":
+                with self.subTest(wave=name):
+                    self.assertEqual(set(job["with"]), declared)
+
     def test_the_build_root_installs_from_the_extracted_repository(self) -> None:
         text = uncommented(BUILD_STAGE)
         self.assertIn("./.github/actions/load-factory-repo", text)
-        self.assertEqual(text.count("FACTORY_REPO: ${{ steps.factory.outputs.url }}"), 3)
+        self.assertEqual(text.count("FACTORY_REPO: ${{ steps.factory.outputs.url }}"), 4)
         # The container mounts $PWD/work at /work, so that is the only path
         # the repository can be enabled under.
         self.assertIn("url=file:///$TARGET", LOAD_ACTION.read_text())
@@ -83,7 +167,8 @@ class FactoryWitnessTests(unittest.TestCase):
         self.assertIn('test -f "$TARGET/repodata/repomd.xml"', LOAD_ACTION.read_text())
 
     def test_debuginfo_is_not_built_only_to_be_discarded(self) -> None:
-        text = uncommented(BUILD_STAGE)
+        # Both lanes: the mock lane inline, the container lane in its script.
+        text = uncommented(BUILD_STAGE) + uncommented(ROOT / "tools" / "build_container.sh")
         self.assertIn("!work/result/**/*-debuginfo-*.rpm", text)
         self.assertEqual(text.count('--define "debug_package %{nil}"'), 2)
         # debug_package alone is not enough: %mingw_debug_package sets
@@ -98,9 +183,18 @@ class FactoryWitnessTests(unittest.TestCase):
         started before another run published. It must refuse to overwrite that
         newer image with artifacts built against an older witness.
         """
-        text = uncommented(REBUILD)
-        self.assertIn('EXPECTED_IMAGE: ${{ needs.prepare.outputs.factory_image }}', text)
-        self.assertIn('if [ "$current" != "$EXPECTED_IMAGE" ]; then', text)
+        text = uncommented(REBUILD) + uncommented(PUBLISH)
+        self.assertIn('EXPECTED_IMAGE: ${{ inputs.seed_image }}', text)
+        self.assertIn('seed_image: ${{ needs.prepare.outputs.seed_image }}', text)
+        # Outside the canary the seed is exactly the factory image prepare
+        # read; the canary may only ever seed from its own tag.
+        self.assertIn('seed="$resolved"', text)
+        self.assertIn('seed=$(resolve "$PUBLISH_TAG")', text)
+        self.assertIn('elif [ "$current" != "$EXPECTED_IMAGE" ]; then', text)
+        # The one exception is this run's own earlier attempt, recognised by
+        # the run id label publish writes.
+        self.assertIn('[ "$moved_by" = "$GITHUB_RUN_ID" ]', text)
+        self.assertIn('--label "org.projectbluefin.factory.run=${GITHUB_RUN_ID}"', text)
         self.assertIn("refusing to overwrite the newer repository", text)
         self.assertNotIn('utah-packages:latest"', text)
 
@@ -134,13 +228,22 @@ class FactoryWitnessTests(unittest.TestCase):
             "Never share the consumer image's tag namespace with cache entries.",
             "Never let cache presence decide the rebuild plan.",
             "Never restore stale or directly changed packages.",
-            "Never delay cache publication until the final atomic publish job.",
+            "Never delay cache publication until the final publish job.",
         ):
             self.assertIn(rule, text)
 
     def test_a_failed_prepare_stops_precedence_and_publish(self) -> None:
         text = uncommented(REBUILD)
-        self.assertEqual(text.count("needs.prepare.result == 'success'"), 2)
+        # every publication (early and final), and the report job
+        self.assertEqual(text.count("needs.prepare.result == 'success'"), 6)
+
+    def test_publish_prunes_hummingbird_owned_sources_from_its_seed(self) -> None:
+        text = uncommented(REBUILD) + uncommented(PUBLISH)
+        self.assertIn('prune_sources: ${{ steps.matrix.outputs.prune_sources }}', text)
+        self.assertIn('prune_sources: ${{ needs.prepare.outputs.prune_sources }}', text)
+        self.assertIn('PRUNE_SOURCES: ${{ inputs.prune_sources }}', text)
+        self.assertIn('rpm -qp --qf \'%{SOURCERPM}\'', text)
+        self.assertIn("needs.prepare.outputs.prune_sources != '[]'", text)
 
 
 class IcuAgreementTests(unittest.TestCase):
@@ -171,7 +274,7 @@ class IcuAgreementTests(unittest.TestCase):
     SPELLING = "libicu-77.*-*hum1"
 
     def test_the_consumer_transaction_still_excludes_icu_77(self):
-        self.assertIn(self.SPELLING, uncommented(REBUILD),
+        self.assertIn(self.SPELLING, uncommented(PUBLISH),
                       "the consumer transaction must exclude libicu 77")
 
     def test_the_build_root_does_not_exclude_the_last_provider_of_so_77(self):
@@ -204,6 +307,27 @@ class IcuAgreementTests(unittest.TestCase):
         for line in uncommented(BUILD_STAGE).splitlines():
             if "fedora.excludepkgs" in line:
                 self.assertNotIn("libicu-77", line)
+
+
+class WorkflowSyntaxTests(unittest.TestCase):
+    def test_every_workflow_is_parseable_yaml(self) -> None:
+        """A workflow that does not parse runs nothing, and said so nowhere.
+
+        db689f1 embedded a shell heredoc in build-stage.yml with its body at
+        column 0, which ends the enclosing block scalar: the file stopped
+        parsing and every build-stage run died in 0s with "workflow file
+        issue". Nothing here caught it -- run_scripts only ever loads
+        rebuild-rpms.yml, and the other tests read build-stage.yml as text --
+        so the validate job stayed green while the factory could not build.
+        Use `python3 -c` for inline scripts; a heredoc cannot be indented into
+        a block scalar without its terminator leaving the block.
+        """
+        for path in sorted(WORKFLOWS.glob("*.yml")):
+            with self.subTest(workflow=path.name):
+                try:
+                    yaml.safe_load(path.read_text())
+                except yaml.YAMLError as error:
+                    self.fail(f"{path.name} is not parseable YAML: {error}")
 
 
 if __name__ == "__main__":

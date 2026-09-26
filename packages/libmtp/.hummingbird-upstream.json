@@ -1,0 +1,8 @@
+{
+  "package": "libmtp",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libmtp.git",
+  "commit": "af527f51f72c3f0c56afc540dfeb4baccd829a9e",
+  "tree": "ec013ac7bf1a2220bec229362ec725802417457c",
+  "imported_at": "2026-09-24T23:38:33.614127+00:00"
+}

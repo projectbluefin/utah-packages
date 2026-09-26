@@ -10,44 +10,132 @@ on:
         type: boolean
       backend:
         description: >
-          How to build. container is the hand-simulated build root every
-          published RPM was built in. mock is a real mock root, the way Packit
-          builds locally; it is unproven here, so it is dispatch-only.
+          How to build. hermetic (the default) locks a mock root from real
+          BuildRequires and builds offline from the lock, the way Hummingbird
+          does; a package with build_lane container in
+          config/upstream-sources.json stays on the container lane.
+          container is the hand-simulated build root every package was built
+          in before. mock is a plain networked mock root.
         required: false
-        default: container
+        default: hermetic
         type: choice
         options:
+          - hermetic
           - container
           - mock
+  # A merge that changes a recipe or config builds it, plus everything that
+  # BuildRequires it, and publishes -- the way Fedora and Hummingbird build a
+  # package when it changes. Pipeline-only changes are proven by the canary
+  # on their pull request instead, and reach the next scheduled run.
   push:
     branches: [main]
     paths:
-      - config/**
-      - packages/**
-      - tools/source_pipeline.py
-      - tools/generated_sources.py
-      - tools/rebuild_matrix.py
-      - tools/rebuild_plan.py
-      - tools/mock_config.py
-      - tools/runtime_contract.py
-      - tests/**
-      - .github/workflows/rebuild-rpms.yml
-      - .github/workflows/build-stage.yml
-  pull_request:
-    paths:
-      - config/**
-      - packages/**
-      - tools/source_pipeline.py
-      - tools/generated_sources.py
-      - tools/rebuild_matrix.py
-      - tools/rebuild_plan.py
-      - tools/mock_config.py
-      - tools/runtime_contract.py
-      - tests/**
-      - .github/workflows/rebuild-rpms.yml
-      - .github/workflows/build-stage.yml
+      - 'packages/**'
+      - 'config/**'
   schedule:
-    - cron: '41 6 * * *'
+    # Daily: whatever changed, plus a retry of every package whose last
+    # attempt failed. It used to run at 06:41, the same minute as
+    # bump-upstream-sources.yml; the bump now reaches the factory through the
+    # push above when its pull request merges.
+    - cron: '17 3 * * *'
+    # Weekly safety net: every package, whatever the state label says.
+    - cron: '23 1 * * 0'
+  # The canary (.github/workflows/canary.yml) calls this same workflow, so a
+  # pipeline change is proven on the real jobs in minutes, over a fixed
+  # handful of packages, before any full run. Every input below defaults to
+  # what a production run does; booleans are phrased negatively so that a
+  # schedule or dispatch run, where they are null, reads as false.
+  workflow_call:
+    inputs:
+      full:
+        description: Rebuild every selected package, ignoring what is already published
+        required: false
+        default: false
+        type: boolean
+      backend:
+        required: false
+        default: hermetic
+        type: string
+      packages:
+        description: JSON array restricting the inventory to these recipes
+        required: false
+        default: ''
+        type: string
+      publish_tag:
+        description: >
+          Tag to seed from and publish to instead of latest or the branch tag.
+          The canary uses canary-<pr>; it never names latest.
+        required: false
+        default: ''
+        type: string
+      no_factory:
+        description: Build without the published factory repository in the build root
+        required: false
+        default: false
+        type: boolean
+      skip_publish:
+        description: Build, check precedence, and stop before publish
+        required: false
+        default: false
+        type: boolean
+      consumer:
+        description: >
+          What the Hummingbird-only transaction installs. contract (default)
+          is the runtime contract; built is every binary RPM in the candidate
+          repository, for a canary set too small to satisfy the contract.
+        required: false
+        default: contract
+        type: string
+      artifact_prefix:
+        required: false
+        default: ''
+        type: string
+      cache_salt:
+        required: false
+        default: ''
+        type: string
+      perturb:
+        required: false
+        default: ''
+        type: string
+      flaky_check:
+        description: >
+          Canary only: JSON names whose %check fails once and passes on the
+          retry, to prove build-stage.yml retries a flaky %check.
+        required: false
+        default: ''
+        type: string
+      factory_tag:
+        description: >
+          Read this tag as the published factory instead of latest or the
+          branch tag. The canary points it at its own tag to exercise
+          incremental selection against a state it published itself.
+        required: false
+        default: ''
+        type: string
+      inject_failure:
+        description: >
+          Canary only: JSON names whose build job fails on purpose, to prove
+          a failed package keeps its previous build and is reported.
+        required: false
+        default: ''
+        type: string
+    outputs:
+      build_list:
+        description: JSON names prepare selected
+        value: ${{ jobs.prepare.outputs.build_list }}
+      ref:
+        description: The published tag
+        value: ${{ jobs.publish.outputs.ref }}
+      digest:
+        description: The published digest
+        value: ${{ jobs.publish.outputs.digest }}
+      failed:
+        description: JSON names of the selected packages that did not publish
+        value: ${{ jobs.report.outputs.failed }}
+      utah_report:
+        description: JSON verdict of resolving what Utah installs against the candidate
+        value: ${{ jobs.publish.outputs.utah_report }}
 
 permissions:
   contents: read
@@ -55,31 +143,26 @@ permissions:
   packages: write
   attestations: write
 
-# Build waves may run concurrently.  The consumer tag itself remains serialized
-# at `publish`, and publish refuses to replace an image that advanced while the
-# run was building.  That keeps an older run from overwriting newer artifacts.
+# One run per ref at a time, and a merge never cancels one in flight: each
+# run's builds finish and publish. GitHub keeps at most one run pending
+# behind it and replaces an older pending run with a newer one; nothing is
+# lost by that, because prepare selects against the state label on the
+# published image -- every change since the last publication -- not against
+# the previous push. The canary's passes each have their own prefix, so they
+# are not serialized behind main or one another.
 #
-# A pull request is the exception: a push to it supersedes the run before,
-# and that run used to carry on for hours anyway -- 369, 370 and 374 were all
-# cancelled by hand, one of them four hours in. Nothing on main or a schedule
-# is cancelled, because there a run in flight is the one that publishes.
-# The group is pull-request-only for the same reason. A group covering every
-# ref would also queue main and schedule runs behind one another and let GitHub
-# drop a superseded *pending* run -- a behaviour change the comment above
-# explicitly says is not wanted, since concurrent waves are safe by design.
+# Publication stays serialized below as well, and publish still refuses to
+# replace an image that advanced while the run was building.
 concurrency:
-  group: ${{ github.event_name == 'pull_request'
-    && format('utah-packages-rebuild-{0}-{1}', github.workflow, github.ref)
-    || format('utah-packages-rebuild-{0}-{1}-{2}', github.workflow, github.ref, github.run_id) }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  group: rebuild-rpms-${{ github.ref }}-${{ inputs.artifact_prefix || 'factory' }}
+  cancel-in-progress: false
 
 jobs:
   prepare:
     runs-on: ubuntu-24.04
-    env:
-      # The build root this factory intends to use, recorded so the choice is
-      # auditable and so Renovate keeps the digest current through the
-      # build-root-image manager in renovate.json.
+      # The build root this factory uses is pinned in config/buildroot-image
+      # (read by tools/buildroot_pin.py in the "Pull the build root" step).
+      # History of why it is pinned the way it is:
       #
       # It is the EXPECTED value, not the pull target. quay.io/fedora/fedora:44
       # is republished several times a day and each previous digest is
@@ -96,10 +179,23 @@ jobs:
       # correct when the run started. So the tag is pulled once here and the
       # bytes are shared with every job; a mismatch against this digest is
       # reported, not fatal, because failing on it recreates that outage.
-      BUILDROOT_IMAGE: quay.io/fedora/fedora:44@sha256:e7d398c0a67572b33a43260102f9135ab79b6b8d95efca91faa5179d83b2cdf0
+      #
+      # That still left the root moving under the factory several times a
+      # day, and the package cache key includes its digest, so every late
+      # stage missed (webkitgtk built cold twice, 2cdfedd -> 94e175d). The
+      # factory now owns the root: refresh-buildroot.yml copies fedora:44 to
+      # ghcr.io/projectbluefin/utah-buildroot weekly under a dated tag, which
+      # nothing prunes, and opens a PR moving this pin
+      # (tools/buildroot_pin.py). The pin lives in config/buildroot-image, not
+      # here: the workflow token may not edit workflow files, so a pin in this
+      # file could never be moved by the refresh job (run 36167595383).
+      # A mirror pin is pulled by digest and a failure is fatal: that digest
+      # cannot rot. A quay.io value is the legacy form and keeps the old
+      # pull-the-tag-and-warn behaviour.
     outputs:
       buildroot_digest: ${{ steps.buildroot.outputs.digest }}
       factory_image: ${{ steps.factory_image.outputs.image }}
+      seed_image: ${{ steps.factory_image.outputs.seed }}
       stage0: ${{ steps.matrix.outputs.stage0 }}
       stage1: ${{ steps.matrix.outputs.stage1 }}
       stage2: ${{ steps.matrix.outputs.stage2 }}
@@ -122,12 +218,39 @@ jobs:
       stage8_chunks: ${{ steps.matrix.outputs.stage8_chunks }}
       stage9_chunks: ${{ steps.matrix.outputs.stage9_chunks }}
       stage10_chunks: ${{ steps.matrix.outputs.stage10_chunks }}
+      stage11: ${{ steps.matrix.outputs.stage11 }}
+      stage11_chunks: ${{ steps.matrix.outputs.stage11_chunks }}
+      stage12: ${{ steps.matrix.outputs.stage12 }}
+      stage12_chunks: ${{ steps.matrix.outputs.stage12_chunks }}
+      stage13: ${{ steps.matrix.outputs.stage13 }}
+      stage13_chunks: ${{ steps.matrix.outputs.stage13_chunks }}
       build_list: ${{ steps.matrix.outputs.build_list }}
       cacheable: ${{ steps.matrix.outputs.cacheable }}
+      prune_sources: ${{ steps.matrix.outputs.prune_sources }}
+      trusted: ${{ steps.matrix.outputs.trusted }}
+      early_waves: ${{ steps.matrix.outputs.early_waves }}
+      through0: ${{ steps.matrix.outputs.through0 }}
+      through1: ${{ steps.matrix.outputs.through1 }}
+      through2: ${{ steps.matrix.outputs.through2 }}
+      through3: ${{ steps.matrix.outputs.through3 }}
+      container_lane: ${{ steps.matrix.outputs.container_lane }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
+      # The same perturbation build-stage.yml applies, so the plan sees the
+      # recipe the build jobs will build.
+      - name: Perturb recipes for the canary
+        if: inputs.perturb != ''
+        env:
+          PERTURB: ${{ inputs.perturb }}
+        run: |
+          for name in $(jq -r '.[]' <<<"$PERTURB"); do
+            spec=$(find "packages/$name" -maxdepth 1 -name '*.spec' -print -quit)
+            test -n "$spec"
+            printf '\n# canary perturbation %s\n' "$GITHUB_RUN_ID" >> "$spec"
+            echo "perturbed $spec"
+          done
       - name: Validate factory policy and tests
         run: |
           python3 tools/check_workflow_quoting.py
@@ -145,16 +268,28 @@ jobs:
       - name: Pull the build root once and record what it resolved to
         id: buildroot
         run: |
+          BUILDROOT_IMAGE=$(python3 tools/buildroot_pin.py get)
           tag="${BUILDROOT_IMAGE%@*}"
           expected="${BUILDROOT_IMAGE##*@}"
-          docker pull "$tag"
-          actual=$(docker image inspect "$tag" \
-            --format '{{index .RepoDigests 0}}' | sed 's/.*@//')
+          case "$BUILDROOT_IMAGE" in
+            ghcr.io/projectbluefin/utah-buildroot:*@sha256:*)
+              # The factory mirror: immutable and never pruned, so pull the
+              # exact pinned bytes and fail if they are not there.
+              docker pull "${tag%:*}@${expected}"
+              docker tag "${tag%:*}@${expected}" "$tag"
+              actual="$expected"
+              ;;
+            *)
+              docker pull "$tag"
+              actual=$(docker image inspect "$tag" \
+                --format '{{index .RepoDigests 0}}' | sed 's/.*@//')
+              if [ "$actual" != "$expected" ]; then
+                echo "::warning title=build root moved::$tag now resolves to $actual, not the recorded $expected. The run continues on what it resolved to; run refresh-buildroot.yml to pin the factory mirror." >&2
+              fi
+              ;;
+          esac
           echo "expected $expected"
           echo "actual   $actual"
-          if [ "$actual" != "$expected" ]; then
-            echo "::warning title=build root moved::$tag now resolves to $actual, not the recorded $expected. The run continues on what it resolved to; update BUILDROOT_IMAGE to re-record it." >&2
-          fi
           echo "digest=$actual" >> "$GITHUB_OUTPUT"
           # A bare name, deliberately. Every job runs this image by that name
           # with no registry behind it, so a job that failed to load the
@@ -165,10 +300,29 @@ jobs:
           ls -l buildroot.tar.zst
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: buildroot-image
+          name: ${{ inputs.artifact_prefix }}buildroot-image
           path: buildroot.tar.zst
           if-no-files-found: error
           retention-days: 1
+      # The waves and the reverse dependencies an incremental run drags along
+      # come from real BuildRequires: rpmspec, in this build root, over every
+      # recipe (tools/build_graph.py). This used to be discarded: preflight
+      # resolved BuildRequires and then left the waves to a hand-assigned
+      # stage integer, two of which were discovered by a build failing.
+      - name: Extract BuildRequires from every recipe
+        run: |
+          mkdir -p work/graph/rows
+          docker run --rm \
+            -v "$PWD/packages:/packages:ro,Z" \
+            -v "$PWD/work/graph/rows:/out:Z" \
+            -v "$PWD/tools/extract_buildrequires.sh:/extract.sh:ro,Z" \
+            utah-buildroot:run bash /extract.sh
+          sudo chown -R "$(id -u):$(id -g)" work/graph
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: ${{ inputs.artifact_prefix }}build-graph
+          path: work/graph
+          retention-days: 7
       # The published repository is the witness for what may be skipped, and
       # it lives in one place: the OCI image publish writes. It used to be
       # read over HTTP from a GitHub Pages mirror that had been retired but
@@ -183,6 +337,11 @@ jobs:
       # push to a pull request skips what the first push built; main only ever
       # reads latest. No image at all is not an error: it means nothing can
       # be skipped, which is what rebuild_plan.py does with an empty witness.
+      #
+      # The seed is what publish will start from and must still find
+      # unchanged (repeated mistake 14). It is the factory image itself
+      # unless the canary names its own publish tag, whose previous image is
+      # then the only thing it may seed from -- never latest.
       - name: Resolve the published factory image
         id: factory_image
         env:
@@ -191,6 +350,9 @@ jobs:
           REF_NAME: ${{ github.ref_name }}
           REF: ${{ github.ref }}
           ACTOR: ${{ github.actor }}
+          NO_FACTORY: ${{ inputs.no_factory == true && '1' || '' }}
+          PUBLISH_TAG: ${{ inputs.publish_tag }}
+          FACTORY_TAG: ${{ inputs.factory_tag }}
         run: |
           set -euo pipefail
           owner=$(printf '%s' "$REPOSITORY_OWNER" | tr "[:upper:]" "[:lower:]")
@@ -202,31 +364,70 @@ jobs:
           else
             candidates="$branch latest"
           fi
+          if [ -n "$FACTORY_TAG" ]; then
+            candidates="$FACTORY_TAG"
+          fi
+          if [ -n "$NO_FACTORY" ]; then
+            candidates=
+          fi
           echo "${GITHUB_TOKEN}" | docker login ghcr.io -u "$ACTOR" --password-stdin \
             || echo "::warning title=ghcr login failed::resolving the factory image anonymously"
-          resolved=
-          for tag in $candidates; do
-            if docker pull "${image}:${tag}"; then
-              digest=$(docker image inspect "${image}:${tag}" \
-                --format '{{index .RepoDigests 0}}' | sed 's/.*@//')
-              resolved="${image}@${digest}"
-              echo "factory repository: ${image}:${tag} -> ${resolved}"
-              break
-            fi
-            echo "no factory image at ${image}:${tag}"
-          done
-          if [ -z "$resolved" ]; then
+          # A tag, or a digest (sha256:...) -- the canary pins one run's
+          # published image by digest so another pass cannot move it.
+          resolve() {
+            for tag in "$@"; do
+              case "$tag" in
+                sha256:*) ref="${image}@${tag}" ;;
+                *) ref="${image}:${tag}" ;;
+              esac
+              if docker pull --quiet "$ref" >&2; then
+                digest=$(docker image inspect "$ref" \
+                  --format '{{index .RepoDigests 0}}' | sed 's/.*@//')
+                echo "$ref -> ${image}@${digest}" >&2
+                echo "${image}@${digest}"
+                return
+              fi
+              echo "no image at $ref" >&2
+            done
+          }
+          # shellcheck disable=SC2086 # candidates is a word list
+          resolved=$(resolve $candidates)
+          if [ -z "$resolved" ] && [ -z "$NO_FACTORY" ]; then
             echo "::warning title=no factory image::nothing is published for this ref or main, so nothing can be skipped as already built"
           fi
+          if [ -n "$PUBLISH_TAG" ]; then
+            test "$PUBLISH_TAG" != latest
+            seed=$(resolve "$PUBLISH_TAG")
+          else
+            seed="$resolved"
+          fi
+          echo "factory repository: ${resolved:-<none>}"
+          echo "publish seed:       ${seed:-<none>}"
           echo "image=${resolved}" >> "$GITHUB_OUTPUT"
+          echo "seed=${seed}" >> "$GITHUB_OUTPUT"
+          # The state label (tools/factory_state.py) is what prepare selects
+          # against: the inputs every published build was made from.
+          mkdir -p work
+          if [ -n "$resolved" ]; then
+            docker image inspect "$resolved" --format '{{json .Config.Labels}}' > work/factory-labels.json
+          else
+            echo null > work/factory-labels.json
+          fi
       - uses: ./.github/actions/load-factory-repo
         id: factory
         with:
           image: ${{ steps.factory_image.outputs.image }}
       - id: matrix
         env:
-          FULL: ${{ github.event_name == 'workflow_dispatch' && inputs.full == true && '1' || '0' }}
-          BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+          FULL: ${{ (inputs.full == true || github.event.schedule == '23 1 * * 0') && '1' || '0' }}
+          EVENT: ${{ github.event_name }}
+          FACTORY_LABELS: work/factory-labels.json
+          GRAPH_ROWS: work/graph/rows
+          # Only a push has a range worth diffing. A pull_request event also
+          # carries `before` -- the previous head of the branch, which a force
+          # push makes unreachable, and git diff then kills prepare.
+          BASE_SHA: ${{ github.event_name == 'push' && github.event.before || '' }}
+          ONLY_PACKAGES: ${{ inputs.packages }}
           FACTORY_URL: ${{ steps.factory.outputs.url }}
         run: |
           # The action reports the path as the build container sees it under
@@ -258,6 +459,8 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: ./.github/actions/load-buildroot
+        with:
+          artifact: ${{ inputs.artifact_prefix }}buildroot-image
       - uses: ./.github/actions/load-factory-repo
         id: factory
         with:
@@ -335,16 +538,18 @@ jobs:
             '
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: preflight-buildrequires
+          name: ${{ inputs.artifact_prefix }}preflight-buildrequires
           path: work/reports/preflight.txt
           if-no-files-found: warn
 
-  # Five waves of the same build, ordered so a package can resolve a
+  # Fourteen waves of the same build, ordered so a package can resolve a
   # BuildRequires against something an earlier wave produced. The wave
   # itself lives in build-stage.yml; only the ordering is here.
   #
-  # GitHub needs the chain to be static, so the count is fixed at five. A
-  # sixth wave is a real decision, not a silent overflow: `prepare` fails
+  # GitHub needs the chain to be static, so the count is fixed at fourteen:
+  # the deepest BuildRequires chain tools/build_graph.py solves is twelve
+  # (hwdata -> libdisplay-info -> mesa -> ... -> nautilus-python). A
+  # fifteenth wave is a real decision, not a silent overflow: `prepare` fails
   # rather than dropping a package that does not fit.
   rebuild0:
     needs: prepare
@@ -357,10 +562,16 @@ jobs:
     with:
       stage: '0'
       packages: ${{ matrix.chunk }}
-      backend: ${{ inputs.backend || 'container' }}
+      backend: ${{ inputs.backend || 'hermetic' }}
       factory_image: ${{ needs.prepare.outputs.factory_image }}
       buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
       cacheable_packages: ${{ needs.prepare.outputs.cacheable }}
+      artifact_prefix: ${{ inputs.artifact_prefix }}
+      cache_salt: ${{ inputs.cache_salt }}
+      perturb: ${{ inputs.perturb }}
+      inject_failure: ${{ inputs.inject_failure }}
+      flaky_check: ${{ inputs.flaky_check }}
+      container_packages: ${{ needs.prepare.outputs.container_lane }}
 
   rebuild1:
     needs: [prepare, rebuild0]
@@ -373,10 +584,16 @@ jobs:
     with:
       stage: '1'
       packages: ${{ matrix.chunk }}
-      backend: ${{ inputs.backend || 'container' }}
+      backend: ${{ inputs.backend || 'hermetic' }}
       factory_image: ${{ needs.prepare.outputs.factory_image }}
       buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
       cacheable_packages: ${{ needs.prepare.outputs.cacheable }}
+      artifact_prefix: ${{ inputs.artifact_prefix }}
+      cache_salt: ${{ inputs.cache_salt }}
+      perturb: ${{ inputs.perturb }}
+      inject_failure: ${{ inputs.inject_failure }}
+      flaky_check: ${{ inputs.flaky_check }}
+      container_packages: ${{ needs.prepare.outputs.container_lane }}
 
   rebuild2:
     needs: [prepare, rebuild0, rebuild1]
@@ -389,10 +606,16 @@ jobs:
     with:
       stage: '2'
       packages: ${{ matrix.chunk }}
-      backend: ${{ inputs.backend || 'container' }}
+      backend: ${{ inputs.backend || 'hermetic' }}
       factory_image: ${{ needs.prepare.outputs.factory_image }}
       buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
       cacheable_packages: ${{ needs.prepare.outputs.cacheable }}
+      artifact_prefix: ${{ inputs.artifact_prefix }}
+      cache_salt: ${{ inputs.cache_salt }}
+      perturb: ${{ inputs.perturb }}
+      inject_failure: ${{ inputs.inject_failure }}
+      flaky_check: ${{ inputs.flaky_check }}
+      container_packages: ${{ needs.prepare.outputs.container_lane }}
 
   rebuild3:
     needs: [prepare, rebuild0, rebuild1, rebuild2]
@@ -405,10 +628,16 @@ jobs:
     with:
       stage: '3'
       packages: ${{ matrix.chunk }}
-      backend: ${{ inputs.backend || 'container' }}
+      backend: ${{ inputs.backend || 'hermetic' }}
       factory_image: ${{ needs.prepare.outputs.factory_image }}
       buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
       cacheable_packages: ${{ needs.prepare.outputs.cacheable }}
+      artifact_prefix: ${{ inputs.artifact_prefix }}
+      cache_salt: ${{ inputs.cache_salt }}
+      perturb: ${{ inputs.perturb }}
+      inject_failure: ${{ inputs.inject_failure }}
+      flaky_check: ${{ inputs.flaky_check }}
+      container_packages: ${{ needs.prepare.outputs.container_lane }}
 
   rebuild4:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3]
@@ -421,10 +650,16 @@ jobs:
     with:
       stage: '4'
       packages: ${{ matrix.chunk }}
-      backend: ${{ inputs.backend || 'container' }}
+      backend: ${{ inputs.backend || 'hermetic' }}
       factory_image: ${{ needs.prepare.outputs.factory_image }}
       buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
       cacheable_packages: ${{ needs.prepare.outputs.cacheable }}
+      artifact_prefix: ${{ inputs.artifact_prefix }}
+      cache_salt: ${{ inputs.cache_salt }}
+      perturb: ${{ inputs.perturb }}
+      inject_failure: ${{ inputs.inject_failure }}
+      flaky_check: ${{ inputs.flaky_check }}
+      container_packages: ${{ needs.prepare.outputs.container_lane }}
 
   rebuild5:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4]
@@ -437,10 +672,16 @@ jobs:
     with:
       stage: '5'
       packages: ${{ matrix.chunk }}
-      backend: ${{ inputs.backend || 'container' }}
+      backend: ${{ inputs.backend || 'hermetic' }}
       factory_image: ${{ needs.prepare.outputs.factory_image }}
       buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
       cacheable_packages: ${{ needs.prepare.outputs.cacheable }}
+      artifact_prefix: ${{ inputs.artifact_prefix }}
+      cache_salt: ${{ inputs.cache_salt }}
+      perturb: ${{ inputs.perturb }}
+      inject_failure: ${{ inputs.inject_failure }}
+      flaky_check: ${{ inputs.flaky_check }}
+      container_packages: ${{ needs.prepare.outputs.container_lane }}
 
   rebuild6:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5]
@@ -453,10 +694,16 @@ jobs:
     with:
       stage: '6'
       packages: ${{ matrix.chunk }}
-      backend: ${{ inputs.backend || 'container' }}
+      backend: ${{ inputs.backend || 'hermetic' }}
       factory_image: ${{ needs.prepare.outputs.factory_image }}
       buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
       cacheable_packages: ${{ needs.prepare.outputs.cacheable }}
+      artifact_prefix: ${{ inputs.artifact_prefix }}
+      cache_salt: ${{ inputs.cache_salt }}
+      perturb: ${{ inputs.perturb }}
+      inject_failure: ${{ inputs.inject_failure }}
+      flaky_check: ${{ inputs.flaky_check }}
+      container_packages: ${{ needs.prepare.outputs.container_lane }}
 
   rebuild7:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6]
@@ -469,10 +716,16 @@ jobs:
     with:
       stage: '7'
       packages: ${{ matrix.chunk }}
-      backend: ${{ inputs.backend || 'container' }}
+      backend: ${{ inputs.backend || 'hermetic' }}
       factory_image: ${{ needs.prepare.outputs.factory_image }}
       buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
       cacheable_packages: ${{ needs.prepare.outputs.cacheable }}
+      artifact_prefix: ${{ inputs.artifact_prefix }}
+      cache_salt: ${{ inputs.cache_salt }}
+      perturb: ${{ inputs.perturb }}
+      inject_failure: ${{ inputs.inject_failure }}
+      flaky_check: ${{ inputs.flaky_check }}
+      container_packages: ${{ needs.prepare.outputs.container_lane }}
 
   rebuild8:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7]
@@ -485,10 +738,16 @@ jobs:
     with:
       stage: '8'
       packages: ${{ matrix.chunk }}
-      backend: ${{ inputs.backend || 'container' }}
+      backend: ${{ inputs.backend || 'hermetic' }}
       factory_image: ${{ needs.prepare.outputs.factory_image }}
       buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
       cacheable_packages: ${{ needs.prepare.outputs.cacheable }}
+      artifact_prefix: ${{ inputs.artifact_prefix }}
+      cache_salt: ${{ inputs.cache_salt }}
+      perturb: ${{ inputs.perturb }}
+      inject_failure: ${{ inputs.inject_failure }}
+      flaky_check: ${{ inputs.flaky_check }}
+      container_packages: ${{ needs.prepare.outputs.container_lane }}
 
   rebuild9:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8]
@@ -501,10 +760,16 @@ jobs:
     with:
       stage: '9'
       packages: ${{ matrix.chunk }}
-      backend: ${{ inputs.backend || 'container' }}
+      backend: ${{ inputs.backend || 'hermetic' }}
       factory_image: ${{ needs.prepare.outputs.factory_image }}
       buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
       cacheable_packages: ${{ needs.prepare.outputs.cacheable }}
+      artifact_prefix: ${{ inputs.artifact_prefix }}
+      cache_salt: ${{ inputs.cache_salt }}
+      perturb: ${{ inputs.perturb }}
+      inject_failure: ${{ inputs.inject_failure }}
+      flaky_check: ${{ inputs.flaky_check }}
+      container_packages: ${{ needs.prepare.outputs.container_lane }}
 
   rebuild10:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8, rebuild9]
@@ -517,379 +782,279 @@ jobs:
     with:
       stage: '10'
       packages: ${{ matrix.chunk }}
-      backend: ${{ inputs.backend || 'container' }}
+      backend: ${{ inputs.backend || 'hermetic' }}
       factory_image: ${{ needs.prepare.outputs.factory_image }}
       buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
       cacheable_packages: ${{ needs.prepare.outputs.cacheable }}
+      artifact_prefix: ${{ inputs.artifact_prefix }}
+      cache_salt: ${{ inputs.cache_salt }}
+      perturb: ${{ inputs.perturb }}
+      inject_failure: ${{ inputs.inject_failure }}
+      flaky_check: ${{ inputs.flaky_check }}
+      container_packages: ${{ needs.prepare.outputs.container_lane }}
 
-  precedence:
-    # Every wave, not the first five. See publish below.
+  rebuild11:
     needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8, rebuild9, rebuild10]
-    # `!cancelled()` is what lets this run after a failed wave, which is the
-    # point: it has to see every RPM that did build. It also let it run after
-    # a failed prepare, where there is no build root artifact to load, so a
-    # unit-test failure in prepare surfaced a second time as a download error
-    # here (runs 372 and 379). prepare has to have succeeded.
-    if: ${{ !cancelled() && needs.prepare.result == 'success' && needs.prepare.outputs.build_list != '[]' }}
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - uses: ./.github/actions/load-buildroot
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
-        with:
-          pattern: rpm-*
-          path: built
-          merge-multiple: true
-      - name: Assert our builds outrank Fedora and Hummingbird
-        run: |
-          docker run --rm \
-            -v "$PWD/built:/built:ro,Z" \
-            -v "$PWD/config:/repos:ro,Z" \
-            utah-buildroot:run bash -exc '
-              dnf -y install rpmdevtools >/dev/null
-              cp /repos/hummingbird.repo /etc/yum.repos.d/
-              disable=--disablerepo=fedora-cisco-openh264
-              fmt="%|EPOCH?{%{EPOCH}:}|%{VERSION}-%{RELEASE}"
-              : > /tmp/losers
-              : > /tmp/overlap
-              find /built -name "*.rpm" -type f | sort | while read -r rpm; do
-                case "$rpm" in
-                  *.src.rpm) continue ;;
-                  # The malcontent bootstrap is ranked below the real build on
-                  # purpose and is deleted before publish. It is meant to lose.
-                  *-0.bootstrap.*) continue ;;
-                esac
-                name=$(rpm -qp --qf "%{NAME}" "$rpm" 2>/dev/null) || continue
-                ours=$(rpm -qp --qf "$fmt" "$rpm")
-                line=$(dnf -q $disable repoquery --latest-limit=1 \
-                         --qf "$fmt %{reponame}" "$name" 2>/dev/null | tail -n1)
-                theirs=${line%% *}
-                repo=${line##* }
-                # Nothing else ships this name, so there is nothing to outrank.
-                [ -n "$theirs" ] || continue
-                rc=0; rpmdev-vercmp "$ours" "$theirs" >/dev/null 2>&1 || rc=$?
-                # 11 means the first argument is newer, which is what we need.
-                # 0 (equal) and 12 (theirs newer) both mean ours will not win.
-                [ "$rc" = 11 ] || echo "  $name: ours $ours, $repo has $theirs" >> /tmp/losers
-                # .hum1.bfin outranks .hum1 at equal release by construction, so
-                # a package the base OS also ships no longer appears as a loser.
-                # It is still worth knowing about: this factory is for the
-                # desktop stack Hummingbird does not ship.
-                case "$repo" in
-                  *hummingbird*) echo "  $name: ours $ours, $repo also has $theirs" >> /tmp/overlap ;;
-                esac
-              done
-              if [ -s /tmp/losers ]; then
-                echo "These builds do not outrank what the repositories already offer,"
-                echo "so dnf would install the other one:"
-                cat /tmp/losers
-                echo
-                echo "Our disttag outranks both Fedora and Hummingbird at an equal"
-                echo "release, so a loser here means the thing we forked has moved on:"
-                echo "its leading release segment is now higher than ours. Rebase the"
-                echo "spec on the newer dist-git, which raises ours to match."
-                echo
-                echo "If the release has NOT moved and we simply need to build it again,"
-                echo "add \"dist_bump\": {\"count\": 1, \"baseline\": \"<Release:>\"}"
-                echo "to the package in config/upstream-sources.json"
-                echo "instead. That appends .N after .bfin, which is what AlmaLinux does"
-                echo "with .alma.1. It cannot help with a release bump, because the"
-                echo "leading segment comes from the spec."
-                exit 1
-              fi
-              if [ -s /tmp/overlap ]; then
-                echo "Note: Hummingbird also ships these, and we outrank it:"
-                cat /tmp/overlap
-                echo "The remit is the desktop stack Hummingbird does not ship, so each of"
-                echo "these is worth checking. Not a failure."
-              fi
-              echo "every build outranks what Fedora 44 and Hummingbird offer"
-            '
+    if: ${{ !cancelled() && needs.prepare.outputs.stage11 != '[]' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        chunk: ${{ fromJSON(needs.prepare.outputs.stage11_chunks) }}
+    uses: ./.github/workflows/build-stage.yml
+    with:
+      stage: '11'
+      packages: ${{ matrix.chunk }}
+      backend: ${{ inputs.backend || 'hermetic' }}
+      factory_image: ${{ needs.prepare.outputs.factory_image }}
+      buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
+      cacheable_packages: ${{ needs.prepare.outputs.cacheable }}
+      artifact_prefix: ${{ inputs.artifact_prefix }}
+      cache_salt: ${{ inputs.cache_salt }}
+      perturb: ${{ inputs.perturb }}
+      inject_failure: ${{ inputs.inject_failure }}
+      flaky_check: ${{ inputs.flaky_check }}
+      container_packages: ${{ needs.prepare.outputs.container_lane }}
 
+  rebuild12:
+    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8, rebuild9, rebuild10, rebuild11]
+    if: ${{ !cancelled() && needs.prepare.outputs.stage12 != '[]' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        chunk: ${{ fromJSON(needs.prepare.outputs.stage12_chunks) }}
+    uses: ./.github/workflows/build-stage.yml
+    with:
+      stage: '12'
+      packages: ${{ matrix.chunk }}
+      backend: ${{ inputs.backend || 'hermetic' }}
+      factory_image: ${{ needs.prepare.outputs.factory_image }}
+      buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
+      cacheable_packages: ${{ needs.prepare.outputs.cacheable }}
+      artifact_prefix: ${{ inputs.artifact_prefix }}
+      cache_salt: ${{ inputs.cache_salt }}
+      perturb: ${{ inputs.perturb }}
+      inject_failure: ${{ inputs.inject_failure }}
+      flaky_check: ${{ inputs.flaky_check }}
+      container_packages: ${{ needs.prepare.outputs.container_lane }}
+
+  rebuild13:
+    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8, rebuild9, rebuild10, rebuild11, rebuild12]
+    if: ${{ !cancelled() && needs.prepare.outputs.stage13 != '[]' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        chunk: ${{ fromJSON(needs.prepare.outputs.stage13_chunks) }}
+    uses: ./.github/workflows/build-stage.yml
+    with:
+      stage: '13'
+      packages: ${{ matrix.chunk }}
+      backend: ${{ inputs.backend || 'hermetic' }}
+      factory_image: ${{ needs.prepare.outputs.factory_image }}
+      buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
+      cacheable_packages: ${{ needs.prepare.outputs.cacheable }}
+      artifact_prefix: ${{ inputs.artifact_prefix }}
+      cache_salt: ${{ inputs.cache_salt }}
+      perturb: ${{ inputs.perturb }}
+      inject_failure: ${{ inputs.inject_failure }}
+      flaky_check: ${{ inputs.flaky_check }}
+      container_packages: ${{ needs.prepare.outputs.container_lane }}
+
+  # Each wave's successes publish as that wave finishes, while later waves
+  # still build: publish0..publish3, one per wave among the first four that
+  # has later waves still to come (see publish-repository.yml). Four, not
+  # one per wave: the canary expands this workflow six times, and GitHub
+  # refused a workflow with thirteen early publications per expansion
+  # ("Maximum object size exceeded"). The first four waves of a run are
+  # where a small change and its direct dependents live; anything later is
+  # covered by the final publication. They run one after another, and
+  # each seeds from the image the previous one pushed -- allowed because it
+  # carries this run's id.
+  publish0:
+    needs: [prepare, rebuild0]
+    if: ${{ !cancelled() && needs.prepare.result == 'success' && inputs.skip_publish != true && contains(fromJSON(needs.prepare.outputs.early_waves), '0') }}
+    uses: ./.github/workflows/publish-repository.yml
+    with:
+      wave: '0'
+      final: false
+      build_list: ${{ needs.prepare.outputs.through0 }}
+      seed_image: ${{ needs.prepare.outputs.seed_image }}
+      trusted: ${{ needs.prepare.outputs.trusted }}
+      artifact_prefix: ${{ inputs.artifact_prefix }}
+      publish_tag: ${{ inputs.publish_tag }}
+      consumer: ${{ inputs.consumer || 'contract' }}
+  publish1:
+    needs: [prepare, rebuild0, rebuild1, publish0]
+    if: ${{ !cancelled() && needs.prepare.result == 'success' && inputs.skip_publish != true && contains(fromJSON(needs.prepare.outputs.early_waves), '1') }}
+    uses: ./.github/workflows/publish-repository.yml
+    with:
+      wave: '1'
+      final: false
+      build_list: ${{ needs.prepare.outputs.through1 }}
+      seed_image: ${{ needs.prepare.outputs.seed_image }}
+      trusted: ${{ needs.prepare.outputs.trusted }}
+      artifact_prefix: ${{ inputs.artifact_prefix }}
+      publish_tag: ${{ inputs.publish_tag }}
+      consumer: ${{ inputs.consumer || 'contract' }}
+  publish2:
+    needs: [prepare, rebuild0, rebuild1, rebuild2, publish0, publish1]
+    if: ${{ !cancelled() && needs.prepare.result == 'success' && inputs.skip_publish != true && contains(fromJSON(needs.prepare.outputs.early_waves), '2') }}
+    uses: ./.github/workflows/publish-repository.yml
+    with:
+      wave: '2'
+      final: false
+      build_list: ${{ needs.prepare.outputs.through2 }}
+      seed_image: ${{ needs.prepare.outputs.seed_image }}
+      trusted: ${{ needs.prepare.outputs.trusted }}
+      artifact_prefix: ${{ inputs.artifact_prefix }}
+      publish_tag: ${{ inputs.publish_tag }}
+      consumer: ${{ inputs.consumer || 'contract' }}
+  publish3:
+    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, publish0, publish1, publish2]
+    if: ${{ !cancelled() && needs.prepare.result == 'success' && inputs.skip_publish != true && contains(fromJSON(needs.prepare.outputs.early_waves), '3') }}
+    uses: ./.github/workflows/publish-repository.yml
+    with:
+      wave: '3'
+      final: false
+      build_list: ${{ needs.prepare.outputs.through3 }}
+      seed_image: ${{ needs.prepare.outputs.seed_image }}
+      trusted: ${{ needs.prepare.outputs.trusted }}
+      artifact_prefix: ${{ inputs.artifact_prefix }}
+      publish_tag: ${{ inputs.publish_tag }}
+      consumer: ${{ inputs.consumer || 'contract' }}
+
+  # The final publication: every wave, prune included, and the one whose
+  # transaction failure fails the run. It still waits for every wave to
+  # FINISH, so nothing is published around a wave that is still building,
+  # and no wave's result can veto it (tools/publish_gate.py).
   publish:
-    # The consumer tag is atomic. Successful artifacts from a failed matrix are
-    # still retained by Actions for diagnosis, but they never replace the
-    # coherent repository Utah consumes. Publication requires every selected
-    # stage plus precedence and the Hummingbird-only transaction below.
-    #
-    # "Every selected stage" was what this said and not what it did: needs
-    # stopped at rebuild4, so publication ran while stages 5 to 10 were still
-    # building and validated a repository that could not yet contain their
-    # output. The first run to reach the transaction check said so plainly --
-    #
-    #   nothing provides libepoxy.so.0()(64bit) needed by gtk4 ... from factory
-    #   nothing provides libGL.so.1()(64bit) needed by libva ... from factory
-    #
-    # -- with libepoxy and libglvnd both at stage 6, behind the gate. The
-    # dependency now covers all eleven waves, which is what makes the check
-    # meaningful: it can finally see the whole repository it is judging.
-    #
-    # This is not main-only. The repository is published as an OCI image, and
-    # that image is the only thing consumers read. A Pages mirror used to be
-    # published alongside it, but Pages can only deploy from the default
-    # branch, so nothing existed to consume until a merge had already landed
-    # and an image could never be tested against the packages it was meant to
-    # use. A registry has no such rule, so the mirror was a second publication
-    # path that nothing consumed and every change had to be made twice in.
-    #
-    # A pull request from a fork is the exception, and it has to be stated
-    # rather than assumed: GitHub gives those a read-only GITHUB_TOKEN, so the
-    # GHCR login and push would fail however the rest of the run went. Skipping
-    # is honest; failing on a permission that was never going to be granted is
-    # noise that reads like a broken pipeline.
+    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8, rebuild9, rebuild10, rebuild11, rebuild12, rebuild13, publish0, publish1, publish2, publish3]
     if: >-
       ${{ !cancelled()
           && needs.prepare.result == 'success'
-          && needs.prepare.outputs.build_list != '[]'
-          && needs.precedence.result == 'success'
-          && (needs.rebuild0.result == 'success' || needs.rebuild0.result == 'skipped')
-          && (needs.rebuild1.result == 'success' || needs.rebuild1.result == 'skipped')
-          && (needs.rebuild2.result == 'success' || needs.rebuild2.result == 'skipped')
-          && (needs.rebuild3.result == 'success' || needs.rebuild3.result == 'skipped')
-          && (needs.rebuild4.result == 'success' || needs.rebuild4.result == 'skipped')
-          && (needs.rebuild5.result == 'success' || needs.rebuild5.result == 'skipped')
-          && (needs.rebuild6.result == 'success' || needs.rebuild6.result == 'skipped')
-          && (needs.rebuild7.result == 'success' || needs.rebuild7.result == 'skipped')
-          && (needs.rebuild8.result == 'success' || needs.rebuild8.result == 'skipped')
-          && (needs.rebuild9.result == 'success' || needs.rebuild9.result == 'skipped')
-          && (needs.rebuild10.result == 'success' || needs.rebuild10.result == 'skipped')
-          && (github.event_name != 'pull_request'
-              || github.event.pull_request.head.repo.full_name == github.repository) }}
-    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8, rebuild9, rebuild10, precedence]
-    # Build waves can overlap, but the consumer tag is an atomic input. Queue
-    # only this critical section per ref. The seed step verifies that the image
-    # seen by `prepare` is still current; an older run therefore cannot publish
-    # over a newer one.
-    concurrency:
-      group: utah-packages-publish-${{ github.ref }}
-      cancel-in-progress: false
+          && inputs.skip_publish != true
+          && (needs.prepare.outputs.build_list != '[]'
+              || needs.prepare.outputs.prune_sources != '[]') }}
+    uses: ./.github/workflows/publish-repository.yml
+    with:
+      final: true
+      build_list: ${{ needs.prepare.outputs.build_list }}
+      prune_sources: ${{ needs.prepare.outputs.prune_sources }}
+      seed_image: ${{ needs.prepare.outputs.seed_image }}
+      trusted: ${{ needs.prepare.outputs.trusted }}
+      artifact_prefix: ${{ inputs.artifact_prefix }}
+      publish_tag: ${{ inputs.publish_tag }}
+      consumer: ${{ inputs.consumer || 'contract' }}
+
+  report:
+    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8, rebuild9, rebuild10, rebuild11, rebuild12, rebuild13, publish]
+    if: ${{ always() && needs.prepare.result == 'success' && needs.prepare.outputs.build_list != '[]' }}
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: read
+      issues: write
     outputs:
-      ref: ${{ steps.oci.outputs.ref }}
-      digest: ${{ steps.oci.outputs.digest }}
+      failed: ${{ steps.name.outputs.failed }}
     steps:
-      # The consumer-transaction check below runs tools/runtime_contract.py
-      # against config/, and the OCI step reads nothing else from the tree, so
-      # this job was the one that never checked the repository out. It failed
-      # on `python3: can't open file .../tools/runtime_contract.py` the moment
-      # the seed step stopped failing first and let it get that far.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - name: Verify and seed repository from the prepare-time factory image
+      - name: Name every package that did not publish
+        id: name
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          EXPECTED_IMAGE: ${{ needs.prepare.outputs.factory_image }}
-          REPOSITORY_OWNER: ${{ github.repository_owner }}
-          REF_NAME: ${{ github.ref_name }}
-          REF: ${{ github.ref }}
-          ACTOR: ${{ github.actor }}
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          BUILD_LIST: ${{ needs.prepare.outputs.build_list }}
+          LOSERS: ${{ needs.publish.outputs.losers || '[]' }}
+          PREFIX: ${{ inputs.artifact_prefix }}
+          PUBLISH_RESULT: ${{ needs.publish.result }}
+          PUBLISH_REPORT: ${{ needs.publish.outputs.report }}
+          DIGEST: ${{ needs.publish.outputs.digest }}
         run: |
           set -euo pipefail
-          owner=$(printf '%s' "$REPOSITORY_OWNER" | tr "[:upper:]" "[:lower:]")
-          image="ghcr.io/${owner}/utah-packages"
-          branch=$(printf '%s' "$REF_NAME" \
-            | tr "/" "-" | tr -cd "[:alnum:]._-" | cut -c1-96)
-          if [ "$REF" = "refs/heads/main" ]; then
-            candidates="latest"
-          else
-            candidates="$branch latest"
-          fi
-          mkdir -p repository
-          echo "${GITHUB_TOKEN}" | podman login ghcr.io -u "$ACTOR" --password-stdin
-          current=
-          for tag in $candidates; do
-            if podman pull "${image}:${tag}"; then
-              digest=$(podman image inspect "${image}:${tag}" \
-                --format '{{index .RepoDigests 0}}' | sed 's/.*@//')
-              current="${image}@${digest}"
-              echo "current factory image: ${image}:${tag} -> ${current}"
-              break
-            fi
-            echo "no factory image at ${image}:${tag}"
+          gh api --paginate "repos/$REPOSITORY/actions/runs/$RUN_ID/artifacts?per_page=100" \
+            --jq '.artifacts[].name' | jq -R . | jq -s . > artifacts.json
+          python3 tools/publish_gate.py report \
+            --build-list "$BUILD_LIST" --artifacts artifacts.json --prefix "$PREFIX" \
+            --losers "$LOSERS" --publish-result "$PUBLISH_RESULT" \
+            --publish-report "$PUBLISH_REPORT" --digest "$DIGEST" --run-url "$RUN_URL" \
+            --output report.md --failed-output failed.json > /dev/null
+          cat report.md >> "$GITHUB_STEP_SUMMARY"
+          echo "failed=$(jq -c . failed.json)" >> "$GITHUB_OUTPUT"
+          for name in $(jq -r '.[]' failed.json); do
+            echo "::error title=package not published::$name failed this run and was not replaced"
           done
-          if [ "$current" != "$EXPECTED_IMAGE" ]; then
-            echo "factory image advanced while this run was building" >&2
-            echo "  prepare witnessed: ${EXPECTED_IMAGE:-<none>}" >&2
-            echo "  publish sees:      ${current:-<none>}" >&2
-            echo "refusing to overwrite the newer repository; rerun this commit" >&2
-            exit 1
-          fi
-          if [ -z "$current" ]; then
-            echo "prepare witnessed no published image; publishing a new repository"
-          else
-            # The factory image is FROM scratch with one COPY and no CMD or
-            # ENTRYPOINT, so a bare create exits 125 with "no command or
-            # entrypoint provided". A command is only recorded here, never run
-            # -- the container exists to be copied out of -- so naming one that
-            # the image does not even contain is enough to satisfy create.
-            container=$(podman create "$current" /bin/true)
-            podman cp "$container:/repository/." repository/
-            podman rm "$container"
-          fi
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
-        with:
-          pattern: rpm-*
-          path: repository
-          merge-multiple: true
-      - name: Create and keylessly sign repository metadata
-        run: |
-          sudo apt-get update && sudo apt-get install -y createrepo-c
-          # The malcontent bootstrap pass exists only to give the next stage a
-          # malcontent-libs linked against accountsservice 26, breaking the
-          # flatpak-libs -> libmalcontent-0.so.0 cycle. It has no parental
-          # controls UI, so it must not reach anyone's system. Its release is
-          # 0.bootstrap, below the real build, so this is belt and braces.
-          find repository -name '*-0.bootstrap.*.rpm' -print -delete
-          # 507b2bf stopped the factory building icu, because a factory icu
-          # 78.3 competed with the Hummingbird 78.3 that is already newest and
-          # left consumers linking the leftover 77. The recipe went away; the
-          # RPM did not. libicu-78.3-1.hum1.bfin is still carried forward from
-          # the published image on every run, so the transaction kept seeing a
-          # factory ICU that nothing in this tree builds and no recipe can fix.
-          # git log -S over the whole history finds no libicu in the inventory,
-          # so there is nothing to rebuild -- only this to stop re-seeding.
-          find repository -name 'libicu-*.bfin.*.rpm' -o -name 'icu-*.bfin.*.rpm' \
-            | tee /dev/stderr | xargs -r rm -f
-          createrepo_c --update repository
-          curl -fsSL https://github.com/sigstore/cosign/releases/download/v2.4.1/cosign-linux-amd64 -o cosign
-          echo '8b24b946dd5809c6bd93de08033bcf6bc0ed7d336b7785787c080f574b89249b  cosign' | sha256sum -c -
-          install -m 0755 cosign /usr/local/bin/cosign
-          cosign sign-blob --yes --bundle repository/repodata/repomd.xml.bundle repository/repodata/repomd.xml
-      - name: Validate Hummingbird-only consumer transaction
-        run: |
-          CONTRACT=$(python3 tools/runtime_contract.py \
-            config/bluefin-packages.toml config/runtime-contract.toml)
-          BASE_IMAGE=$(python3 tools/runtime_contract.py \
-            config/bluefin-packages.toml config/runtime-contract.toml --base-image)
-          export CONTRACT
-          docker run --rm \
-            -e CONTRACT \
-            -v "$PWD/repository:/repository:ro,Z" \
-            -v "$PWD/config:/config:ro,Z" \
-            "$BASE_IMAGE" bash -euo pipefail -c '
-              cp /config/hummingbird.repo /etc/yum.repos.d/hummingbird.repo
-              # Hummingbird ships libicu 77.1 beside 78.3, and 507b2bf settled
-              # that 78 is the sole runtime ICU: the factory stopped building
-              # icu so every consumer links Hummingbird 78. Nothing enforced it
-              # here, so this transaction still had 77.1 to choose from and
-              # split -- libtinysparql wanting libicuuc.so.78 against a samba
-              # wanting .so.77, which no resolution satisfies.
-              #
-              # The exclusion belongs in this copy and nowhere else. 012cb6a
-              # removed a blanket libicu-77 exclusion because it broke Fedora
-              # build-only deps that legitimately link ICU 77 -- raptor2 via
-              # gstreamer-bad, localsearch and pipewire-libs-extra
-              # transitively. This transaction has no Fedora repository at all,
-              # only factory plus Hummingbird, so no build-only dep can be
-              # caught by it. Editing config/hummingbird.repo instead would
-              # reach the build root, which is the thing 012cb6a fixed.
-              #
-              # Spelled with release as its own field: 1f88491 found that dnf
-              # splits a package spec on its dashes before globbing each field,
-              # so libicu-77.*hum1 parses its version as 77.*hum1 and matches
-              # nothing at all.
-              printf "excludepkgs=libicu-77.*-*hum1\n" >> /etc/yum.repos.d/hummingbird.repo
-              cat >/etc/yum.repos.d/factory.repo <<EOF
-          [factory]
-          name=Utah package factory candidate
-          baseurl=file:///repository
-          enabled=1
-          gpgcheck=0
-          EOF
-              mapfile -t packages <<<"$CONTRACT"
-              test "${#packages[@]}" -gt 0
-              DNF=$(command -v dnf5 || command -v dnf)
-              output=$($DNF --assumeno --setopt=install_weak_deps=False \
-                --disablerepo="*" \
-                --enablerepo=factory \
-                --enablerepo=public-hummingbird-x86_64-rpms \
-                install "${packages[@]}" 2>&1 || true)
-              printf "%s\n" "$output"
-              if grep -Eqi "No match for argument|nothing provides|conflicting requests|cannot install both|does not belong to a distupgrade repository" <<<"$output"; then
-                echo "Hummingbird-only consumer transaction is not resolvable" >&2
-                exit 1
-              fi
-              if ! grep -Eq "Transaction Summary|Nothing to do" <<<"$output"; then
-                echo "DNF did not produce a valid transaction summary" >&2
-                exit 1
-              fi
-              echo "Hummingbird-only consumer transaction resolves ${#packages[@]} packages"
-            '
-      # The repository as an OCI image, which is how everything else in this
-      # ecosystem ships build output: Utah Containerfile already pulls
-      # projectbluefin/common and ublue-os/brew this way, pinned by digest.
-      #
-      # A registry beats a Pages site here on three counts. It works from any
-      # branch, so an image can be built against a package set before either is
-      # merged. It is addressable by digest, so an image records exactly which
-      # packages went into it rather than whatever the site served that day. And
-      # provenance comes from the registry and a signature over the digest,
-      # rather than from an unsigned directory of RPMs over HTTPS.
-      - name: Publish the repository as an OCI image
-        id: oci
+      # One issue per package Utah cannot install from the published
+      # repository, opened when it appears and closed by the first run in
+      # which it resolves. Only when the check actually ran.
+      - name: Track each package Utah cannot install
+        if: github.ref == 'refs/heads/main' && inputs.publish_tag == '' && inputs.artifact_prefix == '' && needs.publish.outputs.utah_report != ''
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          DOCKER_CONFIG: ${{ runner.temp }}/.docker
-          REPOSITORY_OWNER: ${{ github.repository_owner }}
-          REF_NAME: ${{ github.ref_name }}
-          REF: ${{ github.ref }}
-          ACTOR: ${{ github.actor }}
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          UTAH_REPORT: ${{ needs.publish.outputs.utah_report }}
         run: |
           set -euo pipefail
-          owner=$(printf '%s' "$REPOSITORY_OWNER" | tr "[:upper:]" "[:lower:]")
-          image="ghcr.io/${owner}/utah-packages"
-          # main publishes the tag consumers follow; every other ref publishes
-          # under its own name so it can be tested without touching main.
-          if [ "$REF" = "refs/heads/main" ]; then
-            tag=latest
-          else
-            tag=$(printf '%s' "$REF_NAME" | tr "/" "-" | tr -cd "[:alnum:]._-" | cut -c1-96)
-          fi
-          printf "FROM scratch\nCOPY repository /repository\n" > Containerfile.repo
-          # cosign signs by pushing to the same registry, but it reads the
-          # Docker config rather than podman own auth file, so the login has to
-          # land somewhere both of them look. DOCKER_CONFIG is set on this step
-          # and on the signing step to the same directory.
-          mkdir -p "${DOCKER_CONFIG}"
-          echo "${GITHUB_TOKEN}" | podman login ghcr.io -u "$ACTOR" \
-            --password-stdin --authfile "${DOCKER_CONFIG}/config.json"
-          podman build --tag "${image}:${tag}" --file Containerfile.repo .
-          podman push "${image}:${tag}" --digestfile /tmp/digest \
-            --authfile "${DOCKER_CONFIG}/config.json"
-          digest=$(cat /tmp/digest)
-          {
-            echo "ref=${image}:${tag}"
-            echo "image=${image}"
-            echo "digest=${digest}"
-          } >> "$GITHUB_OUTPUT"
-          echo "published ${image}:${tag}"
-          echo "consume it with: ${image}@${digest}"
-          {
-            echo "### Package repository published"
-            echo
-            echo '```'
-            echo "${image}:${tag}"
-            echo "${image}@${digest}"
-            echo '```'
-            echo
-            echo "Consume in a Containerfile:"
-            echo '```dockerfile'
-            echo "FROM ${image}@${digest} AS packages"
-            echo "COPY --from=packages /repository /etc/utah-packages"
-            echo '```'
-          } >> "$GITHUB_STEP_SUMMARY"
-      - name: Sign the published image
+          prefix="Utah install set: "
+          gh issue list -R "$REPOSITORY" --state open --limit 200 \
+            --search "in:title \"$prefix\"" --json number,title > open.json
+          jq -r '.unresolved | keys[]' <<<"$UTAH_REPORT" > unresolved.txt
+          while read -r package; do
+            [ -n "$package" ] || continue
+            title="${prefix}${package} does not resolve"
+            why=$(jq -r --arg p "$package" '.unresolved[$p]' <<<"$UTAH_REPORT")
+            fence='```'
+            body=$(printf "Utah installs %s (projectbluefin/utah packages/*.toml), and it does not resolve against the published factory repository plus Hummingbird:\n\n%s\n%s\n%s\n\nLast seen: %s\n\nThis issue closes itself on the first run in which it resolves.\n" "$package" "$fence" "$why" "$fence" "$RUN_URL")
+            number=$(jq -r --arg t "$title" '.[] | select(.title == $t) | .number' open.json | head -n1)
+            if [ -z "$number" ]; then
+              gh issue create -R "$REPOSITORY" --title "$title" --body "$body"
+            else
+              gh issue edit "$number" -R "$REPOSITORY" --body "$body"
+            fi
+          done < unresolved.txt
+          jq -r --arg prefix "$prefix" '.[] | select(.title | startswith($prefix)) | "\(.number)\t\(.title)"' open.json \
+            | while IFS=$'\t' read -r number title; do
+                package=${title#"$prefix"}
+                package=${package% does not resolve}
+                if ! grep -qxF "$package" unresolved.txt; then
+                  gh issue close "$number" -R "$REPOSITORY" --comment "Resolves as of $RUN_URL."
+                fi
+              done
+      - name: Open, update or close the tracking issue
+        # Production runs only. A canary pass leaves publish_tag empty when
+        # it does not publish, and a canary dispatched on main runs with
+        # refs/heads/main, so the artifact prefix -- which every canary pass
+        # sets and no production run does -- is what tells them apart.
+        if: github.ref == 'refs/heads/main' && inputs.publish_tag == '' && inputs.artifact_prefix == ''
         env:
-          COSIGN_YES: "true"
-          DOCKER_CONFIG: ${{ runner.temp }}/.docker
-          REPOSITORY_OWNER: ${{ github.repository_owner }}
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          PUBLISH_RESULT: ${{ needs.publish.result }}
         run: |
-          owner=$(printf '%s' "$REPOSITORY_OWNER" | tr "[:upper:]" "[:lower:]")
-          cosign sign "ghcr.io/${owner}/utah-packages@${{ steps.oci.outputs.digest }}"
-      # A signature says this image came from here. Provenance says what built
-      # it -- workflow, commit, runner -- which is the question asked after a
-      # bad package ships, and the one a signature alone cannot answer.
-      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4
-        with:
-          subject-name: ${{ steps.oci.outputs.image }}
-          subject-digest: ${{ steps.oci.outputs.digest }}
-          push-to-registry: true
+          set -euo pipefail
+          title="Factory: packages failing on main"
+          number=$(gh issue list -R "$REPOSITORY" --state open --limit 50 \
+            --search "in:title \"$title\"" --json number,title \
+            --jq ".[] | select(.title == \"$title\") | .number" | head -n1)
+          healthy=false
+          if [ "$(jq length failed.json)" -eq 0 ] && [ "$PUBLISH_RESULT" != failure ]; then
+            healthy=true
+          fi
+          if [ "$healthy" = true ]; then
+            if [ -n "$number" ]; then
+              gh issue close "$number" -R "$REPOSITORY" --comment "Fixed: $RUN_URL built every selected package and published."
+            fi
+            exit 0
+          fi
+          if [ -z "$number" ]; then
+            gh issue create -R "$REPOSITORY" --title "$title" --body-file report.md
+            exit 0
+          fi
+          gh issue view "$number" -R "$REPOSITORY" --json body --jq .body > previous.md
+          previous=$(python3 tools/publish_gate.py marker previous.md)
+          gh issue edit "$number" -R "$REPOSITORY" --body-file report.md
+          if [ "$previous" != "$(jq -c . failed.json)" ]; then
+            gh issue comment "$number" -R "$REPOSITORY" --body-file report.md
+          fi

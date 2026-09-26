@@ -1,8 +1,0 @@
-{
-  "package": "bootc",
-  "branch": "rawhide",
-  "remote": "https://src.fedoraproject.org/rpms/bootc.git",
-  "commit": "f5a8b66944a6dac89669dc4c1469b428032e1135",
-  "tree": "8044ea38715753df837e7ca80d97403cbed64b75",
-  "imported_at": "2026-08-29T06:02:17.171918+00:00"
-}

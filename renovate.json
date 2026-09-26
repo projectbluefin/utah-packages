@@ -6,17 +6,12 @@
   "automerge": false,
   "packageRules": [
     {
-      "description": "Keep the GitHub Actions supply chain patched automatically.",
+      "description": "An action update is executable code, not a version string: every workflow in this factory runs actions with contents: write, packages: write and id-token: write, so a bumped ref runs with the tokens that sign and publish our RPMs the moment it lands. Unlike a build-root digest, a rotted action pin does not fail the run -- it just runs something else -- so automerging buys no availability and spends the only review this supply chain gets. A human reads the diff. Stated explicitly rather than left to the top-level default, so a preset bump cannot re-enable it unnoticed.",
       "matchManagers": [
         "github-actions"
       ],
-      "matchUpdateTypes": [
-        "digest",
-        "patch",
-        "minor"
-      ],
-      "automerge": true,
-      "platformAutomerge": true
+      "automerge": false,
+      "platformAutomerge": false
     },
     {
       "description": "Direct upstream RPM sources may merge only after their real build and verification gate succeeds.",

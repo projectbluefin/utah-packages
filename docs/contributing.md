@@ -19,9 +19,22 @@ payload comes from. `tools/bootstrap_upstream_sources.py` proposes candidates
 by resolving `Source0`, and accepts one only when it is an upstream HTTP(S)
 URL whose bytes download directly — never Fedora's lookaside cache.
 
-If it needs to build after something else this factory builds, give it a
-`stage`. Stage N resolves against everything in stages below N, and there is
-no stage above 4.
+Some Fedora `Source0` archives exist only in the lookaside because a packager
+repacked them by hand: `gpm` removes `doc/specs` from the upstream release for
+licensing reasons, and its `sources` file pins that hand-made tarball by MD5.
+No upstream URL serves those bytes. Do not lock the lookaside copy as `url`;
+add a deterministic transformation from the SHA-512-pinned upstream release to
+`tools/generated_sources.py`, lock it as a `generate` entry, and repin
+`packages/<name>/sources` to the generated digest. Diff the unpacked tree
+against Fedora's archive first: for `gpm` they are identical.
+
+Build order is solved from the recipe's BuildRequires: a package builds after
+every factory package it BuildRequires, and a merge that changes it rebuilds it
+plus everything that BuildRequires it. You do not assign a `stage`. The one
+exception is a BuildRequires cycle that has to be broken on purpose, like
+`malcontent-bootstrap` -> `flatpak` -> `malcontent`: give the members distinct
+stages and the lower one builds first. The `prepare` job's summary shows the
+solved wave and the reason for every package it selects.
 
 Do not hand-edit `.hummingbird-upstream.json`. Re-import instead; it is
 provenance, and editing it makes the recipe claim an origin it does not have.
@@ -41,12 +54,32 @@ same four places an import writes to, or the next `just check` fails:
 - `.packit.yaml` -- delete the package's block.
 - `packages/<name>/` -- delete the whole directory (recipe, patches, sources).
 - Any generator special-casing in `tools/generated_sources.py` and the
-  hardcoded package-count assertions in `tests/` that track the set size.
+  hardcoded package-count assertions in `tests/` that track the set size:
+  `test_render_packit_config.py`, `test_package_inventory.py`,
+  `test_packit_srpm.py`, and `test_source_inventory.py` (which counts the set
+  minus one, because `mesa` is Hummingbird-supplied), plus the counts quoted
+  in `docs/architecture.md`.
 
 The image manifest (`config/bluefin-packages.toml`) and
 `config/hummingbird-provided-sources.json` are intentionally left alone: the
 image still wants the package, it just resolves from Hummingbird now. Re-add by
 reversing `Import Rawhide package`.
+
+Publication also prunes binaries from these Hummingbird-owned sources out of
+the previous factory repository before regenerating metadata. Merely stopping
+their builds is insufficient: the OCI repository is seeded from its prior
+digest, so an explicit prune is what prevents removed RPMs from surviving
+forever. The rebuild plan only requests a cleanup publication while such an
+overlap is actually present, making the operation retryable and idempotent.
+
+Before removing a package as unneeded, prove nothing in the consumer
+transaction reaches it at runtime: `publish` installs every name in
+`config/bluefin-packages.toml` from this repository plus Hummingbird, so run
+`dnf repoquery --whatrequires` on each of its binary packages and check the
+result against that contract, transitively. #244 dropped python-pydantic after
+checking only BuildRequires and Utah's own manifests; `input-remapper`, which
+is in the contract, requires it at runtime, and the next publish failed on
+`nothing provides python3.14dist(pydantic)`.
 
 Leaving one of these behind is what makes `main` red: the other three sources
 end up at different set sizes, which surfaces later as an unrelated failing
@@ -59,7 +92,7 @@ removal fails legibly.
 ## Before you commit
 
 ```sh
-just check   # factory onboarding contract + package configuration
+just check   # all CI gates: contract, validate, quoting, runtime contract, tests
 just test    # pytest
 pre-commit run --all-files
 ```

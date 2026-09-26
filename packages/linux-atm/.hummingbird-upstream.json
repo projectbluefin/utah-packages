@@ -1,0 +1,8 @@
+{
+  "package": "linux-atm",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/linux-atm.git",
+  "commit": "6acab13b3bdb7bcbef3b157d1f45f0dd8be1f0a5",
+  "tree": "f27038b2accb2c4450a21992885f8982d8b564b9",
+  "imported_at": "2026-09-20T05:46:52.687477+00:00"
+}

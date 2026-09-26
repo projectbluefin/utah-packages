@@ -1,0 +1,18 @@
+summary: Fonts related tests
+discover:
+  how: fmf
+  url: https://src.fedoraproject.org/tests/fonts
+  exclude:
+    - generic_alias
+prepare:
+  name: tmt
+  how: install
+  package: google-noto-color-emoji-fonts
+execute:
+  how: tmt
+environment:
+  PACKAGE: google-noto-color-emoji-fonts
+  FONT_ALIAS: emoji
+  FONT_FAMILY: Noto Color Emoji
+  FONT_LANG: und-zsye
+  DEFAULT_EMOJI: 1

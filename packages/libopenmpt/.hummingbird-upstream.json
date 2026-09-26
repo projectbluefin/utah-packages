@@ -1,0 +1,8 @@
+{
+  "package": "libopenmpt",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libopenmpt.git",
+  "commit": "07637cf8b2d2d717216f605cde467211bb2e6d38",
+  "tree": "d12f51636fde2b8ba5d6837b4744044e41b3a174",
+  "imported_at": "2026-09-23T03:30:43.429256+00:00"
+}

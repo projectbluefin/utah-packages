@@ -1,0 +1,8 @@
+{
+  "package": "gpm",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/gpm.git",
+  "commit": "9b5bfc4ca12c91a36bff28a360d7b829e031e64b",
+  "tree": "9b6ca7fbe2646901c515397bae942e50e43ea35a",
+  "imported_at": "2026-09-24T23:38:37.947898+00:00"
+}

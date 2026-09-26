@@ -1,0 +1,8 @@
+{
+  "package": "libbs2b",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libbs2b.git",
+  "commit": "f8321fe1ddd71f7d23f745e9a04ac5c9b2125040",
+  "tree": "a7d18939bad380a5b061baa1b08cf8289e01ab87",
+  "imported_at": "2026-09-25T08:04:27.906971+00:00"
+}

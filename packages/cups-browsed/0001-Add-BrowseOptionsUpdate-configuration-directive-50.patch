@@ -1,0 +1,216 @@
+From 4cbb2c286334f67e54707b0d9e6c43913ddc1d71 Mon Sep 17 00:00:00 2001
+From: zdohnal <zdohnal@redhat.com>
+Date: Thu, 10 Apr 2025 09:11:43 +0200
+Subject: [PATCH] Add BrowseOptionsUpdate configuration directive (#50)
+
+The directive influences where default option settings are taken from and
+whether they can be updated. This way admins can propagate defaults to
+clients automatically if the client opts in for the behavior.
+---
+ daemon/cups-browsed.c       | 67 +++++++++++++++++++++++++++++++------
+ daemon/cups-browsed.conf.5  | 20 +++++++++++
+ daemon/cups-browsed.conf.in | 14 ++++++++
+ 3 files changed, 91 insertions(+), 10 deletions(-)
+
+diff --git a/daemon/cups-browsed.c b/daemon/cups-browsed.c
+index a14a4cbc..764040ed 100644
+--- a/daemon/cups-browsed.c
++++ b/daemon/cups-browsed.c
+@@ -277,6 +277,17 @@ typedef enum autoshutdown_inactivity_type_e
+   NO_JOBS
+ } autoshutdown_inactivity_type_t;
+ 
++// How and when to take the options when recreating queue found by browsing:
++// NONE - from file at CacheDir
++// STATIC - from destination's IPP Get-Printer-Attributes response once the service is found
++// DYNAMIC - from destination's IPP Get-Printer-Attributes response at every browsing event defined by BrowseInterval
++typedef enum browse_options_update
++{
++  NONE = 0,
++  STATIC,
++  DYNAMIC
++} browse_options_update_t;
++
+ typedef struct media_size_s
+ {
+   int x;
+@@ -450,6 +461,7 @@ static int FrequentNetifUpdate = 1;
+ #else
+ static int FrequentNetifUpdate = 0;
+ #endif
++static browse_options_update_t method = NONE;
+ 
+ static int debug_stderr = 0;
+ static int debug_logfile = 0;
+@@ -6462,13 +6474,15 @@ on_printer_modified (CupsNotifier *object,
+       }
+       // The user has changed settings of a printer which we have generated,
+       // backup the changes for the case of a crash or unclean shutdown of
+-      // cups-browsed.
+-      if (!p->no_autosave)
++      // cups-browsed if we don't want to get defaults from destination.
++      if (!p->no_autosave && method == NONE)
+       {
+ 	debug_printf("Settings of printer %s got modified, doing backup.\n",
+ 		     p->queue_name);
+ 	p->no_autosave = 1; // Avoid infinite recursion
++
+ 	record_printer_options(p->queue_name);
++
+ 	p->no_autosave = 0;
+       }
+     }
+@@ -7159,7 +7173,7 @@ remove_printer_entry(remote_printer_t *p)
+     // Schedule this printer for updating the CUPS queue
+     q->status = STATUS_TO_BE_CREATED;
+     q->timeout = time(NULL) + TIMEOUT_IMMEDIATELY;
+-    debug_printf("Printer %s (%s) diasappeared, replacing by backup on host %s, port %d with URI %s.\n",
++    debug_printf("Printer %s (%s) disappeared, replacing by backup on host %s, port %d with URI %s.\n",
+ 		 p->queue_name, p->uri, q->host, q->port, q->uri);
+   }
+   else
+@@ -7636,9 +7650,10 @@ create_queue(void* arg)
+ 				      &p->options);
+   }
+ 
+-  // Loading saved option settings from last session
+-  p->num_options = load_printer_options(p->queue_name, p->num_options,
+-					&p->options);
++  // Loading saved option settings from last session if we want them
++  if (method == NONE)
++    p->num_options = load_printer_options(p->queue_name, p->num_options,
++					  &p->options);
+ 
+   // Determine whether we have an IPP network printer. If not we
+   // have remote CUPS queue(s) and so we use an implicit class for
+@@ -8409,7 +8424,9 @@ update_cups_queues(gpointer unused)
+ 
+ 	    // Record the option settings to retrieve them when the remote
+ 	    // queue re-appears later or when cups-browsed gets started again
+-	    record_printer_options(p->queue_name);
++	    // if we want to use local settings
++	    if (method == NONE)
++	      record_printer_options(p->queue_name);
+ 
+ 	    if (p->status != STATUS_TO_BE_RELEASED &&
+ 		!queue_overwritten(p))
+@@ -9607,6 +9624,25 @@ examine_discovered_printer_record(const char *host,
+       p->domain = strdup(domain);
+       debug_printf("Switched over to newly discovered entry for this printer.\n");
+     }
++    else if (method == DYNAMIC)
++    {
++      // in the end we can skip most free+strdup and use the same pointers for
++      // option update, but we need to free:
++      // - prattrs
++      // - options
++      // - nickname
++      free(p->prattrs);
++      cupsFreeOptions(p->num_options, p->options);
++      free(p->nickname);
++
++      p->prattrs = NULL;
++      p->nickname = NULL;
++      p->options = NULL;
++      p->num_options = 0;
++      p->status = STATUS_TO_BE_CREATED;
++      p->timeout = time(NULL) + TIMEOUT_IMMEDIATELY;
++      debug_printf("Updating printer capabilities for printer %s.\n", p->queue_name);
++    }
+     else
+       debug_printf("Staying with previously discovered entry for this printer.\n");
+ 
+@@ -9631,9 +9667,11 @@ examine_discovered_printer_record(const char *host,
+       queue_creation_handle_default(p->queue_name);
+       // If this queue is disabled, re-enable it.
+       enable_printer(p->queue_name);
+-      // Record the options, to record any changes which happened
+-      // while cups-browsed was not running
+-      record_printer_options(p->queue_name);
++      // If we prefer options from local machine, record them,
++      // to record any changes which happened while cups-browsed
++      // was not running
++      if (method == NONE)
++	record_printer_options(p->queue_name);
+     }
+ 
+     // Gather extra info from our new discovery
+@@ -12087,6 +12125,15 @@ read_configuration (const char *filename)
+ 	debug_printf("Invalid value for pause between calls of update_cups_queues(): %d\n",
+ 		     t);
+     }
++    else if (!strcasecmp(line, "BrowseOptionsUpdate") && value)
++    {
++      if (!strcasecmp(value, "None"))
++        method = NONE;
++      else if (!strcasecmp(value, "Static"))
++        method = STATIC;
++      else if (!strcasecmp(value, "Dynamic"))
++        method = DYNAMIC;
++    }
+   }
+ 
+   if (browse_line_found == 0)
+diff --git a/daemon/cups-browsed.conf.5 b/daemon/cups-browsed.conf.5
+index 4af67884..5bfcb8c0 100644
+--- a/daemon/cups-browsed.conf.5
++++ b/daemon/cups-browsed.conf.5
+@@ -946,6 +946,7 @@ and doing specific actions when a D-BUS notification comes.
+ .nf
+ .fam C
+         NotifLeaseDuration 86400
++
+ .fam T
+ .fi
+ FrequentNetifUpdate turns on/off the network interface update routines
+@@ -958,6 +959,25 @@ is 'Yes'.
+ .nf
+ .fam C
+         FrequentNetifUpdate Yes
++
++.fam T
++.fi
++BrowseOptionsUpdate directive defines how default printing options are updated when
++cups-browsed is running. The value "None" uses default values from destination
++at discovery and overrides them by values from the file "/var/cache/cups/cups-browsed-options-<queue-name>"
++if it is present from the previous cups-browsed run. The value "Static" does not save default
++options between runs and do not read them from file if the cached file exists. The default options
++are statically set at the first discovery and cups-browsed restart is required to synchronize
++new default options from destinations. The value "Dynamic" causes cups-browsed to update default
++options at every "BrowseInterval" event to synchronize with destination's default options automatically.
++With "Static" and "Dynamic" user are able to change default options values locally via "lpoptions". 
++.PP
++.nf
++.fam C
++        BrowseOptionsUpdate None
++        BrowseOptionsUpdate Static
++        BrowseOptionsUpdate Dynamic
++
+ .fam T
+ .fi
+ .SH SEE ALSO
+diff --git a/daemon/cups-browsed.conf.in b/daemon/cups-browsed.conf.in
+index af026966..afa6a67c 100644
+--- a/daemon/cups-browsed.conf.in
++++ b/daemon/cups-browsed.conf.in
+@@ -745,3 +745,17 @@ BrowseRemoteProtocols @BROWSEREMOTEPROTOCOLS@
+ # is 'Yes'.
+ #
+ # FrequentNetifUpdate Yes
++
++# BrowseOptionsUpdate directive defines how default printing options are updated when
++# cups-browsed is running. The value "None" uses default values from destination
++# at discovery and overrides them by values from the file "/var/cache/cups/cups-browsed-options-<queue-name>"
++# if it is present from the previous cups-browsed run. The value "Static" does not save default
++# options between runs and do not read them from file if the cached file exists. The default options
++# are statically set at the first discovery and cups-browsed restart is required to synchronize
++# new default options from destinations. The value "Dynamic" causes cups-browsed to update default
++# options at every BrowseInterval event to synchronize with destination's default options automatically.
++# With "Static" and "Dynamic" user are able to change default options values locally via "lpoptions". 
++#
++# BrowseOptionsUpdate None
++# BrowseOptionsUpdate Static
++# BrowseOptionsUpdate Dynamic
+-- 
+2.49.0
+

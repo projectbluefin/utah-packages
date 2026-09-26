@@ -1,0 +1,96 @@
+name: Refresh the build-root mirror
+
+# quay.io/fedora/fedora:44 is republished several times a day and quay
+# garbage-collects every previous digest within hours, so it cannot be pinned
+# (docs/skills/repeated-mistakes.md section 7). Pulling the moving tag instead
+# made every run build on whatever Fedora pushed that morning: the pin in
+# rebuild-rpms.yml was a warning, not a pin, and because the package cache key
+# includes the build-root digest, every cache entry older than the last
+# republish missed. webkitgtk rebuilt cold twice in a row that way (runs
+# 36112238153 and 36117470974, 2cdfedd -> 94e175d).
+#
+# The factory therefore owns its build root. Once a week this copies the
+# current fedora:44 to ghcr.io/projectbluefin/utah-buildroot under a dated tag
+# and opens a pull request that moves config/buildroot-image to that digest.
+# Nothing prunes that repository, so a pin written here stays pullable, every
+# job of every run builds on the same bytes until the pin moves on purpose,
+# and the cache chain survives from one run to the next.
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Monday 04:23 UTC: before the daily 06:41 rebuild, off the top of the hour.
+    - cron: '23 4 * * 1'
+
+permissions:
+  contents: write
+  packages: write
+  pull-requests: write
+
+concurrency:
+  group: buildroot-mirror
+  cancel-in-progress: false
+
+jobs:
+  mirror:
+    runs-on: ubuntu-24.04
+    env:
+      UPSTREAM: quay.io/fedora/fedora:44
+      MIRROR: ghcr.io/projectbluefin/utah-buildroot
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Copy fedora:44 to the mirror under a dated tag
+        id: mirror
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          docker pull "$UPSTREAM"
+          upstream_digest=$(docker image inspect "$UPSTREAM" \
+            --format '{{index .RepoDigests 0}}' | sed 's/.*@//')
+          tag="44-$(date -u +%Y%m%d)-${upstream_digest#sha256:}"
+          tag="${tag:0:24}"
+          # The label links the package to this repository, so it inherits
+          # the repository visibility and the workflow token may write it.
+          printf 'FROM %s@%s\nLABEL org.opencontainers.image.source=https://github.com/%s\nLABEL org.projectbluefin.buildroot.upstream=%s@%s\n' \
+            "$UPSTREAM" "$upstream_digest" "$GITHUB_REPOSITORY" "$UPSTREAM" "$upstream_digest" \
+            > Containerfile.buildroot
+          echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          docker build --tag "$MIRROR:$tag" --file Containerfile.buildroot .
+          docker push "$MIRROR:$tag"
+          digest=$(docker image inspect "$MIRROR:$tag" \
+            --format '{{index .RepoDigests 0}}' | sed 's/.*@//')
+          test -n "$digest"
+          # Prove the pin is pullable by digest from a clean cache before
+          # proposing it.
+          docker image rm "$MIRROR:$tag"
+          docker pull "$MIRROR@$digest"
+          rm -f Containerfile.buildroot
+          {
+            echo "pin=$MIRROR:$tag@$digest"
+            echo "upstream=$UPSTREAM@$upstream_digest"
+            echo "tag=$tag"
+          } >> "$GITHUB_OUTPUT"
+      - name: Move the build-root pin
+        env:
+          PIN: ${{ steps.mirror.outputs.pin }}
+        run: |
+          set -euo pipefail
+          python3 tools/buildroot_pin.py set "$PIN"
+          git diff --stat
+      - name: Open a pull request for the new pin
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8
+        with:
+          branch: chore/buildroot-mirror
+          delete-branch: true
+          title: 'chore(buildroot): move the build root to ${{ steps.mirror.outputs.tag }}'
+          commit-message: 'chore(buildroot): move the build root to ${{ steps.mirror.outputs.tag }}'
+          body: |
+            Weekly build-root refresh.
+
+            - upstream: `${{ steps.mirror.outputs.upstream }}`
+            - mirror: `${{ steps.mirror.outputs.pin }}`
+
+            Merging this moves every factory build to the new root, which
+            changes every package cache key, so the next run rebuilds cold
+            once. Batch it with other root-wide changes where possible.

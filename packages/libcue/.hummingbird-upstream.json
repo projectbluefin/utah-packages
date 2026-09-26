@@ -1,0 +1,8 @@
+{
+  "package": "libcue",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libcue.git",
+  "commit": "f0a38beacb40e08527562c870b48a6977aeb4c15",
+  "tree": "f7a12d2ca1981586d03a641da0a0659688e21fa4",
+  "imported_at": "2026-09-23T03:30:03.239318+00:00"
+}

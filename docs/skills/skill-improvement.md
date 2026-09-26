@@ -37,7 +37,12 @@ Write it down:
   BuildRequires that only Hummingbird lacks, a macro that behaves differently
   than on Rawhide, an ordering constraint between stages.
 - Source-verification surprises: archives that are regenerated on every fetch,
-  upstreams that re-tag, signatures that are detached in an unusual layout.
+  upstreams that re-tag, signatures that are detached in an unusual layout,
+  or a proposed fallback whose digest and provenance must be pinned separately
+  to avoid turning an availability mirror into a second source of truth.
+- Fallback contracts: record the transport precedence, the exact errors that
+  permit a fallback, and the integrity failures that must stop without trying
+  another mirror.
 - Failure modes that look like one thing and are another. That is the entire
   reason [`build-failure-triage`](../../.agents/skills/build-failure-triage/SKILL.md)
   exists.

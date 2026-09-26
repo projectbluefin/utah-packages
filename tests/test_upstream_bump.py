@@ -148,6 +148,63 @@ class ModuleDetectionTests(unittest.TestCase):
         self.assertIsNone(gnome_module({}))
 
 
+class FallbackFeedTests(unittest.TestCase):
+    """A lock whose primary moved to the lookaside still tracks its mirror's feed.
+
+    GitHub archive tarballs can be regenerated upstream (srt 1.5.7 was), so
+    the stable primary is the Fedora lookaside URL and the forge archive
+    stays only as an availability fallback. The bumper must keep watching
+    the feed the fallback names, but must never auto-apply from it: the new
+    bytes are not in the lookaside until Fedora uploads them, so apply()
+    would 404 fetching the digest or write a half-substituted lock.
+    """
+
+    SRT = {
+        "name": "srt",
+        "version": "1.5.7",
+        "url": "https://src.fedoraproject.org/repo/pkgs/rpms/srt/srt-1.5.7.tar.gz/"
+        "sha512/" + "8" * 128 + "/srt-1.5.7.tar.gz",
+        "filename": "srt-1.5.7.tar.gz",
+        "sha512": "8" * 128,
+        "fallback_urls": [
+            "https://github.com/Haivision/srt/archive/v1.5.7/srt-1.5.7.tar.gz"
+        ],
+    }
+
+    def test_finds_the_forge_feed_named_by_a_fallback_mirror(self) -> None:
+        self.assertEqual(
+            forge_feed(self.SRT),
+            {"forge": "github", "endpoint": "tags", "owner": "Haivision", "repo": "srt"},
+        )
+
+    def test_the_primary_feed_wins_over_a_fallback(self) -> None:
+        entry = {
+            "url": "https://github.com/a/b/archive/v1.tar.gz",
+            "fallback_urls": ["https://github.com/c/d/archive/v2.tar.gz"],
+        }
+        feed = forge_feed(entry)
+        assert feed is not None
+        self.assertEqual(feed["repo"], "b")
+
+    def test_no_feed_when_no_locked_url_is_forge_shaped(self) -> None:
+        entry = {k: v for k, v in self.SRT.items() if k != "fallback_urls"}
+        self.assertIsNone(forge_feed(entry))
+
+    def test_a_same_major_release_is_review_only_while_the_primary_is_lookaside(self) -> None:
+        opener = fake_opener(
+            {
+                "https://api.github.com/repos/Haivision/srt/tags?per_page=100": json.dumps(
+                    [{"name": "v1.5.7"}, {"name": "v1.5.8"}]
+                ).encode()
+            }
+        )
+        proposals = plan(ROOT, only="srt", opener=opener)
+        self.assertEqual(len(proposals), 1)
+        self.assertEqual(proposals[0]["kind"], "review")
+        self.assertEqual(proposals[0]["latest"], "1.5.8")
+        self.assertIn("reason", proposals[0])
+
+
 class EntryRewriteTests(unittest.TestCase):
     """Every URL is rebuilt from the release, so no field keeps the old tarball."""
 

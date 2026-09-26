@@ -27,7 +27,7 @@ that supplies factory-wide rules; it never overrides local authority here.
 ## Validate
 
 ```sh
-just check           # factory contract + configuration validation
+just check           # all CI gates: contract, validate, quoting, runtime contract, tests
 just test            # pytest
 just factory-check   # onboarding contract only
 pre-commit run --all-files
@@ -152,12 +152,20 @@ tooling arrives; do not copy them as-is.
 - Sources come from **upstream releases**, verified and SHA-512 locked. Fedora
   dist-git supplies the **recipe only**, pinned by commit in
   `.hummingbird-upstream.json`.
-- Packages that BuildRequire each other need a `stage` in
-  `config/upstream-sources.json`. Stage N resolves against stages `< N`.
+- Build order is solved from real BuildRequires (`tools/build_graph.py`):
+  a package builds in a later wave than every factory package it
+  BuildRequires. A `stage` in `config/upstream-sources.json` only orders the
+  members of a BuildRequires cycle, such as `malcontent-bootstrap` before
+  `flatpak` before `malcontent`; anywhere else it is ignored.
 - Hummingbird's disttag is `hum1`, and it bumps `Release` with a `.N` suffix
   immediately before `%{?dist}` so a rebuild sorts above the Fedora build it
   derives from. **This repository does not do that yet** — its RPMs still carry
   Fedora's disttag.
+- Packages build in a hermetic mock root by default: the root is locked
+  from BuildRequires (`buildroot_lock.json`) and the build runs offline from
+  the lock. A package that cannot, stays on the container lane with
+  `build_lane: container` and a `build_lane_reason` in
+  `config/upstream-sources.json`; do not add one without the reason.
 - Run package builds, source-generation and reproducibility probes, and other
   environment-sensitive validation in GitHub Actions on GitHub-hosted
   `ubuntu-26.04` runners, inside the digest-pinned

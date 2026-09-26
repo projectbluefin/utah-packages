@@ -14,7 +14,11 @@
 %global with_ffmpeg 1
 %global with_libcue 1
 %global with_libmediainfo 1
-%global with_totem_pl_parser 1
+# totem-plparser is retired from Fedora Rawhide (no dist-git repo), so there
+# is nothing to build the playlist extractor against; the spec already falls
+# back to -Dplaylist=disabled, and RHEL >= 10 ships it that way. Forced off
+# here instead of waiting for upstream to drop it.
+%global with_totem_pl_parser 0
 
 %if 0%{?rhel}
 %global with_enca 0

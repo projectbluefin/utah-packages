@@ -9,6 +9,7 @@ double-run gate covers the network path.
 
 import gzip
 import io
+import lzma
 from pathlib import Path
 import tarfile
 import unittest
@@ -103,6 +104,65 @@ class IntelMediaDriverFreeTransformTests(unittest.TestCase):
         self.assertEqual(names, sorted(names))
 
 
+def build_gpm_archive(version: str) -> bytes:
+    """A synthetic upstream gpm .tar.lzma carrying doc/specs."""
+    top = f"gpm-{version}"
+    members = {
+        f"{top}/README": b"readme",
+        f"{top}/doc/gpm.texinfo": b"kept",
+        f"{top}/doc/specs/ps2.pdf": b"unclear licence",
+        f"{top}/doc/specs-not/kept.txt": b"kept: only doc/specs itself goes",
+        f"{top}/src/daemon/gpm.c": b"kept",
+    }
+    directories = {top, f"{top}/doc", f"{top}/doc/specs", f"{top}/doc/specs-not", f"{top}/src", f"{top}/src/daemon"}
+    raw = io.BytesIO()
+    with tarfile.open(fileobj=raw, mode="w", format=tarfile.GNU_FORMAT) as tar:
+        for name in sorted(directories, reverse=True):
+            info = tarfile.TarInfo(name)
+            info.type = tarfile.DIRTYPE
+            info.mtime, info.uid, info.gid, info.uname, info.gname = 1351286460, 1000, 1000, "jcapik", "jcapik"
+            tar.addfile(info)
+        for name in sorted(members, reverse=True):
+            info = tarfile.TarInfo(name)
+            info.size = len(members[name])
+            info.mtime, info.uid, info.gid, info.uname, info.gname = 1351286460, 1000, 1000, "jcapik", "jcapik"
+            tar.addfile(info, io.BytesIO(members[name]))
+    return lzma.compress(raw.getvalue(), format=lzma.FORMAT_ALONE)
+
+
+class GpmTransformTests(unittest.TestCase):
+    VERSION = "1.20.7"
+
+    def members(self, payload: bytes) -> list[tarfile.TarInfo]:
+        with tarfile.open(fileobj=io.BytesIO(payload), mode="r:xz") as tar:
+            return tar.getmembers()
+
+    def test_removes_exactly_doc_specs(self):
+        result = generated_sources._gpm_transform(build_gpm_archive(self.VERSION), self.VERSION)
+        names = {member.name for member in self.members(result)}
+        self.assertNotIn("gpm-1.20.7/doc/specs", names)
+        self.assertNotIn("gpm-1.20.7/doc/specs/ps2.pdf", names)
+        self.assertIn("gpm-1.20.7/doc/specs-not/kept.txt", names)
+        self.assertIn("gpm-1.20.7/doc/gpm.texinfo", names)
+        self.assertIn("gpm-1.20.7/src/daemon/gpm.c", names)
+
+    def test_transform_is_byte_reproducible_sorted_and_ownerless(self):
+        archive = build_gpm_archive(self.VERSION)
+        first = generated_sources._gpm_transform(archive, self.VERSION)
+        self.assertEqual(first, generated_sources._gpm_transform(archive, self.VERSION))
+        members = self.members(first)
+        self.assertEqual([m.name for m in members], sorted(m.name for m in members))
+        for member in members:
+            self.assertEqual((member.uid, member.gid, member.uname, member.gname), (0, 0, "", ""))
+            self.assertEqual(member.mtime, 1351286460)
+
+    def test_metadata_names_the_recipe_source_and_pinned_input(self):
+        metadata = generated_sources.metadata_for("gpm", ROOT / "packages" / "gpm")
+        self.assertEqual(metadata["filename"], "gpm-1.20.7.tar.xz")
+        self.assertIn("gpm-1.20.7.tar.lzma", metadata["generate"]["input"])
+        self.assertIn("1.20.7", generated_sources.GPM_INPUT_SHA512)
+
+
 class GeneratedMetadataTests(unittest.TestCase):
     def test_intel_media_metadata_uses_spec_version(self):
         metadata = generated_sources.metadata_for(
@@ -130,6 +190,72 @@ class TailscaleToolchainGapTests(unittest.TestCase):
         with patch("shutil.which", return_value=None):
             with self.assertRaisesRegex(RuntimeError, "Go toolchain"):
                 generated_sources.generate("tailscale", ROOT / "packages" / "tailscale", Path("/tmp"))
+
+
+def _targz(members: dict[str, bytes], mtime: int = 1700000000) -> bytes:
+    raw = io.BytesIO()
+    with tarfile.open(fileobj=raw, mode="w:gz") as archive:
+        for name, data in members.items():
+            info = tarfile.TarInfo(name)
+            info.size = len(data)
+            info.mtime = mtime
+            archive.addfile(info, io.BytesIO(data))
+    return raw.getvalue()
+
+
+class PydanticCoreVendorTests(unittest.TestCase):
+    VERSION = "9.9.9"
+
+    def fixture(self):
+        import hashlib
+
+        crate = _targz({"tinycrate-1.0.0/Cargo.toml": b"[package]", "tinycrate-1.0.0/src/lib.rs": b"//"})
+        checksum = hashlib.sha256(crate).hexdigest()
+        lock = (
+            'version = 4\n\n[[package]]\nname = "pydantic-core"\nversion = "9.9.9"\n\n'
+            '[[package]]\nname = "tinycrate"\nversion = "1.0.0"\n'
+            'source = "registry+https://github.com/rust-lang/crates.io-index"\n'
+            f'checksum = "{checksum}"\n'
+        )
+        top = f"pydantic_core-{self.VERSION}"
+        sdist = _targz({f"{top}/Cargo.lock": lock.encode(), f"{top}/Cargo.toml": b"[package]"})
+        return sdist, {("tinycrate", "1.0.0"): crate}, lock
+
+    def test_lock_parsing_skips_the_workspace_root(self):
+        _, _, lock = self.fixture()
+        crates = generated_sources.cargo_lock_packages(lock)
+        self.assertEqual([(c["name"], c["version"]) for c in crates], [("tinycrate", "1.0.0")])
+
+    def test_lock_parsing_refuses_git_sources(self):
+        lock = '[[package]]\nname = "x"\nversion = "1"\nsource = "git+https://example.com/x"\n'
+        with self.assertRaisesRegex(RuntimeError, "not crates.io"):
+            generated_sources.cargo_lock_packages(lock)
+
+    def test_vendor_layout_and_checksum_file(self):
+        import json
+        import lzma
+
+        sdist, crates, _ = self.fixture()
+        out = generated_sources._pydantic_core_transform(sdist, self.VERSION, crates)
+        with tarfile.open(fileobj=io.BytesIO(lzma.decompress(out))) as archive:
+            names = archive.getnames()
+            vendored = f"pydantic_core-{self.VERSION}/vendor/tinycrate-1.0.0"
+            self.assertIn(f"{vendored}/src/lib.rs", names)
+            checksum = json.loads(archive.extractfile(f"{vendored}/.cargo-checksum.json").read())
+        self.assertEqual(set(checksum["files"]), {"Cargo.toml", "src/lib.rs"})
+
+    def test_transform_is_byte_reproducible(self):
+        sdist, crates, _ = self.fixture()
+        self.assertEqual(
+            generated_sources._pydantic_core_transform(sdist, self.VERSION, crates),
+            generated_sources._pydantic_core_transform(sdist, self.VERSION, crates),
+        )
+
+    def test_a_substituted_crate_fails_closed(self):
+        sdist, crates, _ = self.fixture()
+        crates[("tinycrate", "1.0.0")] = _targz({"tinycrate-1.0.0/Cargo.toml": b"evil"})
+        with self.assertRaisesRegex(RuntimeError, "expected sha256"):
+            generated_sources._pydantic_core_transform(sdist, self.VERSION, crates)
 
 
 if __name__ == "__main__":

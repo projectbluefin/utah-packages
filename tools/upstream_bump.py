@@ -200,18 +200,39 @@ def forge_feed(entry: dict) -> dict | None:
     Returns a descriptor rather than a tuple because the three shapes differ in
     what they need: GitHub releases are read from a different endpoint than
     GitHub tags, and GitLab is a different host entirely.
+
+    The primary URL is read first, then each fallback in order. A lock whose
+    primary moved to the Fedora lookaside for stability (forge archives can
+    be regenerated upstream, silently changing the bytes) still tracks the
+    feed its mirror names, so the daily poll keeps watching it. Whether the
+    resulting proposal may be applied is decided in plan(), not here.
+    """
+    urls = [entry.get("url", ""), *entry.get("fallback_urls", [])]
+    for url in urls:
+        match = FORGE_RELEASE.match(url)
+        if match:
+            return {"forge": "github", "endpoint": "releases", **match.groupdict()}
+        match = FORGE_ARCHIVE.match(url)
+        if match:
+            return {"forge": "github", "endpoint": "tags", **match.groupdict()}
+        match = GITLAB_ARCHIVE.match(url)
+        if match:
+            return {"forge": "gitlab", "endpoint": "tags", **match.groupdict()}
+    return None
+
+
+def primary_tracks_forge(entry: dict) -> bool:
+    """Whether the lock's primary URL names a git-forge feed.
+
+    When only a fallback does, the new release's bytes are not where the
+    primary points -- the lookaside carries only what Fedora uploaded, and a
+    bare listing has no version to substitute -- so a proposal from that feed
+    is reported for a human and never applied.
     """
     url = entry.get("url", "")
-    match = FORGE_RELEASE.match(url)
-    if match:
-        return {"forge": "github", "endpoint": "releases", **match.groupdict()}
-    match = FORGE_ARCHIVE.match(url)
-    if match:
-        return {"forge": "github", "endpoint": "tags", **match.groupdict()}
-    match = GITLAB_ARCHIVE.match(url)
-    if match:
-        return {"forge": "gitlab", "endpoint": "tags", **match.groupdict()}
-    return None
+    return bool(
+        FORGE_RELEASE.match(url) or FORGE_ARCHIVE.match(url) or GITLAB_ARCHIVE.match(url)
+    )
 
 
 def forge_label(feed: dict) -> str:
@@ -410,9 +431,10 @@ def candidates(locks: dict[str, dict], only: str | None = None) -> list[tuple[st
     """(name, entry, feed) for every lock this tool can track, sorted by name.
 
     A feed is either {"forge": "gnome", "module": ...} or a git-forge
-    descriptor from forge_feed. A lock on neither -- the Fedora lookaside, a
-    bare directory listing -- has no release feed to poll and is skipped; see
-    the module docstring.
+    descriptor from forge_feed, which also reads the fallback mirrors. A lock
+    with no feed anywhere -- the Fedora lookaside with no forge mirror, a
+    bare directory listing -- has nothing to poll and is skipped; see the
+    module docstring.
     """
     found = []
     for name, entry in sorted(locks.items()):
@@ -492,7 +514,22 @@ def plan(root: Path, only: str | None, opener=urllib.request.urlopen) -> list[di
     proposals = []
     for name, entry, feed in candidates(locks, only):
         if feed["forge"] != "gnome":
-            proposals.append(forge_proposal(name, entry, feed, opener=opener))
+            proposal = forge_proposal(name, entry, feed, opener=opener)
+            if proposal.get("kind") == "update" and not primary_tracks_forge(entry):
+                # The feed came from a mirror, so the primary points at the
+                # lookaside or a bare listing: apply() would fetch the digest
+                # from an address that does not carry the new release, or
+                # substitute a version into a URL that has none. Report it so
+                # a human sees the release; main() only applies final/update.
+                proposal = {
+                    **proposal,
+                    "kind": "review",
+                    "reason": (
+                        "the release feed is tracked through a fallback mirror; "
+                        "the new bytes must be ingested through the primary first"
+                    ),
+                }
+            proposals.append(proposal)
             continue
         module = feed["module"]
         try:
@@ -605,9 +642,10 @@ def main() -> int:
         # Deliberately not applied, and deliberately not silent: a later cycle
         # may be a development series (pango 1.90 toward 2.0), which no rule
         # here can tell from a stable one.
+        detail = item.get("reason", "crosses a release cycle or a major")
         print(
             f"needs review  {item['name']}: {item['current']} -> {item['latest']} "
-            f"(crosses a release cycle or a major)",
+            f"({detail})",
             file=sys.stderr,
         )
 

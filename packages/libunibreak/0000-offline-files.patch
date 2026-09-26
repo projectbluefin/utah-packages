@@ -1,0 +1,74 @@
+--- libunibreak-libunibreak_8_0--orig/src/Makefile.am	2026-09-15 09:10:38.000000000 +0200
++++ libunibreak-libunibreak_8_0/src/Makefile.am	2026-09-21 16:59:23.666829110 +0200
+@@ -58,63 +58,36 @@
+ distclean-local:
+ 	rm -f LineBreak.txt WordBreakData.txt GraphemeBreakData.txt DerivedCoreProperties.txt DerivedGeneralCategory.txt EastAsianWidth.txt emoji-data.txt
+ 
+ 
+-LineBreak.txt:
+-	wget http://unicode.org/Public/UNIDATA/LineBreak.txt
+-
+-WordBreakProperty.txt:
+-	wget http://www.unicode.org/Public/UNIDATA/auxiliary/WordBreakProperty.txt
+-
+-GraphemeBreakProperty.txt:
+-	wget http://www.unicode.org/Public/UNIDATA/auxiliary/GraphemeBreakProperty.txt
+-
+-DerivedCoreProperties.txt:
+-	wget https://www.unicode.org/Public/UNIDATA/DerivedCoreProperties.txt
+-
+-DerivedGeneralCategory.txt:
+-	wget https://www.unicode.org/Public/UNIDATA/extracted/DerivedGeneralCategory.txt
+-
+-EastAsianWidth.txt:
+-	wget https://www.unicode.org/Public/UNIDATA/EastAsianWidth.txt
+-
+-emoji-data.txt:
+-	wget https://www.unicode.org/Public/UNIDATA/emoji/emoji-data.txt
+-
+-
+-linebreakdata: LineBreak.txt
++linebreakdata:
+ 	sed -E -n -f ${srcdir}/extract_data.sed LineBreak.txt | \
+ 	sed -E -f ${srcdir}/expand_single.sed | \
+ 	${srcdir}/generate_linebreakdata.py > tmp.c
+ 	head -2 LineBreak.txt > tmp.txt
+ 	cat ${srcdir}/linebreakdata1.tmpl tmp.txt tmp.c > ${srcdir}/linebreakdata.c
+ 	rm tmp.txt tmp.c
+ 
+-linebreakauxdata: DerivedGeneralCategory.txt LineBreak.txt emoji-data.txt
++linebreakauxdata:
+ 	${srcdir}/generate_linebreak_aux.py > ${srcdir}/linebreakauxdata.c
+ 
+-wordbreakdata: WordBreakProperty.txt
++wordbreakdata:
+ 	${srcdir}/generate_word_break.py > ${srcdir}/wordbreakdata.c
+ 
+-graphemebreakdata: GraphemeBreakProperty.txt
++graphemebreakdata:
+ 	${srcdir}/generate_grapheme_break.py > ${srcdir}/graphemebreakdata.c
+ 
+-eastasianwidthdata: EastAsianWidth.txt LineBreak.txt
++eastasianwidthdata:
+ 	${srcdir}/generate_east_asian_width.py > ${srcdir}/eastasianwidthdata.c
+ 
+-indicconjunctbreakdata: DerivedCoreProperties.txt
++indicconjunctbreakdata:
+ 	${srcdir}/generate_indic_conjunct_break.py > ${srcdir}/indicconjunctbreakdata.c
+ 
+-emojidata: emoji-data.txt
++emojidata:
+ 	${srcdir}/generate_extended_pictographic.py > ${srcdir}/emojidata.c
+ 
+ update-test:
+-	rm -f LineBreakTest.txt WordBreakTest.txt GraphemeBreakTest.txt
+-	rm -f ${srcdir}/LineBreakTest.txt ${srcdir}/WordBreakTest.txt ${srcdir}/GraphemeBreakTest.txt
+-	wget http://www.unicode.org/Public/UNIDATA/auxiliary/LineBreakTest.txt
+-	wget http://www.unicode.org/Public/UNIDATA/auxiliary/WordBreakTest.txt
+-	wget http://www.unicode.org/Public/UNIDATA/auxiliary/GraphemeBreakTest.txt
+-	[ -f ${srcdir}/LineBreakTest.txt ] || mv -f LineBreakTest.txt WordBreakTest.txt GraphemeBreakTest.txt ${srcdir}
++	[ -f ${srcdir}/LineBreakText.txt && -f ${srcdir}/WordBreakTest.txt && -f ${srcdir}/GraphemeBreakTest.txt ] || exit 42
+ 
+ 
+ # Tests
+ 

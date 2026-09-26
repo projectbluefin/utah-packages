@@ -75,20 +75,26 @@ class RenovateCoverageTests(unittest.TestCase):
         for path in workflow_files():
             for match in pattern.finditer(path.read_text()):
                 found[match.group("depName")] = match.group("currentValue")
-        self.assertIn("quay.io/fedora/fedora", found)
+        # quay.io/fedora/fedora is no longer pinned in a workflow: the factory
+        # mirrors it (refresh-buildroot.yml, config/buildroot-image).
         self.assertIn("quay.io/packit/packit", found)
 
     def test_the_fedora_build_root_tracks_a_release_not_latest(self) -> None:
         # Following :latest here would carry the factory to a new Fedora major
         # on somebody else's schedule. The build root is a deliberate choice.
+        # It is refreshed by refresh-buildroot.yml from fedora:44 into the
+        # factory mirror rather than by Renovate: a quay.io digest pin rots.
+        refresh = (WORKFLOWS / "refresh-buildroot.yml").read_text()
+        self.assertRegex(refresh, r"(?m)^\s*UPSTREAM: quay\.io/fedora/fedora:44\s*$")
         pattern = manager_pattern(build_root_manager())
-        tags = {
-            m.group("currentValue")
-            for path in workflow_files()
-            for m in pattern.finditer(path.read_text())
-            if m.group("depName") == "quay.io/fedora/fedora"
-        }
-        self.assertEqual(tags, {"44"})
+        self.assertFalse(
+            any(
+                m.group("depName") == "quay.io/fedora/fedora"
+                for path in workflow_files()
+                for m in pattern.finditer(path.read_text())
+            ),
+            "the Fedora build root is pinned in config/buildroot-image via the mirror",
+        )
 
     def test_the_manually_pinned_image_is_left_alone(self) -> None:
         # bootc-os moves with runtime-contract.toml, not on its own.
@@ -110,6 +116,35 @@ class RenovateCoverageTests(unittest.TestCase):
         self.assertEqual(len(rules), 1)
         self.assertTrue(rules[0]["automerge"])
         self.assertEqual(rules[0]["matchUpdateTypes"], ["digest"])
+
+    def test_no_rule_automerges_an_action_update(self) -> None:
+        # An action ref is executable code that runs with contents: write,
+        # packages: write and id-token: write. A rotted action pin does not
+        # fail the run the way a rotted build-root digest does -- it runs
+        # something else -- so automerging buys no availability here and
+        # spends the only review this supply chain gets.
+        config = json.loads(RENOVATE.read_text())
+        self.assertFalse(config.get("automerge", False), "top-level automerge must stay off")
+        offenders = [
+            r.get("description", r)
+            for r in config["packageRules"]
+            if "github-actions" in (r.get("matchManagers") or [])
+            and (r.get("automerge") or r.get("platformAutomerge"))
+        ]
+        self.assertEqual(offenders, [], "github-actions updates must be human-reviewed")
+
+    def test_the_actions_rule_states_its_stance_explicitly(self) -> None:
+        # config:recommended is a moving target. Leaving github-actions to the
+        # top-level default would let a preset bump re-enable automerge with no
+        # diff in this file, so the rule is pinned off on purpose.
+        config = json.loads(RENOVATE.read_text())
+        rules = [
+            r for r in config["packageRules"]
+            if "github-actions" in (r.get("matchManagers") or [])
+        ]
+        self.assertEqual(len(rules), 1, "expected exactly one github-actions rule")
+        self.assertIs(rules[0]["automerge"], False)
+        self.assertIs(rules[0]["platformAutomerge"], False)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,8 @@
+{
+  "package": "libsamplerate",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libsamplerate.git",
+  "commit": "9b8f90cbcecc24679b985ee32bbfec9caa7c488a",
+  "tree": "e897921c92abaf502406257d729c9f746bc926d1",
+  "imported_at": "2026-09-25T08:04:30.921363+00:00"
+}

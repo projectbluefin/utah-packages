@@ -5,7 +5,7 @@ The factory's only skip mechanism is the published consumer repository, and
 publication is atomic: it needs every stage, plus precedence, plus the
 Hummingbird-only transaction. So a failing gate freezes the witness, and
 everything outside it rebuilds from scratch on every run. The witness has been
-at 67 of 349 packages since 2026-08-30; webkitgtk, which is not in it, built 20
+at 67 packages since 2026-08-30; webkitgtk, which is not in it, built 20
 times on 19 September alone at 182 minutes a build, with byte-identical inputs
 (issue #177).
 
@@ -32,7 +32,7 @@ Why the chain holds across stages
 ---------------------------------
 It only works if an unchanged recipe yields an unchanged NEVR, or every stage's
 resolved root would differ from the last run's and nothing would ever hit. It
-does: 167 of 349 specs use %autorelease, which rpmautospec derives from the
+does: many specs use %autorelease, which rpmautospec derives from the
 committed packages/<name>/changelog and not from a build counter. Confirmed
 empirically -- libical-3.0.20-1.hum1.bfin came out with the identical NEVR in
 run 35413902261 and run 35445712318, twelve hours and many commits apart.
@@ -54,7 +54,7 @@ ROOT = Path(__file__).resolve().parent.parent
 
 # Bumped when the meaning of the key changes, so an old cache entry computed
 # under different rules can never be mistaken for a current one.
-SCHEMA = "1"
+SCHEMA = "2"
 
 # The tag is the key and nothing else. A 32-character hex digest always matches
 # the OCI tag grammar ([a-zA-Z0-9_][a-zA-Z0-9._-]{0,127}), so the tag can never
@@ -119,9 +119,9 @@ def cache_key(
     package: str,
     recipe: str,
     buildroot_digest: str,
-    factory_digest: str,
     resolved_root: list[str],
     disttag: str,
+    salt: str = "",
 ) -> str:
     """The cache tag for one package built under one exact set of inputs.
 
@@ -129,20 +129,34 @@ def cache_key(
       package           -- the name, so two recipes cannot collide
       recipe            -- spec, patches, sources, changelog
       buildroot_digest  -- a different compiler produces a different binary
-      factory_digest    -- what the root could install from the factory
       resolved_root     -- what it actually installed, post-resolution
       disttag           -- .humN.bfin[.N], which lands in the Release
+
+    The published factory image's digest is deliberately NOT an input
+    (schema 2). resolved_root is the post-builddep rpm -qa, so it already
+    names the exact NEVR of every package the root took from the factory; a
+    factory change that reaches this build changes the key through it. Keyed
+    on the digest as well, every publish invalidated every entry, and the run
+    after a successful publish (36159982139, 9cb66729 -> 9e17ca2c) rebuilt
+    packages whose inputs had not changed at all.
+
+    `salt` is for the canary workflow only: it namespaces a canary's entries
+    away from production ones so the canary can force a real compile and then
+    prove the next pass hits. It is left out of the payload entirely when
+    empty, so a production key is byte-for-byte what it was without it.
     """
+    fields = {
+        "schema": SCHEMA,
+        "package": package,
+        "recipe": recipe,
+        "buildroot": buildroot_digest,
+        "root": normalise_root(resolved_root),
+        "disttag": disttag,
+    }
+    if salt:
+        fields["salt"] = salt
     payload = json.dumps(
-        {
-            "schema": SCHEMA,
-            "package": package,
-            "recipe": recipe,
-            "buildroot": buildroot_digest,
-            "factory": factory_digest,
-            "root": normalise_root(resolved_root),
-            "disttag": disttag,
-        },
+        fields,
         sort_keys=True,
         separators=(",", ":"),
     ).encode()
@@ -153,8 +167,12 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("package")
     parser.add_argument("--buildroot-digest", required=True)
-    parser.add_argument("--factory-digest", default="")
     parser.add_argument("--disttag", required=True)
+    parser.add_argument(
+        "--salt",
+        default="",
+        help="Canary namespace; empty (the default) for every production key",
+    )
     parser.add_argument(
         "--resolved-root",
         required=True,
@@ -185,9 +203,9 @@ def main() -> int:
         package=args.package,
         recipe=recipe_digest(package_dir),
         buildroot_digest=args.buildroot_digest,
-        factory_digest=args.factory_digest,
         resolved_root=nevras,
         disttag=args.disttag,
+        salt=args.salt,
     )
     print(key)
     return 0

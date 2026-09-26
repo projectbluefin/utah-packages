@@ -24,6 +24,7 @@ Both are indexed below. A skill that exists but is not listed here fails
 | Finish a task and decide what learning to write back | [`skills/skill-improvement.md`](skills/skill-improvement.md) |
 | Change a stage, a container pin, a bcond, the rebuild workflow, or drop a recipe, without repeating a fix the history already reverted | [`skills/repeated-mistakes.md`](skills/repeated-mistakes.md) |
 | Change package-cache keys, eligibility, restore/publish ordering, or cache storage | [`skills/package-build-cache.md`](skills/package-build-cache.md) |
+| Import, configure, or verify font package recipes | [`skills/font-package-recipes.md`](skills/font-package-recipes.md) |
 
 ## Reference docs (load on demand)
 

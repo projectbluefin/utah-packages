@@ -1,6 +1,6 @@
 """A cache hit must be indistinguishable from a build, or it is not safe.
 
-The factory rebuilds ~282 of 349 packages every run because its only skip
+The factory used to rebuild most of its 342 packages every run because its only skip
 mechanism is the atomically-published consumer repository, whose witness has
 been frozen at 67 packages since 2026-08-30 (issue #177). webkitgtk alone built
 20 times on 19 September at 182 minutes a build, with byte-identical inputs.
@@ -31,7 +31,6 @@ BASE = dict(
     package="webkitgtk",
     recipe="recipe-digest",
     buildroot_digest="sha256:buildroot",
-    factory_digest="sha256:factory",
     resolved_root=["gcc-15.2.1-1.fc44.x86_64", "glibc-2.42-1.fc44.x86_64"],
     disttag=".hum1.bfin",
 )
@@ -46,9 +45,52 @@ class KeySensitivityTests(unittest.TestCase):
         reversed_root = dict(BASE, resolved_root=list(reversed(BASE["resolved_root"])))
         self.assertEqual(pck.cache_key(**BASE), pck.cache_key(**reversed_root))
 
+    def test_a_new_factory_publish_alone_does_not_change_the_key(self):
+        """Schema 2: the factory image digest is not an input.
+
+        The same package, recipe, build root and resolved root must give the
+        same key whatever the published factory image is -- a publish changes
+        its digest, and keying on it made the run after every publish cold.
+        cache_key() refuses the old argument outright, so it cannot creep back.
+        """
+        with self.assertRaises(TypeError):
+            pck.cache_key(**BASE, factory_digest="sha256:9cb66729")
+        self.assertEqual(pck.cache_key(**BASE), pck.cache_key(**dict(BASE)))
+
+    def test_a_factory_package_change_reaches_the_key_through_the_root(self):
+        """What the factory digest used to guard is still guarded."""
+        before = dict(BASE, resolved_root=BASE["resolved_root"] + ["libfoo-1.0-1.hum1.bfin.x86_64"])
+        after = dict(BASE, resolved_root=BASE["resolved_root"] + ["libfoo-1.1-1.hum1.bfin.x86_64"])
+        self.assertNotEqual(pck.cache_key(**before), pck.cache_key(**after))
+
     def test_a_duplicate_in_the_root_does_not_change_the_key(self):
         doubled = dict(BASE, resolved_root=BASE["resolved_root"] + BASE["resolved_root"])
         self.assertEqual(pck.cache_key(**BASE), pck.cache_key(**doubled))
+
+    def test_an_empty_salt_leaves_the_production_key_unchanged(self):
+        """The canary salt must not move a single production cache entry."""
+        import hashlib
+        import json
+
+        unsalted = hashlib.sha256(json.dumps(
+            {
+                "schema": pck.SCHEMA,
+                "package": BASE["package"],
+                "recipe": BASE["recipe"],
+                "buildroot": BASE["buildroot_digest"],
+                "root": pck.normalise_root(BASE["resolved_root"]),
+                "disttag": BASE["disttag"],
+            },
+            sort_keys=True, separators=(",", ":"),
+        ).encode()).hexdigest()[:32]
+        self.assertEqual(pck.cache_key(**BASE), unsalted)
+        self.assertEqual(pck.cache_key(**BASE, salt=""), unsalted)
+
+    def test_a_canary_salt_namespaces_the_key(self):
+        salted = pck.cache_key(**BASE, salt="canary-abc")
+        self.assertNotEqual(salted, pck.cache_key(**BASE))
+        self.assertEqual(salted, pck.cache_key(**BASE, salt="canary-abc"))
+        self.assertNotEqual(salted, pck.cache_key(**BASE, salt="canary-abd"))
 
     def test_every_input_changes_the_key(self):
         """The whole safety argument. A missed input serves a wrong RPM."""
@@ -56,7 +98,6 @@ class KeySensitivityTests(unittest.TestCase):
             "package": dict(BASE, package="bluez"),
             "recipe": dict(BASE, recipe="other-digest"),
             "buildroot": dict(BASE, buildroot_digest="sha256:other"),
-            "factory": dict(BASE, factory_digest="sha256:other"),
             "disttag": dict(BASE, disttag=".hum1.bfin.2"),
             "resolved_root": dict(
                 BASE, resolved_root=["gcc-15.2.2-1.fc44.x86_64",
@@ -96,7 +137,7 @@ class RecipeDigestTests(unittest.TestCase):
     def test_the_changelog_is_part_of_the_recipe(self):
         """%autorelease reads it, so it decides the Release and the NEVR.
 
-        167 of 349 specs use %autorelease. A digest that ignored the changelog
+        Many specs use %autorelease. A digest that ignored the changelog
         would treat two different releases as the same build.
         """
         a = self.recipe({"p.spec": b"spec", "changelog": b"* one\n"})
@@ -140,7 +181,6 @@ class CommandLineTests(unittest.TestCase):
             return subprocess.run(
                 ["python3", str(SCRIPT), package,
                  "--buildroot-digest", "sha256:aaa",
-                 "--factory-digest", "sha256:bbb",
                  "--disttag", ".hum1.bfin",
                  "--resolved-root", path, *extra],
                 capture_output=True, text=True, cwd=ROOT,

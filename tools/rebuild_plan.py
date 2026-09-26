@@ -50,8 +50,13 @@ PUBLISHED_RELEASE = re.compile(r"^(?P<base>.+)\.hum\d+\.bfin(?P<bump>(?:\.\d+)?)
 # against an empty buildroot. Hand each stage over in chunks instead.
 CHUNK = 250
 
-# The job chain in rebuild-rpms.yml is eleven deep and GitHub needs it static.
-STAGES = 11
+# The job chain in rebuild-rpms.yml is fourteen deep and GitHub needs it static.
+STAGES = 14
+
+# rebuild-rpms.yml publishes after each of the first four waves that has
+# later waves to come (publish0..publish3); the final publication covers the
+# rest. See the comment above publish0 there.
+EARLY_PUBLICATIONS = 4
 
 
 def published_from_primary(primary: bytes) -> dict[str, tuple[str, str]]:
@@ -171,6 +176,39 @@ def provides_from_primary(
     return provided
 
 
+def provides_by_source(primary: bytes) -> dict[str, set[str]]:
+    """Source package name -> every capability its published binaries provide.
+
+    Provides entries plus shipped files, like provides_from_primary, but kept
+    per source: tools/build_graph.py maps a BuildRequires on a generated
+    capability (a soname, pkgconfig(), python3dist()) to the recipe that
+    produces it, which rpmspec alone cannot see.
+    """
+    result: dict[str, set[str]] = {}
+    root = ElementTree.fromstring(primary)
+    for package in root.iter(f"{{{COMMON_NS}}}package"):
+        fmt = package.find(f"{{{COMMON_NS}}}format")
+        if fmt is None:
+            continue
+        source = source_name(fmt.findtext(f"{{{RPM_NS}}}sourcerpm") or "")
+        if source is None:
+            continue
+        provided = result.setdefault(source, set())
+        name = package.findtext(f"{{{COMMON_NS}}}name")
+        if name:
+            provided.add(name)
+        for entry in fmt.iterfind(f"{{{RPM_NS}}}provides/{{{RPM_NS}}}entry"):
+            provided.add(entry.get("name", ""))
+        for file in fmt.iterfind(f"{{{COMMON_NS}}}file"):
+            provided.add(file.text or "")
+        provided.discard("")
+    return result
+
+
+# A shared-library capability: libavcodec.so.62()(64bit) -> base libavcodec.so
+SONAME = re.compile(r"^(?P<base>[^()\s]+?\.so)\.(?P<version>[^()\s]+)(?:\(.*\))*$")
+
+
 def stale_from_primary(primary: bytes, external: set[str]) -> dict[str, set[str]]:
     """Source name -> the Requires of its published binaries that nothing provides.
 
@@ -195,8 +233,22 @@ def stale_from_primary(primary: bytes, external: set[str]) -> dict[str, set[str]
     dependencies in parentheses, which need dnf to evaluate; and file paths,
     because primary.xml lists only a subset of files and the full list lives
     in filelists.xml, which is not read here.
+
+    And only a *moved* soname counts: libavcodec.so.62 unsatisfied while
+    something provides libavcodec.so.63. That is what a rebuild repairs.
+    A Requires nothing provides at any version -- vala, cvs, mingw32(...),
+    pkgconfig(xproto) from a -devel or MinGW subpackage, all of which
+    Fedora and not the consumer's repositories supply -- is not repaired by
+    rebuilding, so calling it stale rebuilt the same 80 packages, and their
+    dependents, on every run: 215 of 397 for a one-package change. Whether
+    the consumer can install what it needs is the Hummingbird-only
+    transaction's question, and it still asks it.
     """
     provided = provides_from_primary(primary) | external
+    moved_from = {
+        match["base"] for capability in provided
+        if (match := SONAME.match(capability))
+    }
     stale: dict[str, set[str]] = {}
     root = ElementTree.fromstring(primary)
     for package in root.iter(f"{{{COMMON_NS}}}package"):
@@ -214,6 +266,9 @@ def stale_from_primary(primary: bytes, external: set[str]) -> dict[str, set[str]
                 or capability in provided
             ):
                 continue
+            match = SONAME.match(capability)
+            if match is None or match["base"] not in moved_from:
+                continue
             stale.setdefault(source, set()).add(capability)
     return stale
 
@@ -228,16 +283,24 @@ def source_name(sourcerpm: str) -> str | None:
     return name or None
 
 
-def reverse_closure(names: set[str], dependents: dict[str, set[str]]) -> set[str]:
-    """Every published package that transitively depends on one of `names`."""
+def reverse_closure(
+    names: set[str], dependents: dict[str, set[str]], depth: int | None = None
+) -> set[str]:
+    """Every package that depends on one of `names`, within `depth` hops.
+
+    `depth=None` follows the edges transitively; `depth=1` takes only the
+    direct dependents.
+    """
     closure: set[str] = set()
-    frontier = list(names)
+    frontier = [(name, 0) for name in names]
     while frontier:
-        current = frontier.pop()
+        current, hops = frontier.pop()
+        if depth is not None and hops >= depth:
+            continue
         for dependent in dependents.get(current, ()):
             if dependent not in closure and dependent not in names:
                 closure.add(dependent)
-                frontier.append(dependent)
+                frontier.append((dependent, hops + 1))
     return closure
 
 
@@ -332,8 +395,15 @@ def plan(
     factory_repo: str,
     dependents: dict[str, set[str]] | None = None,
     stale: set[str] = frozenset(),
+    trust_state: bool = False,
+    closure_depth: int | None = None,
 ) -> list[dict]:
     """The recipes to build, in inventory order.
+
+    `trust_state` is set when `changed` came from the state label on the
+    published image (tools/factory_state.py): it already compared every
+    recipe against the build that is published, so a package outside
+    `changed` and `stale` is up to date and the NEVR comparison is not needed.
 
     `dependents` is the reverse dependency map of the published repository
     (see dependents_from_primary). Whatever is rebuilt drags its published
@@ -351,13 +421,15 @@ def plan(
         name = entry["name"]
         if full or name in changed or name in stale or not trust_published:
             build.append(entry)
+        elif trust_state:
+            continue
         elif is_published(root, entry, published):
             continue
         else:
             build.append(entry)
     if dependents:
         building = {entry["name"] for entry in build}
-        dragged = reverse_closure(building, dependents)
+        dragged = reverse_closure(building, dependents, closure_depth)
         build = [
             entry
             for entry in config["packages"]
@@ -393,29 +465,88 @@ def cacheable(build: list[dict], changed: set[str], stale: set[str]) -> list[str
     return [entry["name"] for entry in build if entry["name"] not in excluded]
 
 
-def stage_outputs(build: list[dict]) -> dict[str, str]:
-    """Per-stage package lists and their <=250-package chunks."""
+def prunable_sources(
+    published: dict[str, tuple[str, str]], hummingbird_owned: set[str]
+) -> list[str]:
+    """Hummingbird-owned sources still carried by the factory repository.
+
+    Removing a recipe stops future builds, but publish starts by copying the
+    previous repository.  Without this explicit intersection, every RPM from
+    the removed source would survive forever.  Returning only witnessed
+    overlaps also makes cleanup idempotent: once publication removes them, a
+    no-op run does not republish the same repository.
+    """
+    return sorted(set(published) & hummingbird_owned)
+
+
+def stage_outputs(build: list[dict], waves: dict[str, int] | None = None) -> dict[str, str]:
+    """Per-wave package lists and their <=250-package chunks.
+
+    `waves` is the solved order from tools/build_graph.py. Without it the
+    hand-assigned config stage is used, which is what every run did before
+    the graph existed.
+    """
+    def wave(entry: dict) -> int:
+        if waves is not None and entry["name"] in waves:
+            return waves[entry["name"]]
+        return entry.get("stage") or 0
+
     outputs: dict[str, str] = {
         "build_list": json.dumps([entry["name"] for entry in build]),
     }
     for stage in range(STAGES):
-        names = [
-            entry["name"] for entry in build if (entry.get("stage") or 0) == stage
-        ]
+        names = [entry["name"] for entry in build if wave(entry) == stage]
         outputs[f"stage{stage}"] = json.dumps(names)
         chunks = [names[i : i + CHUNK] for i in range(0, len(names), CHUNK)]
         outputs[f"stage{stage}_chunks"] = json.dumps(
             [json.dumps(chunk) for chunk in chunks]
         )
+    # What an early publication after wave k covers, and which waves get one:
+    # every non-empty wave that has a later non-empty wave, because the final
+    # publication covers the last one anyway. rebuild-rpms.yml publishes each
+    # of those waves' successes as it finishes (publish-repository.yml).
+    occupied = [stage for stage in range(STAGES)
+                if json.loads(outputs[f"stage{stage}"])]
+    for stage in range(EARLY_PUBLICATIONS):
+        outputs[f"through{stage}"] = json.dumps(
+            [entry["name"] for entry in build if wave(entry) <= stage]
+        )
+    outputs["early_waves"] = json.dumps(
+        [str(stage) for stage in occupied[:-1] if stage < EARLY_PUBLICATIONS]
+    )
     return outputs
 
 
-def overflow(build: list[dict]) -> list[str]:
+def restrict(config: dict, only: list[str]) -> dict:
+    """The inventory narrowed to `only`, for the canary workflow.
+
+    The canary runs the real pipeline over a handful of named recipes. An
+    unknown name is an error rather than a silent drop: a canary that quietly
+    builds nothing proves nothing. Order follows the inventory, so the waves
+    come out exactly as a full run would order them.
+    """
+    if not only:
+        return config
+    known = {entry["name"] for entry in config["packages"]}
+    unknown = sorted(set(only) - known)
+    if unknown:
+        raise ValueError(f"not in the inventory: {', '.join(unknown)}")
+    wanted = set(only)
+    return {
+        **config,
+        "packages": [entry for entry in config["packages"] if entry["name"] in wanted],
+    }
+
+
+def overflow(build: list[dict], waves: dict[str, int] | None = None) -> list[str]:
     """Recipes asking for a wave that has no job.
 
     These used to fall out of every stage list while staying in build_list, so
     the run published a repository that was quietly missing them.
     """
-    return sorted(
-        entry["name"] for entry in build if (entry.get("stage") or 0) >= STAGES
-    )
+    def wave(entry: dict) -> int:
+        if waves is not None and entry["name"] in waves:
+            return waves[entry["name"]]
+        return entry.get("stage") or 0
+
+    return sorted(entry["name"] for entry in build if wave(entry) >= STAGES)

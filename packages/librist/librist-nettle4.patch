@@ -1,0 +1,78 @@
+From: Project Bluefin <bot@projectbluefin.io>
+Subject: [PATCH] crypto: build against nettle 4.0
+
+Backport of upstream eccf426a86d9 ("fix(crypto): build against nettle
+4.0", librist 0.2.19) to 0.2.11, reduced to the files 0.2.11 has.
+
+nettle 4.0 removed struct aes_ctx and the length argument of
+nettle_sha256_digest. psk.{c,h} only used aes_ctx as a holder for one of
+the per-size key schedules, so keep an equivalent local union. srp.c picks
+the digest call on NETTLE_VERSION_MAJOR, so nettle 3.x keeps working.
+
+---
+diff --git a/src/crypto/psk.c b/src/crypto/psk.c
+index 72dbace..f902ece 100644
+--- a/src/crypto/psk.c
++++ b/src/crypto/psk.c
+@@ -162,7 +162,7 @@ void _librist_crypto_aes_ctr(const uint8_t key[], int key_size, uint8_t iv[], co
+ 	mbedtls_aes_crypt_ctr(&ctx, payload_len, &nc_off, iv, stream_block, inbuf, outbuf);
+ 	mbedtls_aes_free(&ctx);
+ #elif HAVE_NETTLE
+-    struct aes_ctx aes_ctx;
++    struct rist_nettle_aes_ctx aes_ctx;
+     memset(&aes_ctx, 0, sizeof(aes_ctx));
+     nettle_cipher_func *f;
+     switch (key_size) {
+diff --git a/src/crypto/psk.h b/src/crypto/psk.h
+index dd9e924..156cb06 100644
+--- a/src/crypto/psk.h
++++ b/src/crypto/psk.h
+@@ -15,6 +15,14 @@
+ #include "mbedtls/aes.h"
+ #elif HAVE_NETTLE
+ #include <nettle/aes.h>
++/* nettle 4.0 removed struct aes_ctx; only its per-size union was used. */
++struct rist_nettle_aes_ctx {
++	union {
++		struct aes128_ctx ctx128;
++		struct aes192_ctx ctx192;
++		struct aes256_ctx ctx256;
++	} u;
++};
+ #else
+ #ifdef LINUX_CRYPTO
+ #include "linux-crypto.h"
+@@ -38,7 +46,7 @@ struct rist_key {
+ 	unsigned char strean_block[16];
+ 	mbedtls_aes_context mbedtls_aes_ctx;
+ #elif HAVE_NETTLE
+-	struct aes_ctx nettle_ctx;
++	struct rist_nettle_aes_ctx nettle_ctx;
+ #elif defined(LINUX_CRYPTO)
+ 	struct linux_crypto *linux_crypto_ctx;
+ #endif
+diff --git a/src/crypto/srp.c b/src/crypto/srp.c
+index baf3049..1badb1b 100644
+--- a/src/crypto/srp.c
++++ b/src/crypto/srp.c
+@@ -103,6 +103,7 @@ void librist_crypto_srp_mbedtls_hash_init(HASH_CONTEXT *ctx, bool correct_init)
+ 
+ #elif HAVE_NETTLE
+ #include <nettle/sha2.h>
++#include <nettle/version.h>
+ #include <nettle/bignum.h>
+ #define BIGNUM MP_INT
+ #define BIGNUM_INIT(num) mpz_init(num)
+@@ -171,8 +172,12 @@ static int librist_crypto_srp_hash_final(HASH_CONTEXT *hash_ctx, uint8_t *data)
+ #else
+ 	return mbedtls_sha256_finish_ret( hash_ctx, data);
+ #endif
++#else
++#if NETTLE_VERSION_MAJOR >= 4
++	nettle_sha256_digest( hash_ctx, data);
+ #else
+ 	nettle_sha256_digest( hash_ctx, SHA256_DIGEST_LENGTH, data);
++#endif
+ #endif
+ 	return 0;
+ }

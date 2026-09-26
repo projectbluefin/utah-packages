@@ -1,0 +1,462 @@
+# The pipeline canary: the real rebuild workflow, end to end, over a fixed
+# handful of small packages, in minutes rather than hours into a full run.
+#
+# A change to the pipeline used to be proven by dispatching the full factory
+# and reading it five to ten hours later. Most of what broke -- a publish step
+# with no checkout, a seed image nobody could create, an attestation with no
+# credentials, a cache key that moved on every publish -- would have failed in
+# the first few minutes on three packages. This runs rebuild-rpms.yml itself
+# (workflow_call), not a copy of it, so it cannot drift from what main runs.
+#
+#   pass1  builds libical and vulkan-headers (stage 0) and vulkan-loader
+#          (stage 4, BuildRequires vulkan-headers = its own version, which
+#          only stage 0's output satisfies), publishes them to
+#          utah-packages:canary-<pr> -- never latest -- then verify-publish
+#          checks the image the way Utah will consume it.
+#   pass2  the same set again: every build must be a cache hit, zero compiles.
+#          Proves the cache key is stable from one run to the next.
+#   pass4  the same set with vulkan-loader failing on purpose, published to
+#          the same canary tag: the image must move, still carry pass1's
+#          vulkan-loader, and the run must report it as failed. Proves the
+#          incremental publish rule. libical's %check also fails once on
+#          purpose: it must compile, be retried, and publish.
+#   pass5  an incremental run against pass1's image: vulkan-headers
+#          changes, and exactly vulkan-headers and vulkan-loader (which
+#          BuildRequires it) are selected, in solved waves 0 and 1.
+#   pass6  the same set on the container lane, which build_lane exceptions
+#          still use. Every other pass builds through the hermetic lane, the
+#          default; verify-hermetic checks pass1's locks.
+#   pass3  the same set plus python-typing-inspection with its recipe
+#          perturbed in the checkout: that one compiles, every canary package
+#          must still hit. Proves a change to one package does not
+#          invalidate the cache wholesale.
+#
+# pass2 and pass3 need only pass1's cache entries, so they run side by side.
+# Neither publishes; pass1 already proved that path.
+#
+# The cache is salted with a digest of the build path (build-stage.yml and
+# the actions), so a PR that changes how packages are built compiles for real
+# in pass1, and one that does not reuses the previous canary's builds.
+# Dispatch with compile=true to force a compile regardless.
+#
+# Every source in the set is locked on the Fedora lookaside. The first set
+# used samba.org, which answered a GitHub runner with bytes that did not
+# match the lock while serving the right tarball elsewhere; the source
+# pipeline rightly refuses that, and a canary must fail on the pipeline, not
+# on a flaky upstream host.
+#
+# The job named "Canary" is the required check. It always runs, and passes
+# without building anything when a pull request touches no pipeline path.
+name: Canary
+
+on:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      compile:
+        description: Force pass1 to compile every package, ignoring earlier canary builds
+        required: false
+        default: false
+        type: boolean
+      lane_packages:
+        description: >
+          JSON array: run pass6 over these packages instead of the canary
+          set, against the published factory, to measure a lane on a wider
+          subset.
+        required: false
+        default: ''
+        type: string
+      lane_backend:
+        description: The lane pass6 builds on (container by default)
+        required: false
+        default: container
+        type: choice
+        options:
+          - container
+          - hermetic
+
+permissions:
+  contents: read
+  id-token: write
+  packages: write
+  attestations: write
+  actions: read
+  # rebuild-rpms.yml's report job asks for it; it only opens the tracking
+  # issue on main, never from the canary.
+  issues: write
+
+concurrency:
+  group: canary-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  CANARY_SET: '["libical", "vulkan-headers", "vulkan-loader"]'
+
+jobs:
+  changes:
+    runs-on: ubuntu-24.04
+    outputs:
+      run: ${{ steps.paths.outputs.run }}
+      fork: ${{ steps.paths.outputs.fork }}
+      tag: ${{ steps.name.outputs.tag }}
+      salt: ${{ steps.name.outputs.salt }}
+      set: ${{ steps.name.outputs.set }}
+      set_plus: ${{ steps.name.outputs.set_plus }}
+      lane_set: ${{ steps.name.outputs.lane_set }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Does this change touch the pipeline?
+        id: paths
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          PR: ${{ github.event.pull_request.number }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT" != pull_request ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            echo "fork=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          gh api --paginate "repos/$REPO/pulls/$PR/files" --jq '.[].filename' > files.txt
+          if python3 tools/canary.py touches-pipeline < files.txt; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
+          if [ "$HEAD_REPO" = "$REPO" ]; then
+            echo "fork=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "fork=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Name the canary tag and cache salt
+        id: name
+        env:
+          PR: ${{ github.event.pull_request.number }}
+          REF_NAME: ${{ github.ref_name }}
+          FORCE: ${{ inputs.compile == true && github.run_id || '' }}
+          LANE_PACKAGES: ${{ inputs.lane_packages }}
+        run: |
+          set -euo pipefail
+          if [ -n "$PR" ]; then
+            tag="canary-pr${PR}"
+          else
+            tag="canary-$(printf '%s' "$REF_NAME" | tr '/' '-' | tr -cd '[:alnum:]._-' | cut -c1-80)"
+          fi
+          test "$tag" != latest
+          salt="$(python3 tools/canary.py salt)${FORCE:+-$FORCE}"
+          {
+            echo "tag=$tag"
+            echo "salt=$salt"
+            echo "set=$CANARY_SET"
+            echo "set_plus=$(jq -c '. + ["python-typing-inspection"]' <<<"$CANARY_SET")"
+            echo "lane_set=$(jq -c . <<<"${LANE_PACKAGES:-$CANARY_SET}")"
+          } >> "$GITHUB_OUTPUT"
+          echo "canary tag $tag, cache salt $salt"
+
+  pass1:
+    needs: changes
+    if: needs.changes.outputs.run == 'true' && needs.changes.outputs.fork != 'true'
+    uses: ./.github/workflows/rebuild-rpms.yml
+    with:
+      full: true
+      packages: ${{ needs.changes.outputs.set }}
+      publish_tag: ${{ needs.changes.outputs.tag }}
+      no_factory: true
+      consumer: built
+      artifact_prefix: p1-
+      cache_salt: ${{ needs.changes.outputs.salt }}
+
+  verify-publish:
+    needs: [changes, pass1]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Install cosign
+        run: |
+          set -euo pipefail
+          curl -fsSL https://github.com/sigstore/cosign/releases/download/v2.4.1/cosign-linux-amd64 -o cosign
+          echo '8b24b946dd5809c6bd93de08033bcf6bc0ed7d336b7785787c080f574b89249b  cosign' | sha256sum -c -
+          sudo install -m 0755 cosign /usr/local/bin/cosign
+      # Utah's own reader, fetched from its main branch at run time, so this
+      # is the consumer's code and not a restatement of it.
+      - name: Read the image with Utah's check-repo-availability.py
+        env:
+          IMAGE: ${{ needs.pass1.outputs.ref }}
+          DIGEST: ${{ needs.pass1.outputs.digest }}
+          SET: ${{ needs.changes.outputs.set }}
+        run: |
+          set -euo pipefail
+          test -n "$DIGEST"
+          curl -fsSL https://raw.githubusercontent.com/projectbluefin/utah/main/scripts/check-repo-availability.py \
+            -o check-repo-availability.py
+          python3 tools/canary.py verify-image "${IMAGE%:*}@${DIGEST}" \
+            --utah-reader check-repo-availability.py --expect "$SET" --expect-state
+      # The canary's repository is three packages, so most of what Utah
+      # installs cannot resolve against it; what this proves is that the
+      # advisory check ran, with Utah's own code, over Utah's whole set.
+      - name: The Utah install-set check ran
+        env:
+          UTAH_REPORT: ${{ needs.pass1.outputs.utah_report }}
+        run: |
+          set -euo pipefail
+          requested=$(jq -r '.requested' <<<"${UTAH_REPORT:-null}")
+          echo "Utah install set checked: $requested packages, $(jq '.unresolved | length' <<<"$UTAH_REPORT") unresolved against the canary repository"
+          test "$requested" -ge 100
+      # vulkan-loader is wave 1, so wave 0 (libical, vulkan-headers) must
+      # have published on its own while vulkan-loader was still building.
+      - name: Wave 0 published before the final publication
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          set -euo pipefail
+          gh api --paginate "repos/$REPOSITORY/actions/runs/$RUN_ID/attempts/$RUN_ATTEMPT/jobs?per_page=100" \
+            --jq '.jobs[]' | jq -s . > jobs.json
+          python3 tools/canary.py verify-early jobs.json --pass pass1 --wave 0
+      - name: Verify the signature and provenance of the canary image
+        env:
+          GH_TOKEN: ${{ github.token }}
+          IMAGE: ${{ needs.pass1.outputs.ref }}
+          DIGEST: ${{ needs.pass1.outputs.digest }}
+          REPOSITORY: ${{ github.repository }}
+          REF: ${{ github.ref }}
+        run: |
+          set -euo pipefail
+          cosign verify "${IMAGE%:*}@${DIGEST}" \
+            --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+            --certificate-identity "https://github.com/${REPOSITORY}/.github/workflows/publish-repository.yml@${REF}" \
+            > /dev/null
+          echo "cosign signature verified"
+          gh attestation verify "oci://${IMAGE%:*}@${DIGEST}" --repo "$REPOSITORY"
+
+  pass2:
+    needs: [changes, pass1]
+    uses: ./.github/workflows/rebuild-rpms.yml
+    with:
+      full: true
+      packages: ${{ needs.changes.outputs.set }}
+      no_factory: true
+      skip_publish: true
+      artifact_prefix: p2-
+      cache_salt: ${{ needs.changes.outputs.salt }}
+
+  pass3:
+    needs: [changes, pass1]
+    uses: ./.github/workflows/rebuild-rpms.yml
+    with:
+      full: true
+      packages: ${{ needs.changes.outputs.set_plus }}
+      no_factory: true
+      skip_publish: true
+      artifact_prefix: p3-
+      cache_salt: ${{ needs.changes.outputs.salt }}
+      perturb: '["python-typing-inspection"]'
+
+  # A deliberately failing package: vulkan-loader's build job fails before
+  # it produces anything. Incremental publish must still publish the rest to
+  # the canary tag, keep vulkan-loader at pass1's build, and name it as
+  # failed. It is the stage-4 consumer on purpose: its provider,
+  # vulkan-headers, still publishes around it.
+  pass4:
+    needs: [changes, pass1]
+    uses: ./.github/workflows/rebuild-rpms.yml
+    with:
+      full: true
+      packages: ${{ needs.changes.outputs.set }}
+      publish_tag: ${{ needs.changes.outputs.tag }}
+      no_factory: true
+      consumer: built
+      artifact_prefix: p4-
+      cache_salt: ${{ needs.changes.outputs.salt }}
+      inject_failure: '["vulkan-loader"]'
+      # And libical's %check fails once: the retry must rebuild it and
+      # publish, with a flaky %check warning.
+      flaky_check: '["libical"]'
+
+  verify-failure:
+    needs: [changes, pass1, pass4]
+    # pass4 is red by design: one of its packages failed.
+    if: ${{ always() && needs.pass1.result == 'success' }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: The failed package kept its previous build and was reported
+        env:
+          PASS1_DIGEST: ${{ needs.pass1.outputs.digest }}
+          IMAGE: ${{ needs.pass4.outputs.ref }}
+          DIGEST: ${{ needs.pass4.outputs.digest }}
+          FAILED: ${{ needs.pass4.outputs.failed }}
+          SET: ${{ needs.changes.outputs.set }}
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          set -euo pipefail
+          echo "pass4 failed: ${FAILED:-<none>}"
+          test "$(jq -c . <<<"${FAILED:-null}")" = '["vulkan-loader"]'
+          # Published anyway, and not simply the old image again.
+          test -n "$DIGEST"
+          test "$DIGEST" != "$PASS1_DIGEST"
+          curl -fsSL https://raw.githubusercontent.com/projectbluefin/utah/main/scripts/check-repo-availability.py \
+            -o check-repo-availability.py
+          # libical's %check failed once on purpose; it must have compiled,
+          # been retried, and published.
+          gh api --paginate "repos/$REPOSITORY/actions/runs/$RUN_ID/attempts/$RUN_ATTEMPT/jobs?per_page=100" \
+            --jq '.jobs[]' | jq -s . > jobs.json
+          python3 tools/canary.py verify-flaky jobs.json --pass pass4 --package libical
+          # vulkan-loader is still there: pass1's build, kept.
+          python3 tools/canary.py verify-image "${IMAGE%:*}@${DIGEST}" \
+            --utah-reader check-repo-availability.py --expect "$SET"
+
+  # An incremental run, the way a merge to main runs: pass1's image, pinned
+  # by digest, is the published factory, and vulkan-headers' recipe changes.
+  # prepare must select exactly vulkan-headers and the package that
+  # BuildRequires it -- vulkan-loader, in the next solved wave rather than at
+  # its config stage 4 -- and leave libical alone. Selection comes from the
+  # state label pass1 recorded; without it (a diff with no range, and a NEVR
+  # that did not move) nothing would be selected at all.
+  pass5:
+    needs: [changes, pass1]
+    uses: ./.github/workflows/rebuild-rpms.yml
+    with:
+      packages: ${{ needs.changes.outputs.set }}
+      factory_tag: ${{ needs.pass1.outputs.digest }}
+      skip_publish: true
+      artifact_prefix: p5-
+      cache_salt: ${{ needs.changes.outputs.salt }}
+      perturb: '["vulkan-headers"]'
+
+  verify-incremental:
+    needs: [changes, pass5]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Only the change and its reverse dependency were built
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+          BUILD_LIST: ${{ needs.pass5.outputs.build_list }}
+        run: |
+          set -euo pipefail
+          gh api --paginate "repos/$REPOSITORY/actions/runs/$RUN_ID/attempts/$RUN_ATTEMPT/jobs?per_page=100" \
+            --jq '.jobs[]' | jq -s . > jobs.json
+          python3 tools/canary.py verify-incremental jobs.json --build-list "$BUILD_LIST" \
+            --expect '{"vulkan-headers": 0, "vulkan-loader": 1}' >> "$GITHUB_STEP_SUMMARY"
+
+  # The hermetic lane is the default, so pass1 through pass5 already build
+  # through it. verify-hermetic reads pass1's locks: every package locked
+  # with a pinned bootstrap image, built offline or restored, and
+  # vulkan-loader taking vulkan-headers from the stage-0 artifact
+  # (file:///work/prior) through its lock.
+  verify-hermetic:
+    needs: [changes, pass1]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          pattern: p1-lock-*
+          path: locks
+      - name: Every package was locked, and built from the lock or its cache
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+          SET: ${{ needs.changes.outputs.set }}
+        run: |
+          set -euo pipefail
+          gh api --paginate "repos/$REPOSITORY/actions/runs/$RUN_ID/attempts/$RUN_ATTEMPT/jobs?per_page=100" \
+            --jq '.jobs[]' | jq -s . > jobs.json
+          python3 tools/canary.py verify-hermetic jobs.json --pass pass1 --locks locks --set "$SET" \
+            --stage-dependency vulkan-loader=vulkan-headers >> "$GITHUB_STEP_SUMMARY"
+
+  # The other lane: the container root, which build_lane exceptions still
+  # use, stays proven on the same set. A dispatch can point this pass at a
+  # wider subset and either lane (lane_packages, lane_backend) to measure a
+  # lane before relying on it.
+  pass6:
+    needs: changes
+    if: needs.changes.outputs.run == 'true' && needs.changes.outputs.fork != 'true'
+    uses: ./.github/workflows/rebuild-rpms.yml
+    with:
+      full: true
+      packages: ${{ needs.changes.outputs.lane_set }}
+      # A dispatched wider subset needs the published factory for the
+      # BuildRequires it does not build itself.
+      no_factory: ${{ inputs.lane_packages == '' }}
+      skip_publish: true
+      backend: ${{ inputs.lane_backend || 'container' }}
+      artifact_prefix: p6-
+      cache_salt: ${{ needs.changes.outputs.salt }}
+
+  verify-lane:
+    needs: [changes, pass6]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Every package in the other lane built
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+          SET: ${{ needs.changes.outputs.lane_set }}
+        run: |
+          set -euo pipefail
+          gh api --paginate "repos/$REPOSITORY/actions/runs/$RUN_ID/attempts/$RUN_ATTEMPT/jobs?per_page=100" \
+            --jq '.jobs[]' | jq -s . > jobs.json
+          python3 tools/canary.py verify-built jobs.json --pass pass6 --set "$SET" >> "$GITHUB_STEP_SUMMARY"
+
+  verify-cache:
+    needs: [changes, pass1, pass2, pass3]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Count compiles and cache hits in every pass
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+          SET: ${{ needs.changes.outputs.set }}
+        run: |
+          set -euo pipefail
+          gh api --paginate "repos/$REPOSITORY/actions/runs/$RUN_ID/attempts/$RUN_ATTEMPT/jobs?per_page=100" \
+            --jq '.jobs[]' | jq -s . > jobs.json
+          python3 tools/canary.py verify-cache jobs.json --set "$SET" \
+            --perturbed python-typing-inspection >> "$GITHUB_STEP_SUMMARY"
+
+  canary:
+    name: Canary
+    needs: [changes, pass1, verify-publish, pass2, pass3, verify-cache, pass4, verify-failure, pass5, verify-incremental, verify-hermetic, pass6, verify-lane]
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Decide
+        env:
+          RUN: ${{ needs.changes.outputs.run }}
+          FORK: ${{ needs.changes.outputs.fork }}
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          set -euo pipefail
+          if [ "$RUN" != true ]; then
+            echo "no pipeline path changed; nothing to prove"
+            exit 0
+          fi
+          if [ "$FORK" = true ]; then
+            echo "::error::a fork pull request cannot publish the canary image; a maintainer must push this branch to the repository" >&2
+            exit 1
+          fi
+          echo "$RESULTS" | jq -r 'to_entries[] | "\(.key): \(.value.result)"'
+          # pass4 fails on purpose; verify-failure is what judges it.
+          failed=$(echo "$RESULTS" | jq -r '[to_entries[] | select(.key != "pass4" and .value.result != "success")] | length')
+          test "$failed" -eq 0

@@ -1,0 +1,8 @@
+{
+  "package": "giflib",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/giflib.git",
+  "commit": "7d402bbaec9a0c9dbf754ba47f69ab1529790e36",
+  "tree": "0eb43a92b1da3c7af340f4486554461319118e5c",
+  "imported_at": "2026-09-23T03:30:10.584334+00:00"
+}

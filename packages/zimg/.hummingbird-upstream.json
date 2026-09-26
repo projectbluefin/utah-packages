@@ -1,0 +1,8 @@
+{
+  "package": "zimg",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/zimg.git",
+  "commit": "9e83f41da3a94fbd5c71784a31d2c1a5aa83b587",
+  "tree": "0533b05ff483e276c5e9ec1358783e4c3fc27e2c",
+  "imported_at": "2026-09-25T08:04:29.391331+00:00"
+}

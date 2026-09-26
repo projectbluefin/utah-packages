@@ -12,8 +12,10 @@ from tools.rebuild_plan import (
     is_published,
     overflow,
     plan,
+    prunable_sources,
     provides_from_primary,
     published_from_primary,
+    restrict,
     reverse_closure,
     stage_outputs,
     stale_from_primary,
@@ -377,9 +379,21 @@ class StaleTests(unittest.TestCase):
 
     def test_external_provides_count_as_satisfied(self) -> None:
         # libc comes from Hummingbird, not the factory: without the external
-        # set every package would look stale.
-        stale = stale_from_primary(self.PRIMARY, set())
+        # set, a Hummingbird that moved libc to .so.7 would make every
+        # package that links .so.6 stale.
+        self.assertNotIn("ffmpeg-free", stale_from_primary(self.PRIMARY, self.EXTERNAL))
+        stale = stale_from_primary(self.PRIMARY, {"libc.so.7"})
         self.assertIn("libc.so.6", stale["ffmpeg-free"])
+
+    def test_a_requirement_nothing_provides_at_any_version_is_not_stale(self) -> None:
+        # vala, cvs, mingw32(...), pkgconfig(xproto): Fedora-only, and no
+        # rebuild changes that. Counting them rebuilt 80 packages every run.
+        primary = full_primary(
+            ("git", "git", ["git"], ["cvs", "lighttpd", "libc.so.6"]),
+            ("osinfo-db-tools", "osinfo-db-tools", [], ["mingw32(kernel32.dll)"]),
+            ("SDL3-devel", "SDL3", [], ["pkgconfig(xproto)", "libfltk.so.1.4()(64bit)"]),
+        )
+        self.assertEqual(stale_from_primary(primary, self.EXTERNAL), {})
 
     def test_rpmlib_rich_and_file_requires_are_not_judged(self) -> None:
         stale = stale_from_primary(self.PRIMARY, self.EXTERNAL)
@@ -427,9 +441,44 @@ class StageOutputTests(unittest.TestCase):
 
     def test_reports_a_stage_that_has_no_job(self) -> None:
         self.assertEqual(
-            overflow([{"name": "late", "stage": 11}, {"name": "fine", "stage": 10}]),
+            overflow([{"name": "late", "stage": 14}, {"name": "fine", "stage": 13}]),
             ["late"],
         )
+
+    def test_early_publications_cover_every_wave_but_the_last(self) -> None:
+        build = [{"name": "libass"}, {"name": "ffmpeg"}, {"name": "gst-bad"}, {"name": "webkitgtk"}]
+        outputs = stage_outputs(build, {"libass": 0, "webkitgtk": 0, "ffmpeg": 1, "gst-bad": 3})
+        self.assertEqual(json.loads(outputs["early_waves"]), ["0", "1"])
+        self.assertEqual(json.loads(outputs["through0"]), ["libass", "webkitgtk"])
+        self.assertEqual(json.loads(outputs["through1"]), ["libass", "ffmpeg", "webkitgtk"])
+        self.assertEqual(json.loads(outputs["through2"]), json.loads(outputs["through1"]))
+        self.assertNotIn("through4", outputs, "only the first four waves publish early")
+        late = stage_outputs(build, {"libass": 0, "webkitgtk": 0, "ffmpeg": 5, "gst-bad": 6})
+        self.assertEqual(json.loads(late["early_waves"]), ["0"])
+        single = stage_outputs([{"name": "xdg-terminal-exec"}], {"xdg-terminal-exec": 0})
+        self.assertEqual(json.loads(single["early_waves"]), [], "one wave: the final publication covers it")
+
+    def test_solved_waves_override_the_config_stage(self) -> None:
+        build = [{"name": "gnome-shell", "stage": 10}, {"name": "mutter", "stage": 6}]
+        outputs = stage_outputs(build, {"mutter": 0, "gnome-shell": 1})
+        self.assertEqual(json.loads(outputs["stage0"]), ["mutter"])
+        self.assertEqual(json.loads(outputs["stage1"]), ["gnome-shell"])
+        self.assertEqual(json.loads(outputs["stage10"]), [])
+        self.assertEqual(overflow(build, {"mutter": 0, "gnome-shell": 14}), ["gnome-shell"])
+
+
+class HummingbirdOwnershipTests(unittest.TestCase):
+    def test_only_published_overlaps_need_pruning(self) -> None:
+        published = {
+            "openssh": ("10.5p1", "1.hum1.bfin"),
+            "mesa": ("26.1.0", "1.hum1.bfin"),
+        }
+        self.assertEqual(
+            prunable_sources(published, {"openssh", "bootc"}), ["openssh"]
+        )
+
+    def test_cleanup_is_idempotent_after_overlap_is_gone(self) -> None:
+        self.assertEqual(prunable_sources({}, {"openssh"}), [])
 
 
 def icu_primary() -> bytes:
@@ -487,6 +536,64 @@ class ExcludedExternalTests(unittest.TestCase):
     def test_the_exclusion_is_declared_once_and_names_libicu_77(self) -> None:
         from tools.rebuild_plan import EXCLUDED_EXTERNAL
         self.assertIn(("libicu", "77."), EXCLUDED_EXTERNAL)
+
+
+class ClosureDepthTests(unittest.TestCase):
+    DEPENDENTS = {"git": {"fish", "mutter"}, "mutter": {"gnome-shell"}}
+
+    def test_transitive_by_default(self) -> None:
+        self.assertEqual(
+            reverse_closure({"git"}, self.DEPENDENTS), {"fish", "mutter", "gnome-shell"}
+        )
+
+    def test_depth_one_takes_only_direct_dependents(self) -> None:
+        self.assertEqual(reverse_closure({"git"}, self.DEPENDENTS, 1), {"fish", "mutter"})
+
+    def test_state_mode_selects_the_change_and_its_direct_dependents(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            names = ["git", "fish", "mutter", "gnome-shell", "unrelated"]
+            for name in names:
+                recipe(root, name, "1")
+            config = {"packages": [{"name": n, "version": "1.0"} for n in names]}
+            build = plan(
+                config, root,
+                published={n: ("1.0", "1.hum1.bfin") for n in names},
+                changed={"git"}, full=False, factory_repo="file:///repo",
+                dependents=self.DEPENDENTS, trust_state=True, closure_depth=1,
+            )
+            self.assertEqual([e["name"] for e in build], ["git", "fish", "mutter"])
+
+
+class RestrictTests(unittest.TestCase):
+    """The canary narrows the inventory to a named set."""
+
+    CONFIG = {
+        "schema": 1,
+        "packages": [
+            {"name": "libtalloc", "stage": 0},
+            {"name": "libtdb"},
+            {"name": "libtevent", "stage": 1},
+            {"name": "webkitgtk", "stage": 5},
+        ],
+    }
+
+    def test_empty_means_everything(self) -> None:
+        self.assertIs(restrict(self.CONFIG, []), self.CONFIG)
+
+    def test_keeps_inventory_order_and_stages(self) -> None:
+        narrowed = restrict(self.CONFIG, ["libtevent", "libtalloc"])
+        self.assertEqual(
+            [entry["name"] for entry in narrowed["packages"]], ["libtalloc", "libtevent"]
+        )
+        outputs = stage_outputs(narrowed["packages"])
+        self.assertEqual(json.loads(outputs["stage0"]), ["libtalloc"])
+        self.assertEqual(json.loads(outputs["stage1"]), ["libtevent"])
+
+    def test_an_unknown_name_is_an_error_not_a_silent_drop(self) -> None:
+        with self.assertRaises(ValueError) as caught:
+            restrict(self.CONFIG, ["libtalloc", "no-such-package"])
+        self.assertIn("no-such-package", str(caught.exception))
 
 
 if __name__ == "__main__":

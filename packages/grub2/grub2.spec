@@ -14,6 +14,16 @@
 # and it is *awful* to update this.
 %global gnulibversion 9f48fb992a3d7e96610c4ce8be969cff2d61a01b
 
+# Utah ships Fedora's shim (shim-x64 installs to EFI/fedora, and shim loads
+# grubx64.efi from its own directory). Hummingbird's build root defines
+# %%efi_vendor as "hummingbird", which installs GRUB to EFI/hummingbird AND
+# compiles "-p /EFI/hummingbird" into grubx64.efi. The installed system then
+# has shim with no GRUB beside it and cannot boot. Utah's post-testing ISO
+# install e2e has been red since 2026-09-21: the Hummingbird base moved to
+# shim 16.1, and a stale Fedora grubx64.efi that had been hiding this went
+# away. Pair GRUB with the shim that loads it.
+%global efi_vendor fedora
+
 Name:		grub2
 Epoch:		1
 Version:	2.12

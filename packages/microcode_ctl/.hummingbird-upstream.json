@@ -1,0 +1,8 @@
+{
+  "package": "microcode_ctl",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/microcode_ctl.git",
+  "commit": "6d3372cbabd928825d3128094aff2f6758838dc5",
+  "tree": "c86ae84d6a72cd6e4b3f6c576530e602f719484f",
+  "imported_at": "2026-09-20T07:05:57.705963+00:00"
+}

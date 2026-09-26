@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import subprocess
 import sys
 import tomllib
@@ -17,6 +18,49 @@ from tools.rawhide_sources import import_binaries, source_name
 
 def command(*args: str) -> subprocess.CompletedProcess[str]:
     return subprocess.run(args, text=True, capture_output=True, check=False)
+
+
+def factory_sources(destination: Path) -> set[str]:
+    """Return package and binary names whose source is the factory itself (direct-upstream recipes).
+
+    Note: Parses spec files with literal regexes and does not expand RPM macros.
+    """
+    if not destination.is_dir():
+        return set()
+    names: set[str] = set()
+    for directory in sorted(destination.iterdir()):
+        if not directory.is_dir():
+            continue
+        provenance_path = directory / ".hummingbird-upstream.json"
+        if not provenance_path.is_file():
+            continue
+        try:
+            data = json.loads(provenance_path.read_text())
+        except (json.JSONDecodeError, OSError):
+            continue
+        if data.get("branch") == "upstream":
+            names.add(directory.name)
+            if "package" in data and isinstance(data["package"], str):
+                names.add(data["package"])
+            for spec in sorted(directory.glob("*.spec")):
+                main_name = directory.name
+                try:
+                    spec_content = spec.read_text(errors="replace")
+                except OSError:
+                    continue
+                for line in spec_content.splitlines():
+                    match_name = re.match(r"^Name:\s*(\S+)", line)
+                    if match_name:
+                        main_name = match_name.group(1)
+                        names.add(main_name)
+                    match_pkg_n = re.match(r"^%package\s+-n\s+(\S+)", line)
+                    if match_pkg_n:
+                        names.add(match_pkg_n.group(1))
+                    else:
+                        match_pkg = re.match(r"^%package\s+(\S+)", line)
+                        if match_pkg:
+                            names.add(f"{main_name}-{match_pkg.group(1)}")
+    return names
 
 
 def resolve_source(binary: str) -> tuple[str | None, str | None]:
@@ -44,6 +88,9 @@ def main() -> int:
         policy = tomllib.loads(args.policy.read_text())
         excluded = set(policy.get("unavailable", {}).get("packages", []))
         binaries = [binary for binary in binaries if binary not in excluded]
+
+    factory = factory_sources(args.destination)
+    binaries = [binary for binary in binaries if binary not in factory]
 
     resolved: dict[str, str] = {}
     unavailable: list[dict[str, str]] = []

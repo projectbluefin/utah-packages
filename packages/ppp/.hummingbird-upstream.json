@@ -1,0 +1,8 @@
+{
+  "package": "ppp",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/ppp.git",
+  "commit": "c8662f462d162a3b546b6f429d0935f3e72073b6",
+  "tree": "fd32385e88230583494afd622ac8584ab93b7ee1",
+  "imported_at": "2026-09-20T05:46:48.333587+00:00"
+}

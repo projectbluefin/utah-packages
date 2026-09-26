@@ -9,6 +9,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from tools.check_suppressed_tests import main as check_suppressed_tests
 from tools.package_inventory import inventory
 
 
@@ -46,6 +47,9 @@ def main(root: Path = Path(".")) -> int:
             raise SystemExit(f"missing upstream provenance: {path}")
         data = json.loads(path.read_text())
         check_provenance(path, data)
+    # Report every problem in one run rather than stopping at the first, so a
+    # contributor is not sent round the loop twice.
+    status = check_suppressed_tests(root)
     records = inventory(root)
     missing_locks = sorted(record.name for record in records if not record.source_locked)
     missing_packit = sorted(record.name for record in records if not record.packit_configured)
@@ -55,6 +59,11 @@ def main(root: Path = Path(".")) -> int:
         if missing_packit:
             print(f"packages missing Packit config: {', '.join(missing_packit)}")
         return 1
+    # The suppressed-test gate reports its own detail on stderr; say nothing
+    # more here. Printing "validated N source RPMs" and then exiting 1 leaves
+    # a CI log whose last stdout line reads as success.
+    if status:
+        return status
     print(f"validated {len(records)} source RPMs")
     return 0
 

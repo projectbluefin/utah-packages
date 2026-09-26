@@ -27,6 +27,11 @@ packages = [
   "NetworkManager-wifi",
   "wpa_supplicant",
   "wireless-regdb",
+  # Fingerprint login. Bluefin gets fprintd from the Fedora base image, so it is
+  # absent from Bluefin's live build_files/packages/base.toml; Utah builds it so
+  # fingerprint login works on the delivered image (utah#145).
+  "fprintd",
+  "fprintd-pam",
   # Hummingbird ships the avahi daemon but not libdaemon, which it links; the
   # factory builds libdaemon so geoclue has a daemon to talk to (utah#104).
   "avahi",

@@ -70,14 +70,15 @@ Whether to finish that design or supersede it is tracked in
 [#43](https://github.com/projectbluefin/utah-packages/issues/43).
 
 `.github/workflows/packit-srpm-pilot.yml` proves the SRPM path but is
-verification-only. Its `discover` job emits the package list from
+verification-only and manual-dispatch-only: its full-inventory fan-out is not
+a PR or merge check and its output is not published. Its `discover` job emits the package list from
 `tools/packit_workflow.py packages`; its per-package `srpm` matrix has
 `fail-fast: false` and is fanned out over chunks of 250 by
 `tools/packit_workflow.py chunks`. The chunking is not cosmetic: GitHub caps a
 matrix at 256 jobs and expands a larger one to nothing rather than rejecting
 it, so once the monorepo passed 256 packages the pilot failed on every run with
 a green `discover` above an `srpm` job that never existed. The `discover` guard
-asserts the package list is non-empty, which a list of 345 satisfies while
+asserts the package list is non-empty, which a list of 399 satisfies while
 still producing no jobs. Each matrix job uses `tools/source_pipeline.py` to fetch
 and verify the configured sources and stage them beside the spec, then runs
 `packit srpm --preserve-spec`. It uploads one SRPM artifact and stops there:
@@ -129,18 +130,18 @@ Two consequences worth stating plainly:
   precondition for Copr builds, not evidence of them. The only thing exercising
   Packit is the pilot workflow.
 
-The root Packit configuration and the source lock both cover all 345 recipes:
+The root Packit configuration and the source lock both cover all 399 recipes:
 
 | check | result |
 | --- | ---: |
-| `ls -d packages/*/ \| wc -l` | `345` |
-| entries under `.packit.yaml:packages` | `345` |
-| entries under `config/upstream-sources.json:packages` | `345` |
+| `ls -d packages/*/ \| wc -l` | `399` |
+| entries under `.packit.yaml:packages` | `399` |
+| entries under `config/upstream-sources.json:packages` | `399` |
 
 `python3 tools/validate.py` reports:
 
 ```text
-validated 345 source RPMs
+validated 399 source RPMs
 ```
 
 ## Current binary pipeline
@@ -152,11 +153,19 @@ validated 345 source RPMs
 
 | job | verified behavior |
 | --- | --- |
-| `prepare` | Selects the packages that are new, changed, or requested by a full rebuild, then emits five stage lists. A package declaring a stage above 4 has no job to run in, so this fails and names it rather than dropping it. |
-| `preflight` | Resolves BuildRequires for the selected packages in the real build root and uploads a worklist; it is `continue-on-error`. Its output is advisory: the waves are still driven by the hand-assigned `stage` in config, not by what this resolves. |
-| `rebuild0` through `rebuild4` | Five calls to the reusable `build-stage.yml`, one per wave, each a `fail-fast: false` package matrix. Each later stage downloads the earlier workflow artifacts, creates a local `[stages]` dnf repository with `createrepo_c`, and resolves against it. |
-| `precedence` | Checks that each produced RPM outranks what Fedora 44 and Hummingbird already offer, and reports any name Hummingbird also provides. |
-| `publish` | Merges the stage artifacts, removes the bootstrap RPM, creates and signs repository metadata, validates the Hummingbird-only transaction, and publishes a GHCR OCI image that is both cosign-signed and provenance-attested. |
+| `prepare` | Runs `rpmspec` over every recipe in the build root (`tools/extract_buildrequires.sh`) and solves the BuildRequires graph (`tools/build_graph.py`). Selects every package whose input digest differs from the one recorded on the published image (`tools/factory_state.py`), every stale published build, and the direct BuildRequires dependents of both; a full rebuild selects everything. Orders the selection into waves by longest path over the graph, a config `stage` only ordering the members of a cycle, and writes the plan with the reason for each package to the job summary. A chain deeper than the fourteen waves fails and names the package rather than dropping it. |
+| `preflight` | Resolves BuildRequires for the selected packages with dnf in the real build root and uploads a worklist of unsatisfiable ones; it is `continue-on-error` and advisory. The graph that orders the waves comes from `prepare`. |
+| `rebuild0` through `rebuild13` | Fourteen calls to the reusable `build-stage.yml`, one per wave, each a `fail-fast: false` package matrix. Each later wave downloads the artifacts of strictly earlier waves, creates a local `[stages]` dnf repository with `createrepo_c`, and resolves against it. |
+| `precedence` | Checks that each produced RPM outranks what Fedora 44 and Hummingbird already offer, and reports any name Hummingbird also provides. A source package with a losing RPM is named in its `losers` output and kept out of the repository; it does not fail the job. |
+| `publish` | Seeds from the verified previous image, replaces the RPMs of each source package this run built (and did not lose precedence) by source name, removes the bootstrap RPM, creates and signs repository metadata, validates the Hummingbird-only transaction over the whole candidate, and publishes a GHCR OCI image that is both cosign-signed and provenance-attested. A failed package keeps its previous build. |
+| `report` | Runs whether or not publish did. Names every selected package that did not publish -- from the run's own artifact list -- in the job summary, and on `main` opens, updates or closes the tracking issue *Factory: packages failing on main*. |
+
+89 of 399 packages carry a hand-assigned `stage` in
+`config/upstream-sources.json`. Since waves are solved from BuildRequires it is
+consulted only between members of one BuildRequires cycle, to decide which
+builds first -- `malcontent-bootstrap` before `flatpak` before `malcontent`.
+Elsewhere it is ignored; the solved order is twelve waves deep, where the hand
+stages went to ten and had missed real edges.
 
 `.github/workflows/build-stage.yml` is the wave itself, and the only place a
 package is built. It takes a stage number and a JSON list of packages; it
@@ -169,15 +178,65 @@ the local `[stages]` repository there, and uses that repository for the
 transaction; the artifact handoff and the dnf repository are both part of
 the dependency mechanism.
 
-Inside the Fedora 44 container, the workflow stages the verified source and
-runs `rpmbuild -br` to resolve generated BuildRequires, followed by
-`rpmbuild -ba` to produce the binary RPMs.
+A package builds in the hermetic mock lane unless it declares `build_lane:
+container`. `tools/hermetic_build.sh` renders the mock config
+(`tools/mock_config.py`), lets `mock --calculate-build-dependencies` resolve
+every BuildRequires into `buildroot_lock.json`, keys the package cache on the
+locked NEVRAs, materializes the lock into a local repository and runs `mock
+--hermetic-build` under `unshare --net`, as an unprivileged `mockbuilder`.
+The lock, the mock config and its hash are uploaded per package
+(`lock-s<N>-<pkg>`).
+
+On the container lane, the workflow stages the verified source inside the
+Fedora 44 container and runs `rpmbuild -br` to resolve generated
+BuildRequires, followed by `rpmbuild -ba` to produce the binary RPMs.
+
+### Incremental publication
+
+Publication follows Fedora and Hummingbird: each good build goes into the
+repository. The candidate is the previous published image, verified, with
+every source package this run built replacing its own previous RPMs, by
+source name so a dropped subpackage leaves with it. A package that failed to
+build, or built but does not outrank Fedora or Hummingbird, keeps its
+previous published build, or stays absent if it never had one.
+
+What still gates the tag is the Hummingbird-only consumer transaction over the
+whole candidate: it is what protects Utah. If the new set does not resolve,
+the tag does not move, however many packages built. `tools/publish_gate.py`
+decides the replacement (`assemble`), models the gate (`publish_allowed`) and
+checks the publish job against both; `tests/test_incremental_publish.py`
+drives them through each failure mode.
+
+Publication happens as waves finish, not once at the end. After each wave
+that has later waves still to come, `rebuild-rpms.yml` calls
+`publish-repository.yml` for waves 0..k (`publish0`..`publish3`, the first four waves), and a final
+call covers every wave. Each publication seeds from the image the previous
+one pushed, which the witness check accepts because it carries this run's id,
+and each is gated on its own Hummingbird-only transaction. An early one may
+fail it -- a library whose soname moved publishes before its consumers are
+rebuilt -- and then publishes nothing; only the final one fails the run. So a
+one-line fix to a wave-0 library publishes when wave 0 finishes, not when the
+slowest package in the same run does.
+
+A second, advisory check follows it: what Utah actually installs. The gate's
+contract is about 78 packages; Utah installs about 120 -- Bluefin's
+`[fedora]` and `[fedora_v44]` plus Utah's `[gnome]`, `[parity]`, `[hardware]`,
+`[services]` and `[build]`, minus `[unavailable]`. `tools/utah_install_set.py`
+computes that set with Utah's own `scripts/install-packages.py`, fetched from
+Utah's `main` with its repository files, and resolves it in the Hummingbird
+base image against the candidate plus Hummingbird, naming every package that
+does not resolve. It warns rather than blocks, so one gap cannot freeze every
+other package: the job summary lists them, and on `main` the report job keeps
+one *Utah install set: <package> does not resolve* issue per package, closing
+each on the first run in which it resolves.
+
+It used to be atomic: one failed package held back every other one, and over
+four weeks 3 of 117 full runs published while one flaky `fish` test blocked
+everything behind it.
 
 ### Preserving completed package builds
 
-Atomic repository publication and incremental work preservation are separate.
-The consumer image advances only after the complete repository passes its
-gates. Each successful package build is also written immediately to a
+Each successful package build is also written immediately to a
 content-keyed OCI cache, so a later run can restore completed RPMs even when
 the earlier run never published a repository. Restored RPMs follow the same
 stage-artifact and final-gate path as freshly compiled RPMs.
@@ -187,6 +246,59 @@ digest, resolved build-root NEVRAs and disttag. Rebuild planning remains
 authoritative: directly changed and stale packages are excluded from reuse.
 The full rationale and invariants are in
 [`docs/skills/package-build-cache.md`](skills/package-build-cache.md).
+
+### Triggers: incremental on merge, daily retry, weekly full
+
+| trigger | builds |
+| --- | --- |
+| push to `main` touching `packages/**` or `config/**` | what changed since the published image, plus its direct BuildRequires dependents |
+| daily, `03:17 UTC` | the same, plus every package whose last attempt failed |
+| weekly, Sunday `01:23 UTC` | everything, against the cache |
+| dispatch | the same as daily, or everything with `full` |
+
+What changed is read from the `org.projectbluefin.factory.state` label on the
+published image: the input digest of every build in it -- recipe files,
+inventory entry, build-root pin and Hummingbird repository. A git diff from
+the previous push cannot answer that once runs queue, and a NEVR comparison
+misses a recipe fix that does not move the release. An image without the
+label (the first run after this landed) falls back to both.
+
+Runs on one ref are serialized and never cancelled: GitHub keeps one run
+pending and replaces an older pending run with a newer one, which is safe
+because the newer run selects against the published state and so builds the
+union. The daily run moved off `06:41 UTC`, where it collided with
+`bump-upstream-sources.yml`; a merged bump now builds through the push
+trigger. Pull requests run validation and the canary, never the factory.
+The rationale is part of the cache contract in
+[`docs/skills/package-build-cache.md`](skills/package-build-cache.md#triggers-queueing-and-batching).
+
+### The pipeline canary
+
+`.github/workflows/canary.yml` proves a pipeline change in minutes instead of
+hours into a full run. It calls `rebuild-rpms.yml` itself through
+`workflow_call`, so it runs the real jobs, over a fixed set: `libical` and
+`vulkan-headers` at stage 0 and `vulkan-loader` at stage 4, which
+BuildRequires `vulkan-headers = %{version}` -- only stage 0's output satisfies
+it. Every source in the set is on the Fedora lookaside, so the canary fails on
+the pipeline and not on a flaky upstream host.
+
+| pass | what it proves |
+| --- | --- |
+| `pass1` | The set builds, passes precedence and a Hummingbird-only transaction over every binary it produced, and publishes, signs and attests `utah-packages:canary-<pr>`. Never `latest`. `verify-publish` then reads that digest with Utah's own `scripts/check-repo-availability.py`, fetched from Utah's `main`, asserts two layers with repodata first, and verifies the signature and provenance. |
+| `pass2` | The same set again compiles nothing: every build is a cache hit, so the key is stable from one run to the next. |
+| `pass3` | The same set plus `python-typing-inspection` with its recipe perturbed in the checkout: that one compiles and every other package still hits, so one package's change does not invalidate the cache wholesale. |
+
+The cache is salted with a digest of the build path (`tools/canary.py
+salt`), so a change to how packages are compiled compiles for real in
+`pass1`, and any other change reuses the previous canary's builds. Canary
+entries never share a key with production ones: an empty salt leaves the
+production key unchanged, which `tests/test_package_cache_key.py` asserts.
+
+It runs on every pull request. The `Canary` job is the required check and
+passes without building anything when no pipeline path changed
+(`.github/workflows/`, `.github/actions/`, `tools/`, `config/`,
+`Containerfile*`). Do not dispatch a full run to prove a pipeline change
+before the canary is green on it.
 
 It is not a mock build, and this is the most misleading thing about the file:
 `build-stage.yml` installs `mock` and never invokes it, then hand-simulates
@@ -198,19 +310,23 @@ between packages. Moving to real mock is agreed and unbuilt; see below.
 
 ## Repository gates
 
-`.github/workflows/validate.yml` runs on every pull request and every push to
-`main`, in three independent jobs:
+The repository gates are enforced across CI workflows and collected in `Justfile`:
 
-| Job | Command | Gates |
-| --- | --- | --- |
-| Factory onboarding contract | `tools/factory_contract.py` | Skill router coverage, skill front-matter, the `AGENTS.md` self-improvement mandate, the pinned `projectbluefin/common` sidecar, banned changelog and session-notes files, and relative documentation links |
-| Package factory configuration | `tools/validate.py` | Import provenance in `.hummingbird-upstream.json`, source-lock coverage, and Packit configuration for every recipe |
-| Unit tests | `pytest tests` | The tooling in `tools/`, including `tools/publish_gate.py`, whose regression test asserts the rebuild-rpms.yml publish job stays gated so a failed build, precedence, or unresolved Hummingbird-only transaction cannot partially replace the published factory |
+| Gate | Command | Enforced in | What it gates |
+| --- | --- | --- | --- |
+| Factory onboarding contract | `tools/factory_contract.py` | `.github/workflows/validate.yml` | Skill router coverage, skill front-matter, the `AGENTS.md` self-improvement mandate, the pinned `projectbluefin/common` sidecar, banned changelog and session-notes files, and relative documentation links |
+| Package factory configuration | `tools/validate.py` | `.github/workflows/validate.yml` | Import provenance in `.hummingbird-upstream.json`, source-lock coverage, and Packit configuration for every recipe |
+| Workflow shell quoting | `tools/check_workflow_quoting.py` | `.github/workflows/rebuild-rpms.yml` (`prepare`) | Shell-quoting safety of build scripts embedded in GitHub Actions workflows |
+| Runtime contract | `tools/runtime_contract.py config/bluefin-packages.toml config/runtime-contract.toml --check` | `.github/workflows/rebuild-rpms.yml` (`prepare`) | Image manifest resolution against the pinned Hummingbird runtime contract |
+| Unit tests | `pytest tests` / `unittest discover` | `.github/workflows/validate.yml`, `.github/workflows/rebuild-rpms.yml` (`prepare`) | The tooling in `tools/`, including `tools/publish_gate.py`, whose regression test asserts the rebuild-rpms.yml publish job replaces only what a run built, keeps a failed or precedence-losing package at its previous build, and never publishes a candidate whose Hummingbird-only transaction does not resolve |
 
-`just check` runs the first two, `just test` the third, and
-`pre-commit run --all-files` adds YAML, JSON, and TOML hygiene plus actionlint
-and the SHA-pinning rule for third-party actions. None of these publish
-anything; publication gates live in the rebuild and compose workflows.
+`just check` runs all five gates (`factory-check`, `validate`, `workflow-quoting`,
+`runtime-contract`, `test`), and `tests/test_gate_catalog.py` structurally
+asserts that the documented local gate and CI agree on the enforced gate set in
+both directions. `just test` remains available to run the test suite on its own,
+and `pre-commit run --all-files` adds YAML, JSON, and TOML hygiene plus
+actionlint and the SHA-pinning rule for third-party actions. None of these
+publish anything; publication gates live in the rebuild and compose workflows.
 
 ## Agreed direction, not yet built
 
@@ -225,9 +341,8 @@ here as a list of completed work.
 | --- | --- | --- | --- |
 | **Scope** | "the desktop stack Hummingbird does not ship" | Everything above the base OS that Bluefin's contract needs; never Hummingbird's toolchain | Utah is Bluefin recreated on Hummingbird, and we package it ourselves. Owning an ABI inside a six-hour runner is not a job worth taking from people who do it well. |
 | **Hummingbird overlap** | `precedence` reports any shared package name as a mistake | Allowed, but declared per package in `config/upstream-sources.json` | A general factory legitimately rebuilds things Hummingbird also ships. Undeclared overlap is still a mistake. |
-| **Build engine** | Bare `rpmbuild -br` then `-ba`, in a container that hand-simulates a build root | Mock, hermetic where possible | `build-stage.yml` installs `mock` and never invokes it, then reimplements it: *"mirroring Hummingbird mock.cfg"*, *"mock defines USER in its build root; a bare container does not"*. Hummingbird builds in mock, and so does the approved design in `docs/superpowers/specs/`, which this review reached independently. Whether Packit drives it is the open part — [#43](https://github.com/projectbluefin/utah-packages/issues/43). |
-| **Buildroot** | Solved live against whatever the repos serve at that moment | Resolve once, write `buildroot_lock.json` as a run artifact, build offline from it | Hummingbird's mechanism: `rpmspec --buildrequires` → DNF solve → `buildroot_lock.json` → hermetic repo → `--network=none` (`ci/build_rpms.sh`). Records EVR, arch, repo ID, URL, checksum and source RPM — not names. It is why the ABI question has an answer instead of a log grep. |
-| **Stage assignment** | 45 of 345 packages carry a hand-assigned `stage` | Solve waves from real BuildRequires; config `stage` demotes to an override for cycle-breakers such as `malcontent-bootstrap` | `preflight` already resolves every recipe's BuildRequires and then discards the result. Hand integers are a manual cache of a computed value; two of them were discovered by a build failing. Hummingbird has no stage numbers at all — it is solver-driven plus a reverse-dependency impact scanner. |
+| **Build engine** | The hermetic mock lane by default (`backend: hermetic`); packages with `build_lane: container` in `config/upstream-sources.json` stay on the hand-built container root, each with a `build_lane_reason` | Mock, hermetic | Built. The container lane reimplemented mock by hand (*"mirroring Hummingbird mock.cfg"*, *"mock defines USER in its build root; a bare container does not"*). It remains for declared exceptions -- none yet: a 24-package subset (Rust and Python with generated BuildRequires, meson/cmake C, `%check`-heavy git, fish, flac, libratbag, pipewire) built on the hermetic lane -- and the canary's `pass6` keeps it proven. Whether Packit drives mock is still [#43](https://github.com/projectbluefin/utah-packages/issues/43). |
+| **Buildroot** | Solved live against whatever the repos serve at that moment, except on the hermetic lane | Resolve once, write `buildroot_lock.json` as a run artifact, build offline from it | Built as the hermetic lane (`tools/hermetic_build.sh`): `mock --calculate-build-dependencies` resolves every BuildRequires, dynamic ones included, into `buildroot_lock.json`, which records EVR, arch, URL and header digest per package and the bootstrap image by digest; the lock is materialized into a local repository and the build runs under `unshare --net`. The lock is uploaded per package (`lock-s<N>-<pkg>`) and is the cache key's root. Hummingbird's `ci/build_rpms.sh --hermetic` is the same mechanism. |
 | **Compiler cache** | `sccache` against the Actions cache service, over the network | Mock's `ccache` plugin plus `actions/cache`; delete `.github/actions/setup-sccache` | Hermetic mock is network-isolated. sccache would degrade to a total miss and look like "builds got slower" rather than failing. |
 | **Architecture** | `x86_64` hardcoded in the Hummingbird repository id and the sccache URL | Stay x86_64 only | Deferred deliberately, not overlooked. |
 | **Fork state** | `.hummingbird-upstream.json` pins a Fedora commit and tree; drift is invisible | Compute drift against the pinned commit in CI; an undeclared diff fails | Hummingbird labels every package `clean`, `modified` or `independent` and requires a reason for `modified`. Computed rather than declared, so it cannot rot the way the stage integers did. The recorded `tree` cannot be recomputed offline: the import drops files dist-git carries, so pango records tree `bdf8be16` while its three imported files hash to `f80aca67`, the difference being `.gitignore`. Drift detection has to fetch the pinned commit rather than rehash the working tree. |

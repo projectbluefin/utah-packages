@@ -1,0 +1,8 @@
+{
+  "package": "libmediainfo",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libmediainfo.git",
+  "commit": "a7b48acd0af37adabd5863784614361292e00bf8",
+  "tree": "94409af57c8e3dbd45f548963ab9b3c1b4f44610",
+  "imported_at": "2026-09-23T03:30:19.483945+00:00"
+}

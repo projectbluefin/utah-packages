@@ -1,0 +1,10 @@
+/fprintd:
+  summary: Run fprintd.py
+  test: ./run.sh ./fprintd.py
+  require:
+    - python3-gobject-base
+    - python3-dbus
+    - python3-cairo
+    - dbus-daemon
+    - python3-dbusmock
+  duration: 10m

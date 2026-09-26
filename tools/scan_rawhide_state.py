@@ -17,20 +17,60 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from tools.rawhide_sources import import_binaries, source_name
+from tools.rawhide_sources import SRPM_NAME, import_binaries, source_name
 
 
 def query(package: str) -> dict[str, str] | None:
     command = [
         "dnf", "repoquery", "--latest-limit=1",
-        "--qf", "%{name}\\t%{evr}\\t%{arch}\\t%{sourcerpm}", package,
+        "--qf", "%{name}\t%{evr}\t%{arch}\t%{sourcerpm}\n", package,
     ]
     result = subprocess.run(command, text=True, capture_output=True, check=False)
     lines = [line for line in result.stdout.splitlines() if line and "(none)" not in line]
-    if not lines:
-        return None
-    name, evr, arch, sourcerpm = lines[0].split("\t", 3)
-    return {"name": name, "evr": evr, "arch": arch, "sourcerpm": sourcerpm}
+    # dnf5 expands only \n in --qf, not \t (libdnf5-cli copies the two-char
+    # sequence through verbatim), so the format must carry real tabs and a
+    # trailing newline. A literal "\t" is copied through as backslash-t and the
+    # i686 and x86_64 records glue into one line, which is the "expected 4, got
+    # 1" that #99's dnf4-style format produced (#172): query() then returns None
+    # for every package and main() writes an empty report that exits green,
+    # hiding the crash instead of closing it. Prefer x86_64 then noarch over
+    # lines[0], which is i686 (arch sorts first); the source package is
+    # arch-independent but a fixed arch keeps the report deterministic. Skip any
+    # line that is not four real-tab fields (dnf5 can still emit warnings into
+    # stdout) rather than crashing (#172). Every discarded line and every
+    # package that survives parsing but has no selectable arch is logged to
+    # stderr, so a systematically malformed query or an arch-filtered package is
+    # visible instead of silently vanishing from the report.
+    records: dict[str, dict[str, str]] = {}
+    for line in lines:
+        parts = line.split("\t", 3)
+        if len(parts) != 4:
+            sys.stderr.write(
+                f"scan_rawhide_state: skipping line that is not four "
+                f"tab-separated fields for {package!r}: {line!r}\n"
+            )
+            continue
+        name, evr, line_arch, sourcerpm = parts
+        if not SRPM_NAME.match(sourcerpm):
+            sys.stderr.write(
+                f"scan_rawhide_state: skipping line with non-SRPM "
+                f"sourcerpm for {package!r}: {line!r}\n"
+            )
+            continue
+        records.setdefault(
+            line_arch,
+            {"name": name, "evr": evr, "arch": line_arch, "sourcerpm": sourcerpm},
+        )
+    for arch in ("x86_64", "noarch"):
+        if arch in records:
+            return records[arch]
+    if records:
+        sys.stderr.write(
+            f"scan_rawhide_state: no x86_64 or noarch record for {package!r}; "
+            f"dropping it from the report (arches seen: "
+            f"{', '.join(sorted(records))})\n"
+        )
+    return None
 
 
 def main() -> int:

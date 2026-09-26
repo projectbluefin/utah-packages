@@ -27,11 +27,21 @@ on:
         description: >
           container (default) builds with bare rpmbuild in a Fedora container
           that hand-simulates a build root. mock builds the SRPM in a real mock
-          root, which is what Packit does (packit build in-mock). mock is opt-in
-          until a full run has proven it: the container path is what the
+          root, which is what Packit does (packit build in-mock). hermetic
+          locks the mock root from real BuildRequires (buildroot_lock.json)
+          and builds offline from exactly that lock, the way Hummingbird
+          does (tools/hermetic_build.sh). mock and hermetic are opt-in until
+          a full run has proven them: the container path is what the
           published repository was built with.
         required: false
-        default: container
+        default: hermetic
+        type: string
+      container_packages:
+        description: >
+          JSON names that build on the container lane even when backend is
+          hermetic: build_lane container in config/upstream-sources.json.
+        required: false
+        default: ''
         type: string
       factory_image:
         description: >
@@ -49,6 +59,42 @@ on:
         description: JSON names allowed to reuse an exact package-cache entry.
         required: true
         type: string
+      # The three inputs below exist for .github/workflows/canary.yml, which
+      # runs this pipeline several times in one workflow run. Every production
+      # caller leaves them empty, and empty means exactly the old behaviour.
+      artifact_prefix:
+        description: Prefix for every artifact name, so canary passes cannot collide.
+        required: false
+        default: ''
+        type: string
+      cache_salt:
+        description: Canary cache namespace; empty for production keys.
+        required: false
+        default: ''
+        type: string
+      perturb:
+        description: >
+          JSON names whose recipe is altered in this checkout only (a comment
+          appended to the spec), so the canary can prove a change to one
+          package leaves every other cache key where it was.
+        required: false
+        default: ''
+        type: string
+      flaky_check:
+        description: >
+          Canary only: JSON names whose %check fails on its first run and
+          passes on the retry, to prove the retry. They always compile.
+        required: false
+        default: ''
+        type: string
+      inject_failure:
+        description: >
+          Canary only: JSON names whose build fails on purpose, before any
+          RPM is produced, so the canary can prove a failed package keeps its
+          previous published build and is reported.
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: read
@@ -56,6 +102,10 @@ permissions:
 
 jobs:
   build:
+    # A canary-injected failure is a real failed job, but an expected one:
+    # the canary judges it through verify-failure, so it must not turn the
+    # whole canary run red. Every production run leaves inject_failure empty.
+    continue-on-error: ${{ inputs.inject_failure != '' && contains(fromJSON(inputs.inject_failure), matrix.package) }}
     strategy:
       fail-fast: false
       matrix:
@@ -63,12 +113,69 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      # The lane this package builds on: the run's backend, unless the
+      # package is one of the declared container-lane exceptions.
+      - name: Choose the build lane
+        id: lane
+        env:
+          BACKEND: ${{ inputs.backend }}
+          PACKAGE: ${{ matrix.package }}
+          EXCEPTION: ${{ inputs.container_packages != '' && contains(fromJSON(inputs.container_packages), matrix.package) && '1' || '' }}
+        run: |
+          lane="$BACKEND"
+          if [ "$BACKEND" = hermetic ] && [ -n "$EXCEPTION" ]; then
+            lane=container
+            echo "::notice title=container lane::$PACKAGE builds on the container lane (build_lane in config/upstream-sources.json)"
+          fi
+          echo "backend=$lane" >> "$GITHUB_OUTPUT"
+          echo "build lane: $lane"
+      - name: Fail this package on purpose for the canary
+        if: inputs.inject_failure != '' && contains(fromJSON(inputs.inject_failure), matrix.package)
+        env:
+          PACKAGE: ${{ matrix.package }}
+        run: |
+          echo "::error title=canary::failing $PACKAGE on purpose (inject_failure)"
+          exit 1
+      - name: Perturb recipes for the canary
+        if: inputs.perturb != ''
+        env:
+          PERTURB: ${{ inputs.perturb }}
+        run: |
+          for name in $(jq -r '.[]' <<<"$PERTURB"); do
+            spec=$(find "packages/$name" -maxdepth 1 -name '*.spec' -print -quit)
+            test -n "$spec"
+            printf '\n# canary perturbation %s\n' "$GITHUB_RUN_ID" >> "$spec"
+            echo "perturbed $spec"
+          done
       - uses: ./.github/actions/setup-sccache
+        if: matrix.package == 'mozjs140'
       - uses: ./.github/actions/load-buildroot
+        with:
+          artifact: ${{ inputs.artifact_prefix }}buildroot-image
       - uses: ./.github/actions/load-factory-repo
         id: factory
         with:
           image: ${{ inputs.factory_image }}
+      # Only strictly earlier waves: a same-stage sibling does not exist for
+      # this build (repeated mistake 3). This step used to be missing while
+      # the download below still read its output, so the pattern was empty
+      # and download-artifact fetched EVERY artifact of the run so far --
+      # same-stage siblings that happened to finish first, and the build
+      # root tarball -- into work/prior.
+      - name: Name the artifacts of earlier stages
+        id: prior
+        if: inputs.stage != '0'
+        env:
+          STAGE: ${{ inputs.stage }}
+          PREFIX: ${{ inputs.artifact_prefix }}
+        run: |
+          if [ "$STAGE" -eq 1 ]; then
+            stages=0
+          else
+            stages="{$(seq -s, 0 $((STAGE - 1)))}"
+          fi
+          echo "pattern=${PREFIX}rpm-s${stages}-*" >> "$GITHUB_OUTPUT"
+          echo "earlier stages: ${PREFIX}rpm-s${stages}-*"
       - name: Collect RPMs built by earlier stages
         if: inputs.stage != '0'
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
@@ -82,17 +189,74 @@ jobs:
           PACKAGE: ${{ matrix.package }}
         run: |
           python3 tools/source_pipeline.py "$PACKAGE" --output work/sources --report-dir work/reports
+      # The hermetic lane, phase one, online: mock resolves every
+      # BuildRequires -- %generate_buildrequires included -- in a real mock
+      # root and records the result, NEVRA by NEVRA with its URL, in
+      # buildroot_lock.json. That lock is the build root: the cache key is
+      # computed from it below, and the offline build installs exactly it.
+      # This is the design review's "rpmspec --buildrequires -> DNF solve ->
+      # buildroot_lock.json -> build offline", done by mock itself, as
+      # Hummingbird's ci/build_rpms.sh --hermetic does.
+      - name: Lock the build root from its BuildRequires (hermetic)
+        id: hermetic_lock
+        if: steps.lane.outputs.backend == 'hermetic'
+        env:
+          PACKAGE: ${{ matrix.package }}
+          FACTORY_REPO: ${{ steps.factory.outputs.url }}
+          FLAKY_CHECK: ${{ inputs.flaky_check != '' && contains(fromJSON(inputs.flaky_check), matrix.package) && '1' || '' }}
+        run: |
+          set -euo pipefail
+          DIST_BUMP="$(python3 tools/dist_bump.py "$PACKAGE")"
+          BUILDROOT_ICU77="$(python3 -c 'import json,sys;name=sys.argv[1];pkgs=json.loads(open("config/upstream-sources.json").read()).get("packages",[]);entry=next((p for p in pkgs if p.get("name")==name),{});print("true" if entry.get("buildroot_icu77",False) else "false")' "$PACKAGE")"
+          # The factory's own pinned build root doubles as mock's bootstrap
+          # image, so the bootstrap is the same bytes every job builds with.
+          BOOTSTRAP_IMAGE="$(tr -d '[:space:]' < config/buildroot-image)"
+          export DIST_BUMP BUILDROOT_ICU77 BOOTSTRAP_IMAGE FLAKY_CHECK
+          # podman (inside, for the bootstrap image) and mock both need a
+          # real filesystem, not the container's overlay.
+          mkdir -p "$RUNNER_TEMP/containers" "$RUNNER_TEMP/mock"
+          docker run --rm --privileged \
+            -e PACKAGE -e FACTORY_REPO -e DIST_BUMP -e BUILDROOT_ICU77 -e BOOTSTRAP_IMAGE -e FLAKY_CHECK \
+            -v "$PWD/work:/work:Z" \
+            -v "$PWD/packages:/packages:ro,Z" \
+            -v "$PWD/config:/repos:ro,Z" \
+            -v "$PWD/tools:/tools:ro,Z" \
+            -v "$RUNNER_TEMP/containers:/var/lib/containers:Z" \
+            -v "$RUNNER_TEMP/mock:/var/lib/mock:Z" \
+            utah-buildroot:run bash /tools/hermetic_build.sh lock
+          # The container hands its directories to its own mockbuilder user;
+          # give them back, or the cache restore below cannot write
+          # work/result (podman cp failed exactly so on the first cache hit).
+          sudo chown -R "$(id -u):$(id -g)" work
+          echo "locked root: $(wc -l < work/cache/root) packages, disttag $(cat work/cache/disttag)"
+      # The hermetic lane keys the cache on its lock, in its own namespace:
+      # a container-lane entry must never be restored into a hermetic build.
+      - name: Key the package cache from the lock (hermetic)
+        id: package_cache_lock
+        if: steps.lane.outputs.backend == 'hermetic' && contains(fromJSON(inputs.cacheable_packages), matrix.package)
+        env:
+          PACKAGE: ${{ matrix.package }}
+          BUILDROOT_DIGEST: ${{ inputs.buildroot_digest }}
+          CACHE_SALT: ${{ inputs.cache_salt }}
+        run: |
+          set -euo pipefail
+          key=$(python3 tools/package_cache_key.py "$PACKAGE" \
+            --buildroot-digest "$BUILDROOT_DIGEST" \
+            --disttag "$(cat work/cache/disttag)" \
+            --resolved-root work/cache/root \
+            --salt "hermetic${CACHE_SALT:+-$CACHE_SALT}")
+          echo "key=$key" >> "$GITHUB_OUTPUT"
       # A cache key includes the root dnf actually resolved. Resolve it before
       # asking GHCR so a hit cannot cross a build-root boundary. This is cheap
       # beside an RPM compile; a cache hit skips the compile entirely.
       - name: Resolve the package cache key
         id: package_cache
-        if: inputs.backend == 'container' && contains(fromJSON(inputs.cacheable_packages), matrix.package)
+        if: steps.lane.outputs.backend == 'container' && contains(fromJSON(inputs.cacheable_packages), matrix.package) && !contains(fromJSON(inputs.flaky_check || '[]'), matrix.package)
         env:
           PACKAGE: ${{ matrix.package }}
           FACTORY_REPO: ${{ steps.factory.outputs.url }}
           BUILDROOT_DIGEST: ${{ inputs.buildroot_digest }}
-          FACTORY_DIGEST: ${{ inputs.factory_image }}
+          CACHE_SALT: ${{ inputs.cache_salt }}
         run: |
           set -euo pipefail
           mkdir -p work/cache
@@ -120,6 +284,11 @@ jobs:
                 printf "[factory]\nname=factory\nbaseurl=%s\nenabled=1\ngpgcheck=0\npriority=5\n" "$FACTORY_REPO" > /etc/yum.repos.d/factory.repo
               fi
               dnf -y $disable install dnf-plugins-core mock rpm-build @buildsys-build
+              # Same upgrade as the build step below; see the comment there.
+              for split in libxml2; do
+                rpm -q "$split" >/dev/null 2>&1 || continue
+                dnf -y $disable upgrade "$split"
+              done
               dnf -y $disable swap sqlite-libs sqlite-libs --allowerasing || true
               DISTTAG=".$(rpm -qa --qf "%{RELEASE}\n" | grep -oE "hum[0-9]+$" | sort -u | head -n1).bfin${DIST_BUMP:-}"
               test "$DISTTAG" != ".bfin"
@@ -130,16 +299,16 @@ jobs:
             '
           key=$(python3 tools/package_cache_key.py "$PACKAGE" \
             --buildroot-digest "$BUILDROOT_DIGEST" \
-            --factory-digest "$FACTORY_DIGEST" \
             --disttag "$(cat work/cache/disttag)" \
-            --resolved-root work/cache/root)
+            --resolved-root work/cache/root \
+            --salt "$CACHE_SALT")
           echo "key=$key" >> "$GITHUB_OUTPUT"
       - name: Restore package RPM cache
         id: package_cache_restore
-        if: inputs.backend == 'container' && contains(fromJSON(inputs.cacheable_packages), matrix.package)
+        if: (steps.lane.outputs.backend == 'container' || steps.lane.outputs.backend == 'hermetic') && contains(fromJSON(inputs.cacheable_packages), matrix.package) && !contains(fromJSON(inputs.flaky_check || '[]'), matrix.package)
         env:
           GITHUB_TOKEN: ${{ github.token }}
-          KEY: ${{ steps.package_cache.outputs.key }}
+          KEY: ${{ steps.package_cache.outputs.key || steps.package_cache_lock.outputs.key }}
           OWNER: ${{ github.repository_owner }}
         run: |
           set -euo pipefail
@@ -162,7 +331,7 @@ jobs:
             echo "cache miss: $KEY"
           fi
       - name: Build the verified source with its RPM recipe
-        if: inputs.backend != 'mock' && steps.package_cache_restore.outputs.hit != 'true'
+        if: steps.lane.outputs.backend == 'container' && steps.package_cache_restore.outputs.hit != 'true'
         env:
           PACKAGE: ${{ matrix.package }}
           # `prepare` skips any package the published repository already
@@ -177,6 +346,10 @@ jobs:
           # local file:// repo, so they cannot disagree and nothing is fetched
           # over HTTP mid-build.
           FACTORY_REPO: ${{ steps.factory.outputs.url }}
+          # Canary only; see the flaky_check input. An expression inside the
+          # run script below would make GitHub evaluate the whole script as
+          # one expression, which is over its 21000-character limit.
+          FLAKY_CHECK: ${{ inputs.flaky_check != '' && contains(fromJSON(inputs.flaky_check), matrix.package) && '1' || '' }}
         run: |
           test -d "packages/$PACKAGE"
           mkdir -p work/result
@@ -184,401 +357,45 @@ jobs:
           # container, which only sees config/ and packages/.
           DIST_BUMP="$(python3 tools/dist_bump.py "$PACKAGE")"
           export DIST_BUMP
+          # Whether the build root may admit Hummingbird libicu-77. By default
+          # every factory package excludes it so nothing links .so.77 -- the
+          # runtime carries only libicu 78. A package that genuinely needs it
+          # (e.g. libvdpau, which pulls in TeX Live for doxygen) opts in with
+          # "buildroot_icu77": true in config/upstream-sources.json.
+          BUILDROOT_ICU77="$(python3 -c 'import json,sys;name=sys.argv[1];pkgs=json.loads(open("config/upstream-sources.json").read()).get("packages",[]);entry=next((p for p in pkgs if p.get("name")==name),{});print("true" if entry.get("buildroot_icu77",False) else "false")' "$PACKAGE")"
+          export BUILDROOT_ICU77
           docker run --rm --privileged \
-            -e PACKAGE -e FACTORY_REPO -e DIST_BUMP \
+            -e PACKAGE -e FACTORY_REPO -e DIST_BUMP -e BUILDROOT_ICU77 -e FLAKY_CHECK \
             -v "$PWD/work:/work:Z" \
             -v "$PWD/packages:/packages:ro,Z" \
             -v "$PWD/config:/repos:ro,Z" \
-            utah-buildroot:run bash -exc '
-              # The fedora:rawhide image ships fedora-cisco-openh264 enabled, but
-              # its packages are signed with Cisco key, which the image does not
-              # trust -- so any builddep graph reaching gstreamer/pipewire dies on
-              # "Import of the key did not help, wrong key?". openh264 is a runtime
-              # codec, never a build requirement, and Fedora own noopenh264 provides
-              # the same libopenh264.so.8 soname, so disabling the repo resolves.
-              disable=--disablerepo=fedora-cisco-openh264
-              # The Fedora container images set tsflags=nodocs, so every %doc file is
-              # dropped at install time. rand_core ships its crate docs that way and
-              # its lib.rs does #![doc = include_str!("../README.md")], so rust-just
-              # failed to compile: rustc could not read ../README.md. Nothing was wrong
-              # with the Fedora package: mock installs docs into a build root, and
-              # this container was not. Restore that.
-              sed -i "/^tsflags=nodocs/d" /etc/dnf/dnf.conf
-              # The Hummingbird repository times out under load, and dnf gives
-              # up far too readily on it. libtevent and vulkan-loader both died
-              # mid-builddep with
-              #   Curl error (28): Timeout was reached for .../rhash-1.4.5-5.hum1.rpm
-              #   Librepo error: ... All mirrors were tried
-              # and samba then failed at stage 6 for want of the libtevent
-              # those builds never produced -- one flaky download costing three
-              # packages. There is no mirror to fall back to, so the only
-              # answer is to wait longer and try harder: raise the retry count,
-              # let a slow transfer finish rather than tripping the 30s
-              # default, and only give up on one that has genuinely stalled.
-              printf "retries=10\ntimeout=120\nminrate=1000\nmax_parallel_downloads=4\n" \
-                >> /etc/dnf/dnf.conf
-              # Fedora 44 plus Hummingbird, mirroring Hummingbird mock.cfg:
-              # Fedora release repos with its own Pulp repos shadowing them by
-              # priority. Proven correct by this job own diagnostic below --
-              # openssl 3.5.7 means libcrypto.so.3, the ABI Hummingbird has.
-              # A Rawhide root produced RPMs needing libcrypto.so.4 instead.
-              cp /repos/hummingbird.repo /etc/yum.repos.d/
-              # RPMs from earlier stages become a local repo, so a later stage
-              # can satisfy a BuildRequires on something this run just built.
-              # The guard must recurse: upload-artifact takes the common parent
-              # of its path globs as the artifact root, so an artifact declaring
-              # work/result/*.rpm and work/reports/*.json unpacks as
-              # prior/result/*.rpm, not prior/*.rpm. A non-recursive glob matched
-              # nothing, this block was silently skipped in every stage, and
-              # mutter resolved gsettings-desktop-schemas to Fedora 50.1 instead
-              # of the 51.beta stage 0 had just built. createrepo_c itself walks
-              # the tree, so only the test needed fixing.
-              if [ -n "$(find /work/prior -name "*.rpm" -print -quit 2>/dev/null)" ]; then
-                dnf -y $disable install createrepo_c
-                createrepo_c /work/prior
-                printf "[stages]\nname=stages\nbaseurl=file:///work/prior\nenabled=1\ngpgcheck=0\npriority=1\n" \
-                  > /etc/yum.repos.d/stages.repo
-                # priority alone does not keep Fedora out. gnome-control-center
-                # pulled Fedora accountsservice 23.13.9 even though stage 0 had
-                # built 26.27.3 and [stages] was priority 1: the Fedora main
-                # package entered the transaction and pinned accountsservice-libs
-                # to its exact NEVR, so our libs could not be installed and our
-                # devel, which needs them, was dropped --
-                #   cannot install both accountsservice-libs-26.27.3 from stages
-                #                   and accountsservice-libs-23.13.9-16.fc44 from fedora
-                # Excluding by name is what settles it: whatever an earlier stage
-                # built, Fedora must not answer for. Names come from rpm rather
-                # than from parsing filenames, which stops working the moment a
-                # disttag changes.
-                EXCLUDE=$(find /work/prior -name "*.rpm" -type f -print0 \
-                  | xargs -0 -r rpm -qp --qf "%{NAME}\n" 2>/dev/null \
-                  | sort -u | paste -sd, -)
-                echo "excluding from Fedora: $EXCLUDE"
-              fi
-              # Hummingbird ships newer versions of some names than Fedora 44
-              # does, and the two must never mix in one transaction. The
-              # conflicts this prevents are real: libicu 78.3 (hum) vs 77.1
-              # (fc44) broke samba and evolution-data-server, and Fedora ruby
-              # 3.3/3.4-default-gems vs Hummingbird ruby4.0-default-gems broke
-              # webkitgtk, colord, libnotify and zsh. Always prefer the
-              # Hummingbird copy by excluding these names from Fedora.
-              # Unconditional: stage 0 has no prior RPMs, so the block above
-              # never ran and EXCLUDE would otherwise be empty here.
-              # sqlite joins that list for the same reason. Hummingbird builds
-              # subversion against sqlite 3.53.4; Fedora 44 ships 3.51.2, wins the
-              # buildroot, and subversion then cannot open a repository at all:
-              #   svn: E200029: atomic initialization could not be performed
-              #   svn: E200030: SQLite compiled for 3.53.4, but running with 3.51.2
-              # Every svn checkout and copy fails from there, which surfaces far
-              # away as six failures in the git test suite
-              # (t9168-git-svn-partially-globbed-names) and looks like a git bug.
-              HB_EXCLUDE="ruby-default-gems,ruby3.3-default-gems,ruby3.4-default-gems,libicu,icu,gpgme,qt6-qtbase,sqlite,sqlite-libs"
-              EXCLUDE="${HB_EXCLUDE}${EXCLUDE:+,}${EXCLUDE}"
-              echo "hummingbird exclusions: $HB_EXCLUDE"
-              # Hummingbird ships ruby3.3-, ruby3.4- and ruby4.0-default-gems,
-              # and all three claim the same files, so the buildroot resolves and
-              # then dies in rpm:
-              #   Transaction failed: Rpm transaction failed.
-              #   file /usr/bin/erb conflicts between attempted installs of
-              #     ruby4.0-default-gems-4.0.6-37.3.hum1 and
-              #     ruby3.4-default-gems-3.4.10-31.7.hum1
-              # It reads as nothing at all in a tail: dnf reports success, the
-              # error lands after "Running transaction". gcc, git, iputils,
-              # libvdpau, appstream and libtheora all failed here (issue #75).
-              # Exclude the legacy default-gems from the Hummingbird repository so
-              # ruby4.0 alone answers for default gems.
-              #
-              # libicu does NOT join that list, and the attempt to add it is worth
-              # recording because the reasoning looked airtight and was not.
-              #
-              # Hummingbird has migrated to ICU 78: read against its primary.xml,
-              # every current build links libicuuc.so.78 and only superseded ones
-              # link .so.77. From that it seemed to follow that excluding
-              # libicu-77 from the Hummingbird repository could not strand
-              # anything, since no current Hummingbird build needs it.
-              #
-              # The build root is not only Hummingbird. It also carries Fedora
-              # binaries that Hummingbird has never rebuilt, and those link
-              # whatever ICU Fedora built them against -- libical-3.0.20-7.fc44
-              # requires libicuuc.so.77 outright. HB_EXCLUDE above already keeps
-              # Fedora libicu out, so Hummingbird superseded libicu-77 is the
-              # only remaining provider of .so.77. Excluding it too leaves none,
-              # and the root stops resolving:
-              #
-              #   package libical-3.0.20-7.fc44 from fedora requires
-              #   libicuuc.so.77, but none of the providers can be installed
-              #   - package libicu-77.1-2.1.hum1 is filtered out by exclude filtering
-              #
-              # bluez failed exactly that way in run 35443117478, at stage 0,
-              # which is worse than the publish failure the exclusion was meant to
-              # fix: it loses all 331 builds instead of one gate. 012cb6a reverted
-              # a blanket libicu exclusion for the same underlying reason, and
-              # scoping it to the Hummingbird repository did not change the
-              # reason -- it only changed which repository the last provider of
-              # .so.77 happened to live in.
-              #
-              # The real problem is still open: a factory package can link ICU 77
-              # because Fedora build deps pull it into the root, and the consumer
-              # transaction then refuses that package. It has to be solved without
-              # removing the .so.77 provider the root legitimately needs.
-              HB_REPO_EXCLUDE="ruby3.3-default-gems,ruby3.4-default-gems"
-              echo "hummingbird repo exclusions: $HB_REPO_EXCLUDE"
-              if [ -n "${FACTORY_REPO:-}" ]; then
-                printf "[factory]\nname=factory\nbaseurl=%s\nenabled=1\ngpgcheck=0\npriority=5\n" \
-                  "$FACTORY_REPO" > /etc/yum.repos.d/factory.repo
-              fi
-              # The plain fedora image is not a build root: it lacks the group mock
-              # installs, so /usr/bin/echo and friends are missing. Most packages pull
-              # them in transitively; squashfs-tools calls echo directly from its
-              # manpage installer and fails without it.
-              dnf -y $disable install dnf-plugins-core mock rpm-build @buildsys-build
-              rpm -q --qf "buildroot openssl: %{VERSION}-%{RELEASE}\n" openssl-libs || true
-              # Excluding a repository does not touch a package that is already
-              # installed, and the base image arrives with some of these. Fedora
-              # sqlite-libs 3.51.2 ships in it, so telling dnf to prefer
-              # Hummingbird changed nothing and subversion -- built against
-              # 3.53.4 -- could not open a repository at all:
-              #   svn: E200030: SQLite compiled for 3.53.4, but running with 3.51.2
-              # which surfaced as six failures in the git test suite. Upgrade the
-              # names we have just said Hummingbird must answer for, so the
-              # decision reaches the build root rather than only the resolver.
-              for preinstalled in ${HB_EXCLUDE//,/ }; do
-                rpm -q "$preinstalled" >/dev/null 2>&1 || continue
-                dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
-                  ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} \
-                  upgrade "$preinstalled" || true
-              done
-              rpm -q --qf "buildroot sqlite: %{VERSION}-%{RELEASE}\n" sqlite-libs || true
-              # NO APOSTROPHES IN THIS SCRIPT. It is the body of bash -exc
-              # a single-quoted string, so one closes it and everything after
-              # is reparsed. That is what the stilted "Fedora own
-              # noopenh264" and "this job own diagnostic" above are avoiding.
-              # Three apostrophes in this very comment took out all 36 stage 0
-              # jobs at once, in under two minutes, with no clue in the log.
-              #
-              # The AlmaLinux convention, one distro over. They keep the vendor
-              # release and dist and append to it -- their dnf is
-              # 4.14.0-34.el9_8.alma.1 against 34.el9_8 from Red Hat, and both
-              # .alma and .alma.N appear in their repositories.
-              #
-              # The vendor here is Hummingbird, not Fedora. These packages are
-              # built for Hummingbird and installed on Hummingbird; Fedora 44 is
-              # only the other half of the buildroot, the way a compiler is. An
-              # earlier version of this tagged them .fc44.bfin, which named the
-              # distribution they are not for.
-              #
-              # The tag is read from the Hummingbird packages present in the
-              # buildroot rather than hardcoded, so a move to hum2 carries
-              # itself. A buildroot containing none of them is a repository
-              # misconfiguration -- the exact failure this factory exists to
-              # avoid -- so it stops rather than quietly tagging something else.
-              HUM_TAG="$(rpm -qa --qf "%{RELEASE}\n" | grep -oE "hum[0-9]+$" | sort -u | head -n1)"
-              if [ -z "$HUM_TAG" ]; then
-                echo "No Hummingbird package in the buildroot; cannot derive a disttag" >&2
-                rpm -qa --qf "%{NAME} %{RELEASE}\n" | sort | head -20 >&2
-                exit 1
-              fi
-              DISTTAG=".${HUM_TAG}.bfin${DIST_BUMP:-}"
-              echo "disttag: $DISTTAG"
-              # librsvg writes its reference-test output PNGs to TESTS_OUTPUT_DIR,
-              # defaulting to a temp dir outside /builddir -- which is why two
-              # collections found meson logs and no images. Point it at the
-              # mounted volume so a failed comparison leaves its -out.png and
-              # -diff.png behind. Harmless for every other package.
-              export TESTS_OUTPUT_DIR=/work/reports/check/$PACKAGE/test-output
-              mkdir -p "$TESTS_OUTPUT_DIR"
-              # libratbag %check starts ratbagd, which calls
-              # Gio.bus_get_sync(Gio.BusType.SYSTEM) and dies with "Could not
-              # connect: No such file or directory" -- a plain container has no
-              # system bus socket. Seven of its ten suites already pass and the
-              # failing one is a real test, so give the build root a bus rather
-              # than disabling the test. Non-fatal: no other package needs it.
-              dnf -y $disable install dbus-daemon || true
-              mkdir -p /run/dbus
-              dbus-daemon --system --fork || true
-              # mock defines USER in its build root; a bare container does not.
-              # just 1.57.0 tests/functions.rs:88 calls env::var("USER").unwrap()
-              # and panicked with NotPresent -- 1823 tests passed, that one did
-              # not. Same shape as the missing system bus: supply what a real
-              # build root has rather than disable the test.
-              export USER="${USER:-root}"
-              export LOGNAME="${LOGNAME:-$USER}"
-              spec=$(find "/packages/$PACKAGE" -maxdepth 1 -name "*.spec" -print -quit)
-              test -n "$spec"
-              # The Hummingbird repository is one host with no mirrors, so a bad
-              # minute there is a failed build. retries=10 and timeout=120 in
-              # dnf.conf cover a slow transfer, which is what Curl error 28 was,
-              # but not a refusal: snowball died on the S3 backend answering
-              #
-              #   Status code: 503 for .../python3-setuptools-83.0.0-2.1.hum1.rpm
-              #   No more mirrors to try - All mirrors were already tried
-              #
-              # after four attempts inside one second. librepo retries with no
-              # backoff, so all four hit the same bad moment. Waiting between
-              # attempts is the part that was missing. This retries resolution
-              # only, never the build, and an unsatisfiable graph still fails
-              # every attempt and then fails the job.
-              builddep_attempt() {
-                dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
-                  ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} \
-                  ${HB_REPO_EXCLUDE:+--setopt=public-hummingbird-x86_64-rpms.excludepkgs="$HB_REPO_EXCLUDE"} \
-                  builddep -D "_sourcedir /packages/$PACKAGE" "$1"
-              }
-              with_backoff() {
-                delay=5
-                for attempt in 1 2 3 4; do
-                  status=0
-                  builddep_attempt "$1" || status=$?
-                  if [ "$status" -eq 0 ]; then
-                    return 0
-                  fi
-                  if [ "$attempt" -eq 4 ]; then
-                    echo "builddep failed after 4 attempts" >&2
-                    return "$status"
-                  fi
-                  echo "::warning title=builddep retry::attempt $attempt failed, waiting ${delay}s" >&2
-                  sleep "$delay"
-                  delay=$((delay * 3))
-                done
-              }
-              with_backoff "$spec"
-              # An imported spec keeps its dist-git PatchN and auxiliary SourceN
-              # files next to itself, while the verified upstream archive lands in
-              # /work/sources. rpmbuild takes a single _sourcedir, so stage both:
-              # recipe files first, then the verified archive, which therefore wins
-              # over anything of the same name carried in the import.
-              staged=/work/staged/$PACKAGE
-              rm -rf "$staged"
-              mkdir -p "$staged"
-              cp -a "/packages/$PACKAGE/." "$staged/"
-              cp -a "/work/sources/$PACKAGE/." "$staged/"
-              # A package that declares system users creates them from its %pre
-              # at install time, which never happens to a buildroot -- so the
-              # test suite runs without them. The openssh regress tests die with
-              #   Privilege separation user sshd does not exist
-              #   FATAL: sshd_proxy broken
-              # Create whatever the recipe declares, the same way installing it
-              # would. Supplying what a real build root has, rather than
-              # disabling the test that noticed it was missing.
-              if command -v systemd-sysusers >/dev/null 2>&1; then
-                for sysusers in "$staged"/*sysusers*.conf; do
-                  [ -e "$sysusers" ] || continue
-                  echo "applying sysusers: $(basename "$sysusers")"
-                  systemd-sysusers "$sysusers" || true
-                done
-              fi
-              # Match the mock build user, exactly as tools/build-rpm.sh already does
-              # for a local build. rpmbuild as root can write files regardless of
-              # their mode bits, so a suite that chmods a file read-only and then
-              # asserts the write fails is defeated by the build root rather than
-              # by the code. FLAC says so outright:
-              #   ERROR: iterator claims file is writable when tester thinks it
-              #   should not be; are you running as root?
-              # The two lanes had drifted: the local one builds unprivileged, this
-              # one did not, so a package could pass locally and fail here.
-              id -u mockbuild >/dev/null 2>&1 || \
-                useradd --create-home --home-dir /builddir mockbuild
-              mkdir -p /builddir/rpmbuild/SRPMS
-              chown -R mockbuild:mockbuild /builddir/rpmbuild "$staged" /work/result
-              # No debuginfo. The upload below excludes every debuginfo and
-              # debugsource RPM by pattern, so they were being built, stripped
-              # and compressed only to be thrown away: webkitgtk spent 25
-              # minutes in find-debuginfo and another 10 compressing four
-              # debuginfo RPMs, on the serial critical path of an eight-hour
-              # run. Publishing debuginfo would be a separate artifact; until
-              # then nothing pays for it.
-              #
-              # Two defines, because one is not enough. debug_package %{nil}
-              # keeps rpmbuild from declaring the native -debuginfo
-              # subpackage. It does not stop find-debuginfo: that runs from
-              # __spec_install_post whenever __debug_package is set, and the
-              # ten specs that build a MinGW half (opus, libsoup3, taglib...)
-              # set it themselves through %mingw_debug_package. With only the
-              # first define those built, ran find-debuginfo, and failed on
-              # the native .debug files nothing declared -- run 380, all ten,
-              # "Installed (but unpackaged) file(s) found". Emptying
-              # __debug_install_post stops the native extraction at the
-              # source. The MinGW halves keep their own -debuginfo
-              # subpackages, produced by the explicit %mingw_debug_install_post
-              # in %install, which the upload filter drops like the rest.
-              build_rpm() {
-                runuser -u mockbuild -- rpmbuild \
-                  --define "_topdir /builddir/rpmbuild" \
-                  --define "debug_package %{nil}" \
-                  --define "__debug_install_post %{nil}" "$@"
-              }
-              # Packages with %generate_buildrequires -- every Rust one -- compute
-              # their real BuildRequires during the build, so the spec alone does not
-              # list them and rpmbuild exits 11 asking to be re-run. Install what the
-              # generated source RPM declares and retry, bounded so an unsatisfiable
-              # requirement fails instead of looping.
-              for _ in 1 2 3 4 5; do
-                rm -f /builddir/rpmbuild/SRPMS/*.buildreqs.nosrc.rpm
-                if build_rpm -br "$spec" --define "_sourcedir $staged" \
-                     --define "dist $DISTTAG"; then break; fi
-                generated=$(ls /builddir/rpmbuild/SRPMS/*.buildreqs.nosrc.rpm 2>/dev/null | head -1)
-                test -n "$generated"
-                with_backoff "$generated"
-              done
-              # A %check that fails takes its evidence down with it. The test
-              # binaries run inside /builddir, which is not a mounted volume, so
-              # nothing survives the container -- librsvg2 failed its reference
-              # suite twice and neither log named a single failing test, because
-              # cargo test output never reached the job log at all. Copy whatever
-              # the build left behind before giving up, so the next failure can
-              # be read instead of guessed at.
-              # Captured explicitly: inside `if ! cmd`, $? is the status of the
-              # negation, which is 0, so exiting with it would turn every failed
-              # build green.
-              status=0
-              build_rpm -ba "$spec" \
-                --define "_sourcedir $staged" \
-                --define "dist $DISTTAG" \
-                --define "_rpmdir /work/result" || status=$?
-              if [ "$status" -ne 0 ]; then
-                mkdir -p "/work/reports/check/$PACKAGE"
-                find /builddir -maxdepth 8 -type d \
-                  \( -name meson-logs -o -name output -o -name test-suite.log \) \
-                  -exec cp -r {} "/work/reports/check/$PACKAGE/" \; 2>/dev/null || true
-                find /builddir -maxdepth 8 -type f \
-                  \( -name "*.log" -o -name "testlog*.txt" -o -name "*-diff.png" -o -name "*-out.png" \) \
-                  -exec cp --parents {} "/work/reports/check/$PACKAGE/" \; 2>/dev/null || true
-                # The container runs as root and upload-artifact runs as the
-                # runner user, which could not read the tree cp left behind:
-                #   EACCES: permission denied, scandir .../check/librsvg2/builddir
-                chmod -R a+rX "/work/reports/check/$PACKAGE" || true
-                echo "collected %check evidence:" >&2
-                find "/work/reports/check/$PACKAGE" -type f | head -40 >&2
-                # An artifact still has to be downloaded to be read, so put the
-                # detail in the job log too. Grepped, not tailed: the meson
-                # testlog.txt ends with hundreds of cargo "Fresh"/"Compiling"
-                # lines, so a tail of it showed nothing but build chatter while
-                # the failures sat further up. These patterns are what the test
-                # harnesses actually print -- librsvg reports
-                #   <name>: <N> pixels changed with maximum difference of <M>
-                # and meson prints its own per-test verdicts.
-                find "/work/reports/check/$PACKAGE" -name "testlog*.txt" -type f | while read -r log; do
-                  echo "--- failures in $log" >&2
-                  grep -aiE "pixels changed|panicked|FAILED|^not ok|TIMEOUT|[0-9]+/[0-9]+ .*(FAIL|ERROR)|^Ok: |^Fail: |^Timeout: |assertion" \
-                    "$log" | head -60 >&2 || echo "(no recognised failure lines)" >&2
-                done
-                find "/work/reports/check/$PACKAGE" -name "*-diff.png" -o -name "*-out.png" 2>/dev/null \
-                  | head -20 >&2
-                exit "$status"
-              fi
-              find /work/result -name "*.rpm" -type f -print0 | \
-                xargs -0 -r rpm -qp --qf "%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n"
-              # A build that produced no RPM must fail here. if-no-files-found on
-              # the upload cannot catch it: the artifact also carries
-              # work/reports/*.json, so one file always matches and the upload
-              # reports success while shipping no packages at all.
-              test -n "$(find /work/result -name "*.rpm" -type f -print -quit)"
-            '
+            -v "$PWD/tools:/tools:ro,Z" \
+            utah-buildroot:run bash -ex /tools/build_container.sh
+      # The hermetic lane, phase two: materialize the lock into a local
+      # repository, then build in a network namespace with no interface but
+      # loopback. Nothing the build installs or fetches can come from
+      # anywhere but the lock.
+      - name: Build offline from the lock (hermetic)
+        if: steps.lane.outputs.backend == 'hermetic' && steps.package_cache_restore.outputs.hit != 'true'
+        env:
+          PACKAGE: ${{ matrix.package }}
+        run: |
+          set -euo pipefail
+          docker run --rm --privileged \
+            -e PACKAGE \
+            -v "$PWD/work:/work:Z" \
+            -v "$PWD/packages:/packages:ro,Z" \
+            -v "$PWD/config:/repos:ro,Z" \
+            -v "$PWD/tools:/tools:ro,Z" \
+            -v "$RUNNER_TEMP/containers:/var/lib/containers:Z" \
+            -v "$RUNNER_TEMP/mock:/var/lib/mock:Z" \
+            utah-buildroot:run bash /tools/hermetic_build.sh build
+          sudo chown -R "$(id -u):$(id -g)" work
       - name: Publish package RPM cache
-        if: success() && inputs.backend == 'container' && contains(fromJSON(inputs.cacheable_packages), matrix.package) && steps.package_cache_restore.outputs.hit != 'true'
+        if: success() && (steps.lane.outputs.backend == 'container' || steps.lane.outputs.backend == 'hermetic') && contains(fromJSON(inputs.cacheable_packages), matrix.package) && !contains(fromJSON(inputs.flaky_check || '[]'), matrix.package) && steps.package_cache_restore.outputs.hit != 'true'
         env:
           GITHUB_TOKEN: ${{ github.token }}
-          KEY: ${{ steps.package_cache.outputs.key }}
+          KEY: ${{ steps.package_cache.outputs.key || steps.package_cache_lock.outputs.key }}
           OWNER: ${{ github.repository_owner }}
         run: |
           set -euo pipefail
@@ -605,7 +422,7 @@ jobs:
       # single quotes, so it must not contain one -- tools/check_workflow_quoting.py
       # fails the run if it does, and only covers this form.
       - name: Build the verified source in a mock root
-        if: inputs.backend == 'mock'
+        if: steps.lane.outputs.backend == 'mock'
         env:
           PACKAGE: ${{ matrix.package }}
           FACTORY_REPO: ${{ steps.factory.outputs.url }}
@@ -659,18 +476,58 @@ jobs:
                 /packages/$PACKAGE/*.spec
               # No debuginfo, for the reasons the container lane gives --
               # both defines, or the MinGW specs fail on orphaned .debug files.
-              mock --root /work/mock/utah.cfg \
-                --resultdir /work/result \
-                --define "dist $DISTTAG" \
-                --define "debug_package %{nil}" \
-                --define "__debug_install_post %{nil}" \
-                --rebuild /work/srpm/*.src.rpm
+              # A failed %check is retried once, as in the container lane;
+              # mock writes the rpmbuild output to build.log in the resultdir.
+              mock_rebuild() {
+                mock --root /work/mock/utah.cfg \
+                  --resultdir /work/result \
+                  --define "dist $DISTTAG" \
+                  --define "debug_package %{nil}" \
+                  --define "__debug_install_post %{nil}" \
+                  --rebuild /work/srpm/*.src.rpm
+              }
+              status=0
+              mock_rebuild || status=$?
+              if [ "$status" -ne 0 ] && grep -qE "Bad exit status from .*\(%check\)" /work/result/build.log; then
+                echo "::warning title=flaky %check retry::$PACKAGE failed in %check (exit $status); retrying the build once"
+                mkdir -p "/work/reports/check/$PACKAGE/attempt-1"
+                cp /work/result/*.log "/work/reports/check/$PACKAGE/attempt-1/" || true
+                status=0
+                mock_rebuild || status=$?
+                if [ "$status" -eq 0 ]; then
+                  echo "::warning title=flaky %check::$PACKAGE failed %check once and passed on retry"
+                  printf "%s\n" "$PACKAGE" > /work/reports/flaky-check
+                fi
+              fi
+              test "$status" -eq 0
               find /work/result -name "*.rpm" -type f -print0 | \
                 xargs -0 -r rpm -qp --qf "%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n"
               # Same guard as the container path: an upload that finds no RPM
               # still succeeds, because the artifact also carries reports.
               test -n "$(find /work/result -name "*.rpm" -type f -print -quit)"
             '
+      - name: Report a %check that passed only on its retry
+        if: always()
+        env:
+          PACKAGE: ${{ matrix.package }}
+        run: |
+          if [ -f work/reports/flaky-check ]; then
+            echo "- \`$PACKAGE\` failed \`%check\` once and passed on retry; its RPMs are from the retry" >> "$GITHUB_STEP_SUMMARY"
+          fi
+      # What went into the package, recorded: every NEVRA with its source URL
+      # and header digest, the bootstrap image by digest, and the mock
+      # config with its hash. Kept even when the build fails.
+      - name: Upload the build-root lock (hermetic)
+        if: always() && steps.hermetic_lock.outcome == 'success'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: ${{ inputs.artifact_prefix }}lock-s${{ inputs.stage }}-${{ matrix.package }}
+          path: |
+            work/hermetic/lock/buildroot_lock.json
+            work/hermetic/mock.cfg
+            work/hermetic/mock.cfg.sha256
+          if-no-files-found: error
+          retention-days: 30
       # Its own upload, and only on failure: the RPM artifact below declares
       # if-no-files-found: error, so a build that produced nothing cannot carry
       # this out with it.
@@ -678,14 +535,14 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: check-s${{ inputs.stage }}-${{ matrix.package }}
+          name: ${{ inputs.artifact_prefix }}check-s${{ inputs.stage }}-${{ matrix.package }}
           path: work/reports/check/**
           if-no-files-found: ignore
           retention-days: 7
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: rpm-s${{ inputs.stage }}-${{ matrix.package }}
+          name: ${{ inputs.artifact_prefix }}rpm-s${{ inputs.stage }}-${{ matrix.package }}
           # Debuginfo and debugsource are excluded deliberately. No
           # BuildRequires ever names one, so a later stage has no use for them,
           # and they are more than half the bytes. Uploading them cost the run

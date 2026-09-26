@@ -31,6 +31,9 @@ from tools.packit_workflow import package_names
 # fix/repeatable-local-builds, flattened into consecutive numbers.
 KNOWN_STAGES = frozenset(range(11))
 
+# Per-package overrides of the run's build lane (build-stage.yml backend).
+BUILD_LANES = frozenset({"container"})
+
 
 @dataclass(frozen=True)
 class PackageRecord:
@@ -71,6 +74,16 @@ def load_source_locks(config: Path) -> dict[str, dict]:
         stage = entry.get("stage", 0)
         if not isinstance(stage, int) or stage not in KNOWN_STAGES:
             raise ValueError(f"unknown stage for {name}: {stage!r}")
+        # The hermetic mock lane is the default. A package may stay on the
+        # hand-built container root only with a stated reason, so each
+        # exception names the gap that keeps it there.
+        lane = entry.get("build_lane")
+        if lane is not None:
+            if lane not in BUILD_LANES:
+                raise ValueError(f"unknown build_lane for {name}: {lane!r}")
+            reason = entry.get("build_lane_reason")
+            if not isinstance(reason, str) or not reason.strip():
+                raise ValueError(f"{name}: build_lane needs a build_lane_reason")
         locks[name] = entry
     return locks
 

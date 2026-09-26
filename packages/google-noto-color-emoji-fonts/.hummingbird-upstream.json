@@ -1,0 +1,8 @@
+{
+  "package": "google-noto-color-emoji-fonts",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/google-noto-color-emoji-fonts.git",
+  "commit": "645bfd6a54e0b15036dc3aa954af18ab28975de4",
+  "tree": "6eb82f0ee79f7f706cc702bea082f6d97af09988",
+  "imported_at": "2026-09-20T03:05:07.743062+00:00"
+}

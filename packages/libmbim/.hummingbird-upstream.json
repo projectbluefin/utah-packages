@@ -1,0 +1,8 @@
+{
+  "package": "libmbim",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libmbim.git",
+  "commit": "a6409523b887262bee9b7e35937eba37c0ef545d",
+  "tree": "84d2f767053b57a733af8e79dec30b2689b866b5",
+  "imported_at": "2026-09-24T23:38:37.159344+00:00"
+}

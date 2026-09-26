@@ -1,0 +1,707 @@
+# One publication of the factory repository: precedence over the RPMs it
+# covers, then the incremental publish -- seed from the verified previous
+# image, replace what built, gate on the Hummingbird-only transaction, push
+# the two-layer image, sign and attest.
+#
+# rebuild-rpms.yml calls it once after each wave that has later waves still
+# to come (inputs.final false, covering waves 0..wave), and once at the end
+# (final, every wave). So a package publishes when its wave finishes, not
+# when the slowest package in the run does: a one-line libass fix used to
+# wait for webkitgtk's three hours whenever they shared a run. Every
+# publication is gated on its own transaction; only the final one fails the
+# run when it does not resolve.
+name: Publish the factory repository
+
+on:
+  workflow_call:
+    inputs:
+      wave:
+        description: Highest wave this publication covers; empty for every wave
+        required: false
+        default: ''
+        type: string
+      final:
+        description: The run's last publication. Its transaction failure fails the run.
+        required: true
+        type: boolean
+      build_list:
+        description: JSON names selected in the waves this publication covers
+        required: true
+        type: string
+      prune_sources:
+        required: false
+        default: '[]'
+        type: string
+      seed_image:
+        required: false
+        default: ''
+        type: string
+      trusted:
+        required: false
+        default: '[]'
+        type: string
+      artifact_prefix:
+        required: false
+        default: ''
+        type: string
+      publish_tag:
+        required: false
+        default: ''
+        type: string
+      consumer:
+        required: false
+        default: contract
+        type: string
+    outputs:
+      ref:
+        value: ${{ jobs.publish.outputs.ref }}
+      digest:
+        value: ${{ jobs.publish.outputs.digest }}
+      report:
+        value: ${{ jobs.publish.outputs.report }}
+      utah_report:
+        value: ${{ jobs.publish.outputs.utah_report }}
+      losers:
+        value: ${{ jobs.precedence.outputs.losers }}
+
+permissions:
+  contents: read
+  id-token: write
+  packages: write
+  attestations: write
+
+jobs:
+  precedence:
+    # Every wave this publication covers. See publish below.
+    # `!cancelled()` is what lets this run after a failed wave, which is the
+    # point: it has to see every RPM that did build. It also let it run after
+    # a failed prepare, where there is no build root artifact to load, so a
+    # unit-test failure in prepare surfaced a second time as a download error
+    # here (runs 372 and 379). prepare has to have succeeded.
+    if: ${{ inputs.build_list != '[]' }}
+    runs-on: ubuntu-24.04
+    # A build that does not outrank Fedora or Hummingbird is kept out of the
+    # repository -- dnf would install the other one anyway -- and reported as
+    # a failed package. It no longer fails the job: under incremental publish
+    # one losing package must not hold back the rest. publish reads `losers`
+    # (source package names); a job that could not run at all still fails,
+    # and publish then refuses, because nothing was judged.
+    outputs:
+      losers: ${{ steps.losers.outputs.losers }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: ./.github/actions/load-buildroot
+        with:
+          artifact: ${{ inputs.artifact_prefix }}buildroot-image
+      - name: Name the artifacts this publication covers
+        id: covered
+        env:
+          WAVE: ${{ inputs.wave }}
+          PREFIX: ${{ inputs.artifact_prefix }}
+        run: python3 tools/publish_gate.py pattern --wave "$WAVE" --prefix "$PREFIX" >> "$GITHUB_OUTPUT"
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          pattern: ${{ steps.covered.outputs.pattern }}
+          path: built
+          merge-multiple: true
+      - name: Assert our builds outrank Fedora and Hummingbird
+        run: |
+          mkdir -p work
+          docker run --rm \
+            -v "$PWD/built:/built:ro,Z" \
+            -v "$PWD/work:/work:Z" \
+            -v "$PWD/config:/repos:ro,Z" \
+            utah-buildroot:run bash -exc '
+              dnf -y install rpmdevtools >/dev/null
+              cp /repos/hummingbird.repo /etc/yum.repos.d/
+              disable=--disablerepo=fedora-cisco-openh264
+              fmt="%|EPOCH?{%{EPOCH}:}|%{VERSION}-%{RELEASE}"
+              : > /tmp/losers
+              : > /tmp/overlap
+              find /built -name "*.rpm" -type f | sort | while read -r rpm; do
+                case "$rpm" in
+                  *.src.rpm) continue ;;
+                  # The malcontent bootstrap is ranked below the real build on
+                  # purpose and is deleted before publish. It is meant to lose.
+                  *-0.bootstrap.*) continue ;;
+                esac
+                name=$(rpm -qp --qf "%{NAME}" "$rpm" 2>/dev/null) || continue
+                ours=$(rpm -qp --qf "$fmt" "$rpm")
+                line=$(dnf -q $disable repoquery --latest-limit=1 \
+                         --qf "$fmt %{reponame}" "$name" 2>/dev/null | tail -n1)
+                theirs=${line%% *}
+                repo=${line##* }
+                # Nothing else ships this name, so there is nothing to outrank.
+                [ -n "$theirs" ] || continue
+                rc=0; rpmdev-vercmp "$ours" "$theirs" >/dev/null 2>&1 || rc=$?
+                # 11 means the first argument is newer, which is what we need.
+                # 0 (equal) and 12 (theirs newer) both mean ours will not win.
+                if [ "$rc" != 11 ]; then
+                  echo "  $name: ours $ours, $repo has $theirs" >> /tmp/losers
+                  rpm -qp --qf "%{SOURCERPM}\n" "$rpm" >> /tmp/loser-sources
+                fi
+                # .hum1.bfin outranks .hum1 at equal release by construction, so
+                # a package the base OS also ships no longer appears as a loser.
+                # It is still worth knowing about: this factory is for the
+                # desktop stack Hummingbird does not ship.
+                case "$repo" in
+                  *hummingbird*) echo "  $name: ours $ours, $repo also has $theirs" >> /tmp/overlap ;;
+                esac
+              done
+              if [ -s /tmp/losers ]; then
+                echo "These builds do not outrank what the repositories already offer,"
+                echo "so dnf would install the other one:"
+                cat /tmp/losers
+                echo
+                echo "Our disttag outranks both Fedora and Hummingbird at an equal"
+                echo "release, so a loser here means the thing we forked has moved on:"
+                echo "its leading release segment is now higher than ours. Rebase the"
+                echo "spec on the newer dist-git, which raises ours to match."
+                echo
+                echo "If the release has NOT moved and we simply need to build it again,"
+                echo "add \"dist_bump\": {\"count\": 1, \"baseline\": \"<Release:>\"}"
+                echo "to the package in config/upstream-sources.json"
+                echo "instead. That appends .N after .bfin, which is what AlmaLinux does"
+                echo "with .alma.1. It cannot help with a release bump, because the"
+                echo "leading segment comes from the spec."
+                echo
+                echo "Their source packages keep their previous published build."
+                sed -e "s/-[^-]*-[^-]*\.src\.rpm$//" /tmp/loser-sources | sort -u > /work/precedence-losers
+                while read -r source; do
+                  echo "::warning title=precedence::$source does not outrank Fedora or Hummingbird and is not published"
+                done < /work/precedence-losers
+              fi
+              if [ -s /tmp/overlap ]; then
+                echo "Note: Hummingbird also ships these, and we outrank it:"
+                cat /tmp/overlap
+                echo "The remit is the desktop stack Hummingbird does not ship, so each of"
+                echo "these is worth checking. Not a failure."
+              fi
+              [ -s /tmp/losers ] || echo "every build outranks what Fedora 44 and Hummingbird offer"
+            '
+      - name: Name the losing source packages
+        id: losers
+        run: |
+          if [ -s work/precedence-losers ]; then
+            echo "losers=$(jq -R . work/precedence-losers | jq -sc .)" >> "$GITHUB_OUTPUT"
+          else
+            echo "losers=[]" >> "$GITHUB_OUTPUT"
+          fi
+
+  publish:
+    # Incremental, the way Fedora and Hummingbird publish: each package this
+    # run built replaces its own previous build, and nothing else changes. A
+    # package that failed -- or lost precedence -- keeps its previous
+    # published build, or stays absent if it never built; the report job
+    # names every one of them. It used to be atomic: one failed package held
+    # back the rest, and over four weeks 3 of 117 full runs published while
+    # fish's one flaky test blocked every package behind it.
+    #
+    # What still gates the tag is the Hummingbird-only consumer transaction
+    # over the whole candidate. If the new set does not resolve, nothing
+    # moves. tools/publish_gate.py encodes the rule and checks this job
+    # against it.
+    #
+    # The job still waits for every wave to FINISH (needs), so it can never
+    # publish around a wave that is still building. Before this was
+    # incremental, "every selected stage" was also what this said and not
+    # what it did: needs
+    # stopped at rebuild4, so publication ran while stages 5 to 10 were still
+    # building and validated a repository that could not yet contain their
+    # output. The first run to reach the transaction check said so plainly --
+    #
+    #   nothing provides libepoxy.so.0()(64bit) needed by gtk4 ... from factory
+    #   nothing provides libGL.so.1()(64bit) needed by libva ... from factory
+    #
+    # -- with libepoxy and libglvnd both at stage 6, behind the gate. The
+    # dependency now covers every wave, which is what makes the check
+    # meaningful: it can finally see the whole repository it is judging.
+    #
+    # This is not main-only. The repository is published as an OCI image, and
+    # that image is the only thing consumers read. A Pages mirror used to be
+    # published alongside it, but Pages can only deploy from the default
+    # branch, so nothing existed to consume until a merge had already landed
+    # and an image could never be tested against the packages it was meant to
+    # use. A registry has no such rule, so the mirror was a second publication
+    # path that nothing consumed and every change had to be made twice in.
+    #
+    if: >-
+      ${{ !cancelled()
+          && (inputs.build_list != '[]'
+              || inputs.prune_sources != '[]')
+          && (needs.precedence.result == 'success'
+              || (inputs.build_list == '[]'
+                  && needs.precedence.result == 'skipped')) }}
+    needs: [precedence]
+    # Build waves can overlap, but the consumer tag is an atomic input. Queue
+    # only this critical section per ref. The seed step verifies that the image
+    # seen by `prepare` is still current; an older run therefore cannot publish
+    # over a newer one.
+    concurrency:
+      group: utah-packages-publish-${{ github.ref }}
+      cancel-in-progress: false
+    runs-on: ubuntu-24.04
+    outputs:
+      ref: ${{ steps.oci.outputs.ref }}
+      digest: ${{ steps.oci.outputs.digest }}
+      report: ${{ steps.assemble.outputs.report }}
+      utah_report: ${{ steps.utah.outputs.report }}
+    steps:
+      # The consumer-transaction check below runs tools/runtime_contract.py
+      # against config/, and the OCI step reads nothing else from the tree, so
+      # this job was the one that never checked the repository out. It failed
+      # on `python3: can't open file .../tools/runtime_contract.py` the moment
+      # the seed step stopped failing first and let it get that far.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Install cosign
+        run: |
+          set -euo pipefail
+          curl -fsSL https://github.com/sigstore/cosign/releases/download/v2.4.1/cosign-linux-amd64 -o cosign
+          echo '8b24b946dd5809c6bd93de08033bcf6bc0ed7d336b7785787c080f574b89249b  cosign' | sha256sum -c -
+          sudo install -m 0755 cosign /usr/local/bin/cosign
+      - name: Verify and seed repository from the prepare-time factory image
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EXPECTED_IMAGE: ${{ inputs.seed_image }}
+          PUBLISH_TAG: ${{ inputs.publish_tag }}
+          REPOSITORY: ${{ github.repository }}
+          REPOSITORY_OWNER: ${{ github.repository_owner }}
+          REF_NAME: ${{ github.ref_name }}
+          REF: ${{ github.ref }}
+          ACTOR: ${{ github.actor }}
+          DOCKER_CONFIG: ${{ runner.temp }}/.docker
+        run: |
+          set -euo pipefail
+          owner=$(printf '%s' "$REPOSITORY_OWNER" | tr "[:upper:]" "[:lower:]")
+          image="ghcr.io/${owner}/utah-packages"
+          branch=$(printf '%s' "$REF_NAME" \
+            | tr "/" "-" | tr -cd "[:alnum:]._-" | cut -c1-96)
+          if [ -n "$PUBLISH_TAG" ]; then
+            candidates="$PUBLISH_TAG"
+          elif [ "$REF" = "refs/heads/main" ]; then
+            candidates="latest"
+          else
+            candidates="$branch latest"
+          fi
+          mkdir -p repository "${DOCKER_CONFIG}"
+          # cosign verify below reads the Docker config, not podman's own
+          # auth file (the same split the "Publish the repository" step
+          # already works around), so the login has to land where cosign
+          # will look, even though the package is public and every pull
+          # here succeeds anonymously either way.
+          echo "${GITHUB_TOKEN}" | podman login ghcr.io -u "$ACTOR" \
+            --password-stdin --authfile "${DOCKER_CONFIG}/config.json"
+          current=
+          current_ref=
+          for tag in $candidates; do
+            if podman pull --authfile "${DOCKER_CONFIG}/config.json" "${image}:${tag}"; then
+              digest=$(podman image inspect "${image}:${tag}" \
+                --format '{{index .RepoDigests 0}}' | sed 's/.*@//')
+              current="${image}@${digest}"
+              # latest is only ever published from main; a branch tag is only
+              # ever published by this same workflow running on that branch.
+              # Recording which one matched lets verification below pin the
+              # exact signer identity instead of accepting either.
+              if [ "$tag" = "latest" ]; then
+                current_ref="refs/heads/main"
+              else
+                current_ref="$REF"
+              fi
+              echo "current factory image: ${image}:${tag} -> ${current}"
+              break
+            fi
+            echo "no factory image at ${image}:${tag}"
+          done
+          # Incremental publication means a run whose builds partly failed
+          # still publishes, so "re-run failed jobs" -- which keeps prepare's
+          # outputs from the first attempt -- found the tag moved by its own
+          # first attempt and refused (canary run 36189640622). An image
+          # published by an earlier attempt of this same run is not newer
+          # work from elsewhere: same commit, same plan. It is accepted as
+          # the seed, still subject to the signature check below.
+          moved_by=
+          if [ -n "$current" ] && [ "$current" != "$EXPECTED_IMAGE" ]; then
+            moved_by=$(podman image inspect "$current" \
+              --format '{{ index .Labels "org.projectbluefin.factory.run" }}' 2>/dev/null || true)
+          fi
+          if [ "$current" != "$EXPECTED_IMAGE" ] && [ "$moved_by" = "$GITHUB_RUN_ID" ]; then
+            echo "the tag moved only by an earlier attempt of this run ($GITHUB_RUN_ID); seeding from it"
+          elif [ "$current" != "$EXPECTED_IMAGE" ]; then
+            echo "factory image advanced while this run was building" >&2
+            echo "  prepare witnessed: ${EXPECTED_IMAGE:-<none>}" >&2
+            echo "  publish sees:      ${current:-<none>}" >&2
+            echo "refusing to overwrite the newer repository; rerun this commit" >&2
+            exit 1
+          fi
+          mkdir -p work
+          echo null > work/seed-labels.json
+          if [ -z "$current" ]; then
+            echo "prepare witnessed no published image; publishing a new repository"
+          else
+            # The seed image is only trustworthy if this workflow signed it.
+            # Verify the digest actually pulled -- never the mutable tag,
+            # which could move again after this check -- before creating a
+            # container or copying anything out of it. Without this, anyone
+            # able to push to the GHCR package once could plant RPMs in
+            # :latest and have every subsequent run copy them forward, sign
+            # over them, and re-publish them as verified factory output.
+            # Two workflow files have signed this tag: rebuild-rpms.yml,
+            # before publication moved into publish-repository.yml, and
+            # publish-repository.yml since -- a reusable workflow signs as
+            # itself. The pattern admits exactly those two files, at exactly
+            # the ref that matched, anchored at both ends.
+            cosign verify "$current" \
+              --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+              --certificate-identity-regexp "^$(printf '%s' "https://github.com/${REPOSITORY}/.github/workflows/" | sed 's/[.]/[.]/g')(rebuild-rpms|publish-repository)[.]yml@$(printf '%s' "$current_ref" | sed 's/[.]/[.]/g')\$"
+            # The factory image is FROM scratch with only COPY layers, no CMD or
+            # ENTRYPOINT, so a bare create exits 125 with "no command or
+            # entrypoint provided". A command is only recorded here, never run
+            # -- the container exists to be copied out of -- so naming one that
+            # the image does not even contain is enough to satisfy create.
+            container=$(podman create "$current" /bin/true)
+            podman cp "$container:/repository/." repository/
+            podman rm "$container"
+            # The state it was published with, which this publish extends.
+            podman image inspect "$current" --format '{{json .Labels}}' > work/seed-labels.json
+          fi
+      # Into built/, not straight into the seed. Copying on top of the seed
+      # left a package's old subpackages in place whenever a build renamed or
+      # dropped one; replacement has to be by source package.
+      - name: Name the artifacts this publication covers
+        id: covered
+        env:
+          WAVE: ${{ inputs.wave }}
+          PREFIX: ${{ inputs.artifact_prefix }}
+        run: python3 tools/publish_gate.py pattern --wave "$WAVE" --prefix "$PREFIX" >> "$GITHUB_OUTPUT"
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        if: inputs.build_list != '[]'
+        with:
+          pattern: ${{ steps.covered.outputs.pattern }}
+          path: built
+          merge-multiple: true
+      - name: Replace the packages this run built
+        id: assemble
+        env:
+          BUILD_LIST: ${{ inputs.build_list }}
+          LOSERS: ${{ needs.precedence.outputs.losers || '[]' }}
+          PRUNE_SOURCES: ${{ inputs.prune_sources }}
+        run: |
+          set -euo pipefail
+          sudo apt-get update && sudo apt-get install -y createrepo-c rpm
+          mkdir -p built
+          python3 tools/publish_gate.py assemble \
+            --seed repository --built built \
+            --build-list "$BUILD_LIST" --losers "$LOSERS" \
+            --report work/publish-report.json | tee -a "$GITHUB_STEP_SUMMARY"
+          replaced=$(jq '.replaced | length' work/publish-report.json)
+          pruned=$(jq 'length' <<<"$PRUNE_SOURCES")
+          # A run in which nothing built and nothing is pruned has nothing to
+          # publish; republishing the seed would only move the digest.
+          if [ $((replaced + pruned)) -gt 0 ]; then
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            echo "nothing built and nothing to prune: the published image stays as it is" | tee -a "$GITHUB_STEP_SUMMARY"
+          fi
+          echo "report=$(jq -c . work/publish-report.json)" >> "$GITHUB_OUTPUT"
+      - name: Create and keylessly sign repository metadata
+        env:
+          PRUNE_SOURCES: ${{ inputs.prune_sources }}
+        run: |
+          # A recipe removal does not remove its RPMs from the previous OCI
+          # repository we seed above. Drop every binary whose source package is
+          # now owned by Hummingbird before regenerating metadata. The prepare
+          # step computes this list from the repository it actually witnessed,
+          # so cleanup-only runs are both retryable and idempotent.
+          mapfile -t prune_sources < <(jq -r '.[]' <<<"$PRUNE_SOURCES")
+          while IFS= read -r -d '' rpm_file; do
+            source_rpm=$(rpm -qp --qf '%{SOURCERPM}' "$rpm_file" 2>/dev/null || true)
+            for source in "${prune_sources[@]}"; do
+              case "$source_rpm" in
+                "$source"-*)
+                  echo "remove Hummingbird-owned $rpm_file ($source_rpm)"
+                  rm -f "$rpm_file"
+                  break
+                  ;;
+              esac
+            done
+          done < <(find repository -type f -name '*.rpm' -print0)
+          # The malcontent bootstrap pass exists only to give the next stage a
+          # malcontent-libs linked against accountsservice 26, breaking the
+          # flatpak-libs -> libmalcontent-0.so.0 cycle. It has no parental
+          # controls UI, so it must not reach anyone's system. Its release is
+          # 0.bootstrap, below the real build, so this is belt and braces.
+          find repository -name '*-0.bootstrap.*.rpm' -print -delete
+          # 507b2bf stopped the factory building icu, because a factory icu
+          # 78.3 competed with the Hummingbird 78.3 that is already newest and
+          # left consumers linking the leftover 77. The recipe went away; the
+          # RPM did not. libicu-78.3-1.hum1.bfin is still carried forward from
+          # the published image on every run, so the transaction kept seeing a
+          # factory ICU that nothing in this tree builds and no recipe can fix.
+          # git log -S over the whole history finds no libicu in the inventory,
+          # so there is nothing to rebuild -- only this to stop re-seeding.
+          find repository -name 'libicu-*.bfin.*.rpm' -o -name 'icu-*.bfin.*.rpm' \
+            | tee /dev/stderr | xargs -r rm -f
+          createrepo_c --update repository
+          curl -fsSL https://github.com/sigstore/cosign/releases/download/v2.4.1/cosign-linux-amd64 -o cosign
+          echo '8b24b946dd5809c6bd93de08033bcf6bc0ed7d336b7785787c080f574b89249b  cosign' | sha256sum -c -
+          sudo install -m 0755 cosign /usr/local/bin/cosign
+          cosign sign-blob --yes --bundle repository/repodata/repomd.xml.bundle repository/repodata/repomd.xml
+      # Blocking for the final publication. An early one -- after one wave,
+      # while later waves still build -- can legitimately fail it: a library
+      # whose soname moved publishes before its consumers are rebuilt. It
+      # then publishes nothing, and the next publication tries again with
+      # more of the run in it.
+      - name: Validate Hummingbird-only consumer transaction
+        id: validate
+        continue-on-error: ${{ !inputs.final }}
+        env:
+          CONSUMER: ${{ inputs.consumer || 'contract' }}
+        run: |
+          if [ "$CONSUMER" = built ]; then
+            # The canary: every binary in the candidate repository must
+            # install from it plus Hummingbird alone.
+            CONTRACT=$(find repository -name '*.rpm' ! -name '*.src.rpm' -print0 \
+              | xargs -0 -r rpm -qp --qf '%{NAME}\n' | sort -u)
+          else
+            CONTRACT=$(python3 tools/runtime_contract.py \
+              config/bluefin-packages.toml config/runtime-contract.toml)
+          fi
+          BASE_IMAGE=$(python3 tools/runtime_contract.py \
+            config/bluefin-packages.toml config/runtime-contract.toml --base-image)
+          export CONTRACT
+          docker run --rm \
+            -e CONTRACT \
+            -v "$PWD/repository:/repository:ro,Z" \
+            -v "$PWD/config:/config:ro,Z" \
+            "$BASE_IMAGE" bash -euo pipefail -c '
+              cp /config/hummingbird.repo /etc/yum.repos.d/hummingbird.repo
+              # Hummingbird ships libicu 77.1 beside 78.3, and 507b2bf settled
+              # that 78 is the sole runtime ICU: the factory stopped building
+              # icu so every consumer links Hummingbird 78. Nothing enforced it
+              # here, so this transaction still had 77.1 to choose from and
+              # split -- libtinysparql wanting libicuuc.so.78 against a samba
+              # wanting .so.77, which no resolution satisfies.
+              #
+              # The exclusion belongs in this copy and nowhere else. 012cb6a
+              # removed a blanket libicu-77 exclusion because it broke Fedora
+              # build-only deps that legitimately link ICU 77 -- raptor2 via
+              # gstreamer-bad, localsearch and pipewire-libs-extra
+              # transitively. This transaction has no Fedora repository at all,
+              # only factory plus Hummingbird, so no build-only dep can be
+              # caught by it. Editing config/hummingbird.repo instead would
+              # reach the build root, which is the thing 012cb6a fixed.
+              #
+              # Spelled with release as its own field: 1f88491 found that dnf
+              # splits a package spec on its dashes before globbing each field,
+              # so libicu-77.*hum1 parses its version as 77.*hum1 and matches
+              # nothing at all.
+              printf "excludepkgs=libicu-77.*-*hum1\n" >> /etc/yum.repos.d/hummingbird.repo
+              cat >/etc/yum.repos.d/factory.repo <<EOF
+          [factory]
+          name=Utah package factory candidate
+          baseurl=file:///repository
+          enabled=1
+          gpgcheck=0
+          EOF
+              mapfile -t packages <<<"$CONTRACT"
+              test "${#packages[@]}" -gt 0
+              DNF=$(command -v dnf5 || command -v dnf)
+              output=$($DNF --assumeno --setopt=install_weak_deps=False \
+                --disablerepo="*" \
+                --enablerepo=factory \
+                --enablerepo=public-hummingbird-x86_64-rpms \
+                install "${packages[@]}" 2>&1 || true)
+              printf "%s\n" "$output"
+              if grep -Eqi "No match for argument|nothing provides|conflicting requests|cannot install both|does not belong to a distupgrade repository" <<<"$output"; then
+                echo "Hummingbird-only consumer transaction is not resolvable" >&2
+                exit 1
+              fi
+              if ! grep -Eq "Transaction Summary|Nothing to do" <<<"$output"; then
+                echo "DNF did not produce a valid transaction summary" >&2
+                exit 1
+              fi
+              echo "Hummingbird-only consumer transaction resolves ${#packages[@]} packages"
+            '
+      # What Utah actually installs, which is more than the contract above:
+      # Bluefin's [fedora] and [fedora_v44] plus Utah's [gnome], [parity],
+      # [hardware], [services] and [build], minus [unavailable] -- computed
+      # by Utah's own scripts/install-packages.py and resolved with Utah's
+      # own repository files, fetched from projectbluefin/utah main. Utah
+      # found libgphoto2 -> libexif/lockdev and libppd -> ghostscript one
+      # image build at a time; this names every such gap on every run.
+      #
+      # Advisory, by decision: under incremental publication one package's
+      # gap must not freeze every other package. It warns, fills the job
+      # summary, and the report job keeps one issue per package on main.
+      - name: Resolve what Utah installs (advisory)
+        id: utah
+        if: inputs.final
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          # Utah's own base, from Utah's Containerfile: Utah installs on top
+          # of its rpmdb, so a different base gives a different answer.
+          python3 tools/utah_install_set.py fetch --dir work/utah
+          BASE_IMAGE=$(cat work/utah/base-image)
+          docker run --rm \
+            -v "$PWD/repository:/etc/utah-packages:ro,Z" \
+            -v "$PWD/work/utah:/utah:Z" \
+            -v "$PWD/tools:/tools:ro,Z" \
+            "$BASE_IMAGE" python3 /tools/utah_install_set.py resolve --dir /utah --report /utah/report.json
+          python3 tools/utah_install_set.py summary work/utah/report.json >> "$GITHUB_STEP_SUMMARY"
+          jq -r '.unresolved | to_entries[] | "::warning title=Utah cannot install \(.key)::\(.value)"' \
+            work/utah/report.json
+          echo "report=$(jq -c . work/utah/report.json)" >> "$GITHUB_OUTPUT"
+      # The repository as an OCI image, which is how everything else in this
+      # ecosystem ships build output: Utah Containerfile already pulls
+      # projectbluefin/common and ublue-os/brew this way, pinned by digest.
+      #
+      # A registry beats a Pages site here on three counts. It works from any
+      # branch, so an image can be built against a package set before either is
+      # merged. It is addressable by digest, so an image records exactly which
+      # packages went into it rather than whatever the site served that day. And
+      # provenance comes from the registry and a signature over the digest,
+      # rather than from an unsigned directory of RPMs over HTTPS.
+      - name: Publish the repository as an OCI image
+        id: oci
+        if: steps.validate.outcome == 'success' && steps.assemble.outputs.publish == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DOCKER_CONFIG: ${{ runner.temp }}/.docker
+          REPOSITORY_OWNER: ${{ github.repository_owner }}
+          REF_NAME: ${{ github.ref_name }}
+          REF: ${{ github.ref }}
+          ACTOR: ${{ github.actor }}
+          PUBLISH_TAG: ${{ inputs.publish_tag }}
+          TRUSTED: ${{ inputs.trusted || '[]' }}
+          PRUNE_SOURCES: ${{ inputs.prune_sources }}
+        run: |
+          set -euo pipefail
+          owner=$(printf '%s' "$REPOSITORY_OWNER" | tr "[:upper:]" "[:lower:]")
+          image="ghcr.io/${owner}/utah-packages"
+          # What every published build was made from, per package
+          # (tools/factory_state.py): the next run selects against it, so a
+          # run is the union of every change since this publication. A label
+          # adds no layer; the layout below is untouched.
+          state=$(python3 tools/factory_state.py merge \
+            --seed-labels work/seed-labels.json \
+            --plan "$(jq -cn --argjson t "$TRUSTED" '{trusted: $t}')" \
+            --report work/publish-report.json --pruned "$PRUNE_SOURCES")
+          echo "state label: $(jq '.inputs | length' <<<"$state") packages recorded, $(jq '.failed | length' <<<"$state") failing"
+          # main publishes the tag consumers follow; every other ref publishes
+          # under its own name so it can be tested without touching main.
+          # The canary names its own tag, and never latest.
+          if [ -n "$PUBLISH_TAG" ]; then
+            test "$PUBLISH_TAG" != latest
+            tag="$PUBLISH_TAG"
+          elif [ "$REF" = "refs/heads/main" ]; then
+            tag=latest
+          else
+            tag=$(printf '%s' "$REF_NAME" | tr "/" "-" | tr -cd "[:alnum:]._-" | cut -c1-96)
+          fi
+          # Two layers, and the order is a contract with Utah. Its check-repos
+          # (projectbluefin/utah scripts/check-repo-availability.py) reads only
+          # manifest.layers[0], requires it under 64 MiB, and accepts nothing
+          # in it but repository/repodata/* -- so it can resolve dependencies
+          # without pulling the multi-GB RPM payload. A single COPY put
+          # everything in one 2 GB layer and Utah refused 9e17ca2c with
+          #   Package image lacks a small leading metadata layer
+          # The repodata is repeated in the second layer; a few MB is cheaper
+          # than depending on COPY --exclude. tests/test_incremental_publish.py
+          # holds the order.
+          printf "FROM scratch\nCOPY repository/repodata /repository/repodata\nCOPY repository /repository\n" > Containerfile.repo
+          # cosign signs by pushing to the same registry, but it reads the
+          # Docker config rather than podman own auth file, so the login has to
+          # land somewhere both of them look. DOCKER_CONFIG is set on this step
+          # and on the signing step to the same directory.
+          mkdir -p "${DOCKER_CONFIG}"
+          echo "${GITHUB_TOKEN}" | podman login ghcr.io -u "$ACTOR" \
+            --password-stdin --authfile "${DOCKER_CONFIG}/config.json"
+          podman build --tag "${image}:${tag}" --file Containerfile.repo \
+            --label "org.projectbluefin.factory.state=${state}" \
+            --label "org.opencontainers.image.revision=${GITHUB_SHA}" \
+            --label "org.projectbluefin.factory.run=${GITHUB_RUN_ID}" .
+          podman push "${image}:${tag}" --digestfile /tmp/digest \
+            --authfile "${DOCKER_CONFIG}/config.json"
+          digest=$(cat /tmp/digest)
+          {
+            echo "ref=${image}:${tag}"
+            echo "image=${image}"
+            echo "digest=${digest}"
+          } >> "$GITHUB_OUTPUT"
+          echo "published ${image}:${tag}"
+          echo "consume it with: ${image}@${digest}"
+          {
+            echo "### Package repository published"
+            echo
+            echo '```'
+            echo "${image}:${tag}"
+            echo "${image}@${digest}"
+            echo '```'
+            echo
+            echo "Consume in a Containerfile:"
+            echo '```dockerfile'
+            echo "FROM ${image}@${digest} AS packages"
+            echo "COPY --from=packages /repository /etc/utah-packages"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Sign the published image
+        if: steps.oci.outputs.digest != ''
+        env:
+          COSIGN_YES: "true"
+          DOCKER_CONFIG: ${{ runner.temp }}/.docker
+          REPOSITORY_OWNER: ${{ github.repository_owner }}
+        run: |
+          owner=$(printf '%s' "$REPOSITORY_OWNER" | tr "[:upper:]" "[:lower:]")
+          cosign sign "ghcr.io/${owner}/utah-packages@${{ steps.oci.outputs.digest }}"
+      # A signature says this image came from here. Provenance says what built
+      # it -- workflow, commit, runner -- which is the question asked after a
+      # bad package ships, and the one a signature alone cannot answer.
+      #
+      # push-to-registry reads credentials from the default docker config
+      # (~/.docker/config.json). The publish step logs in with podman into a
+      # separate DOCKER_CONFIG under runner.temp, so run 36117470974 published
+      # and signed the image and then failed here on
+      #   No credentials found for registry ghcr.io
+      # Log in where the action looks.
+      - name: Log in to GHCR for the provenance attestation
+        if: steps.oci.outputs.digest != ''
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ACTOR: ${{ github.actor }}
+        run: echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$ACTOR" --password-stdin
+      # By this point the consumer tag has already moved and the image is
+      # signed; an attestation cannot be made before the digest exists, and
+      # pushing is what creates it. So a failure here must not turn the job
+      # red over a repository that did publish -- that is what made 36117470974
+      # look unpublished. It is non-fatal and reported loudly instead: a
+      # warning annotation and a line in the job summary saying provenance is
+      # missing for that digest, so it can be re-attested.
+      - name: Attest build provenance
+        id: attest
+        if: steps.oci.outputs.digest != ''
+        continue-on-error: true
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4
+        with:
+          subject-name: ${{ steps.oci.outputs.image }}
+          subject-digest: ${{ steps.oci.outputs.digest }}
+          push-to-registry: true
+      - name: Report a missing provenance attestation
+        if: steps.attest.outcome == 'failure'
+        env:
+          DIGEST: ${{ steps.oci.outputs.digest }}
+          IMAGE: ${{ steps.oci.outputs.image }}
+        run: |
+          echo "::warning title=provenance not attested::${IMAGE}@${DIGEST} is published and signed, but its build-provenance attestation failed; see the Attest build provenance step."
+          {
+            echo
+            echo "**Warning:** \`${IMAGE}@${DIGEST}\` is published and cosign-signed, but its build-provenance attestation failed."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # Names every package that did not publish, loudly, whether or not publish
+  # ran: in the job summary on every run, and on main in one tracking issue
+  # that is opened, updated as the failing set changes, and closed by the
+  # first run with no failures. Failures are read from the run's own artifact
+  # list -- build-stage.yml uploads rpm-s<stage>-<package> only for a package
+  # that produced RPMs -- so a publish that never started still gets a report.

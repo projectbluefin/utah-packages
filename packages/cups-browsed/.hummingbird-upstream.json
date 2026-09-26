@@ -1,0 +1,8 @@
+{
+  "package": "cups-browsed",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/cups-browsed.git",
+  "commit": "aee1596da8d5e94e7cae6b641d6bdbf4ee2115bf",
+  "tree": "4dbef1b62bf58093afd3a2c3d2c9890f1066bc6a",
+  "imported_at": "2026-09-20T19:15:45.587205+00:00"
+}

@@ -1,0 +1,12 @@
+diff -rupN --no-dereference giflib-6.1.3/doc/Makefile giflib-6.1.3-new/doc/Makefile
+--- giflib-6.1.3/doc/Makefile	2026-04-12 19:17:27.000000000 +0200
++++ giflib-6.1.3-new/doc/Makefile	2026-05-12 22:33:37.015795932 +0200
+@@ -1,7 +1,7 @@
+ .SUFFIXES: .xml .html .txt .adoc .1 .7
+ 
+ .xml.html:
+-	xmlto xhtml-nochunks $<
++	xmlto --stringparam generate.consistent.ids=1 xhtml-nochunks $<
+ 
+ .xml.1:
+ 	xmlto man $<

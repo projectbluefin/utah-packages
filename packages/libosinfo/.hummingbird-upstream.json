@@ -1,0 +1,8 @@
+{
+  "package": "libosinfo",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libosinfo.git",
+  "commit": "f8637bfaeeba32a07db96bedf6e023b6d02bcb59",
+  "tree": "e936c3ed6261fc5cc11b6a0ffb6580d94803f503",
+  "imported_at": "2026-09-23T03:30:23.579640+00:00"
+}

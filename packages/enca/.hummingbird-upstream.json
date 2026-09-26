@@ -1,0 +1,8 @@
+{
+  "package": "enca",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/enca.git",
+  "commit": "5d5c38b3ee706320a5115ece12103c6d90f306eb",
+  "tree": "b7a7fd4231729377c5e471d8bb90b5f1bf3074b5",
+  "imported_at": "2026-09-23T03:42:40.024504+00:00"
+}

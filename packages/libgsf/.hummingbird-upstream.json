@@ -1,0 +1,8 @@
+{
+  "package": "libgsf",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libgsf.git",
+  "commit": "73ac2bf8f88e857f9ca78228264bcbf29119312d",
+  "tree": "b67c53820d5e36180387f03b3531f0084306e0f9",
+  "imported_at": "2026-09-23T03:30:13.339201+00:00"
+}

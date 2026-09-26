@@ -1,13 +1,17 @@
 name: Bump upstream source locks
 
 # Opens one reviewable PR when a source this factory tracks ships a newer
-# release. Three feeds are polled, covering 63 of the 340 locks:
+# release. Three feeds are polled, covering 80 of the 373 locks:
 #
-#   download.gnome.org  17  cache.json per-module release index
-#   github.com          36  tags, or releases where a project publishes them
-#   gitlab (3 hosts)    10  repository tags API
+#   download.gnome.org  20  cache.json per-module release index
+#   github.com          47  tags, or releases where a project publishes them
+#   gitlab (3 hosts)    13  repository tags API
 #
-# The remaining 277 are locked on Fedora's lookaside cache or on a bare
+# A lock whose stable primary is the lookaside still tracks the feed its
+# fallback mirror names, but only as a review-only proposal: the new bytes
+# are not in the lookaside until Fedora uploads them.
+#
+# The remaining 293 are locked on Fedora's lookaside cache or on a bare
 # directory listing. A lookaside URL carries its own digest in the path, so
 # there is nothing to poll for "latest"; reaching those needs each project's
 # real upstream feed identified per package, which is tracked separately.

@@ -1,0 +1,8 @@
+{
+  "package": "gnome-initial-setup",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/gnome-initial-setup.git",
+  "commit": "3c227054193fc92bda8c468b6ef0599442e97c33",
+  "tree": "10c8d802bb1bd399a04b30997fd1cdbef4962297",
+  "imported_at": "2026-09-24T22:15:35.402817+00:00"
+}

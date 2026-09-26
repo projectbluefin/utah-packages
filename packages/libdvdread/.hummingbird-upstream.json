@@ -1,0 +1,8 @@
+{
+  "package": "libdvdread",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libdvdread.git",
+  "commit": "d2b90c039bd40b4d1f7f52836c52652d4e345448",
+  "tree": "843563f9d80497772d842540a46e4154c2854756",
+  "imported_at": "2026-09-23T03:30:34.224623+00:00"
+}

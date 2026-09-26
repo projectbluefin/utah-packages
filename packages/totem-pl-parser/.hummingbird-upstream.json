@@ -1,0 +1,8 @@
+{
+  "package": "totem-pl-parser",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/totem-pl-parser.git",
+  "commit": "9abb5847b1329cd4e034925d69d102bd0d492914",
+  "tree": "b1589437ca8ae02e0b30813560c3dc81714ab9fd",
+  "imported_at": "2026-09-24T23:38:32.910205+00:00"
+}

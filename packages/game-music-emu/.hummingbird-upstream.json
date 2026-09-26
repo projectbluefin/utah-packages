@@ -1,0 +1,8 @@
+{
+  "package": "game-music-emu",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/game-music-emu.git",
+  "commit": "a866db15486e51af0efb451ea6b4efde08a7ba63",
+  "tree": "5ea3a4fa6a284c646e04d8dae685968cf278f50a",
+  "imported_at": "2026-09-23T03:30:38.207396+00:00"
+}

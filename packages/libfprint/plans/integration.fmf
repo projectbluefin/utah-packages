@@ -1,0 +1,5 @@
+summary: Test for libfprint
+discover:
+    how: fmf
+execute:
+    how: tmt

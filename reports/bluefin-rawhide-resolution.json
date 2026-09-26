@@ -1,5 +1,5 @@
 {
-  "binary_count": 75,
+  "binary_count": 74,
   "import_failures": [],
   "imported_sources": [
     "adw-gtk3-theme",
@@ -141,11 +141,6 @@
     "zenity": "zenity",
     "zsh": "zsh"
   },
-  "unavailable": [
-    {
-      "binary": "pipewire-libs-extra",
-      "reason": "Updating and loading repositories:\nRepositories loaded."
-    }
-  ],
+  "unavailable": [],
   "upstream_manifest": "https://github.com/projectbluefin/bluefin/blob/main/build_files/packages/base.toml"
 }

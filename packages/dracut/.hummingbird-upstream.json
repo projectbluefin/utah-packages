@@ -1,8 +1,0 @@
-{
-  "package": "dracut",
-  "branch": "rawhide",
-  "remote": "https://src.fedoraproject.org/rpms/dracut.git",
-  "commit": "6b9ddd529cc9da2a2b8a0978bebddd51ca90f6eb",
-  "tree": "e99da5963ea3f7b13685f184bf68a521fe38adfb",
-  "imported_at": "2026-08-29T06:02:21.218517+00:00"
-}

@@ -99,13 +99,75 @@ class BuildRootSharingTests(unittest.TestCase):
         self.assertNotIn("exit 1", prepare.split("docker pull")[1].split("digest=")[0])
 
     def test_the_shared_image_is_uploaded_and_downloaded_under_one_name(self) -> None:
-        self.assertIn("name: buildroot-image", jobs(REBUILD)["prepare"])
-        self.assertIn("name: buildroot-image", LOAD_ACTION.read_text())
+        # One name, optionally prefixed: the canary runs the pipeline several
+        # times in one workflow run and artifact names are unique per run.
+        self.assertIn("name: ${{ inputs.artifact_prefix }}buildroot-image", jobs(REBUILD)["prepare"])
+        self.assertIn("default: buildroot-image", LOAD_ACTION.read_text())
+        self.assertIn("name: ${{ inputs.artifact }}", LOAD_ACTION.read_text())
+        for workflow in (REBUILD, BUILD_STAGE):
+            text = workflow.read_text()
+            self.assertEqual(
+                text.count("- uses: ./.github/actions/load-buildroot"),
+                text.count("artifact: ${{ inputs.artifact_prefix }}buildroot-image"),
+                f"{workflow.name}: every load names the prefixed artifact",
+            )
 
     def test_the_load_action_asserts_the_image_arrived(self) -> None:
         # Without this, a failed download surfaces as a confusing docker error
         # inside the build step instead of a clear one here.
         self.assertIn("docker image inspect utah-buildroot:run", LOAD_ACTION.read_text())
+
+    def test_a_mirror_pin_is_pulled_by_its_exact_digest(self) -> None:
+        # The factory mirror is never pruned, so its digest is the pull
+        # target; only the legacy quay.io form pulls a moving tag.
+        prepare = jobs(REBUILD)["prepare"]
+        self.assertIn("ghcr.io/projectbluefin/utah-buildroot:*@sha256:*)", prepare)
+        self.assertIn('docker pull "${tag%:*}@${expected}"', prepare)
+
+
+class BuildRootPinTests(unittest.TestCase):
+    PIN = "ghcr.io/projectbluefin/utah-buildroot:44-20260925-94e175d9796d@sha256:" + "a" * 64
+
+    def test_the_committed_pin_is_a_mirror_digest_pin(self) -> None:
+        from tools import buildroot_pin
+
+        self.assertTrue(buildroot_pin.is_mirror_pin(buildroot_pin.get()))
+
+    def test_the_pin_lives_outside_workflow_files(self) -> None:
+        # The workflow token cannot push workflow edits, so a pin inside a
+        # workflow could never be moved by refresh-buildroot.yml.
+        for path in sorted(WORKFLOWS.glob("*.yml")):
+            self.assertNotRegex(path.read_text(), r"(?m)^\s*BUILDROOT_IMAGE:\s*\S", path.name)
+        self.assertIn("python3 tools/buildroot_pin.py get", jobs(REBUILD)["prepare"])
+
+    def test_set_then_get_round_trips(self) -> None:
+        import tempfile
+        from tools import buildroot_pin
+
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "buildroot-image"
+            buildroot_pin.set_pin(self.PIN, path)
+            self.assertEqual(buildroot_pin.get(path), self.PIN)
+
+    def test_set_refuses_anything_but_a_mirror_digest_pin(self) -> None:
+        import tempfile
+        from tools import buildroot_pin
+
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "buildroot-image"
+            for bad in (
+                "quay.io/fedora/fedora:44@sha256:" + "a" * 64,  # prunable upstream
+                "ghcr.io/projectbluefin/utah-buildroot:44",  # no digest
+                "ghcr.io/projectbluefin/utah-buildroot@sha256:" + "a" * 64,  # no tag
+            ):
+                with self.assertRaises(ValueError):
+                    buildroot_pin.set_pin(bad, path)
+
+    def test_the_refresh_workflow_writes_the_pin_through_the_tool(self) -> None:
+        refresh = (WORKFLOWS / "refresh-buildroot.yml").read_text()
+        self.assertIn("python3 tools/buildroot_pin.py set", refresh)
+        self.assertIn("ghcr.io/projectbluefin/utah-buildroot", refresh)
+        self.assertIn("schedule:", refresh)
 
 
 if __name__ == "__main__":

@@ -53,6 +53,20 @@ ICU_77_REBUILDS = {
     # libical-0:3.0.20-7.fc44 from fedora and then libicu-0:77.1-2.1.hum1.
     # The factory's own libical is clean: it built against libicu-78.3-8.hum1.
     "libical": ("bluez",),
+    # Fedora's nautilus-50.x requires libicuuc.so.77 and libicui18n.so.77, and
+    # also requires localsearch. nautilus-python is its only consumer here and
+    # sat in the same stage 6, so its root had to take Fedora's nautilus -- and
+    # could not. This one does not contaminate quietly, it fails the build:
+    # localsearch (stage 4) was already excluded from Fedora by name, so the
+    # root took the factory's, which requires libicui18n.so.78 and pins libicu
+    # to 78.3. Run 35480019777 ended on
+    #   package localsearch-3.12~beta-1.hum1.bfin from stages requires
+    #   libicui18n.so.78, but none of the providers can be installed
+    #   - cannot install both libicu-78.3-* and libicu-77.1-2.1.hum1
+    #   - package nautilus-50.0-1.fc44 from fedora requires libicuuc.so.77
+    # Ordering nautilus-python after nautilus settles it twice over: the
+    # factory's nautilus is ICU 78 and, being built, is excluded from Fedora.
+    "nautilus": ("nautilus-python",),
 }
 
 
@@ -72,10 +86,11 @@ class IcuStagingTests(unittest.TestCase):
         """Moving a package earlier must not outrun what it is built from.
 
         samba BuildRequires the factory's libtevent, libtalloc, libtdb and icu.
-        Pulling samba forward is only correct if those still precede it.
+        (libxcrypt now comes directly from Hummingbird.) Pulling samba forward
+        is only correct if the factory-owned dependencies still precede it.
         """
         required_before = {
-            "samba": ("libtevent", "libtalloc", "libtdb", "icu", "libxcrypt"),
+            "samba": ("libtevent", "libtalloc", "libtdb", "icu"),
             # gvfs moved from stage 1 to 3 to land after samba; everything else
             # it is built from is stage 0, so nothing else constrains it.
             "gvfs": ("samba", "libnfs", "libsoup3", "libsecret", "udisks2"),

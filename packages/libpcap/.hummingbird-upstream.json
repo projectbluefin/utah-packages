@@ -1,0 +1,8 @@
+{
+  "package": "libpcap",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libpcap.git",
+  "commit": "72cd9ecf404e67c3290340de53b9393a07813ea0",
+  "tree": "5ac08b0a16313a33d92f58d4f56a85834e602488",
+  "imported_at": "2026-09-20T05:46:44.451698+00:00"
+}
