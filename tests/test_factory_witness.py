@@ -167,7 +167,8 @@ class FactoryWitnessTests(unittest.TestCase):
         self.assertIn('test -f "$TARGET/repodata/repomd.xml"', LOAD_ACTION.read_text())
 
     def test_debuginfo_is_not_built_only_to_be_discarded(self) -> None:
-        text = uncommented(BUILD_STAGE)
+        # Both lanes: the mock lane inline, the container lane in its script.
+        text = uncommented(BUILD_STAGE) + uncommented(ROOT / "tools" / "build_container.sh")
         self.assertIn("!work/result/**/*-debuginfo-*.rpm", text)
         self.assertEqual(text.count('--define "debug_package %{nil}"'), 2)
         # debug_package alone is not enough: %mingw_debug_package sets

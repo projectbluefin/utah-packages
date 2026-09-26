@@ -21,10 +21,14 @@ CHECK_FAILURE = re.compile(r'grep -qE "Bad exit status from \.\*\\\(%check\\\)" 
 
 
 def step(name: str) -> dict:
+    """A build-stage.yml step; the container lane's script is in its own file."""
     workflow = yaml.safe_load(BUILD_STAGE.read_text())
-    return next(
+    found = dict(next(
         s for s in workflow["jobs"]["build"]["steps"] if s.get("name") == name
-    )
+    ))
+    if "/tools/build_container.sh" in found.get("run", ""):
+        found["run"] += "\n" + (ROOT / "tools" / "build_container.sh").read_text()
+    return found
 
 
 LANES = {
