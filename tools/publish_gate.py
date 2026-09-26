@@ -327,12 +327,28 @@ def _normalized(gate: str) -> str:
     return re.sub(r"\s+", " ", gate).strip()
 
 
-def assert_gate_enforced(workflow: dict) -> None:
-    """The publish job must encode exactly the rule ``publish_allowed`` models."""
+PUBLISH_WORKFLOW = REBUILD_WORKFLOW.with_name("publish-repository.yml")
+PUBLISH_USES = "./.github/workflows/publish-repository.yml"
+EARLY_JOB = re.compile(r"^publish(\d+)$")
+
+
+def assert_gate_enforced(workflow: dict, publish_workflow: dict | None = None) -> None:
+    """The publish jobs must encode exactly the rule ``publish_allowed`` models.
+
+    ``workflow`` is rebuild-rpms.yml, which decides *when* a publication
+    runs; ``publish_workflow`` is publish-repository.yml, which decides what
+    one does.
+    """
+    if publish_workflow is None:
+        publish_workflow = load_workflow(PUBLISH_WORKFLOW)
     try:
         publish = workflow["jobs"]["publish"]
     except (KeyError, TypeError) as error:
         raise AssertionError("rebuild-rpms.yml has no publish job") from error
+    if publish.get("uses") != PUBLISH_USES:
+        raise AssertionError(f"rebuild-rpms.yml's publish job must call {PUBLISH_USES}")
+    if publish.get("with", {}).get("final") is not True:
+        raise AssertionError("rebuild-rpms.yml's publish job must be the final publication")
 
     gate = _normalized(str(publish.get("if", "")))
 
@@ -346,8 +362,9 @@ def assert_gate_enforced(workflow: dict) -> None:
             "update STAGES and the publish job together"
         )
 
-    # Publish still waits for every wave to *finish*: a wave still running
-    # would otherwise be published around, and its packages reported failed.
+    # The final publication still waits for every wave to *finish*: a wave
+    # still running would otherwise be published around, and its packages
+    # reported failed.
     needs = publish.get("needs", [])
     if isinstance(needs, str):
         needs = [needs]
@@ -356,34 +373,67 @@ def assert_gate_enforced(workflow: dict) -> None:
         raise AssertionError(
             f"publish job must depend on every rebuild wave; missing {missing}"
         )
-    if "precedence" not in needs:
-        raise AssertionError("publish job must depend on precedence")
 
     # ...but no wave's result may veto it. That was the atomic rule, and the
     # reason one flaky test held back every package.
-    for stage in stages:
-        if f"needs.{stage}.result" in gate:
-            raise AssertionError(
-                f"publish gate must not depend on {stage}'s result; a failed "
-                "package keeps its previous build instead"
-            )
-    if "!cancelled()" not in gate:
-        raise AssertionError("publish must run after a failed wave, so its if: needs !cancelled()")
+    for name, job in workflow["jobs"].items():
+        if job.get("uses") != PUBLISH_USES:
+            continue
+        condition = _normalized(str(job.get("if", "")))
+        for stage in stages:
+            if f"needs.{stage}.result" in condition:
+                raise AssertionError(
+                    f"{name} must not depend on {stage}'s result; a failed "
+                    "package keeps its previous build instead"
+                )
+        if "!cancelled()" not in condition:
+            raise AssertionError(f"{name} must run after a failed wave, so its if: needs !cancelled()")
+        if "needs.prepare.result == 'success'" not in condition:
+            raise AssertionError(f"{name} must require prepare to succeed")
 
-    if "needs.prepare.result == 'success'" not in gate:
-        raise AssertionError("publish gate must require prepare to succeed")
+    # An early publication covers waves 0..k and must not wait for a later
+    # wave -- that is its whole point -- nor cover one.
+    for name, job in workflow["jobs"].items():
+        match = EARLY_JOB.match(name)
+        if not match:
+            continue
+        wave = int(match.group(1))
+        early_needs = job.get("needs", [])
+        later = [need for need in early_needs
+                 if (m := STAGE_JOB.match(need)) and int(m.group(1)) > wave]
+        if later:
+            raise AssertionError(f"{name} must not wait for later waves {later}")
+        with_ = job.get("with", {})
+        if with_.get("final") is not False or str(with_.get("wave")) != str(wave):
+            raise AssertionError(f"{name} must be an early publication of wave {wave}")
+        if f"needs.prepare.outputs.through{wave}" not in str(with_.get("build_list")):
+            raise AssertionError(f"{name} must cover exactly waves 0..{wave}")
+
+    triggers = workflow.get("on", workflow.get(True, {}))
+    if "pull_request" in triggers and "pull_request.head.repo.full_name" not in gate:
+        raise AssertionError("publish gate must exclude fork pull requests")
+
+    _assert_publication(publish_workflow)
+
+
+def _assert_publication(publish_workflow: dict) -> None:
+    """What one publication does, in publish-repository.yml."""
+    try:
+        publish = publish_workflow["jobs"]["publish"]
+    except (KeyError, TypeError) as error:
+        raise AssertionError("publish-repository.yml has no publish job") from error
+    needs = publish.get("needs", [])
+    if isinstance(needs, str):
+        needs = [needs]
+    if "precedence" not in needs:
+        raise AssertionError("publish job must depend on precedence")
+    gate = _normalized(str(publish.get("if", "")))
     # Precedence names the builds that must not replace their predecessor,
     # so it has to have run.
     if "needs.precedence.result == 'success'" not in gate:
         raise AssertionError("publish gate must require precedence to succeed")
-
-    triggers = workflow.get("on", workflow.get(True, {}))
-    if (
-        "pull_request" in triggers
-        and "pull_request.head.repo.full_name" not in gate
-    ):
-        raise AssertionError("publish gate must exclude fork pull requests")
-
+    if "!cancelled()" not in gate:
+        raise AssertionError("publish must run after a failed wave, so its if: needs !cancelled()")
     _assert_step_order(publish)
 
 
@@ -416,10 +466,15 @@ def _assert_step_order(publish: dict) -> None:
     run = str(steps[assemble_step].get("run", ""))
     if "tools/publish_gate.py assemble" not in run:
         raise AssertionError("the replacement must be decided by publish_gate.py assemble")
-    # The validation runs whenever the publish job runs and its non-zero exit
-    # fails the job before the image step; it must not be skippable.
+    # The validation runs whenever the publish job runs; it must not be
+    # skippable, and the image step must require it to have passed. Only an
+    # early publication may carry on past a failure -- publishing nothing.
     if "if" in steps[validate]:
         raise AssertionError("the transaction validation must not be skippable")
+    if "steps.validate.outcome == 'success'" not in str(steps[publish_step].get("if", "")):
+        raise AssertionError("the image may publish only when the transaction validated")
+    if str(steps[validate].get("continue-on-error", "false")) not in ("false", "${{ !inputs.final }}"):
+        raise AssertionError("only an early publication may continue past a failed transaction")
 
 
 def load_workflow(path: Path = REBUILD_WORKFLOW) -> dict:
@@ -482,6 +537,19 @@ def _cli_report(args: argparse.Namespace) -> int:
     return 0
 
 
+def artifact_pattern(wave: str, prefix: str) -> str:
+    """download-artifact pattern for the RPMs of waves 0..wave (all if empty).
+
+    Brace alternation needs two members to expand, so wave 0 is spelled out.
+    """
+    if wave == "":
+        return f"{prefix}rpm-*"
+    last = int(wave)
+    if last == 0:
+        return f"{prefix}rpm-s0-*"
+    return f"{prefix}rpm-s{{{','.join(str(n) for n in range(last + 1))}}}-*"
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     commands = parser.add_subparsers(dest="command")
@@ -509,7 +577,13 @@ def main(argv: list[str] | None = None) -> int:
     report_cmd.add_argument("--failed-output", type=Path, required=True)
     marker_cmd = commands.add_parser("marker")
     marker_cmd.add_argument("body", type=Path)
+    pattern_cmd = commands.add_parser("pattern")
+    pattern_cmd.add_argument("--wave", default="")
+    pattern_cmd.add_argument("--prefix", default="")
     args = parser.parse_args(argv)
+    if args.command == "pattern":
+        print(f"pattern={artifact_pattern(args.wave, args.prefix)}")
+        return 0
     if args.command == "report":
         return _cli_report(args)
     if args.command == "marker":
@@ -519,7 +593,7 @@ def main(argv: list[str] | None = None) -> int:
         return _cli_assemble(args)
     if args.command == "failures":
         return _cli_failures(args)
-    assert_gate_enforced(load_workflow())
+    assert_gate_enforced(load_workflow(), load_workflow(PUBLISH_WORKFLOW))
     print("publish gate enforced: every wave finishes, a failed package keeps its "
           "previous build, precedence runs, and the Hummingbird-only transaction "
           "validates before the image publishes")

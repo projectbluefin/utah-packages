@@ -19,6 +19,7 @@ import yaml
 ROOT = Path(__file__).resolve().parent.parent
 WORKFLOWS = ROOT / ".github" / "workflows"
 REBUILD = WORKFLOWS / "rebuild-rpms.yml"
+PUBLISH = WORKFLOWS / "publish-repository.yml"
 BUILD_STAGE = WORKFLOWS / "build-stage.yml"
 LOAD_ACTION = ROOT / ".github" / "actions" / "load-factory-repo" / "action.yml"
 REBUILD_MATRIX = ROOT / "tools" / "rebuild_matrix.py"
@@ -74,11 +75,11 @@ class FactoryWitnessTests(unittest.TestCase):
         self.assertLess(order.index("Extract BuildRequires from every recipe"), order.index("matrix"))
 
     def test_publish_records_the_state_without_adding_a_layer(self) -> None:
-        workflow = yaml.safe_load(REBUILD.read_text())
+        workflow = yaml.safe_load(PUBLISH.read_text())
         oci = next(s for s in workflow["jobs"]["publish"]["steps"] if s.get("id") == "oci")
         self.assertIn('--label "org.projectbluefin.factory.state=${state}"', oci["run"])
         self.assertIn("python3 tools/factory_state.py merge", oci["run"])
-        self.assertEqual(oci["env"]["TRUSTED"], "${{ needs.prepare.outputs.trusted || '[]' }}")
+        self.assertEqual(oci["env"]["TRUSTED"], "${{ inputs.trusted || '[]' }}")
 
     def test_the_schedule_is_daily_plus_a_weekly_full_rebuild(self) -> None:
         workflow = yaml.safe_load(REBUILD.read_text())
@@ -181,8 +182,9 @@ class FactoryWitnessTests(unittest.TestCase):
         started before another run published. It must refuse to overwrite that
         newer image with artifacts built against an older witness.
         """
-        text = uncommented(REBUILD)
-        self.assertIn('EXPECTED_IMAGE: ${{ needs.prepare.outputs.seed_image }}', text)
+        text = uncommented(REBUILD) + uncommented(PUBLISH)
+        self.assertIn('EXPECTED_IMAGE: ${{ inputs.seed_image }}', text)
+        self.assertIn('seed_image: ${{ needs.prepare.outputs.seed_image }}', text)
         # Outside the canary the seed is exactly the factory image prepare
         # read; the canary may only ever seed from its own tag.
         self.assertIn('seed="$resolved"', text)
@@ -231,13 +233,14 @@ class FactoryWitnessTests(unittest.TestCase):
 
     def test_a_failed_prepare_stops_precedence_and_publish(self) -> None:
         text = uncommented(REBUILD)
-        # precedence, publish, and the report job
-        self.assertEqual(text.count("needs.prepare.result == 'success'"), 3)
+        # every publication (early and final), and the report job
+        self.assertEqual(text.count("needs.prepare.result == 'success'"), 15)
 
     def test_publish_prunes_hummingbird_owned_sources_from_its_seed(self) -> None:
-        text = uncommented(REBUILD)
+        text = uncommented(REBUILD) + uncommented(PUBLISH)
         self.assertIn('prune_sources: ${{ steps.matrix.outputs.prune_sources }}', text)
-        self.assertIn('PRUNE_SOURCES: ${{ needs.prepare.outputs.prune_sources }}', text)
+        self.assertIn('prune_sources: ${{ needs.prepare.outputs.prune_sources }}', text)
+        self.assertIn('PRUNE_SOURCES: ${{ inputs.prune_sources }}', text)
         self.assertIn('rpm -qp --qf \'%{SOURCERPM}\'', text)
         self.assertIn("needs.prepare.outputs.prune_sources != '[]'", text)
 
@@ -270,7 +273,7 @@ class IcuAgreementTests(unittest.TestCase):
     SPELLING = "libicu-77.*-*hum1"
 
     def test_the_consumer_transaction_still_excludes_icu_77(self):
-        self.assertIn(self.SPELLING, uncommented(REBUILD),
+        self.assertIn(self.SPELLING, uncommented(PUBLISH),
                       "the consumer transaction must exclude libicu 77")
 
     def test_the_build_root_does_not_exclude_the_last_provider_of_so_77(self):

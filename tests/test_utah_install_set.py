@@ -11,7 +11,7 @@ import yaml
 from tools import utah_install_set as uis
 
 ROOT = Path(__file__).resolve().parent.parent
-REBUILD = ROOT / ".github" / "workflows" / "rebuild-rpms.yml"
+REBUILD = ROOT / ".github" / "workflows" / "publish-repository.yml"
 
 INSTALLER = '''
 import tomllib
@@ -130,7 +130,8 @@ class WorkflowTests(unittest.TestCase):
         self.assertIn("utah_install_set.py fetch", step["run"])
 
     def test_one_issue_per_package_on_main_only(self) -> None:
-        step = next(s for s in self.jobs["report"]["steps"]
+        factory = yaml.safe_load((ROOT / ".github" / "workflows" / "rebuild-rpms.yml").read_text())
+        step = next(s for s in factory["jobs"]["report"]["steps"]
                     if s.get("name") == "Track each package Utah cannot install")
         for clause in ("refs/heads/main", "inputs.publish_tag == ''",
                        "inputs.artifact_prefix == ''", "needs.publish.outputs.utah_report != ''"):

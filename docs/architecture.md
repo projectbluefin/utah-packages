@@ -207,6 +207,17 @@ decides the replacement (`assemble`), models the gate (`publish_allowed`) and
 checks the publish job against both; `tests/test_incremental_publish.py`
 drives them through each failure mode.
 
+Publication happens as waves finish, not once at the end. After each wave
+that has later waves still to come, `rebuild-rpms.yml` calls
+`publish-repository.yml` for waves 0..k (`publish0`..`publish12`), and a final
+call covers every wave. Each publication seeds from the image the previous
+one pushed, which the witness check accepts because it carries this run's id,
+and each is gated on its own Hummingbird-only transaction. An early one may
+fail it -- a library whose soname moved publishes before its consumers are
+rebuilt -- and then publishes nothing; only the final one fails the run. So a
+one-line fix to a wave-0 library publishes when wave 0 finishes, not when the
+slowest package in the same run does.
+
 A second, advisory check follows it: what Utah actually installs. The gate's
 contract is about 78 packages; Utah installs about 120 -- Bluefin's
 `[fedora]` and `[fedora_v44]` plus Utah's `[gnome]`, `[parity]`, `[hardware]`,

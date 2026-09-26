@@ -253,6 +253,23 @@ class HermeticVerdictTests(unittest.TestCase):
         self.assertEqual(canary.build_outcomes(jobs)["pass6"]["libical"], "compiled")
 
 
+class EarlyPublishTests(unittest.TestCase):
+    def jobs(self, oci="success", early_end="2026-09-26T02:05:00Z"):
+        return [
+            {"name": "pass1 / publish0 / publish", "completed_at": early_end,
+             "steps": [{"name": "Publish the repository as an OCI image", "conclusion": oci}]},
+            {"name": "pass1 / publish / publish", "started_at": "2026-09-26T02:09:00Z", "steps": []},
+        ]
+
+    def test_an_early_image_before_the_final_one_passes(self) -> None:
+        self.assertEqual(canary.early_publish_problems(self.jobs(), "pass1", 0), [])
+
+    def test_no_image_or_a_late_one_fails(self) -> None:
+        self.assertTrue(canary.early_publish_problems(self.jobs(oci="skipped"), "pass1", 0))
+        self.assertTrue(canary.early_publish_problems(self.jobs(early_end="2026-09-26T02:10:00Z"), "pass1", 0))
+        self.assertTrue(canary.early_publish_problems([], "pass1", 0))
+
+
 class WorkflowShapeTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:

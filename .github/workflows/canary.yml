@@ -205,6 +205,19 @@ jobs:
           requested=$(jq -r '.requested' <<<"${UTAH_REPORT:-null}")
           echo "Utah install set checked: $requested packages, $(jq '.unresolved | length' <<<"$UTAH_REPORT") unresolved against the canary repository"
           test "$requested" -ge 100
+      # vulkan-loader is wave 1, so wave 0 (libical, vulkan-headers) must
+      # have published on its own while vulkan-loader was still building.
+      - name: Wave 0 published before the final publication
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          set -euo pipefail
+          gh api --paginate "repos/$REPOSITORY/actions/runs/$RUN_ID/attempts/$RUN_ATTEMPT/jobs?per_page=100" \
+            --jq '.jobs[]' | jq -s . > jobs.json
+          python3 tools/canary.py verify-early jobs.json --pass pass1 --wave 0
       - name: Verify the signature and provenance of the canary image
         env:
           GH_TOKEN: ${{ github.token }}

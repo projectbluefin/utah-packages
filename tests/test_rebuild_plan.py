@@ -445,6 +445,16 @@ class StageOutputTests(unittest.TestCase):
             ["late"],
         )
 
+    def test_early_publications_cover_every_wave_but_the_last(self) -> None:
+        build = [{"name": "libass"}, {"name": "ffmpeg"}, {"name": "gst-bad"}, {"name": "webkitgtk"}]
+        outputs = stage_outputs(build, {"libass": 0, "webkitgtk": 0, "ffmpeg": 1, "gst-bad": 3})
+        self.assertEqual(json.loads(outputs["early_waves"]), ["0", "1"])
+        self.assertEqual(json.loads(outputs["through0"]), ["libass", "webkitgtk"])
+        self.assertEqual(json.loads(outputs["through1"]), ["libass", "ffmpeg", "webkitgtk"])
+        self.assertEqual(json.loads(outputs["through2"]), json.loads(outputs["through1"]))
+        single = stage_outputs([{"name": "xdg-terminal-exec"}], {"xdg-terminal-exec": 0})
+        self.assertEqual(json.loads(single["early_waves"]), [], "one wave: the final publication covers it")
+
     def test_solved_waves_override_the_config_stage(self) -> None:
         build = [{"name": "gnome-shell", "stage": 10}, {"name": "mutter", "stage": 6}]
         outputs = stage_outputs(build, {"mutter": 0, "gnome-shell": 1})

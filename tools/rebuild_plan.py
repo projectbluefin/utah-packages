@@ -496,6 +496,17 @@ def stage_outputs(build: list[dict], waves: dict[str, int] | None = None) -> dic
         outputs[f"stage{stage}_chunks"] = json.dumps(
             [json.dumps(chunk) for chunk in chunks]
         )
+    # What an early publication after wave k covers, and which waves get one:
+    # every non-empty wave that has a later non-empty wave, because the final
+    # publication covers the last one anyway. rebuild-rpms.yml publishes each
+    # of those waves' successes as it finishes (publish-repository.yml).
+    occupied = [stage for stage in range(STAGES)
+                if json.loads(outputs[f"stage{stage}"])]
+    for stage in range(STAGES - 1):
+        outputs[f"through{stage}"] = json.dumps(
+            [entry["name"] for entry in build if wave(entry) <= stage]
+        )
+    outputs["early_waves"] = json.dumps([str(stage) for stage in occupied[:-1]])
     return outputs
 
 

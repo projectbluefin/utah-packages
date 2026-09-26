@@ -31,6 +31,7 @@ from tools.publish_gate import (
     assert_gate_enforced,
     failed_marker,
     failures_from_artifacts,
+    PUBLISH_WORKFLOW,
     load_workflow,
     publish_allowed,
     rebuild_stages,
@@ -175,6 +176,22 @@ class AssembleTests(unittest.TestCase):
             ])
 
 
+class ArtifactPatternTests(unittest.TestCase):
+    def test_a_publication_downloads_only_the_waves_it_covers(self):
+        from fnmatch import fnmatch
+
+        from tools.publish_gate import artifact_pattern
+
+        self.assertEqual(artifact_pattern("", "p1-"), "p1-rpm-*")
+        self.assertEqual(artifact_pattern("0", ""), "rpm-s0-*")
+        self.assertEqual(artifact_pattern("2", ""), "rpm-s{0,1,2}-*")
+        # download-artifact expands the braces; check the expansion by hand.
+        expanded = ["rpm-s0-*", "rpm-s1-*", "rpm-s2-*"]
+        for name, covered in (("rpm-s1-libass", True), ("rpm-s10-gtk4", False),
+                              ("rpm-s3-webkitgtk", False)):
+            self.assertEqual(any(fnmatch(name, p) for p in expanded), covered, name)
+
+
 class BootstrapTests(unittest.TestCase):
     def test_a_bootstrap_build_never_replaces_the_real_package(self):
         from tools.publish_gate import publishable
@@ -240,6 +257,7 @@ class PublishGateWorkflowTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.workflow = load_workflow()
+        cls.publication = load_workflow(PUBLISH_WORKFLOW)
 
     def test_workflow_gate_matches_decision(self):
         assert_gate_enforced(self.workflow)
@@ -248,7 +266,7 @@ class PublishGateWorkflowTests(unittest.TestCase):
         """The Containerfile.repo the publish step writes, as printf renders it."""
         import re
 
-        steps = self.workflow["jobs"]["publish"]["steps"]
+        steps = self.publication["jobs"]["publish"]["steps"]
         run = next(step for step in steps if step.get("id") == "oci")["run"]
         match = re.search(r'printf "([^"]*)" > Containerfile\.repo', run)
         self.assertIsNotNone(match, "publish no longer writes Containerfile.repo with printf")
@@ -270,7 +288,7 @@ class PublishGateWorkflowTests(unittest.TestCase):
     def test_transaction_validated_before_publish(self):
         names = [
             str(step.get("name", ""))
-            for step in self.workflow["jobs"]["publish"]["steps"]
+            for step in self.publication["jobs"]["publish"]["steps"]
         ]
         validate = next(
             i for i, name in enumerate(names)
@@ -323,22 +341,56 @@ class PublishGateWorkflowTests(unittest.TestCase):
             assert_gate_enforced(workflow)
 
     def test_publish_must_still_require_precedence_and_prepare(self):
-        for clause in ("needs.precedence.result == 'success'",
-                       "needs.prepare.result == 'success'"):
-            workflow = copy.deepcopy(self.workflow)
-            workflow["jobs"]["publish"]["if"] = workflow["jobs"]["publish"]["if"].replace(
-                clause, "true")
-            with self.subTest(clause=clause), self.assertRaises(AssertionError):
-                assert_gate_enforced(workflow)
+        workflow = copy.deepcopy(self.workflow)
+        workflow["jobs"]["publish"]["if"] = workflow["jobs"]["publish"]["if"].replace(
+            "needs.prepare.result == 'success'", "true")
+        with self.assertRaises(AssertionError):
+            assert_gate_enforced(workflow, self.publication)
+        publication = copy.deepcopy(self.publication)
+        publication["jobs"]["publish"]["if"] = publication["jobs"]["publish"]["if"].replace(
+            "needs.precedence.result == 'success'", "true")
+        with self.assertRaises(AssertionError):
+            assert_gate_enforced(self.workflow, publication)
 
     def test_the_replacement_step_comes_between_seed_and_transaction(self):
-        workflow = copy.deepcopy(self.workflow)
-        steps = workflow["jobs"]["publish"]["steps"]
+        publication = copy.deepcopy(self.publication)
+        steps = publication["jobs"]["publish"]["steps"]
         index = next(i for i, s in enumerate(steps)
                      if "Replace the packages this run built" in str(s.get("name")))
         steps.append(steps.pop(index))
         with self.assertRaises(AssertionError):
-            assert_gate_enforced(workflow)
+            assert_gate_enforced(self.workflow, publication)
+
+    def test_the_image_publishes_only_after_the_transaction_validated(self):
+        publication = copy.deepcopy(self.publication)
+        oci = next(s for s in publication["jobs"]["publish"]["steps"] if s.get("id") == "oci")
+        oci["if"] = "steps.assemble.outputs.publish == 'true'"
+        with self.assertRaises(AssertionError):
+            assert_gate_enforced(self.workflow, publication)
+
+    def test_each_wave_publishes_as_it_finishes_without_waiting_for_later_ones(self):
+        early = {name: job for name, job in self.workflow["jobs"].items()
+                 if name.startswith("publish") and name != "publish"}
+        self.assertEqual(len(early), len(STAGES) - 1)
+        for name, job in early.items():
+            wave = int(name.removeprefix("publish"))
+            with self.subTest(job=name):
+                self.assertFalse(job["with"]["final"])
+                self.assertIn(f"rebuild{wave}", job["needs"])
+                self.assertNotIn(f"rebuild{wave + 1}", job["needs"])
+                self.assertIn(f"contains(fromJSON(needs.prepare.outputs.early_waves), '{wave}')", job["if"])
+        # One after another: each seeds from the previous one's image.
+        self.assertIn("publish0", early["publish1"]["needs"])
+        workflow = copy.deepcopy(self.workflow)
+        workflow["jobs"]["publish2"]["needs"].append("rebuild5")
+        with self.assertRaises(AssertionError):
+            assert_gate_enforced(workflow, self.publication)
+
+    def test_only_an_early_publication_may_carry_on_past_a_failed_transaction(self):
+        validate = next(s for s in self.publication["jobs"]["publish"]["steps"]
+                        if s.get("id") == "validate")
+        self.assertEqual(validate["continue-on-error"], "${{ !inputs.final }}")
+        self.assertTrue(self.workflow["jobs"]["publish"]["with"]["final"])
 
     def test_the_report_job_runs_even_when_publish_does_not(self):
         report = self.workflow["jobs"]["report"]
@@ -352,7 +404,7 @@ class PublishGateWorkflowTests(unittest.TestCase):
         self.assertIn("inputs.artifact_prefix == ''", issue["if"])
 
     def test_transaction_validation_is_not_skippable(self):
-        steps = self.workflow["jobs"]["publish"]["steps"]
+        steps = self.publication["jobs"]["publish"]["steps"]
         validate = next(
             i for i, step in enumerate(steps)
             if "Hummingbird-only consumer transaction" in str(step.get("name", ""))
@@ -372,7 +424,7 @@ class SeedImageVerificationTests(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.workflow = load_workflow()
+        cls.workflow = load_workflow(PUBLISH_WORKFLOW)
         cls.steps = cls.workflow["jobs"]["publish"]["steps"]
 
     def _step_script(self, name_substring):

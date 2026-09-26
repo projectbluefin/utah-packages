@@ -296,6 +296,22 @@ def hermetic_problems(
     return problems
 
 
+def early_publish_problems(jobs: list[dict], pass_name: str, wave: int) -> list[str]:
+    """The pass published wave `wave` on its own, before its final publication."""
+    by_name = {job.get("name", ""): job for job in jobs}
+    early = by_name.get(f"{pass_name} / publish{wave} / publish")
+    final = by_name.get(f"{pass_name} / publish / publish")
+    if early is None:
+        return [f"{pass_name}: no early publication after wave {wave}"]
+    steps = {s["name"]: s.get("conclusion") for s in early.get("steps", [])}
+    problems = []
+    if steps.get("Publish the repository as an OCI image") != "success":
+        problems.append(f"{pass_name}: the wave-{wave} publication pushed no image")
+    if final is not None and early.get("completed_at", "") > final.get("started_at", "~"):
+        problems.append(f"{pass_name}: the wave-{wave} publication did not finish before the final one")
+    return problems
+
+
 def summary(outcomes: dict[str, dict[str, str]], problems: list[str]) -> str:
     lines = ["### Canary cache", "", "| pass | package | outcome |", "| --- | --- | --- |"]
     for name in sorted(outcomes):
@@ -338,6 +354,10 @@ def main(argv: list[str] | None = None) -> int:
     built.add_argument("jobs", type=Path)
     built.add_argument("--pass", dest="pass_name", required=True)
     built.add_argument("--set", required=True)
+    early = commands.add_parser("verify-early")
+    early.add_argument("jobs", type=Path)
+    early.add_argument("--pass", dest="pass_name", required=True)
+    early.add_argument("--wave", type=int, required=True)
     cache = commands.add_parser("verify-cache")
     cache.add_argument("jobs", type=Path)
     cache.add_argument("--set", required=True)
@@ -407,6 +427,14 @@ def main(argv: list[str] | None = None) -> int:
             print(f"- `{package}`: {outcome}")
         for problem in problems:
             print(f"::error title=canary {args.pass_name}::{problem}", file=sys.stderr)
+        return 1 if problems else 0
+    if args.command == "verify-early":
+        jobs = json.loads(args.jobs.read_text())
+        problems = early_publish_problems(jobs, args.pass_name, args.wave)
+        for problem in problems:
+            print(f"::error title=canary early publish::{problem}", file=sys.stderr)
+        if not problems:
+            print(f"{args.pass_name}: wave {args.wave} published on its own, before the final publication")
         return 1 if problems else 0
     if args.command == "verify-cache":
         outcomes = build_outcomes(json.loads(args.jobs.read_text()))
