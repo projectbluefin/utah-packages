@@ -379,9 +379,21 @@ class StaleTests(unittest.TestCase):
 
     def test_external_provides_count_as_satisfied(self) -> None:
         # libc comes from Hummingbird, not the factory: without the external
-        # set every package would look stale.
-        stale = stale_from_primary(self.PRIMARY, set())
+        # set, a Hummingbird that moved libc to .so.7 would make every
+        # package that links .so.6 stale.
+        self.assertNotIn("ffmpeg-free", stale_from_primary(self.PRIMARY, self.EXTERNAL))
+        stale = stale_from_primary(self.PRIMARY, {"libc.so.7"})
         self.assertIn("libc.so.6", stale["ffmpeg-free"])
+
+    def test_a_requirement_nothing_provides_at_any_version_is_not_stale(self) -> None:
+        # vala, cvs, mingw32(...), pkgconfig(xproto): Fedora-only, and no
+        # rebuild changes that. Counting them rebuilt 80 packages every run.
+        primary = full_primary(
+            ("git", "git", ["git"], ["cvs", "lighttpd", "libc.so.6"]),
+            ("osinfo-db-tools", "osinfo-db-tools", [], ["mingw32(kernel32.dll)"]),
+            ("SDL3-devel", "SDL3", [], ["pkgconfig(xproto)", "libfltk.so.1.4()(64bit)"]),
+        )
+        self.assertEqual(stale_from_primary(primary, self.EXTERNAL), {})
 
     def test_rpmlib_rich_and_file_requires_are_not_judged(self) -> None:
         stale = stale_from_primary(self.PRIMARY, self.EXTERNAL)
