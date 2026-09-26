@@ -447,6 +447,16 @@ jobs:
           echo '8b24b946dd5809c6bd93de08033bcf6bc0ed7d336b7785787c080f574b89249b  cosign' | sha256sum -c -
           sudo install -m 0755 cosign /usr/local/bin/cosign
           cosign sign-blob --yes --bundle repository/repodata/repomd.xml.bundle repository/repodata/repomd.xml
+      # Utah's install inputs: its installer, manifests, repository files and
+      # the base image its Containerfile pins. The transaction below resolves
+      # in that base, because that is where the published repository has to
+      # install (#272 found the factory's own base disagreeing with Utah's).
+      # A fetch failure falls back to the factory's base, loudly, rather than
+      # leaving the gate unable to run.
+      - name: Fetch what Utah installs, and its base image
+        id: utah_inputs
+        continue-on-error: true
+        run: python3 tools/utah_install_set.py fetch --dir work/utah
       # Blocking for the final publication. An early one -- after one wave,
       # while later waves still build -- can legitimately fail it: a library
       # whose soname moved publishes before its consumers are rebuilt. It
@@ -457,6 +467,7 @@ jobs:
         continue-on-error: ${{ !inputs.final }}
         env:
           CONSUMER: ${{ inputs.consumer || 'contract' }}
+          UTAH_INPUTS: ${{ steps.utah_inputs.outcome }}
         run: |
           if [ "$CONSUMER" = built ]; then
             # The canary: every binary in the candidate repository must
@@ -467,8 +478,15 @@ jobs:
             CONTRACT=$(python3 tools/runtime_contract.py \
               config/bluefin-packages.toml config/runtime-contract.toml)
           fi
-          BASE_IMAGE=$(python3 tools/runtime_contract.py \
-            config/bluefin-packages.toml config/runtime-contract.toml --base-image)
+          if [ "$UTAH_INPUTS" = success ] && [ -s work/utah/base-image ]; then
+            BASE_IMAGE=$(cat work/utah/base-image)
+            echo "resolving in Utah's base image: $BASE_IMAGE"
+          else
+            BASE_IMAGE=$(python3 tools/runtime_contract.py \
+              config/bluefin-packages.toml config/runtime-contract.toml --base-image)
+            echo "::warning title=transaction not in Utah's base::could not read ARG BASE_IMAGE from projectbluefin/utah's Containerfile; resolving in the factory's own base $BASE_IMAGE, which can disagree with what Utah installs into"
+            printf "\n**Warning:** the Hummingbird-only transaction ran in the factory fallback base %s, not in the base Utah pins: fetching the Utah Containerfile failed.\n" "$BASE_IMAGE" >> "$GITHUB_STEP_SUMMARY"
+          fi
           export CONTRACT
           docker run --rm \
             -e CONTRACT \
@@ -542,7 +560,8 @@ jobs:
           set -euo pipefail
           # Utah's own base, from Utah's Containerfile: Utah installs on top
           # of its rpmdb, so a different base gives a different answer.
-          python3 tools/utah_install_set.py fetch --dir work/utah
+          # Fetched above, before the transaction.
+          test "${{ steps.utah_inputs.outcome }}" = success
           BASE_IMAGE=$(cat work/utah/base-image)
           docker run --rm \
             -v "$PWD/repository:/etc/utah-packages:ro,Z" \

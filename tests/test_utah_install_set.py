@@ -71,6 +71,21 @@ class BaseImageTests(unittest.TestCase):
         self.assertNotIn("runtime_contract.py", step["run"])
         self.assertIn("Containerfile", uis.FILES.values())
 
+    def test_the_blocking_transaction_resolves_in_utahs_base_with_a_loud_fallback(self) -> None:
+        steps = yaml.safe_load(REBUILD.read_text())["jobs"]["publish"]["steps"]
+        names = [s.get("name") for s in steps]
+        fetch = names.index("Fetch what Utah installs, and its base image")
+        validate = names.index("Validate Hummingbird-only consumer transaction")
+        self.assertLess(fetch, validate)
+        self.assertTrue(steps[fetch]["continue-on-error"])
+        run = steps[validate]["run"]
+        self.assertIn("BASE_IMAGE=$(cat work/utah/base-image)", run)
+        # The factory base only as a fallback, and never silently.
+        fallback = run.split("else", 1)[1]
+        self.assertIn("--base-image", fallback)
+        self.assertIn("::warning title=transaction not in Utah's base::", fallback)
+        self.assertIn("GITHUB_STEP_SUMMARY", fallback)
+
     def test_an_rpmdb_conflict_is_reported_by_its_own_line(self) -> None:
         output = (
             "Problem: package xdg-desktop-portal-1.22.1-1.hum1.bfin.x86_64 from utah-packages "
@@ -127,7 +142,7 @@ class WorkflowTests(unittest.TestCase):
         step = self.jobs["publish"]["steps"][utah]
         self.assertTrue(step["continue-on-error"])
         self.assertIn("/etc/utah-packages", step["run"])
-        self.assertIn("utah_install_set.py fetch", step["run"])
+        self.assertIn("steps.utah_inputs.outcome", step["run"])
 
     def test_one_issue_per_package_on_main_only(self) -> None:
         factory = yaml.safe_load((ROOT / ".github" / "workflows" / "rebuild-rpms.yml").read_text())
