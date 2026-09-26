@@ -1301,9 +1301,10 @@ jobs:
         continue-on-error: true
         run: |
           set -euo pipefail
-          BASE_IMAGE=$(python3 tools/runtime_contract.py \
-            config/bluefin-packages.toml config/runtime-contract.toml --base-image)
+          # Utah's own base, from Utah's Containerfile: Utah installs on top
+          # of its rpmdb, so a different base gives a different answer.
           python3 tools/utah_install_set.py fetch --dir work/utah
+          BASE_IMAGE=$(cat work/utah/base-image)
           docker run --rm \
             -v "$PWD/repository:/etc/utah-packages:ro,Z" \
             -v "$PWD/work/utah:/utah:Z" \

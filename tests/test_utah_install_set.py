@@ -42,6 +42,44 @@ class InstallSetTests(unittest.TestCase):
         self.assertEqual(packages, ["fish", "libgphoto2", "gnome-shell", "meson"])
 
 
+class BaseImageTests(unittest.TestCase):
+    """Regression: the check resolved in the factory's older base image.
+
+    bootc-os@c5539f9e still carried Fedora fuse3-libs 3.16 and a
+    grub2-tools-minimal requiring libfuse3.so.3, so Hummingbird's
+    fuse3-libs 3.18 (libfuse3.so.4) could not be installed beside it and
+    flatpak, gnome-shell and xdg-desktop-portal were reported as gaps. Utah's
+    base, bootc-os@7ea73596, ships fuse3-libs 3.18.3 and installed them.
+    """
+
+    UTAH = ("ARG BASE_IMAGE=quay.io/hummingbird-community/bootc-os:latest@sha256:"
+            "7ea735968c2543f51a975474b13b17bb8e110852045fd99bd13066179bf775f2\n")
+
+    def test_the_base_is_utahs_pinned_base(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            containerfile = Path(directory) / "Containerfile"
+            containerfile.write_text("FROM x\n" + self.UTAH)
+            self.assertTrue(uis.base_image(containerfile).endswith("7ea735968c2543f51a975474b13b17bb8e110852045fd99bd13066179bf775f2"))
+            containerfile.write_text("ARG BASE_IMAGE=quay.io/hummingbird-community/bootc-os:latest\n")
+            with self.assertRaises(ValueError):
+                uis.base_image(containerfile)
+
+    def test_the_workflow_resolves_in_utahs_base_not_the_contracts(self) -> None:
+        step = next(s for s in yaml.safe_load(REBUILD.read_text())["jobs"]["publish"]["steps"]
+                    if s.get("name") == "Resolve what Utah installs (advisory)")
+        self.assertIn("BASE_IMAGE=$(cat work/utah/base-image)", step["run"])
+        self.assertNotIn("runtime_contract.py", step["run"])
+        self.assertIn("Containerfile", uis.FILES.values())
+
+    def test_an_rpmdb_conflict_is_reported_by_its_own_line(self) -> None:
+        output = (
+            "Problem: package xdg-desktop-portal-1.22.1-1.hum1.bfin.x86_64 from utah-packages "
+            "requires libfuse3.so.4()(64bit), but none of the providers can be installed\n"
+            "  - cannot install both fuse3-libs-3.18.3-1.hum1.x86_64 from public-hummingbird-x86_64-rpms "
+            "and fuse3-libs-3.16.2-6.fc43.x86_64 from @System\n")
+        self.assertIn("requires libfuse3.so.4", uis.first_problem(output))
+
+
 class VerdictTests(unittest.TestCase):
     NOTHING = ("Failed to resolve the transaction:\n"
                "Problem: conflicting requests\n"

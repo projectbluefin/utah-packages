@@ -53,6 +53,9 @@ FILES = {
     "utah_packages_repo": "packages/utah-packages.repo",
     "hummingbird_repo": "packages/hummingbird.repo",
     "gpg_key": "packages/RPM-GPG-KEY-redhat-release-2",
+    # Utah's base image, pinned by digest in its Containerfile. The
+    # resolution runs inside it, because Utah installs on top of its rpmdb.
+    "containerfile": "Containerfile",
 }
 FEDORA_MAJOR = "44"
 
@@ -74,6 +77,23 @@ def fetch(ref: str, directory: Path) -> dict[str, Path]:
             target.write_bytes(response.read())
         paths[key] = target
     return paths
+
+
+def base_image(containerfile: Path) -> str:
+    """ARG BASE_IMAGE from Utah's Containerfile, which must pin a digest.
+
+    The first version of this check resolved in the factory's own
+    runtime-contract base (bootc-os@c5539f9e), an older build whose rpmdb
+    still held Fedora's fuse3-libs 3.16 and a grub2-tools-minimal pinned to
+    libfuse3.so.3. Hummingbird's fuse3-libs 3.18 could not replace it, so
+    flatpak, gnome-shell and xdg-desktop-portal looked uninstallable while
+    Utah, on bootc-os@7ea73596, installed all three. The rpmdb is part of
+    the answer, so the base has to be Utah's own.
+    """
+    match = re.search(r"(?m)^ARG BASE_IMAGE=(\S+)$", containerfile.read_text())
+    if match is None or not re.fullmatch(r"[a-zA-Z0-9./:_-]+@sha256:[0-9a-f]{64}", match.group(1)):
+        raise ValueError(f"{containerfile} does not pin ARG BASE_IMAGE by digest")
+    return match.group(1)
 
 
 def installer_module(installer: Path):
@@ -190,7 +210,9 @@ def main(argv: list[str] | None = None) -> int:
         files = fetch(args.ref, args.dir)
         packages = install_set(files["installer"], files["manifest"], files["overlay"])
         (args.dir / "packages.txt").write_text("".join(f"{name}\n" for name in packages))
-        print(f"Utah installs {len(packages)} packages (projectbluefin/utah@{args.ref})")
+        (args.dir / "base-image").write_text(base_image(files["containerfile"]) + "\n")
+        print(f"Utah installs {len(packages)} packages (projectbluefin/utah@{args.ref}) "
+              f"on {base_image(files['containerfile'])}")
         return 0
     if args.command == "resolve":
         packages = [line.strip() for line in (args.dir / "packages.txt").read_text().splitlines()
