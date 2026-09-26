@@ -1,0 +1,8 @@
+{
+  "package": "ghostscript",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/ghostscript.git",
+  "commit": "a064fc05079635fb61b2d84df33f3224114e0513",
+  "tree": "ac9c9662a70ad70caf033cf6f6de7b9eefaec6e3",
+  "imported_at": "2026-09-26T00:41:04.918217+00:00"
+}

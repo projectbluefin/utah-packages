@@ -370,6 +370,12 @@ packages:
     downstream_package_name: geocode-glib
     paths:
       - packages/geocode-glib
+  ghostscript:
+    specfile_path: ghostscript.spec
+    upstream_package_name: ghostscript
+    downstream_package_name: ghostscript
+    paths:
+      - packages/ghostscript
   giflib:
     specfile_path: giflib.spec
     upstream_package_name: giflib
@@ -1084,6 +1090,12 @@ packages:
     downstream_package_name: libevdev
     paths:
       - packages/libevdev
+  libexif:
+    specfile_path: libexif.spec
+    upstream_package_name: libexif
+    downstream_package_name: libexif
+    paths:
+      - packages/libexif
   libfprint:
     specfile_path: libfprint.spec
     upstream_package_name: libfprint

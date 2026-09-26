@@ -1,0 +1,19 @@
+upstream_project_url: https://github.com/libexif/libexif
+upstream_tag_include: 'v\d+'
+upstream_tag_template: v{version}
+jobs:
+
+- job: pull_from_upstream
+  trigger: release
+  dist_git_branches:
+   - fedora-rawhide
+
+- job: koji_build
+  trigger: commit
+  dist_git_branches:
+    - fedora-all
+
+- job: bodhi_update
+  trigger: commit
+  dist_git_branches:
+    - fedora-branched # rawhide updates are created automatically

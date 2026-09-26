@@ -2,6 +2,27 @@
   "schema": 1,
   "packages": [
     {
+      "name": "ghostscript",
+      "version": "10.08.0",
+      "url": "https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs10080/ghostscript-10.08.0.tar.xz",
+      "filename": "ghostscript-10.08.0.tar.xz",
+      "sha512": "8006e2a32d03759a905b9548bdd83d4563173041006750e17e428b9eea24ad519aa4452ceecd7c073d3c420a68bf1b07ccc9e0533b1a05935f6b39ea8d9ce875",
+      "stage": 1,
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/ghostscript/ghostscript-10.08.0.tar.xz/sha512/8006e2a32d03759a905b9548bdd83d4563173041006750e17e428b9eea24ad519aa4452ceecd7c073d3c420a68bf1b07ccc9e0533b1a05935f6b39ea8d9ce875/ghostscript-10.08.0.tar.xz"
+      ]
+    },
+    {
+      "name": "libexif",
+      "version": "0.6.26",
+      "url": "https://github.com/libexif/libexif/releases/download/v0.6.26/libexif-0.6.26.tar.bz2",
+      "filename": "libexif-0.6.26.tar.bz2",
+      "sha512": "e99d2de0566284d98547915d6661effd18a51fe1687d923e57bd2250551d3ee73587f7c8386d926e7ff21df06887bedae3e10b4441bf544f04f559c381e258fe",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libexif/libexif-0.6.26.tar.bz2/sha512/e99d2de0566284d98547915d6661effd18a51fe1687d923e57bd2250551d3ee73587f7c8386d926e7ff21df06887bedae3e10b4441bf544f04f559c381e258fe/libexif-0.6.26.tar.bz2"
+      ]
+    },
+    {
       "name": "libass",
       "version": "0.17.4",
       "url": "https://github.com/libass/libass/releases/download/0.17.4/libass-0.17.4.tar.xz",
@@ -280,7 +301,7 @@
     {
       "name": "cups-browsed",
       "version": "2.1.1",
-      "stage": 2,
+      "stage": 4,
       "url": "https://github.com/OpenPrinting/cups-browsed/releases/download/2.1.1/cups-browsed-2.1.1.tar.gz",
       "filename": "cups-browsed-2.1.1.tar.gz",
       "sha512": "e0c611f9d43acd86561c2cb7cd23f27846620f8a96ce41dc8e97459d85e993aa501f9f35de411a5437bde92fdea74514a506942496ea2623378c6ab383d6aa8f"
@@ -288,7 +309,7 @@
     {
       "name": "cups-filters",
       "version": "2.0.1",
-      "stage": 2,
+      "stage": 4,
       "url": "https://github.com/OpenPrinting/cups-filters/releases/download/2.0.1/cups-filters-2.0.1.tar.gz",
       "filename": "cups-filters-2.0.1.tar.gz",
       "sha512": "b5d7b8f5a89a6a6bba0e861dd3c3263195be75996d22129d123f325f6bff74fbabf22f2ee2d953908ffb8294d825af5568af6695896c76ef4082ae98cd19c42c"
@@ -1396,7 +1417,7 @@
     {
       "name": "libcupsfilters",
       "version": "2.2.1",
-      "stage": 0,
+      "stage": 2,
       "url": "https://github.com/OpenPrinting/libcupsfilters/releases/download/2.2.1/libcupsfilters-2.2.1.tar.gz",
       "filename": "libcupsfilters-2.2.1.tar.gz",
       "sha512": "9d4b34cd56fa9d6ad1307779458e231e5474fc046edb298d13ba9037574ed91a1ed2f13d479ab0028e1d213dfba867917c503cb926b9e605f74a29037ac026f0"
@@ -1736,7 +1757,7 @@
     {
       "name": "libppd",
       "version": "2.1.1",
-      "stage": 1,
+      "stage": 3,
       "url": "https://github.com/OpenPrinting/libppd/releases/download/2.1.1/libppd-2.1.1.tar.gz",
       "filename": "libppd-2.1.1.tar.gz",
       "sha512": "401b91b96d8a0297d1c39c328037459d3ba7a9f78e011f6abc9c7d29f1c2677e001295a58642d94c2786f43116643f59205a6a29490ae40276871f59a82942e3"
@@ -3160,7 +3181,8 @@
       "fallback_urls": [
         "https://downloads.sourceforge.net/gphoto/libgphoto2-2.5.33.tar.bz2",
         "https://src.fedoraproject.org/repo/pkgs/rpms/libgphoto2/libgphoto2-2.5.33.tar.bz2/sha512/5a987fb712c704bbb276d4ff5319d96b9096a6e4be303d38f97e0eafc01b47def93ab4b6d3acb76cb7597edd846d2dac4b0227a3e8d2ec8634f5e52de69a6da4/libgphoto2-2.5.33.tar.bz2"
-      ]
+      ],
+      "stage": 1
     },
     {
       "name": "libmbim",

@@ -354,11 +354,25 @@ Furthermore, `cups-filters` only weakly recommends `braille-printer-app`, which
 carries heavy dependencies (`liblouis`, `ImageMagick`, etc.) not in the
 Hummingbird base.
 
+The first import then built against Fedora 44's `ghostscript` and `libexif`,
+which the publish gate's Hummingbird-only transaction cannot see: `libppd`
+Requires `ghostscript >= 10.0.0`, and `libcupsfilters` links `libexif.so.12`.
+
 **Rule.** When importing cups-filters 2.x or cups-browsed into the factory,
-import `libcupsfilters` (stage 0), `libppd` (stage 1, depends on
-libcupsfilters), and `cups-filters` / `cups-browsed` (stage 2, depending on both
-libraries). Do not pull `braille-printer-app` into the core printing closure
-unless Braille printing is explicitly required.
+import `ghostscript` (stage 1) and `libexif` (stage 0) as well, then
+`libcupsfilters` (stage 2, BuildRequires both), `libppd` (stage 3, depends on
+libcupsfilters and ghostscript), and `cups-filters` / `cups-browsed` (stage 4,
+depending on both libraries). The factory's ghostscript uses its bundled
+jbig2dec, ijs and `Resource/` fonts and CMaps and builds without libpaper, gtk,
+X11 and dvipdf, because their runtime providers are in neither Hummingbird nor
+the factory; the spec's bconds say why each one is off. Do not pull
+`braille-printer-app` into the core printing closure unless Braille printing
+is explicitly required.
+
+A runtime library whose Fedora source no upstream serves cannot be imported:
+`lockdev` is a 2011 alioth snapshot pinned by MD5, so `libgphoto2` builds with
+`--disable-lockdev --disable-ttylock` instead. This is the same call ffmpeg
+made for libqrencode and openal in #249.
 
 ## 18. Broad credential or tool exposure across build matrix jobs
 

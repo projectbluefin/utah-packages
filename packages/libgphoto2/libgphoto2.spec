@@ -34,9 +34,14 @@ BuildRequires:  pkgconfig(libexif)
 # -----------------------------------
 # libgphoto2_port
 # -----------------------------------
-%if !0%{?flatpak}
-BuildRequires:  lockdev-devel
-%endif
+# Factory: no lockdev-devel, and --disable-lockdev --disable-ttylock below.
+# liblockdev.so.1 is in neither Hummingbird nor this factory, and lockdev
+# cannot be imported with a verified source: Fedora builds a 2011 alioth
+# nightly snapshot (lockdev-1.0.4.20111007git) pinned by MD5 only, alioth is
+# gone, and no upstream serves those bytes. lockdev only locks legacy RS-232
+# camera ports; USB and PTP/IP cameras never touch it. Fedora's flatpak build
+# drops it the same way. The configure flags keep the build from linking the
+# Fedora 44 lockdev-devel if something else drags it into the build root.
 BuildRequires:  pkgconfig(libusb-1.0)
 # -----------------------------------
 
@@ -83,6 +88,8 @@ autoreconf -if
 %endif
     --disable-static             \
     --disable-rpath              \
+    --disable-lockdev            \
+    --disable-ttylock            \
     %{nil}
 
 # Don't use rpath!
