@@ -435,6 +435,26 @@ planning time.
 across git ranges, such as `git show ${base_sha}:...`, remain raw JSON.) The lock
 file is parsed and validated in exactly one place.
 
+## 21. The tracking issue speaks only when the run reached a verdict
+
+**What happened.** The `report` job names every selected package with no
+`rpm-s<stage>-<package>` artifact as failed and files or refreshes the
+`Factory: packages failing on main` issue. Twice it spoke for a run that had
+decided nothing. A canary dispatched on `main` reused the production issue
+(`b858eee`, `#261`) until the artifact prefix told them apart. Then a run
+cancelled by hand one minute into `rebuild0` (`#267`) reported all 215
+selected packages as failed and the publish job as `cancelled`: the job ran
+on `always()`, no wave had uploaded anything, and the report read that
+silence as a verdict.
+
+**Rule.** The report is a statement about builds that finished. Its `if:` is
+`!cancelled()`, the same shape as `publish`: a failed wave or a failed
+publish gate still reports, a cancelled run reports nothing, and a pass that
+is not production (canary prefix, `publish_tag`) does not touch the issue.
+`tools/publish_gate.assert_gate_enforced` rejects `always()` on the report
+job. Before extending the report or the issue step, ask what the run proved;
+"no artifact" is proof of failure only when the wave was allowed to finish.
+
 ## Quick checks before pushing a fix
 
 - [ ] Does `git log --oneline -- <file>` show this file being fixed for the
@@ -450,3 +470,5 @@ file is parsed and validated in exactly one place.
       [`package-build-cache.md`](package-build-cache.md)?
 - [ ] Is there a run, on this head, that reached the gate this fix claims to
       satisfy?
+- [ ] Does a change to `report` or the tracking issue still stay silent for
+      a cancelled run and a canary pass?
