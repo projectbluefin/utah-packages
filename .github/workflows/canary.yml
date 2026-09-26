@@ -229,7 +229,7 @@ jobs:
           set -euo pipefail
           cosign verify "${IMAGE%:*}@${DIGEST}" \
             --certificate-oidc-issuer https://token.actions.githubusercontent.com \
-            --certificate-identity "https://github.com/${REPOSITORY}/.github/workflows/rebuild-rpms.yml@${REF}" \
+            --certificate-identity "https://github.com/${REPOSITORY}/.github/workflows/publish-repository.yml@${REF}" \
             > /dev/null
           echo "cosign signature verified"
           gh attestation verify "oci://${IMAGE%:*}@${DIGEST}" --repo "$REPOSITORY"

@@ -345,9 +345,14 @@ jobs:
             # able to push to the GHCR package once could plant RPMs in
             # :latest and have every subsequent run copy them forward, sign
             # over them, and re-publish them as verified factory output.
+            # Two workflow files have signed this tag: rebuild-rpms.yml,
+            # before publication moved into publish-repository.yml, and
+            # publish-repository.yml since -- a reusable workflow signs as
+            # itself. The pattern admits exactly those two files, at exactly
+            # the ref that matched, anchored at both ends.
             cosign verify "$current" \
               --certificate-oidc-issuer https://token.actions.githubusercontent.com \
-              --certificate-identity "https://github.com/${REPOSITORY}/.github/workflows/rebuild-rpms.yml@${current_ref}"
+              --certificate-identity-regexp "^$(printf '%s' "https://github.com/${REPOSITORY}/.github/workflows/" | sed 's/[.]/[.]/g')(rebuild-rpms|publish-repository)[.]yml@$(printf '%s' "$current_ref" | sed 's/[.]/[.]/g')\$"
             # The factory image is FROM scratch with only COPY layers, no CMD or
             # ENTRYPOINT, so a bare create exits 125 with "no command or
             # entrypoint provided". A command is only recorded here, never run

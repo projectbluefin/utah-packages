@@ -407,6 +407,10 @@ image, `cosign verify` the digest actually pulled -- never the mutable tag,
 which can move again after the check -- against this same workflow's own
 keyless OIDC identity. `latest` is only ever published from `refs/heads/main`;
 a branch tag is only ever published by this workflow running on that branch.
+(Since publication moved into the reusable `publish-repository.yml`, which
+signs as itself, the check admits exactly two workflow files -- that one and
+`rebuild-rpms.yml`, which signed every earlier image -- by an anchored
+pattern, still at the one ref that matched.)
 Pin `--certificate-identity` to whichever ref actually matched, not a regex
 wide enough to accept either -- a regex scoped to `main` alone breaks every
 branch-tag seed, since those are signed under their own ref. `cosign verify`

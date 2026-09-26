@@ -442,6 +442,30 @@ class SeedImageVerificationTests(unittest.TestCase):
         self.assertIn("--certificate-oidc-issuer", script)
         self.assertIn("--certificate-identity", script)
 
+    def test_the_signer_is_one_of_exactly_two_workflow_files(self):
+        import re
+        import subprocess
+
+        script = self._step_script("Verify and seed repository")
+        line = next(l for l in script.splitlines() if "--certificate-identity-regexp" in l)
+        expression = line.split("--certificate-identity-regexp", 1)[1].strip()
+        pattern = subprocess.run(
+            ["bash", "-c", f"printf '%s' {expression}"],
+            env={"REPOSITORY": "projectbluefin/utah-packages", "current_ref": "refs/heads/main",
+                 "PATH": "/usr/bin:/bin"},
+            capture_output=True, text=True, check=True,
+        ).stdout
+        base = "https://github.com/projectbluefin/utah-packages/.github/workflows/"
+        for identity, ok in (
+            (base + "rebuild-rpms.yml@refs/heads/main", True),
+            (base + "publish-repository.yml@refs/heads/main", True),
+            (base + "canary.yml@refs/heads/main", False),
+            (base + "publish-repository.yml@refs/heads/mainx", False),
+            (base + "publish-repository.yml@refs/pull/1/merge", False),
+            ("https://github.com/evil/utah-packages/.github/workflows/publish-repository.yml@refs/heads/main", False),
+        ):
+            self.assertEqual(bool(re.search(pattern, identity)), ok, identity)
+
     def test_seed_step_verifies_the_pulled_digest_not_the_tag(self):
         script = self._step_script("Verify and seed repository")
         verify_line = next(
