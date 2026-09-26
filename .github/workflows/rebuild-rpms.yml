@@ -233,15 +233,6 @@ jobs:
       through1: ${{ steps.matrix.outputs.through1 }}
       through2: ${{ steps.matrix.outputs.through2 }}
       through3: ${{ steps.matrix.outputs.through3 }}
-      through4: ${{ steps.matrix.outputs.through4 }}
-      through5: ${{ steps.matrix.outputs.through5 }}
-      through6: ${{ steps.matrix.outputs.through6 }}
-      through7: ${{ steps.matrix.outputs.through7 }}
-      through8: ${{ steps.matrix.outputs.through8 }}
-      through9: ${{ steps.matrix.outputs.through9 }}
-      through10: ${{ steps.matrix.outputs.through10 }}
-      through11: ${{ steps.matrix.outputs.through11 }}
-      through12: ${{ steps.matrix.outputs.through12 }}
       container_lane: ${{ steps.matrix.outputs.container_lane }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -869,8 +860,13 @@ jobs:
       container_packages: ${{ needs.prepare.outputs.container_lane }}
 
   # Each wave's successes publish as that wave finishes, while later waves
-  # still build (publish0..publish12, one per wave that has later waves still
-  # to come; see publish-repository.yml). They run one after another, and
+  # still build: publish0..publish3, one per wave among the first four that
+  # has later waves still to come (see publish-repository.yml). Four, not
+  # one per wave: the canary expands this workflow six times, and GitHub
+  # refused a workflow with thirteen early publications per expansion
+  # ("Maximum object size exceeded"). The first four waves of a run are
+  # where a small change and its direct dependents live; anything later is
+  # covered by the final publication. They run one after another, and
   # each seeds from the image the previous one pushed -- allowed because it
   # carries this run's id.
   publish0:
@@ -925,130 +921,13 @@ jobs:
       artifact_prefix: ${{ inputs.artifact_prefix }}
       publish_tag: ${{ inputs.publish_tag }}
       consumer: ${{ inputs.consumer || 'contract' }}
-  publish4:
-    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, publish0, publish1, publish2, publish3]
-    if: ${{ !cancelled() && needs.prepare.result == 'success' && inputs.skip_publish != true && contains(fromJSON(needs.prepare.outputs.early_waves), '4') }}
-    uses: ./.github/workflows/publish-repository.yml
-    with:
-      wave: '4'
-      final: false
-      build_list: ${{ needs.prepare.outputs.through4 }}
-      seed_image: ${{ needs.prepare.outputs.seed_image }}
-      trusted: ${{ needs.prepare.outputs.trusted }}
-      artifact_prefix: ${{ inputs.artifact_prefix }}
-      publish_tag: ${{ inputs.publish_tag }}
-      consumer: ${{ inputs.consumer || 'contract' }}
-  publish5:
-    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, publish0, publish1, publish2, publish3, publish4]
-    if: ${{ !cancelled() && needs.prepare.result == 'success' && inputs.skip_publish != true && contains(fromJSON(needs.prepare.outputs.early_waves), '5') }}
-    uses: ./.github/workflows/publish-repository.yml
-    with:
-      wave: '5'
-      final: false
-      build_list: ${{ needs.prepare.outputs.through5 }}
-      seed_image: ${{ needs.prepare.outputs.seed_image }}
-      trusted: ${{ needs.prepare.outputs.trusted }}
-      artifact_prefix: ${{ inputs.artifact_prefix }}
-      publish_tag: ${{ inputs.publish_tag }}
-      consumer: ${{ inputs.consumer || 'contract' }}
-  publish6:
-    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, publish0, publish1, publish2, publish3, publish4, publish5]
-    if: ${{ !cancelled() && needs.prepare.result == 'success' && inputs.skip_publish != true && contains(fromJSON(needs.prepare.outputs.early_waves), '6') }}
-    uses: ./.github/workflows/publish-repository.yml
-    with:
-      wave: '6'
-      final: false
-      build_list: ${{ needs.prepare.outputs.through6 }}
-      seed_image: ${{ needs.prepare.outputs.seed_image }}
-      trusted: ${{ needs.prepare.outputs.trusted }}
-      artifact_prefix: ${{ inputs.artifact_prefix }}
-      publish_tag: ${{ inputs.publish_tag }}
-      consumer: ${{ inputs.consumer || 'contract' }}
-  publish7:
-    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, publish0, publish1, publish2, publish3, publish4, publish5, publish6]
-    if: ${{ !cancelled() && needs.prepare.result == 'success' && inputs.skip_publish != true && contains(fromJSON(needs.prepare.outputs.early_waves), '7') }}
-    uses: ./.github/workflows/publish-repository.yml
-    with:
-      wave: '7'
-      final: false
-      build_list: ${{ needs.prepare.outputs.through7 }}
-      seed_image: ${{ needs.prepare.outputs.seed_image }}
-      trusted: ${{ needs.prepare.outputs.trusted }}
-      artifact_prefix: ${{ inputs.artifact_prefix }}
-      publish_tag: ${{ inputs.publish_tag }}
-      consumer: ${{ inputs.consumer || 'contract' }}
-  publish8:
-    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8, publish0, publish1, publish2, publish3, publish4, publish5, publish6, publish7]
-    if: ${{ !cancelled() && needs.prepare.result == 'success' && inputs.skip_publish != true && contains(fromJSON(needs.prepare.outputs.early_waves), '8') }}
-    uses: ./.github/workflows/publish-repository.yml
-    with:
-      wave: '8'
-      final: false
-      build_list: ${{ needs.prepare.outputs.through8 }}
-      seed_image: ${{ needs.prepare.outputs.seed_image }}
-      trusted: ${{ needs.prepare.outputs.trusted }}
-      artifact_prefix: ${{ inputs.artifact_prefix }}
-      publish_tag: ${{ inputs.publish_tag }}
-      consumer: ${{ inputs.consumer || 'contract' }}
-  publish9:
-    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8, rebuild9, publish0, publish1, publish2, publish3, publish4, publish5, publish6, publish7, publish8]
-    if: ${{ !cancelled() && needs.prepare.result == 'success' && inputs.skip_publish != true && contains(fromJSON(needs.prepare.outputs.early_waves), '9') }}
-    uses: ./.github/workflows/publish-repository.yml
-    with:
-      wave: '9'
-      final: false
-      build_list: ${{ needs.prepare.outputs.through9 }}
-      seed_image: ${{ needs.prepare.outputs.seed_image }}
-      trusted: ${{ needs.prepare.outputs.trusted }}
-      artifact_prefix: ${{ inputs.artifact_prefix }}
-      publish_tag: ${{ inputs.publish_tag }}
-      consumer: ${{ inputs.consumer || 'contract' }}
-  publish10:
-    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8, rebuild9, rebuild10, publish0, publish1, publish2, publish3, publish4, publish5, publish6, publish7, publish8, publish9]
-    if: ${{ !cancelled() && needs.prepare.result == 'success' && inputs.skip_publish != true && contains(fromJSON(needs.prepare.outputs.early_waves), '10') }}
-    uses: ./.github/workflows/publish-repository.yml
-    with:
-      wave: '10'
-      final: false
-      build_list: ${{ needs.prepare.outputs.through10 }}
-      seed_image: ${{ needs.prepare.outputs.seed_image }}
-      trusted: ${{ needs.prepare.outputs.trusted }}
-      artifact_prefix: ${{ inputs.artifact_prefix }}
-      publish_tag: ${{ inputs.publish_tag }}
-      consumer: ${{ inputs.consumer || 'contract' }}
-  publish11:
-    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8, rebuild9, rebuild10, rebuild11, publish0, publish1, publish2, publish3, publish4, publish5, publish6, publish7, publish8, publish9, publish10]
-    if: ${{ !cancelled() && needs.prepare.result == 'success' && inputs.skip_publish != true && contains(fromJSON(needs.prepare.outputs.early_waves), '11') }}
-    uses: ./.github/workflows/publish-repository.yml
-    with:
-      wave: '11'
-      final: false
-      build_list: ${{ needs.prepare.outputs.through11 }}
-      seed_image: ${{ needs.prepare.outputs.seed_image }}
-      trusted: ${{ needs.prepare.outputs.trusted }}
-      artifact_prefix: ${{ inputs.artifact_prefix }}
-      publish_tag: ${{ inputs.publish_tag }}
-      consumer: ${{ inputs.consumer || 'contract' }}
-  publish12:
-    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8, rebuild9, rebuild10, rebuild11, rebuild12, publish0, publish1, publish2, publish3, publish4, publish5, publish6, publish7, publish8, publish9, publish10, publish11]
-    if: ${{ !cancelled() && needs.prepare.result == 'success' && inputs.skip_publish != true && contains(fromJSON(needs.prepare.outputs.early_waves), '12') }}
-    uses: ./.github/workflows/publish-repository.yml
-    with:
-      wave: '12'
-      final: false
-      build_list: ${{ needs.prepare.outputs.through12 }}
-      seed_image: ${{ needs.prepare.outputs.seed_image }}
-      trusted: ${{ needs.prepare.outputs.trusted }}
-      artifact_prefix: ${{ inputs.artifact_prefix }}
-      publish_tag: ${{ inputs.publish_tag }}
-      consumer: ${{ inputs.consumer || 'contract' }}
 
   # The final publication: every wave, prune included, and the one whose
   # transaction failure fails the run. It still waits for every wave to
   # FINISH, so nothing is published around a wave that is still building,
   # and no wave's result can veto it (tools/publish_gate.py).
   publish:
-    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8, rebuild9, rebuild10, rebuild11, rebuild12, rebuild13, publish0, publish1, publish2, publish3, publish4, publish5, publish6, publish7, publish8, publish9, publish10, publish11, publish12]
+    needs: [prepare, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8, rebuild9, rebuild10, rebuild11, rebuild12, rebuild13, publish0, publish1, publish2, publish3]
     if: >-
       ${{ !cancelled()
           && needs.prepare.result == 'success'

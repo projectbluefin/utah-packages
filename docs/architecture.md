@@ -209,7 +209,7 @@ drives them through each failure mode.
 
 Publication happens as waves finish, not once at the end. After each wave
 that has later waves still to come, `rebuild-rpms.yml` calls
-`publish-repository.yml` for waves 0..k (`publish0`..`publish12`), and a final
+`publish-repository.yml` for waves 0..k (`publish0`..`publish3`, the first four waves), and a final
 call covers every wave. Each publication seeds from the image the previous
 one pushed, which the witness check accepts because it carries this run's id,
 and each is gated on its own Hummingbird-only transaction. An early one may

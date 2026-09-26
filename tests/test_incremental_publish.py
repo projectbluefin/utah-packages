@@ -371,7 +371,9 @@ class PublishGateWorkflowTests(unittest.TestCase):
     def test_each_wave_publishes_as_it_finishes_without_waiting_for_later_ones(self):
         early = {name: job for name, job in self.workflow["jobs"].items()
                  if name.startswith("publish") and name != "publish"}
-        self.assertEqual(len(early), len(STAGES) - 1)
+        from tools.rebuild_plan import EARLY_PUBLICATIONS
+
+        self.assertEqual(len(early), EARLY_PUBLICATIONS)
         for name, job in early.items():
             wave = int(name.removeprefix("publish"))
             with self.subTest(job=name):

@@ -452,6 +452,9 @@ class StageOutputTests(unittest.TestCase):
         self.assertEqual(json.loads(outputs["through0"]), ["libass", "webkitgtk"])
         self.assertEqual(json.loads(outputs["through1"]), ["libass", "ffmpeg", "webkitgtk"])
         self.assertEqual(json.loads(outputs["through2"]), json.loads(outputs["through1"]))
+        self.assertNotIn("through4", outputs, "only the first four waves publish early")
+        late = stage_outputs(build, {"libass": 0, "webkitgtk": 0, "ffmpeg": 5, "gst-bad": 6})
+        self.assertEqual(json.loads(late["early_waves"]), ["0"])
         single = stage_outputs([{"name": "xdg-terminal-exec"}], {"xdg-terminal-exec": 0})
         self.assertEqual(json.loads(single["early_waves"]), [], "one wave: the final publication covers it")
 

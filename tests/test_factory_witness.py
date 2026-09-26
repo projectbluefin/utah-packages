@@ -234,7 +234,7 @@ class FactoryWitnessTests(unittest.TestCase):
     def test_a_failed_prepare_stops_precedence_and_publish(self) -> None:
         text = uncommented(REBUILD)
         # every publication (early and final), and the report job
-        self.assertEqual(text.count("needs.prepare.result == 'success'"), 15)
+        self.assertEqual(text.count("needs.prepare.result == 'success'"), 6)
 
     def test_publish_prunes_hummingbird_owned_sources_from_its_seed(self) -> None:
         text = uncommented(REBUILD) + uncommented(PUBLISH)
