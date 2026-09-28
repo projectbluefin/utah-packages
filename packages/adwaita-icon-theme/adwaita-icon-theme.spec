@@ -1,7 +1,7 @@
 %global adwlegacy_ver 46.2
 
 Name:           adwaita-icon-theme
-Version:        51~beta
+Version:        51.0
 Release:        %autorelease
 Summary:        Adwaita icon theme
 

@@ -1,7 +1,7 @@
 %global xdg_desktop_portal_version 1.21.1
 
 Name:           xdg-desktop-portal-gnome
-Version:        51~alpha
+Version:        51.0
 Release:        %autorelease
 Summary:        Backend implementation for xdg-desktop-portal using GNOME
 

@@ -6,7 +6,7 @@
 %global libadwaita_version 1.8~alpha
 
 Name:           nautilus
-Version:        51~beta
+Version:        51.0.1
 Release:        %autorelease
 Summary:        File manager for GNOME
 

@@ -3,7 +3,7 @@
 %global glib_version 2.84.0
 
 Name:           libadwaita
-Version:        1.10~beta.1
+Version:        1.10.0
 Release:        %autorelease
 Summary:        Building blocks for modern GNOME applications
 

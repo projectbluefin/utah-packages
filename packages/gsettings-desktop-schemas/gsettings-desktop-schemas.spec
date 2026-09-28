@@ -1,7 +1,7 @@
 %global debug_package %{nil}
 
 Name:           gsettings-desktop-schemas
-Version:        51~beta
+Version:        51.0
 Release:        %autorelease
 Summary:        A collection of GSettings schemas
 

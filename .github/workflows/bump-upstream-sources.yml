@@ -22,6 +22,14 @@ name: Bump upstream source locks
 # lives in three files here and only one of them is JSON, and the tarball's
 # SHA-512 has to be computed from the bytes.
 #
+# GNOME cycle policy: the scheduled run stays inside each lock's own
+# release cycle -- it takes GNOME 51 point releases but never jumps to 52.
+# A newer GNOME cycle is reported for a human and never applied, and a cycle
+# whose final has not shipped yet proposes nothing, so no run can land on an
+# alpha, beta or rc. GNOME-next work happens on a next branch: cut it, then
+# dispatch this workflow there with target-cycle set (e.g. 52). The override
+# only widens the in-cycle window; prereleases stay unproposable.
+#
 # Deliberately proposes, never merges. The bump changes what the factory
 # builds, so it goes through the same review and the same eleven-stage run as
 # any other recipe change.
@@ -31,6 +39,10 @@ on:
     inputs:
       package:
         description: "Limit the run to a single package (default: every lock with a release feed)"
+        required: false
+        type: string
+      target-cycle:
+        description: "Move within this release cycle instead of each lock's own (GNOME-next branches only)"
         required: false
         type: string
   schedule:
@@ -62,16 +74,18 @@ jobs:
       # the remainder as unreachable -- which reads as "nothing to bump".
       - name: Report what upstream has released
         run: |
-          python3 tools/upstream_bump.py ${PACKAGE:+--package "$PACKAGE"}
+          python3 tools/upstream_bump.py ${PACKAGE:+--package "$PACKAGE"} ${CYCLE:+--cycle "$CYCLE"}
         env:
           PACKAGE: ${{ inputs.package }}
+          CYCLE: ${{ inputs.target-cycle }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Rewrite the locks, specs and source manifests
         run: |
-          python3 tools/upstream_bump.py --apply ${PACKAGE:+--package "$PACKAGE"}
+          python3 tools/upstream_bump.py --apply ${PACKAGE:+--package "$PACKAGE"} ${CYCLE:+--cycle "$CYCLE"}
         env:
           PACKAGE: ${{ inputs.package }}
+          CYCLE: ${{ inputs.target-cycle }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # The same gates a contributor runs. A bump that cannot pass these is a
@@ -94,7 +108,9 @@ jobs:
       - name: Open reviewable update
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8
         with:
-          branch: bump/upstream-sources
+          # A target-cycle run (GNOME-next branches) gets its own PR branch so
+          # it never collides with the daily in-cycle PR.
+          branch: ${{ inputs.target-cycle != '' && format('bump/upstream-sources-cycle-{0}', inputs.target-cycle) || 'bump/upstream-sources' }}
           delete-branch: true
           title: 'chore(sources): bump upstream locks to released versions'
           commit-message: 'chore(sources): bump upstream locks to released versions'
@@ -107,7 +123,9 @@ jobs:
             run log lists what moved, and any candidate that crosses a release
             cycle or a major version is reported for a human and never applied,
             because version arithmetic alone cannot make that compatibility
-            decision.
+            decision. A dispatched `target-cycle` run widens the window to the
+            named cycle (GNOME-next branches); prereleases are never proposed
+            with or without it.
 
             Verified in the run before this PR was opened: the unit tests,
             `tools/validate.py`, the workflow quoting check, and

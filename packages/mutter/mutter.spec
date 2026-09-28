@@ -16,7 +16,7 @@
 %global mutter_api_version 51
 
 Name:          mutter
-Version:       51~beta
+Version:       51.0
 Release:       %autorelease
 Summary:       Window and compositing manager based on Clutter
 
