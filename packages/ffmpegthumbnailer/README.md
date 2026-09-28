@@ -1,0 +1,3 @@
+# ffmpegthumbnailer
+
+The ffmpegthumbnailer package
