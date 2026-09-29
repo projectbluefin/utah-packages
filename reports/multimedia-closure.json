@@ -18,7 +18,8 @@
     "exception": 8,
     "sources": 16,
     "upstream_parity": 0,
-    "fedora_restricted": 15
+    "fedora_restricted": 15,
+    "divergent": 0
   },
   "requirements": [
     {

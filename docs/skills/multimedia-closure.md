@@ -98,9 +98,14 @@ by comparing the recipe's `.hummingbird-upstream.json` provenance against the
 target source named in `[upstream_spec_sources]`:
 
 - `upstream` — built from the named negativo17 or RPM Fusion spec.
-- `fedora-restricted` — built from something else, today always a Fedora
-  import; the restriction is stated in `[parity.<recipe>].reason` in
+- `fedora-restricted` — built from a Fedora dist-git import
+  (`src.fedoraproject.org`), which is every override in the tree today; the
+  restriction is stated in `[parity.<recipe>].reason` in
   `config/multimedia-closure.toml` and copied into the report as `parity_note`.
+- `divergent` — built from some third source that is neither the named
+  upstream nor a Fedora import. Nothing is labelled this today; it exists so
+  the Fedora label stays a statement about Fedora's codec policy rather than a
+  catch-all for "not upstream". It needs a `[parity]` reason on the same terms.
 - `unknown` — built from a recipe with no recorded provenance.
 - `null` — no upstream spec source is named for it in
   `[upstream_spec_sources]`, so there is nothing to measure against. That is
@@ -108,7 +113,7 @@ target source named in `[upstream_spec_sources]`:
   `built` entries outside the override set — `lame{,-libs}`, the
   `gstreamer1-plugins-*` family, the `pipewire-*` binaries. `null` is "not
   measured", not "not at parity"; only the 16 named sources are counted in
-  `upstream_parity` and `fedora_restricted`.
+  `upstream_parity`, `fedora_restricted` and `divergent`.
 
 `--check` fails when a divergence carries no `[parity]` entry, so a
 Fedora-restricted build cannot pass as upstream parity by wearing the `built`
@@ -150,12 +155,14 @@ contract is the measurement that will show it, not the work it measures.
   `apt-get`, and createrepo_c ≥ 1.0 writes zstd. `tools/rebuild_matrix.py`
   reads the published repository the same way.
 - **The publish-time report does not gate the publish, and that is enforced,
-  not merely intended.** The step in `rebuild-rpms.yml` carries
-  `continue-on-error: true`. Without it, the step's exit code fails the publish
-  job before the consumer-transaction validation and the image push — and the
-  `--repodata` half runs only there, so no PR check can catch a failure in it.
-  If you want the closure to block a publish, that is a deliberate widening:
-  say so in the PR, and take the flag off on purpose rather than by accident.
+  not merely intended.** The step is in `.github/workflows/publish-repository.yml`
+  — the reusable publish workflow, not `rebuild-rpms.yml`, which only calls it
+  — and it carries `continue-on-error: true`. Without it, the step's exit code
+  fails the publish job before the consumer-transaction validation and the
+  image push — and the `--repodata` half runs only there, so no PR check can
+  catch a failure in it. If you want the closure to block a publish, that is a
+  deliberate widening: say so in the PR, and take the flag off on purpose
+  rather than by accident.
 
 ## Adding to the inventory
 
@@ -168,7 +175,9 @@ install line, fails `--check` until it has an entry:
 - `[exception]` — nothing here satisfies it. Needs `reason`, and the reason
   should say what would close it, or that nothing will.
 - `[upstream_spec_sources]` — every multimedia override binary must carry a named
-  upstream spec source URL from negativo17 or RPM Fusion.
+  upstream spec source URL from negativo17 or RPM Fusion. Key it by the
+  requirement name, or by the factory source recipe when one spec answers
+  several binaries; the requirement key wins when both are present.
 
 Then regenerate the report:
 

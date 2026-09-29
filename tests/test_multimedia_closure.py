@@ -282,6 +282,37 @@ class CodecParityTests(unittest.TestCase):
         with self.assertRaisesRegex(ClosureError, r"\[parity\] declares names"):
             self.resolve(closure, "https://github.com/negativo17/mesa")
 
+    def test_a_non_fedora_third_source_is_divergent_not_fedora_restricted(self) -> None:
+        # The Fedora label is a claim about Fedora's codec policy. A spec from
+        # anywhere else is off the named upstream without that explanation.
+        closure = CLOSURE + (
+            '\n[parity.mesa]\nreason = "Vendor fork pending review."\n'
+        )
+        report = self.resolve(closure, "https://gitlab.example.invalid/forks/mesa.git")
+        entry = report["requirements"][0]
+        self.assertEqual(entry["codec_parity"], "divergent")
+        self.assertEqual(entry["parity_note"], "Vendor fork pending review.")
+        self.assertEqual(report["counts"]["divergent"], 1)
+        self.assertEqual(report["counts"]["fedora_restricted"], 0)
+        self.assertEqual(report["counts"]["upstream_parity"], 0)
+
+    def test_an_undeclared_divergent_provenance_fails_the_gate(self) -> None:
+        with self.assertRaisesRegex(ClosureError, r"\[parity\.mesa\]"):
+            self.resolve(CLOSURE, "https://gitlab.example.invalid/forks/mesa.git")
+
+    def test_an_upstream_source_keyed_by_factory_source_covers_its_binaries(self) -> None:
+        # One upstream spec answers every binary its recipe emits, so the map
+        # takes a recipe name as well as a requirement name.
+        closure = CLOSURE.replace(
+            '[upstream_spec_sources]\nmesa-libGL = "https://github.com/negativo17/mesa"\n',
+            '[upstream_spec_sources]\nmesa = "https://github.com/negativo17/mesa"\n',
+        )
+        report = self.resolve(closure, "https://github.com/negativo17/mesa.git")
+        entry = report["requirements"][0]
+        self.assertEqual(entry["upstream_spec_source"], "https://github.com/negativo17/mesa")
+        self.assertEqual(entry["codec_parity"], "upstream")
+        self.assertEqual(report["counts"]["upstream_parity"], 1)
+
 
 class PublishedNevraTests(unittest.TestCase):
     def test_epoch_is_carried_and_the_highest_release_wins(self) -> None:
@@ -509,6 +540,7 @@ class RepositoryClosureTests(unittest.TestCase):
                     f"{entry['requirement']} diverges from its named upstream spec "
                     "source with no reason recorded in [parity]",
                 )
+        self.assertEqual(report["counts"]["divergent"], 0)
         self.assertEqual(
             report["counts"]["upstream_parity"] + report["counts"]["fedora_restricted"],
             sum(1 for entry in report["requirements"]

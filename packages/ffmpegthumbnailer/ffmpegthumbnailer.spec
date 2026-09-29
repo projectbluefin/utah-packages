@@ -20,6 +20,10 @@ BuildRequires:  pkgconfig(libavfilter)
 BuildRequires:  pkgconfig(libjpeg)
 BuildRequires:  pkgconfig(libpng)
 
+# Local fix on top of the Fedora dist-git import recorded in
+# .hummingbird-upstream.json: upstream writes %%{?isa}, which is not a
+# defined macro and expands to nothing, so the dependency loses its
+# architecture. %%{?_isa} is the macro that was meant.
 Requires:       %{name}-libs%{?_isa} = %{version}-%{release}
 
 %description
@@ -36,6 +40,10 @@ This package contains the library for %{name}.
 
 %package        devel
 Summary:        Development files for %{name}
+# Local fix on top of the Fedora dist-git import recorded in
+# .hummingbird-upstream.json: upstream writes %%{?isa}, which is not a
+# defined macro and expands to nothing, so the dependency loses its
+# architecture. %%{?_isa} is the macro that was meant.
 Requires:       %{name}-libs%{?_isa} = %{version}-%{release}
 
 %description    devel

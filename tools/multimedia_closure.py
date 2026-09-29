@@ -49,6 +49,11 @@ RPM_NS = "http://linux.duke.edu/metadata/rpm"
 
 SCHEMA = 1
 
+# `_normalise_source` spelling of Fedora dist-git, which is where every
+# override recipe in packages/ is imported from. Used to tell a Fedora import
+# apart from some other non-upstream source when labelling parity.
+FEDORA_DISTGIT = "https://src.fedoraproject.org/"
+
 
 class ClosureError(Exception):
     """A statement in the inventory that the repository does not support."""
@@ -83,6 +88,13 @@ def codec_parity(upstream_spec_source: str | None, recipe_provenance: str | None
     override set -- `lame`, the `gstreamer1-plugins-*` family, the
     `pipewire-*` binaries -- has no negativo17 or RPM Fusion spec named for
     it in `[upstream_spec_sources]`, so there is nothing to compare against.
+
+    A mismatch is only `fedora-restricted` when the provenance really is a
+    Fedora dist-git import, which is the case for every override in the tree
+    today. Calling any other third source "Fedora" would put a claim about
+    Fedora's codec policy on a spec Fedora never shipped, so a mismatch from
+    somewhere else is `divergent`: off the named upstream, and not explained
+    by Fedora's restrictions either. Both fail the same gate.
     """
     if not upstream_spec_source:
         return None
@@ -90,7 +102,9 @@ def codec_parity(upstream_spec_source: str | None, recipe_provenance: str | None
         return "unknown"
     if _normalise_source(recipe_provenance) == _normalise_source(upstream_spec_source):
         return "upstream"
-    return "fedora-restricted"
+    if _normalise_source(recipe_provenance).startswith(FEDORA_DISTGIT):
+        return "fedora-restricted"
+    return "divergent"
 
 
 def requirements(manifest: dict, closure: dict) -> list[tuple[str, str]]:
@@ -325,15 +339,15 @@ def resolve(root: Path, repodata: Path | None = None) -> dict:
             "config/multimedia-closure.toml claims requirements the transaction "
             "does not ask for: " + ", ".join(stale)
         )
-    stale_sources = sorted(set(upstream_sources) - {name for name, _ in wanted})
+    known_keys = {name for name, _ in wanted} | {
+        claim["factory_source"] for claim in claims.values() if claim.get("factory_source")
+    }
+    stale_sources = sorted(set(upstream_sources) - known_keys)
     if stale_sources:
         raise ClosureError(
             "config/multimedia-closure.toml [upstream_spec_sources] maps names the "
             "transaction does not ask for: " + ", ".join(stale_sources)
         )
-    known_keys = {name for name, _ in wanted} | {
-        claim["factory_source"] for claim in claims.values() if claim.get("factory_source")
-    }
     stale_parity = sorted(set(parity_declarations) - known_keys)
     if stale_parity:
         raise ClosureError(
@@ -394,7 +408,7 @@ def resolve(root: Path, repodata: Path | None = None) -> dict:
             codec_parity(upstream_spec_source, entry["recipe_provenance"])
             if source is not None else None
         )
-        if entry["codec_parity"] == "fedora-restricted":
+        if entry["codec_parity"] in ("fedora-restricted", "divergent"):
             declaration = parity_declarations.get(name) or (
                 parity_declarations.get(source) if source else None
             )
@@ -436,6 +450,7 @@ def resolve(root: Path, repodata: Path | None = None) -> dict:
         "fedora_restricted": sum(
             1 for entry in resolved if entry["codec_parity"] == "fedora-restricted"
         ),
+        "divergent": sum(1 for entry in resolved if entry["codec_parity"] == "divergent"),
     }
     report = {
         "schema": SCHEMA,
@@ -481,7 +496,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"multimedia closure inventoried: {summary}")
         restricted = [
             entry["requirement"] for entry in report["requirements"]
-            if entry["codec_parity"] == "fedora-restricted"
+            if entry["codec_parity"] in ("fedora-restricted", "divergent")
         ]
         if restricted:
             # Reported, not failed: every override is a Fedora import today, so
