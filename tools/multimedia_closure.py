@@ -418,6 +418,22 @@ def resolve(root: Path, repodata: Path | None = None) -> dict:
                     f"named upstream spec source {upstream_spec_source}; declare the "
                     f"restriction in [parity.{source or name}] with a reason"
                 )
+            # The declared `status` is a second opinion on what the provenance
+            # comparison already derived, so it is only worth carrying if the
+            # two must agree. Left unchecked, a table saying
+            # `fedora-restricted` would keep passing the gate after the recipe
+            # moved to some third spec and the derivation turned `divergent` --
+            # the reason text would then describe Fedora's codec policy for a
+            # spec Fedora never shipped.
+            declared_status = declaration.get("status")
+            if declared_status != entry["codec_parity"]:
+                raise ClosureError(
+                    f"[parity.{source or name}] declares status "
+                    f"'{declared_status}' but {name} derives "
+                    f"'{entry['codec_parity']}' from its provenance "
+                    f"{entry['recipe_provenance']} against the named upstream "
+                    f"spec source {upstream_spec_source}"
+                )
             entry["parity_note"] = " ".join(declaration["reason"].split())
 
         if origin == "multimedia-override":

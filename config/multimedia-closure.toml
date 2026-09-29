@@ -133,6 +133,11 @@ gstreamer1-plugins-ugly-free = "https://github.com/rpmfusion/gstreamer1-plugins-
 # source named above, and fails when a divergence carries no entry here -- so a
 # Fedora-restricted build cannot pass as upstream parity by wearing the `built`
 # label. Keys are factory source recipes (or requirement names).
+#
+# `status` is not decoration: the tool requires it to equal the parity it
+# derived, so a table cannot keep explaining a Fedora restriction after the
+# recipe has moved to some third spec and the derivation has turned
+# `divergent`.
 [parity.mesa]
 status = "fedora-restricted"
 reason = """
@@ -303,11 +308,19 @@ libraries above; encoding uses fdk-aac-free.
 
 [exception.gstreamer1-plugin-libav]
 reason = """
-The GStreamer-to-FFmpeg bridge, sourced upstream from RPM Fusion gstreamer1-libav.
-Fedora's source package is `gstreamer1-plugin-libav` (singular `plugin`), it is
-at 1.28.7, and it carries `BuildRequires: gstreamer1-devel >= %{version}`. This
-factory's gstreamer1 family is pinned at 1.28.6, so importing the current
-recipe would add a BuildRequires nothing in the build root satisfies --
+The GStreamer-to-FFmpeg bridge. Two specs carry that bridge and
+`[upstream_spec_sources]` names the one Bluefin installs today: RPM Fusion's
+`gstreamer1-libav`, built against RPM Fusion's full-codec ffmpeg. The closing
+path planned here is the *other* one, Fedora's dist-git
+`gstreamer1-plugin-libav` (singular `plugin`), built against this factory's
+ffmpeg, which is Fedora's `-free` flavour -- so the import closes the
+requirement by name and lands at `fedora-restricted` parity, not at the named
+upstream. Declare that in `[parity]` when the recipe arrives; closing the
+codec gap too means moving this factory's ffmpeg to the RPM Fusion spec first.
+Fedora's recipe is at 1.28.7 and carries
+`BuildRequires: gstreamer1-devel >= %{version}`, while this factory's
+gstreamer1 family is pinned at 1.28.6, so importing it today would add a
+BuildRequires nothing in the build root satisfies --
 `docs/skills/repeated-mistakes.md` #2, a package and the family it is released
 with pinned separately. Bump gstreamer1, gstreamer1-plugins-base,
 gstreamer1-plugins-good and gstreamer1-plugins-bad-free to 1.28.7 in one
@@ -316,10 +329,16 @@ change, then import this at a stage above ffmpeg's.
 
 [exception.gstreamer1-plugins-ugly-free]
 reason = """
-The free subset of GStreamer's `ugly` plugin set (with RPM Fusion carrying nonfree plugins);
-no recipe here yet. It is a plain Fedora dist-git import at the gstreamer1 family version,
-so it is import-ready once that family moves -- see gstreamer1-plugin-libav, which has
-to move with it.
+GStreamer's `ugly` plugin set. `[upstream_spec_sources]` names RPM Fusion's
+`gstreamer1-plugins-ugly`, the full set including the patent-encumbered
+plugins, because that is the repository Bluefin installs from. The closing
+path planned here is Fedora's dist-git `gstreamer1-plugins-ugly-free`, the
+free subset under the exact name Bluefin asks for, at the gstreamer1 family
+version -- so, as with gstreamer1-plugin-libav, the import closes the
+requirement by name at `fedora-restricted` parity rather than at the named
+upstream, and wants a `[parity]` entry saying so. No recipe here yet; it is
+import-ready once that family moves, and it has to move with
+gstreamer1-plugin-libav.
 """
 
 [exception.gstreamer1-plugin-dav1d]

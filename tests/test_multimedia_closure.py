@@ -286,7 +286,8 @@ class CodecParityTests(unittest.TestCase):
         # The Fedora label is a claim about Fedora's codec policy. A spec from
         # anywhere else is off the named upstream without that explanation.
         closure = CLOSURE + (
-            '\n[parity.mesa]\nreason = "Vendor fork pending review."\n'
+            '\n[parity.mesa]\nstatus = "divergent"\n'
+            'reason = "Vendor fork pending review."\n'
         )
         report = self.resolve(closure, "https://gitlab.example.invalid/forks/mesa.git")
         entry = report["requirements"][0]
@@ -299,6 +300,25 @@ class CodecParityTests(unittest.TestCase):
     def test_an_undeclared_divergent_provenance_fails_the_gate(self) -> None:
         with self.assertRaisesRegex(ClosureError, r"\[parity\.mesa\]"):
             self.resolve(CLOSURE, "https://gitlab.example.invalid/forks/mesa.git")
+
+    def test_a_declared_status_that_disagrees_with_the_derivation_fails(self) -> None:
+        # The declaration is a second opinion on the derivation, so it has to
+        # agree with it. A table left saying `fedora-restricted` after the
+        # recipe moved off Fedora would put a claim about Fedora's codec policy
+        # on a spec Fedora never shipped, and it would pass the gate.
+        closure = CLOSURE + (
+            '\n[parity.mesa]\nstatus = "fedora-restricted"\n'
+            'reason = "Vendor fork pending review."\n'
+        )
+        with self.assertRaisesRegex(
+            ClosureError, r"declares status 'fedora-restricted' but .* 'divergent'"
+        ):
+            self.resolve(closure, "https://gitlab.example.invalid/forks/mesa.git")
+
+    def test_a_parity_entry_with_no_status_fails(self) -> None:
+        closure = CLOSURE + '\n[parity.mesa]\nreason = "Fedora import."\n'
+        with self.assertRaisesRegex(ClosureError, r"declares status 'None'"):
+            self.resolve(closure, "https://src.fedoraproject.org/rpms/mesa.git")
 
     def test_an_upstream_source_keyed_by_factory_source_covers_its_binaries(self) -> None:
         # One upstream spec answers every binary its recipe emits, so the map

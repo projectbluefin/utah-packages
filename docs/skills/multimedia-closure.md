@@ -117,7 +117,11 @@ target source named in `[upstream_spec_sources]`:
 
 `--check` fails when a divergence carries no `[parity]` entry, so a
 Fedora-restricted build cannot pass as upstream parity by wearing the `built`
-label, and it prints the requirements still short of parity. It does not fail
+label, and it prints the requirements still short of parity. It also fails when
+a `[parity.<recipe>].status` disagrees with the parity derived from the
+provenance: the declaration is a second opinion, so it has to agree, or a table
+explaining a Fedora restriction would keep passing after the recipe moved to a
+third spec and the derivation turned `divergent`. It does not fail
 on the divergence itself: the migration under `#230` has not run, so `0
 upstream_parity, 15 fedora_restricted` is the honest current state, not a
 regression to block on.
