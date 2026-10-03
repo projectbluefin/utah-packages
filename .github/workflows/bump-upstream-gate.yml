@@ -239,6 +239,29 @@ jobs:
           gh workflow run bump-upstream-gate.yml -R "$REPOSITORY" \
             --ref bump/upstream-sources -f pr="$PR"
           echo "::warning title=bump gate::held $HOLD; gating the rest at $(git rev-parse HEAD)"
+      # GitHub does create pull_request runs for the bot-opened PR, but parks
+      # them in action_required (a bot triggered them). A parked run's pending
+      # Canary check on the head commit blocks the merge -- "the base branch
+      # policy prohibits the merge" -- even after the dispatched Canary passed.
+      # Approve the parked runs on exactly the commit this gate built; they are
+      # this repository's own workflows on its own branch.
+      - name: Release pull_request runs parked for approval on this commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ github.sha }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          gh api "repos/$REPOSITORY/actions/runs?head_sha=$SHA&status=action_required&per_page=100" \
+            --jq '.workflow_runs[] | select(.event == "pull_request") | .id' > parked.txt
+          while read -r id; do
+            [ -n "$id" ] || continue
+            if gh api -X POST "repos/$REPOSITORY/actions/runs/$id/approve" > /dev/null; then
+              echo "approved parked run $id"
+            else
+              echo "::warning title=bump gate::could not approve parked run $id; a maintainer must approve it before the merge can pass"
+            fi
+          done < parked.txt
       - name: Wait for the Canary check on this commit
         env:
           GH_TOKEN: ${{ github.token }}

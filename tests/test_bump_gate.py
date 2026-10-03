@@ -547,6 +547,21 @@ class BumpWorkflowTests(unittest.TestCase):
 
 
 
+class ParkedRunTests(unittest.TestCase):
+    """Bot-triggered pull_request runs wait in action_required, and their
+    pending Canary blocks the merge; the gate approves them on its commit."""
+
+    def test_merge_job_approves_parked_runs_before_waiting_for_canary(self):
+        workflow = yaml.safe_load((WORKFLOWS / "bump-upstream-gate.yml").read_text())
+        steps = [step.get("name", "") for step in workflow["jobs"]["merge"]["steps"]]
+        release = steps.index("Release pull_request runs parked for approval on this commit")
+        wait = steps.index("Wait for the Canary check on this commit")
+        self.assertLess(release, wait)
+        run = workflow["jobs"]["merge"]["steps"][release]["run"]
+        self.assertIn("head_sha=$SHA&status=action_required", run)
+        self.assertIn('select(.event == "pull_request")', run)
+        self.assertEqual(workflow["jobs"]["merge"]["permissions"]["actions"], "write")
+
 class AddPathsExistTests(unittest.TestCase):
     """create-pull-request runs `git add` on every add-paths entry, and a
     missing path is fatal: the first bump after the holds file was introduced

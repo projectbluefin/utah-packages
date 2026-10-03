@@ -166,6 +166,10 @@ Constraints that shaped it, so they are not rediscovered:
   daily bump re-dispatches the gate even when nothing new moved, which
   retries a flaky build.
 - A `target-cycle` (GNOME-next) run is never gated; it stays a human merge.
+- GitHub does create `pull_request` runs for the bot-opened PR, parked in
+  `action_required`; their pending `Canary` blocked the first gated merge
+  ("the base branch policy prohibits the merge"). The merge job approves
+  parked runs on the exact commit it built before waiting for Canary.
 - A relock (a dispatched `--package` run that moves a primary off the Fedora
   lookaside) changes `config/fedora-primary-sources.txt`, which the gate
   refuses: moving a source's origin stays a human merge.
