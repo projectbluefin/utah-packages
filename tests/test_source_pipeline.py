@@ -17,6 +17,7 @@ from tools.source_pipeline import (
     FETCH_ATTEMPTS,
     LOOKASIDE,
     bundled_sources,
+    digest,
     fetch,
     fetch_with_fallbacks,
     main,
@@ -463,6 +464,41 @@ class SourceManifestTests(unittest.TestCase):
                     source_manifest({"name": "demo"}),
                     [("gvdb.tar.xz", "a" * 128), ("extra.tar.xz", "d" * 128)],
                 )
+
+
+class DigestTests(unittest.TestCase):
+    """digest() compares a downloaded file against the value Fedora recorded.
+
+    The pipeline is integrity-only, so every algorithm — including md5 on the
+    handful of legacy lookaside pins — must work in a FIPS-mode OpenSSL build,
+    which refuses ``hashlib.new('md5')`` for security use. The call has to
+    carry ``usedforsecurity=False`` so that md5 verification does not raise
+    ValueError on a FIPS host.
+    """
+
+    def test_digest_passes_usedforsecurity_false_to_hashlib_new(self) -> None:
+        captured: list[tuple[str, dict]] = []
+        real_new = hashlib.new
+
+        def spy_new(name: str, *args: object, **kwargs: object):
+            captured.append((name, dict(kwargs)))
+            return real_new(name, *args, **kwargs)
+
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "bytes"
+            path.write_bytes(b"digest me")
+            with patch("tools.source_pipeline.hashlib.new", side_effect=spy_new):
+                for algorithm in ("sha512", "sha256", "md5"):
+                    digest(path, algorithm)
+        self.assertEqual([name for name, _ in captured], ["sha512", "sha256", "md5"])
+        for _, kwargs in captured:
+            self.assertEqual(kwargs, {"usedforsecurity": False})
+
+    def test_digest_matches_hashlib_for_md5(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "bytes"
+            path.write_bytes(b"digest me")
+            self.assertEqual(digest(path, "md5"), hashlib.md5(b"digest me").hexdigest())
 
 
 class BundledSourceTests(unittest.TestCase):

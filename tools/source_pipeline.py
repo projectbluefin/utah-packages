@@ -29,7 +29,11 @@ from tools.package_inventory import load_source_locks
 
 
 def digest(path: Path, algorithm: str) -> str:
-    value = hashlib.new(algorithm)
+    # usedforsecurity=False bypasses the FIPS-mode block on md5: the pipeline
+    # only uses the digest to compare a downloaded file against the value
+    # Fedora recorded for it, never to authenticate anything, so a weak hash
+    # is acceptable when the pin itself is md5.
+    value = hashlib.new(algorithm, usedforsecurity=False)
     with path.open("rb") as source:
         for block in iter(lambda: source.read(1024 * 1024), b""):
             value.update(block)
