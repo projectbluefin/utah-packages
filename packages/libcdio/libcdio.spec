@@ -1,6 +1,6 @@
 Name: libcdio
-Version: 2.3.0
-Release: 2%{?dist}
+Version: 2.4.0
+Release: 1%{?dist}
 Summary: CD-ROM input and control library
 # include/cdio/ecma_167.h and lib/driver/netbsd.c and lib/udf/udf_fs.c are BSD-2-Clause
 # src/getopt* are LGPL-2.1-or-later
