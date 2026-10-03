@@ -40,7 +40,7 @@ on:
   workflow_dispatch:
     inputs:
       pr:
-        description: The bump pull request number (bump/upstream-sources into main)
+        description: The bump pull request number (bump/upstream-sources or bump/rawhide-imports into main)
         required: true
         type: string
 
@@ -55,7 +55,9 @@ jobs:
   plan:
     # Only the daily in-cycle bump merges itself. A GNOME-next target-cycle
     # branch, or a dispatch on any other ref, does nothing.
-    if: github.ref == 'refs/heads/bump/upstream-sources'
+    # The two daily automated PRs: upstream version bumps and Rawhide recipe
+    # re-imports. Both change only the lock and packages/, which plan enforces.
+    if: github.ref == 'refs/heads/bump/upstream-sources' || github.ref == 'refs/heads/bump/rawhide-imports'
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -73,14 +75,15 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           PR: ${{ inputs.pr }}
           SHA: ${{ github.sha }}
+          BRANCH: ${{ github.ref_name }}
           REPOSITORY: ${{ github.repository }}
         run: |
           set -euo pipefail
           gh pr view "$PR" -R "$REPOSITORY" \
             --json state,baseRefName,headRefName,headRefOid,isCrossRepository > pr.json
           jq . pr.json
-          if jq -e --arg sha "$SHA" '.state == "OPEN" and .baseRefName == "main"
-              and .headRefName == "bump/upstream-sources" and .headRefOid == $sha
+          if jq -e --arg sha "$SHA" --arg branch "$BRANCH" '.state == "OPEN" and .baseRefName == "main"
+              and .headRefName == $branch and .headRefOid == $sha
               and (.isCrossRepository | not)' pr.json > /dev/null; then
             echo "current=true" >> "$GITHUB_OUTPUT"
           else
@@ -106,9 +109,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           PR: ${{ inputs.pr }}
+          BRANCH: ${{ github.ref_name }}
           REPOSITORY: ${{ github.repository }}
         run: |
-          gh workflow run canary.yml -R "$REPOSITORY" --ref bump/upstream-sources -f pr="$PR"
+          gh workflow run canary.yml -R "$REPOSITORY" --ref "$BRANCH" -f pr="$PR"
 
   build:
     needs: plan

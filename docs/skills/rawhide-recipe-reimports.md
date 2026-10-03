@@ -84,3 +84,14 @@ the new case is safe, and keep `classify` pure so the policy stays testable
 offline. Widening rule 6 to version moves would make this workflow write
 source locks, which needs the download-and-verify path `upstream_bump.py`
 already owns; extend that tool rather than duplicating it here.
+
+## Merging
+
+The PR is opened with `GITHUB_TOKEN`, so it fires no `pull_request` CI. The
+job then dispatches `bump-upstream-gate.yml` on `bump/rawhide-imports`, the
+same gate the daily upstream bump uses (`docs/skills/upstream-version-bumps.md`):
+it runs the required Canary check, builds exactly the re-imported recipes
+without publishing, merges only at the commit that built, and dispatches the
+factory on `main`. A failed build leaves the PR open with a comment naming the
+packages. The gate accepts only these two branches, and only diffs confined to
+the source lock and `packages/`.

@@ -252,9 +252,15 @@ class GateWorkflowTests(unittest.TestCase):
         cls.workflow = yaml.safe_load(cls.text)
         cls.jobs = cls.workflow["jobs"]
 
-    def test_dispatch_only_and_only_for_the_daily_branch(self) -> None:
+    def test_dispatch_only_and_only_for_the_daily_branches(self) -> None:
+        # The upstream bump and the Rawhide re-import; nothing else, and never
+        # a GNOME-next target-cycle branch.
         self.assertEqual(set(on(self.workflow)), {"workflow_dispatch"})
-        self.assertEqual(self.jobs["plan"]["if"], "github.ref == 'refs/heads/bump/upstream-sources'")
+        self.assertEqual(
+            self.jobs["plan"]["if"],
+            "github.ref == 'refs/heads/bump/upstream-sources' "
+            "|| github.ref == 'refs/heads/bump/rawhide-imports'")
+        self.assertNotIn("cycle", self.jobs["plan"]["if"])
 
     def test_a_newer_gate_cancels_an_older_one(self) -> None:
         self.assertTrue(self.workflow["concurrency"]["cancel-in-progress"])

@@ -59,6 +59,7 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+      actions: write
     outputs:
       branch: bump/rawhide-imports
       pull-request-number: ${{ steps.pr.outputs.pull-request-number }}
@@ -122,3 +123,24 @@ jobs:
           title: 'chore(packages): re-import Rawhide recipe updates'
           commit-message: 'chore(packages): re-import Rawhide recipe updates'
           body-path: ${{ runner.temp }}/body.md
+
+      # The same gate as the daily upstream bump: build exactly the re-imported
+      # recipes, publishing nothing, merge only if all of them built and the
+      # head is still the commit that built, then publish from main. A failure
+      # leaves the pull request open with a comment naming the packages.
+      - name: Gate the re-imports on their own build
+        if: steps.pr.outputs.pull-request-operation != 'closed'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          pr=$(gh pr list -R "$REPOSITORY" --head bump/rawhide-imports --base main \
+            --state open --json number --jq '.[0].number // empty')
+          if [ -z "$pr" ]; then
+            echo "no open re-import pull request; nothing to gate"
+            exit 0
+          fi
+          gh workflow run bump-upstream-gate.yml -R "$REPOSITORY" \
+            --ref bump/rawhide-imports -f pr="$pr"
+          echo "dispatched the bump gate for pull request $pr"
