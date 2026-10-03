@@ -3561,6 +3561,27 @@
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/plymouth/plymouth-26.134.222.tar.bz2/sha512/61d43405fca0208bb2cdd5a1534b8de390fd9e33677709388a6e42feba13f8ba230d0791c63a94648b8ad70946597747b5bdd0ddab35e74c6e3b69a8e212b100/plymouth-26.134.222.tar.bz2"
       ]
+    },
+    {
+      "name": "tpm2-tools",
+      "version": "5.8",
+      "url": "https://github.com/tpm2-software/tpm2-tools/releases/download/5.8/tpm2-tools-5.8.tar.gz",
+      "filename": "tpm2-tools-5.8.tar.gz",
+      "sha512": "0bea68505a773f75476a1e0ea2abd8336a16f0b8900006512a81019708f04b50dbb7960922b37821278825305d33e042f82da2125e7409dacbd139cd52474e82"
+    },
+    {
+      "name": "pcsc-lite",
+      "version": "2.5.2",
+      "url": "https://pcsclite.apdu.fr/files/pcsc-lite-2.5.2.tar.xz",
+      "filename": "pcsc-lite-2.5.2.tar.xz",
+      "sha512": "f8b20a7654c3a8607c090827df9242de4518cdd592faa558f0a0ace2ccfc24b00f1316d2566fafe4e4045c61897868213ca3d0e4eea4e472d1841968e65ce85c"
+    },
+    {
+      "name": "pcsc-lite-ccid",
+      "version": "1.8.4",
+      "url": "https://ccid.apdu.fr/files/ccid-1.8.4.tar.xz",
+      "filename": "ccid-1.8.4.tar.xz",
+      "sha512": "e4110ebc6a4cbb904ba957a76cb9e9967580882f1803faf3f8cdb16a88aa278617dfd2d40831f9596faebf12c2e9f6d82564766cb5ac8091577ae50176b70e3b"
     }
   ]
 }
