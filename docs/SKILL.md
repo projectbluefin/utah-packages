@@ -27,6 +27,7 @@ Both are indexed below. A skill that exists but is not listed here fails
 | Change a stage, a container pin, a bcond, the rebuild workflow, or drop a recipe, without repeating a fix the history already reverted | [`skills/repeated-mistakes.md`](skills/repeated-mistakes.md) |
 | Change package-cache keys, eligibility, restore/publish ordering, or cache storage | [`skills/package-build-cache.md`](skills/package-build-cache.md) |
 | Change upstream version bumps, their RPM release and rebuild counters, or the gate that merges the daily bump | [`skills/upstream-version-bumps.md`](skills/upstream-version-bumps.md) |
+| Change which Rawhide recipe moves the daily `bump/rawhide-imports` PR takes unattended | [`skills/rawhide-recipe-reimports.md`](skills/rawhide-recipe-reimports.md) |
 | Import, configure, or verify font package recipes | [`skills/font-package-recipes.md`](skills/font-package-recipes.md) |
 | Carry or verify GNOME Shell theme fixes | [`skills/gnome-shell-theme-patches.md`](skills/gnome-shell-theme-patches.md) |
 | Interpret or regenerate the GNOME-vs-gnome-build-meta audit | [`skills/gnome-build-meta-audit.md`](skills/gnome-build-meta-audit.md) |

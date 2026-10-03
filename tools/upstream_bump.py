@@ -29,8 +29,9 @@ git-forge entries poll tags or releases. A lock whose own URLs reveal no feed
 -- a lookaside primary with no forge mirror -- may carry an explicit `feed`
 naming the project's real upstream feed, derived from the spec's Source0 and
 verified against the forge; see issue #134. detect-rawhide-updates.yml
-deliberately only observes the lookaside on the stated policy that "Fedora is
-a compatibility build root, not a source-update feed."
+takes Fedora's recipe changes but never a version or a lookaside source, on
+the stated policy that "Fedora is a compatibility build root, not a
+source-update feed" -- version moves are this tool's.
 
 GNOME publishes an authoritative release index per module at
 sources/<module>/cache.json, so the candidate list needs no scraping.

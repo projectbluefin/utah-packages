@@ -51,6 +51,16 @@ provenance, and editing it makes the recipe claim an origin it does not have.
 Pull requests validate configuration. They cannot publish packages,
 attestations, or image tags.
 
+## Updating a carried package from Rawhide
+
+You usually do not. `detect-rawhide-updates.yml` re-imports, once a day on
+`bump/rawhide-imports`, every carried recipe whose Koji Rawhide build moved
+and that `tools/rawhide_reimport.py` classifies safe: unmodified here, same
+`sources` and `Version:`, no new `BuildRequires`. Everything else it lists in
+the pull request body for a human. A recipe with Utah-local edits stays out
+of that pull request for good, so update it by hand on its own branch. See
+[`skills/rawhide-recipe-reimports.md`](skills/rawhide-recipe-reimports.md).
+
 ## Removing a package
 
 Dropping a recipe out of the rebuild set (for example `gcc`, removed because

@@ -505,6 +505,14 @@ pull request.
   including the quoted `validate.py` output line.
 - `just check` green on the import branch, not after merge.
 
+The daily re-import of carried recipes (`tools/rawhide_reimport.py`, the
+`bump` job in `detect-rawhide-updates.yml`) cannot repeat this: it only
+replaces recipes already in every inventory, refuses any move that would
+touch the source lock (`sources` or `Version:` changed), and fails the run if
+`.packit.yaml` or `config/upstream-sources.json` differ afterwards. It never
+adds a package. Keep it that way; see
+[`rawhide-recipe-reimports.md`](rawhide-recipe-reimports.md).
+
 ## Quick checks before pushing a fix
 
 - [ ] Does `git log --oneline -- <file>` show this file being fixed for the
