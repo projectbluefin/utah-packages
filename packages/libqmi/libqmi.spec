@@ -1,6 +1,6 @@
 Name: libqmi
-Version: 1.36.0
-Release: 4%{?dist}
+Version: 1.38.0
+Release: 1%{?dist}
 Summary: Support library to use the Qualcomm MSM Interface (QMI) protocol
 License: LGPL-2.1-or-later
 URL: https://gitlab.freedesktop.org/mobile-broadband/libqmi/
@@ -10,8 +10,8 @@ BuildRequires: meson >= 0.53
 BuildRequires: gcc
 BuildRequires: glib2-devel >= 2.56
 BuildRequires: gobject-introspection-devel
-BuildRequires: gtk-doc
-BuildRequires: pkgconfig(gudev-1.0) >= 147
+BuildRequires: gi-docgen
+BuildRequires: pkgconfig(gudev-1.0) >= 232
 BuildRequires: libmbim-devel >= 1.18.0
 BuildRequires: libqrtr-glib-devel
 BuildRequires: python3
@@ -51,13 +51,14 @@ from the command line.
 # Let's avoid BuildRequiring bash-completion because it changes behavior
 # of shell, at least until the .pc file gets into the -devel subpackage.
 # We'll just install the bash-completion file ourselves.
+# 1.38.0 builds its API reference with gi-docgen instead of gtk-doc; the
+# meson option keeps its old name.
 %meson -Dgtk_doc=true -Dbash_completion=false
 %meson_build
 
 
 %install
 %meson_install
-find %{buildroot}%{_datadir}/gtk-doc |xargs touch --reference meson.build
 mkdir -p %{buildroot}%{_datadir}/bash-completion/completions
 cp -a src/qmicli/qmicli %{buildroot}%{_datadir}/bash-completion/completions/
 
@@ -80,7 +81,7 @@ cp -a src/qmicli/qmicli %{buildroot}%{_datadir}/bash-completion/completions/
 %{_includedir}/libqmi-glib/
 %{_libdir}/pkgconfig/qmi-glib.pc
 %{_libdir}/libqmi-glib.so
-%{_datadir}/gtk-doc/html/libqmi-glib/
+%{_docdir}/libqmi-glib-1.0/
 %{_datadir}/gir-1.0/Qmi-1.0.gir
 
 
