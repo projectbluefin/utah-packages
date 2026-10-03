@@ -71,6 +71,18 @@ the reference when Fedora has one. Seen so far:
 - A forge lock on `/archive/` polls tags, and a tag is not a release:
   stixfonts `v2.14` is an interim source-only tag with no built fonts.
   Do not build such a version; leave the lock where it is.
+- A carried patch that stops applying was usually merged upstream. Check
+  with `patch -p1 -R --dry-run` against the new tarball: a clean reverse apply
+  means drop it, along with anything the spec marks as needed only for it
+  (libgphoto2 2.5.34 dropped an `autoreconf`; libmtp 1.1.23 and libheif
+  1.23.5 dropped theirs too).
+- Rawhide at the same version has often already dropped, rebased or added a
+  patch (libayatana-appindicator 0.6.0 needed Rawhide's gapi metadata patch
+  for its mono bindings).
+
+Verify a fix with `rebuild-rpms.yml` dispatched on the `fix/recipe-<name>`
+ref with `packages=["<name>"]`; a non-main ref publishes only a
+branch-named tag.
 
 ## The bump gate
 
