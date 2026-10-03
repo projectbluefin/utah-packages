@@ -282,38 +282,64 @@ def _forge_request(url: str) -> urllib.request.Request:
     return urllib.request.Request(url, headers=headers)
 
 
-def forge_versions(feed: dict, opener=urllib.request.urlopen) -> list[str]:
-    """Every version a forge lists for a project, tag prefixes stripped.
+def _forge_list(url: str, opener) -> list:
+    """One page of a forge API listing; anything but a JSON list is an error.
 
-    Draft and prerelease-flagged GitHub releases are dropped here rather than
-    left to is_prerelease: a maintainer marking a release prerelease is a
-    stronger signal than the version string, and some use neither an alpha nor
-    a beta suffix for one.
+    GitHub answers rate limiting and 404 with an object. Treating that as an
+    empty listing would silently report every package as up to date.
     """
-    if feed["forge"] == "github":
-        url = (
-            f"{GITHUB_API}/repos/{feed['owner']}/{feed['repo']}"
-            f"/{feed['endpoint']}?per_page=100"
-        )
-    else:
-        project = urllib.parse.quote(feed["path"], safe="")
-        url = (
-            f"https://{feed['host']}/api/v4/projects/{project}"
-            f"/repository/tags?per_page=100"
-        )
     with opener(_forge_request(url), timeout=60) as response:
         document = json.loads(response.read())
     if not isinstance(document, list):
         raise ValueError("forge returned no list")
+    return document
+
+
+def _published_releases(document: list) -> list[str]:
+    """The stable versions a forge release listing publishes.
+
+    Draft and prerelease-flagged GitHub releases, and GitLab's
+    upcoming_release, are dropped here rather than left to is_prerelease: a
+    maintainer marking a release prerelease is a stronger signal than the
+    version string, and some use neither an alpha nor a beta suffix for one.
+    """
     found = []
     for item in document:
-        if feed.get("endpoint") == "releases" and feed["forge"] == "github":
-            if item.get("draft") or item.get("prerelease"):
-                continue
-            tag = item.get("tag_name", "")
-        else:
-            tag = item.get("name", "")
-        version = strip_tag_prefix(tag)
+        if item.get("draft") or item.get("prerelease") or item.get("upcoming_release"):
+            continue
+        version = strip_tag_prefix(item.get("tag_name", ""))
+        if version:
+            found.append(version)
+    return found
+
+
+def forge_versions(feed: dict, opener=urllib.request.urlopen) -> list[str]:
+    """Every version a forge publishes for a project, tag prefixes stripped.
+
+    A feed read from an `/archive/` URL names a tag, but a tag is not a
+    release: stixfonts tagged `v2.14` on an interim, source-only commit with
+    no built fonts while its latest release stayed 2.13b171. So a project that
+    publishes releases is read through its releases; only a project that
+    publishes none (no stable, non-draft release at all) falls back to its
+    tags. That costs one extra request per tag feed, which the authenticated
+    GitHub budget absorbs.
+    """
+    if feed["forge"] == "github":
+        base = f"{GITHUB_API}/repos/{feed['owner']}/{feed['repo']}"
+        releases_url = f"{base}/releases?per_page=100"
+        tags_url = f"{base}/tags?per_page=100"
+    else:
+        project = urllib.parse.quote(feed["path"], safe="")
+        base = f"https://{feed['host']}/api/v4/projects/{project}"
+        releases_url = f"{base}/releases?per_page=100"
+        tags_url = f"{base}/repository/tags?per_page=100"
+
+    published = _published_releases(_forge_list(releases_url, opener))
+    if published or feed.get("endpoint") == "releases":
+        return published
+    found = []
+    for item in _forge_list(tags_url, opener):
+        version = strip_tag_prefix(item.get("name", ""))
         if version:
             found.append(version)
     return found
@@ -644,6 +670,34 @@ def candidates(locks: dict[str, dict], only: str | None = None) -> list[tuple[st
     return found
 
 
+# A suffix that marks a prerelease of the version it follows: 1.0~rc2 and
+# 4.25.0rc1 come before 1.0 and 4.25.0.
+PRERELEASE_SUFFIX = re.compile(r"^[.~_-]?(alpha|beta|rc|pre|dev)", re.IGNORECASE)
+NUMERIC_PREFIX = re.compile(r"^\d+(?:\.\d+)*")
+
+
+def newer(candidate: str, current: str) -> bool:
+    """Whether a feed version is newer than a forge lock's version.
+
+    version_key cannot read a suffixed component and keys 2.13b171 as
+    (2, -1), below every 2.x. But stixfonts' 2.13b171 is build 171 after
+    its 2.13 release, and usbmuxd's 1.1.1^20251205git... a snapshot after
+    1.1.1, so proposing 2.13, 2.12 or 1.1.1 for them would be a downgrade.
+    A suffixed lock is therefore compared by its numeric prefix: a
+    prerelease suffix (rc, alpha, beta, pre, dev) sits below the prefix, so
+    the prefix itself is newer; any other suffix sits above it, so only
+    something newer than the prefix is.
+    """
+    match = NUMERIC_PREFIX.match(current)
+    rest = current[match.end():] if match else ""
+    if not match or not rest:
+        return version_key(candidate) > version_key(current)
+    prefix = version_key(match.group())
+    if PRERELEASE_SUFFIX.match(rest):
+        return version_key(candidate) >= prefix
+    return version_key(candidate) > prefix
+
+
 def forge_proposal(name: str, entry: dict, feed: dict, opener=urllib.request.urlopen) -> dict:
     """What a single git-forge lock should move to, if anything.
 
@@ -667,7 +721,7 @@ def forge_proposal(name: str, entry: dict, feed: dict, opener=urllib.request.url
 
     current = entry["version"]
     newest = newest_stable(available)
-    if newest is None or version_key(newest) <= version_key(current):
+    if newest is None or not newer(newest, current):
         return {"name": name, "module": label, "current": current, "latest": None}
 
     same_major = [
@@ -675,7 +729,7 @@ def forge_proposal(name: str, entry: dict, feed: dict, opener=urllib.request.url
         if not is_prerelease(v) and major(v) == major(current)
     ]
     within = newest_stable(same_major)
-    if within is not None and version_key(within) > version_key(current):
+    if within is not None and newer(within, current):
         return {
             "kind": "update",
             "name": name,

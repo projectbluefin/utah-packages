@@ -68,9 +68,21 @@ the reference when Fedora has one. Seen so far:
   gtk-doc with gi-docgen under the same `gtk_doc` meson option: BuildRequire
   `gi-docgen`, pass `-Dgtk_doc=true`, and ship `%{_docdir}/<lib>-1.0/`
   instead of `%{_datadir}/gtk-doc/html/<lib>/`.
-- A forge lock on `/archive/` polls tags, and a tag is not a release:
-  stixfonts `v2.14` is an interim source-only tag with no built fonts.
-  Do not build such a version; leave the lock where it is.
+- A tag is not a release: stixfonts tagged `v2.14` on an interim,
+  source-only commit with no built fonts while its latest release stayed
+  `v2.13b171`, and the daily bump proposed the tag. `forge_versions()` now
+  reads a forge's releases API first (GitHub and GitLab, one extra request
+  per tag feed) and polls tags only when the project publishes no stable,
+  non-draft release at all. If a project's releases lag its real versions,
+  give the lock an Anitya `feed` rather than reading tags again. Do not
+  build an interim tag; leave the lock where it is.
+- A suffixed lock is compared by its numeric prefix (`newer()`): a
+  prerelease suffix (`rc`, `alpha`, `beta`, `pre`, `dev`) sits below it, any
+  other suffix above. Without that, `version_key` read `2.13b171` (a build
+  after 2.13) and `1.1.1^20251205git...` as older than every release sharing
+  their major, and proposed 2.13 and 1.1.1 as "updates". `2.0b3`-style
+  betas with a bare `b` read as post-releases; give such a lock a hold or
+  a feed if it ever matters.
 - A carried patch that stops applying was usually merged upstream. Check
   with `patch -p1 -R --dry-run` against the new tarball: a clean reverse apply
   means drop it, along with anything the spec marks as needed only for it

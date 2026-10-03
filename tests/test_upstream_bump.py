@@ -29,6 +29,7 @@ from tools.upstream_bump import (
     forge_planned_entry,
     forge_proposal,
     forge_versions,
+    newer,
     strip_tag_prefix,
     substituted,
     candidates,
@@ -231,6 +232,7 @@ class FallbackFeedTests(unittest.TestCase):
             )
             opener = fake_opener(
                 {
+                    "https://api.github.com/repos/Haivision/srt/releases?per_page=100": b"[]",
                     "https://api.github.com/repos/Haivision/srt/tags?per_page=100": json.dumps(
                         [{"name": "v1.5.7"}, {"name": "v1.5.8"}]
                     ).encode()
@@ -249,6 +251,7 @@ class FallbackFeedTests(unittest.TestCase):
     def test_a_same_major_release_is_review_only_while_the_primary_is_lookaside(self) -> None:
         opener = fake_opener(
             {
+                "https://api.github.com/repos/Haivision/srt/releases?per_page=100": b"[]",
                 "https://api.github.com/repos/Haivision/srt/tags?per_page=100": json.dumps(
                     [{"name": "v1.5.7"}, {"name": "v1.5.8"}]
                 ).encode()
@@ -1206,6 +1209,7 @@ class ForgeVersionListingTests(unittest.TestCase):
         feed = {"forge": "github", "endpoint": "tags", "owner": "o", "repo": "r"}
         opener = fake_opener(
             {
+                "https://api.github.com/repos/o/r/releases?per_page=100": b"[]",
                 "https://api.github.com/repos/o/r/tags?per_page=100": json.dumps(
                     [{"name": "v2.3.0"}, {"name": "v2.2.1"}, {"name": "main"}]
                 ).encode()
@@ -1235,21 +1239,74 @@ class ForgeVersionListingTests(unittest.TestCase):
                 "host": "gitlab.freedesktop.org", "path": "camera/libcamera"}
         url = ("https://gitlab.freedesktop.org/api/v4/projects/"
                "camera%2Flibcamera/repository/tags?per_page=100")
-        opener = fake_opener({url: json.dumps([{"name": "v0.6.0"}]).encode()})
+        releases = ("https://gitlab.freedesktop.org/api/v4/projects/"
+                    "camera%2Flibcamera/releases?per_page=100")
+        opener = fake_opener({releases: b"[]", url: json.dumps([{"name": "v0.6.0"}]).encode()})
         self.assertEqual(forge_versions(feed, opener=opener), ["0.6.0"])
+
+    def test_a_project_that_publishes_releases_ignores_its_other_tags(self):
+        # stixfonts tagged v2.14 on an interim, source-only commit while its
+        # latest release stayed v2.13b171; the daily bump proposed the tag
+        # and the build failed. The tag listing is not even read.
+        feed = {"forge": "github", "endpoint": "tags", "owner": "o", "repo": "r"}
+        opener = fake_opener(
+            {
+                "https://api.github.com/repos/o/r/releases?per_page=100": json.dumps(
+                    [{"tag_name": "v2.13"}, {"tag_name": "v2.12"}]
+                ).encode()
+            }
+        )
+        self.assertEqual(forge_versions(feed, opener=opener), ["2.13", "2.12"])
+
+    def test_tags_are_read_when_only_drafts_or_prereleases_are_published(self):
+        feed = {"forge": "github", "endpoint": "tags", "owner": "o", "repo": "r"}
+        opener = fake_opener(
+            {
+                "https://api.github.com/repos/o/r/releases?per_page=100": json.dumps(
+                    [{"tag_name": "v3.0", "draft": True},
+                     {"tag_name": "v2.9", "prerelease": True}]
+                ).encode(),
+                "https://api.github.com/repos/o/r/tags?per_page=100": json.dumps(
+                    [{"name": "v2.8"}]
+                ).encode(),
+            }
+        )
+        self.assertEqual(forge_versions(feed, opener=opener), ["2.8"])
+
+    def test_a_gitlab_project_that_publishes_releases_ignores_its_other_tags(self):
+        feed = {"forge": "gitlab", "endpoint": "tags",
+                "host": "gitlab.example.org", "path": "g/p"}
+        base = "https://gitlab.example.org/api/v4/projects/g%2Fp"
+        opener = fake_opener(
+            {
+                f"{base}/releases?per_page=100": json.dumps(
+                    [{"tag_name": "v1.3", "upcoming_release": True},
+                     {"tag_name": "v1.2"}]
+                ).encode()
+            }
+        )
+        self.assertEqual(forge_versions(feed, opener=opener), ["1.2"])
+
+    def test_a_release_feed_with_no_stable_release_does_not_read_tags(self):
+        # A /releases/download/ lock already names a release feed.
+        feed = {"forge": "github", "endpoint": "releases", "owner": "o", "repo": "r"}
+        opener = fake_opener(
+            {"https://api.github.com/repos/o/r/releases?per_page=100": b"[]"}
+        )
+        self.assertEqual(forge_versions(feed, opener=opener), [])
 
     def test_a_non_list_response_is_an_error_not_an_empty_feed(self):
         # GitHub answers rate limiting and 404 with an object. Treating that as
         # "no releases" would silently report every package as up to date.
         feed = {"forge": "github", "endpoint": "tags", "owner": "o", "repo": "r"}
-        opener = fake_opener(
-            {
-                "https://api.github.com/repos/o/r/tags?per_page=100":
-                    b'{"message": "API rate limit exceeded"}'
+        for listing in ("releases", "tags"):
+            payloads = {
+                "https://api.github.com/repos/o/r/releases?per_page=100": b"[]",
+                f"https://api.github.com/repos/o/r/{listing}?per_page=100":
+                    b'{"message": "API rate limit exceeded"}',
             }
-        )
-        with self.assertRaises(ValueError):
-            forge_versions(feed, opener=opener)
+            with self.subTest(listing=listing), self.assertRaises(ValueError):
+                forge_versions(feed, opener=fake_opener(payloads))
 
 
 class ForgeProposalTests(unittest.TestCase):
@@ -1263,8 +1320,9 @@ class ForgeProposalTests(unittest.TestCase):
     def propose(self, tags):
         opener = fake_opener(
             {
+                "https://api.github.com/repos/rockowitz/ddcutil/releases?per_page=100": b"[]",
                 "https://api.github.com/repos/rockowitz/ddcutil/tags?per_page=100":
-                    json.dumps([{"name": t} for t in tags]).encode()
+                    json.dumps([{"name": t} for t in tags]).encode(),
             }
         )
         return forge_proposal("ddcutil", self.ENTRY, self.FEED, opener=opener)
@@ -1298,6 +1356,38 @@ class ForgeProposalTests(unittest.TestCase):
         p = forge_proposal("ddcutil", self.ENTRY, self.FEED, opener=broken)
         self.assertIn("error", p)
         self.assertIn("ddcutil", p["error"])
+
+    def test_a_suffixed_lock_is_compared_by_its_numeric_prefix(self):
+        # 2.13b171 is a build after 2.13, a ^git snapshot comes after its
+        # base, and an rc comes before its final. version_key alone reads
+        # every suffixed lock as older than any release sharing its major.
+        cases = [
+            ("2.13b171", "2.13", False),
+            ("2.13b171", "2.12", False),
+            ("2.13b171", "2.14", True),
+            ("1.1.1^20251205git3ded00c", "1.1.1", False),
+            ("1.1.1^20251205git3ded00c", "1.1.2", True),
+            ("4.25.0rc1", "4.25.0", True),
+            ("1.0~rc2", "1.0", True),
+            ("1.0~rc2", "0.9", False),
+            ("2.2.1", "2.2.10", True),
+            ("2.2.1", "2.2.1", False),
+        ]
+        for current, candidate, expected in cases:
+            with self.subTest(current=current, candidate=candidate):
+                self.assertIs(newer(candidate, current), expected)
+
+    def test_a_post_release_lock_is_not_moved_back_to_its_base(self):
+        entry = dict(self.ENTRY, version="2.13b171")
+        opener = fake_opener(
+            {
+                "https://api.github.com/repos/rockowitz/ddcutil/releases?per_page=100":
+                    json.dumps([{"tag_name": "v2.13b171"}, {"tag_name": "v2.13"},
+                                {"tag_name": "v2.12"}]).encode(),
+            }
+        )
+        p = forge_proposal("stix-fonts", entry, self.FEED, opener=opener)
+        self.assertIsNone(p["latest"])
 
 
 class ForgeEntryRewriteTests(unittest.TestCase):
