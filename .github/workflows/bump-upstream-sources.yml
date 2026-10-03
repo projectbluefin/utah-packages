@@ -129,6 +129,7 @@ jobs:
           # dozens of work/reports/*.json files alongside the bumps.
           add-paths: |
             config/upstream-sources.json
+            config/fedora-primary-sources.txt
             packages/
           title: 'chore(sources): bump upstream locks to released versions'
           commit-message: 'chore(sources): bump upstream locks to released versions'

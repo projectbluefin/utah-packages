@@ -9,6 +9,7 @@ import unittest
 import urllib.error
 
 from tools.upstream_bump import (
+    anitya_versions,
     apply,
     cycle_final,
     release_cycle,
@@ -215,7 +216,8 @@ class FallbackFeedTests(unittest.TestCase):
 
     def test_a_proposal_from_an_explicit_feed_is_review_only(self) -> None:
         # The primary still points at the lookaside, so the new bytes are not
-        # where the lock points: reported for a human, never applied.
+        # where the lock points: a full run reports it for a human and never
+        # applies it.
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             (root / "config").mkdir()
@@ -231,11 +233,15 @@ class FallbackFeedTests(unittest.TestCase):
                     ).encode()
                 }
             )
-            proposals = plan(root, only="srt", opener=opener)
+            proposals = plan(root, only=None, opener=opener)
+            singled = plan(root, only="srt", opener=opener)
         self.assertEqual(len(proposals), 1)
         self.assertEqual(proposals[0]["kind"], "review")
         self.assertEqual(proposals[0]["latest"], "1.5.8")
         self.assertIn("explicit feed", proposals[0]["reason"])
+        # Naming the package is the human decision that may move the primary.
+        self.assertEqual(singled[0]["kind"], "relock")
+        self.assertEqual(singled[0]["latest"], "1.5.8")
 
     def test_a_same_major_release_is_review_only_while_the_primary_is_lookaside(self) -> None:
         opener = fake_opener(
@@ -1155,3 +1161,220 @@ class ForgeLabelTests(unittest.TestCase):
             forge_label({"forge": "gitlab", "host": "h", "path": "a/b"}),
             "h/a/b",
         )
+
+
+GTK3_LOOKASIDE = {
+    "name": "gtk3",
+    "version": "3.24.51",
+    "url": "https://src.fedoraproject.org/repo/pkgs/rpms/gtk3/gtk-3.24.51.tar.xz/"
+    "sha512/" + "e" * 128 + "/gtk-3.24.51.tar.xz",
+    "filename": "gtk-3.24.51.tar.xz",
+    "sha512": "e" * 128,
+    "feed": "https://download.gnome.org/sources/gtk/3.24/gtk-3.24.51.tar.xz",
+}
+GTK_CACHE = [4, {}, {"gtk": ["3.24.51", "3.24.52", "4.24.1"]}, {}]
+GTK_CACHE_URL = "https://download.gnome.org/sources/gtk/cache.json"
+
+
+def lookaside_tree(tmp: str, entry: dict, spec_version: str) -> Path:
+    """A scratch tree with one lookaside lock, its recipe and the ratchet."""
+    root = Path(tmp)
+    (root / "config").mkdir()
+    (root / "config" / "upstream-sources.json").write_text(
+        json.dumps({"packages": [entry]}, indent=2) + "\n"
+    )
+    (root / "config" / "fedora-primary-sources.txt").write_text(
+        f"# header\n{entry['name']}\nzzz-other\n"
+    )
+    package = root / "packages" / entry["name"]
+    package.mkdir(parents=True)
+    (package / f"{entry['name']}.spec").write_text(
+        f"Version:        {spec_version}\nRelease:        3%{{?dist}}\n"
+    )
+    (package / "sources").write_text(f"SHA512 ({entry['filename']}) = {entry['sha512']}\n")
+    return root
+
+
+class ExplicitGnomeFeedTests(unittest.TestCase):
+    """An explicit GNOME feed reaches modules not named like their package."""
+
+    def test_the_explicit_module_is_polled_not_the_package_name(self) -> None:
+        found = candidates({"gtk3": dict(GTK3_LOOKASIDE)})
+        self.assertEqual(found[0][2], {"forge": "gnome", "module": "gtk"})
+
+    def test_a_full_run_reports_the_in_cycle_release_for_review(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = lookaside_tree(tmp, dict(GTK3_LOOKASIDE), "3.24.51")
+            opener = fake_opener({GTK_CACHE_URL: json.dumps(GTK_CACHE).encode()})
+            proposals = plan(root, None, opener=opener)
+        self.assertEqual(len(proposals), 1)
+        # In-cycle (3.24.52), not the 4.x cycle, and never a "final": there is
+        # no GNOME primary for apply() to rewrite.
+        self.assertEqual(proposals[0]["kind"], "review")
+        self.assertEqual(proposals[0]["latest"], "3.24.52")
+        self.assertIn("--package", proposals[0]["reason"])
+
+    def test_a_package_run_relocks_to_the_explicit_module(self) -> None:
+        import hashlib
+
+        payload = b"a plausible gtk 3 tarball"
+        expected = hashlib.sha512(payload).hexdigest()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = lookaside_tree(tmp, dict(GTK3_LOOKASIDE), "3.24.51")
+            opener = fake_opener(
+                {
+                    GTK_CACHE_URL: json.dumps(GTK_CACHE).encode(),
+                    "https://download.gnome.org/sources/gtk/3.24/gtk-3.24.52.tar.xz": payload,
+                }
+            )
+            proposals = plan(root, "gtk3", opener=opener)
+            self.assertEqual(proposals[0]["kind"], "relock")
+            self.assertEqual(proposals[0]["module"], "gtk")
+            apply(root, proposals[0], opener=opener)
+            written = json.loads((root / "config" / "upstream-sources.json").read_text())[
+                "packages"
+            ][0]
+            ratchet = (root / "config" / "fedora-primary-sources.txt").read_text()
+            spec = (root / "packages" / "gtk3" / "gtk3.spec").read_text()
+        self.assertEqual(
+            written["url"], "https://download.gnome.org/sources/gtk/3.24/gtk-3.24.52.tar.xz"
+        )
+        self.assertEqual(written["sha512"], expected)
+        self.assertNotIn("feed", written)
+        # The lookaside stays as a fallback, under the Fedora package's name.
+        self.assertEqual(
+            written["fallback_urls"],
+            [
+                "https://src.fedoraproject.org/repo/pkgs/rpms/gtk3/gtk-3.24.52.tar.xz/"
+                f"sha512/{expected}/gtk-3.24.52.tar.xz"
+            ],
+        )
+        # validate.py fails on a stale ratchet entry; the relock retires it.
+        self.assertEqual(ratchet, "# header\nzzz-other\n")
+        self.assertIn("Version:        3.24.52", spec)
+        self.assertIn("Release:        1%{?dist}", spec)
+
+
+class ExplicitForgeRelockTests(unittest.TestCase):
+    """--package moves a lookaside lock onto the forge its explicit feed names."""
+
+    ENTRY = {
+        "name": "srt",
+        "version": "1.5.7",
+        "url": "https://src.fedoraproject.org/repo/pkgs/rpms/srt/srt-1.5.7.tar.gz/"
+        "sha512/" + "8" * 128 + "/srt-1.5.7.tar.gz",
+        "filename": "srt-1.5.7.tar.gz",
+        "sha512": "8" * 128,
+        "feed": "https://github.com/Haivision/srt/archive/v1.5.7/srt-1.5.7.tar.gz",
+    }
+
+    def test_relock_moves_the_primary_to_the_feed(self) -> None:
+        import hashlib
+
+        payload = b"a plausible srt tarball"
+        expected = hashlib.sha512(payload).hexdigest()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = lookaside_tree(tmp, dict(self.ENTRY), "1.5.7")
+            opener = fake_opener(
+                {"https://github.com/Haivision/srt/archive/v1.5.8/srt-1.5.8.tar.gz": payload}
+            )
+            apply(
+                root,
+                {"name": "srt", "latest": "1.5.8", "kind": "relock",
+                 "module": "github.com/Haivision/srt"},
+                opener=opener,
+            )
+            written = json.loads((root / "config" / "upstream-sources.json").read_text())[
+                "packages"
+            ][0]
+            ratchet = (root / "config" / "fedora-primary-sources.txt").read_text()
+            manifest = (root / "packages" / "srt" / "sources").read_text()
+        self.assertEqual(
+            written["url"], "https://github.com/Haivision/srt/archive/v1.5.8/srt-1.5.8.tar.gz"
+        )
+        self.assertEqual(written["filename"], "srt-1.5.8.tar.gz")
+        self.assertEqual(written["sha512"], expected)
+        self.assertNotIn("feed", written)
+        self.assertEqual(
+            written["fallback_urls"],
+            [
+                "https://src.fedoraproject.org/repo/pkgs/rpms/srt/srt-1.5.8.tar.gz/"
+                f"sha512/{expected}/srt-1.5.8.tar.gz"
+            ],
+        )
+        self.assertEqual(ratchet, "# header\nzzz-other\n")
+        self.assertEqual(manifest, f"SHA512 (srt-1.5.8.tar.gz) = {expected}\n")
+
+    def test_a_feed_without_the_locked_version_is_refused(self) -> None:
+        # Substitution is the only template a forge feed has; a feed that does
+        # not carry the locked version cannot be bumped by it.
+        entry = dict(self.ENTRY, feed="https://github.com/Haivision/srt/archive/master.tar.gz")
+        with tempfile.TemporaryDirectory() as tmp:
+            root = lookaside_tree(tmp, entry, "1.5.7")
+            opener = fake_opener(
+                {"https://github.com/Haivision/srt/archive/master.tar.gz": b"x"}
+            )
+            with self.assertRaises(ValueError):
+                apply(
+                    root,
+                    {"name": "srt", "latest": "1.5.8", "kind": "relock",
+                     "module": "github.com/Haivision/srt"},
+                    opener=opener,
+                )
+            # Nothing was written: the lock, recipe and ratchet are untouched.
+            written = json.loads((root / "config" / "upstream-sources.json").read_text())
+            self.assertEqual(written["packages"][0], entry)
+            self.assertIn("srt\n", (root / "config" / "fedora-primary-sources.txt").read_text())
+
+
+ANITYA_URL = "https://release-monitoring.org/api/v2/versions/?project_id=1764"
+
+
+class AnityaFeedTests(unittest.TestCase):
+    """release-monitoring.org reaches upstreams that publish only a listing."""
+
+    ENTRY = {
+        "name": "libX11",
+        "version": "1.8.12",
+        "url": "https://src.fedoraproject.org/repo/pkgs/rpms/libX11/libX11-1.8.12.tar.xz/"
+        "sha512/" + "a" * 128 + "/libX11-1.8.12.tar.xz",
+        "filename": "libX11-1.8.12.tar.xz",
+        "sha512": "a" * 128,
+        "feed": "https://release-monitoring.org/project/1764",
+    }
+
+    def test_reads_stable_versions_once_each(self) -> None:
+        opener = fake_opener(
+            {ANITYA_URL: json.dumps(
+                {"latest_version": "1.8.13", "stable_versions": ["1.8.13", "1.8.12", "1.8.12"]}
+            ).encode()}
+        )
+        self.assertEqual(anitya_versions({"forge": "anitya", "id": "1764"}, opener=opener),
+                         ["1.8.13", "1.8.12"])
+
+    def test_a_response_without_a_version_list_is_an_error(self) -> None:
+        opener = fake_opener({ANITYA_URL: json.dumps({"error": "nope"}).encode()})
+        with self.assertRaises(ValueError):
+            anitya_versions({"forge": "anitya", "id": "1764"}, opener=opener)
+
+    def test_an_anitya_feed_is_review_only_even_for_a_package_run(self) -> None:
+        # Anitya names versions, not a download, so there is nothing to relock to.
+        opener = fake_opener(
+            {ANITYA_URL: json.dumps({"stable_versions": ["1.8.13", "1.8.12"]}).encode()}
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            root = lookaside_tree(tmp, dict(self.ENTRY), "1.8.12")
+            for only in (None, "libX11"):
+                with self.subTest(only=only):
+                    proposals = plan(root, only, opener=opener)
+                    self.assertEqual(len(proposals), 1)
+                    self.assertEqual(proposals[0]["kind"], "review")
+                    self.assertEqual(proposals[0]["latest"], "1.8.13")
+                    self.assertEqual(proposals[0]["module"], "release-monitoring.org/project/1764")
+
+    def test_an_unreachable_anitya_project_is_reported_not_raised(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = lookaside_tree(tmp, dict(self.ENTRY), "1.8.12")
+            proposals = plan(root, None, opener=fake_opener({}))
+        self.assertEqual(len(proposals), 1)
+        self.assertIn("error", proposals[0])

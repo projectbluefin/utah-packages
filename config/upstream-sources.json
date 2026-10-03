@@ -654,7 +654,7 @@
       "sha512": "0f8cc0546ad5922068a262d8bd6ffe83fb74f7e5736f66c1cbf02f6af91136415ee24bef0674a26270859cdf8569c0522501615240a52d0c2cb0b5855d1c39ff",
       "sha256_url": "https://download.gnome.org/sources/gnome-desktop/51/gnome-desktop-51.0.sha256sum",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/gnome-desktop/gnome-desktop-51.0.tar.xz/sha512/0f8cc0546ad5922068a262d8bd6ffe83fb74f7e5736f66c1cbf02f6af91136415ee24bef0674a26270859cdf8569c0522501615240a52d0c2cb0b5855d1c39ff/gnome-desktop-51.0.tar.xz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/gnome-desktop3/gnome-desktop-51.0.tar.xz/sha512/0f8cc0546ad5922068a262d8bd6ffe83fb74f7e5736f66c1cbf02f6af91136415ee24bef0674a26270859cdf8569c0522501615240a52d0c2cb0b5855d1c39ff/gnome-desktop-51.0.tar.xz"
       ]
     },
     {
@@ -891,7 +891,7 @@
       "sha256_url": "https://download.gnome.org/sources/gtk/4.23/gtk-4.23.4.sha256sum",
       "stage": 4,
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/gtk/gtk-4.23.4.tar.xz/sha512/da1cf7977ab020b16e7d38a5e259a1b33140f0147d6b96c938041a2a6c2586bddb45d4b97bc9c429880340aa52727f11a61d2f6fb15d7dfc3dffef73a2464c70/gtk-4.23.4.tar.xz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/gtk4/gtk-4.23.4.tar.xz/sha512/da1cf7977ab020b16e7d38a5e259a1b33140f0147d6b96c938041a2a6c2586bddb45d4b97bc9c429880340aa52727f11a61d2f6fb15d7dfc3dffef73a2464c70/gtk-4.23.4.tar.xz"
       ]
     },
     {

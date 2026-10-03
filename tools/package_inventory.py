@@ -52,8 +52,38 @@ GITLAB_ARCHIVE = re.compile(
 )
 
 
+# An explicit `feed` may also name a feed that no locked URL could: a GNOME
+# module's release index (a lookaside lock whose Source0 is download.gnome.org,
+# including modules whose name differs from the package -- gtk3 is "gtk"), or
+# a release-monitoring.org (Anitya) project, for the projects that publish only
+# a directory listing (x.org, freedesktop.org, kernel.org, SourceForge). The
+# Anitya project is the one Fedora's own package mapping names, so it is the
+# same release feed Fedora's update tracking already trusts.
+GNOME_FEED = re.compile(r"^https://download\.gnome\.org/sources/(?P<module>[^/]+)/")
+ANITYA_FEED = re.compile(r"^https://release-monitoring\.org/project/(?P<id>\d+)/?$")
+
+
+def parse_explicit_feed(url: str) -> dict | None:
+    """The feed descriptor an explicit lock `feed` names, if it names one.
+
+    Wider than parse_feed_url on purpose: that one also reads a lock's own
+    primary and fallback URLs, where a GNOME or Anitya address must never be
+    mistaken for a forge mirror.
+    """
+    feed = parse_feed_url(url)
+    if feed:
+        return feed
+    match = GNOME_FEED.match(url)
+    if match:
+        return {"forge": "gnome", **match.groupdict()}
+    match = ANITYA_FEED.match(url)
+    if match:
+        return {"forge": "anitya", **match.groupdict()}
+    return None
+
+
 def parse_feed_url(url: str) -> dict | None:
-    """The forge feed descriptor an explicit lock `feed` names, if it names one."""
+    """The git-forge feed descriptor a URL names, if it names one."""
     match = FORGE_RELEASE.match(url)
     if match:
         return {"forge": "github", "endpoint": "releases", **match.groupdict()}
@@ -144,10 +174,10 @@ def load_source_locks(config: Path) -> dict[str, dict]:
             reason = entry.get("build_lane_reason")
             if not isinstance(reason, str) or not reason.strip():
                 raise ValueError(f"{name}: build_lane needs a build_lane_reason")
-        # An explicit release feed must name a forge this factory can poll;
+        # An explicit release feed must name a feed this factory can poll;
         # anything else is a silent hole in the bump coverage, not a feed.
         feed = entry.get("feed")
-        if feed is not None and parse_feed_url(feed) is None:
+        if feed is not None and parse_explicit_feed(feed) is None:
             raise ValueError(f"unparseable feed for {name}: {feed!r}")
         locks[name] = entry
     return locks

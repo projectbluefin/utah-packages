@@ -80,3 +80,57 @@ Constraints that shaped it, so they are not rediscovered:
   daily bump re-dispatches the gate even when nothing new moved, which
   retries a flaky build.
 - A `target-cycle` (GNOME-next) run is never gated; it stays a human merge.
+
+## Release feeds for lookaside locks (issue #134)
+
+A lock whose primary is the Fedora lookaside names no feed in its own URLs.
+It carries an explicit `feed` instead, which `parse_explicit_feed()` accepts
+in three shapes:
+
+- a git-forge Source0 URL (`github.com/<o>/<r>/archive|releases/...`, a
+  `*gitlab*` host's `/-/archive/`), polled for tags or releases;
+- `https://download.gnome.org/sources/<module>/...`, polled through the
+  module's `cache.json` — needed whenever the module and the package differ
+  (gtk3 → `gtk`, rest → `librest`), since the `--package` relock guess uses
+  the package name;
+- `https://release-monitoring.org/project/<id>` (Anitya), for upstreams that
+  publish only a directory listing. Take the id from Fedora's own mapping,
+  `GET /api/v2/packages/?distribution=Fedora&name=<pkg>`, then
+  `/api/v2/projects/?name=<project>&ecosystem=<ecosystem>`.
+
+Derive the feed from the spec's `Source0:` (expand it with `rpmspec -P` in a
+Fedora container), and add it only when the feed lists the locked version in
+the same spelling. Prefer a forge feed where its tags are clean — it is the
+only kind that can be relocked — and fall back to Anitya when tags carry the
+name (`libX11-1.8.12` strips to `11-1.8.12`), use another spelling
+(`V3-6-0`), or include stray tags (`thin-provisioning-tools` has one that
+reads as `2`).
+
+What a feed on a lookaside lock can do:
+
+- The **scheduled run only reports** it ("needs review"). It never applies,
+  by design: the new bytes are not in the lookaside, and no unattended run
+  moves a primary.
+- A **`--package <name>` dispatch relocks** a GNOME or forge feed: the
+  primary moves to the feed (the forge URL is the feed with the version
+  substituted, so the feed must contain the locked version), the old lookaside
+  URL becomes the fallback, the explicit `feed` is dropped, and the package is
+  deleted from `config/fedora-primary-sources.txt`. Before that last step
+  existed, every relock left a stale ratchet entry and failed
+  `tools/validate.py`. The workflow's PR step commits the ratchet file too.
+- An **Anitya feed never relocks**: it names versions, not a download URL.
+
+The lookaside fallback is keyed by the Fedora package, not the GNOME module
+(`rpms/gtk3/gtk-3.24.52.tar.xz/...`). `planned_entry()` used the module
+until 2026-10-03, which left gtk4 and gnome-desktop3 with `rpms/gtk/` and
+`rpms/gnome-desktop/` fallbacks that 404ed; both were corrected then.
+
+Left without a feed on purpose (2026-10-03): git snapshots (aribb24),
+sources with no upstream release (color-filesystem, kde-filesystem,
+kde-settings, kf5), generated sources whose `generate.input` the tool does
+not read (gpm, intel-media-driver-free, python-pydantic-core), a compat pin (protobuf3), a prerelease lock that the
+feed spells differently (ibus 1.5.35~beta2, Xwayland 26.0.99.901), and
+versions that cannot be compared with the lock's (enca's revival fork,
+libappindicator's Ubuntu snapshot, libisoburn and libisofs `.pl02`, mozc,
+spandsp date snapshots, fxload `2008_10_13`, and Vulkan headers/loader, whose
+tags mix spec `v1.4.365` with SDK `vulkan-sdk-1.4.350.0`).
