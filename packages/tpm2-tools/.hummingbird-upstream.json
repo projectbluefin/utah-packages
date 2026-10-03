@@ -1,0 +1,8 @@
+{
+  "package": "tpm2-tools",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/tpm2-tools.git",
+  "commit": "acfce501fa866b535cb4e957feb5cf447186d7ae",
+  "tree": "50bf4009ec4597802a147c1adfaacee6710dc9f1",
+  "imported_at": "2026-10-03T20:53:49.354527+00:00"
+}
