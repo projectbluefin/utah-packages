@@ -2,22 +2,31 @@ name: Bump upstream source locks
 
 # Opens one reviewable PR when a source this factory tracks ships a newer
 # release. Three feeds are polled, plus explicit per-lock feeds, covering
-# 169 of the 400 locks:
+# 382 of the 402 locks (measured 2026-10-03):
 #
-#   download.gnome.org  22  cache.json per-module release index
-#   git forges        ~147  tags, or releases where a project publishes them:
-#                           79 read off lock URLs, 68 from a lock's explicit
-#                           `feed` naming its real upstream feed when its own
-#                           URLs cannot (issue #134)
+#   download.gnome.org   67  cache.json per-module release index: 26 read
+#                            off GNOME primaries, 41 from an explicit `feed`
+#                            (gtk3's module is "gtk")
+#   git forges          165  tags, or releases where a project publishes them:
+#                            81 read off lock URLs, 84 from an explicit `feed`
+#   release-monitoring  150  Anitya, for upstreams that publish only a
+#                            directory listing (x.org, freedesktop.org,
+#                            kernel.org, SourceForge); the project is the one
+#                            Fedora's own package mapping names
 #
-# A lock whose stable primary is the lookaside still tracks the feed its
-# fallback mirror or its explicit `feed` names, but only as a review-only
-# proposal: the new bytes are not in the lookaside until Fedora uploads them.
+# Every explicit feed was derived from the spec's Source0 and checked to list
+# the locked version (issue #134).
 #
-# The remaining 231 are locked on Fedora's lookaside cache or on a bare
-# directory listing. A lookaside URL carries its own digest in the path, so
-# there is nothing to poll for "latest"; reaching those needs each project's
-# real upstream feed identified per package, which is tracked in #134.
+# A lock whose primary is still the lookaside only ever yields a review-only
+# proposal on the scheduled run: the new bytes are not in the lookaside until
+# Fedora uploads them, and no unattended run moves a primary. Dispatching
+# this workflow with `package` set relocks one such package onto the GNOME
+# module or forge its explicit feed names (Anitya names no download, so never
+# for those), retiring it from config/fedora-primary-sources.txt.
+#
+# The remaining 20 have no usable feed: git snapshots, Fedora-only or
+# repacked sources, compat pins, and tag streams whose versions do not match
+# the lock's spelling. They are listed in docs/skills/upstream-version-bumps.md.
 #
 # renovate.json has a custom manager aimed at config/upstream-sources.json,
 # but it keys on datasource and depName and 0 of 340 entries carry either, so
