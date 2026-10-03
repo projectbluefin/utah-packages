@@ -733,8 +733,11 @@ def apply(root: Path, proposal: dict, opener=urllib.request.urlopen) -> dict:
         tarball = tarball_version(release)
         url = f"{GNOME_SOURCES}{module}/{release_cycle(tarball)}/{module}-{tarball}.tar.xz"
         digest = sha512_of(url, opener=opener)
-        if relock and entry.get("url", "") and not gnome_module(entry):
+        if relock and entry.get("url", "").startswith(LOOKASIDE) and not gnome_module(entry):
             # Keep the lookaside as the fallback a GNOME primary carries.
+            # Only a lookaside primary: planned_entry() rewrites any fallback
+            # into a lookaside URL, so seeding one from another mirror
+            # (libgxps's ftp.gnome.org) would swap it for a guessed address.
             entry = {**entry, "fallback_urls": [entry["url"]]}
         updated = planned_entry(entry, release, digest, module=module)
     else:

@@ -730,6 +730,49 @@ class RelockTests(unittest.TestCase):
                 f"SHA512 (nautilus-51.0.1.tar.xz) = {expected}\n",
             )
 
+    def test_relock_from_a_mirror_primary_adds_no_guessed_fallback(self) -> None:
+        # libgxps: an ftp.gnome.org primary, no fallback. Seeding it as a
+        # fallback would have planned_entry() rewrite it into a lookaside URL
+        # Fedora may never have uploaded.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "config").mkdir()
+            entry = {
+                "name": "libgxps",
+                "version": "0.3.2",
+                "url": "https://ftp.gnome.org/pub/gnome/sources/libgxps/0.3/libgxps-0.3.2.tar.xz",
+                "filename": "libgxps-0.3.2.tar.xz",
+                "feed": "https://download.gnome.org/sources/libgxps/0.3/libgxps-0.3.2.tar.xz",
+                "sha512": "d" * 128,
+            }
+            (root / "config" / "upstream-sources.json").write_text(
+                json.dumps({"packages": [entry]}, indent=2) + "\n"
+            )
+            package = root / "packages" / "libgxps"
+            package.mkdir(parents=True)
+            (package / "libgxps.spec").write_text("Version:        0.3.2\n")
+            (package / "sources").write_text(
+                f"SHA512 (libgxps-0.3.2.tar.xz) = {'d' * 128}\n"
+            )
+            opener = fake_opener(
+                {
+                    "https://download.gnome.org/sources/libgxps/0.3/libgxps-0.3.3.tar.xz": b"libgxps"
+                }
+            )
+            apply(
+                root,
+                {"name": "libgxps", "latest": "0.3.3", "module": "libgxps", "kind": "relock"},
+                opener=opener,
+            )
+            written = json.loads((root / "config" / "upstream-sources.json").read_text())[
+                "packages"
+            ][0]
+            self.assertEqual(
+                written["url"],
+                "https://download.gnome.org/sources/libgxps/0.3/libgxps-0.3.3.tar.xz",
+            )
+            self.assertNotIn("fallback_urls", written)
+
 
 class ApplyTests(unittest.TestCase):
     """apply() moves all three files together, against a scratch tree."""

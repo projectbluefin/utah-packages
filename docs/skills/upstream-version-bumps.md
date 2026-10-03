@@ -132,5 +132,8 @@ not read (gpm, intel-media-driver-free, python-pydantic-core), a compat pin (pro
 feed spells differently (ibus 1.5.35~beta2, Xwayland 26.0.99.901), and
 versions that cannot be compared with the lock's (enca's revival fork,
 libappindicator's Ubuntu snapshot, libisoburn and libisofs `.pl02`, mozc,
-spandsp date snapshots, fxload `2008_10_13`, and Vulkan headers/loader, whose
-tags mix spec `v1.4.365` with SDK `vulkan-sdk-1.4.350.0`).
+spandsp date snapshots, fxload `2008_10_13`, hunspell-en, whose en-wl/wordlist
+tags strip to `2026.02.25` against the locked `0.20260225`, and Vulkan
+headers/loader and spirv-tools, whose tags mix spec `v1.4.365` with SDK
+`vulkan-sdk-1.4.350.0` -- SPIRV-Tools tags only `vulkan-sdk-*`, so no feed
+carries its locked `2026.3`).
