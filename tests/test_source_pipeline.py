@@ -461,7 +461,28 @@ class SourceManifestTests(unittest.TestCase):
             with working_directory(root):
                 self.assertEqual(
                     source_manifest({"name": "demo"}),
-                    [("gvdb.tar.xz", "a" * 128), ("extra.tar.xz", "d" * 128)],
+                    [
+                        ("gvdb.tar.xz", "a" * 128, "sha512"),
+                        ("extra.tar.xz", "d" * 128, "sha512"),
+                    ],
+                )
+
+    def test_legacy_md5_lines_are_read_with_their_algorithm(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write_manifest(
+                root,
+                "demo",
+                "deadbeefdeadbeefdeadbeefdeadbeef  legacy.tar.gz\n"
+                "SHA512 (gvdb.tar.xz) = " + "a" * 128 + "\n",
+            )
+            with working_directory(root):
+                self.assertEqual(
+                    source_manifest({"name": "demo"}),
+                    [
+                        ("legacy.tar.gz", "deadbeefdeadbeefdeadbeefdeadbeef", "md5"),
+                        ("gvdb.tar.xz", "a" * 128, "sha512"),
+                    ],
                 )
 
 
@@ -507,6 +528,7 @@ class BundledSourceTests(unittest.TestCase):
             self.assertEqual(
                 requested,
                 [LOOKASIDE.format(pkg="malcontent", name="gvdb.tar.xz",
+                                  algorithm="sha512",
                                   hash=hashlib.sha512(self.PAYLOAD).hexdigest())],
             )
 
@@ -549,6 +571,58 @@ class BundledSourceTests(unittest.TestCase):
             self.assertFalse((target_dir / "extra.tar.xz.candidate").exists())
             self.assertFalse((target_dir / "extra.tar.xz").exists())
 
+    def test_legacy_md5_pin_is_fetched_from_the_md5_lookaside(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            package_dir = root / "packages" / "demo"
+            package_dir.mkdir(parents=True)
+            payload = b"bundled legacy md5 tarball"
+            md5 = hashlib.md5(payload).hexdigest()
+            (package_dir / "sources").write_text(
+                f"{md5}  legacy.tar.gz\n"
+            )
+            target_dir = root / "sources" / "demo"
+            target_dir.mkdir(parents=True)
+
+            requested: list[str] = []
+
+            def fake_fetch(url: str, destination: Path) -> None:
+                requested.append(url)
+                destination.write_bytes(payload)
+
+            with working_directory(root), patch("tools.source_pipeline.fetch", side_effect=fake_fetch):
+                fetched = bundled_sources({"name": "demo"}, target_dir, "demo.tar.xz")
+
+            self.assertEqual(fetched, ["legacy.tar.gz"])
+            self.assertEqual((target_dir / "legacy.tar.gz").read_bytes(), payload)
+            self.assertEqual(
+                requested,
+                [LOOKASIDE.format(
+                    pkg="demo", name="legacy.tar.gz",
+                    algorithm="md5", hash=md5,
+                )],
+            )
+
+    def test_md5_digest_mismatch_rejects_and_leaves_no_candidate_behind(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            package_dir = root / "packages" / "demo"
+            package_dir.mkdir(parents=True)
+            md5 = hashlib.md5(b"recorded bytes").hexdigest()
+            (package_dir / "sources").write_text(f"{md5}  legacy.tar.gz\n")
+            target_dir = root / "sources" / "demo"
+            target_dir.mkdir(parents=True)
+
+            def fake_fetch(url: str, destination: Path) -> None:
+                destination.write_bytes(b"substituted bytes")
+
+            with working_directory(root), patch("tools.source_pipeline.fetch", side_effect=fake_fetch):
+                with self.assertRaisesRegex(ValueError, "MD5 mismatch for legacy.tar.gz"):
+                    bundled_sources({"name": "demo"}, target_dir, "demo.tar.xz")
+
+            self.assertFalse((target_dir / "legacy.tar.gz.candidate").exists())
+            self.assertFalse((target_dir / "legacy.tar.gz").exists())
+
 
 class StagedVerificationTests(unittest.TestCase):
     def test_bundled_sources_are_verified_alongside_source0(self) -> None:
@@ -580,6 +654,61 @@ class StagedVerificationTests(unittest.TestCase):
             package = {"name": "demo", "filename": "demo.tar.gz", "sha512": "ab" * 64}
             with working_directory(root):
                 with self.assertRaisesRegex(ValueError, "staged source does not exist"):
+                    verify_staged_sources(package, root / "packages")
+
+    def test_md5_pinned_bundled_source_is_verified_with_md5(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            package_dir = root / "packages" / "demo"
+            package_dir.mkdir(parents=True)
+            payload = b"bundled legacy md5 tarball"
+            md5 = hashlib.md5(payload).hexdigest()
+            (package_dir / "legacy.tar.gz").write_bytes(payload)
+            (package_dir / "sources").write_text(f"{md5}  legacy.tar.gz\n")
+            package = {
+                "name": "demo",
+                "filename": "",
+                "sha512": "",
+            }
+            with working_directory(root):
+                verified = verify_staged_sources(package, root / "packages")
+            self.assertEqual(
+                sorted(Path(item).name for item in verified),
+                ["legacy.tar.gz"],
+            )
+
+    def test_md5_pinned_bundled_source_mismatch_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            package_dir = root / "packages" / "demo"
+            package_dir.mkdir(parents=True)
+            md5 = hashlib.md5(b"recorded bytes").hexdigest()
+            (package_dir / "legacy.tar.gz").write_bytes(b"substituted bytes")
+            (package_dir / "sources").write_text(f"{md5}  legacy.tar.gz\n")
+            package = {"name": "demo", "filename": "", "sha512": ""}
+            with working_directory(root):
+                with self.assertRaisesRegex(ValueError, "MD5 mismatch for"):
+                    verify_staged_sources(package, root / "packages")
+
+    def test_source0_md5_manifest_line_does_not_downgrade_the_sha512_lock(self) -> None:
+        # A legacy md5 manifest line naming the Source0 file must not replace
+        # the recipe's locked sha512 with a weaker md5 check (security).
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            package_dir = root / "packages" / "demo"
+            package_dir.mkdir(parents=True)
+            payload = b"staged source0 bytes"
+            md5 = hashlib.md5(payload).hexdigest()
+            locked_sha512 = "0" * 128
+            (package_dir / "demo.tar.xz").write_bytes(payload)
+            (package_dir / "sources").write_text(f"{md5}  demo.tar.xz\n")
+            package = {
+                "name": "demo",
+                "filename": "demo.tar.xz",
+                "sha512": locked_sha512,
+            }
+            with working_directory(root):
+                with self.assertRaisesRegex(ValueError, "SHA-512 mismatch for"):
                     verify_staged_sources(package, root / "packages")
 
 

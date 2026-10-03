@@ -105,7 +105,7 @@ def verify_signature(package: dict, target: Path, directory: Path) -> None:
         subprocess.run(["gpg", "--batch", "--verify", str(signature), str(target)], check=True, env=environment, capture_output=True)
 
 
-LOOKASIDE = "https://src.fedoraproject.org/repo/pkgs/rpms/{pkg}/{name}/sha512/{hash}/{name}"
+LOOKASIDE = "https://src.fedoraproject.org/repo/pkgs/rpms/{pkg}/{name}/{algorithm}/{hash}/{name}"
 
 
 def generate_source(package: dict, target_dir: Path) -> Path:
@@ -140,16 +140,36 @@ def generate_source(package: dict, target_dir: Path) -> Path:
     return produced
 
 
-def source_manifest(package: dict) -> list[tuple[str, str]]:
-    """Return the Fedora lookaside filenames and SHA-512 digests."""
+def source_manifest(package: dict) -> list[tuple[str, str, str]]:
+    """Return the Fedora lookaside filenames, digests, and hash algorithm.
+
+    Fedora records bundled sources in one of two ``sources`` line formats.
+    The current form pins the SHA-512::
+
+        SHA512 (file.tar.xz) = <128 hex>
+
+    The legacy form predates that and pins the MD5 with the hash first::
+
+        <32 hex>  file.tar.xz
+
+    Both are fetched from the lookaside by the recorded hash, so both are
+    returned; a line in neither format is skipped rather than silently
+    misread.
+    """
     manifest = Path("packages") / package["name"] / "sources"
     if not manifest.is_file():
         return []
     entries = []
     for line in manifest.read_text().splitlines():
-        match = re.fullmatch(r"SHA512 \((\S+)\) = ([0-9a-f]{128})", line.strip())
-        if match:
-            entries.append(match.groups())
+        sha = re.fullmatch(r"SHA512 \((\S+)\) = ([0-9a-f]{128})", line.strip())
+        if sha:
+            filename, digest = sha.groups()
+            entries.append((filename, digest, "sha512"))
+            continue
+        md5 = re.fullmatch(r"([0-9a-f]{32})\s+(\S+)", line.strip())
+        if md5:
+            digest, filename = md5.groups()
+            entries.append((filename, digest, "md5"))
     return entries
 
 
@@ -163,22 +183,24 @@ def bundled_sources(package: dict, target_dir: Path, already: str) -> list[str]:
 
         tar -xf /.../gvdb.tar.xz: No such file or directory
 
-    the moment the buildroot resolved. Each entry names its own SHA-512 and the
-    lookaside is addressed by that hash, so the URL is only satisfiable by the
-    exact bytes recorded here.
+    the moment the buildroot resolved. Each entry names its own SHA-512 (or,
+    for legacy lines, MD5) and the lookaside is addressed by that algorithm and
+    hash, so the URL is only satisfiable by the exact bytes recorded here, and
+    the download is re-verified against the same digest.
     """
     fetched = []
-    for filename, expected in source_manifest(package):
+    for filename, expected, algorithm in source_manifest(package):
         if filename == already:  # Source0 comes from upstream, with its own checks.
             continue
         url = LOOKASIDE.format(pkg=package.get("dist_git_name", package["name"]),
-                               name=filename, hash=expected)
+                               name=filename, algorithm=algorithm, hash=expected)
         candidate = target_dir / f"{filename}.candidate"
         fetch(url, candidate)
-        actual = digest(candidate, "sha512")
+        actual = digest(candidate, algorithm)
         if actual != expected:
             candidate.unlink(missing_ok=True)
-            raise ValueError(f"SHA-512 mismatch for {filename}: expected {expected}, got {actual}")
+            label = "SHA-512" if algorithm == "sha512" else "MD5"
+            raise ValueError(f"{label} mismatch for {filename}: expected {expected}, got {actual}")
         candidate.replace(target_dir / filename)
         fetched.append(filename)
     return fetched
@@ -195,21 +217,29 @@ def verify_staged_sources(package: dict, package_root: Path) -> list[str]:
         # nothing but itself in the SRPM, and the placeholder archive
         # tools/packit_source0.py writes to satisfy Packit is not a source.
         return []
-    expected_sources = {
-        package.get("filename", ""): package["sha512"].lower(),
-        **dict(source_manifest(package)),
+    package_filename = package.get("filename", "")
+    expected_sources: dict[str, tuple[str, str]] = {
+        package_filename: (package["sha512"].lower(), "sha512"),
     }
+    for filename, expected, algorithm in source_manifest(package):
+        if filename == package_filename:
+            # Source0 is locked by the recipe's sha512 above; a legacy md5
+            # manifest line naming the same file must not downgrade that check
+            # to md5, which the post-Packit gate would then accept.
+            continue
+        expected_sources[filename] = (expected, algorithm)
     verified = []
-    for filename, expected in expected_sources.items():
+    for filename, (expected, algorithm) in expected_sources.items():
         if not filename:
             continue
         source = package_dir / filename
         if not source.is_file():
             raise ValueError(f"staged source does not exist: {source}")
-        actual = digest(source, "sha512")
+        actual = digest(source, algorithm)
         if actual != expected:
+            label = "SHA-512" if algorithm == "sha512" else "MD5"
             raise ValueError(
-                f"SHA-512 mismatch for {source}: expected {expected}, got {actual}"
+                f"{label} mismatch for {source}: expected {expected}, got {actual}"
             )
         verified.append(str(source))
     return verified
