@@ -546,5 +546,22 @@ class BumpWorkflowTests(unittest.TestCase):
         self.assertEqual(disallowed(paths), ["config/fedora-primary-sources.txt"])
 
 
+
+class AddPathsExistTests(unittest.TestCase):
+    """create-pull-request runs `git add` on every add-paths entry, and a
+    missing path is fatal: the first bump after the holds file was introduced
+    died on "pathspec 'config/bump-holds.json' did not match any files"."""
+
+    def test_every_bump_add_path_exists_in_the_repository(self):
+        root = Path(__file__).resolve().parents[1]
+        for name in ("bump-upstream-sources.yml", "detect-rawhide-updates.yml"):
+            workflow = yaml.safe_load((WORKFLOWS / name).read_text())
+            for job in workflow["jobs"].values():
+                for step in job.get("steps", []):
+                    paths = (step.get("with") or {}).get("add-paths", "")
+                    for path in paths.split():
+                        with self.subTest(workflow=name, path=path):
+                            self.assertTrue((root / path).exists(), path)
+
 if __name__ == "__main__":
     unittest.main()
