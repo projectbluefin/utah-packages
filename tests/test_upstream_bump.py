@@ -425,16 +425,61 @@ class BundledSourcesTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "gum-2.0.0-vendor.tar.bz2"):
                 check_bumpable(root, entry)
 
-    def test_refuses_a_version_computed_from_macros(self) -> None:
+    def test_refuses_a_version_macro_a_source_line_reads(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root, entry = self.scratch(
-                tmp, "fish", "%global version_base 2.0.0\nVersion: %{version_base}%{?version_pre:~%{version_pre}}\n",
-                f"SHA512 (fish-2.0.0.tar.gz) = {'0' * 128}\n",
+                tmp, "sof",
+                "%global sof_ver 2.0.0\n%global sof_ver_pkg v%{sof_ver}\nVersion: %{sof_ver}\n"
+                "Source: https://example.org/%{sof_ver_pkg}/sof-%{sof_ver}.tar.gz\n",
+                f"SHA512 (sof-2.0.0.tar.gz) = {'0' * 128}\n",
             )
             with self.assertRaisesRegex(ValueError, "macros"):
                 check_bumpable(root, entry)
             with self.assertRaises(ValueError):
-                rewrite_spec(root / "packages" / "fish" / "fish.spec", "2.0.1")
+                rewrite_spec(root / "packages" / "sof" / "sof.spec", "2.0.1")
+
+    def test_refuses_a_source_reading_a_macro_version_depends_on(self) -> None:
+        # re2: Version: %{base_version}, computed from %{tag}, which Source reads.
+        with tempfile.TemporaryDirectory() as tmp:
+            root, entry = self.scratch(
+                tmp, "re2",
+                "%global tag 2025-11-05\n%global base_version %(echo '%{tag}' | tr -d -)\n"
+                "Version: %{base_version}\nSource: https://example.org/%{tag}/re2-%{tag}.tar.gz\n",
+                f"SHA512 (re2-2.0.0.tar.gz) = {'0' * 128}\n",
+            )
+            with self.assertRaisesRegex(ValueError, "macros"):
+                check_bumpable(root, entry)
+
+    def test_a_macro_version_whose_sources_read_version_is_bumpable(self) -> None:
+        # pipewire and alsa-utils: Source0 reads %{version}, not the components.
+        spec_text = (
+            "%global majorversion 2\n%global minorversion 0\n%global microversion 0\n"
+            "%global libversion 0.%(echo $((%{minorversion} * 100))).0\n"
+            "Version: %{majorversion}.%{minorversion}.%{microversion}\n"
+            "Release: 3%{?dist}\n"
+            "Source0: https://example.org/%{version}/pipewire-%{version}.tar.gz\n"
+            "Source1: pipewire.sysusers\n"
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            root, entry = self.scratch(
+                tmp, "pipewire", spec_text, f"SHA512 (pipewire-2.0.0.tar.gz) = {'0' * 128}\n",
+            )
+            check_bumpable(root, entry)
+            spec = root / "packages" / "pipewire" / "pipewire.spec"
+            self.assertTrue(rewrite_spec(spec, "2.0.1"))
+            self.assertIn("Version: 2.0.1\n", spec.read_text())
+
+    def test_refuses_a_bundled_source_in_tarball_spelling(self) -> None:
+        # glycin 2.2~beta pins glycin-2.2.beta-vendor.tar.xz.
+        with tempfile.TemporaryDirectory() as tmp:
+            root, entry = self.scratch(
+                tmp, "glycin", "Version: 2.2~beta\n",
+                f"SHA512 (glycin-2.2.beta.tar.xz) = {'0' * 128}\n"
+                f"SHA512 (glycin-2.2.beta-vendor.tar.xz) = {'1' * 128}\n",
+            )
+            entry.update(version="2.2~beta", filename="glycin-2.2.beta.tar.xz")
+            with self.assertRaisesRegex(ValueError, "glycin-2.2.beta-vendor.tar.xz"):
+                check_bumpable(root, entry)
 
     def test_a_version_free_bundle_is_bumpable(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
