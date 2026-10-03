@@ -3458,13 +3458,13 @@
     },
     {
       "name": "libgphoto2",
-      "version": "2.5.33",
-      "url": "https://github.com/gphoto/libgphoto2/releases/download/v2.5.33/libgphoto2-2.5.33.tar.bz2",
-      "filename": "libgphoto2-2.5.33.tar.bz2",
-      "sha512": "5a987fb712c704bbb276d4ff5319d96b9096a6e4be303d38f97e0eafc01b47def93ab4b6d3acb76cb7597edd846d2dac4b0227a3e8d2ec8634f5e52de69a6da4",
+      "version": "2.5.34",
+      "url": "https://github.com/gphoto/libgphoto2/releases/download/v2.5.34/libgphoto2-2.5.34.tar.bz2",
+      "filename": "libgphoto2-2.5.34.tar.bz2",
+      "sha512": "a47add752c283343ae73abf99b663c032dba9a27b2f69e767cf87f32f04f752eff02b61a167fe36404af51cff944dc2b0a2b8ab24a8483cecef096a46b25c17a",
       "fallback_urls": [
-        "https://downloads.sourceforge.net/gphoto/libgphoto2-2.5.33.tar.bz2",
-        "https://src.fedoraproject.org/repo/pkgs/rpms/libgphoto2/libgphoto2-2.5.33.tar.bz2/sha512/5a987fb712c704bbb276d4ff5319d96b9096a6e4be303d38f97e0eafc01b47def93ab4b6d3acb76cb7597edd846d2dac4b0227a3e8d2ec8634f5e52de69a6da4/libgphoto2-2.5.33.tar.bz2"
+        "https://downloads.sourceforge.net/gphoto/libgphoto2-2.5.34.tar.bz2",
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libgphoto2/libgphoto2-2.5.34.tar.bz2/sha512/a47add752c283343ae73abf99b663c032dba9a27b2f69e767cf87f32f04f752eff02b61a167fe36404af51cff944dc2b0a2b8ab24a8483cecef096a46b25c17a/libgphoto2-2.5.34.tar.bz2"
       ],
       "stage": 1
     },

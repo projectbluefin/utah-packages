@@ -4,8 +4,8 @@
 %global port_version 0.12.2
 
 Name:           libgphoto2
-Version:        2.5.33
-Release:        5%{?dist}
+Version:        2.5.34
+Release:        1%{?dist}
 Summary:        Library for accessing digital cameras
 License:        GPL-2.0-only AND GPL-2.0-or-later AND LGPL-2.0-only AND LGPL-2.0-or-later AND LGPL-2.1-or-later AND LGPL-3.0-or-later AND BSD-3-Clause AND IJG-short AND (MIT OR Unlicense)
 URL:            http://www.gphoto.org/
@@ -13,8 +13,6 @@ URL:            http://www.gphoto.org/
 Source0:        http://downloads.sourceforge.net/gphoto/%{name}-%{version}.tar.bz2
 Patch1:         gphoto2-pkgcfg.patch
 Patch2:         gphoto2-device-return.patch
-# https://github.com/gphoto/libgphoto2/commit/7c5e5f66bb1a113123e289c221728a2eaee2411f
-Patch3:         0001-merge-music-players.h-from-libmtp.patch
 
 BuildRequires:  gcc
 BuildRequires:  gcc-c++
@@ -45,9 +43,6 @@ BuildRequires:  pkgconfig(libexif)
 BuildRequires:  pkgconfig(libusb-1.0)
 # -----------------------------------
 
-# Temporarily required for patch3
-BuildRequires: autoconf automake libtool gettext-devel
-
 %description
 libgphoto2 is a library that can be used by applications to access
 various digital cameras. libgphoto2 itself is not a GUI application,
@@ -76,9 +71,6 @@ for f in AUTHORS ChangeLog COPYING libgphoto2_port/AUTHORS libgphoto2_port/COPYI
 done
 
 %build
-# Temporarily required for patch3
-autoreconf -if
-
 %configure \
     udevscriptdir='%{udevdir}'   \
     --with-drivers=all           \
@@ -167,6 +159,11 @@ rm -rf %{buildroot}%{_datadir}/libgphoto2_port/*/vcamera/
 %{_mandir}/man3/%{name}_port.3*
 
 %changelog
+* Sat Oct 03 2026 Utah package factory <noreply@anthropic.com> - 2.5.34-1
+- Update to 2.5.34
+- Drop 0001-merge-music-players.h-from-libmtp.patch and its autoreconf;
+  2.5.34 ships the merged device table
+
 * Sat Sep 26 2026 Utah package factory <noreply@anthropic.com> - 2.5.33-5
 - Rebuild without lockdev (--disable-lockdev --disable-ttylock) and against
   the factory libexif; the recipe changed in #269 at the same release, so the
