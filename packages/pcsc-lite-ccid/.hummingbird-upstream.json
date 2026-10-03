@@ -1,0 +1,8 @@
+{
+  "package": "pcsc-lite-ccid",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/pcsc-lite-ccid.git",
+  "commit": "8c5a97aed30d1f60264d7e5da524bf3d36c911e6",
+  "tree": "a74efbab33a6bf5c3dbf926dee607140d3323557",
+  "imported_at": "2026-10-03T20:53:57.963530+00:00"
+}
