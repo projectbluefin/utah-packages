@@ -30,6 +30,20 @@ name: Bump gate
 #     03:17 schedule is up to a day away; the dispatch is the same
 #     incremental run either would have been, published to latest.
 #
+# Partial failure: when the only thing wrong is that some bumped packages
+# failed to build, the gate does not leave the whole bump open. It takes the
+# failed packages' lock entries and recipes back to the merge base, records
+# each in config/bump-holds.json with the version that failed and this run,
+# commits that on top of the commit it built (a fast-forward push, so a
+# branch that moved meanwhile refuses it), and dispatches itself on the new
+# head. That second run builds only what is left -- restored from the
+# package cache this run pushed -- and merges it like any other bump, holds
+# included; upstream_bump.py then does not propose a held version again. If
+# every bumped package failed, what is left is the holds file alone, which
+# merges after Canary with nothing to build. The dispatched run cancels this
+# one through the concurrency group once it starts, so this run can end as
+# cancelled after its last step.
+#
 # Concurrency: a newer daily bump force-updates the branch and dispatches a
 # newer gate, which cancels this one. Even uncancelled, nothing stale merges:
 # every job works on github.sha, the commit this run was dispatched at, and
@@ -65,6 +79,7 @@ jobs:
       actions: write
     outputs:
       packages: ${{ steps.bumped.outputs.packages }}
+      holds_only: ${{ steps.bumped.outputs.holds_only }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -90,8 +105,9 @@ jobs:
             echo "::notice title=bump gate::pull request $PR is not the open bump at $SHA; a newer gate owns it"
             echo "current=false" >> "$GITHUB_OUTPUT"
           fi
-      # Only the lock and the recipes may differ from main: an automatic merge
-      # must never carry anything else, whoever pushed to the branch.
+      # Only the lock, the holds and the recipes may differ from main: an
+      # automatic merge must never carry anything else, whoever pushed to the
+      # branch.
       - name: Name the bumped packages
         id: bumped
         if: steps.current.outputs.current == 'true'
@@ -103,6 +119,7 @@ jobs:
           base=$(git merge-base origin/main "$SHA")
           python3 tools/bump_gate.py plan --base "$base" --head "$SHA" > plan.json
           echo "packages=$(jq -c .packages plan.json)" >> "$GITHUB_OUTPUT"
+          echo "holds_only=$(jq -c .holds_only plan.json)" >> "$GITHUB_OUTPUT"
           echo "bumped: $(jq -c .packages plan.json)"
       - name: Run the required Canary check on the pull request
         if: steps.current.outputs.current == 'true'
@@ -116,7 +133,7 @@ jobs:
 
   build:
     needs: plan
-    if: needs.plan.outputs.packages != ''
+    if: needs.plan.outputs.packages != '' && needs.plan.outputs.holds_only != 'true'
     permissions:
       contents: read
       id-token: write
@@ -141,11 +158,15 @@ jobs:
       actions: write
       checks: read
     steps:
+      # The full history: the merge base names what a held package goes back to.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
       - name: Every bumped package built
         id: verdict
         env:
           BUMPED: ${{ needs.plan.outputs.packages }}
+          HOLDS_ONLY: ${{ needs.plan.outputs.holds_only }}
           BUILD_LIST: ${{ needs.build.outputs.build_list }}
           FAILED: ${{ needs.build.outputs.failed }}
           RESULT: ${{ needs.build.result }}
@@ -153,14 +174,18 @@ jobs:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           set -euo pipefail
-          if python3 tools/bump_gate.py decide --bumped "$BUMPED" \
+          echo "[]" > hold.json
+          flags=()
+          if [ "$HOLDS_ONLY" = true ]; then flags+=(--holds-only); fi
+          if python3 tools/bump_gate.py decide --bumped "$BUMPED" "${flags[@]}" \
               --build-list "$BUILD_LIST" --failed "$FAILED" --result "$RESULT" \
               --sha "$SHA" --run-url "$RUN_URL" \
-              --comment comment.md --failed-output failed.json; then
+              --comment comment.md --failed-output failed.json --hold-output hold.json; then
             echo "ok=true" >> "$GITHUB_OUTPUT"
           else
             echo "ok=false" >> "$GITHUB_OUTPUT"
           fi
+          echo "hold=$(jq -c . hold.json)" >> "$GITHUB_OUTPUT"
       # Left open, never merged. One comment per verdict per commit: the
       # daily re-gate of an unchanged branch does not repeat itself.
       - name: Say why on the pull request
@@ -180,6 +205,40 @@ jobs:
             gh pr comment "$PR" -R "$REPOSITORY" --body-file comment.md
           fi
           exit 1
+      # Some bumped packages failed and nothing else went wrong: hold those,
+      # and gate what is left on a new commit instead of leaving every bump
+      # behind them. Runs after the step above reported and failed, and only
+      # for this exact verdict.
+      - name: Hold the failed packages and gate the rest
+        if: failure() && steps.verdict.outputs.ok == 'false' && steps.verdict.outputs.hold != '[]'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HOLD: ${{ steps.verdict.outputs.hold }}
+          PR: ${{ inputs.pr }}
+          SHA: ${{ github.sha }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          head=$(gh pr view "$PR" -R "$REPOSITORY" --json state,headRefOid --jq 'select(.state == "OPEN") | .headRefOid')
+          if [ "$head" != "$SHA" ]; then
+            echo "::notice title=bump gate::pull request $PR moved to ${head:-closed} since $SHA built; not trimming"
+            exit 0
+          fi
+          git fetch --quiet origin main
+          base=$(git merge-base origin/main "$SHA")
+          python3 tools/bump_gate.py trim --base "$base" --head "$SHA" --hold "$HOLD" --run-url "$RUN_URL"
+          git add -A -- config/upstream-sources.json config/bump-holds.json packages/
+          git -c user.name="github-actions[bot]" \
+              -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+              commit -q -m "chore(sources): hold bumps that failed the gate: $(jq -r 'join(", ")' <<< "$HOLD")" \
+              -m "Held by $RUN_URL"
+          # A fast-forward of the commit that built: if the branch moved,
+          # GitHub refuses the push and the newer gate owns it.
+          git push origin "HEAD:refs/heads/bump/upstream-sources"
+          gh workflow run bump-upstream-gate.yml -R "$REPOSITORY" \
+            --ref bump/upstream-sources -f pr="$PR"
+          echo "::warning title=bump gate::held $HOLD; gating the rest at $(git rev-parse HEAD)"
       - name: Wait for the Canary check on this commit
         env:
           GH_TOKEN: ${{ github.token }}

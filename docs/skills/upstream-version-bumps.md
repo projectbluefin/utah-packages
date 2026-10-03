@@ -102,12 +102,36 @@ Constraints that shaped it, so they are not rediscovered:
 - Fail closed: no named packages, a build that was skipped or cancelled, a
   missing output, a bumped package that was not selected, or any failure
   blocks the merge. The diff from main may touch only
-  `config/upstream-sources.json` and `packages/**`.
+  `config/upstream-sources.json`, `config/bump-holds.json` and `packages/**`.
 - Staleness: the gate works on `github.sha`, the branch head when it was
   dispatched, checks the pull request still points there, and merges with
   `gh pr merge --match-head-commit`. A newer bump's gate cancels an older
   one through the concurrency group.
-- A failed build verdict leaves the pull request open with one comment per
+- Partial failure holds instead of blocking. When the only problem is that
+  some bumped packages failed (the build reached a verdict, both outputs
+  are present, every bumped package was selected, every failure is a
+  bumped package), `bump_gate.py holdable` names them and the gate's
+  `Hold the failed packages and gate the rest` step runs `bump_gate.py
+  trim`: their lock entries and `packages/<name>/` go back to the merge
+  base exactly, and `config/bump-holds.json` records
+  `{"holds": {"<name>": {"version", "run"}}}`. It commits that on top
+  of the commit it built, pushes as a fast-forward (a moved branch refuses
+  it), and dispatches itself on the new head. That run rebuilds only what
+  is left, mostly from the package cache the first run pushed, and merges
+  normally, holds included. If every bumped package failed, what is left
+  is the holds file alone: `plan` reports `holds_only` (only the holds
+  changed, lock content equal to base), the build is skipped, and it
+  merges after Canary. Each round removes at least one package, so this
+  converges. The dispatched run cancels the trimming run through the
+  concurrency group, so the trimming run can show as cancelled.
+- `upstream_bump.py` skips a proposal whose exact version is held and
+  logs `held <name>`. A newer upstream release is proposed as usual, and
+  applying it deletes the hold, which is why `bump-upstream-sources.yml`
+  commits `config/bump-holds.json` with the lock and recipes. To retry a
+  held version sooner, delete its entry, normally in the pull request that
+  fixes the recipe. A hold set by a flaky build waits for the next release
+  unless a human deletes it.
+- Any other failed verdict leaves the pull request open with one comment per
   verdict per commit (marker `<!-- bump-gate: sha=... failed=[...] -->`).
   Other non-merge outcomes leave no comment: a refused diff or a failed or
   missing Canary fails the gate run (the Canary result is also the check on
@@ -115,6 +139,9 @@ Constraints that shaped it, so they are not rediscovered:
   daily bump re-dispatches the gate even when nothing new moved, which
   retries a flaky build.
 - A `target-cycle` (GNOME-next) run is never gated; it stays a human merge.
+- A relock (a dispatched `--package` run that moves a primary off the Fedora
+  lookaside) changes `config/fedora-primary-sources.txt`, which the gate
+  refuses: moving a source's origin stays a human merge.
 
 ## Release feeds for lookaside locks (issue #134)
 

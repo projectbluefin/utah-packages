@@ -33,6 +33,7 @@ from tools.upstream_bump import (
     substituted,
     candidates,
     check_bumpable,
+    held,
     version_bound,
 )
 
@@ -514,6 +515,54 @@ class BundledSourcesTests(unittest.TestCase):
                       opener=fake_opener({}))
             self.assertEqual(config.read_text(), before)
             self.assertIn("Version: 2.0.0", (root / "packages" / "gum" / "gum.spec").read_text())
+
+
+class HoldTests(unittest.TestCase):
+    """The bump gate's holds stop exactly the version that failed."""
+
+    holds = {"fish": {"version": "4.9.3", "run": "https://example.invalid/run/1"}}
+
+    def test_the_held_version_is_held(self) -> None:
+        self.assertIsNotNone(held({"name": "fish", "latest": "4.9.3"}, self.holds))
+
+    def test_a_newer_release_is_not(self) -> None:
+        self.assertIsNone(held({"name": "fish", "latest": "4.9.4"}, self.holds))
+        self.assertIsNone(held({"name": "gum", "latest": "4.9.3"}, self.holds))
+
+    def run_main(self, root: Path, proposals: list[dict]):
+        import contextlib
+        from unittest import mock
+
+        from tools import upstream_bump
+
+        out, err = io.StringIO(), io.StringIO()
+        argv = ["upstream_bump.py", "--apply", "--root", str(root)]
+        with mock.patch.object(sys, "argv", argv), \
+                mock.patch.object(upstream_bump, "plan", return_value=proposals), \
+                mock.patch.object(upstream_bump, "apply", return_value={}) as applied, \
+                contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            out.reconfigure = lambda **_: None
+            code = upstream_bump.main()
+        return code, [c.args[1]["name"] for c in applied.call_args_list], err.getvalue()
+
+    def test_main_skips_a_held_version_and_retires_a_superseded_hold(self) -> None:
+        from tools.bump_gate import dump_holds, load_holds
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "config").mkdir()
+            (root / "config" / "bump-holds.json").write_text(dump_holds({
+                "fish": {"version": "4.9.3", "run": "u1"},
+                "gum": {"version": "2.0.2", "run": "u2"},
+            }))
+            code, applied, err = self.run_main(root, [
+                {"kind": "update", "name": "fish", "current": "4.6.0", "latest": "4.9.3"},
+                {"kind": "update", "name": "gum", "current": "2.0.0", "latest": "2.0.3"},
+            ])
+            self.assertEqual(code, 0)
+            self.assertEqual(applied, ["gum"])
+            self.assertIn("held fish", err)
+            self.assertEqual(set(load_holds(root)), {"fish"})
 
 
 def fake_opener(payloads: dict):

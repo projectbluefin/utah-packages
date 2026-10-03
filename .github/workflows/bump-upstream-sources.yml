@@ -46,8 +46,12 @@ name: Bump upstream source locks
 # in-cycle pull request is opened or updated, the gate is dispatched: it
 # builds exactly the bumped recipes through rebuild-rpms.yml, publishing
 # nothing, and merges only when every one of them built, then dispatches the
-# factory on main to publish latest. A failed build leaves the pull request
-# open with a comment naming the packages. Cross-cycle and major candidates
+# factory on main to publish latest. When only some bumped packages fail, the
+# gate holds those in config/bump-holds.json at the failing version, drops
+# them from the pull request and gates the rest again; this workflow then
+# skips a held version until upstream ships a newer one or a human deletes
+# the hold. Applying a newer release retires its hold, which is why the
+# holds file is committed with the bump. Cross-cycle and major candidates
 # are still only reported above, never applied, so they never reach the
 # gate. A target-cycle run is never gated: GNOME-next merges stay human.
 
@@ -139,6 +143,7 @@ jobs:
           add-paths: |
             config/upstream-sources.json
             config/fedora-primary-sources.txt
+            config/bump-holds.json
             packages/
           title: 'chore(sources): bump upstream locks to released versions'
           commit-message: 'chore(sources): bump upstream locks to released versions'
@@ -163,8 +168,10 @@ jobs:
             **The build is verified next**, by `bump-upstream-gate.yml`: it
             builds exactly the bumped recipes against the published factory,
             publishing nothing, and merges this pull request only if every
-            one of them built and the head is still the commit it built. A
-            failure leaves it open, with a comment naming the packages.
+            one of them built and the head is still the commit it built. If
+            some fail, it comments naming them, holds them in
+            `config/bump-holds.json` at the failing version, drops them from
+            this pull request and gates the rest again.
 
       # Every day the pull request is still open, including a day on which
       # nothing new moved (operation none): a gate that failed on a flaky

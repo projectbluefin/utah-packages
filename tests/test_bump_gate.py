@@ -23,12 +23,17 @@ import yaml
 
 from tools import bump_gate
 from tools.bump_gate import (
+    HOLDS,
     already_posted,
     bumped,
     comment,
     disallowed,
+    dump_holds,
+    holdable,
+    holds_only_verdict,
     locks_by_name,
     marker,
+    parse_holds,
     verdict,
 )
 
@@ -46,6 +51,7 @@ class PathTests(unittest.TestCase):
         self.assertEqual(
             disallowed([
                 "config/upstream-sources.json",
+                "config/bump-holds.json",
                 "packages/glib2/glib2.spec",
                 "packages/glib2/sources",
             ]),
@@ -131,12 +137,92 @@ class VerdictTests(unittest.TestCase):
         self.assertTrue(any("other packages" in reason for reason in result.reasons))
 
 
+class HoldableTests(unittest.TestCase):
+    """Which failures may be held so the rest of the bump merges.
+
+    Run 37129679613 failed 12 of 22 bumped packages and merged none of the
+    10 that built. Holding is the way forward, but only for a verdict the gate
+    fully accounts for; everything else keeps failing closed for a human.
+    """
+
+    def test_the_failed_bumped_packages_are_held(self) -> None:
+        self.assertEqual(
+            holdable('["fish","glib2","gtk4"]', '["fish","glib2","gtk4"]', '["gtk4","fish"]', "failure"),
+            ["fish", "gtk4"],
+        )
+
+    def test_every_bumped_package_failing_is_still_held(self) -> None:
+        # What is left is the holds file alone; the plan merges that.
+        self.assertEqual(holdable('["gtk4"]', '["gtk4"]', '["gtk4"]', "failure"), ["gtk4"])
+
+    def test_nothing_failed_holds_nothing(self) -> None:
+        self.assertEqual(holdable('["gtk4"]', '["gtk4"]', "[]", "success"), [])
+
+    def test_a_cancelled_or_skipped_build_holds_nothing(self) -> None:
+        for outcome in ("cancelled", "skipped", ""):
+            with self.subTest(outcome=outcome):
+                self.assertEqual(holdable('["gtk4"]', '["gtk4"]', '["gtk4"]', outcome), [])
+
+    def test_missing_outputs_hold_nothing(self) -> None:
+        self.assertEqual(holdable('["gtk4"]', "", '["gtk4"]', "failure"), [])
+        self.assertEqual(holdable('["gtk4"]', '["gtk4"]', "", "failure"), [])
+        self.assertEqual(holdable("", '["gtk4"]', '["gtk4"]', "failure"), [])
+
+    def test_an_unselected_bumped_package_holds_nothing(self) -> None:
+        self.assertEqual(holdable('["glib2","gtk4"]', '["gtk4"]', '["gtk4"]', "failure"), [])
+
+    def test_a_failure_outside_the_bump_holds_nothing(self) -> None:
+        self.assertEqual(
+            holdable('["glib2","gtk4"]', '["glib2","gtk4","pango"]', '["gtk4","pango"]', "failure"), []
+        )
+
+
+class HoldsFileTests(unittest.TestCase):
+    def test_missing_or_empty_is_no_holds(self) -> None:
+        self.assertEqual(parse_holds(None), {})
+        self.assertEqual(parse_holds(""), {})
+
+    def test_round_trips_sorted(self) -> None:
+        holds = {"gtk4": {"version": "4.20.1", "run": "u"}, "fish": {"version": "4.9.3", "run": "u"}}
+        text = dump_holds(holds)
+        self.assertEqual(parse_holds(text), holds)
+        self.assertLess(text.index('"fish"'), text.index('"gtk4"'))
+
+    def test_a_malformed_file_raises_rather_than_releasing_every_hold(self) -> None:
+        for text in ('[]', '{"holds": []}', '{"holds": {"fish": {}}}',
+                     '{"holds": {"fish": {"version": ""}}}', '{"holds": {"fish": "4.9.3"}}'):
+            with self.subTest(text=text), self.assertRaises(ValueError):
+                parse_holds(text)
+
+    def test_the_committed_holds_file_parses(self) -> None:
+        path = ROOT / HOLDS
+        if path.is_file():
+            parse_holds(path.read_text())
+
+
+class HoldsOnlyVerdictTests(unittest.TestCase):
+    def test_merges_when_nothing_was_bumped_or_built(self) -> None:
+        self.assertTrue(holds_only_verdict("[]", "skipped").ok)
+
+    def test_refuses_when_a_package_was_named_or_something_built(self) -> None:
+        self.assertFalse(holds_only_verdict('["gtk4"]', "skipped").ok)
+        self.assertFalse(holds_only_verdict("[]", "success").ok)
+        self.assertFalse(holds_only_verdict("", "skipped").ok)
+
+
 class CommentTests(unittest.TestCase):
     def test_the_comment_names_failures_and_carries_its_marker(self) -> None:
         result = verdict('["gtk4"]', '["gtk4"]', '["gtk4"]', "failure")
         text = comment(result, SHA, "https://example.invalid/run/1")
         self.assertIn("`gtk4`", text)
         self.assertIn("https://example.invalid/run/1", text)
+        self.assertIn(marker(SHA, ["gtk4"]), text)
+
+    def test_a_holding_comment_says_what_is_held_and_how_to_release_it(self) -> None:
+        result = verdict('["glib2","gtk4"]', '["glib2","gtk4"]', '["gtk4"]', "failure")
+        text = comment(result, SHA, "u", held=["gtk4"])
+        self.assertIn("holding `gtk4`", text)
+        self.assertIn(HOLDS, text)
         self.assertIn(marker(SHA, ["gtk4"]), text)
 
     def test_the_same_verdict_on_the_same_commit_is_posted_once(self) -> None:
@@ -189,7 +275,35 @@ class CommandLineTests(unittest.TestCase):
         (self.tmp / "packages" / "glib2" / "glib2.spec").write_text("Version: 2.86.1\n")
         code, out, _ = self.plan(self.commit())
         self.assertEqual(code, 0)
-        self.assertEqual(json.loads(out), {"packages": ["glib2"]})
+        self.assertEqual(json.loads(out), {"packages": ["glib2"], "holds_only": False})
+
+    def test_plan_lets_the_holds_file_ride_along(self) -> None:
+        self.write_lock({"glib2": "2.86.1", "gtk4": "4.20.0"})
+        (self.tmp / HOLDS).write_text(dump_holds({"gtk4": {"version": "4.20.1", "run": "u"}}))
+        code, out, _ = self.plan(self.commit())
+        self.assertEqual(code, 0)
+        self.assertEqual(json.loads(out)["packages"], ["glib2"])
+
+    def test_plan_names_a_holds_only_diff(self) -> None:
+        (self.tmp / HOLDS).write_text(dump_holds({"gtk4": {"version": "4.20.1", "run": "u"}}))
+        code, out, _ = self.plan(self.commit())
+        self.assertEqual(code, 0)
+        self.assertEqual(json.loads(out), {"packages": [], "holds_only": True})
+
+    def test_a_holds_only_diff_may_not_change_the_lock_content(self) -> None:
+        (self.tmp / HOLDS).write_text(dump_holds({"gtk4": {"version": "4.20.1", "run": "u"}}))
+        lock = self.tmp / "config" / "upstream-sources.json"
+        document = json.loads(lock.read_text())
+        document["schema"] = 2
+        lock.write_text(json.dumps(document))
+        self.assertEqual(self.plan(self.commit())[0], 1)
+
+    def test_plan_refuses_a_holds_file_it_cannot_read(self) -> None:
+        (self.tmp / HOLDS).write_text('{"holds": {"gtk4": {}}}')
+        code, out, err = self.plan(self.commit())
+        self.assertEqual(code, 1)
+        self.assertEqual(out, "")
+        self.assertIn("holds file", err)
 
     def test_plan_refuses_a_change_outside_the_lock_and_recipes(self) -> None:
         self.write_lock({"glib2": "2.86.1", "gtk4": "4.20.0"})
@@ -210,31 +324,102 @@ class CommandLineTests(unittest.TestCase):
     def test_plan_refuses_a_diff_with_no_recipe(self) -> None:
         self.assertEqual(self.plan(self.base)[0], 1)
 
-    def test_decide_passes_and_writes_nothing(self) -> None:
+    def decide(self, *args: str) -> tuple[int, str]:
         out = io.StringIO()
         with redirect_stdout(out):
             code = bump_gate.main([
-                "decide", "--bumped", '["glib2"]', "--build-list", '["glib2"]',
-                "--failed", "[]", "--result", "success", "--sha", SHA,
-                "--run-url", "u", "--comment", str(self.tmp / "c.md"),
+                "decide", *args, "--sha", SHA, "--run-url", "u",
+                "--comment", str(self.tmp / "c.md"),
                 "--failed-output", str(self.tmp / "f.json"),
+                "--hold-output", str(self.tmp / "h.json"),
             ])
+        return code, out.getvalue()
+
+    def test_decide_passes_and_writes_nothing(self) -> None:
+        code, _ = self.decide("--bumped", '["glib2"]', "--build-list", '["glib2"]',
+                              "--failed", "[]", "--result", "success")
         self.assertEqual(code, 0)
         self.assertFalse((self.tmp / "c.md").exists())
+        self.assertFalse((self.tmp / "h.json").exists())
 
     def test_decide_fails_and_writes_the_comment_and_failed_list(self) -> None:
-        out = io.StringIO()
-        with redirect_stdout(out):
-            code = bump_gate.main([
-                "decide", "--bumped", '["glib2"]', "--build-list", '["glib2"]',
-                "--failed", '["glib2"]', "--result", "failure", "--sha", SHA,
-                "--run-url", "u", "--comment", str(self.tmp / "c.md"),
-                "--failed-output", str(self.tmp / "f.json"),
-            ])
+        code, out = self.decide("--bumped", '["glib2"]', "--build-list", '["glib2"]',
+                                "--failed", '["glib2"]', "--result", "failure")
         self.assertEqual(code, 1)
-        self.assertIn("::error title=bump gate::", out.getvalue())
+        self.assertIn("::error title=bump gate::", out)
         self.assertIn(marker(SHA, ["glib2"]), (self.tmp / "c.md").read_text())
         self.assertEqual(json.loads((self.tmp / "f.json").read_text()), ["glib2"])
+        self.assertEqual(json.loads((self.tmp / "h.json").read_text()), ["glib2"])
+
+    def test_decide_holds_nothing_for_a_verdict_it_cannot_account_for(self) -> None:
+        code, _ = self.decide("--bumped", '["glib2"]', "--build-list", '["glib2"]',
+                              "--failed", '["glib2"]', "--result", "cancelled")
+        self.assertEqual(code, 1)
+        self.assertEqual(json.loads((self.tmp / "h.json").read_text()), [])
+
+    def test_decide_passes_a_holds_only_change_that_built_nothing(self) -> None:
+        code, _ = self.decide("--bumped", "[]", "--holds-only", "--result", "skipped")
+        self.assertEqual(code, 0)
+        code, _ = self.decide("--bumped", "[]", "--holds-only", "--result", "success")
+        self.assertEqual(code, 1)
+
+    def trim(self, head: str, hold: str) -> tuple[int, str, str]:
+        out, err = io.StringIO(), io.StringIO()
+        with mock.patch.object(bump_gate, "ROOT", self.tmp), \
+                redirect_stdout(out), redirect_stderr(err):
+            code = bump_gate.main(["trim", "--base", self.base, "--head", head,
+                                   "--hold", hold, "--run-url", "https://example.invalid/run/9"])
+        return code, out.getvalue(), err.getvalue()
+
+    def test_trim_takes_held_packages_back_to_base_and_records_them(self) -> None:
+        self.write_lock({"glib2": "2.86.1", "gtk4": "4.20.1", "fish": "4.9.3"})
+        (self.tmp / "packages" / "glib2" / "glib2.spec").write_text("Version: 2.86.1\n")
+        (self.tmp / "packages" / "glib2" / "new.patch").write_text("+\n")
+        (self.tmp / "packages" / "gtk4").mkdir()
+        (self.tmp / "packages" / "gtk4" / "gtk4.spec").write_text("Version: 4.20.1\n")
+        head = self.commit()
+        code, out, err = self.trim(head, '["glib2","fish"]')
+        self.assertEqual(code, 0, err)
+        self.assertIn("held glib2 at 2.86.1", out)
+        self.assertEqual(
+            {e["name"]: e["version"] for e in json.loads((self.tmp / bump_gate.LOCK).read_text())["packages"]},
+            {"glib2": "2.86.0", "gtk4": "4.20.1"},
+        )
+        # The recipe directory is exactly the base one: changed file restored,
+        # added file gone.
+        self.assertEqual((self.tmp / "packages" / "glib2" / "glib2.spec").read_text(), "Version: 2.86.0\n")
+        self.assertFalse((self.tmp / "packages" / "glib2" / "new.patch").exists())
+        self.assertTrue((self.tmp / "packages" / "gtk4" / "gtk4.spec").exists())
+        holds = parse_holds((self.tmp / HOLDS).read_text())
+        self.assertEqual(holds["glib2"], {"version": "2.86.1", "run": "https://example.invalid/run/9"})
+        self.assertEqual(holds["fish"]["version"], "4.9.3")
+        # What is left plans as exactly the packages that built, plus holds.
+        trimmed = self.commit()
+        code, planned, _ = self.plan(trimmed)
+        self.assertEqual(code, 0)
+        self.assertEqual(json.loads(planned)["packages"], ["gtk4"])
+
+    def test_trim_of_every_package_leaves_a_holds_only_change(self) -> None:
+        self.write_lock({"glib2": "2.86.1", "gtk4": "4.20.0"})
+        (self.tmp / "packages" / "glib2" / "glib2.spec").write_text("Version: 2.86.1\n")
+        head = self.commit()
+        self.assertEqual(self.trim(head, '["glib2"]')[0], 0)
+        code, planned, _ = self.plan(self.commit())
+        self.assertEqual(code, 0)
+        self.assertEqual(json.loads(planned), {"packages": [], "holds_only": True})
+
+    def test_trim_keeps_existing_holds(self) -> None:
+        (self.tmp / HOLDS).write_text(dump_holds({"pango": {"version": "1.60.0", "run": "old"}}))
+        self.write_lock({"glib2": "2.86.1", "gtk4": "4.20.0"})
+        head = self.commit()
+        self.assertEqual(self.trim(head, '["glib2"]')[0], 0)
+        self.assertEqual(set(parse_holds((self.tmp / HOLDS).read_text())), {"glib2", "pango"})
+
+    def test_trim_refuses_nothing_or_an_unknown_package(self) -> None:
+        self.assertEqual(self.trim(self.base, "[]")[0], 1)
+        code, _, err = self.trim(self.base, '["stray"]')
+        self.assertEqual(code, 1)
+        self.assertIn("stray", err)
 
     def test_seen_reads_comment_bodies_from_stdin(self) -> None:
         for text, expected in ((marker(SHA, ["glib2"]), 0), ("nothing", 1)):
@@ -294,6 +479,35 @@ class GateWorkflowTests(unittest.TestCase):
         report = next(s for s in steps if s.get("name") == "Say why on the pull request")
         self.assertEqual(report["if"], "steps.verdict.outputs.ok != 'true'")
         self.assertTrue(report["run"].rstrip().endswith("exit 1"))
+        # Every later step but the hold runs only on success, so the failed
+        # step above keeps them from merging.
+        report_at = steps.index(report)
+        for step in steps[report_at + 1:]:
+            if step.get("name") == "Hold the failed packages and gate the rest":
+                continue
+            self.assertNotIn("failure()", step.get("if", ""), step.get("name"))
+            self.assertNotIn("always()", step.get("if", ""), step.get("name"))
+
+    def test_a_partial_failure_holds_and_regates_without_merging(self) -> None:
+        steps = self.jobs["merge"]["steps"]
+        hold = next(s for s in steps if s.get("name") == "Hold the failed packages and gate the rest")
+        self.assertIn("failure()", hold["if"])
+        self.assertIn("steps.verdict.outputs.hold != '[]'", hold["if"])
+        run = hold["run"]
+        self.assertIn("tools/bump_gate.py trim", run)
+        # Fast-forward only: never a force push over a branch that moved.
+        self.assertIn('git push origin "HEAD:refs/heads/bump/upstream-sources"', run)
+        self.assertNotIn("--force", run)
+        self.assertNotIn("gh pr merge", run)
+        self.assertIn("gh workflow run bump-upstream-gate.yml", run)
+        self.assertIn('"$head" != "$SHA"', run)
+        self.assertEqual(self.jobs["merge"]["permissions"]["contents"], "write")
+
+    def test_a_holds_only_change_builds_nothing(self) -> None:
+        self.assertIn("needs.plan.outputs.holds_only != 'true'", self.jobs["build"]["if"])
+        verdict_step = next(s for s in self.jobs["merge"]["steps"]
+                            if s.get("name") == "Every bumped package built")
+        self.assertIn("--holds-only", verdict_step["run"])
 
     def test_latest_is_published_by_dispatching_the_factory_on_main_after_a_merge(self) -> None:
         publish = next(s for s in self.jobs["merge"]["steps"]
@@ -319,6 +533,17 @@ class BumpWorkflowTests(unittest.TestCase):
         self.assertIn("inputs.target-cycle == ''", step["if"])
         self.assertIn("gh workflow run bump-upstream-gate.yml", step["run"])
         self.assertIn("--ref bump/upstream-sources", step["run"])
+
+    def test_the_bump_commits_the_holds_it_retires(self) -> None:
+        workflow = yaml.safe_load((WORKFLOWS / "bump-upstream-sources.yml").read_text())
+        cpr = next(s for s in workflow["jobs"]["bump"]["steps"] if s.get("id") == "cpr")
+        paths = cpr["with"]["add-paths"].split()
+        self.assertIn(HOLDS, paths)
+        # config/fedora-primary-sources.txt changes only when a dispatched
+        # --package run relocks a source off the Fedora lookaside. The gate
+        # deliberately refuses that diff: moving a source's origin is a
+        # human merge, never an automatic one.
+        self.assertEqual(disallowed(paths), ["config/fedora-primary-sources.txt"])
 
 
 if __name__ == "__main__":

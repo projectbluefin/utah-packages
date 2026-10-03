@@ -74,6 +74,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from tools.bootstrap_upstream_sources import FEDORA_HOSTS
+from tools.bump_gate import HOLDS, dump_holds, load_holds
 from tools.package_inventory import (
     FORGE_ARCHIVE,
     FORGE_RELEASE,
@@ -588,6 +589,14 @@ def rewrite_sources(manifest: Path, filename: str, digest: str, previous: str = 
     manifest.write_text("\n".join(lines) + "\n")
 
 
+def held(proposal: dict, holds: dict[str, dict]) -> dict | None:
+    """The hold that stops this proposal, if its exact version is held."""
+    hold = holds.get(proposal["name"])
+    if hold and rpm_version(hold["version"]) == rpm_version(proposal["latest"]):
+        return hold
+    return None
+
+
 def candidates(locks: dict[str, dict], only: str | None = None) -> list[tuple[str, dict, dict]]:
     """(name, entry, feed) for every lock this tool can track, sorted by name.
 
@@ -919,6 +928,16 @@ def main() -> int:
     finals = [p for p in proposals if p.get("kind") in ("final", "update", "relock")]
     review = [p for p in proposals if p.get("kind") == "review"]
 
+    # The bump gate held these exact versions after they failed to build; a
+    # newer release is proposed as usual, and applying it retires the hold.
+    holds = load_holds(args.root)
+    for bump in [p for p in finals if held(p, holds)]:
+        hold = held(bump, holds)
+        print(f"held {bump['name']}: {bump['current']} -> {bump['latest']} "
+              f"failed the bump gate ({hold.get('run') or 'no run recorded'})", file=sys.stderr)
+        finals.remove(bump)
+    retired = False
+
     for failure in failures:
         print(f"skipped {failure['name']}: {failure['error']}", file=sys.stderr)
 
@@ -935,6 +954,8 @@ def main() -> int:
                 print(f"skipped {bump['name']}: {error}", file=sys.stderr)
                 continue
             applied += 1
+            if holds.pop(bump["name"], None) is not None:
+                retired = True
 
     for item in review:
         # Deliberately not applied, and deliberately not silent: a later cycle
@@ -946,6 +967,9 @@ def main() -> int:
             f"({detail})",
             file=sys.stderr,
         )
+
+    if retired:
+        (args.root / HOLDS).write_text(dump_holds(holds))
 
     if not finals:
         print("no in-cycle release is newer than what the inventory locks")
