@@ -72,8 +72,11 @@ Constraints that shaped it, so they are not rediscovered:
   dispatched, checks the pull request still points there, and merges with
   `gh pr merge --match-head-commit`. A newer bump's gate cancels an older
   one through the concurrency group.
-- A failure leaves the pull request open with one comment per verdict per
-  commit (marker `<!-- bump-gate: sha=... failed=[...] -->`). The next
+- A failed build verdict leaves the pull request open with one comment per
+  verdict per commit (marker `<!-- bump-gate: sha=... failed=[...] -->`).
+  Other non-merge outcomes leave no comment: a refused diff or a failed or
+  missing Canary fails the gate run (the Canary result is also the check on
+  the head commit), and a moved head is a notice in the run. The next
   daily bump re-dispatches the gate even when nothing new moved, which
   retries a flaky build.
 - A `target-cycle` (GNOME-next) run is never gated; it stays a human merge.
