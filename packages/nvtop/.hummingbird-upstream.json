@@ -1,0 +1,8 @@
+{
+  "package": "nvtop",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/nvtop.git",
+  "commit": "f880ca7539c0ae9ec1875610af83328f8922bdb5",
+  "tree": "4d76fc4bc024e0ea5ec6d7e7591759e34d801e51",
+  "imported_at": "2026-10-02T06:58:58.368319+00:00"
+}
