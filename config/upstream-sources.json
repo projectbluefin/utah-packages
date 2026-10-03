@@ -3274,12 +3274,12 @@
     },
     {
       "name": "libmtp",
-      "version": "1.1.22",
-      "url": "https://github.com/libmtp/libmtp/releases/download/v1.1.22/libmtp-1.1.22.tar.gz",
-      "filename": "libmtp-1.1.22.tar.gz",
-      "sha512": "97094b29073681da0c714b6c4aea2e5f35253a8d06229e60c0af46727413470e9da6be422d873449fc4dec6f9b8efce6d3edc657b9251182cc0a709859e99baa",
+      "version": "1.1.23",
+      "url": "https://github.com/libmtp/libmtp/releases/download/v1.1.23/libmtp-1.1.23.tar.gz",
+      "filename": "libmtp-1.1.23.tar.gz",
+      "sha512": "2411513f1b7f81d4418eb1455213d7e198bc7d36bfadc22d2c380c51ca1924fffe21b08b6522266586ec76cbfc760427ed5d1c31064a59f6906d6638f198d1af",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/libmtp/libmtp-1.1.22.tar.gz/sha512/97094b29073681da0c714b6c4aea2e5f35253a8d06229e60c0af46727413470e9da6be422d873449fc4dec6f9b8efce6d3edc657b9251182cc0a709859e99baa/libmtp-1.1.22.tar.gz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libmtp/libmtp-1.1.23.tar.gz/sha512/2411513f1b7f81d4418eb1455213d7e198bc7d36bfadc22d2c380c51ca1924fffe21b08b6522266586ec76cbfc760427ed5d1c31064a59f6906d6638f198d1af/libmtp-1.1.23.tar.gz"
       ]
     },
     {
