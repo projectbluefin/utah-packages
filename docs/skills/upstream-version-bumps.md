@@ -1,6 +1,6 @@
 ---
 name: upstream-version-bumps
-description: Preserve RPM release and rebuild-counter semantics when changing upstream versions.
+description: Preserve RPM release and rebuild-counter semantics when changing upstream versions, and how the daily bump gates and merges itself.
 metadata:
   type: procedure
 ---
@@ -36,3 +36,44 @@ fetched (as `plan()` already skips an unreachable feed) and fails only when
 none applied. A CI log that names a package right before a traceback is not
 evidence that package failed unless stdout is line buffered, which `main()`
 now forces.
+
+## The bump gate
+
+The daily in-cycle pull request on `bump/upstream-sources` merges itself
+through `.github/workflows/bump-upstream-gate.yml`, and only when every
+bumped recipe builds. Decisions live in `tools/bump_gate.py` and are covered
+by `tests/test_bump_gate.py`; the workflow only acts on them.
+
+Constraints that shaped it, so they are not rediscovered:
+
+- Everything here runs on `GITHUB_TOKEN`. A pull request it opens starts no
+  `pull_request` workflow, and a merge it makes starts no `push` workflow;
+  a `workflow_dispatch` it sends does start one. So the bump job dispatches
+  the gate, the gate dispatches `canary.yml` with `pr=<number>` (the required
+  `Canary` check is matched by name on the head commit, and a dispatch is the
+  only way it lands there), and after merging it dispatches
+  `rebuild-rpms.yml` on `main` to publish `latest`. Waiting for the 03:17
+  schedule instead would leave a merged bump unpublished for up to a day.
+- The build is `rebuild-rpms.yml` called as a job (`workflow_call`), not a
+  dispatched run to find and poll: its `build_list` and `failed` outputs
+  are job outputs, and no single job has to outlive a factory run.
+  It runs with `packages` = the bumped recipes, `factory_tag: latest`,
+  `skip_publish: true` and `artifact_prefix: gate-`, so it builds against
+  what main would and publishes no tag at all. Restricting to the bumped set
+  keeps a package already failing on main from blocking an unrelated bump;
+  the cost is that reverse dependencies are first built by the post-merge
+  run on main, where a failure keeps the previous build and opens the usual
+  tracking issue.
+- Fail closed: no named packages, a build that was skipped or cancelled, a
+  missing output, a bumped package that was not selected, or any failure
+  blocks the merge. The diff from main may touch only
+  `config/upstream-sources.json` and `packages/**`.
+- Staleness: the gate works on `github.sha`, the branch head when it was
+  dispatched, checks the pull request still points there, and merges with
+  `gh pr merge --match-head-commit`. A newer bump's gate cancels an older
+  one through the concurrency group.
+- A failure leaves the pull request open with one comment per verdict per
+  commit (marker `<!-- bump-gate: sha=... failed=[...] -->`). The next
+  daily bump re-dispatches the gate even when nothing new moved, which
+  retries a flaky build.
+- A `target-cycle` (GNOME-next) run is never gated; it stays a human merge.

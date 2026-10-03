@@ -1,0 +1,219 @@
+name: Bump gate
+
+# Merges the daily upstream bump when, and only when, the packages it bumps
+# really build. bump-upstream-sources.yml dispatches this after it opens or
+# updates its pull request; nobody has to.
+#
+# Why a dispatch and a reusable call, and not pull_request, workflow_run or
+# polling. The bump pull request is opened with GITHUB_TOKEN, and GitHub
+# starts no pull_request or push workflow for an event GITHUB_TOKEN caused --
+# but it does start a workflow_dispatch. So:
+#
+#   - the build is rebuild-rpms.yml itself, called as a job here
+#     (workflow_call, the way the canary calls it), so its outputs -- the
+#     selected build_list and the failed list -- are plain job outputs. No
+#     second run to find, correlate by SHA and poll, and no 6-hour job limit:
+#     each wave is its own job, as in any factory run.
+#   - it builds only the bumped recipes (packages), against the published
+#     latest (factory_tag), and publishes nothing (skip_publish). It cannot
+#     move latest, a branch tag, or anything Utah reads. A successful build
+#     does push its package-cache entry, keyed by its inputs, which is what
+#     lets the post-merge run on main restore it instead of compiling again.
+#   - the required check on main is `Canary`, and GitHub matches it by name
+#     on the head commit. A GITHUB_TOKEN pull request never gets one, so this
+#     dispatches canary.yml on the branch with the pull request number; the
+#     canary then judges the pull request's files exactly as its
+#     pull_request run would (a lock-and-recipe change touches no pipeline
+#     path, so it passes in a minute without building).
+#   - after merging, it dispatches rebuild-rpms.yml on main. The merge is a
+#     GITHUB_TOKEN push, so the factory's push trigger does not fire, and the
+#     03:17 schedule is up to a day away; the dispatch is the same
+#     incremental run either would have been, published to latest.
+#
+# Concurrency: a newer daily bump force-updates the branch and dispatches a
+# newer gate, which cancels this one. Even uncancelled, nothing stale merges:
+# every job works on github.sha, the commit this run was dispatched at, and
+# the merge names it with --match-head-commit, so GitHub refuses if the pull
+# request moved on.
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: The bump pull request number (bump/upstream-sources into main)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bump-upstream-gate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  plan:
+    # Only the daily in-cycle bump merges itself. A GNOME-next target-cycle
+    # branch, or a dispatch on any other ref, does nothing.
+    if: github.ref == 'refs/heads/bump/upstream-sources'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: read
+      actions: write
+    outputs:
+      packages: ${{ steps.bumped.outputs.packages }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+      - name: The pull request is the open daily bump, at this commit
+        id: current
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ inputs.pr }}
+          SHA: ${{ github.sha }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          gh pr view "$PR" -R "$REPOSITORY" \
+            --json state,baseRefName,headRefName,headRefOid,isCrossRepository > pr.json
+          jq . pr.json
+          if jq -e --arg sha "$SHA" '.state == "OPEN" and .baseRefName == "main"
+              and .headRefName == "bump/upstream-sources" and .headRefOid == $sha
+              and (.isCrossRepository | not)' pr.json > /dev/null; then
+            echo "current=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice title=bump gate::pull request $PR is not the open bump at $SHA; a newer gate owns it"
+            echo "current=false" >> "$GITHUB_OUTPUT"
+          fi
+      # Only the lock and the recipes may differ from main: an automatic merge
+      # must never carry anything else, whoever pushed to the branch.
+      - name: Name the bumped packages
+        id: bumped
+        if: steps.current.outputs.current == 'true'
+        env:
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          git fetch --quiet origin main
+          base=$(git merge-base origin/main "$SHA")
+          python3 tools/bump_gate.py plan --base "$base" --head "$SHA" > plan.json
+          echo "packages=$(jq -c .packages plan.json)" >> "$GITHUB_OUTPUT"
+          echo "bumped: $(jq -c .packages plan.json)"
+      - name: Run the required Canary check on the pull request
+        if: steps.current.outputs.current == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ inputs.pr }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          gh workflow run canary.yml -R "$REPOSITORY" --ref bump/upstream-sources -f pr="$PR"
+
+  build:
+    needs: plan
+    if: needs.plan.outputs.packages != ''
+    permissions:
+      contents: read
+      id-token: write
+      packages: write
+      attestations: write
+      actions: read
+      issues: write
+    uses: ./.github/workflows/rebuild-rpms.yml
+    with:
+      packages: ${{ needs.plan.outputs.packages }}
+      factory_tag: latest
+      skip_publish: true
+      artifact_prefix: gate-
+
+  merge:
+    needs: [plan, build]
+    if: ${{ !cancelled() && needs.plan.outputs.packages != '' }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: write
+      checks: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Every bumped package built
+        id: verdict
+        env:
+          BUMPED: ${{ needs.plan.outputs.packages }}
+          BUILD_LIST: ${{ needs.build.outputs.build_list }}
+          FAILED: ${{ needs.build.outputs.failed }}
+          RESULT: ${{ needs.build.result }}
+          SHA: ${{ github.sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          if python3 tools/bump_gate.py decide --bumped "$BUMPED" \
+              --build-list "$BUILD_LIST" --failed "$FAILED" --result "$RESULT" \
+              --sha "$SHA" --run-url "$RUN_URL" \
+              --comment comment.md --failed-output failed.json; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          fi
+      # Left open, never merged. One comment per verdict per commit: the
+      # daily re-gate of an unchanged branch does not repeat itself.
+      - name: Say why on the pull request
+        if: steps.verdict.outputs.ok != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ inputs.pr }}
+          SHA: ${{ github.sha }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          gh api --paginate "repos/$REPOSITORY/issues/$PR/comments?per_page=100" \
+            --jq '.[].body' > comments.txt
+          if python3 tools/bump_gate.py seen --sha "$SHA" --failed "$(cat failed.json)" < comments.txt; then
+            echo "already reported on the pull request"
+          else
+            gh pr comment "$PR" -R "$REPOSITORY" --body-file comment.md
+          fi
+          exit 1
+      - name: Wait for the Canary check on this commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ github.sha }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          for _ in $(seq 1 60); do
+            gh api "repos/$REPOSITORY/commits/$SHA/check-runs?check_name=Canary&filter=latest" \
+              --jq '[.check_runs[] | {status, conclusion}]' > canary.json
+            if jq -e 'any(.[]; .status == "completed")' canary.json > /dev/null; then
+              jq -e 'any(.[]; .conclusion == "success")' canary.json > /dev/null
+              echo "Canary passed on $SHA"
+              exit 0
+            fi
+            sleep 60
+          done
+          echo "::error title=bump gate::no completed Canary check on $SHA after an hour" >&2
+          exit 1
+      - name: Merge, only at the commit that built
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ inputs.pr }}
+          SHA: ${{ github.sha }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          head=$(gh pr view "$PR" -R "$REPOSITORY" --json state,headRefOid --jq 'select(.state == "OPEN") | .headRefOid')
+          if [ "$head" != "$SHA" ]; then
+            echo "::notice title=bump gate::pull request $PR moved to ${head:-closed} since $SHA built; not merging"
+            exit 0
+          fi
+          gh pr merge "$PR" -R "$REPOSITORY" --squash --match-head-commit "$SHA"
+          echo "merged=true" >> "$GITHUB_ENV"
+      - name: Publish the merged bump to latest
+        if: env.merged == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          gh workflow run rebuild-rpms.yml -R "$REPOSITORY" --ref main

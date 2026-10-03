@@ -99,18 +99,22 @@ class FactoryWitnessTests(unittest.TestCase):
         weekly = next(c for c in crons if not c.endswith("* * *"))
         self.assertIn(f"github.event.schedule == '{weekly}'", REBUILD.read_text())
 
-    def test_only_the_canary_calls_the_factory_and_never_for_latest(self) -> None:
+    def test_only_the_canary_and_the_bump_gate_call_the_factory_never_for_latest(self) -> None:
         callers = [
             path.name
             for path in sorted(WORKFLOWS.glob("*.yml"))
             if "uses: ./.github/workflows/rebuild-rpms.yml" in path.read_text()
         ]
-        self.assertEqual(callers, ["canary.yml"])
-        canary = yaml.safe_load((WORKFLOWS / "canary.yml").read_text())
-        for name, job in canary["jobs"].items():
+        self.assertEqual(callers, ["bump-upstream-gate.yml", "canary.yml"])
+        for caller in callers:
+            workflow = yaml.safe_load((WORKFLOWS / caller).read_text())
+            self._never_latest(caller, workflow)
+
+    def _never_latest(self, caller: str, workflow: dict) -> None:
+        for name, job in workflow["jobs"].items():
             if job.get("uses") != "./.github/workflows/rebuild-rpms.yml":
                 continue
-            with self.subTest(job=name):
+            with self.subTest(workflow=caller, job=name):
                 inputs = job["with"]
                 # Never the consumer tag, and every pass that does not publish
                 # says so explicitly.

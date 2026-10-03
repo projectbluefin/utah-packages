@@ -44,8 +44,9 @@ on:
   schedule:
     # Daily: whatever changed, plus a retry of every package whose last
     # attempt failed. It used to run at 06:41, the same minute as
-    # bump-upstream-sources.yml; the bump now reaches the factory through the
-    # push above when its pull request merges.
+    # bump-upstream-sources.yml. A bump merged by bump-upstream-gate.yml is a
+    # GITHUB_TOKEN push, which starts no push run, so the gate dispatches this
+    # workflow on main itself; a bump merged by a person builds through push.
     - cron: '17 3 * * *'
     # Weekly safety net: every package, whatever the state label says.
     - cron: '23 1 * * 0'

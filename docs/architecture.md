@@ -267,8 +267,12 @@ Runs on one ref are serialized and never cancelled: GitHub keeps one run
 pending and replaces an older pending run with a newer one, which is safe
 because the newer run selects against the published state and so builds the
 union. The daily run moved off `06:41 UTC`, where it collided with
-`bump-upstream-sources.yml`; a merged bump now builds through the push
-trigger. Pull requests run validation and the canary, never the factory.
+`bump-upstream-sources.yml`. The daily bump pull request is gated by
+`bump-upstream-gate.yml`, which builds exactly the bumped recipes (publishing
+nothing), merges only when all of them built, and then dispatches the factory
+on `main`, because its GITHUB_TOKEN merge starts no push run; see
+[`docs/skills/upstream-version-bumps.md`](skills/upstream-version-bumps.md#the-bump-gate).
+Other pull requests run validation and the canary, never the factory.
 The rationale is part of the cache contract in
 [`docs/skills/package-build-cache.md`](skills/package-build-cache.md#triggers-queueing-and-batching).
 
