@@ -32,6 +32,7 @@ Both are indexed below. A skill that exists but is not listed here fails
 | Carry or verify GNOME Shell theme fixes | [`skills/gnome-shell-theme-patches.md`](skills/gnome-shell-theme-patches.md) |
 | Interpret or regenerate the GNOME-vs-gnome-build-meta audit | [`skills/gnome-build-meta-audit.md`](skills/gnome-build-meta-audit.md) |
 | Diff a GNOME source version, patch line, feature flag, or dependency edge against BuildStream intent | [`skills/gnome-build-meta-audit.md`](skills/gnome-build-meta-audit.md) |
+| Track the 551-name factory build backlog from issue #308, or close a backlog gap | [`skills/factory-build-backlog.md`](skills/factory-build-backlog.md) |
 
 ## Reference docs (load on demand)
 

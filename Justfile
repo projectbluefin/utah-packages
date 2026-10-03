@@ -26,5 +26,11 @@ workflow-quoting:
 runtime-contract:
     python3 tools/runtime_contract.py config/bluefin-packages.toml config/runtime-contract.toml --check
 
+# Run the factory build backlog audit. Not in `check` because the gate is
+# not yet wired into CI; ``tools/factory_build_backlog.py --check`` is what
+# runs the gate, and the workflow that calls it ships in a follow-up PR.
+factory-build-backlog:
+    python3 tools/factory_build_backlog.py --check
+
 test:
     python3 -m pytest tests -q
