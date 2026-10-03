@@ -434,14 +434,22 @@ def reset_release(text: str) -> str:
     return RELEASE_LINE.sub(lambda m: f"{m.group(1)}1{m.group(3)}", text, count=1)
 
 
+VERSION_LINE = re.compile(r"(?m)^(Version:\s*)(\S+)$")
+
+
 def rewrite_spec(spec: Path, release: str) -> bool:
     """Update Version: and reset a literal Release:. True when changed."""
     text = spec.read_text()
     wanted = rpm_version(release)
-    pattern = re.compile(r"(?m)^(Version:\s*)(\S+)$")
+    pattern = VERSION_LINE
     match = pattern.search(text)
     if match is None:
         raise ValueError(f"{spec}: no Version: line to bump")
+    if "%" in match.group(2):
+        # fish spells Version: from %{version_base} and friends, which the
+        # Source0 and %prep lines read too. Overwriting the field with a
+        # literal left them on the old release and the build had no Source0.
+        raise ValueError(f"{spec}: Version: is computed from macros, so a bump cannot rewrite it")
     if match.group(2) == wanted:
         return False
     text = pattern.sub(lambda m: m.group(1) + wanted, text, count=1)
@@ -449,9 +457,62 @@ def rewrite_spec(spec: Path, release: str) -> bool:
     return True
 
 
-def rewrite_sources(manifest: Path, filename: str, digest: str) -> None:
-    """Replace a package's Fedora sources manifest with the new tarball pin."""
-    manifest.write_text(f"SHA512 ({filename}) = {digest}\n")
+MANIFEST_LINE = re.compile(r"SHA512 \((\S+)\) = [0-9a-f]{128}")
+
+
+def version_bound(filename: str, version: str) -> bool:
+    """Whether a file name carries `version` as a whole version string."""
+    return re.search(rf"(?<![\w.]){re.escape(version)}(?![\w]|\.\d)", filename) is not None
+
+
+def bundled_entries(manifest: Path, primary: str) -> list[str]:
+    """The manifest lines other than the primary tarball's, in order."""
+    if not manifest.is_file():
+        return []
+    return [
+        line for line in manifest.read_text().splitlines()
+        if (match := MANIFEST_LINE.fullmatch(line.strip())) and match.group(1) != primary
+    ]
+
+
+def check_bumpable(root: Path, entry: dict) -> None:
+    """Refuse, before fetching anything, a recipe a version bump cannot move.
+
+    The `sources` manifest also pins bundled files that come from Fedora's
+    lookaside (tools/source_pipeline.py bundled_sources): ppp-watch.tar.xz,
+    a signing key, a vendored Go tree. A bump keeps those. One whose name
+    carries the old version -- gum-2.0.0-vendor.tar.bz2, fish-4.6.0.tar.xz.asc
+    -- has a successor that only a human (or Fedora) can produce, so the
+    bump is reported for review rather than written half-done.
+    """
+    package = root / "packages" / entry["name"]
+    spec = package / f"{entry['name']}.spec"
+    if spec.is_file():
+        match = VERSION_LINE.search(spec.read_text())
+        if match and "%" in match.group(2):
+            raise ValueError(f"{spec}: Version: is computed from macros, so a bump cannot rewrite it")
+    for line in bundled_entries(package / "sources", entry.get("filename", "")):
+        filename = MANIFEST_LINE.fullmatch(line.strip()).group(1)
+        if version_bound(filename, entry["version"]):
+            raise ValueError(
+                f"{entry['name']}: bundled source {filename} is bound to {entry['version']}; "
+                "its successor has to be produced by hand"
+            )
+
+
+def rewrite_sources(manifest: Path, filename: str, digest: str, previous: str = "") -> None:
+    """Move the primary tarball pin in a Fedora sources manifest.
+
+    Every other line -- a bundled file fetched from the lookaside by its own
+    digest -- is kept. Writing the new pin alone dropped them, and the build
+    of every such package (ppp, adw-gtk3-theme, gum, fish) died in
+    `rpmbuild -bs` on a missing source.
+    """
+    kept = bundled_entries(manifest, previous or filename)
+    lines = [f"SHA512 ({filename}) = {digest}", *[line for line in kept
+             if MANIFEST_LINE.fullmatch(line.strip()).group(1) != filename]]
+    manifest.write_text("\n".join(lines) + "\n")
+
 
 
 def candidates(locks: dict[str, dict], only: str | None = None) -> list[tuple[str, dict, dict]]:
@@ -650,6 +711,7 @@ def apply(root: Path, proposal: dict, opener=urllib.request.urlopen) -> dict:
     document = json.loads(config.read_text())
     index = next(i for i, e in enumerate(document["packages"]) if e["name"] == name)
     entry = document["packages"][index]
+    check_bumpable(root, entry)
 
     # A relock proposal carries the GNOME module explicitly because the old
     # primary is the lookaside; every other proposal reads it off the lock.
@@ -686,7 +748,7 @@ def apply(root: Path, proposal: dict, opener=urllib.request.urlopen) -> dict:
         rewrite_spec(spec, release)
     manifest = package / "sources"
     if manifest.is_file():
-        rewrite_sources(manifest, updated["filename"], digest)
+        rewrite_sources(manifest, updated["filename"], digest, previous=entry.get("filename", ""))
     config.write_text(json.dumps(document, indent=2) + "\n")
     return updated
 
@@ -720,6 +782,7 @@ def main() -> int:
     # full scan, so no unattended run moves a primary on its own.
     finals = [p for p in proposals if p.get("kind") in ("final", "update", "relock")]
     review = [p for p in proposals if p.get("kind") == "review"]
+
 
     for failure in failures:
         print(f"skipped {failure['name']}: {failure['error']}", file=sys.stderr)
