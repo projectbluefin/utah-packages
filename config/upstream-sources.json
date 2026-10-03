@@ -3295,13 +3295,13 @@
     },
     {
       "name": "libqrtr-glib",
-      "version": "1.2.2",
-      "url": "https://gitlab.freedesktop.org/mobile-broadband/libqrtr-glib/-/archive/1.2.2/libqrtr-glib-1.2.2.tar.bz2",
-      "filename": "libqrtr-glib-1.2.2.tar.bz2",
-      "sha512": "b21df1685c2474c1124e6f6bf12c552a06a28986284fde876210a3a6db8c19872a5458cae622bb22020ffd278167f52eba38d763ba633e783fa708863832bade",
+      "version": "1.4.0",
+      "url": "https://gitlab.freedesktop.org/mobile-broadband/libqrtr-glib/-/archive/1.4.0/libqrtr-glib-1.4.0.tar.bz2",
+      "filename": "libqrtr-glib-1.4.0.tar.bz2",
+      "sha512": "675d5c33146677f2e1c7925cfa5559c2108ddb9a18a0aadb67686e2e6640a84f67ea64757c773b87ecc44b9b4e8d14e722145450a72128e5a6c5892f528cea1f",
       "stage": 1,
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/libqrtr-glib/libqrtr-glib-1.2.2.tar.bz2/sha512/b21df1685c2474c1124e6f6bf12c552a06a28986284fde876210a3a6db8c19872a5458cae622bb22020ffd278167f52eba38d763ba633e783fa708863832bade/libqrtr-glib-1.2.2.tar.bz2"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libqrtr-glib/libqrtr-glib-1.4.0.tar.bz2/sha512/675d5c33146677f2e1c7925cfa5559c2108ddb9a18a0aadb67686e2e6640a84f67ea64757c773b87ecc44b9b4e8d14e722145450a72128e5a6c5892f528cea1f/libqrtr-glib-1.4.0.tar.bz2"
       ]
     },
     {

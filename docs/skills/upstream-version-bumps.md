@@ -55,6 +55,23 @@ reads, directly or through another macro (alsa-sof-firmware's
 `%{version}` (pipewire, alsa-utils) is still overwritten with a literal. Both
 refusals are skipped with a reason, like a failed download.
 
+## When a bumped recipe fails
+
+`--apply` moves the version only; the recipe can still need the change a new
+release forces. Fix it on a `fix/recipe-<name>` branch that carries the bump
+and the recipe change together, using Rawhide's spec at the same version as
+the reference when Fedora has one. Seen so far:
+
+- A new hard dependency in `configure`/`meson` needs its BuildRequires
+  (ddcutil 2.2.7: `pkgconfig(libacl)`).
+- The mobile-broadband stack (libqrtr-glib 1.4, libqmi 1.38) replaced
+  gtk-doc with gi-docgen under the same `gtk_doc` meson option: BuildRequire
+  `gi-docgen`, pass `-Dgtk_doc=true`, and ship `%{_docdir}/<lib>-1.0/`
+  instead of `%{_datadir}/gtk-doc/html/<lib>/`.
+- A forge lock on `/archive/` polls tags, and a tag is not a release:
+  stixfonts `v2.14` is an interim source-only tag with no built fonts.
+  Do not build such a version; leave the lock where it is.
+
 ## The bump gate
 
 The daily in-cycle pull request on `bump/upstream-sources` merges itself
