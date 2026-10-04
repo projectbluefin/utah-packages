@@ -10,7 +10,9 @@ are tested rather than restated in shell:
         print {"packages": [...]}: the recipes the bump changed. Exits 1 when
         the diff touches anything a bump may not (only the lock and the
         recipes are allowed: an automatic merge must never carry a pipeline
-        or a workflow change), or names a recipe the inventory does not know.
+        or a workflow change), names a recipe the inventory does not know, or
+        moves the lock entry of a package config/bump-review-only.txt lists
+        (its upstream bytes land only through a human-reviewed pull request).
 
         A diff that changes nothing but config/bump-holds.json -- every bumped
         package failed and was held -- prints {"packages": [],
@@ -60,6 +62,16 @@ LOCK = "config/upstream-sources.json"
 # propose a held version again; a newer release, or a human deleting the
 # entry, releases the hold.
 HOLDS = "config/bump-holds.json"
+# Packages whose upstream bytes never self-merge. A bump pins the SHA-512 of
+# whatever the forge serves at bump time -- nothing but the forge vouches for
+# it -- so a release-side compromise (a replaced release asset, a stolen
+# maintainer account) of a package that runs as root or in the boot chain
+# would be built, signed and published to latest within a day with no human
+# looking. upstream_bump.py reports these for review instead of applying
+# them, and the gate refuses a bump pull request that moves one of their lock
+# entries, whoever pushed it. The file itself is outside ALLOWED, so no
+# self-merging pull request can shorten it.
+REVIEW_ONLY = "config/bump-review-only.txt"
 # Exactly what bump-upstream-sources.yml commits (create-pull-request add-paths).
 ALLOWED = (LOCK, HOLDS, "packages/")
 MARKER = re.compile(r"<!-- bump-gate: sha=([0-9a-f]+) failed=(\[.*?\]) -->")
@@ -97,6 +109,26 @@ def load_holds(root: Path) -> dict[str, dict]:
     return parse_holds(path.read_text() if path.is_file() else None)
 
 
+def parse_review_only(text: str | None) -> set[str]:
+    """Package names from config/bump-review-only.txt text; `#` starts a comment."""
+    names = set()
+    for line in (text or "").splitlines():
+        stripped = line.split("#", 1)[0].strip()
+        if stripped:
+            names.add(stripped)
+    return names
+
+
+def load_review_only(root: Path) -> set[str]:
+    path = root / REVIEW_ONLY
+    return parse_review_only(path.read_text() if path.is_file() else None)
+
+
+def moved(base: dict[str, dict], head: dict[str, dict]) -> set[str]:
+    """Packages whose lock entry differs between base and head: the bytes moved."""
+    return {name for name, entry in head.items() if base.get(name) != entry}
+
+
 def dump_holds(holds: dict[str, dict]) -> str:
     return json.dumps({"holds": dict(sorted(holds.items()))}, indent=2) + "\n"
 
@@ -107,7 +139,7 @@ def locks_by_name(document: dict | None) -> dict[str, dict]:
 
 def bumped(base: dict[str, dict], head: dict[str, dict], paths: list[str]) -> list[str]:
     """Recipes whose lock entry or recipe directory changed between base and head."""
-    names = {name for name, entry in head.items() if base.get(name) != entry}
+    names = moved(base, head)
     names |= {name for name in base if name not in head}
     for path in paths:
         parts = path.split("/")
@@ -310,7 +342,16 @@ def _cli_plan(args: argparse.Namespace) -> int:
         return 1
     head_lock, base_lock = _lock_at(args.head), _lock_at(args.base)
     head = locks_by_name(head_lock)
-    names = bumped(locks_by_name(base_lock), head, paths)
+    base = locks_by_name(base_lock)
+    # Read at the head: the list a human last reviewed. A bump that edits the
+    # list is already refused above as a disallowed path.
+    guarded = sorted(moved(base, head) & parse_review_only(_show(args.head, REVIEW_ONLY)))
+    if guarded:
+        print(f"{REVIEW_ONLY} lists these, so their upstream bytes land only through "
+              f"a human-reviewed pull request, never this gate: {', '.join(guarded)}",
+              file=sys.stderr)
+        return 1
+    names = bumped(base, head, paths)
     unknown = sorted(set(names) - set(head))
     if unknown:
         print(f"not in the head inventory, so the gate cannot build them: {', '.join(unknown)}",

@@ -568,6 +568,24 @@ class HoldTests(unittest.TestCase):
             self.assertIn("held fish", err)
             self.assertEqual(set(load_holds(root)), {"fish"})
 
+    def test_main_reports_a_review_only_package_instead_of_applying_it(self) -> None:
+        from tools.bump_gate import REVIEW_ONLY
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "config").mkdir()
+            (root / REVIEW_ONLY).write_text("# runs as root\ngdm\nppp\n")
+            code, applied, err = self.run_main(root, [
+                {"kind": "final", "name": "gdm", "current": "51.0", "latest": "51.1"},
+                {"kind": "update", "name": "gum", "current": "2.0.0", "latest": "2.0.3"},
+                # A relock lands on its own, human-merged branch: not gated, not held back.
+                {"kind": "relock", "name": "ppp", "current": "2.5.2", "latest": "2.5.3"},
+            ])
+            self.assertEqual(code, 0)
+            self.assertEqual(applied, ["gum", "ppp"])
+            self.assertIn("needs review  gdm: 51.0 -> 51.1", err)
+            self.assertIn(REVIEW_ONLY, err)
+
 
 def fake_opener(payloads: dict):
     """Serve canned bytes per URL so no test reaches the network."""

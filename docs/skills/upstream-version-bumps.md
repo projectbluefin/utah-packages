@@ -130,6 +130,18 @@ Constraints that shaped it, so they are not rediscovered:
   missing output, a bumped package that was not selected, or any failure
   blocks the merge. The diff from main may touch only
   `config/upstream-sources.json`, `config/bump-holds.json` and `packages/**`.
+- Review-only packages never self-merge. A bump pins the SHA-512 of
+  whatever the forge serves, and the gate merges it once it builds, so the
+  forge is the only party vouching for the bytes. `config/bump-review-only.txt`
+  names the packages where that is not enough -- root daemons, the boot
+  chain, firmware (gdm, fprintd, microcode_ctl, tpm2-tools, plymouth, ...).
+  `upstream_bump.py` reports their releases as `needs review` and applies
+  nothing; `bump_gate.py plan` refuses a pull request that moves one of
+  their lock entries, whoever pushed it (a recipe-only change, such as a
+  Rawhide re-import, still passes). Bump them by hand in an ordinary pull
+  request, as in the section above. The list is outside what a bump may
+  commit, so only a reviewed pull request can shorten it, and
+  `tools/validate.py` fails on a name the lock does not carry.
 - Staleness: the gate works on `github.sha`, the branch head when it was
   dispatched, checks the pull request still points there, and merges with
   `gh pr merge --match-head-commit`. A newer bump's gate cancels an older

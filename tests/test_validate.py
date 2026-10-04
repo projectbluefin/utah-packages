@@ -71,6 +71,7 @@ class ValidateScriptTests(unittest.TestCase):
         buildroot_pin=DEFAULT_BUILDROOT_PIN,
         source_urls=None,
         fedora_baseline=None,
+        review_only=None,
     ) -> None:
         """Write a factory tree validate.py accepts unless a case breaks one rule."""
         locked = packages if locked is None else locked
@@ -94,6 +95,10 @@ class ValidateScriptTests(unittest.TestCase):
         if fedora_baseline is not None:
             (root / "config" / "fedora-primary-sources.txt").write_text(
                 "# baseline\n" + "".join(f"{name}\n" for name in fedora_baseline)
+            )
+        if review_only is not None:
+            (root / "config" / "bump-review-only.txt").write_text(
+                "# guarded\n" + "".join(f"{name}\n" for name in review_only)
             )
         if buildroot_lock is not None:
             (root / "config" / "buildroot-lock.json").write_text(
@@ -335,6 +340,17 @@ class ValidateScriptTests(unittest.TestCase):
         )
         assert result.returncode != 0
         assert "takes its payload from Fedora" in result.stderr
+
+    def test_accepts_a_review_only_list_of_locked_packages(self) -> None:
+        result = self.check(review_only=("example",))
+        assert result.returncode == 0, result.stdout + result.stderr
+
+    def test_rejects_a_review_only_name_the_lock_does_not_carry(self) -> None:
+        # A misspelled guard protects nothing while reading as if it did.
+        result = self.check(review_only=("example", "gdm-typo"))
+        assert result.returncode != 0
+        assert "bump-review-only.txt names packages the source lock does not carry: gdm-typo" \
+            in result.stderr
 
     def test_the_checked_in_factory_tree_passes_its_own_gate(self) -> None:
         result = self.run_validate(ROOT)

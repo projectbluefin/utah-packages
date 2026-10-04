@@ -74,7 +74,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from tools.bootstrap_upstream_sources import FEDORA_HOSTS
-from tools.bump_gate import HOLDS, dump_holds, load_holds
+from tools.bump_gate import HOLDS, REVIEW_ONLY, dump_holds, load_holds, load_review_only
 from tools.package_inventory import (
     FORGE_ARCHIVE,
     FORGE_RELEASE,
@@ -1004,6 +1004,18 @@ def main() -> int:
     # full scan, so no unattended run moves a primary on its own.
     finals = [p for p in proposals if p.get("kind") in ("final", "update", "relock")]
     review = [p for p in proposals if p.get("kind") == "review"]
+
+    # A bump pins whatever bytes the forge serves, and the gate merges it with
+    # no one looking. Packages the review-only list names -- root daemons, the
+    # boot chain, firmware -- are reported like a cross-cycle candidate and
+    # bumped by hand instead; the gate refuses them too, should one get in.
+    # A relock is exempt: it comes only from an explicit --package run and
+    # lands on its own branch, which the gate never merges.
+    review_only = load_review_only(args.root)
+    for bump in [p for p in finals if p["name"] in review_only and p["kind"] != "relock"]:
+        finals.remove(bump)
+        review.append({**bump, "kind": "review",
+                       "reason": f"listed in {REVIEW_ONLY}; bump it in a reviewed pull request"})
 
     # The bump gate held these exact versions after they failed to build; a
     # newer release is proposed as usual, and applying it retires the hold.

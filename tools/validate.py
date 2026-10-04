@@ -16,6 +16,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from tools.buildroot_pin import parse as parse_buildroot_pin
 from tools.check_suppressed_tests import main as check_suppressed_tests
 from tools.bootstrap_upstream_sources import FEDORA_HOSTS
+from tools.bump_gate import REVIEW_ONLY, load_review_only
 from tools.package_inventory import inventory
 
 
@@ -173,6 +174,31 @@ def check_fedora_primary_sources(root: Path) -> None:
         )
 
 
+def check_bump_review_only(root: Path) -> None:
+    """Every name in the review-only list is a lock the bump could move.
+
+    The list keeps upstream_bump.py and the bump gate from self-merging a
+    package's new upstream bytes. A misspelled or retired name protects
+    nothing and says otherwise, so it fails here, where a human is reading.
+    """
+    lock = root / "config" / "upstream-sources.json"
+    if not lock.is_file():
+        return
+    try:
+        data = json.loads(lock.read_text())
+    except (OSError, json.JSONDecodeError):
+        raise SystemExit(f"invalid source lock: {lock}")
+    locked = {entry.get("name") for entry in data.get("packages", []) if isinstance(entry, dict)}
+    unknown = sorted(load_review_only(root) - locked)
+    if unknown:
+        raise SystemExit(
+            f"{REVIEW_ONLY} names packages the source lock does not carry: "
+            f"{', '.join(unknown)}\n"
+            "Each line must be the `name` of a config/upstream-sources.json entry; "
+            "a name that matches nothing guards nothing."
+        )
+
+
 def main(root: Path = Path(".")) -> int:
     packages_dir = root / "packages"
     if not packages_dir.is_dir():
@@ -194,6 +220,7 @@ def main(root: Path = Path(".")) -> int:
     # Before the tally too: a lock that builds from the lookaside is a
     # provenance failure whether or not every recipe is otherwise accounted for.
     check_fedora_primary_sources(root)
+    check_bump_review_only(root)
     records = inventory(root)
     missing_locks = sorted(record.name for record in records if not record.source_locked)
     missing_packit = sorted(record.name for record in records if not record.packit_configured)

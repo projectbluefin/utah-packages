@@ -24,6 +24,8 @@ import yaml
 from tools import bump_gate
 from tools.bump_gate import (
     HOLDS,
+    LOCK,
+    REVIEW_ONLY,
     already_posted,
     bumped,
     comment,
@@ -31,9 +33,11 @@ from tools.bump_gate import (
     dump_holds,
     holdable,
     holds_only_verdict,
+    load_review_only,
     locks_by_name,
     marker,
     parse_holds,
+    parse_review_only,
     verdict,
 )
 
@@ -200,6 +204,22 @@ class HoldsFileTests(unittest.TestCase):
             parse_holds(path.read_text())
 
 
+class ReviewOnlyFileTests(unittest.TestCase):
+    def test_missing_or_empty_is_nothing_guarded(self) -> None:
+        self.assertEqual(parse_review_only(None), set())
+        self.assertEqual(parse_review_only("# only a comment\n\n"), set())
+
+    def test_names_are_read_with_comments_stripped(self) -> None:
+        self.assertEqual(parse_review_only("gdm  # display manager\n ppp\n"), {"gdm", "ppp"})
+
+    def test_the_committed_list_names_only_locked_packages(self) -> None:
+        lock = json.loads((bump_gate.ROOT / LOCK).read_text())
+        locked = {entry["name"] for entry in lock["packages"]}
+        listed = load_review_only(bump_gate.ROOT)
+        self.assertTrue(listed, "the committed list guards nothing")
+        self.assertEqual(sorted(listed - locked), [])
+
+
 class HoldsOnlyVerdictTests(unittest.TestCase):
     def test_merges_when_nothing_was_bumped_or_built(self) -> None:
         self.assertTrue(holds_only_verdict("[]", "skipped").ok)
@@ -323,6 +343,45 @@ class CommandLineTests(unittest.TestCase):
 
     def test_plan_refuses_a_diff_with_no_recipe(self) -> None:
         self.assertEqual(self.plan(self.base)[0], 1)
+
+    def guard(self, *names: str) -> None:
+        (self.tmp / REVIEW_ONLY).write_text("# root daemons\n" + "".join(f"{n}\n" for n in names))
+        self.git("add", "-A")
+        self.git("commit", "-q", "-m", "guard")
+        self.base = self.git("rev-parse", "HEAD").strip()
+
+    def test_plan_refuses_to_move_a_review_only_lock_entry(self) -> None:
+        self.guard("gtk4")
+        self.write_lock({"glib2": "2.86.0", "gtk4": "4.20.1"})
+        code, out, err = self.plan(self.commit())
+        self.assertEqual(code, 1)
+        self.assertEqual(out, "")
+        self.assertIn("gtk4", err)
+        self.assertIn(REVIEW_ONLY, err)
+
+    def test_plan_still_gates_other_bumps_beside_a_guarded_package(self) -> None:
+        self.guard("gtk4")
+        self.write_lock({"glib2": "2.86.1", "gtk4": "4.20.0"})
+        code, out, _ = self.plan(self.commit())
+        self.assertEqual(code, 0)
+        self.assertEqual(json.loads(out)["packages"], ["glib2"])
+
+    def test_plan_lets_a_guarded_recipe_move_when_its_lock_does_not(self) -> None:
+        # A Rawhide recipe re-import touches packages/<name>/ but moves no
+        # bytes; the guard is about the upstream payload, not the recipe.
+        self.guard("glib2")
+        (self.tmp / "packages" / "glib2" / "glib2.spec").write_text("Version: 2.86.0\n# fedora\n")
+        code, out, _ = self.plan(self.commit())
+        self.assertEqual(code, 0)
+        self.assertEqual(json.loads(out)["packages"], ["glib2"])
+
+    def test_plan_refuses_a_bump_that_edits_the_review_only_list(self) -> None:
+        self.guard("gtk4")
+        self.write_lock({"glib2": "2.86.0", "gtk4": "4.20.1"})
+        (self.tmp / REVIEW_ONLY).write_text("")
+        code, _, err = self.plan(self.commit())
+        self.assertEqual(code, 1)
+        self.assertIn(REVIEW_ONLY, err)
 
     def decide(self, *args: str) -> tuple[int, str]:
         out = io.StringIO()
