@@ -2,7 +2,7 @@
   "schema": 1,
   "buildroots": {
     "fedora-44": {
-      "image": "ghcr.io/projectbluefin/utah-buildroot:44-20260928-539cadb5d8a4@sha256:bf993626b391596b67e21325f57b2b3a00ff3f276aef92d857cd7642688f5f84",
+      "image": "ghcr.io/projectbluefin/utah-buildroot:44-20261005-7011f51bd808@sha256:602c1f0037e06ba1615b69fb15fc056d1c050d05a02997ce10369c188f50900c",
       "packages": []
     }
   }
