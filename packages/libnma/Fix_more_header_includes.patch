@@ -1,0 +1,351 @@
+From 68cc85767b2aad7356f1a733b0f98ca53c74d95c Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Corentin=20No=C3=ABl?= <corentin.noel@collabora.com>
+Date: Tue, 6 Feb 2024 19:11:58 +0100
+Subject: [PATCH] all: Add more library include in all headers
+
+Allows to know the dependency requirements of each header directly.
+
+Fixes GObject Introspection warnings.
+
+https://gitlab.gnome.org/GNOME/libnma/-/merge_requests/54
+---
+ src/nma-bar-code-widget.h          | 1 +
+ src/nma-cert-chooser.h             | 2 ++
+ src/nma-ws/nma-eap-fast.h          | 3 +++
+ src/nma-ws/nma-eap-leap.h          | 3 +++
+ src/nma-ws/nma-eap-peap.h          | 3 +++
+ src/nma-ws/nma-eap-simple.h        | 3 +++
+ src/nma-ws/nma-eap-tls.h           | 3 +++
+ src/nma-ws/nma-eap-ttls.h          | 3 +++
+ src/nma-ws/nma-eap.h               | 5 +++++
+ src/nma-ws/nma-ws-802-1x-private.h | 5 +++++
+ src/nma-ws/nma-ws-802-1x.h         | 5 +++++
+ src/nma-ws/nma-ws-dynamic-wep.h    | 4 ++++
+ src/nma-ws/nma-ws-helpers.h        | 6 ++++++
+ src/nma-ws/nma-ws-leap.h           | 4 ++++
+ src/nma-ws/nma-ws-owe.h            | 4 ++++
+ src/nma-ws/nma-ws-private.h        | 6 ++++++
+ src/nma-ws/nma-ws-sae.h            | 5 +++++
+ src/nma-ws/nma-ws-wep-key.h        | 4 ++++
+ src/nma-ws/nma-ws-wpa-eap.h        | 4 ++++
+ src/nma-ws/nma-ws-wpa-psk.h        | 4 ++++
+ src/nma-ws/nma-ws.h                | 6 ++++++
+ 21 files changed, 83 insertions(+)
+
+diff --git a/src/nma-bar-code-widget.h b/src/nma-bar-code-widget.h
+index d43ae464..552dc842 100644
+--- a/src/nma-bar-code-widget.h
++++ b/src/nma-bar-code-widget.h
+@@ -18,6 +18,7 @@
+ #ifndef __NMA_BAR_CODE_WIDGET_H__
+ #define __NMA_BAR_CODE_WIDGET_H__
+ 
++#include <glib.h>
+ #include <glib-object.h>
+ #include <gtk/gtk.h>
+ #include <NetworkManager.h>
+diff --git a/src/nma-cert-chooser.h b/src/nma-cert-chooser.h
+index 3dfeb627..8953db12 100644
+--- a/src/nma-cert-chooser.h
++++ b/src/nma-cert-chooser.h
+@@ -10,6 +10,8 @@
+ #define __NMA_CERT_CHOOSER_H__
+ 
+ #include <gtk/gtk.h>
++#include <glib.h>
++#include <glib-object.h>
+ #include <NetworkManager.h>
+ 
+ #include "nma-version.h"
+diff --git a/src/nma-ws/nma-eap-fast.h b/src/nma-ws/nma-eap-fast.h
+index a63d9707..569b3dac 100644
+--- a/src/nma-ws/nma-eap-fast.h
++++ b/src/nma-ws/nma-eap-fast.h
+@@ -8,6 +8,9 @@
+ #ifndef NMA_EAP_FAST_H
+ #define NMA_EAP_FAST_H
+ 
++#include <glib.h>
++#include <NetworkManager.h>
++
+ #include "nma-ws.h"
+ 
+ typedef struct _NMAEapFast NMAEapFast;
+diff --git a/src/nma-ws/nma-eap-leap.h b/src/nma-ws/nma-eap-leap.h
+index c75aa56a..5abafbdf 100644
+--- a/src/nma-ws/nma-eap-leap.h
++++ b/src/nma-ws/nma-eap-leap.h
+@@ -8,6 +8,9 @@
+ #ifndef NMA_EAP_LEAP_H
+ #define NMA_EAP_LEAP_H
+ 
++#include <glib.h>
++#include <NetworkManager.h>
++
+ #include "nma-ws.h"
+ 
+ typedef struct _NMAEapLeap NMAEapLeap;
+diff --git a/src/nma-ws/nma-eap-peap.h b/src/nma-ws/nma-eap-peap.h
+index 9f6c4a1e..44747a27 100644
+--- a/src/nma-ws/nma-eap-peap.h
++++ b/src/nma-ws/nma-eap-peap.h
+@@ -8,6 +8,9 @@
+ #ifndef NMA_EAP_PEAP_H
+ #define NMA_EAP_PEAP_H
+ 
++#include <glib.h>
++#include <NetworkManager.h>
++
+ #include "nma-ws.h"
+ 
+ typedef struct _NMAEapPeap NMAEapPeap;
+diff --git a/src/nma-ws/nma-eap-simple.h b/src/nma-ws/nma-eap-simple.h
+index 82024dca..8655ad85 100644
+--- a/src/nma-ws/nma-eap-simple.h
++++ b/src/nma-ws/nma-eap-simple.h
+@@ -8,6 +8,9 @@
+ #ifndef NMA_EAP_SIMPLE_H
+ #define NMA_EAP_SIMPLE_H
+ 
++#include <glib.h>
++#include <NetworkManager.h>
++
+ #include "nma-ws.h"
+ 
+ typedef enum {
+diff --git a/src/nma-ws/nma-eap-tls.h b/src/nma-ws/nma-eap-tls.h
+index 5de30814..b1684b16 100644
+--- a/src/nma-ws/nma-eap-tls.h
++++ b/src/nma-ws/nma-eap-tls.h
+@@ -8,6 +8,9 @@
+ #ifndef NMA_EAP_TLS_H
+ #define NMA_EAP_TLS_H
+ 
++#include <glib.h>
++#include <NetworkManager.h>
++
+ #include "nma-ws-802-1x.h"
+ 
+ typedef struct _NMAEapTls NMAEapTls;
+diff --git a/src/nma-ws/nma-eap-ttls.h b/src/nma-ws/nma-eap-ttls.h
+index 1e072336..7d9ebb03 100644
+--- a/src/nma-ws/nma-eap-ttls.h
++++ b/src/nma-ws/nma-eap-ttls.h
+@@ -8,6 +8,9 @@
+ #ifndef NMA_EAP_TTLS_H
+ #define NMA_EAP_TTLS_H
+ 
++#include <glib.h>
++#include <NetworkManager.h>
++
+ #include "nma-ws.h"
+ 
+ typedef struct _NMAEapTtls NMAEapTtls;
+diff --git a/src/nma-ws/nma-eap.h b/src/nma-ws/nma-eap.h
+index db5c84a0..32bf502a 100644
+--- a/src/nma-ws/nma-eap.h
++++ b/src/nma-ws/nma-eap.h
+@@ -8,6 +8,11 @@
+ #ifndef NMA_EAP_H
+ #define NMA_EAP_H
+ 
++#include <gtk/gtk.h>
++#include <glib.h>
++#include <glib-object.h>
++#include <NetworkManager.h>
++
+ typedef struct _NMAEap NMAEap;
+ 
+ typedef void        (*NMAEapAddToSizeGroupFunc) (NMAEap *method, GtkSizeGroup *group);
+diff --git a/src/nma-ws/nma-ws-802-1x-private.h b/src/nma-ws/nma-ws-802-1x-private.h
+index 0b20214a..ebf9e89e 100644
+--- a/src/nma-ws/nma-ws-802-1x-private.h
++++ b/src/nma-ws/nma-ws-802-1x-private.h
+@@ -6,6 +6,11 @@
+ #ifndef NMA_WS_802_1X_PRIVATE_H
+ #define NMA_WS_802_1X_PRIVATE_H
+ 
++#include <gtk/gtk.h>
++#include <glib.h>
++
++#include <NetworkManager.h>
++
+ struct _NMAWs8021xClass {
+ 	GtkGridClass parent;
+ };
+diff --git a/src/nma-ws/nma-ws-802-1x.h b/src/nma-ws/nma-ws-802-1x.h
+index f0cbb527..a8a5110b 100644
+--- a/src/nma-ws/nma-ws-802-1x.h
++++ b/src/nma-ws/nma-ws-802-1x.h
+@@ -6,6 +6,11 @@
+ #ifndef NMA_WS_802_1X_H
+ #define NMA_WS_802_1X_H
+ 
++#include <glib.h>
++#include <glib-object.h>
++
++#include <NetworkManager.h>
++
+ #include "nma-version.h"
+ 
+ G_BEGIN_DECLS
+diff --git a/src/nma-ws/nma-ws-dynamic-wep.h b/src/nma-ws/nma-ws-dynamic-wep.h
+index c7b8b71c..0f249a2c 100644
+--- a/src/nma-ws/nma-ws-dynamic-wep.h
++++ b/src/nma-ws/nma-ws-dynamic-wep.h
+@@ -8,6 +8,10 @@
+ #ifndef NMA_WS_DYNAMIC_WEP_H
+ #define NMA_WS_DYNAMIC_WEP_H
+ 
++#include <glib.h>
++#include <glib-object.h>
++#include <NetworkManager.h>
++
+ #include "nma-version.h"
+ 
+ G_BEGIN_DECLS
+diff --git a/src/nma-ws/nma-ws-helpers.h b/src/nma-ws/nma-ws-helpers.h
+index 3f842646..18103169 100644
+--- a/src/nma-ws/nma-ws-helpers.h
++++ b/src/nma-ws/nma-ws-helpers.h
+@@ -8,6 +8,12 @@
+ #ifndef _NMA_WS_HELPERS_H_
+ #define _NMA_WS_HELPERS_H_
+ 
++
++#include <gtk/gtk.h>
++#include <glib.h>
++#include <glib-object.h>
++#include <NetworkManager.h>
++
+ typedef const char * (*HelperSecretFunc)(NMSetting *);
+ 
+ void nma_ws_helper_fill_secret_entry (NMConnection *connection,
+diff --git a/src/nma-ws/nma-ws-leap.h b/src/nma-ws/nma-ws-leap.h
+index 3e35d447..23c78729 100644
+--- a/src/nma-ws/nma-ws-leap.h
++++ b/src/nma-ws/nma-ws-leap.h
+@@ -8,6 +8,10 @@
+ #ifndef NMA_WS_LEAP_H
+ #define NMA_WS_LEAP_H
+ 
++#include <glib.h>
++#include <glib-object.h>
++#include <NetworkManager.h>
++
+ #include "nma-version.h"
+ 
+ G_BEGIN_DECLS
+diff --git a/src/nma-ws/nma-ws-owe.h b/src/nma-ws/nma-ws-owe.h
+index b178651c..8ef3d0d0 100644
+--- a/src/nma-ws/nma-ws-owe.h
++++ b/src/nma-ws/nma-ws-owe.h
+@@ -1,6 +1,10 @@
+ #ifndef NMA_WS_OWE_H
+ #define NMA_WS_OWE_H
+ 
++#include <glib.h>
++#include <glib-object.h>
++#include <NetworkManager.h>
++
+ #include "nma-version.h"
+ 
+ G_BEGIN_DECLS
+diff --git a/src/nma-ws/nma-ws-private.h b/src/nma-ws/nma-ws-private.h
+index a3a34d78..e9bccec8 100644
+--- a/src/nma-ws/nma-ws-private.h
++++ b/src/nma-ws/nma-ws-private.h
+@@ -8,6 +8,12 @@
+ #ifndef NMA_WS_PRIVATE_H
+ #define NMA_WS_PRIVATE_H
+ 
++#include <gtk/gtk.h>
++#include <glib.h>
++#include <glib-object.h>
++
++#include <NetworkManager.h>
++
+ struct _NMAWsInterface {
+ 	GTypeInterface parent;
+ 
+diff --git a/src/nma-ws/nma-ws-sae.h b/src/nma-ws/nma-ws-sae.h
+index fae77d89..01cc9b1f 100644
+--- a/src/nma-ws/nma-ws-sae.h
++++ b/src/nma-ws/nma-ws-sae.h
+@@ -6,6 +6,11 @@
+ #ifndef NMA_WS_SAE_H
+ #define NMA_WS_SAE_H
+ 
++#include <glib.h>
++#include <glib-object.h>
++
++#include <NetworkManager.h>
++
+ #include "nma-version.h"
+ 
+ G_BEGIN_DECLS
+diff --git a/src/nma-ws/nma-ws-wep-key.h b/src/nma-ws/nma-ws-wep-key.h
+index 191aedad..abde97f7 100644
+--- a/src/nma-ws/nma-ws-wep-key.h
++++ b/src/nma-ws/nma-ws-wep-key.h
+@@ -8,6 +8,10 @@
+ #ifndef NMA_WS_WEP_KEY_H
+ #define NMA_WS_WEP_KEY_H
+ 
++#include <glib.h>
++#include <glib-object.h>
++#include <NetworkManager.h>
++
+ #include "nma-version.h"
+ 
+ G_BEGIN_DECLS
+diff --git a/src/nma-ws/nma-ws-wpa-eap.h b/src/nma-ws/nma-ws-wpa-eap.h
+index d054f45f..27bd5178 100644
+--- a/src/nma-ws/nma-ws-wpa-eap.h
++++ b/src/nma-ws/nma-ws-wpa-eap.h
+@@ -8,6 +8,10 @@
+ #ifndef NMA_WS_WPA_EAP_H
+ #define NMA_WS_WPA_EAP_H
+ 
++#include <glib.h>
++#include <glib-object.h>
++#include <NetworkManager.h>
++
+ #include "nma-version.h"
+ 
+ G_BEGIN_DECLS
+diff --git a/src/nma-ws/nma-ws-wpa-psk.h b/src/nma-ws/nma-ws-wpa-psk.h
+index aca5d5df..8d62c2b2 100644
+--- a/src/nma-ws/nma-ws-wpa-psk.h
++++ b/src/nma-ws/nma-ws-wpa-psk.h
+@@ -8,6 +8,10 @@
+ #ifndef NMA_WS_WPA_PSK_H
+ #define NMA_WS_WPA_PSK_H
+ 
++#include <glib.h>
++#include <glib-object.h>
++#include <NetworkManager.h>
++
+ #include "nma-version.h"
+ 
+ G_BEGIN_DECLS
+diff --git a/src/nma-ws/nma-ws.h b/src/nma-ws/nma-ws.h
+index 93bf2802..df7f736f 100644
+--- a/src/nma-ws/nma-ws.h
++++ b/src/nma-ws/nma-ws.h
+@@ -8,6 +8,12 @@
+ #ifndef NMA_WS_H
+ #define NMA_WS_H
+ 
++#include <gtk/gtk.h>
++#include <glib.h>
++#include <glib-object.h>
++
++#include <NetworkManager.h>
++
+ #include "nma-version.h"
+ 
+ G_BEGIN_DECLS
+-- 
+GitLab
+

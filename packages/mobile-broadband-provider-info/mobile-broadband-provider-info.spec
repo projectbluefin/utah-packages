@@ -1,7 +1,7 @@
 Summary: Mobile broadband provider database
 Name: mobile-broadband-provider-info
 Version: 20240407
-Release: 6%{?dist}
+Release: 7%{?dist}
 URL: https://wiki.gnome.org/Projects/NetworkManager/MobileBroadband/ServiceProviders
 License: CC-PDDC
 Source: https://download.gnome.org/sources/%{name}/%{version}/%{name}-%{version}.tar.xz
@@ -55,6 +55,9 @@ developing developing applications that use %{name}.
 
 
 %changelog
+* Thu Sep 10 2026 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 20240407-7
+- Rebuilt for libxml-2.5.4
+
 * Thu Jul 16 2026 Fedora Release Engineering <releng@fedoraproject.org> - 20240407-6
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_45_Mass_Rebuild
 

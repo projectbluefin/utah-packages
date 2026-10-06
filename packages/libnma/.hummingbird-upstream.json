@@ -2,7 +2,7 @@
   "package": "libnma",
   "branch": "rawhide",
   "remote": "https://src.fedoraproject.org/rpms/libnma.git",
-  "commit": "862123a473b22b97c5f5e481c29da382fdcb3e2b",
-  "tree": "a13ece2e8aa32dfd45a61c262285ed97ee44f028",
-  "imported_at": "2026-08-30T15:47:23.467306+00:00"
+  "commit": "109752df8894b3ee94087bd3414e686ad9035de9",
+  "tree": "34438e323d06e30467697fbfcc489ff090b6ab70",
+  "imported_at": "2026-10-06T05:30:23.959937+00:00"
 }

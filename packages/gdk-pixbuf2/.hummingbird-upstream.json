@@ -2,7 +2,7 @@
   "package": "gdk-pixbuf2",
   "branch": "rawhide",
   "remote": "https://src.fedoraproject.org/rpms/gdk-pixbuf2.git",
-  "commit": "a61a1744dbc2f74d9b8190e223ede22f5c3f5f63",
-  "tree": "3a89262f57aea7c5ca4987297bcfb417d3e3b1d4",
-  "imported_at": "2026-08-30T15:47:02.110023+00:00"
+  "commit": "f1cf381fd71d85639724f8d2ef55e142a48e90e3",
+  "tree": "67d5173fdeb7f484b39bc456758fe9005c14d8de",
+  "imported_at": "2026-10-06T05:29:34.673629+00:00"
 }
