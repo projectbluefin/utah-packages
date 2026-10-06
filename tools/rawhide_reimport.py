@@ -14,9 +14,13 @@ whether it may be taken without a human:
 * its source lock records no Utah-local build decision (``dist_bump``,
   ``rebuild_reason``, ``generate``, ``dist_git_name``, ...) that was reasoned
   about against the old recipe;
-* Fedora's ``sources`` file, ``Name:``, ``Epoch:`` and ``Version:`` are
-  unchanged, so the SHA-512 source lock in ``config/upstream-sources.json``
-  still describes the payload byte for byte and needs no rewrite;
+* Fedora's ``sources`` file, ``Name:``, ``Epoch:``, ``Version:`` and
+  ``Release:`` are unchanged, so the SHA-512 source lock in
+  ``config/upstream-sources.json`` still describes the payload byte for byte
+  and needs no rewrite. A ``Release:`` change -- including the literal-to-
+  ``%autorelease`` swap that turned libnma into a 1.10.6-12 -> 1.10.6-1
+  downgrade (issue #382) -- is left for a human: macros evaluate against the
+  build target, so a value that was 14 in Koji's tag becomes 1 in ours;
 * the new spec adds no ``BuildRequires`` (or ``%generate_buildrequires``),
   so the build graph and the hermetic build root cannot grow a dependency the
   factory has never resolved;
@@ -226,7 +230,7 @@ def classify(name: str, provenance: dict, lock: dict | None, local: Tree,
         reasons.append(f"spec renamed {old[0]} -> {new[0]}")
     if pinned.get("sources") != target.get("sources"):
         reasons.append("Fedora changed `sources`: the source lock would have to move")
-    for field in ("Name", "Epoch", "Version"):
+    for field in ("Name", "Epoch", "Version", "Release"):
         before, after = field_lines(old[1], field), field_lines(new[1], field)
         if before != after:
             reasons.append(f"{field}: changed {before} -> {after}")
