@@ -128,6 +128,21 @@ A checksum is not a signature. `tools/factory_manifest.py` counts each kind and
 names the packages in the checksum-only classes under `source_verification`, so
 the exceptions are a list to shorten rather than a property to grep for.
 
+## FIPS-mode OpenSSL refuses `hashlib.new('md5')`
+
+`source_manifest()` in `tools/source_pipeline.py` reads only sha512 `sources`
+lines today; md5-pinned lines are not read until #351 lands. Once they are,
+a plain `hashlib.new('md5')` on a FIPS-mode OpenSSL host raises `ValueError`,
+because md5 is blocked for security use. md5 is collision-broken; we accept it only where
+the dist-git pin itself is md5, and such recipes are listed in
+`factory_manifest.py` under `source_verification` as the checksum-only class
+to shorten. The pipeline passes `usedforsecurity=False` for md5 so the
+verification step works on FIPS hosts, and explicitly passes
+`usedforsecurity=True` for sha512 and sha256 — a future algorithm addition
+cannot silently opt out of FIPS policy. `tests/test_source_pipeline.py::DigestTests`
+pins the kwarg so a future cleanup that removes it regresses on a test instead
+of on a FIPS-only runner.
+
 ## The manifest
 
 `tools/factory_manifest.py` writes `manifest.json` beside the repository: the
