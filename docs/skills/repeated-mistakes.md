@@ -513,6 +513,17 @@ touch the source lock (`sources` or `Version:` changed), and fails the run if
 adds a package. Keep it that way; see
 [`rawhide-recipe-reimports.md`](rawhide-recipe-reimports.md).
 
+## Validate imported metadata without reformatting it
+
+Fedora gating YAML can contain several documents and custom `!Policy` tags.
+Use `check-yaml --unsafe` (syntax-only) specifically for `packages/*/gating.yaml`;
+retain safe loading for all other YAML. Do not edit imported recipe bytes to
+satisfy a single-document or standard-tag assumption. Shell variables populated by Actions `env:` still
+need explicit `${VAR:?}` assertions when a similarly named lowercase variable
+causes shellcheck's SC2153 heuristic. Keep those checks specific rather than
+disabling shellcheck globally. README inventory descriptions should reference
+the live inventory tool instead of freezing another recipe-count snapshot.
+
 ## Quick checks before pushing a fix
 
 - [ ] Does `git log --oneline -- <file>` show this file being fixed for the

@@ -122,6 +122,7 @@ jobs:
           INJECT: ${{ inputs.inject_failure }}
         run: |
           set -euo pipefail
+          : "${PACKAGES:?missing package matrix}"
           packages=$(jq -c --argjson drop "${INJECT:-[]}" \
             'map(select(. as $p | $drop | index($p) | not))' <<<"$PACKAGES")
           echo "packages=$packages" >> "$GITHUB_OUTPUT"
