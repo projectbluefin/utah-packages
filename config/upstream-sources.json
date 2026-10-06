@@ -1712,12 +1712,12 @@
     {
       "name": "libheif",
       "stage": 1,
-      "version": "1.23.5",
-      "url": "https://github.com/strukturag/libheif/archive/v1.23.5/libheif-1.23.5.tar.gz",
-      "filename": "libheif-1.23.5.tar.gz",
-      "sha512": "a7b4a7ecc093f6b453939e093abef391f88bb371303183a91e431cba8f4b590131c05cc80a28733ac4822cce4a69ca1475251b2d4679890330a603de04c6c77c",
+      "version": "1.23.6",
+      "url": "https://github.com/strukturag/libheif/archive/v1.23.6/libheif-1.23.6.tar.gz",
+      "filename": "libheif-1.23.6.tar.gz",
+      "sha512": "60a3b974a6c8d2d053098bc3cd36da78c6aa1d4d3282ce0055263fb4120e8390316d63bc3f2312f20c5d97f1cc35afaf89fa7321c0cb163c778883bae6dbb5e6",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/libheif/libheif-1.23.5.tar.gz/sha512/a7b4a7ecc093f6b453939e093abef391f88bb371303183a91e431cba8f4b590131c05cc80a28733ac4822cce4a69ca1475251b2d4679890330a603de04c6c77c/libheif-1.23.5.tar.gz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libheif/libheif-1.23.6.tar.gz/sha512/60a3b974a6c8d2d053098bc3cd36da78c6aa1d4d3282ce0055263fb4120e8390316d63bc3f2312f20c5d97f1cc35afaf89fa7321c0cb163c778883bae6dbb5e6/libheif-1.23.6.tar.gz"
       ]
     },
     {
