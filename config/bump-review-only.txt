@@ -21,6 +21,8 @@ fprintd
 gdm
 libblockdev
 libfprint
+# gvfs is linked to the libcdio 2.3 ABI; upgrades require a consumer rebuild.
+libcdio
 microcode_ctl
 plymouth
 ppp

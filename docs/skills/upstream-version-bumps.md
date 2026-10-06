@@ -142,6 +142,11 @@ Constraints that shaped it, so they are not rediscovered:
   request, as in the section above. The list is outside what a bump may
   commit, so only a reviewed pull request can shorten it, and
   `tools/validate.py` fails on a name the lock does not carry.
+- ABI holds: `libcdio` stays review-only until gvfs is rebuilt for its new
+  soname. An exact-version entry in `bump-holds.json` blocks only that version;
+  the next release retires it. Use the review-only list when a consumer rebuild
+  is required for every newer release, and remove it only with transaction
+  evidence for the matching consumer.
 - Staleness: the gate works on `github.sha`, the branch head when it was
   dispatched, checks the pull request still points there, and merges with
   `gh pr merge --match-head-commit`. A newer bump's gate cancels an older

@@ -1499,13 +1499,13 @@
     },
     {
       "name": "libcdio",
-      "version": "2.4.0",
-      "url": "https://github.com/libcdio/libcdio/releases/download/2.4.0/libcdio-2.4.0.tar.bz2",
-      "filename": "libcdio-2.4.0.tar.bz2",
-      "sha512": "fd7d397298ab8a8c8e8d2aab5e63d2a7da5b6bb39ab1a6176afe994f56967a0e0bd80b1ad3c8479063a6f49fc706269a76f14cee52e42b1ae5570764b4c7a148",
+      "version": "2.3.0",
+      "url": "https://github.com/libcdio/libcdio/releases/download/2.3.0/libcdio-2.3.0.tar.bz2",
+      "filename": "libcdio-2.3.0.tar.bz2",
+      "sha512": "42e1659df57b558f5bfc81badf137682793070d1301fdf4926d221eca1fffc8d1b912d23ebe0a2e84a9bbd832f257033ef854b5349cf80fc8184bce759800d6c",
       "stage": 0,
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/libcdio/libcdio-2.4.0.tar.bz2/sha512/fd7d397298ab8a8c8e8d2aab5e63d2a7da5b6bb39ab1a6176afe994f56967a0e0bd80b1ad3c8479063a6f49fc706269a76f14cee52e42b1ae5570764b4c7a148/libcdio-2.4.0.tar.bz2"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libcdio/libcdio-2.3.0.tar.bz2/sha512/42e1659df57b558f5bfc81badf137682793070d1301fdf4926d221eca1fffc8d1b912d23ebe0a2e84a9bbd832f257033ef854b5349cf80fc8184bce759800d6c/libcdio-2.3.0.tar.bz2"
       ]
     },
     {
@@ -2461,11 +2461,11 @@
     {
       "name": "pipewire",
       "stage": 6,
-      "version": "1.6.8",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/pipewire/pipewire-1.6.8.tar.gz/sha512/afa52e58eebe92ad2137afd9663076c8ecf62a5b1ec70aceeb368d58e6ff9eed1fd8fcf8e92f1b73951f7fbd6461a823c9d911b0d064cb523b8871c0dcc79187/pipewire-1.6.8.tar.gz",
-      "filename": "pipewire-1.6.8.tar.gz",
-      "feed": "https://gitlab.freedesktop.org/pipewire/pipewire/-/archive/1.6.8/pipewire-1.6.8.tar.gz",
-      "sha512": "afa52e58eebe92ad2137afd9663076c8ecf62a5b1ec70aceeb368d58e6ff9eed1fd8fcf8e92f1b73951f7fbd6461a823c9d911b0d064cb523b8871c0dcc79187"
+      "version": "1.6.9",
+      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/pipewire/pipewire-1.6.9.tar.gz/sha512/91a4790123f95c2a52592e4dcd7de90add681883710d3baa068f973c1477c4a9b7696df6afedbcb6c9f42abfdfa10dc01c383aa5d7ced33d781287a07bb18fd3/pipewire-1.6.9.tar.gz",
+      "filename": "pipewire-1.6.9.tar.gz",
+      "feed": "https://gitlab.freedesktop.org/pipewire/pipewire/-/archive/1.6.9/pipewire-1.6.9.tar.gz",
+      "sha512": "91a4790123f95c2a52592e4dcd7de90add681883710d3baa068f973c1477c4a9b7696df6afedbcb6c9f42abfdfa10dc01c383aa5d7ced33d781287a07bb18fd3"
     },
     {
       "name": "pipewire-libs-extra",
