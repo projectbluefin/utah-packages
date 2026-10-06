@@ -252,14 +252,32 @@ jobs:
           REPOSITORY: ${{ github.repository }}
         run: |
           set -euo pipefail
+          run_state() {
+            gh api "repos/$REPOSITORY/actions/runs/$1" --jq '"\(.status)/\(.conclusion)"'
+          }
           gh api "repos/$REPOSITORY/actions/runs?head_sha=$SHA&status=action_required&per_page=100" \
             --jq '.workflow_runs[] | select(.event == "pull_request") | .id' > parked.txt
+          : > approved.txt
           while read -r id; do
             [ -n "$id" ] || continue
             if gh api -X POST "repos/$REPOSITORY/actions/runs/$id/approve" > /dev/null; then
               echo "approved parked run $id"
+              released="$id"
+            elif [ "$(run_state "$id")" = "completed/success" ]; then
+              # Approved by an earlier gate cycle and already finished: the
+              # approve call refuses a completed run, but there is nothing
+              # left to release.
+              echo "parked run $id already completed successfully"
+              released="$id"
             else
               echo "::warning title=bump gate::could not approve parked run $id; a maintainer must approve it before the merge can pass"
+              continue
+            fi
+            # Only the required Canary check gates the merge; other parked
+            # runs are released so nothing pending lingers, but the wait
+            # below tracks Canary alone.
+            if [ "$(gh api "repos/$REPOSITORY/actions/runs/$id" --jq '.name')" = "Canary" ]; then
+              echo "$released" >> approved.txt
             fi
           done < parked.txt
       - name: Wait for the Canary check on this commit
@@ -269,6 +287,41 @@ jobs:
           REPOSITORY: ${{ github.repository }}
         run: |
           set -euo pipefail
+          # Approving a parked run RESTARTS it: a completed Canary check-run
+          # visible right after the approval can predate the restart while
+          # the merge policy already sees the fresh pending run. Waiting on
+          # the check-runs API alone then merges into a policy refusal ("the
+          # base branch policy prohibits the merge"). Wait on the approved
+          # Canary run IDs themselves instead: their status is authoritative
+          # and cannot go stale.
+          if [ -s approved.txt ]; then
+            for _ in $(seq 1 60); do
+              pending=0
+              failed=0
+              while read -r id; do
+                [ -n "$id" ] || continue
+                state=$(gh api "repos/$REPOSITORY/actions/runs/$id" --jq '"\(.status)/\(.conclusion)"')
+                case "$state" in
+                  completed/success) ;;
+                  completed/*)
+                    echo "::error title=bump gate::approved run $id ended $state" >&2
+                    failed=1
+                    ;;
+                  *) pending=1 ;;
+                esac
+              done < approved.txt
+              [ "$failed" = "0" ] || exit 1
+              if [ "$pending" = "0" ]; then
+                echo "approved Canary runs completed successfully on $SHA"
+                break
+              fi
+              sleep 60
+            done
+            if [ "$pending" != "0" ]; then
+              echo "::error title=bump gate::approved runs did not complete on $SHA after an hour" >&2
+              exit 1
+            fi
+          fi
           for _ in $(seq 1 60); do
             gh api "repos/$REPOSITORY/commits/$SHA/check-runs?check_name=Canary&filter=latest" \
               --jq '[.check_runs[] | {status, conclusion}]' > canary.json

@@ -182,6 +182,16 @@ Constraints that shaped it, so they are not rediscovered:
   `action_required`; their pending `Canary` blocked the first gated merge
   ("the base branch policy prohibits the merge"). The merge job approves
   parked runs on the exact commit it built before waiting for Canary.
+- Approving a parked run RESTARTS it, so waiting on the check-runs API
+  after the approval is racy: the completed `Canary` check-run it sees can
+  predate the restart while the merge policy already sees the fresh pending
+  run, and the merge fails the same policy refusal the approval was meant
+  to clear (bump gate run 37418964510 on utah-packages#374). The wait tracks
+  the approved `Canary` run IDs through the runs API instead, whose
+  per-run status cannot go stale; the check-runs query stays only as the
+  final confirmation. Only `Canary`-named runs are tracked: other parked
+  runs are still released, but a non-required check must never gate the
+  merge.
 - A relock (a dispatched `--package` run that moves a primary off the Fedora
   lookaside) changes `config/fedora-primary-sources.txt`, which the gate
   refuses: moving a source's origin stays a human merge.
