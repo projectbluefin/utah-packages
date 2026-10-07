@@ -20,6 +20,9 @@ Source1:	org.gnome.Ptyxis.fedora.gschema.override
 BuildRequires:	pkgconfig(gio-unix-2.0) >= %{glib2_version}
 BuildRequires:	pkgconfig(gtk4) >= %{gtk4_version}
 BuildRequires:	pkgconfig(vte-2.91-gtk4) >= %{vte291_version}
+# Utah: order the first import after our VTE build, not Fedora's incompatible
+# ICU-linked binary, before published pkgconfig provides exist.
+BuildRequires:  vte291-gtk4-devel >= %{vte291_version}
 BuildRequires:	pkgconfig(libadwaita-1) >= %{libadwaita_version}
 BuildRequires:  pkgconfig(libportal-gtk4) >= %{libportal_gtk4_version}
 BuildRequires:	pkgconfig(json-glib-1.0) >= %{json_glib_version}

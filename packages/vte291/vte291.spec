@@ -43,6 +43,9 @@ BuildRequires:  pkgconfig(libpcre2-8) >= %{pcre2_version}
 BuildRequires:  pkgconfig(libsystemd) >= %{libsystemd_version}
 BuildRequires:  pkgconfig(pango) >= %{pango_version}
 BuildRequires:  pkgconfig(simdutf) >= %{simdutf_version}
+# Utah: expose the first-import provider edge before generated pkgconfig
+# provides exist in published primary metadata.
+BuildRequires:  simdutf-devel >= %{simdutf_version}
 BuildRequires:  gcc-c++
 BuildRequires:  gettext
 BuildRequires:  gi-docgen

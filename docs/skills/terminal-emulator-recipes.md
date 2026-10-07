@@ -56,6 +56,14 @@ The factory solves build waves from actual BuildRequires. Prove the chain
 Hummingbird-only consumer transaction. Hand-assigned stages do not prove
 provider availability, ABI compatibility, or published runtime closure.
 
+For a first import, generated `pkgconfig()` provides are absent from published
+metadata and `rpmspec --provides` cannot infer them. Add the corresponding
+explicit devel-package BuildRequires alongside the pkgconfig constraint.
+This exposes the same dependency to the graph before initial publication.
+Without those edges, Ptyxis and VTE ran alongside their providers and Ptyxis
+selected Fedora's VTE, which required an incompatible ICU soname.
+
+
 ## Spec and source-lock shape
 
 - ptyxis and vte291 both resolve `Source0` from `download.gnome.org` using the
