@@ -1,0 +1,21 @@
+# See the documentation for more information:
+# https://packit.dev/docs/configuration/
+
+upstream_project_url: https://github.com/Syllo/nvtop
+copy_upstream_release_description: false
+
+jobs:
+- job: pull_from_upstream
+  trigger: release
+  dist_git_branches:
+    - fedora-rawhide
+  actions:
+    commit-message:
+    - bash -c 'echo "Update to ${PACKIT_PROJECT_VERSION}"'
+    - bash -c '[ -z "$PACKIT_RESOLVED_BUGS" ] || echo ${PACKIT_RESOLVED_BUGS} | tr " " "\n" | sed "s/^/\n- Resolves /"'
+
+- job: koji_build
+  trigger: commit
+  allowed_committers: ['packit']
+  dist_git_branches:
+    - fedora-rawhide

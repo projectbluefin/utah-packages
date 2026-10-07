@@ -72,6 +72,7 @@ class ValidateScriptTests(unittest.TestCase):
         source_urls=None,
         fedora_baseline=None,
         review_only=None,
+        sources_files=None,
     ) -> None:
         """Write a factory tree validate.py accepts unless a case breaks one rule."""
         locked = packages if locked is None else locked
@@ -84,6 +85,8 @@ class ValidateScriptTests(unittest.TestCase):
                 (directory / ".hummingbird-upstream.json").write_text(
                     json.dumps({**provenance, "package": name})
                 )
+            if sources_files and name in sources_files:
+                (directory / "sources").write_text(sources_files[name])
         (root / "config").mkdir()
         locks = [{"name": name} for name in locked]
         for entry in locks:
@@ -351,6 +354,47 @@ class ValidateScriptTests(unittest.TestCase):
         assert result.returncode != 0
         assert "bump-review-only.txt names packages the source lock does not carry: gdm-typo" \
             in result.stderr
+
+    def test_accepts_a_sources_file_pinned_by_sha512(self) -> None:
+        # The bundled-pin format every carried recipe must use.
+        result = self.check(
+            sources_files={
+                "example": "SHA512 (example-1.tar.xz) = " + "0" * 128 + "\n",
+            },
+        )
+        assert result.returncode == 0, result.stdout + result.stderr
+
+    def test_rejects_a_sources_file_pinned_by_md5(self) -> None:
+        # md5 is collision-weak; the lookaside fetch path is gated only by
+        # the manifest's recorded digest (utah-packages#385). A live md5 line
+        # must fail the gate so the repin lands.
+        result = self.check(
+            sources_files={
+                "example": "deadbeefdeadbeefdeadbeefdeadbeef  example-1.tar.xz\n",
+            },
+        )
+        assert result.returncode != 0
+        assert "sources manifest pins a bundled tarball by MD5" in result.stderr
+        assert "deadbeefdeadbeefdeadbeefdeadbeef  example-1.tar.xz" in result.stderr
+
+    def test_rejects_a_bsd_form_md5_or_sha256_pin(self) -> None:
+        # The BSD form can name a weaker algorithm too; only SHA-512 passes.
+        for line in (
+            "MD5 (example-1.tar.xz) = deadbeefdeadbeefdeadbeefdeadbeef",
+            "SHA256 (example-1.tar.xz) = " + "0" * 64,
+        ):
+            with self.subTest(line=line):
+                result = self.check(sources_files={"example": line + "\n"})
+                assert result.returncode != 0
+                assert "sources manifest pins a bundled tarball by MD5" in result.stderr
+                assert line in result.stderr
+
+    def test_an_empty_sources_file_is_accepted(self) -> None:
+        # A spec with no Source line carries no bundled pin; this change
+        # deletes fxload's stale md5 line and leaves the file empty, which
+        # has to pass.
+        result = self.check(sources_files={"example": ""})
+        assert result.returncode == 0, result.stdout + result.stderr
 
     def test_the_checked_in_factory_tree_passes_its_own_gate(self) -> None:
         result = self.run_validate(ROOT)

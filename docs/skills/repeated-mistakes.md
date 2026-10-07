@@ -509,10 +509,22 @@ pull request.
 The daily re-import of carried recipes (`tools/rawhide_reimport.py`, the
 `bump` job in `detect-rawhide-updates.yml`) cannot repeat this: it only
 replaces recipes already in every inventory, refuses any move that would
-touch the source lock (`sources` or `Version:` changed), and fails the run if
+touch the source lock or the spec's NEVR (`sources`, `Version:` or `Release:`
+changed), and fails the run if
 `.packit.yaml` or `config/upstream-sources.json` differ afterwards. It never
 adds a package. Keep it that way; see
 [`rawhide-recipe-reimports.md`](rawhide-recipe-reimports.md).
+
+## Validate imported metadata without reformatting it
+
+Fedora gating YAML can contain several documents and custom `!Policy` tags.
+Use `check-yaml --unsafe` (syntax-only) specifically for `packages/*/gating.yaml`;
+retain safe loading for all other YAML. Do not edit imported recipe bytes to
+satisfy a single-document or standard-tag assumption. Shell variables populated by Actions `env:` still
+need explicit `${VAR:?}` assertions when a similarly named lowercase variable
+causes shellcheck's SC2153 heuristic. Keep those checks specific rather than
+disabling shellcheck globally. README inventory descriptions should reference
+the live inventory tool instead of freezing another recipe-count snapshot.
 
 ## Imported specs must not rewrite trusted proposal tools
 
@@ -557,3 +569,5 @@ proves nothing about their replacement.
       a cancelled run and a canary pass?
 - [ ] Is a new recipe source-locked, in `.packit.yaml`, and counted, in
       the same pull request that imports it?
+
+When rebasing a package import, keep the current data-driven inventory assertions rather than replacing them with old hardcoded package counts. Verify the primary archive bytes against both the SHA-512 lock and manifest before a pinned GitHub Actions package build. A passing build proves the recipe; GPU monitoring still needs a separate hardware check.

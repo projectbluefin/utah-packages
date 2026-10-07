@@ -1,0 +1,2823 @@
+{
+  "areas": {
+    "codecs-media": {
+      "already_recipe": 8,
+      "pending": 41,
+      "total": 49
+    },
+    "dev-tools": {
+      "already_recipe": 2,
+      "pending": 148,
+      "total": 150
+    },
+    "fonts-i18n": {
+      "pending": 59,
+      "total": 59
+    },
+    "gnome-apps": {
+      "pending": 38,
+      "total": 38
+    },
+    "long-tail": {
+      "already_recipe": 8,
+      "manifest_wants": 1,
+      "pending": 175,
+      "total": 184
+    },
+    "power": {
+      "pending": 6,
+      "total": 6
+    },
+    "printing-scanning": {
+      "pending": 32,
+      "total": 32
+    },
+    "ujust-deps": {
+      "pending": 2,
+      "total": 2
+    },
+    "unblockers": {
+      "pending": 4,
+      "total": 4
+    },
+    "vpn": {
+      "already_recipe": 3,
+      "pending": 24,
+      "total": 27
+    }
+  },
+  "audit_digest_bluefin": "sha256:1e37db65e78f7f394e16608aa8449bd6be43eb691ae9f98b619044ffba23c64e",
+  "audit_digest_factory": "sha256:0f04cff2dd0b085604ff3cd79d538ab14b97cbe356980f7d365a35dfc70c857b",
+  "audit_digest_utah": "sha256:dd2fd57e0b4d70d33274a281d27bd473f464466c3fcc7747fe6ced536705b19c",
+  "audit_measured_at": "2026-09-30T22:08:14Z",
+  "audit_names_sha256": "48210d268ba97da8da55f883529ee27f38bc48a4d8f3c4fad46913ef8614d07b",
+  "audit_source": "https://gist.github.com/hanthor/b9b1e3a7f13c51376b771f97a7409a30",
+  "entries": [
+    {
+      "area": "codecs-media",
+      "name": "ImageMagick",
+      "state": "pending"
+    },
+    {
+      "area": "codecs-media",
+      "name": "ImageMagick-libs",
+      "state": "pending"
+    },
+    {
+      "area": "codecs-media",
+      "name": "LCEVCdec",
+      "state": "pending"
+    },
+    {
+      "area": "codecs-media",
+      "name": "LibRaw",
+      "state": "pending"
+    },
+    {
+      "area": "codecs-media",
+      "name": "davs2-libs",
+      "state": "pending"
+    },
+    {
+      "area": "codecs-media",
+      "name": "faad2-libs",
+      "state": "pending"
+    },
+    {
+      "area": "codecs-media",
+      "name": "ffmpeg",
+      "state": "already_recipe"
+    },
+    {
+      "area": "codecs-media",
+      "name": "ffmpeg-libs",
+      "state": "pending"
+    },
+    {
+      "area": "codecs-media",
+      "name": "ffmpegthumbnailer",
+      "state": "pending"
+    },
+    {
+      "area": "codecs-media",
+      "name": "ffmpegthumbnailer-libs",
+      "state": "pending"
+    },
+    {
+      "area": "codecs-media",
+      "name": "gstreamer1-plugin-dav1d",
+      "state": "pending"
+    },
+    {
+      "area": "codecs-media",
+      "name": "gstreamer1-plugin-libav",
+      "state": "pending"
+    },
+    {
+      "area": "codecs-media",
+      "name": "gstreamer1-plugins-good-qt6",
+      "state": "pending"
+    },
+    {
+      "area": "codecs-media",
+      "name": "gstreamer1-plugins-ugly-free",
+      "state": "pending"
+    },
+    {
+      "area": "codecs-media",
+      "name": "liba52",
+      "state": "pending"
+    },
+    {
+      "area": "codecs-media",
+      "name": "libao",
+      "state": "pending"
+    },
+    {
+      "area": "codecs-media",
+      "name": "libavc1394",
+      "state": "pending"
+    },
+    {
+      "area": "codecs-media",
+      "name": "libavcodec",
+      "state": "already_recipe"
+    },
+    {
+      "area": "codecs-media",
+      "name": "libavdevice",
+      "state": "already_recipe"
+    },
+    {
+      "area": "codecs-media",
+      "name": "libavfilter",
+      "state": "already_recipe"
+    },
+    {
+      "area": "codecs-media",
+      "name": "libavformat",
+      "state": "already_recipe"
+    },
+    {
+      "area": "codecs-media",
+      "name": "libavutil",
+      "state": "already_recipe"
+    },
+    {
+      "area": "codecs-media",
+      "name": "libbluray",
+      "state": "pending"
+    },
+    {
+      "area": "codecs-media",
+      "name": "libdc1394",
+      "state": "pending"
+    },
+    {
+      "area": "codecs-media",
+      "name": "libde265",
+      "state": "pending"
+    },
+    {
+      "area": "codecs-media",
+      "name": "libdovi",
+      "state": "pending"
+    },
+    {
+      "area": "codecs-media",
+      "name": "libfdk-aac",
+      "state": "pending"
+    },
+    {
+      "area": "codecs-media",
+      "name": "libiec61883",
+      "state": "pending"
+    },
+    {
+      "area": "codecs-media",
+      "name": "libklvanc",
+      "state": "pending"
+    },
+    {
+      "area": "codecs-media",
+      "name": "libmpeg2",
+      "state": "pending"
+    },
+    {
+      "area": "codecs-media",
+      "name": "libopenjph",
+      "state": "pending"
+    },
+    {
+      "area": "codecs-media",
+      "name": "libplacebo",
+      "state": "pending"
+    },
+    {
+      "area": "codecs-media",
+      "name": "libraw1394",
+      "state": "pending"
+    },
+    {
+      "area": "codecs-media",
+      "name": "libshaderc",
+      "state": "pending"
+    },
+    {
+      "area": "codecs-media",
+      "name": "libswresample",
+      "state": "already_recipe"
+    },
+    {
+      "area": "codecs-media",
+      "name": "libswscale",
+      "state": "already_recipe"
+    },
+    {
+      "area": "codecs-media",
+      "name": "libudfread",
+      "state": "pending"
+    },
+    {
+      "area": "codecs-media",
+      "name": "libultrahdr",
+      "state": "pending"
+    },
+    {
+      "area": "codecs-media",
+      "name": "libxavs",
+      "state": "pending"
+    },
+    {
+      "area": "codecs-media",
+      "name": "papers-libs",
+      "state": "pending"
+    },
+    {
+      "area": "codecs-media",
+      "name": "papers-nautilus",
+      "state": "pending"
+    },
+    {
+      "area": "codecs-media",
+      "name": "papers-previewer",
+      "state": "pending"
+    },
+    {
+      "area": "codecs-media",
+      "name": "papers-thumbnailer",
+      "state": "pending"
+    },
+    {
+      "area": "codecs-media",
+      "name": "svt-vp9-libs",
+      "state": "pending"
+    },
+    {
+      "area": "codecs-media",
+      "name": "vvdec-libs",
+      "state": "pending"
+    },
+    {
+      "area": "codecs-media",
+      "name": "vvenc-libs",
+      "state": "pending"
+    },
+    {
+      "area": "codecs-media",
+      "name": "x264-libs",
+      "state": "pending"
+    },
+    {
+      "area": "codecs-media",
+      "name": "x265-libs",
+      "state": "pending"
+    },
+    {
+      "area": "codecs-media",
+      "name": "xavs2-libs",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "adcli",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "adcli-selinux",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "autofs",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "bc",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "bcache-tools",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "bison",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "bolt",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "borgbackup",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "cifs-utils",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "cifs-utils-info",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "cryfs",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "davfs2",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "default-editor",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "distribution-gpg-keys",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "djvulibre-libs",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "dnsmasq",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "espeak-ng",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "ethtool",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "exfatprogs",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "f2fs-tools",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "fedora-release-common",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "fedora-release-identity-silverblue",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "fedora-release-ostree-desktop",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "fedora-release-silverblue",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "flex",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "freerdp-libs",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "fuse-encfs",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "gamemode",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "generic-logos",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "gssproxy",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "hdparm",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "hfsplus-tools",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "htop",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "ifuse",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "iwd",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "kernel-devel-matched",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "kernel-modules-extra",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "kernel-tools",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "kernel-tools-libs",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "leptonica",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "libbsd",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "libcaca",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "libchromaprint",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "libcollection",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "libsss_autofs",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "libsss_certmap",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "libsss_idmap",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "libsss_nss_idmap",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "libsss_sudo",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "libwinpr",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "lsb_release",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "lsof",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "man-pages",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "mtr",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "nano",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "nano-default-editor",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "nfs-client-utils",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "nfs-common-utils",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "nfs-utils",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "nfsv3-client-utils",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "nfsv4-client-utils",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "nilfs-utils",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "ntfs-3g-system-compression",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "nvme-cli",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "nvtop",
+      "state": "already_recipe"
+    },
+    {
+      "area": "dev-tools",
+      "name": "oddjob",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "oddjob-mkhomedir",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "open-vm-tools",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "open-vm-tools-desktop",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "pinentry",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "pinentry-gnome3",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "python3-anyio",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "python3-boto3",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "python3-botocore",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "python3-click",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "python3-dateutil",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "python3-dns",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "python3-email-validator",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "python3-enchant",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "python3-fido2",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "python3-h11",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "python3-html2text",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "python3-httpcore",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "python3-httpx",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "python3-inotify",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "python3-jaraco-classes",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "python3-jaraco-context",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "python3-jaraco-functools",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "python3-jeepney",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "python3-jmespath",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "python3-keyring",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "python3-keyring+completion",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "python3-llfuse",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "python3-more-itertools",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "python3-msgpack",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "python3-olefile",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "python3-pexpect",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "python3-pillow",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "python3-ptyprocess",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "python3-pygit2",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "python3-pysocks",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "python3-pyudev",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "python3-pyxdg",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "python3-rapidfuzz",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "python3-regex",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "python3-s3transfer",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "python3-secretstorage",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "python3-shtab",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "python3-six",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "qemu-guest-agent",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "qemu-user-static-aarch64",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "rclone",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "realmd",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "restic",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "rpm-ostree",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "rpm-ostree-libs",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "rsync",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "smartmontools",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "smartmontools-selinux",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "speech-dispatcher",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "speech-dispatcher-espeak-ng",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "speech-dispatcher-libs",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "speech-dispatcher-utils",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "spice-vdagent",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "spice-webdavd",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "sshpass",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "sssd-client",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "sssd-common",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "sssd-kcm",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "sssd-krb5-common",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "sssd-nfs-idmap",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "symlinks",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "tcpdump",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "time",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "tmux",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "toolbox",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "tpm2-tools",
+      "state": "already_recipe"
+    },
+    {
+      "area": "dev-tools",
+      "name": "traceroute",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "tree",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "usb_modeswitch",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "usb_modeswitch-data",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "usbip",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "usbutils",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "virt-what",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "wget2",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "wget2-libs",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "wget2-wget",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "whois",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "whois-nls",
+      "state": "pending"
+    },
+    {
+      "area": "dev-tools",
+      "name": "xdg-utils",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "adobe-mappings-cmap",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "adobe-mappings-cmap-deprecated",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "adobe-mappings-pdf",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "adobe-source-code-pro-fonts",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "anthy-unicode",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "cldr-emoji-annotation",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "cldr-emoji-annotation-dtd",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "gdouros-symbola-fonts",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "google-droid-sans-fonts",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "google-noto-emoji-fonts",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "google-noto-sans-cjk-fonts",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "google-noto-serif-cjk-vf-fonts",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "ibus-anthy",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "ibus-anthy-python",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "ibus-chewing",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "ibus-hangul",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "ibus-libpinyin",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "ibus-m17n",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "ibus-typing-booster",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "jetbrains-mono-fonts",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "jetbrains-mono-fonts-all",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "jetbrains-mono-nl-fonts",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "jomolhari-fonts",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "julietaula-montserrat-fonts",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "kasumi-common",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "kasumi-unicode",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "langtable",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "libchewing",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "liberation-mono-fonts",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "liberation-sans-fonts",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "liberation-serif-fonts",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "libhangul",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "libpinyin",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "libpinyin-data",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "m17n-db",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "m17n-lib",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "madan-fonts",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "nerd-fonts",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "open-sans-fonts",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "opendyslexic-fonts",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "paktype-naskh-basic-fonts",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "python3-langtable",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "rit-meera-new-fonts",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "rit-rachana-fonts",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "sil-padauk-fonts",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "unicode-ucd",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "urw-base35-bookman-fonts",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "urw-base35-c059-fonts",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "urw-base35-d050000l-fonts",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "urw-base35-fonts",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "urw-base35-fonts-common",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "urw-base35-gothic-fonts",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "urw-base35-nimbus-mono-ps-fonts",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "urw-base35-nimbus-roman-fonts",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "urw-base35-nimbus-sans-fonts",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "urw-base35-p052-fonts",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "urw-base35-standard-symbols-ps-fonts",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "urw-base35-z003-fonts",
+      "state": "pending"
+    },
+    {
+      "area": "fonts-i18n",
+      "name": "vazirmatn-vf-fonts",
+      "state": "pending"
+    },
+    {
+      "area": "gnome-apps",
+      "name": "cairomm1.16",
+      "state": "pending"
+    },
+    {
+      "area": "gnome-apps",
+      "name": "epiphany-runtime",
+      "state": "pending"
+    },
+    {
+      "area": "gnome-apps",
+      "name": "glibmm2.68",
+      "state": "pending"
+    },
+    {
+      "area": "gnome-apps",
+      "name": "gnome-app-list",
+      "state": "pending"
+    },
+    {
+      "area": "gnome-apps",
+      "name": "gnome-backgrounds",
+      "state": "pending"
+    },
+    {
+      "area": "gnome-apps",
+      "name": "gnome-browser-connector",
+      "state": "pending"
+    },
+    {
+      "area": "gnome-apps",
+      "name": "gnome-classic-session",
+      "state": "pending"
+    },
+    {
+      "area": "gnome-apps",
+      "name": "gnome-color-manager",
+      "state": "pending"
+    },
+    {
+      "area": "gnome-apps",
+      "name": "gnome-disk-utility",
+      "state": "pending"
+    },
+    {
+      "area": "gnome-apps",
+      "name": "gnome-epub-thumbnailer",
+      "state": "pending"
+    },
+    {
+      "area": "gnome-apps",
+      "name": "gnome-menus",
+      "state": "pending"
+    },
+    {
+      "area": "gnome-apps",
+      "name": "gnome-remote-desktop",
+      "state": "pending"
+    },
+    {
+      "area": "gnome-apps",
+      "name": "gnome-rounded-blur",
+      "state": "pending"
+    },
+    {
+      "area": "gnome-apps",
+      "name": "gnome-shell-extension-apps-menu",
+      "state": "pending"
+    },
+    {
+      "area": "gnome-apps",
+      "name": "gnome-shell-extension-blur-my-shell",
+      "state": "pending"
+    },
+    {
+      "area": "gnome-apps",
+      "name": "gnome-shell-extension-common",
+      "state": "pending"
+    },
+    {
+      "area": "gnome-apps",
+      "name": "gnome-shell-extension-launch-new-instance",
+      "state": "pending"
+    },
+    {
+      "area": "gnome-apps",
+      "name": "gnome-shell-extension-places-menu",
+      "state": "pending"
+    },
+    {
+      "area": "gnome-apps",
+      "name": "gnome-shell-extension-window-list",
+      "state": "pending"
+    },
+    {
+      "area": "gnome-apps",
+      "name": "gnome-system-monitor",
+      "state": "pending"
+    },
+    {
+      "area": "gnome-apps",
+      "name": "gnome-tour",
+      "state": "pending"
+    },
+    {
+      "area": "gnome-apps",
+      "name": "gnome-user-docs",
+      "state": "pending"
+    },
+    {
+      "area": "gnome-apps",
+      "name": "gnome-user-share",
+      "state": "pending"
+    },
+    {
+      "area": "gnome-apps",
+      "name": "gtkmm4.0",
+      "state": "pending"
+    },
+    {
+      "area": "gnome-apps",
+      "name": "gtksourceview5",
+      "state": "pending"
+    },
+    {
+      "area": "gnome-apps",
+      "name": "imath",
+      "state": "pending"
+    },
+    {
+      "area": "gnome-apps",
+      "name": "libgee",
+      "state": "pending"
+    },
+    {
+      "area": "gnome-apps",
+      "name": "libhandy",
+      "state": "pending"
+    },
+    {
+      "area": "gnome-apps",
+      "name": "libmediaart",
+      "state": "pending"
+    },
+    {
+      "area": "gnome-apps",
+      "name": "libspelling",
+      "state": "pending"
+    },
+    {
+      "area": "gnome-apps",
+      "name": "libwnck3",
+      "state": "pending"
+    },
+    {
+      "area": "gnome-apps",
+      "name": "orca",
+      "state": "pending"
+    },
+    {
+      "area": "gnome-apps",
+      "name": "pangomm2.48",
+      "state": "pending"
+    },
+    {
+      "area": "gnome-apps",
+      "name": "ptyxis",
+      "state": "pending"
+    },
+    {
+      "area": "gnome-apps",
+      "name": "rygel",
+      "state": "pending"
+    },
+    {
+      "area": "gnome-apps",
+      "name": "vte-profile",
+      "state": "pending"
+    },
+    {
+      "area": "gnome-apps",
+      "name": "vte291",
+      "state": "pending"
+    },
+    {
+      "area": "gnome-apps",
+      "name": "vte291-gtk4",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "7zip",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "NetworkManager-ssh",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "NetworkManager-ssh-gnome",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "NetworkManager-ssh-selinux",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "OpenCL-ICD-Loader",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "PackageKit-glib",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "antiword",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "appstream-data",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "argyllcms",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "argyllcms-data",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "b43-fwcutter",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "b43-openfwwf",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "bash-color-prompt",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "braille-printer-app",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "compsize",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "criu",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "criu-libs",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "desktop-backgrounds-gnome",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "dotconf",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "evolution-ews-core",
+      "state": "manifest_wants"
+    },
+    {
+      "area": "long-tail",
+      "name": "evolution-ews-langpacks",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "f44-backgrounds-base",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "f44-backgrounds-gnome",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "fedora-workstation-backgrounds",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "freeglut",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "fwupd-efi",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "gst-editing-services",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "gst-thumbnailers",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "gupnp-av",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "gupnp-dlna",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "gvfs-afp",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "gvfs-archive",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "hyperv-daemons",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "hyperv-daemons-license",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "hypervfcopyd",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "hypervkvpd",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "hypervvssd",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "initscripts-service",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "intel-vaapi-driver",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "ipset",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "ipset-libs",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "iptstate",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "jbig2dec-libs",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "kf6-filesystem",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "kf6-karchive",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "kf6-kimageformats",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "kmod-v4l2loopback",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "kpartx",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "kvazaar-libs",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "kyotocabinet-libs",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "lcms",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "lcms-libs",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "libXScrnSaver",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "libXres",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "libbasicobjects",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "libdeflate",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "libdhash",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "libell",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "libev",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "libieee1284",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "libijs",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "libini_config",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "liblqr-1",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "libmd",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "libmspack",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "libnet",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "libnfsidmap",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "libntlm",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "libpaper",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "libpasswdqc",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "libpath_utils",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "libpfm",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "libpskc",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "librabbitmq",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "libraqm",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "libref_array",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "libreport-filesystem",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "librtmp",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "libsigc++30",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "libslirp",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "libsrtp",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "libtraceevent",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "liburing",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "libuser",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "libutempter",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "libvarlink",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "libvncserver",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "libwmf-lite",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "lilv-libs",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "lockdev",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "lrzsz",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "lshw",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "mcelog",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "memstrack",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "mkpasswd",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "mod_dnssd",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "mod_http2",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "mozilla-filesystem",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "mtools",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "neon",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "net-snmp-libs",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "net-tools",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "nm-connection-editor",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "nss-altfiles",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "nss-mdns",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "openal-soft",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "openexr-libs",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "oversteer-udev",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "pam_afs_session",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "pam_passwdqc",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "paps",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "passwdqc",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "passwdqc-utils",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "pcaudiolib",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "perl-Unicode-Normalize",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "pinfo",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "plymouth",
+      "state": "already_recipe"
+    },
+    {
+      "area": "long-tail",
+      "name": "plymouth-core-libs",
+      "state": "already_recipe"
+    },
+    {
+      "area": "long-tail",
+      "name": "plymouth-graphics-libs",
+      "state": "already_recipe"
+    },
+    {
+      "area": "long-tail",
+      "name": "plymouth-plugin-label",
+      "state": "already_recipe"
+    },
+    {
+      "area": "long-tail",
+      "name": "plymouth-plugin-two-step",
+      "state": "already_recipe"
+    },
+    {
+      "area": "long-tail",
+      "name": "plymouth-scripts",
+      "state": "already_recipe"
+    },
+    {
+      "area": "long-tail",
+      "name": "plymouth-system-theme",
+      "state": "already_recipe"
+    },
+    {
+      "area": "long-tail",
+      "name": "plymouth-theme-spinner",
+      "state": "already_recipe"
+    },
+    {
+      "area": "long-tail",
+      "name": "portaudio",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "prefixdevname",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "python3-cups",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "python3-linux-procfs",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "python3-perf",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "python3-pskc",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "python3-pyatspi",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "python3-pyaudio",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "python3-pyscard",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "python3-speechd",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "qadwaitadecorations-qt5",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "qpdf-libs",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "qrencode-libs",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "qt5-qtdeclarative",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "qt5-qtsvg",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "qt5-qttranslations",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "qt5-qtwayland",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "qt5-qtx11extras",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "qt5-qtxmlpatterns",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "quota",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "quota-nls",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "redhat-menus",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "rpcbind",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "serd",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "shim-ia32",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "simdutf",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "slang",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "slirp4netns",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "solaar-udev",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "sord",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "sos",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "soundtouch",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "sratom",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "sso-mib-libs",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "tesseract-common",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "tesseract-langpack-eng",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "tesseract-libs",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "tesseract-tessdata-doc",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "tslib",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "uavs3d-libs",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "ublue-os-akmods-addons",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "uchardet",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "udftools",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "uresourced",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "usermode",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "uupd",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "uvg266-libs",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "v4l2loopback",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "virtualbox-guest-additions",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "words",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "xcb-util-cursor",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "xdriinfo",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "xfsprogs",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "xrandr",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "xset",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "yelp-libs",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "yelp-xsl",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "zinnia",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "zinnia-tomoe-ja",
+      "state": "pending"
+    },
+    {
+      "area": "long-tail",
+      "name": "zix",
+      "state": "pending"
+    },
+    {
+      "area": "power",
+      "name": "intel-lpmd",
+      "state": "pending"
+    },
+    {
+      "area": "power",
+      "name": "powerstat",
+      "state": "pending"
+    },
+    {
+      "area": "power",
+      "name": "powertop",
+      "state": "pending"
+    },
+    {
+      "area": "power",
+      "name": "thermald",
+      "state": "pending"
+    },
+    {
+      "area": "power",
+      "name": "tuned",
+      "state": "pending"
+    },
+    {
+      "area": "power",
+      "name": "tuned-ppd",
+      "state": "pending"
+    },
+    {
+      "area": "printing-scanning",
+      "name": "brlapi",
+      "state": "pending"
+    },
+    {
+      "area": "printing-scanning",
+      "name": "brltty",
+      "state": "pending"
+    },
+    {
+      "area": "printing-scanning",
+      "name": "c2esp",
+      "state": "pending"
+    },
+    {
+      "area": "printing-scanning",
+      "name": "dymo-cups-drivers",
+      "state": "pending"
+    },
+    {
+      "area": "printing-scanning",
+      "name": "foo2zjs",
+      "state": "pending"
+    },
+    {
+      "area": "printing-scanning",
+      "name": "foomatic-db-filesystem",
+      "state": "pending"
+    },
+    {
+      "area": "printing-scanning",
+      "name": "gutenprint",
+      "state": "pending"
+    },
+    {
+      "area": "printing-scanning",
+      "name": "gutenprint-cups",
+      "state": "pending"
+    },
+    {
+      "area": "printing-scanning",
+      "name": "gutenprint-libs",
+      "state": "pending"
+    },
+    {
+      "area": "printing-scanning",
+      "name": "hplip",
+      "state": "pending"
+    },
+    {
+      "area": "printing-scanning",
+      "name": "hplip-common",
+      "state": "pending"
+    },
+    {
+      "area": "printing-scanning",
+      "name": "hplip-libs",
+      "state": "pending"
+    },
+    {
+      "area": "printing-scanning",
+      "name": "ipp-usb",
+      "state": "pending"
+    },
+    {
+      "area": "printing-scanning",
+      "name": "liblouis",
+      "state": "pending"
+    },
+    {
+      "area": "printing-scanning",
+      "name": "liblouis-tables",
+      "state": "pending"
+    },
+    {
+      "area": "printing-scanning",
+      "name": "liblouisutdml",
+      "state": "pending"
+    },
+    {
+      "area": "printing-scanning",
+      "name": "liblouisutdml-utils",
+      "state": "pending"
+    },
+    {
+      "area": "printing-scanning",
+      "name": "libsane-airscan",
+      "state": "pending"
+    },
+    {
+      "area": "printing-scanning",
+      "name": "libsane-hpaio",
+      "state": "pending"
+    },
+    {
+      "area": "printing-scanning",
+      "name": "mpage",
+      "state": "pending"
+    },
+    {
+      "area": "printing-scanning",
+      "name": "printer-driver-brlaser",
+      "state": "pending"
+    },
+    {
+      "area": "printing-scanning",
+      "name": "ptouch-driver",
+      "state": "pending"
+    },
+    {
+      "area": "printing-scanning",
+      "name": "python3-brlapi",
+      "state": "pending"
+    },
+    {
+      "area": "printing-scanning",
+      "name": "python3-louis",
+      "state": "pending"
+    },
+    {
+      "area": "printing-scanning",
+      "name": "sane-airscan",
+      "state": "pending"
+    },
+    {
+      "area": "printing-scanning",
+      "name": "sane-backends",
+      "state": "pending"
+    },
+    {
+      "area": "printing-scanning",
+      "name": "sane-backends-drivers-cameras",
+      "state": "pending"
+    },
+    {
+      "area": "printing-scanning",
+      "name": "sane-backends-drivers-scanners",
+      "state": "pending"
+    },
+    {
+      "area": "printing-scanning",
+      "name": "sane-backends-libs",
+      "state": "pending"
+    },
+    {
+      "area": "printing-scanning",
+      "name": "splix",
+      "state": "pending"
+    },
+    {
+      "area": "printing-scanning",
+      "name": "system-config-printer-libs",
+      "state": "pending"
+    },
+    {
+      "area": "printing-scanning",
+      "name": "system-config-printer-udev",
+      "state": "pending"
+    },
+    {
+      "area": "ujust-deps",
+      "name": "fpaste",
+      "state": "pending"
+    },
+    {
+      "area": "ujust-deps",
+      "name": "glow",
+      "state": "pending"
+    },
+    {
+      "area": "unblockers",
+      "name": "qt6-qtdeclarative",
+      "state": "pending"
+    },
+    {
+      "area": "unblockers",
+      "name": "qt6-qttranslations",
+      "state": "pending"
+    },
+    {
+      "area": "unblockers",
+      "name": "qt6-qtwayland",
+      "state": "pending"
+    },
+    {
+      "area": "unblockers",
+      "name": "qt6-qtwayland-adwaita-decoration",
+      "state": "pending"
+    },
+    {
+      "area": "vpn",
+      "name": "NetworkManager-openconnect",
+      "state": "pending"
+    },
+    {
+      "area": "vpn",
+      "name": "NetworkManager-openconnect-gnome",
+      "state": "pending"
+    },
+    {
+      "area": "vpn",
+      "name": "NetworkManager-openvpn",
+      "state": "pending"
+    },
+    {
+      "area": "vpn",
+      "name": "NetworkManager-openvpn-gnome",
+      "state": "pending"
+    },
+    {
+      "area": "vpn",
+      "name": "NetworkManager-vpnc",
+      "state": "pending"
+    },
+    {
+      "area": "vpn",
+      "name": "NetworkManager-vpnc-gnome",
+      "state": "pending"
+    },
+    {
+      "area": "vpn",
+      "name": "libyubikey",
+      "state": "pending"
+    },
+    {
+      "area": "vpn",
+      "name": "openconnect",
+      "state": "pending"
+    },
+    {
+      "area": "vpn",
+      "name": "openpace",
+      "state": "pending"
+    },
+    {
+      "area": "vpn",
+      "name": "opensc",
+      "state": "pending"
+    },
+    {
+      "area": "vpn",
+      "name": "opensc-libs",
+      "state": "pending"
+    },
+    {
+      "area": "vpn",
+      "name": "openvpn",
+      "state": "pending"
+    },
+    {
+      "area": "vpn",
+      "name": "pam-u2f",
+      "state": "pending"
+    },
+    {
+      "area": "vpn",
+      "name": "pam_yubico",
+      "state": "pending"
+    },
+    {
+      "area": "vpn",
+      "name": "pamu2fcfg",
+      "state": "pending"
+    },
+    {
+      "area": "vpn",
+      "name": "pcsc-lite",
+      "state": "already_recipe"
+    },
+    {
+      "area": "vpn",
+      "name": "pcsc-lite-ccid",
+      "state": "already_recipe"
+    },
+    {
+      "area": "vpn",
+      "name": "pcsc-lite-libs",
+      "state": "already_recipe"
+    },
+    {
+      "area": "vpn",
+      "name": "pkcs11-helper",
+      "state": "pending"
+    },
+    {
+      "area": "vpn",
+      "name": "pkcs11-provider",
+      "state": "pending"
+    },
+    {
+      "area": "vpn",
+      "name": "python3-yubikey-manager",
+      "state": "pending"
+    },
+    {
+      "area": "vpn",
+      "name": "stoken-libs",
+      "state": "pending"
+    },
+    {
+      "area": "vpn",
+      "name": "vpnc",
+      "state": "pending"
+    },
+    {
+      "area": "vpn",
+      "name": "vpnc-script",
+      "state": "pending"
+    },
+    {
+      "area": "vpn",
+      "name": "ykclient",
+      "state": "pending"
+    },
+    {
+      "area": "vpn",
+      "name": "ykpers",
+      "state": "pending"
+    },
+    {
+      "area": "vpn",
+      "name": "yubikey-manager",
+      "state": "pending"
+    }
+  ],
+  "issue": "projectbluefin/utah-packages#308",
+  "states": {
+    "already_recipe": 21,
+    "manifest_wants": 1,
+    "pending": 529
+  },
+  "totals": {
+    "backlog": 551,
+    "resolved": 0,
+    "wontfix": 0
+  }
+}
