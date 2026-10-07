@@ -24,19 +24,29 @@ the bytes at bump time, which is what this does.
 
 Scope
 -----
-Only entries whose Source0 is download.gnome.org. That is 17 of 341; the other
-254 resolve through Fedora's lookaside, whose natural feed is dist-git, and
-detect-rawhide-updates.yml deliberately only observes there on the stated
-policy that "Fedora is a compatibility build root, not a source-update feed."
-Widening this tool to those is a separate decision, not an omission.
+GNOME entries (Source0 on download.gnome.org) poll the module's cache.json;
+git-forge entries poll tags or releases. A lock whose own URLs reveal no feed
+-- a lookaside primary with no forge mirror -- may carry an explicit `feed`
+naming the project's real upstream feed, derived from the spec's Source0 and
+verified against the forge; see issue #134. An explicit feed may name a git
+forge, a GNOME module (download.gnome.org/sources/<module>/), or a
+release-monitoring.org (Anitya) project for upstreams that publish only a
+directory listing. detect-rawhide-updates.yml takes Fedora's recipe changes
+but never a version or a lookaside source, on the stated policy that "Fedora
+is a compatibility build root, not a source-update feed" -- version moves are
+this tool's.
 
 GNOME publishes an authoritative release index per module at
 sources/<module>/cache.json, so the candidate list needs no scraping.
 
-A lock still on the Fedora lookaside can be relocked to its GNOME module
-with an explicit --package run: the tool proposes kind "relock" when GNOME
-is newer and --apply moves the primary to download.gnome.org. Full runs
-never propose relocks, so no scan moves a primary on its own.
+A lock still on the Fedora lookaside can be relocked with an explicit
+--package run: to its GNOME module (the explicit feed's, else one named like
+the package), or to the git forge its explicit feed names. The tool proposes
+kind "relock" when the feed is newer within the lock's cycle or major, and
+--apply moves the primary off the lookaside, keeps the lookaside as a
+fallback, and deletes the package from config/fedora-primary-sources.txt.
+Full runs never propose relocks, so no scan moves a primary on its own, and
+an Anitya feed never relocks at all: it names versions, not a download URL.
 
 Two spellings
 -------------
@@ -63,7 +73,16 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from tools.package_inventory import source_locks
+from tools.bootstrap_upstream_sources import FEDORA_HOSTS
+from tools.bump_gate import HOLDS, REVIEW_ONLY, dump_holds, load_holds, load_review_only
+from tools.package_inventory import (
+    FORGE_ARCHIVE,
+    FORGE_RELEASE,
+    GITLAB_ARCHIVE,
+    parse_explicit_feed,
+    parse_feed_url,
+    source_locks,
+)
 
 GNOME_SOURCES = "https://download.gnome.org/sources/"
 
@@ -71,19 +90,10 @@ GNOME_SOURCES = "https://download.gnome.org/sources/"
 # list, which is the only feed a bump needs; releases are preferred over tags
 # where a project publishes them, because a tag is not a release.
 GITHUB_API = "https://api.github.com"
-FORGE_ARCHIVE = re.compile(
-    r"^https://github\.com/(?P<owner>[^/]+)/(?P<repo>[^/]+)/archive/"
-)
-FORGE_RELEASE = re.compile(
-    r"^https://github\.com/(?P<owner>[^/]+)/(?P<repo>[^/]+)/releases/download/"
-)
-# http:// appears in one lock (evtest) and a scheme is not worth missing a
-# feed over. Both GitLab shapes resolve to the same tag list: /-/archive/<tag>
-# and /-/releases/<tag>/downloads/<asset> name the tag in the same position.
-GITLAB_ARCHIVE = re.compile(
-    r"^https?://(?P<host>[^/]*gitlab[^/]*)/(?P<path>.+?)/-/(?:archive|releases)/"
-)
 LOOKASIDE = "https://src.fedoraproject.org/repo/pkgs/rpms"
+# Anitya's per-project version list. stable_versions is Anitya's own
+# prerelease filter, applied before is_prerelease() applies this tool's.
+ANITYA_VERSIONS = "https://release-monitoring.org/api/v2/versions/?project_id="
 
 # alpha/beta/rc in any spelling GNOME uses: 51.beta, 51~rc, 1.10.beta.1.
 # The trailing context is a lookahead, not part of the match: consuming it made
@@ -226,15 +236,9 @@ def forge_feed(entry: dict) -> dict | None:
     """
     urls = [entry.get("url", ""), *entry.get("fallback_urls", [])]
     for url in urls:
-        match = FORGE_RELEASE.match(url)
-        if match:
-            return {"forge": "github", "endpoint": "releases", **match.groupdict()}
-        match = FORGE_ARCHIVE.match(url)
-        if match:
-            return {"forge": "github", "endpoint": "tags", **match.groupdict()}
-        match = GITLAB_ARCHIVE.match(url)
-        if match:
-            return {"forge": "gitlab", "endpoint": "tags", **match.groupdict()}
+        feed = parse_feed_url(url)
+        if feed:
+            return feed
     return None
 
 
@@ -256,6 +260,8 @@ def forge_label(feed: dict) -> str:
     """A short human name for a feed, for reports."""
     if feed["forge"] == "github":
         return f"github.com/{feed['owner']}/{feed['repo']}"
+    if feed["forge"] == "anitya":
+        return f"release-monitoring.org/project/{feed['id']}"
     return f"{feed['host']}/{feed['path']}"
 
 
@@ -276,41 +282,86 @@ def _forge_request(url: str) -> urllib.request.Request:
     return urllib.request.Request(url, headers=headers)
 
 
-def forge_versions(feed: dict, opener=urllib.request.urlopen) -> list[str]:
-    """Every version a forge lists for a project, tag prefixes stripped.
+def _forge_list(url: str, opener) -> list:
+    """One page of a forge API listing; anything but a JSON list is an error.
 
-    Draft and prerelease-flagged GitHub releases are dropped here rather than
-    left to is_prerelease: a maintainer marking a release prerelease is a
-    stronger signal than the version string, and some use neither an alpha nor
-    a beta suffix for one.
+    GitHub answers rate limiting and 404 with an object. Treating that as an
+    empty listing would silently report every package as up to date.
     """
-    if feed["forge"] == "github":
-        url = (
-            f"{GITHUB_API}/repos/{feed['owner']}/{feed['repo']}"
-            f"/{feed['endpoint']}?per_page=100"
-        )
-    else:
-        project = urllib.parse.quote(feed["path"], safe="")
-        url = (
-            f"https://{feed['host']}/api/v4/projects/{project}"
-            f"/repository/tags?per_page=100"
-        )
     with opener(_forge_request(url), timeout=60) as response:
         document = json.loads(response.read())
     if not isinstance(document, list):
         raise ValueError("forge returned no list")
+    return document
+
+
+def _published_releases(document: list) -> list[str]:
+    """The stable versions a forge release listing publishes.
+
+    Draft and prerelease-flagged GitHub releases, and GitLab's
+    upcoming_release, are dropped here rather than left to is_prerelease: a
+    maintainer marking a release prerelease is a stronger signal than the
+    version string, and some use neither an alpha nor a beta suffix for one.
+    """
     found = []
     for item in document:
-        if feed.get("endpoint") == "releases" and feed["forge"] == "github":
-            if item.get("draft") or item.get("prerelease"):
-                continue
-            tag = item.get("tag_name", "")
-        else:
-            tag = item.get("name", "")
-        version = strip_tag_prefix(tag)
+        if item.get("draft") or item.get("prerelease") or item.get("upcoming_release"):
+            continue
+        version = strip_tag_prefix(item.get("tag_name", ""))
         if version:
             found.append(version)
     return found
+
+
+def forge_versions(feed: dict, opener=urllib.request.urlopen) -> list[str]:
+    """Every version a forge publishes for a project, tag prefixes stripped.
+
+    A feed read from an `/archive/` URL names a tag, but a tag is not a
+    release: stixfonts tagged `v2.14` on an interim, source-only commit with
+    no built fonts while its latest release stayed 2.13b171. So a project that
+    publishes releases is read through its releases; only a project that
+    publishes none (no stable, non-draft release at all) falls back to its
+    tags. That costs one extra request per tag feed, which the authenticated
+    GitHub budget absorbs.
+    """
+    if feed["forge"] == "github":
+        base = f"{GITHUB_API}/repos/{feed['owner']}/{feed['repo']}"
+        releases_url = f"{base}/releases?per_page=100"
+        tags_url = f"{base}/tags?per_page=100"
+    else:
+        project = urllib.parse.quote(feed["path"], safe="")
+        base = f"https://{feed['host']}/api/v4/projects/{project}"
+        releases_url = f"{base}/releases?per_page=100"
+        tags_url = f"{base}/repository/tags?per_page=100"
+
+    published = _published_releases(_forge_list(releases_url, opener))
+    if published or feed.get("endpoint") == "releases":
+        return published
+    found = []
+    for item in _forge_list(tags_url, opener):
+        version = strip_tag_prefix(item.get("name", ""))
+        if version:
+            found.append(version)
+    return found
+
+
+def anitya_versions(feed: dict, opener=urllib.request.urlopen) -> list[str]:
+    """Every stable version release-monitoring.org lists for a project.
+
+    Anitya's stable_versions already drops what its backend marks as a
+    prerelease (gstreamer's odd 1.29 series); is_prerelease() still runs over
+    the result in the callers, as for every other feed.
+    """
+    request = urllib.request.Request(
+        f"{ANITYA_VERSIONS}{feed['id']}",
+        headers={"User-Agent": "utah-packages-bump/1"},
+    )
+    with opener(request, timeout=60) as response:
+        document = json.loads(response.read())
+    versions = document.get("stable_versions") if isinstance(document, dict) else None
+    if not isinstance(versions, list):
+        raise ValueError("release-monitoring.org returned no version list")
+    return list(dict.fromkeys(v for v in versions if isinstance(v, str) and v))
 
 
 def strip_tag_prefix(tag: str) -> str:
@@ -381,8 +432,11 @@ def planned_entry(entry: dict, release: str, digest: str, module: str | None = N
     if "sha256_url" in entry:
         updated["sha256_url"] = f"{base}/{module}-{tarball}.sha256sum"
     if entry.get("fallback_urls"):
+        # The lookaside is keyed by the Fedora package, not the GNOME module:
+        # gtk3's tarball is gtk-3.24.52.tar.xz, filed under rpms/gtk3/.
+        package = entry.get("name") or module
         updated["fallback_urls"] = [
-            f"{LOOKASIDE}/{module}/{name}/sha512/{digest}/{name}"
+            f"{LOOKASIDE}/{package}/{name}/sha512/{digest}/{name}"
         ]
     return updated
 
@@ -443,14 +497,60 @@ def reset_release(text: str) -> str:
     return RELEASE_LINE.sub(lambda m: f"{m.group(1)}1{m.group(3)}", text, count=1)
 
 
+VERSION_LINE = re.compile(r"(?m)^(Version:\s*)(\S+)$")
+MACRO_DEFINITION = re.compile(r"(?m)^%(?:global|define)\s+(\w+)\s+(.*)$")
+MACRO_REFERENCE = re.compile(r"%\{?[?!]*(\w+)")
+SOURCE_LINE = re.compile(r"(?m)^Source\d*:\s*(.*)$")
+
+
+def version_macro_sources(text: str) -> list[str]:
+    """Source lines that read a macro the Version: field is computed from.
+
+    pipewire and alsa-utils build Version: from macros but name Source0 by
+    %{version}, so overwriting the field with a literal still builds. A
+    Source that reads the components instead (alsa-sof-firmware's
+    %{sof_ver_pkg}, re2's %{tag}) would stay on the old release.
+    """
+    match = VERSION_LINE.search(text)
+    if match is None or "%" not in match.group(2):
+        return []
+    definitions = {name: set(MACRO_REFERENCE.findall(body))
+                   for name, body in MACRO_DEFINITION.findall(text)}
+    bound = set(MACRO_REFERENCE.findall(match.group(2)))
+    pending = list(bound)
+    while pending:
+        for name in definitions.get(pending.pop(), ()):
+            if name not in bound:
+                bound.add(name)
+                pending.append(name)
+    grown = True
+    while grown:
+        grown = False
+        for name, references in definitions.items():
+            if name not in bound and references & bound:
+                bound.add(name)
+                grown = True
+    return [line for line in SOURCE_LINE.findall(text)
+            if set(MACRO_REFERENCE.findall(line)) & bound]
+
+
+def refuse_macro_sources(spec: Path, text: str) -> None:
+    if version_macro_sources(text):
+        raise ValueError(
+            f"{spec}: Version: is computed from macros that a Source line reads, "
+            "so a bump cannot rewrite it"
+        )
+
+
 def rewrite_spec(spec: Path, release: str) -> bool:
     """Update Version: and reset a literal Release:. True when changed."""
     text = spec.read_text()
     wanted = rpm_version(release)
-    pattern = re.compile(r"(?m)^(Version:\s*)(\S+)$")
+    pattern = VERSION_LINE
     match = pattern.search(text)
     if match is None:
         raise ValueError(f"{spec}: no Version: line to bump")
+    refuse_macro_sources(spec, text)
     if match.group(2) == wanted:
         return False
     text = pattern.sub(lambda m: m.group(1) + wanted, text, count=1)
@@ -458,19 +558,102 @@ def rewrite_spec(spec: Path, release: str) -> bool:
     return True
 
 
-def rewrite_sources(manifest: Path, filename: str, digest: str) -> None:
-    """Replace a package's Fedora sources manifest with the new tarball pin."""
-    manifest.write_text(f"SHA512 ({filename}) = {digest}\n")
+# Fedora `sources` manifests use the BSD form (`SHA512 (file) = <hex>`) and,
+# in older recipes, the legacy md5sum form (`<32 hex>  file`). Ten carried
+# recipes still use the latter.
+MANIFEST_LINE = re.compile(
+    r"(?:[A-Za-z0-9]+ \((?P<bsd>\S+)\) = [0-9a-fA-F]+|[0-9a-fA-F]{32} [ *](?P<md5>\S+))"
+)
+
+
+def manifest_name(line: str) -> str | None:
+    """The file a manifest line pins, or None for a line in neither form."""
+    match = MANIFEST_LINE.fullmatch(line.strip())
+    return (match.group("bsd") or match.group("md5")) if match else None
+
+
+def version_bound(filename: str, version: str) -> bool:
+    """Whether a file name carries `version` as a whole version string."""
+    return re.search(rf"(?<![\w.]){re.escape(version)}(?![\w]|\.\d)", filename) is not None
+
+
+def bundled_entries(manifest: Path, primary: str) -> list[str]:
+    """The manifest lines other than the primary tarball's, in order."""
+    if not manifest.is_file():
+        return []
+    return [
+        line for line in manifest.read_text().splitlines()
+        if line.strip() and manifest_name(line) != primary
+    ]
+
+
+def check_bumpable(root: Path, entry: dict) -> None:
+    """Refuse, before fetching anything, a recipe a version bump cannot move.
+
+    The `sources` manifest also pins bundled files that come from Fedora's
+    lookaside (tools/source_pipeline.py bundled_sources): ppp-watch.tar.xz,
+    a signing key, a vendored Go tree. A bump keeps those. One whose name
+    carries the old version -- gum-2.0.0-vendor.tar.bz2, fish-4.6.0.tar.xz.asc
+    -- has a successor that only a human (or Fedora) can produce, so the
+    bump is reported for review rather than written half-done.
+    """
+    package = root / "packages" / entry["name"]
+    spec = package / f"{entry['name']}.spec"
+    if spec.is_file():
+        refuse_macro_sources(spec, spec.read_text())
+    # glycin pins glycin-2.2.beta-vendor.tar.xz for version 2.2~beta.
+    spellings = {entry["version"], tarball_version(entry["version"])}
+    for line in bundled_entries(package / "sources", entry.get("filename", "")):
+        filename = manifest_name(line)
+        if filename and any(version_bound(filename, spelling) for spelling in spellings):
+            raise ValueError(
+                f"{entry['name']}: bundled source {filename} is bound to {entry['version']}; "
+                "its successor has to be produced by hand"
+            )
+
+
+def rewrite_sources(manifest: Path, filename: str, digest: str, previous: str = "") -> None:
+    """Move the primary tarball pin in a Fedora sources manifest, in place.
+
+    Every other line -- a bundled file fetched from the lookaside by its own
+    digest, in either manifest form, or a line this tool cannot parse -- is
+    kept verbatim. Writing the new pin alone dropped them, and the build of
+    every such package (ppp, adw-gtk3-theme, gum, fish) died in `rpmbuild -bs`
+    on a missing source; keeping only BSD-form lines would still have dropped
+    the bundled pins of the legacy md5 manifests (#326).
+    """
+    primary = previous or filename
+    pin = f"SHA512 ({filename}) = {digest}"
+    lines = manifest.read_text().splitlines() if manifest.is_file() else []
+    out, placed = [], False
+    for line in lines:
+        name = manifest_name(line)
+        if name in (primary, filename):
+            if not placed:
+                out.append(pin)
+                placed = True
+            continue
+        out.append(line)
+    if not placed:
+        out.append(pin)
+    manifest.write_text("\n".join(out) + "\n")
+
+def held(proposal: dict, holds: dict[str, dict]) -> dict | None:
+    """The hold that stops this proposal, if its exact version is held."""
+    hold = holds.get(proposal["name"])
+    if hold and rpm_version(hold["version"]) == rpm_version(proposal["latest"]):
+        return hold
+    return None
 
 
 def candidates(locks: dict[str, dict], only: str | None = None) -> list[tuple[str, dict, dict]]:
     """(name, entry, feed) for every lock this tool can track, sorted by name.
 
     A feed is either {"forge": "gnome", "module": ...} or a git-forge
-    descriptor from forge_feed, which also reads the fallback mirrors. A lock
-    with no feed anywhere -- the Fedora lookaside with no forge mirror, a
-    bare directory listing -- has nothing to poll and is skipped; see the
-    module docstring.
+    descriptor from forge_feed, which also reads the fallback mirrors and the
+    lock's explicit `feed`. A lock with no feed anywhere -- the Fedora
+    lookaside with no forge mirror and no explicit feed, a bare directory
+    listing -- has nothing to poll and is skipped; see the module docstring.
     """
     found = []
     for name, entry in sorted(locks.items()):
@@ -484,6 +667,22 @@ def candidates(locks: dict[str, dict], only: str | None = None) -> list[tuple[st
         if feed:
             found.append((name, entry, feed))
             continue
+        # An explicit `feed` names the project's real release feed when the
+        # lock's own URLs cannot reveal one (a lookaside primary with no
+        # forge mirror). The primary still points at the lookaside, so in a
+        # full run every proposal from it stays review-only -- the new bytes
+        # are not where the lock points. A human naming the package with
+        # --package may relock it instead: a GNOME or forge feed names where
+        # the new bytes live. An Anitya feed never does; it lists versions,
+        # not downloads, so it stays review-only even then.
+        explicit = entry.get("feed")
+        if explicit:
+            feed = parse_explicit_feed(explicit)
+            if feed:
+                if only and feed["forge"] != "anitya":
+                    feed = {**feed, "relock": True}
+                found.append((name, entry, feed))
+                continue
         if only:
             # A human named this package explicitly: give it one chance to
             # be a GNOME module still locked on the Fedora lookaside, so its
@@ -492,6 +691,34 @@ def candidates(locks: dict[str, dict], only: str | None = None) -> list[tuple[st
             # and a name that is no GNOME module fails as a visible skip.
             found.append((name, entry, {"forge": "gnome", "module": name, "relock": True}))
     return found
+
+
+# A suffix that marks a prerelease of the version it follows: 1.0~rc2 and
+# 4.25.0rc1 come before 1.0 and 4.25.0.
+PRERELEASE_SUFFIX = re.compile(r"^[.~_-]?(alpha|beta|rc|pre|dev)", re.IGNORECASE)
+NUMERIC_PREFIX = re.compile(r"^\d+(?:\.\d+)*")
+
+
+def newer(candidate: str, current: str) -> bool:
+    """Whether a feed version is newer than a forge lock's version.
+
+    version_key cannot read a suffixed component and keys 2.13b171 as
+    (2, -1), below every 2.x. But stixfonts' 2.13b171 is build 171 after
+    its 2.13 release, and usbmuxd's 1.1.1^20251205git... a snapshot after
+    1.1.1, so proposing 2.13, 2.12 or 1.1.1 for them would be a downgrade.
+    A suffixed lock is therefore compared by its numeric prefix: a
+    prerelease suffix (rc, alpha, beta, pre, dev) sits below the prefix, so
+    the prefix itself is newer; any other suffix sits above it, so only
+    something newer than the prefix is.
+    """
+    match = NUMERIC_PREFIX.match(current)
+    rest = current[match.end():] if match else ""
+    if not match or not rest:
+        return version_key(candidate) > version_key(current)
+    prefix = version_key(match.group())
+    if PRERELEASE_SUFFIX.match(rest):
+        return version_key(candidate) >= prefix
+    return version_key(candidate) > prefix
 
 
 def forge_proposal(name: str, entry: dict, feed: dict, opener=urllib.request.urlopen) -> dict:
@@ -505,16 +732,19 @@ def forge_proposal(name: str, entry: dict, feed: dict, opener=urllib.request.url
 
     Prereleases are never proposed, and a forge whose API cannot be read is
     reported and skipped so one unreachable project does not stop the rest.
+    An Anitya feed takes the same rule; only where the versions come from
+    differs.
     """
     label = forge_label(feed)
+    fetch = anitya_versions if feed["forge"] == "anitya" else forge_versions
     try:
-        available = forge_versions(feed, opener=opener)
+        available = fetch(feed, opener=opener)
     except (urllib.error.URLError, OSError, ValueError, KeyError, IndexError) as error:
         return {"name": name, "error": f"{label}: {error}"}
 
     current = entry["version"]
     newest = newest_stable(available)
-    if newest is None or version_key(newest) <= version_key(current):
+    if newest is None or not newer(newest, current):
         return {"name": name, "module": label, "current": current, "latest": None}
 
     same_major = [
@@ -522,7 +752,7 @@ def forge_proposal(name: str, entry: dict, feed: dict, opener=urllib.request.url
         if not is_prerelease(v) and major(v) == major(current)
     ]
     within = newest_stable(same_major)
-    if within is not None and version_key(within) > version_key(current):
+    if within is not None and newer(within, current):
         return {
             "kind": "update",
             "name": name,
@@ -571,16 +801,27 @@ def plan(
         if feed["forge"] != "gnome":
             proposal = forge_proposal(name, entry, feed, opener=opener)
             if proposal.get("kind") == "update" and not primary_tracks_forge(entry):
-                # The feed came from a mirror, so the primary points at the
-                # lookaside or a bare listing: apply() would fetch the digest
-                # from an address that does not carry the new release, or
-                # substitute a version into a URL that has none. Report it so
-                # a human sees the release; main() only applies final/update.
+                if feed.get("relock"):
+                    # --package on an explicit forge feed: apply() moves the
+                    # primary to the forge, so the bytes are fetched from
+                    # where the lock will point.
+                    proposals.append({**proposal, "kind": "relock"})
+                    continue
+                # The feed came from a mirror or an explicit `feed`, so the
+                # primary points at the lookaside or a bare listing: apply()
+                # would fetch the digest from an address that does not carry
+                # the new release, or substitute a version into a URL that has
+                # none. Report it so a human sees the release; main() only
+                # applies final/update/relock.
+                if "feed" in entry:
+                    where = "the lock's explicit feed"
+                else:
+                    where = "a fallback mirror"
                 proposal = {
                     **proposal,
                     "kind": "review",
                     "reason": (
-                        "the release feed is tracked through a fallback mirror; "
+                        f"the release feed is tracked through {where}; "
                         "the new bytes must be ingested through the primary first"
                     ),
                 }
@@ -597,9 +838,24 @@ def plan(
 
         # A lock whose primary is still the Fedora lookaside moves its bytes
         # to GNOME as well as forward in version: a relock, not just a bump.
-        kind = "relock" if feed.get("relock") and not gnome_module(entry) else "final"
+        # Without --package (an explicit GNOME feed in a full run) the same
+        # in-cycle release is only reported: apply() would have no GNOME
+        # primary to rewrite.
+        extra = {}
+        if gnome_module(entry):
+            kind = "final"
+        elif feed.get("relock"):
+            kind = "relock"
+        else:
+            kind = "review"
+            extra = {
+                "reason": "the release feed is tracked through the lock's explicit "
+                "feed; relock it with --package to move the primary to GNOME"
+            }
         within = cycle_final(available, target)
-        if is_prerelease(entry["version"]) and within is not None:
+        if (is_prerelease(entry["version"]) and within is not None) or (
+            within is not None and version_key(within) > version_key(current)
+        ):
             proposals.append(
                 {
                     "kind": kind,
@@ -607,17 +863,7 @@ def plan(
                     "module": module,
                     "current": entry["version"],
                     "latest": within,
-                }
-            )
-            continue
-        if within is not None and version_key(within) > version_key(current):
-            proposals.append(
-                {
-                    "kind": kind,
-                    "name": name,
-                    "module": module,
-                    "current": entry["version"],
-                    "latest": within,
+                    **extra,
                 }
             )
             continue
@@ -643,14 +889,38 @@ def apply(root: Path, proposal: dict, opener=urllib.request.urlopen) -> dict:
     document = json.loads(config.read_text())
     index = next(i for i, e in enumerate(document["packages"]) if e["name"] == name)
     entry = document["packages"][index]
+    check_bumpable(root, entry)
 
     # A relock proposal carries the GNOME module explicitly because the old
     # primary is the lookaside; every other proposal reads it off the lock.
-    module = proposal.get("module") or gnome_module(entry)
-    if module:
+    # Only a relock: forge proposals carry their feed label (github.com/o/r)
+    # under the same key, and reading that as a GNOME module built
+    # download.gnome.org/sources/github.com/... URLs that 404ed, which killed
+    # every scheduled run that had a forge update to apply.
+    relock = proposal.get("kind") == "relock"
+    explicit = parse_explicit_feed(entry.get("feed", "")) if relock else None
+    module = (proposal.get("module") if relock else None) or gnome_module(entry)
+    if explicit and explicit["forge"] not in ("gnome", "anitya"):
+        # A forge relock: the explicit feed is the project's own Source0 at
+        # the locked version, so it is the template the new primary is
+        # substituted into. The old lookaside primary becomes a fallback,
+        # rewritten by the same substitution (content-addressed, so it
+        # resolves once Fedora uploads the same bytes, and only then).
+        base = {
+            **entry,
+            "url": entry["feed"],
+            "fallback_urls": [entry["url"], *entry.get("fallback_urls", [])],
+        }
+        url = substituted(entry["feed"], [(entry["version"], release)])
+        digest = sha512_of(url, opener=opener)
+        updated = forge_planned_entry(base, release, digest)
+    elif module:
         tarball = tarball_version(release)
         url = f"{GNOME_SOURCES}{module}/{release_cycle(tarball)}/{module}-{tarball}.tar.xz"
         digest = sha512_of(url, opener=opener)
+        if relock and entry.get("url", "") and not gnome_module(entry):
+            # Keep the lookaside as the fallback a GNOME primary carries.
+            entry = {**entry, "fallback_urls": [entry["url"]]}
         updated = planned_entry(entry, release, digest, module=module)
     else:
         # The new URL comes from substituting into the old one, so the digest
@@ -662,17 +932,47 @@ def apply(root: Path, proposal: dict, opener=urllib.request.urlopen) -> dict:
     # The counter belongs to the old version even if both releases are 1.
     if rpm_version(entry["version"]) != rpm_version(updated["version"]):
         updated.pop("dist_bump", None)
+    if relock:
+        # The primary now names the feed itself; a stale explicit copy would
+        # only be a second place for the two to disagree.
+        updated.pop("feed", None)
     document["packages"][index] = updated
-    config.write_text(json.dumps(document, indent=2) + "\n")
 
+    # The lock is written last. rewrite_spec() raises before writing when the
+    # spec has no Version: line, and main() skips that package and carries on;
+    # with the lock written first, the skip left the lock on the new release
+    # and the spec on the old one.
     package = root / "packages" / name
     spec = package / f"{name}.spec"
     if spec.is_file():
         rewrite_spec(spec, release)
     manifest = package / "sources"
     if manifest.is_file():
-        rewrite_sources(manifest, updated["filename"], digest)
+        rewrite_sources(manifest, updated["filename"], digest, previous=entry.get("filename", ""))
+    config.write_text(json.dumps(document, indent=2) + "\n")
+    if relock:
+        retire_fedora_primary(root, name, updated["url"])
     return updated
+
+
+def retire_fedora_primary(root: Path, name: str, url: str) -> None:
+    """Drop a relocked package from the Fedora-primary ratchet.
+
+    tools/validate.py fails when a package listed in
+    config/fedora-primary-sources.txt no longer has a Fedora primary, so a
+    relock that left the list alone produced a lock no workflow could
+    validate.
+    """
+    host = urllib.parse.urlparse(url).hostname or ""
+    if host in FEDORA_HOSTS or host.endswith(".fedoraproject.org"):
+        return
+    baseline = root / "config" / "fedora-primary-sources.txt"
+    if not baseline.is_file():
+        return
+    lines = baseline.read_text().splitlines(keepends=True)
+    kept = [line for line in lines if line.split("#", 1)[0].strip() != name]
+    if kept != lines:
+        baseline.write_text("".join(kept))
 
 
 def main() -> int:
@@ -691,6 +991,9 @@ def main() -> int:
         help="rewrite the inventory, spec and sources manifest (default: report only)",
     )
     args = parser.parse_args()
+    # Progress goes to stdout and skips to stderr; unbuffered order is what
+    # lets a CI log name the package a failure belongs to.
+    sys.stdout.reconfigure(line_buffering=True)
 
     proposals = plan(args.root, args.package, cycle=args.cycle)
     failures = [p for p in proposals if "error" in p]
@@ -702,13 +1005,46 @@ def main() -> int:
     finals = [p for p in proposals if p.get("kind") in ("final", "update", "relock")]
     review = [p for p in proposals if p.get("kind") == "review"]
 
+    # A bump pins whatever bytes the forge serves, and the gate merges it with
+    # no one looking. Packages the review-only list names -- root daemons, the
+    # boot chain, firmware -- are reported like a cross-cycle candidate and
+    # bumped by hand instead; the gate refuses them too, should one get in.
+    # A relock is exempt: it comes only from an explicit --package run and
+    # lands on its own branch, which the gate never merges.
+    review_only = load_review_only(args.root)
+    for bump in [p for p in finals if p["name"] in review_only and p["kind"] != "relock"]:
+        finals.remove(bump)
+        review.append({**bump, "kind": "review",
+                       "reason": f"listed in {REVIEW_ONLY}; bump it in a reviewed pull request"})
+
+    # The bump gate held these exact versions after they failed to build; a
+    # newer release is proposed as usual, and applying it retires the hold.
+    holds = load_holds(args.root)
+    for bump in [p for p in finals if held(p, holds)]:
+        hold = held(bump, holds)
+        print(f"held {bump['name']}: {bump['current']} -> {bump['latest']} "
+              f"failed the bump gate ({hold.get('run') or 'no run recorded'})", file=sys.stderr)
+        finals.remove(bump)
+    retired = False
+
     for failure in failures:
         print(f"skipped {failure['name']}: {failure['error']}", file=sys.stderr)
 
+    applied = 0
     for bump in finals:
         print(f"{bump['name']}: {bump['current']} -> {bump['latest']}")
         if args.apply:
-            apply(args.root, bump)
+            # One release whose bytes cannot be fetched is reported and
+            # skipped, the same rule plan() applies to an unreachable feed: it
+            # must not discard every other bump the run already proved safe.
+            try:
+                apply(args.root, bump)
+            except (urllib.error.URLError, OSError, ValueError) as error:
+                print(f"skipped {bump['name']}: {error}", file=sys.stderr)
+                continue
+            applied += 1
+            if holds.pop(bump["name"], None) is not None:
+                retired = True
 
     for item in review:
         # Deliberately not applied, and deliberately not silent: a later cycle
@@ -721,8 +1057,24 @@ def main() -> int:
             file=sys.stderr,
         )
 
+    if retired:
+        (args.root / HOLDS).write_text(dump_holds(holds))
+
     if not finals:
         print("no in-cycle release is newer than what the inventory locks")
+    elif args.apply and not applied:
+        print("every proposed bump failed to apply", file=sys.stderr)
+        return 1
+    # A relock moves the primary URL: a `workflow_dispatch --package` that
+    # proposes one must write to a branch the next daily create-pull-request
+    # run cannot overwrite, otherwise the relock commit silently disappears
+    # when the scheduled run force-updates it from a plan based on the old
+    # lookaside lock. The workflow reads this flag and routes the PR to
+    # bump/upstream-sources-relock-<pkg> when it is true.
+    relock = any(p.get("kind") == "relock" for p in finals)
+    if "GITHUB_OUTPUT" in os.environ:
+        with open(os.environ["GITHUB_OUTPUT"], "a") as handle:
+            handle.write(f"relock={'true' if relock else 'false'}\n")
     return 0
 
 

@@ -1,5 +1,8 @@
 sources/
 reports/source-pipeline/
+# Scratch output of tools/source_pipeline.py --report-dir work/reports and the
+# build stages; never a tracked input.
+work/
 __pycache__/
 *.pyc
 .worktrees/

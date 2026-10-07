@@ -1,5 +1,19 @@
 name: Observe Fedora build-root availability
 
+# Two jobs. `detect` reports which Bluefin binaries Rawhide currently ships and
+# moves nothing. `bump` takes Fedora's *recipe* changes for packages this
+# factory already carries, and only those `tools/rawhide_reimport.py` proves
+# safe: the recipe is exactly Fedora's at its pinned commit, the commit is the
+# one Koji built and tagged into Rawhide, and Name/Epoch/Version, `sources`
+# and BuildRequires did not move -- so the SHA-512 source lock, the Packit
+# block and every recipe count stay valid as they are. Version moves are still
+# upstream_bump.py's; Fedora remains a recipe feed, not a source-update feed.
+# Everything else is listed in the run log and the PR body, never applied.
+#
+# The PR is opened with GITHUB_TOKEN, so it triggers no pull_request runs of
+# its own; the job's outputs carry what a dispatch-based gate needs, shaped
+# like bump-upstream-sources.yml's.
+
 on:
   workflow_dispatch:
   schedule:
@@ -39,3 +53,94 @@ jobs:
             config/rawhide-state.json
             reports/rawhide-changed-sources.txt
           if-no-files-found: error
+
+  bump:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: write
+    outputs:
+      branch: bump/rawhide-imports
+      pull-request-number: ${{ steps.pr.outputs.pull-request-number }}
+      pull-request-operation: ${{ steps.pr.outputs.pull-request-operation }}
+      pull-request-head-sha: ${{ steps.pr.outputs.pull-request-head-sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      # Classify and apply in one pass: the classifier needs both dist-git
+      # trees, and cloning every moved package twice buys nothing. The log
+      # lists every safe, unsafe and metadata-only move either way.
+      - name: Re-import Rawhide recipe moves that are safe to take
+        run: |
+          python3 tools/rawhide_reimport.py --apply
+
+      # The same gates a contributor runs, plus the recipe-set agreement the
+      # plymouth import (#312) broke: a PR that cannot pass these is not
+      # opened.
+      - name: Validate the result
+        run: |
+          python3 -m unittest discover -s tests -q
+          python3 tools/validate.py
+          python3 tools/check_workflow_quoting.py
+          python3 tools/render_packit_config.py --write
+          git diff --exit-code -- .packit.yaml config/upstream-sources.json
+
+      - name: Describe the update
+        run: |
+          python3 - <<'PY' > "$RUNNER_TEMP/body.md"
+          import json
+          report = json.load(open("reports/rawhide-reimport.json"))
+          print("Opened by `.github/workflows/detect-rawhide-updates.yml`.\n")
+          print("Re-imports Fedora dist-git at the commit Koji built into Rawhide, for")
+          print("recipes `tools/rawhide_reimport.py` classified safe: unmodified here,")
+          print("same Name/Epoch/Version and `sources`, no new BuildRequires. The source")
+          print("locks, `.packit.yaml` and recipe counts are unchanged by construction,")
+          print("and the run checked that before opening this PR.\n")
+          print("| Package | Koji build | Fedora commit |\n| --- | --- | --- |")
+          for entry in report["safe"]:
+              print(f"| {entry['name']} | {entry['nvr']} | `{entry['to'][:12]}` |")
+          if report["unsafe"]:
+              print("\n<details><summary>Left for a human</summary>\n")
+              for entry in report["unsafe"]:
+                  print(f"- **{entry['name']}** {entry['nvr']}: {'; '.join(entry['reasons'])}")
+              print("\n</details>")
+          print("\n**Not verified: the build.** That is what this PR's factory run is for.")
+          PY
+
+      - name: Open reviewable update
+        id: pr
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8
+        with:
+          branch: bump/rawhide-imports
+          delete-branch: true
+          # The recipes and the files their provenance must agree with; never
+          # the reports/ the tools wrote.
+          add-paths: |
+            packages/
+            .packit.yaml
+            config/upstream-sources.json
+          title: 'chore(packages): re-import Rawhide recipe updates'
+          commit-message: 'chore(packages): re-import Rawhide recipe updates'
+          body-path: ${{ runner.temp }}/body.md
+
+      # The same gate as the daily upstream bump: build exactly the re-imported
+      # recipes, publishing nothing, merge only if all of them built and the
+      # head is still the commit that built, then publish from main. A failure
+      # leaves the pull request open with a comment naming the packages.
+      - name: Gate the re-imports on their own build
+        if: steps.pr.outputs.pull-request-operation != 'closed'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          pr=$(gh pr list -R "$REPOSITORY" --head bump/rawhide-imports --base main \
+            --state open --json number --jq '.[0].number // empty')
+          if [ -z "$pr" ]; then
+            echo "no open re-import pull request; nothing to gate"
+            exit 0
+          fi
+          gh workflow run bump-upstream-gate.yml -R "$REPOSITORY" \
+            --ref bump/rawhide-imports -f pr="$pr"
+          echo "dispatched the bump gate for pull request $pr"

@@ -1,0 +1,8 @@
+{
+  "package": "simdutf",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/simdutf.git",
+  "commit": "6666acdef39a1c9660e235a949c09c23a054ac84",
+  "tree": "cc89042ac665266db411a404d4b3a58a393aab0b",
+  "imported_at": "2026-10-07T04:30:41.750083+00:00"
+}

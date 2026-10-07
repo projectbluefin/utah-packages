@@ -44,5 +44,21 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - run: pip install --disable-pip-version-check pytest==8.3.5 pyyaml==6.0.3
-      - run: python3 -m pytest tests -q
+      - run: pip install --disable-pip-version-check pytest==8.3.5 pyyaml==6.0.3 pytest-cov==7.0.0 coverage==7.16.2
+      - name: Configure subprocess coverage
+        run: printf '[run]\nparallel = true\ninclude = */tools/*.py\n[paths]\ntools =\n    tools\n    /tmp/*/tools\n' > .coveragerc
+      - name: Unit tests with coverage
+        env:
+          # Child processes run from temporary directories: keep their data in
+          # the workspace and arm coverage's startup hook with an absolute rc path.
+          COVERAGE_FILE: ${{ github.workspace }}/.coverage
+          COVERAGE_PROCESS_START: ${{ github.workspace }}/.coveragerc
+        run: |
+          python3 -m pytest tests -q \
+            --cov=tools --cov-report=term-missing:skip-covered --cov-report=xml \
+            --cov-precision=2 --cov-fail-under=80
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: always()
+        with:
+          name: coverage
+          path: coverage.xml

@@ -20,6 +20,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 VALIDATE = ROOT / "tools" / "validate.py"
 
+LOOKASIDE_URL = (
+    "https://src.fedoraproject.org/repo/pkgs/rpms/example/example-1.tar.xz/"
+    "sha512/" + "0" * 128 + "/example-1.tar.xz"
+)
+
 RAWHIDE_PROVENANCE = {
     "package": "example",
     "branch": "rawhide",
@@ -64,6 +69,9 @@ class ValidateScriptTests(unittest.TestCase):
         packit=None,
         buildroot_lock=DEFAULT_BUILDROOT_LOCK,
         buildroot_pin=DEFAULT_BUILDROOT_PIN,
+        source_urls=None,
+        fedora_baseline=None,
+        review_only=None,
     ) -> None:
         """Write a factory tree validate.py accepts unless a case breaks one rule."""
         locked = packages if locked is None else locked
@@ -77,9 +85,21 @@ class ValidateScriptTests(unittest.TestCase):
                     json.dumps({**provenance, "package": name})
                 )
         (root / "config").mkdir()
+        locks = [{"name": name} for name in locked]
+        for entry in locks:
+            if entry["name"] in (source_urls or {}):
+                entry["url"] = source_urls[entry["name"]]
         (root / "config" / "upstream-sources.json").write_text(
-            json.dumps({"packages": [{"name": name} for name in locked]})
+            json.dumps({"packages": locks})
         )
+        if fedora_baseline is not None:
+            (root / "config" / "fedora-primary-sources.txt").write_text(
+                "# baseline\n" + "".join(f"{name}\n" for name in fedora_baseline)
+            )
+        if review_only is not None:
+            (root / "config" / "bump-review-only.txt").write_text(
+                "# guarded\n" + "".join(f"{name}\n" for name in review_only)
+            )
         if buildroot_lock is not None:
             (root / "config" / "buildroot-lock.json").write_text(
                 json.dumps(buildroot_lock)
@@ -270,6 +290,67 @@ class ValidateScriptTests(unittest.TestCase):
             root = Path(directory)
             result = self.run_validate(root)
             assert result.returncode == 0, result.stderr
+
+    def test_rejects_a_source_lock_that_fetches_from_fedora(self) -> None:
+        # source_pipeline.py fetches the primary `url` directly, so a Fedora URL
+        # there builds the package from the lookaside -- the dependency the
+        # direct-source pipeline exists to remove (utah-packages#42).
+        result = self.check(
+            source_urls={"example": LOOKASIDE_URL},
+        )
+        assert result.returncode != 0
+        assert "takes its payload from Fedora, not upstream: example" in result.stderr
+        assert "fallback_urls" in result.stderr
+
+    def test_accepts_a_fedora_url_that_the_baseline_already_records(self) -> None:
+        # The bulk re-pin is long; until it lands the recorded set must still
+        # pass, or the gate cannot be turned on at all.
+        result = self.check(
+            source_urls={"example": LOOKASIDE_URL},
+            fedora_baseline=("example",),
+        )
+        assert result.returncode == 0, result.stdout + result.stderr
+
+    def test_rejects_a_new_fedora_url_alongside_a_recorded_one(self) -> None:
+        result = self.check(
+            packages=("example", "second"),
+            source_urls={"example": LOOKASIDE_URL, "second": LOOKASIDE_URL},
+            fedora_baseline=("example",),
+        )
+        assert result.returncode != 0
+        offenders = result.stderr.splitlines()[0].rsplit(": ", 1)[-1]
+        assert offenders == "second"
+
+    def test_rejects_a_baseline_entry_that_is_no_longer_an_offender(self) -> None:
+        # A package re-pinned upstream but left listed holds the slot open for
+        # the same name to regress unnoticed, so the list only shrinks.
+        result = self.check(fedora_baseline=("example",))
+        assert result.returncode != 0
+        assert "no longer use a Fedora primary URL: example" in result.stderr
+
+    def test_accepts_an_upstream_url(self) -> None:
+        result = self.check(
+            source_urls={"example": "https://github.com/example/example/releases/example-1.tar.xz"},
+        )
+        assert result.returncode == 0, result.stdout + result.stderr
+
+    def test_rejects_any_fedora_subdomain_in_the_primary_position(self) -> None:
+        result = self.check(
+            source_urls={"example": "https://kojipkgs.fedoraproject.org/packages/example.tar.xz"},
+        )
+        assert result.returncode != 0
+        assert "takes its payload from Fedora" in result.stderr
+
+    def test_accepts_a_review_only_list_of_locked_packages(self) -> None:
+        result = self.check(review_only=("example",))
+        assert result.returncode == 0, result.stdout + result.stderr
+
+    def test_rejects_a_review_only_name_the_lock_does_not_carry(self) -> None:
+        # A misspelled guard protects nothing while reading as if it did.
+        result = self.check(review_only=("example", "gdm-typo"))
+        assert result.returncode != 0
+        assert "bump-review-only.txt names packages the source lock does not carry: gdm-typo" \
+            in result.stderr
 
     def test_the_checked_in_factory_tree_passes_its_own_gate(self) -> None:
         result = self.run_validate(ROOT)

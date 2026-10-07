@@ -151,7 +151,11 @@ tooling arrives; do not copy them as-is.
 
 - Sources come from **upstream releases**, verified and SHA-512 locked. Fedora
   dist-git supplies the **recipe only**, pinned by commit in
-  `.hummingbird-upstream.json`.
+  `.hummingbird-upstream.json`. Fedora belongs in `fallback_urls`, never in the
+  primary `url`: `tools/source_pipeline.py` fetches the primary directly, so a
+  Fedora URL there builds from the lookaside. `tools/validate.py` enforces this
+  as a ratchet against `config/fedora-primary-sources.txt`, which records the
+  entries still waiting on the bulk re-pin; that list only shrinks.
 - Build order is solved from real BuildRequires (`tools/build_graph.py`):
   a package builds in a later wave than every factory package it
   BuildRequires. A `stage` in `config/upstream-sources.json` only orders the

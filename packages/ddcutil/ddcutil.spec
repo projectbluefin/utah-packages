@@ -1,7 +1,7 @@
 %bcond_without build_lib
 
 Name:       ddcutil
-Version:    2.2.1
+Version:    2.2.7
 Release:    %autorelease
 Summary:    Query and update monitor settings
 # Automatically converted from old format: GPLv2+ - review is highly recommended.
@@ -24,6 +24,7 @@ BuildRequires:      pkgconfig(libudev)
 BuildRequires:      pkgconfig(xrandr)
 BuildRequires:      pkgconfig(libdrm) >= 2.4.67
 BuildRequires:      pkgconfig(libkmod)
+BuildRequires:      pkgconfig(libacl)
 BuildRequires:      pkgconfig(jansson) >= 2.0
 
 Requires:   hwdata

@@ -78,7 +78,7 @@ a PR or merge check and its output is not published. Its `discover` job emits th
 matrix at 256 jobs and expands a larger one to nothing rather than rejecting
 it, so once the monorepo passed 256 packages the pilot failed on every run with
 a green `discover` above an `srpm` job that never existed. The `discover` guard
-asserts the package list is non-empty, which a list of 402 satisfies while
+asserts the package list is non-empty, which a list of 408 satisfies while
 still producing no jobs. Each matrix job uses `tools/source_pipeline.py` to fetch
 and verify the configured sources and stage them beside the spec, then runs
 `packit srpm --preserve-spec`. It uploads one SRPM artifact and stops there:
@@ -130,18 +130,18 @@ Two consequences worth stating plainly:
   precondition for Copr builds, not evidence of them. The only thing exercising
   Packit is the pilot workflow.
 
-The root Packit configuration and the source lock both cover all 402 recipes:
+The root Packit configuration and the source lock both cover all 408 recipes:
 
 | check | result |
 | --- | ---: |
-| `ls -d packages/*/ \| wc -l` | `402` |
-| entries under `.packit.yaml:packages` | `402` |
-| entries under `config/upstream-sources.json:packages` | `402` |
+| `ls -d packages/*/ \| wc -l` | `408` |
+| entries under `.packit.yaml:packages` | `408` |
+| entries under `config/upstream-sources.json:packages` | `408` |
 
 `python3 tools/validate.py` reports:
 
 ```text
-validated 402 source RPMs (399 rawhide, 3 upstream)
+validated 408 source RPMs (405 rawhide, 3 upstream)
 ```
 
 ## Current binary pipeline
@@ -160,7 +160,7 @@ validated 402 source RPMs (399 rawhide, 3 upstream)
 | `publish` | Seeds from the verified previous image, replaces the RPMs of each source package this run built (and did not lose precedence) by source name, removes the bootstrap RPM, creates and signs repository metadata, validates the Hummingbird-only transaction over the whole candidate, and publishes a GHCR OCI image that is both cosign-signed and provenance-attested. A failed package keeps its previous build. |
 | `report` | Runs whether or not publish did. Names every selected package that did not publish -- from the run's own artifact list -- in the job summary, and on `main` opens, updates or closes the tracking issue *Factory: packages failing on main*. |
 
-91 of 402 packages carry a hand-assigned `stage` in
+91 of 408 packages carry a hand-assigned `stage` in
 `config/upstream-sources.json`. Since waves are solved from BuildRequires it is
 consulted only between members of one BuildRequires cycle, to decide which
 builds first -- `malcontent-bootstrap` before `flatpak` before `malcontent`.
@@ -267,8 +267,12 @@ Runs on one ref are serialized and never cancelled: GitHub keeps one run
 pending and replaces an older pending run with a newer one, which is safe
 because the newer run selects against the published state and so builds the
 union. The daily run moved off `06:41 UTC`, where it collided with
-`bump-upstream-sources.yml`; a merged bump now builds through the push
-trigger. Pull requests run validation and the canary, never the factory.
+`bump-upstream-sources.yml`. The daily bump pull request is gated by
+`bump-upstream-gate.yml`, which builds exactly the bumped recipes (publishing
+nothing), merges only when all of them built, and then dispatches the factory
+on `main`, because its GITHUB_TOKEN merge starts no push run; see
+[`docs/skills/upstream-version-bumps.md`](skills/upstream-version-bumps.md#the-bump-gate).
+Other pull requests run validation and the canary, never the factory.
 The rationale is part of the cache contract in
 [`docs/skills/package-build-cache.md`](skills/package-build-cache.md#triggers-queueing-and-batching).
 
@@ -315,7 +319,7 @@ The repository gates are enforced across CI workflows and collected in `Justfile
 | Gate | Command | Enforced in | What it gates |
 | --- | --- | --- | --- |
 | Factory onboarding contract | `tools/factory_contract.py` | `.github/workflows/validate.yml` | Skill router coverage, skill front-matter, the `AGENTS.md` self-improvement mandate, the pinned `projectbluefin/common` sidecar, banned changelog and session-notes files, and relative documentation links |
-| Package factory configuration | `tools/validate.py` | `.github/workflows/validate.yml` | Import provenance in `.hummingbird-upstream.json`, source-lock coverage, and Packit configuration for every recipe |
+| Package factory configuration | `tools/validate.py` | `.github/workflows/validate.yml` | Import provenance in `.hummingbird-upstream.json`, source-lock coverage, Packit configuration for every recipe, and the Fedora-primary-URL ratchet in `config/fedora-primary-sources.txt` |
 | Workflow shell quoting | `tools/check_workflow_quoting.py` | `.github/workflows/validate.yml`, `.github/workflows/rebuild-rpms.yml` (`prepare`) | Shell-quoting safety of build scripts embedded in GitHub Actions workflows |
 | Runtime contract | `tools/runtime_contract.py config/bluefin-packages.toml config/runtime-contract.toml --check` | `.github/workflows/validate.yml`, `.github/workflows/rebuild-rpms.yml` (`prepare`) | Image manifest resolution against the pinned Hummingbird runtime contract |
 | Unit tests | `pytest tests` / `unittest discover` | `.github/workflows/validate.yml`, `.github/workflows/rebuild-rpms.yml` (`prepare`) | The tooling in `tools/`, including `tools/publish_gate.py`, whose regression test asserts the rebuild-rpms.yml publish job replaces only what a run built, keeps a failed or precedence-losing package at its previous build, and never publishes a candidate whose Hummingbird-only transaction does not resolve |

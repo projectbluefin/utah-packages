@@ -1,0 +1,8 @@
+{
+  "package": "zram-generator",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/zram-generator.git",
+  "commit": "56c4bb775127f4afcea44878027ee932a68b8244",
+  "tree": "fd71df8988dc7622a46a5eafeeee6be8bb31dc87",
+  "imported_at": "2026-09-27T16:54:49.548500+00:00"
+}

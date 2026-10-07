@@ -461,6 +461,82 @@ published build and is reported depends on missing build artifacts
 package from the matrix before the build job runs (via a planning step) so no
 artifact is produced and no red check run is recorded against the commit.
 
+## 22. The tracking issue speaks only when the run reached a verdict
+
+**What happened.** The `report` job names every selected package with no
+`rpm-s<stage>-<package>` artifact as failed and files or refreshes the
+`Factory: packages failing on main` issue. Twice it spoke for a run that had
+decided nothing. A canary dispatched on `main` reused the production issue
+(`b858eee`, `#261`) until the artifact prefix told them apart. Then a run
+cancelled by hand one minute into `rebuild0` (`#267`) reported all 215
+selected packages as failed and the publish job as `cancelled`: the job ran
+on `always()`, no wave had uploaded anything, and the report read that
+silence as a verdict.
+
+**Rule.** The report is a statement about builds that finished. Its `if:` is
+`!cancelled()`, the same shape as `publish`: a failed wave or a failed
+publish gate still reports, a cancelled run reports nothing, and a pass that
+is not production (canary prefix, `publish_tag`) does not touch the issue.
+`tools/publish_gate.assert_gate_enforced` rejects `always()` on the report
+job. Before extending the report or the issue step, ask what the run proved;
+"no artifact" is proof of failure only when the wave was allowed to finish.
+
+## 23. An import pull request is a recipe, not a package
+
+**What happened.** `d088a14` (#312) merged the bot's *Import Rawhide
+package* pull request for plymouth as-is. The workflow only runs
+`tools/import_rawhide.py`, which copies the dist-git recipe; it does not
+write the source lock, the Packit block, or the recipe counts. `main` went
+red in `validate` ("packages missing source locks: plymouth", "packages
+missing Packit config: plymouth") and in eleven count tests (`401 != 402`),
+failing Canary, Unit tests and Package factory configuration on every open
+pull request.
+
+**Rule.** Before merging an import, finish it on the import branch:
+
+- Lock the source with `tools/bootstrap_upstream_sources.py --package <name>
+  --merge`. It needs `rpmspec`; run it inside the pinned
+  `quay.io/packit/packit` image (digest in `packit-srpm-chunk.yml`) when the
+  host has none. Add the Fedora lookaside as `fallback_urls`, never as `url`.
+- Regenerate `.packit.yaml` with `python3 tools/render_packit_config.py
+  --write`.
+- Refresh the counts in `docs/architecture.md` with
+  `python3 tools/render_architecture_counts.py --write`; the contract step
+  (`tests/test_architecture_counts.py`) reads the inventory directly, so the
+  four `tests/` files that used to carry the count no longer track it.
+- `just check` green on the import branch, not after merge.
+
+The daily re-import of carried recipes (`tools/rawhide_reimport.py`, the
+`bump` job in `detect-rawhide-updates.yml`) cannot repeat this: it only
+replaces recipes already in every inventory, refuses any move that would
+touch the source lock (`sources` or `Version:` changed), and fails the run if
+`.packit.yaml` or `config/upstream-sources.json` differ afterwards. It never
+adds a package. Keep it that way; see
+[`rawhide-recipe-reimports.md`](rawhide-recipe-reimports.md).
+
+## Validate imported metadata without reformatting it
+
+Fedora gating YAML can contain several documents and custom `!Policy` tags.
+Use `check-yaml --unsafe` (syntax-only) specifically for `packages/*/gating.yaml`;
+retain safe loading for all other YAML. Do not edit imported recipe bytes to
+satisfy a single-document or standard-tag assumption. Shell variables populated by Actions `env:` still
+need explicit `${VAR:?}` assertions when a similarly named lowercase variable
+causes shellcheck's SC2153 heuristic. Keep those checks specific rather than
+disabling shellcheck globally. README inventory descriptions should reference
+the live inventory tool instead of freezing another recipe-count snapshot.
+
+## Imported specs must not rewrite trusted proposal tools
+
+`rpmspec` expands executable macros. `persist-credentials: false` and a PR
+`add-paths` list do not make a writable checkout safe: a spec could replace a
+host script which runs later with the write token. The import job therefore
+has `contents: read`, mounts only trusted tools and the selected recipe
+read-only, and gives the container a disposable JSON output directory. A fresh
+proposal job accepts exactly one recipe and source candidate, rejects links,
+then renders configuration with its own trusted checkout. No artifact script
+runs in the write-permission job. Keep these job and filesystem boundaries
+when extending import automation.
+
 ## Quick checks before pushing a fix
 
 - [ ] Does `git log --oneline -- <file>` show this file being fixed for the
@@ -476,3 +552,7 @@ artifact is produced and no red check run is recorded against the commit.
       [`package-build-cache.md`](package-build-cache.md)?
 - [ ] Is there a run, on this head, that reached the gate this fix claims to
       satisfy?
+- [ ] Does a change to `report` or the tracking issue still stay silent for
+      a cancelled run and a canary pass?
+- [ ] Is a new recipe source-locked, in `.packit.yaml`, and counted, in
+      the same pull request that imports it?

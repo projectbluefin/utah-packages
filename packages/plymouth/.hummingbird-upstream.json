@@ -1,0 +1,8 @@
+{
+  "package": "plymouth",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/plymouth.git",
+  "commit": "790078da1921e40036ee0326bc9a7959111813ff",
+  "tree": "4bdf9b058a2318cf7a4c4529b1b4b655f3252739",
+  "imported_at": "2026-10-02T02:19:36.594570+00:00"
+}

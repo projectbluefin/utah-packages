@@ -2,7 +2,7 @@
   "package": "libical",
   "branch": "rawhide",
   "remote": "https://src.fedoraproject.org/rpms/libical.git",
-  "commit": "2b5067eeef327dac1dc7fde0df915386f0dd2eca",
-  "tree": "1fa8f13640e302a51939fb6bd139ba78d159824b",
-  "imported_at": "2026-08-30T15:47:24.283616+00:00"
+  "commit": "d3983e28fe2c2c9fec7dd7f15becf283dab03893",
+  "tree": "d4274c0343be0bbf44c96ed40c4a920cfd6d61dd",
+  "imported_at": "2026-10-06T05:30:21.353437+00:00"
 }

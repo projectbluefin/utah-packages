@@ -1792,6 +1792,18 @@ packages:
     downstream_package_name: pciutils
     paths:
       - packages/pciutils
+  pcsc-lite:
+    specfile_path: pcsc-lite.spec
+    upstream_package_name: pcsc-lite
+    downstream_package_name: pcsc-lite
+    paths:
+      - packages/pcsc-lite
+  pcsc-lite-ccid:
+    specfile_path: pcsc-lite-ccid.spec
+    upstream_package_name: pcsc-lite-ccid
+    downstream_package_name: pcsc-lite-ccid
+    paths:
+      - packages/pcsc-lite-ccid
   pdfio:
     specfile_path: pdfio.spec
     upstream_package_name: pdfio
@@ -1816,6 +1828,12 @@ packages:
     downstream_package_name: pixman
     paths:
       - packages/pixman
+  plymouth:
+    specfile_path: plymouth.spec
+    upstream_package_name: plymouth
+    downstream_package_name: plymouth
+    paths:
+      - packages/plymouth
   poppler-data:
     specfile_path: poppler-data.spec
     upstream_package_name: poppler-data
@@ -2002,6 +2020,12 @@ packages:
     downstream_package_name: shared-mime-info
     paths:
       - packages/shared-mime-info
+  simdutf:
+    specfile_path: simdutf.spec
+    upstream_package_name: simdutf
+    downstream_package_name: simdutf
+    paths:
+      - packages/simdutf
   snowball:
     specfile_path: snowball.spec
     upstream_package_name: snowball
@@ -2098,6 +2122,12 @@ packages:
     downstream_package_name: totem-pl-parser
     paths:
       - packages/totem-pl-parser
+  tpm2-tools:
+    specfile_path: tpm2-tools.spec
+    upstream_package_name: tpm2-tools
+    downstream_package_name: tpm2-tools
+    paths:
+      - packages/tpm2-tools
   twolame:
     specfile_path: twolame.spec
     upstream_package_name: twolame
@@ -2404,6 +2434,12 @@ packages:
     downstream_package_name: zimg
     paths:
       - packages/zimg
+  zram-generator:
+    specfile_path: zram-generator.spec
+    upstream_package_name: zram-generator
+    downstream_package_name: zram-generator
+    paths:
+      - packages/zram-generator
   zsh:
     specfile_path: zsh.spec
     upstream_package_name: zsh

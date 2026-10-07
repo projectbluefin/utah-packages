@@ -75,13 +75,17 @@ class ArchitectureCountTests(unittest.TestCase):
             check=False,
         )
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        match = re.search(r"validated (\d+) source RPMs", result.stdout.strip())
+        match = re.search(
+            r"^validated \d+ source RPMs \(.*\)$", result.stdout, flags=re.MULTILINE
+        )
         self.assertIsNotNone(match, result.stdout)
         assert match is not None
-        self.assertEqual(
-            claimed(r"validated (\d+) source RPMs"),
-            int(match.group(1)),
+        # The whole line, provenance split included: comparing only the total
+        # would let "(402 rawhide, 3 upstream)" go stale beside a new total.
+        quoted = re.findall(
+            r"^validated \d+ source RPMs \(.*\)$", DOC.read_text(), flags=re.MULTILINE
         )
+        self.assertEqual(quoted, [match.group(0)])
 
     def test_hand_assigned_stage_count_matches_the_inventory(self) -> None:
         match = re.search(

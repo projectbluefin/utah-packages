@@ -1,6 +1,6 @@
 Name: libqrtr-glib
-Version: 1.2.2
-Release: 10%{?dist}
+Version: 1.4.0
+Release: 1%{?dist}
 Summary: Support library to use and manage the QRTR (Qualcomm IPC Router) bus.
 License: LGPL-2.1-or-later
 URL: https://gitlab.freedesktop.org/mobile-broadband/libqrtr-glib
@@ -10,7 +10,7 @@ BuildRequires: meson >= 0.53
 BuildRequires: gcc
 BuildRequires: glib2-devel >= 2.56
 BuildRequires: gobject-introspection-devel
-BuildRequires: gtk-doc
+BuildRequires: gi-docgen
 BuildRequires: pkgconfig(gudev-1.0) >= 147
 BuildRequires: python3
 
@@ -34,13 +34,13 @@ applications using QRTR functionality from applications that use glib.
 
 
 %build
-%meson
+# 1.4.0 replaced gtk-doc with gi-docgen and no longer builds docs by default.
+%meson -Dgtk_doc=true
 %meson_build
 
 
 %install
 %meson_install
-find %{buildroot}%{_datadir}/gtk-doc |xargs touch --reference meson.build
 
 
 %check
@@ -61,7 +61,7 @@ find %{buildroot}%{_datadir}/gtk-doc |xargs touch --reference meson.build
 %{_includedir}/libqrtr-glib/
 %{_libdir}/libqrtr-glib.so
 %{_libdir}/pkgconfig/qrtr-glib.pc
-%{_datadir}/gtk-doc/html/libqrtr-glib/
+%{_docdir}/libqrtr-glib-1.0/
 %{_datadir}/gir-1.0/Qrtr-1.0.gir
 
 

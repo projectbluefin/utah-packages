@@ -2,7 +2,7 @@
 
 Name:           wayland
 Version:        1.26.0
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        Wayland Compositor Infrastructure
 
 # SPDX
@@ -152,6 +152,9 @@ Wayland server library
 %meson_test
 
 %changelog
+* Thu Sep 10 2026 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 1.26.0-3
+- Rebuilt for libxml-2.5.4
+
 * Fri Jul 17 2026 Yaakov Selkowitz <yselkowi@redhat.com> - 1.26.0-2
 - Conditionalize book documentation
 

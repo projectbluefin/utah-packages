@@ -1,0 +1,13 @@
+addFilter("incorrect-fsf-address")
+addFilter("no-manual-page-for-binary")
+addFilter("no-documentation")
+addFilter("W: no-%check-section")
+# Spinfinity has a symlink to /usr/share/pixmaps/system-logo-white.png
+addFilter("dangling-symlink")
+# Upstream (and RHEL) has named the logrotate file after the logfilename
+# rather then after the package-name
+addFilter("incoherent-logrotate-file")
+# No provides, the throbgress plugin has been removed upstream
+addFilter("obsolete-not-provided plymouth-plugin-throbgress")
+# Some of our packages have no binaries, this is fine
+addFilter("no-binary")

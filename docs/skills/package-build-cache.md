@@ -142,12 +142,18 @@ matrix any more, which is what made per-merge triggers affordable:
 the state label on the published image (`tools/factory_state.py`) says what
 every published build was made from, so a run compares recipes, not commits.
 
-Runs on one ref are serialized and never cancelled. GitHub keeps one run
-pending behind the running one and replaces an older pending run with a
-newer one; that is safe, because the newer run selects against the published
-state and so covers every change the replaced run would have built. N
-merges in quick succession therefore cost at most two runs, and the second
-builds the union.
+Runs on one ref are serialized and a merge never cancels one. GitHub keeps
+one run pending behind the running one and replaces an older pending run
+with a newer one; that is safe, because the newer run selects against the
+published state and so covers every change the replaced run would have
+built. N merges in quick succession therefore cost at most two runs, and the
+second builds the union.
+
+A run cancelled by hand has no verdict: its waves uploaded nothing, so the
+`report` job runs on `!cancelled()` and leaves the job summary and the
+tracking issue alone rather than naming every selected package as failed
+(`#267`). The next run selects against the published state as usual and
+builds whatever the cancelled one did not finish.
 
 Pull requests do not run the factory. Pipeline changes are proven by the
 canary (`.github/workflows/canary.yml`) on their pull request, and recipe

@@ -4,7 +4,7 @@
 Summary: Utilities to generate, maintain and access the AppStream database
 Name:    appstream
 Version: 1.1.3
-Release: 3%{?dist}
+Release: 4%{?dist}
 
 # lib LGPLv2+, tools GPLv2+
 License: GPL-2.0-or-later AND LGPL-2.1-or-later
@@ -208,6 +208,9 @@ mv %{buildroot}%{_datadir}/metainfo/*.xml \
 
 
 %changelog
+* Thu Sep 10 2026 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 1.1.3-4
+- Rebuilt for libxml-2.5.4
+
 * Fri Jul 17 2026 Yaakov Selkowitz <yselkowi@redhat.com> - 1.1.3-3
 - Disable blake3 support on RHEL
 

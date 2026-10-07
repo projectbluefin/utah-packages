@@ -5,6 +5,11 @@ repos:
       - id: check-json
       - id: check-toml
       - id: check-yaml
+        exclude: ^packages/[^/]+/gating\.yaml$
+      - id: check-yaml
+        name: Check Fedora gating YAML syntax (custom tags, multiple documents)
+        args: [--unsafe]
+        files: ^packages/[^/]+/gating\.yaml$
       - id: check-merge-conflict
       - id: detect-private-key
       - id: check-added-large-files

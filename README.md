@@ -56,7 +56,8 @@ rules and the `precedence` job that enforces them.
 
 ## Scope
 
-`packages/` holds 193 imported recipes and `config/upstream-sources.json`
+`packages/` holds the recipes counted by `python3 tools/validate.py`, and
+`config/upstream-sources.json`
 holds a verified upstream source for each: the Fedora components that blocked
 Utah — FUSE, NTFS, device-mapper persistent data, UDisks, librsvg, glycin,
 GVFS, Firefox, Distrobox — and the GNOME 51 stack itself. A recipe with no

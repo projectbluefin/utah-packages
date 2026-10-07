@@ -74,6 +74,15 @@ on:
         options:
           - container
           - hermetic
+      pr:
+        description: >
+          Judge this pull request's files the way its pull_request run would,
+          instead of always running. bump-upstream-gate.yml sets it: a pull
+          request opened with GITHUB_TOKEN gets no pull_request run, so the
+          required Canary check has to be dispatched onto its head commit.
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: read
@@ -110,15 +119,28 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           EVENT: ${{ github.event_name }}
-          PR: ${{ github.event.pull_request.number }}
+          PR: ${{ github.event.pull_request.number || inputs.pr }}
           HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
           REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
-          if [ "$EVENT" != pull_request ]; then
+          if [ "$EVENT" != pull_request ] && [ -z "$PR" ]; then
             echo "run=true" >> "$GITHUB_OUTPUT"
             echo "fork=false" >> "$GITHUB_OUTPUT"
             exit 0
+          fi
+          # A dispatch naming a pull request is judged on that pull request's
+          # files only while its head is the commit this run checks; if it
+          # moved, the files no longer describe this commit, so run.
+          if [ "$EVENT" != pull_request ]; then
+            gh api "repos/$REPO/pulls/$PR" > pr.json
+            HEAD_REPO=$(jq -r .head.repo.full_name pr.json)
+            if [ "$(jq -r .head.sha pr.json)" != "$SHA" ]; then
+              echo "run=true" >> "$GITHUB_OUTPUT"
+              echo "fork=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
           fi
           gh api --paginate "repos/$REPO/pulls/$PR/files" --jq '.[].filename' > files.txt
           if python3 tools/canary.py touches-pipeline < files.txt; then

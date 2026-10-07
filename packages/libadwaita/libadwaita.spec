@@ -12,8 +12,7 @@ License:        LGPL-2.1-or-later AND MIT
 URL:            https://gitlab.gnome.org/GNOME/libadwaita
 Source0:        https://download.gnome.org/sources/%{name}/%{gnome_major_minor_version}/%{name}-%{gnome_tarball_version}.tar.xz
 
-# https://gitlab.gnome.org/GNOME/libadwaita/-/merge_requests/1802
-Patch0:         fix-sassc-requirement-for-tarball-builds.patch
+# Upstream MR 1802 (sassc fix) is merged in 1.10.0; the backport no longer applies.
 
 %gnome_check_version
 

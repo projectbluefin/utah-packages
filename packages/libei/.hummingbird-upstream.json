@@ -2,7 +2,7 @@
   "package": "libei",
   "branch": "rawhide",
   "remote": "https://src.fedoraproject.org/rpms/libei.git",
-  "commit": "9e6e44fc8e0514643d681c9ed16dc93011d01c39",
-  "tree": "9de3e51a97996939b961d850da4f87c86bf29727",
-  "imported_at": "2026-08-30T15:47:20.533297+00:00"
+  "commit": "9efd11db6c2c6494d6ba25ea7bda8aafa9901c73",
+  "tree": "aea3b3f606172fac389ddceded44fb6ab38ebba8",
+  "imported_at": "2026-10-06T05:30:17.961669+00:00"
 }
