@@ -465,6 +465,7 @@ jobs:
           # now owned by Hummingbird before regenerating metadata. The prepare
           # step computes this list from the repository it actually witnessed,
           # so cleanup-only runs are both retryable and idempotent.
+          : "${PRUNE_SOURCES:?missing prune source list}"
           mapfile -t prune_sources < <(jq -r '.[]' <<<"$PRUNE_SOURCES")
           while IFS= read -r -d '' rpm_file; do
             source_rpm=$(rpm -qp --qf '%{SOURCERPM}' "$rpm_file" 2>/dev/null || true)

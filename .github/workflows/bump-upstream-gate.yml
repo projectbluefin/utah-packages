@@ -1,0 +1,358 @@
+name: Bump gate
+
+# Merges the daily upstream bump when, and only when, the packages it bumps
+# really build. bump-upstream-sources.yml dispatches this after it opens or
+# updates its pull request; nobody has to.
+#
+# Why a dispatch and a reusable call, and not pull_request, workflow_run or
+# polling. The bump pull request is opened with GITHUB_TOKEN, and GitHub
+# starts no pull_request or push workflow for an event GITHUB_TOKEN caused --
+# but it does start a workflow_dispatch. So:
+#
+#   - the build is rebuild-rpms.yml itself, called as a job here
+#     (workflow_call, the way the canary calls it), so its outputs -- the
+#     selected build_list and the failed list -- are plain job outputs. No
+#     second run to find, correlate by SHA and poll, and no 6-hour job limit:
+#     each wave is its own job, as in any factory run.
+#   - it builds only the bumped recipes (packages), against the published
+#     latest (factory_tag), and publishes nothing (skip_publish). It cannot
+#     move latest, a branch tag, or anything Utah reads. A successful build
+#     does push its package-cache entry, keyed by its inputs, which is what
+#     lets the post-merge run on main restore it instead of compiling again.
+#   - the required check on main is `Canary`, and GitHub matches it by name
+#     on the head commit. A GITHUB_TOKEN pull request never gets one, so this
+#     dispatches canary.yml on the branch with the pull request number; the
+#     canary then judges the pull request's files exactly as its
+#     pull_request run would (a lock-and-recipe change touches no pipeline
+#     path, so it passes in a minute without building).
+#   - after merging, it dispatches rebuild-rpms.yml on main. The merge is a
+#     GITHUB_TOKEN push, so the factory's push trigger does not fire, and the
+#     03:17 schedule is up to a day away; the dispatch is the same
+#     incremental run either would have been, published to latest.
+#
+# Partial failure: when the only thing wrong is that some bumped packages
+# failed to build, the gate does not leave the whole bump open. It takes the
+# failed packages' lock entries and recipes back to the merge base, records
+# each in config/bump-holds.json with the version that failed and this run,
+# commits that on top of the commit it built (a fast-forward push, so a
+# branch that moved meanwhile refuses it), and dispatches itself on the new
+# head. That second run builds only what is left -- restored from the
+# package cache this run pushed -- and merges it like any other bump, holds
+# included; upstream_bump.py then does not propose a held version again. If
+# every bumped package failed, what is left is the holds file alone, which
+# merges after Canary with nothing to build. The dispatched run cancels this
+# one through the concurrency group once it starts, so this run can end as
+# cancelled after its last step.
+#
+# Concurrency: a newer daily bump force-updates the branch and dispatches a
+# newer gate, which cancels this one. Even uncancelled, nothing stale merges:
+# every job works on github.sha, the commit this run was dispatched at, and
+# the merge names it with --match-head-commit, so GitHub refuses if the pull
+# request moved on.
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: The bump pull request number (bump/upstream-sources or bump/rawhide-imports into main)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bump-upstream-gate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  plan:
+    # Only the daily in-cycle bump merges itself. A GNOME-next target-cycle
+    # branch, or a dispatch on any other ref, does nothing.
+    # The two daily automated PRs: upstream version bumps and Rawhide recipe
+    # re-imports. Both change only the lock and packages/, which plan enforces.
+    if: github.ref == 'refs/heads/bump/upstream-sources' || github.ref == 'refs/heads/bump/rawhide-imports'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: read
+      actions: write
+    outputs:
+      packages: ${{ steps.bumped.outputs.packages }}
+      holds_only: ${{ steps.bumped.outputs.holds_only }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+      - name: The pull request is the open daily bump, at this commit
+        id: current
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ inputs.pr }}
+          SHA: ${{ github.sha }}
+          BRANCH: ${{ github.ref_name }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          gh pr view "$PR" -R "$REPOSITORY" \
+            --json state,baseRefName,headRefName,headRefOid,isCrossRepository > pr.json
+          jq . pr.json
+          if jq -e --arg sha "$SHA" --arg branch "$BRANCH" '.state == "OPEN" and .baseRefName == "main"
+              and .headRefName == $branch and .headRefOid == $sha
+              and (.isCrossRepository | not)' pr.json > /dev/null; then
+            echo "current=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice title=bump gate::pull request $PR is not the open bump at $SHA; a newer gate owns it"
+            echo "current=false" >> "$GITHUB_OUTPUT"
+          fi
+      # Only the lock, the holds and the recipes may differ from main: an
+      # automatic merge must never carry anything else, whoever pushed to the
+      # branch.
+      - name: Name the bumped packages
+        id: bumped
+        if: steps.current.outputs.current == 'true'
+        env:
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          git fetch --quiet origin main
+          base=$(git merge-base origin/main "$SHA")
+          python3 tools/bump_gate.py plan --base "$base" --head "$SHA" > plan.json
+          echo "packages=$(jq -c .packages plan.json)" >> "$GITHUB_OUTPUT"
+          echo "holds_only=$(jq -c .holds_only plan.json)" >> "$GITHUB_OUTPUT"
+          echo "bumped: $(jq -c .packages plan.json)"
+      - name: Run the required Canary check on the pull request
+        if: steps.current.outputs.current == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ inputs.pr }}
+          BRANCH: ${{ github.ref_name }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          gh workflow run canary.yml -R "$REPOSITORY" --ref "$BRANCH" -f pr="$PR"
+
+  build:
+    needs: plan
+    if: needs.plan.outputs.packages != '' && needs.plan.outputs.holds_only != 'true'
+    permissions:
+      contents: read
+      id-token: write
+      packages: write
+      attestations: write
+      actions: read
+      issues: write
+    uses: ./.github/workflows/rebuild-rpms.yml
+    with:
+      packages: ${{ needs.plan.outputs.packages }}
+      factory_tag: latest
+      skip_publish: true
+      artifact_prefix: gate-
+
+  merge:
+    needs: [plan, build]
+    if: ${{ !cancelled() && needs.plan.outputs.packages != '' }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: write
+      checks: read
+    steps:
+      # The full history: the merge base names what a held package goes back to.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+      - name: Every bumped package built
+        id: verdict
+        env:
+          BUMPED: ${{ needs.plan.outputs.packages }}
+          HOLDS_ONLY: ${{ needs.plan.outputs.holds_only }}
+          BUILD_LIST: ${{ needs.build.outputs.build_list }}
+          FAILED: ${{ needs.build.outputs.failed }}
+          RESULT: ${{ needs.build.result }}
+          SHA: ${{ github.sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          echo "[]" > hold.json
+          flags=()
+          if [ "$HOLDS_ONLY" = true ]; then flags+=(--holds-only); fi
+          if python3 tools/bump_gate.py decide --bumped "$BUMPED" "${flags[@]}" \
+              --build-list "$BUILD_LIST" --failed "$FAILED" --result "$RESULT" \
+              --sha "$SHA" --run-url "$RUN_URL" \
+              --comment comment.md --failed-output failed.json --hold-output hold.json; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          fi
+          echo "hold=$(jq -c . hold.json)" >> "$GITHUB_OUTPUT"
+      # Left open, never merged. One comment per verdict per commit: the
+      # daily re-gate of an unchanged branch does not repeat itself.
+      - name: Say why on the pull request
+        if: steps.verdict.outputs.ok != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ inputs.pr }}
+          SHA: ${{ github.sha }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          gh api --paginate "repos/$REPOSITORY/issues/$PR/comments?per_page=100" \
+            --jq '.[].body' > comments.txt
+          if python3 tools/bump_gate.py seen --sha "$SHA" --failed "$(cat failed.json)" < comments.txt; then
+            echo "already reported on the pull request"
+          else
+            gh pr comment "$PR" -R "$REPOSITORY" --body-file comment.md
+          fi
+          exit 1
+      # Some bumped packages failed and nothing else went wrong: hold those,
+      # and gate what is left on a new commit instead of leaving every bump
+      # behind them. Runs after the step above reported and failed, and only
+      # for this exact verdict.
+      - name: Hold the failed packages and gate the rest
+        if: failure() && steps.verdict.outputs.ok == 'false' && steps.verdict.outputs.hold != '[]'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HOLD: ${{ steps.verdict.outputs.hold }}
+          PR: ${{ inputs.pr }}
+          SHA: ${{ github.sha }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          head=$(gh pr view "$PR" -R "$REPOSITORY" --json state,headRefOid --jq 'select(.state == "OPEN") | .headRefOid')
+          if [ "$head" != "$SHA" ]; then
+            echo "::notice title=bump gate::pull request $PR moved to ${head:-closed} since $SHA built; not trimming"
+            exit 0
+          fi
+          git fetch --quiet origin main
+          base=$(git merge-base origin/main "$SHA")
+          python3 tools/bump_gate.py trim --base "$base" --head "$SHA" --hold "$HOLD" --run-url "$RUN_URL"
+          git add -A -- config/upstream-sources.json config/bump-holds.json packages/
+          git -c user.name="github-actions[bot]" \
+              -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+              commit -q -m "chore(sources): hold bumps that failed the gate: $(jq -r 'join(", ")' <<< "$HOLD")" \
+              -m "Held by $RUN_URL"
+          # A fast-forward of the commit that built: if the branch moved,
+          # GitHub refuses the push and the newer gate owns it.
+          git push origin "HEAD:refs/heads/bump/upstream-sources"
+          gh workflow run bump-upstream-gate.yml -R "$REPOSITORY" \
+            --ref bump/upstream-sources -f pr="$PR"
+          echo "::warning title=bump gate::held $HOLD; gating the rest at $(git rev-parse HEAD)"
+      # GitHub does create pull_request runs for the bot-opened PR, but parks
+      # them in action_required (a bot triggered them). A parked run's pending
+      # Canary check on the head commit blocks the merge -- "the base branch
+      # policy prohibits the merge" -- even after the dispatched Canary passed.
+      # Approve the parked runs on exactly the commit this gate built; they are
+      # this repository's own workflows on its own branch.
+      - name: Release pull_request runs parked for approval on this commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ github.sha }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          run_state() {
+            gh api "repos/$REPOSITORY/actions/runs/$1" --jq '"\(.status)/\(.conclusion)"'
+          }
+          gh api "repos/$REPOSITORY/actions/runs?head_sha=$SHA&status=action_required&per_page=100" \
+            --jq '.workflow_runs[] | select(.event == "pull_request") | .id' > parked.txt
+          : > approved.txt
+          while read -r id; do
+            [ -n "$id" ] || continue
+            if gh api -X POST "repos/$REPOSITORY/actions/runs/$id/approve" > /dev/null; then
+              echo "approved parked run $id"
+              released="$id"
+            elif [ "$(run_state "$id")" = "completed/success" ]; then
+              # Approved by an earlier gate cycle and already finished: the
+              # approve call refuses a completed run, but there is nothing
+              # left to release.
+              echo "parked run $id already completed successfully"
+              released="$id"
+            else
+              echo "::warning title=bump gate::could not approve parked run $id; a maintainer must approve it before the merge can pass"
+              continue
+            fi
+            # Only the required Canary check gates the merge; other parked
+            # runs are released so nothing pending lingers, but the wait
+            # below tracks Canary alone.
+            if [ "$(gh api "repos/$REPOSITORY/actions/runs/$id" --jq '.name')" = "Canary" ]; then
+              echo "$released" >> approved.txt
+            fi
+          done < parked.txt
+      - name: Wait for the Canary check on this commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ github.sha }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          # Approving a parked run RESTARTS it: a completed Canary check-run
+          # visible right after the approval can predate the restart while
+          # the merge policy already sees the fresh pending run. Waiting on
+          # the check-runs API alone then merges into a policy refusal ("the
+          # base branch policy prohibits the merge"). Wait on the approved
+          # Canary run IDs themselves instead: their status is authoritative
+          # and cannot go stale.
+          if [ -s approved.txt ]; then
+            for _ in $(seq 1 60); do
+              pending=0
+              failed=0
+              while read -r id; do
+                [ -n "$id" ] || continue
+                state=$(gh api "repos/$REPOSITORY/actions/runs/$id" --jq '"\(.status)/\(.conclusion)"')
+                case "$state" in
+                  completed/success) ;;
+                  completed/*)
+                    echo "::error title=bump gate::approved run $id ended $state" >&2
+                    failed=1
+                    ;;
+                  *) pending=1 ;;
+                esac
+              done < approved.txt
+              [ "$failed" = "0" ] || exit 1
+              if [ "$pending" = "0" ]; then
+                echo "approved Canary runs completed successfully on $SHA"
+                break
+              fi
+              sleep 60
+            done
+            if [ "$pending" != "0" ]; then
+              echo "::error title=bump gate::approved runs did not complete on $SHA after an hour" >&2
+              exit 1
+            fi
+          fi
+          for _ in $(seq 1 60); do
+            gh api "repos/$REPOSITORY/commits/$SHA/check-runs?check_name=Canary&filter=latest" \
+              --jq '[.check_runs[] | {status, conclusion}]' > canary.json
+            if jq -e 'any(.[]; .status == "completed")' canary.json > /dev/null; then
+              jq -e 'any(.[]; .conclusion == "success")' canary.json > /dev/null
+              echo "Canary passed on $SHA"
+              exit 0
+            fi
+            sleep 60
+          done
+          echo "::error title=bump gate::no completed Canary check on $SHA after an hour" >&2
+          exit 1
+      - name: Merge, only at the commit that built
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ inputs.pr }}
+          SHA: ${{ github.sha }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          head=$(gh pr view "$PR" -R "$REPOSITORY" --json state,headRefOid --jq 'select(.state == "OPEN") | .headRefOid')
+          if [ "$head" != "$SHA" ]; then
+            echo "::notice title=bump gate::pull request $PR moved to ${head:-closed} since $SHA built; not merging"
+            exit 0
+          fi
+          gh pr merge "$PR" -R "$REPOSITORY" --squash --match-head-commit "$SHA"
+          echo "merged=true" >> "$GITHUB_ENV"
+      - name: Publish the merged bump to latest
+        if: env.merged == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          gh workflow run rebuild-rpms.yml -R "$REPOSITORY" --ref main

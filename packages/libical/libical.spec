@@ -8,6 +8,9 @@ License:	LGPL-2.1-only OR MPL-2.0
 URL:		https://libical.github.io/libical/
 Source:		https://github.com/%{name}/%{name}/archive/v%{version}/%{name}-%{version}.tar.gz
 
+# https://github.com/libical/libical/issues/1361
+Patch:          0001-CVE-2026-88383-bsearch-incompatible-callback-pointer.patch
+
 BuildRequires:	gcc
 BuildRequires:	gcc-c++
 BuildRequires:	cmake

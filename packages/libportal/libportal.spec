@@ -3,8 +3,8 @@
 %bcond qt5 0
 
 Name:           libportal
-Version:        0.10.0
-Release:        2%{?dist}
+Version:        0.11.0
+Release:        1%{?dist}
 Summary:        Flatpak portal library
 # doc/urlmap.js is LGPL-2.1-or-later
 # everything else is LGPL-3.0-only

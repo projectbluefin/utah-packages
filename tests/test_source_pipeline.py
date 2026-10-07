@@ -17,6 +17,7 @@ from tools.source_pipeline import (
     FETCH_ATTEMPTS,
     LOOKASIDE,
     bundled_sources,
+    digest,
     fetch,
     fetch_with_fallbacks,
     main,
@@ -463,6 +464,44 @@ class SourceManifestTests(unittest.TestCase):
                     source_manifest({"name": "demo"}),
                     [("gvdb.tar.xz", "a" * 128), ("extra.tar.xz", "d" * 128)],
                 )
+
+
+class DigestTests(unittest.TestCase):
+    """digest() compares a downloaded file against the value Fedora recorded.
+
+    md5 is collision-broken; the pipeline accepts it only where the dist-git
+    pin itself is md5, and such recipes are listed in factory_manifest under
+    source_verification as the checksum-only class to shorten. On a FIPS-mode
+    OpenSSL build, ``hashlib.new('md5')`` raises ``ValueError`` for security
+    use; the call has to carry ``usedforsecurity=False`` so md5 verification
+    works on a FIPS host. sha512 and sha256 keep the FIPS-strict default so a
+    future algorithm addition cannot silently opt out of policy.
+    """
+
+    def test_digest_passes_usedforsecurity_false_only_for_md5(self) -> None:
+        captured: list[tuple[str, dict]] = []
+        real_new = hashlib.new
+
+        def spy_new(name: str, *args: object, **kwargs: object):
+            captured.append((name, dict(kwargs)))
+            return real_new(name, *args, **kwargs)
+
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "bytes"
+            path.write_bytes(b"digest me")
+            with patch("tools.source_pipeline.hashlib.new", side_effect=spy_new):
+                for algorithm in ("sha512", "sha256", "md5"):
+                    digest(path, algorithm)
+        self.assertEqual([name for name, _ in captured], ["sha512", "sha256", "md5"])
+        self.assertEqual(captured[0][1], {"usedforsecurity": True})
+        self.assertEqual(captured[1][1], {"usedforsecurity": True})
+        self.assertEqual(captured[2][1], {"usedforsecurity": False})
+
+    def test_digest_matches_hashlib_for_md5(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "bytes"
+            path.write_bytes(b"digest me")
+            self.assertEqual(digest(path, "md5"), hashlib.md5(b"digest me").hexdigest())
 
 
 class BundledSourceTests(unittest.TestCase):

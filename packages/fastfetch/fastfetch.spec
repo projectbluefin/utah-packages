@@ -1,6 +1,6 @@
 Name:           fastfetch
-Version:        2.66.0
-Release:        2%{?dist}
+Version:        2.69.0
+Release:        1%{?dist}
 Summary:        Fast neofetch-like system information tool
 
 License:        MIT

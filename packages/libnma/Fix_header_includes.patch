@@ -1,0 +1,44 @@
+From 9b6165f00ddbcde0d327399945030c2663998f64 Mon Sep 17 00:00:00 2001
+From: Michael Biebl <biebl@debian.org>
+Date: Sun, 3 Mar 2024 00:41:16 +0100
+Subject: [PATCH] all: Fix header includes
+
+Those header files use Gtk* or NMConnection, so need the proper
+includes.
+
+Closes https://gitlab.gnome.org/GNOME/libnma/-/issues/26
+
+https://gitlab.gnome.org/GNOME/libnma/-/merge_requests/55
+---
+ src/nma-bar-code-widget.h | 2 ++
+ src/nma-mobile-wizard.h   | 1 +
+ 2 files changed, 3 insertions(+)
+
+diff --git a/src/nma-bar-code-widget.h b/src/nma-bar-code-widget.h
+index 42e21482..d43ae464 100644
+--- a/src/nma-bar-code-widget.h
++++ b/src/nma-bar-code-widget.h
+@@ -19,6 +19,8 @@
+ #define __NMA_BAR_CODE_WIDGET_H__
+ 
+ #include <glib-object.h>
++#include <gtk/gtk.h>
++#include <NetworkManager.h>
+ 
+ #include "nma-version.h"
+ 
+diff --git a/src/nma-mobile-wizard.h b/src/nma-mobile-wizard.h
+index b14e7240..34a81080 100644
+--- a/src/nma-mobile-wizard.h
++++ b/src/nma-mobile-wizard.h
+@@ -11,6 +11,7 @@
+ #define __NMA_MOBILE_WIZARD_H__
+ 
+ #include <glib.h>
++#include <gtk/gtk.h>
+ #include <NetworkManager.h>
+ #include <nm-device.h>
+ 
+-- 
+GitLab
+

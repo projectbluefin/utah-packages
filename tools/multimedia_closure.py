@@ -231,14 +231,18 @@ def primary_xml(repodata: Path) -> bytes:
     index = repodata / "repomd.xml"
     candidates: list[Path] = []
     if index.is_file():
-        text = index.read_text()
-        match = re.search(r'<data\s+type="primary">.*?<location\s+href="([^"]+)"', text, re.DOTALL)
-        if not match:
-            match = re.search(r'<location href="([^"]*primary[^"]*)"', text)
-        if match:
-            named = repodata / Path(match.group(1)).name
-            if named.is_file():
-                candidates = [named]
+        try:
+            document = ElementTree.fromstring(index.read_bytes())
+        except ElementTree.ParseError as error:
+            raise ClosureError(f"unreadable repomd.xml: {error}") from error
+        namespace = "{http://linux.duke.edu/metadata/repo}"
+        entry = document.find(f"{namespace}data[@type='primary']/{namespace}location")
+        if entry is None or not entry.get("href"):
+            raise ClosureError("repomd.xml has no primary metadata location")
+        named = repodata / Path(entry.get("href")).name
+        if not named.is_file():
+            raise ClosureError(f"repomd.xml primary metadata is missing: {named.name}")
+        candidates = [named]
     if not candidates:
         candidates = sorted(repodata.glob("*primary.xml*"))
     if not candidates:

@@ -413,6 +413,7 @@ def assert_gate_enforced(workflow: dict, publish_workflow: dict | None = None) -
     if "pull_request" in triggers and "pull_request.head.repo.full_name" not in gate:
         raise AssertionError("publish gate must exclude fork pull requests")
 
+    _assert_report_has_a_verdict(workflow)
     _assert_publication(publish_workflow)
 
 
@@ -435,6 +436,37 @@ def _assert_publication(publish_workflow: dict) -> None:
     if "!cancelled()" not in gate:
         raise AssertionError("publish must run after a failed wave, so its if: needs !cancelled()")
     _assert_step_order(publish)
+
+
+def _assert_report_has_a_verdict(workflow: dict) -> None:
+    """The report job speaks after a failure and stays silent after a cancel.
+
+    It reads failures off the run's artifact list, so it must run when
+    publish did not (a failed wave, a failed publish gate). But a run
+    cancelled by hand uploaded nothing for the waves it stopped, and reading
+    that as "every selected package failed" filed a tracking issue naming
+    the whole build list (#267). ``!cancelled()`` gives exactly that:
+    failures report, cancellations do not; ``always()`` is the bug.
+    """
+    try:
+        report = workflow["jobs"]["report"]
+    except (KeyError, TypeError) as error:
+        raise AssertionError("rebuild-rpms.yml has no report job") from error
+    gate = _normalized(str(report.get("if", "")))
+    if "always()" in gate:
+        raise AssertionError(
+            "report must not run on always(): a cancelled run has no failures "
+            "to name and would report the whole build list as failed"
+        )
+    if "!cancelled()" not in gate:
+        raise AssertionError(
+            "report must run after a failed wave or publish, so its if: needs !cancelled()"
+        )
+    # precedence runs inside publish-repository.yml, so waiting for the final
+    # publish is waiting for it.
+    for need in ("prepare", "publish", *STAGES):
+        if need not in report.get("needs", []):
+            raise AssertionError(f"report job must wait for {need}")
 
 
 def _step_index(names: list[str], fragment: str, what: str) -> int:

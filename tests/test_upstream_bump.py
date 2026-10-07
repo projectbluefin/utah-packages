@@ -2,11 +2,15 @@
 
 import io
 import json
+import os
 from pathlib import Path
+import sys
 import tempfile
 import unittest
+import urllib.error
 
 from tools.upstream_bump import (
+    anitya_versions,
     apply,
     cycle_final,
     release_cycle,
@@ -26,9 +30,13 @@ from tools.upstream_bump import (
     forge_planned_entry,
     forge_proposal,
     forge_versions,
+    newer,
     strip_tag_prefix,
     substituted,
     candidates,
+    check_bumpable,
+    held,
+    version_bound,
 )
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -201,9 +209,50 @@ class FallbackFeedTests(unittest.TestCase):
         entry = {k: v for k, v in self.SRT.items() if k != "fallback_urls"}
         self.assertIsNone(forge_feed(entry))
 
+    def test_finds_the_forge_feed_named_by_an_explicit_feed(self) -> None:
+        entry = {k: v for k, v in self.SRT.items() if k != "fallback_urls"}
+        entry["feed"] = "https://github.com/Haivision/srt/archive/v1.5.7/srt-1.5.7.tar.gz"
+        found = candidates({"srt": entry}, only=None)
+        self.assertEqual(len(found), 1)
+        self.assertEqual(
+            found[0][2],
+            {"forge": "github", "endpoint": "tags", "owner": "Haivision", "repo": "srt"},
+        )
+
+    def test_a_proposal_from_an_explicit_feed_is_review_only(self) -> None:
+        # The primary still points at the lookaside, so the new bytes are not
+        # where the lock points: a full run reports it for a human and never
+        # applies it.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "config").mkdir()
+            entry = {k: v for k, v in self.SRT.items() if k != "fallback_urls"}
+            entry["feed"] = "https://github.com/Haivision/srt/archive/v1.5.7/srt-1.5.7.tar.gz"
+            (root / "config" / "upstream-sources.json").write_text(
+                json.dumps({"packages": [entry]}, indent=2) + "\n"
+            )
+            opener = fake_opener(
+                {
+                    "https://api.github.com/repos/Haivision/srt/releases?per_page=100": b"[]",
+                    "https://api.github.com/repos/Haivision/srt/tags?per_page=100": json.dumps(
+                        [{"name": "v1.5.7"}, {"name": "v1.5.8"}]
+                    ).encode()
+                }
+            )
+            proposals = plan(root, only=None, opener=opener)
+            singled = plan(root, only="srt", opener=opener)
+        self.assertEqual(len(proposals), 1)
+        self.assertEqual(proposals[0]["kind"], "review")
+        self.assertEqual(proposals[0]["latest"], "1.5.8")
+        self.assertIn("explicit feed", proposals[0]["reason"])
+        # Naming the package is the human decision that may move the primary.
+        self.assertEqual(singled[0]["kind"], "relock")
+        self.assertEqual(singled[0]["latest"], "1.5.8")
+
     def test_a_same_major_release_is_review_only_while_the_primary_is_lookaside(self) -> None:
         opener = fake_opener(
             {
+                "https://api.github.com/repos/Haivision/srt/releases?per_page=100": b"[]",
                 "https://api.github.com/repos/Haivision/srt/tags?per_page=100": json.dumps(
                     [{"name": "v1.5.7"}, {"name": "v1.5.8"}]
                 ).encode()
@@ -328,6 +377,214 @@ class SourcesManifestTests(unittest.TestCase):
             self.assertEqual(
                 manifest.read_text(), f"SHA512 (gnome-shell-51.0.tar.xz) = {'f' * 128}\n"
             )
+
+
+class BundledSourcesTests(unittest.TestCase):
+    """A bump moves the primary pin and keeps every bundled lookaside file.
+
+    PR #323 rewrote ppp's manifest to the tarball alone, dropping
+    ppp-watch.tar.xz; adw-gtk3-theme lost its README and LICENSE copies, and
+    both died in `rpmbuild -bs` before the gate could build anything.
+    """
+
+    DIGEST = "a" * 128
+
+    def test_keeps_bundled_entries_in_place(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            manifest = Path(tmp) / "sources"
+            manifest.write_text(
+                f"SHA512 (ppp-2.5.3.tar.gz) = {'0' * 128}\n"
+                f"SHA512 (ppp-watch.tar.xz) = {'1' * 128}\n"
+            )
+            rewrite_sources(manifest, "ppp-2.5.4.tar.gz", self.DIGEST, previous="ppp-2.5.3.tar.gz")
+            self.assertEqual(
+                manifest.read_text(),
+                f"SHA512 (ppp-2.5.4.tar.gz) = {self.DIGEST}\n"
+                f"SHA512 (ppp-watch.tar.xz) = {'1' * 128}\n",
+            )
+
+    def test_a_manifest_naming_the_new_file_is_not_duplicated(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            manifest = Path(tmp) / "sources"
+            manifest.write_text(f"SHA512 (x-1.1.tar.gz) = {'0' * 128}\n")
+            rewrite_sources(manifest, "x-1.1.tar.gz", self.DIGEST, previous="x-1.0.tar.gz")
+            self.assertEqual(manifest.read_text(), f"SHA512 (x-1.1.tar.gz) = {self.DIGEST}\n")
+
+    def test_version_bound_names(self) -> None:
+        self.assertTrue(version_bound("gum-2.0.0-vendor.tar.bz2", "2.0.0"))
+        self.assertTrue(version_bound("fish-4.6.0.tar.xz.asc", "4.6.0"))
+        self.assertFalse(version_bound("rust-pcre2-0.2.9-utf32.tar.gz", "4.6.0"))
+        self.assertFalse(version_bound("ppp-watch.tar.xz", "2.5.3"))
+        self.assertFalse(version_bound("x-1.2.3.tar.gz", "1.2"))
+        self.assertFalse(version_bound("x-11.2.tar.gz", "1.2"))
+
+    def scratch(self, tmp: str, name: str, spec: str, manifest: str) -> tuple[Path, dict]:
+        root = Path(tmp)
+        package = root / "packages" / name
+        package.mkdir(parents=True)
+        (package / f"{name}.spec").write_text(spec)
+        (package / "sources").write_text(manifest)
+        return root, {"name": name, "version": "2.0.0", "filename": f"{name}-2.0.0.tar.gz"}
+
+    def test_refuses_a_bundled_source_bound_to_the_old_version(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root, entry = self.scratch(
+                tmp, "gum", "Version: 2.0.0\n",
+                f"SHA512 (gum-2.0.0.tar.gz) = {'0' * 128}\n"
+                f"SHA512 (gum-2.0.0-vendor.tar.bz2) = {'1' * 128}\n",
+            )
+            with self.assertRaisesRegex(ValueError, "gum-2.0.0-vendor.tar.bz2"):
+                check_bumpable(root, entry)
+
+    def test_refuses_a_version_macro_a_source_line_reads(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root, entry = self.scratch(
+                tmp, "sof",
+                "%global sof_ver 2.0.0\n%global sof_ver_pkg v%{sof_ver}\nVersion: %{sof_ver}\n"
+                "Source: https://example.org/%{sof_ver_pkg}/sof-%{sof_ver}.tar.gz\n",
+                f"SHA512 (sof-2.0.0.tar.gz) = {'0' * 128}\n",
+            )
+            with self.assertRaisesRegex(ValueError, "macros"):
+                check_bumpable(root, entry)
+            with self.assertRaises(ValueError):
+                rewrite_spec(root / "packages" / "sof" / "sof.spec", "2.0.1")
+
+    def test_refuses_a_source_reading_a_macro_version_depends_on(self) -> None:
+        # re2: Version: %{base_version}, computed from %{tag}, which Source reads.
+        with tempfile.TemporaryDirectory() as tmp:
+            root, entry = self.scratch(
+                tmp, "re2",
+                "%global tag 2025-11-05\n%global base_version %(echo '%{tag}' | tr -d -)\n"
+                "Version: %{base_version}\nSource: https://example.org/%{tag}/re2-%{tag}.tar.gz\n",
+                f"SHA512 (re2-2.0.0.tar.gz) = {'0' * 128}\n",
+            )
+            with self.assertRaisesRegex(ValueError, "macros"):
+                check_bumpable(root, entry)
+
+    def test_a_macro_version_whose_sources_read_version_is_bumpable(self) -> None:
+        # pipewire and alsa-utils: Source0 reads %{version}, not the components.
+        spec_text = (
+            "%global majorversion 2\n%global minorversion 0\n%global microversion 0\n"
+            "%global libversion 0.%(echo $((%{minorversion} * 100))).0\n"
+            "Version: %{majorversion}.%{minorversion}.%{microversion}\n"
+            "Release: 3%{?dist}\n"
+            "Source0: https://example.org/%{version}/pipewire-%{version}.tar.gz\n"
+            "Source1: pipewire.sysusers\n"
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            root, entry = self.scratch(
+                tmp, "pipewire", spec_text, f"SHA512 (pipewire-2.0.0.tar.gz) = {'0' * 128}\n",
+            )
+            check_bumpable(root, entry)
+            spec = root / "packages" / "pipewire" / "pipewire.spec"
+            self.assertTrue(rewrite_spec(spec, "2.0.1"))
+            self.assertIn("Version: 2.0.1\n", spec.read_text())
+
+    def test_refuses_a_bundled_source_in_tarball_spelling(self) -> None:
+        # glycin 2.2~beta pins glycin-2.2.beta-vendor.tar.xz.
+        with tempfile.TemporaryDirectory() as tmp:
+            root, entry = self.scratch(
+                tmp, "glycin", "Version: 2.2~beta\n",
+                f"SHA512 (glycin-2.2.beta.tar.xz) = {'0' * 128}\n"
+                f"SHA512 (glycin-2.2.beta-vendor.tar.xz) = {'1' * 128}\n",
+            )
+            entry.update(version="2.2~beta", filename="glycin-2.2.beta.tar.xz")
+            with self.assertRaisesRegex(ValueError, "glycin-2.2.beta-vendor.tar.xz"):
+                check_bumpable(root, entry)
+
+    def test_a_version_free_bundle_is_bumpable(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root, entry = self.scratch(
+                tmp, "ppp", "Version: 2.0.0\n",
+                f"SHA512 (ppp-2.0.0.tar.gz) = {'0' * 128}\n"
+                f"SHA512 (ppp-watch.tar.xz) = {'1' * 128}\n",
+            )
+            check_bumpable(root, entry)
+
+    def test_apply_refuses_before_fetching_or_writing(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root, entry = self.scratch(
+                tmp, "gum", "Version: 2.0.0\n",
+                f"SHA512 (gum-2.0.0.tar.gz) = {'0' * 128}\n"
+                f"SHA512 (gum-2.0.0-vendor.tar.bz2) = {'1' * 128}\n",
+            )
+            entry.update(url="https://github.com/charmbracelet/gum/archive/v2.0.0/gum-2.0.0.tar.gz",
+                         sha512="0" * 128)
+            (root / "config").mkdir()
+            config = root / "config" / "upstream-sources.json"
+            config.write_text(json.dumps({"packages": [entry]}, indent=2) + "\n")
+            before = config.read_text()
+            with self.assertRaises(ValueError):
+                apply(root, {"kind": "update", "name": "gum", "latest": "2.0.2"},
+                      opener=fake_opener({}))
+            self.assertEqual(config.read_text(), before)
+            self.assertIn("Version: 2.0.0", (root / "packages" / "gum" / "gum.spec").read_text())
+
+
+class HoldTests(unittest.TestCase):
+    """The bump gate's holds stop exactly the version that failed."""
+
+    holds = {"fish": {"version": "4.9.3", "run": "https://example.invalid/run/1"}}
+
+    def test_the_held_version_is_held(self) -> None:
+        self.assertIsNotNone(held({"name": "fish", "latest": "4.9.3"}, self.holds))
+
+    def test_a_newer_release_is_not(self) -> None:
+        self.assertIsNone(held({"name": "fish", "latest": "4.9.4"}, self.holds))
+        self.assertIsNone(held({"name": "gum", "latest": "4.9.3"}, self.holds))
+
+    def run_main(self, root: Path, proposals: list[dict]):
+        import contextlib
+        from unittest import mock
+
+        from tools import upstream_bump
+
+        out, err = io.StringIO(), io.StringIO()
+        argv = ["upstream_bump.py", "--apply", "--root", str(root)]
+        with mock.patch.object(sys, "argv", argv), \
+                mock.patch.object(upstream_bump, "plan", return_value=proposals), \
+                mock.patch.object(upstream_bump, "apply", return_value={}) as applied, \
+                contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            out.reconfigure = lambda **_: None
+            code = upstream_bump.main()
+        return code, [c.args[1]["name"] for c in applied.call_args_list], err.getvalue()
+
+    def test_main_skips_a_held_version_and_retires_a_superseded_hold(self) -> None:
+        from tools.bump_gate import dump_holds, load_holds
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "config").mkdir()
+            (root / "config" / "bump-holds.json").write_text(dump_holds({
+                "fish": {"version": "4.9.3", "run": "u1"},
+                "gum": {"version": "2.0.2", "run": "u2"},
+            }))
+            code, applied, err = self.run_main(root, [
+                {"kind": "update", "name": "fish", "current": "4.6.0", "latest": "4.9.3"},
+                {"kind": "update", "name": "gum", "current": "2.0.0", "latest": "2.0.3"},
+            ])
+            self.assertEqual(code, 0)
+            self.assertEqual(applied, ["gum"])
+            self.assertIn("held fish", err)
+            self.assertEqual(set(load_holds(root)), {"fish"})
+
+    def test_main_reports_a_review_only_package_instead_of_applying_it(self) -> None:
+        from tools.bump_gate import REVIEW_ONLY
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "config").mkdir()
+            (root / REVIEW_ONLY).write_text("# runs as root\ngdm\nppp\n")
+            code, applied, err = self.run_main(root, [
+                {"kind": "final", "name": "gdm", "current": "51.0", "latest": "51.1"},
+                {"kind": "update", "name": "gum", "current": "2.0.0", "latest": "2.0.3"},
+                # A relock lands on its own, human-merged branch: not gated, not held back.
+                {"kind": "relock", "name": "ppp", "current": "2.5.2", "latest": "2.5.3"},
+            ])
+            self.assertEqual(code, 0)
+            self.assertEqual(applied, ["gum", "ppp"])
+            self.assertIn("needs review  gdm: 51.0 -> 51.1", err)
+            self.assertIn(REVIEW_ONLY, err)
 
 
 def fake_opener(payloads: dict):
@@ -765,6 +1022,203 @@ class ApplyTests(unittest.TestCase):
             updated = apply(root, {"name": "pango", "latest": "1.59.0"}, opener=opener)
             self.assertNotEqual(updated["sha512"], "d" * 128)
 
+    def test_a_forge_update_fetches_from_its_own_url_not_gnome(self) -> None:
+        # forge_proposal() puts its feed label under "module". apply() read
+        # that as a GNOME module and fetched
+        # download.gnome.org/sources/github.com/..., a 404 that ended every
+        # scheduled run with a forge update in it.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "config").mkdir()
+            (root / "packages" / "adw-gtk3-theme").mkdir(parents=True)
+            (root / "config" / "upstream-sources.json").write_text(
+                json.dumps(
+                    {
+                        "packages": [
+                            {
+                                "name": "adw-gtk3-theme",
+                                "version": "6.4",
+                                "url": "https://github.com/lassekongo83/adw-gtk3/releases/download/v6.4/adw-gtk3v6.4.tar.xz",
+                                "filename": "adw-gtk3v6.4.tar.xz",
+                                "sha512": "e" * 128,
+                            }
+                        ]
+                    },
+                    indent=2,
+                )
+                + "\n"
+            )
+            opener = fake_opener(
+                {
+                    "https://github.com/lassekongo83/adw-gtk3/releases/download/v6.5/adw-gtk3v6.5.tar.xz": b"6.5"
+                }
+            )
+            updated = apply(
+                root,
+                {
+                    "kind": "update",
+                    "name": "adw-gtk3-theme",
+                    "module": "github.com/lassekongo83/adw-gtk3",
+                    "current": "6.4",
+                    "latest": "6.5",
+                },
+                opener=opener,
+            )
+            self.assertEqual(updated["version"], "6.5")
+            self.assertEqual(updated["filename"], "adw-gtk3v6.5.tar.xz")
+
+
+    def test_a_spec_that_cannot_be_bumped_leaves_the_lock_alone(self) -> None:
+        # main() skips a package whose apply() raises; nothing may be half
+        # written when it does.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "config").mkdir()
+            package = root / "packages" / "pango"
+            package.mkdir(parents=True)
+            lock = {"packages": [{
+                "name": "pango", "version": "1.58.2",
+                "url": "https://download.gnome.org/sources/pango/1/pango-1.58.2.tar.xz",
+                "filename": "pango-1.58.2.tar.xz", "sha512": "d" * 128}]}
+            config = root / "config" / "upstream-sources.json"
+            config.write_text(json.dumps(lock, indent=2) + "\n")
+            before = config.read_text()
+            (package / "pango.spec").write_text("Name: pango\n")
+            opener = fake_opener(
+                {"https://download.gnome.org/sources/pango/1.58/pango-1.58.3.tar.xz": b"x"})
+            with self.assertRaises(ValueError):
+                apply(root, {"name": "pango", "latest": "1.58.3"}, opener=opener)
+            self.assertEqual(config.read_text(), before)
+
+class MainApplyTests(unittest.TestCase):
+    """main() keeps going when one bump's bytes cannot be fetched."""
+
+    def run_main(self, proposals, apply_side_effect, *, env=None):
+        import contextlib
+        import tempfile
+        from unittest import mock
+
+        from tools import upstream_bump
+
+        out, err = io.StringIO(), io.StringIO()
+        argv = ["upstream_bump.py", "--apply"]
+        with tempfile.TemporaryDirectory() as tmp:
+            output_path = Path(tmp) / "outputs"
+            output_path.touch()
+            patched_env = {"GITHUB_OUTPUT": str(output_path)}
+            if env:
+                patched_env.update(env)
+            with mock.patch.dict(os.environ, patched_env, clear=False), \
+                    mock.patch.object(sys, "argv", argv), \
+                    mock.patch.object(upstream_bump, "plan", return_value=proposals), \
+                    mock.patch.object(upstream_bump, "apply", side_effect=apply_side_effect) as applied, \
+                    contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+                out.reconfigure = lambda **_: None
+                code = upstream_bump.main()
+            outputs = output_path.read_text()
+        return code, applied, err.getvalue(), outputs
+
+    def test_one_failed_download_skips_only_that_package(self) -> None:
+        proposals = [
+            {"kind": "update", "name": "broken", "current": "1.0", "latest": "1.1"},
+            {"kind": "update", "name": "fine", "current": "2.0", "latest": "2.1"},
+        ]
+
+        def side_effect(root, bump):
+            if bump["name"] == "broken":
+                raise urllib.error.HTTPError("https://x/broken", 404, "Not Found", {}, None)
+            return {}
+
+        code, applied, err, _ = self.run_main(proposals, side_effect)
+        self.assertEqual(code, 0)
+        self.assertEqual(applied.call_count, 2)
+        self.assertIn("skipped broken", err)
+
+    def test_fails_when_nothing_could_be_applied(self) -> None:
+        proposals = [{"kind": "update", "name": "broken", "current": "1.0", "latest": "1.1"}]
+
+        def side_effect(root, bump):
+            raise OSError("unreachable")
+
+        code, _, _, _ = self.run_main(proposals, side_effect)
+        self.assertEqual(code, 1)
+
+    def test_writes_relock_true_when_a_relock_was_proposed(self) -> None:
+        proposals = [
+            {"kind": "relock", "name": "nautilus", "current": "51~beta", "latest": "51.0.1"},
+        ]
+        code, _, _, outputs = self.run_main(proposals, lambda root, bump: {})
+        self.assertEqual(code, 0)
+        self.assertEqual(outputs.strip(), "relock=true")
+
+    def test_writes_relock_false_when_no_relock_was_proposed(self) -> None:
+        proposals = [
+            {"kind": "update", "name": "fzf", "current": "0.55", "latest": "0.56"},
+        ]
+        code, _, _, outputs = self.run_main(proposals, lambda root, bump: {})
+        self.assertEqual(code, 0)
+        self.assertEqual(outputs.strip(), "relock=false")
+
+    def test_writes_relock_false_when_nothing_was_proposed(self) -> None:
+        code, _, _, outputs = self.run_main([], lambda root, bump: {})
+        self.assertEqual(code, 0)
+        self.assertEqual(outputs.strip(), "relock=false")
+
+
+class ManifestFormatTests(unittest.TestCase):
+    """Bundled pins survive a bump in either Fedora manifest form (#326)."""
+
+    def write(self, text):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        manifest = Path(tmp.name) / "sources"
+        manifest.write_text(text)
+        return manifest
+
+    def test_legacy_md5_bundled_pins_are_kept(self):
+        from tools.upstream_bump import rewrite_sources
+        manifest = self.write(
+            "b304bbe8ab63373924a744eac9ebc652  fxload-2008_10_13.tar.gz\n"
+            "c1856eceed08f71a5600a716e10b29f1  fxload-2008_10_13-noa3load.tar.gz\n")
+        rewrite_sources(manifest, "fxload-2026.tar.gz", "a" * 128,
+                        previous="fxload-2008_10_13.tar.gz")
+        self.assertEqual(manifest.read_text(),
+                         f"SHA512 (fxload-2026.tar.gz) = {'a' * 128}\n"
+                         "c1856eceed08f71a5600a716e10b29f1  fxload-2008_10_13-noa3load.tar.gz\n")
+
+    def test_unparseable_lines_and_order_are_kept(self):
+        from tools.upstream_bump import rewrite_sources
+        manifest = self.write(
+            f"SHA512 (extra.tar.xz) = {'b' * 128}\n"
+            f"SHA512 (pkg-1.0.tar.xz) = {'c' * 128}\n"
+            "something this tool does not parse\n")
+        rewrite_sources(manifest, "pkg-1.1.tar.xz", "d" * 128, previous="pkg-1.0.tar.xz")
+        self.assertEqual(manifest.read_text().splitlines(), [
+            f"SHA512 (extra.tar.xz) = {'b' * 128}",
+            f"SHA512 (pkg-1.1.tar.xz) = {'d' * 128}",
+            "something this tool does not parse",
+        ])
+
+    def test_a_missing_primary_pin_is_appended(self):
+        from tools.upstream_bump import rewrite_sources
+        manifest = self.write(f"SHA256 (keyring.gpg) = {'e' * 64}\n")
+        rewrite_sources(manifest, "pkg-2.tar.xz", "f" * 128, previous="pkg-1.tar.xz")
+        self.assertEqual(manifest.read_text().splitlines(), [
+            f"SHA256 (keyring.gpg) = {'e' * 64}", f"SHA512 (pkg-2.tar.xz) = {'f' * 128}"])
+
+    def test_check_bumpable_sees_version_bound_md5_entries(self):
+        from tools.upstream_bump import check_bumpable
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            package = root / "packages" / "gum"
+            package.mkdir(parents=True)
+            (package / "sources").write_text(
+                "0123456789abcdef0123456789abcdef  gum-2.0.0.tar.gz\n"
+                "fedcba9876543210fedcba9876543210  gum-2.0.0-vendor.tar.bz2\n")
+            with self.assertRaises(ValueError):
+                check_bumpable(root, {"name": "gum", "version": "2.0.0",
+                                      "filename": "gum-2.0.0.tar.gz"})
+
 
 if __name__ == "__main__":
     unittest.main()
@@ -859,6 +1313,7 @@ class ForgeVersionListingTests(unittest.TestCase):
         feed = {"forge": "github", "endpoint": "tags", "owner": "o", "repo": "r"}
         opener = fake_opener(
             {
+                "https://api.github.com/repos/o/r/releases?per_page=100": b"[]",
                 "https://api.github.com/repos/o/r/tags?per_page=100": json.dumps(
                     [{"name": "v2.3.0"}, {"name": "v2.2.1"}, {"name": "main"}]
                 ).encode()
@@ -888,21 +1343,74 @@ class ForgeVersionListingTests(unittest.TestCase):
                 "host": "gitlab.freedesktop.org", "path": "camera/libcamera"}
         url = ("https://gitlab.freedesktop.org/api/v4/projects/"
                "camera%2Flibcamera/repository/tags?per_page=100")
-        opener = fake_opener({url: json.dumps([{"name": "v0.6.0"}]).encode()})
+        releases = ("https://gitlab.freedesktop.org/api/v4/projects/"
+                    "camera%2Flibcamera/releases?per_page=100")
+        opener = fake_opener({releases: b"[]", url: json.dumps([{"name": "v0.6.0"}]).encode()})
         self.assertEqual(forge_versions(feed, opener=opener), ["0.6.0"])
+
+    def test_a_project_that_publishes_releases_ignores_its_other_tags(self):
+        # stixfonts tagged v2.14 on an interim, source-only commit while its
+        # latest release stayed v2.13b171; the daily bump proposed the tag
+        # and the build failed. The tag listing is not even read.
+        feed = {"forge": "github", "endpoint": "tags", "owner": "o", "repo": "r"}
+        opener = fake_opener(
+            {
+                "https://api.github.com/repos/o/r/releases?per_page=100": json.dumps(
+                    [{"tag_name": "v2.13"}, {"tag_name": "v2.12"}]
+                ).encode()
+            }
+        )
+        self.assertEqual(forge_versions(feed, opener=opener), ["2.13", "2.12"])
+
+    def test_tags_are_read_when_only_drafts_or_prereleases_are_published(self):
+        feed = {"forge": "github", "endpoint": "tags", "owner": "o", "repo": "r"}
+        opener = fake_opener(
+            {
+                "https://api.github.com/repos/o/r/releases?per_page=100": json.dumps(
+                    [{"tag_name": "v3.0", "draft": True},
+                     {"tag_name": "v2.9", "prerelease": True}]
+                ).encode(),
+                "https://api.github.com/repos/o/r/tags?per_page=100": json.dumps(
+                    [{"name": "v2.8"}]
+                ).encode(),
+            }
+        )
+        self.assertEqual(forge_versions(feed, opener=opener), ["2.8"])
+
+    def test_a_gitlab_project_that_publishes_releases_ignores_its_other_tags(self):
+        feed = {"forge": "gitlab", "endpoint": "tags",
+                "host": "gitlab.example.org", "path": "g/p"}
+        base = "https://gitlab.example.org/api/v4/projects/g%2Fp"
+        opener = fake_opener(
+            {
+                f"{base}/releases?per_page=100": json.dumps(
+                    [{"tag_name": "v1.3", "upcoming_release": True},
+                     {"tag_name": "v1.2"}]
+                ).encode()
+            }
+        )
+        self.assertEqual(forge_versions(feed, opener=opener), ["1.2"])
+
+    def test_a_release_feed_with_no_stable_release_does_not_read_tags(self):
+        # A /releases/download/ lock already names a release feed.
+        feed = {"forge": "github", "endpoint": "releases", "owner": "o", "repo": "r"}
+        opener = fake_opener(
+            {"https://api.github.com/repos/o/r/releases?per_page=100": b"[]"}
+        )
+        self.assertEqual(forge_versions(feed, opener=opener), [])
 
     def test_a_non_list_response_is_an_error_not_an_empty_feed(self):
         # GitHub answers rate limiting and 404 with an object. Treating that as
         # "no releases" would silently report every package as up to date.
         feed = {"forge": "github", "endpoint": "tags", "owner": "o", "repo": "r"}
-        opener = fake_opener(
-            {
-                "https://api.github.com/repos/o/r/tags?per_page=100":
-                    b'{"message": "API rate limit exceeded"}'
+        for listing in ("releases", "tags"):
+            payloads = {
+                "https://api.github.com/repos/o/r/releases?per_page=100": b"[]",
+                f"https://api.github.com/repos/o/r/{listing}?per_page=100":
+                    b'{"message": "API rate limit exceeded"}',
             }
-        )
-        with self.assertRaises(ValueError):
-            forge_versions(feed, opener=opener)
+            with self.subTest(listing=listing), self.assertRaises(ValueError):
+                forge_versions(feed, opener=fake_opener(payloads))
 
 
 class ForgeProposalTests(unittest.TestCase):
@@ -916,8 +1424,9 @@ class ForgeProposalTests(unittest.TestCase):
     def propose(self, tags):
         opener = fake_opener(
             {
+                "https://api.github.com/repos/rockowitz/ddcutil/releases?per_page=100": b"[]",
                 "https://api.github.com/repos/rockowitz/ddcutil/tags?per_page=100":
-                    json.dumps([{"name": t} for t in tags]).encode()
+                    json.dumps([{"name": t} for t in tags]).encode(),
             }
         )
         return forge_proposal("ddcutil", self.ENTRY, self.FEED, opener=opener)
@@ -951,6 +1460,38 @@ class ForgeProposalTests(unittest.TestCase):
         p = forge_proposal("ddcutil", self.ENTRY, self.FEED, opener=broken)
         self.assertIn("error", p)
         self.assertIn("ddcutil", p["error"])
+
+    def test_a_suffixed_lock_is_compared_by_its_numeric_prefix(self):
+        # 2.13b171 is a build after 2.13, a ^git snapshot comes after its
+        # base, and an rc comes before its final. version_key alone reads
+        # every suffixed lock as older than any release sharing its major.
+        cases = [
+            ("2.13b171", "2.13", False),
+            ("2.13b171", "2.12", False),
+            ("2.13b171", "2.14", True),
+            ("1.1.1^20251205git3ded00c", "1.1.1", False),
+            ("1.1.1^20251205git3ded00c", "1.1.2", True),
+            ("4.25.0rc1", "4.25.0", True),
+            ("1.0~rc2", "1.0", True),
+            ("1.0~rc2", "0.9", False),
+            ("2.2.1", "2.2.10", True),
+            ("2.2.1", "2.2.1", False),
+        ]
+        for current, candidate, expected in cases:
+            with self.subTest(current=current, candidate=candidate):
+                self.assertIs(newer(candidate, current), expected)
+
+    def test_a_post_release_lock_is_not_moved_back_to_its_base(self):
+        entry = dict(self.ENTRY, version="2.13b171")
+        opener = fake_opener(
+            {
+                "https://api.github.com/repos/rockowitz/ddcutil/releases?per_page=100":
+                    json.dumps([{"tag_name": "v2.13b171"}, {"tag_name": "v2.13"},
+                                {"tag_name": "v2.12"}]).encode(),
+            }
+        )
+        p = forge_proposal("stix-fonts", entry, self.FEED, opener=opener)
+        self.assertIsNone(p["latest"])
 
 
 class ForgeEntryRewriteTests(unittest.TestCase):
@@ -1007,3 +1548,220 @@ class ForgeLabelTests(unittest.TestCase):
             forge_label({"forge": "gitlab", "host": "h", "path": "a/b"}),
             "h/a/b",
         )
+
+
+GTK3_LOOKASIDE = {
+    "name": "gtk3",
+    "version": "3.24.51",
+    "url": "https://src.fedoraproject.org/repo/pkgs/rpms/gtk3/gtk-3.24.51.tar.xz/"
+    "sha512/" + "e" * 128 + "/gtk-3.24.51.tar.xz",
+    "filename": "gtk-3.24.51.tar.xz",
+    "sha512": "e" * 128,
+    "feed": "https://download.gnome.org/sources/gtk/3.24/gtk-3.24.51.tar.xz",
+}
+GTK_CACHE = [4, {}, {"gtk": ["3.24.51", "3.24.52", "4.24.1"]}, {}]
+GTK_CACHE_URL = "https://download.gnome.org/sources/gtk/cache.json"
+
+
+def lookaside_tree(tmp: str, entry: dict, spec_version: str) -> Path:
+    """A scratch tree with one lookaside lock, its recipe and the ratchet."""
+    root = Path(tmp)
+    (root / "config").mkdir()
+    (root / "config" / "upstream-sources.json").write_text(
+        json.dumps({"packages": [entry]}, indent=2) + "\n"
+    )
+    (root / "config" / "fedora-primary-sources.txt").write_text(
+        f"# header\n{entry['name']}\nzzz-other\n"
+    )
+    package = root / "packages" / entry["name"]
+    package.mkdir(parents=True)
+    (package / f"{entry['name']}.spec").write_text(
+        f"Version:        {spec_version}\nRelease:        3%{{?dist}}\n"
+    )
+    (package / "sources").write_text(f"SHA512 ({entry['filename']}) = {entry['sha512']}\n")
+    return root
+
+
+class ExplicitGnomeFeedTests(unittest.TestCase):
+    """An explicit GNOME feed reaches modules not named like their package."""
+
+    def test_the_explicit_module_is_polled_not_the_package_name(self) -> None:
+        found = candidates({"gtk3": dict(GTK3_LOOKASIDE)})
+        self.assertEqual(found[0][2], {"forge": "gnome", "module": "gtk"})
+
+    def test_a_full_run_reports_the_in_cycle_release_for_review(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = lookaside_tree(tmp, dict(GTK3_LOOKASIDE), "3.24.51")
+            opener = fake_opener({GTK_CACHE_URL: json.dumps(GTK_CACHE).encode()})
+            proposals = plan(root, None, opener=opener)
+        self.assertEqual(len(proposals), 1)
+        # In-cycle (3.24.52), not the 4.x cycle, and never a "final": there is
+        # no GNOME primary for apply() to rewrite.
+        self.assertEqual(proposals[0]["kind"], "review")
+        self.assertEqual(proposals[0]["latest"], "3.24.52")
+        self.assertIn("--package", proposals[0]["reason"])
+
+    def test_a_package_run_relocks_to_the_explicit_module(self) -> None:
+        import hashlib
+
+        payload = b"a plausible gtk 3 tarball"
+        expected = hashlib.sha512(payload).hexdigest()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = lookaside_tree(tmp, dict(GTK3_LOOKASIDE), "3.24.51")
+            opener = fake_opener(
+                {
+                    GTK_CACHE_URL: json.dumps(GTK_CACHE).encode(),
+                    "https://download.gnome.org/sources/gtk/3.24/gtk-3.24.52.tar.xz": payload,
+                }
+            )
+            proposals = plan(root, "gtk3", opener=opener)
+            self.assertEqual(proposals[0]["kind"], "relock")
+            self.assertEqual(proposals[0]["module"], "gtk")
+            apply(root, proposals[0], opener=opener)
+            written = json.loads((root / "config" / "upstream-sources.json").read_text())[
+                "packages"
+            ][0]
+            ratchet = (root / "config" / "fedora-primary-sources.txt").read_text()
+            spec = (root / "packages" / "gtk3" / "gtk3.spec").read_text()
+        self.assertEqual(
+            written["url"], "https://download.gnome.org/sources/gtk/3.24/gtk-3.24.52.tar.xz"
+        )
+        self.assertEqual(written["sha512"], expected)
+        self.assertNotIn("feed", written)
+        # The lookaside stays as a fallback, under the Fedora package's name.
+        self.assertEqual(
+            written["fallback_urls"],
+            [
+                "https://src.fedoraproject.org/repo/pkgs/rpms/gtk3/gtk-3.24.52.tar.xz/"
+                f"sha512/{expected}/gtk-3.24.52.tar.xz"
+            ],
+        )
+        # validate.py fails on a stale ratchet entry; the relock retires it.
+        self.assertEqual(ratchet, "# header\nzzz-other\n")
+        self.assertIn("Version:        3.24.52", spec)
+        self.assertIn("Release:        1%{?dist}", spec)
+
+
+class ExplicitForgeRelockTests(unittest.TestCase):
+    """--package moves a lookaside lock onto the forge its explicit feed names."""
+
+    ENTRY = {
+        "name": "srt",
+        "version": "1.5.7",
+        "url": "https://src.fedoraproject.org/repo/pkgs/rpms/srt/srt-1.5.7.tar.gz/"
+        "sha512/" + "8" * 128 + "/srt-1.5.7.tar.gz",
+        "filename": "srt-1.5.7.tar.gz",
+        "sha512": "8" * 128,
+        "feed": "https://github.com/Haivision/srt/archive/v1.5.7/srt-1.5.7.tar.gz",
+    }
+
+    def test_relock_moves_the_primary_to_the_feed(self) -> None:
+        import hashlib
+
+        payload = b"a plausible srt tarball"
+        expected = hashlib.sha512(payload).hexdigest()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = lookaside_tree(tmp, dict(self.ENTRY), "1.5.7")
+            opener = fake_opener(
+                {"https://github.com/Haivision/srt/archive/v1.5.8/srt-1.5.8.tar.gz": payload}
+            )
+            apply(
+                root,
+                {"name": "srt", "latest": "1.5.8", "kind": "relock",
+                 "module": "github.com/Haivision/srt"},
+                opener=opener,
+            )
+            written = json.loads((root / "config" / "upstream-sources.json").read_text())[
+                "packages"
+            ][0]
+            ratchet = (root / "config" / "fedora-primary-sources.txt").read_text()
+            manifest = (root / "packages" / "srt" / "sources").read_text()
+        self.assertEqual(
+            written["url"], "https://github.com/Haivision/srt/archive/v1.5.8/srt-1.5.8.tar.gz"
+        )
+        self.assertEqual(written["filename"], "srt-1.5.8.tar.gz")
+        self.assertEqual(written["sha512"], expected)
+        self.assertNotIn("feed", written)
+        self.assertEqual(
+            written["fallback_urls"],
+            [
+                "https://src.fedoraproject.org/repo/pkgs/rpms/srt/srt-1.5.8.tar.gz/"
+                f"sha512/{expected}/srt-1.5.8.tar.gz"
+            ],
+        )
+        self.assertEqual(ratchet, "# header\nzzz-other\n")
+        self.assertEqual(manifest, f"SHA512 (srt-1.5.8.tar.gz) = {expected}\n")
+
+    def test_a_feed_without_the_locked_version_is_refused(self) -> None:
+        # Substitution is the only template a forge feed has; a feed that does
+        # not carry the locked version cannot be bumped by it.
+        entry = dict(self.ENTRY, feed="https://github.com/Haivision/srt/archive/master.tar.gz")
+        with tempfile.TemporaryDirectory() as tmp:
+            root = lookaside_tree(tmp, entry, "1.5.7")
+            opener = fake_opener(
+                {"https://github.com/Haivision/srt/archive/master.tar.gz": b"x"}
+            )
+            with self.assertRaises(ValueError):
+                apply(
+                    root,
+                    {"name": "srt", "latest": "1.5.8", "kind": "relock",
+                     "module": "github.com/Haivision/srt"},
+                    opener=opener,
+                )
+            # Nothing was written: the lock, recipe and ratchet are untouched.
+            written = json.loads((root / "config" / "upstream-sources.json").read_text())
+            self.assertEqual(written["packages"][0], entry)
+            self.assertIn("srt\n", (root / "config" / "fedora-primary-sources.txt").read_text())
+
+
+ANITYA_URL = "https://release-monitoring.org/api/v2/versions/?project_id=1764"
+
+
+class AnityaFeedTests(unittest.TestCase):
+    """release-monitoring.org reaches upstreams that publish only a listing."""
+
+    ENTRY = {
+        "name": "libX11",
+        "version": "1.8.12",
+        "url": "https://src.fedoraproject.org/repo/pkgs/rpms/libX11/libX11-1.8.12.tar.xz/"
+        "sha512/" + "a" * 128 + "/libX11-1.8.12.tar.xz",
+        "filename": "libX11-1.8.12.tar.xz",
+        "sha512": "a" * 128,
+        "feed": "https://release-monitoring.org/project/1764",
+    }
+
+    def test_reads_stable_versions_once_each(self) -> None:
+        opener = fake_opener(
+            {ANITYA_URL: json.dumps(
+                {"latest_version": "1.8.13", "stable_versions": ["1.8.13", "1.8.12", "1.8.12"]}
+            ).encode()}
+        )
+        self.assertEqual(anitya_versions({"forge": "anitya", "id": "1764"}, opener=opener),
+                         ["1.8.13", "1.8.12"])
+
+    def test_a_response_without_a_version_list_is_an_error(self) -> None:
+        opener = fake_opener({ANITYA_URL: json.dumps({"error": "nope"}).encode()})
+        with self.assertRaises(ValueError):
+            anitya_versions({"forge": "anitya", "id": "1764"}, opener=opener)
+
+    def test_an_anitya_feed_is_review_only_even_for_a_package_run(self) -> None:
+        # Anitya names versions, not a download, so there is nothing to relock to.
+        opener = fake_opener(
+            {ANITYA_URL: json.dumps({"stable_versions": ["1.8.13", "1.8.12"]}).encode()}
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            root = lookaside_tree(tmp, dict(self.ENTRY), "1.8.12")
+            for only in (None, "libX11"):
+                with self.subTest(only=only):
+                    proposals = plan(root, only, opener=opener)
+                    self.assertEqual(len(proposals), 1)
+                    self.assertEqual(proposals[0]["kind"], "review")
+                    self.assertEqual(proposals[0]["latest"], "1.8.13")
+                    self.assertEqual(proposals[0]["module"], "release-monitoring.org/project/1764")
+
+    def test_an_unreachable_anitya_project_is_reported_not_raised(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = lookaside_tree(tmp, dict(self.ENTRY), "1.8.12")
+            proposals = plan(root, None, opener=fake_opener({}))
+        self.assertEqual(len(proposals), 1)
+        self.assertIn("error", proposals[0])

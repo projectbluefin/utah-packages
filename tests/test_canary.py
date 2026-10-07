@@ -1,11 +1,18 @@
 #!/usr/bin/env python3
 """The canary's decisions: when it runs, and what counts as a pass."""
 
+import contextlib
 import gzip
+import io
 import json
+import os
 from pathlib import Path
+import re
+import subprocess
+import sys
 import tempfile
 import unittest
+from unittest import mock
 
 import yaml
 
@@ -401,6 +408,311 @@ class BuildStageShapeTests(unittest.TestCase):
             run_filter('["vulkan-loader"]', '["vulkan-loader"]'),
             [],
         )
+
+
+class MainTests(unittest.TestCase):
+    """The command line .github/workflows/canary.yml actually gates on.
+
+    Every step in canary.yml reads an exit status from ``canary.py``: zero is a
+    pass, non-zero fails the step. The predicates above are proven directly, so
+    what is left to prove is the layer between them and the workflow -- that
+    each subcommand routes to its predicate with the arguments it was handed,
+    that a problem list becomes exit 1 and an empty one exit 0, and that the
+    operator sees the ``::error`` annotation or the step summary that explains
+    the verdict. Getting any of that wrong leaves the canary green by accident.
+    """
+
+    def setUp(self) -> None:
+        directory = tempfile.TemporaryDirectory(prefix="canary-main-")
+        self.addCleanup(directory.cleanup)
+        self.work = Path(directory.name)
+
+    def run_main(self, argv: list[str], stdin: str = "") -> tuple[int, str, str]:
+        out, err = io.StringIO(), io.StringIO()
+        with mock.patch.object(sys, "stdin", io.StringIO(stdin)), \
+                contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            code = canary.main(argv)
+        return code, out.getvalue(), err.getvalue()
+
+    def jobs_file(self, jobs: list[dict], name: str = "jobs.json") -> str:
+        path = self.work / name
+        path.write_text(json.dumps(jobs))
+        return str(path)
+
+    # -- touches-pipeline (canary.yml:124) ---------------------------------
+    #
+    # The workflow branches on the status directly, so an inverted exit would
+    # skip the canary on exactly the changes it exists to catch.
+
+    def test_touches_pipeline_exits_zero_for_a_pipeline_change(self) -> None:
+        code, _, _ = self.run_main(
+            ["touches-pipeline"], "docs/architecture.md\ntools/publish_gate.py\n"
+        )
+        self.assertEqual(code, 0)
+
+    def test_touches_pipeline_exits_one_for_recipes_and_docs(self) -> None:
+        code, _, _ = self.run_main(
+            ["touches-pipeline"], "packages/fish/fish.spec\ndocs/architecture.md\n"
+        )
+        self.assertEqual(code, 1)
+        self.assertEqual(self.run_main(["touches-pipeline"], "")[0], 1)
+
+    # -- salt (canary.yml:149) ---------------------------------------------
+
+    def test_salt_prints_the_cache_namespace_on_stdout(self) -> None:
+        code, out, _ = self.run_main(["salt"])
+        self.assertEqual(code, 0)
+        self.assertEqual(out.strip(), canary.salt())
+        self.assertRegex(out.strip(), r"^canary-[0-9a-f]{16}$")
+
+    # -- verify-image (canary.yml:195, :314) -------------------------------
+
+    def test_verify_image_passes_its_arguments_through_and_reports_success(self) -> None:
+        seen = {}
+
+        def stub(image, utah_reader, expected, expect_state=False):
+            seen.update(image=image, utah_reader=utah_reader, expected=expected,
+                        expect_state=expect_state)
+            return []
+
+        with mock.patch.object(canary, "verify_image", stub):
+            code, out, err = self.run_main([
+                "verify-image", "ghcr.io/x/y@sha256:" + "a" * 64,
+                "--utah-reader", "/tmp/reader.py",
+                "--expect", json.dumps(sorted(SET)),
+                "--expect-state",
+            ])
+        self.assertEqual(code, 0)
+        self.assertEqual(seen["image"], "ghcr.io/x/y@sha256:" + "a" * 64)
+        self.assertEqual(seen["utah_reader"], Path("/tmp/reader.py"))
+        self.assertEqual(seen["expected"], SET)
+        self.assertTrue(seen["expect_state"])
+        self.assertIn("carries exactly the canary set", out)
+        self.assertEqual(err, "")
+
+    def test_verify_image_annotates_and_fails_on_a_problem(self) -> None:
+        with mock.patch.object(canary, "verify_image", lambda *a, **k: ["one layer"]):
+            code, _, err = self.run_main([
+                "verify-image", "ghcr.io/x/y@sha256:" + "a" * 64,
+                "--utah-reader", "/tmp/reader.py", "--expect", "[]",
+            ])
+        self.assertEqual(code, 1)
+        self.assertIn("::error title=canary image::one layer", err)
+
+    # -- verify-flaky (canary.yml:312) -------------------------------------
+
+    FLAKY_JOB = 'pass4 / rebuild0 (["libical"]) / build (libical)'
+
+    def flaky_annotations(self) -> list[dict]:
+        return [
+            {"title": "flaky %check retry",
+             "message": "libical failed in %check (exit 1); retrying the build once"},
+            {"title": "flaky %check", "message": "libical failed %check once and passed on retry"},
+        ]
+
+    def run_flaky(self, jobs: list[dict], annotations: list[dict]) -> tuple[int, str, str, mock.Mock]:
+        completed = subprocess.CompletedProcess([], 0, stdout=json.dumps(annotations), stderr="")
+        with mock.patch.object(canary.subprocess, "run", return_value=completed) as run, \
+                mock.patch.dict(os.environ, {"REPOSITORY": "projectbluefin/utah-packages"}):
+            code, out, err = self.run_main([
+                "verify-flaky", self.jobs_file(jobs), "--pass", "pass4", "--package", "libical",
+            ])
+        return code, out, err, run
+
+    def test_verify_flaky_reads_the_annotations_for_the_matching_job(self) -> None:
+        jobs = [dict(job(self.FLAKY_JOB, "success", "success"), id=4242)]
+        code, out, err, run = self.run_flaky(jobs, self.flaky_annotations())
+        self.assertEqual(code, 0)
+        self.assertIn("failed %check once, was retried, and built", out)
+        self.assertEqual(err, "")
+        self.assertIn(
+            "repos/projectbluefin/utah-packages/check-runs/4242/annotations",
+            run.call_args.args[0],
+        )
+
+    def test_verify_flaky_fails_without_the_retry_annotations(self) -> None:
+        jobs = [dict(job(self.FLAKY_JOB, "success", "success"), id=4242)]
+        code, _, err, _ = self.run_flaky(jobs, [])
+        self.assertEqual(code, 1)
+        self.assertIn("::error title=canary flaky check::", err)
+
+    def test_verify_flaky_fails_without_calling_gh_when_the_job_is_absent(self) -> None:
+        code, _, err, run = self.run_flaky([], self.flaky_annotations())
+        self.assertEqual(code, 1)
+        self.assertIn("::error title=canary flaky check::", err)
+        run.assert_not_called()
+
+    # -- verify-incremental (canary.yml:351) -------------------------------
+
+    INCREMENTAL_JOBS = [
+        job('pass5 / rebuild0 (["vulkan-headers"]) / build (vulkan-headers)', "success", "success"),
+        job('pass5 / rebuild1 (["vulkan-loader"]) / build (vulkan-loader)', "skipped", "success"),
+    ]
+    INCREMENTAL_EXPECT = json.dumps({"vulkan-headers": 0, "vulkan-loader": 1})
+
+    def test_verify_incremental_accepts_exactly_the_change_and_its_dependent(self) -> None:
+        code, out, err = self.run_main([
+            "verify-incremental", self.jobs_file(self.INCREMENTAL_JOBS),
+            "--build-list", json.dumps(["vulkan-headers", "vulkan-loader"]),
+            "--expect", self.INCREMENTAL_EXPECT,
+        ])
+        self.assertEqual(code, 0)
+        self.assertIn("### Canary incremental selection", out)
+        self.assertEqual(err, "")
+
+    def test_verify_incremental_fails_when_the_selection_is_too_wide(self) -> None:
+        code, _, err = self.run_main([
+            "verify-incremental", self.jobs_file(self.INCREMENTAL_JOBS),
+            "--build-list", json.dumps(sorted(SET)),
+            "--expect", self.INCREMENTAL_EXPECT,
+        ])
+        self.assertEqual(code, 1)
+        self.assertIn("::error title=canary incremental::", err)
+
+    # -- verify-hermetic (canary.yml:379) ----------------------------------
+
+    def hermetic_locks(self, staged: bool = True) -> str:
+        directory = self.work / "locks"
+        staged_url = "file:///work/prior/result/noarch/vulkan-headers.rpm"
+        rpms = {
+            "libical": ("gcc", "https://fedora/gcc.rpm"),
+            "vulkan-headers": ("cmake", "https://fedora/cmake.rpm"),
+            "vulkan-loader": (
+                "vulkan-headers",
+                staged_url if staged else "https://fedora/vulkan-headers.rpm",
+            ),
+        }
+        for index, package in enumerate(sorted(rpms)):
+            name, url = rpms[package]
+            path = directory / f"p1-lock-s{index}-{package}" / "lock"
+            path.mkdir(parents=True)
+            (path / "buildroot_lock.json").write_text(json.dumps({
+                "buildroot": {"rpms": [{"name": name, "url": url}]},
+                "bootstrap": {"pull_digest": "sha256:" + "a" * 64},
+            }))
+        return str(directory)
+
+    def hermetic_jobs(self) -> list[dict]:
+        return [
+            job(f'pass1 / rebuild0 (["{package}"]) / build ({package})', "success", "success")
+            for package in sorted(SET)
+        ]
+
+    def run_hermetic(self, locks: str) -> tuple[int, str, str]:
+        return self.run_main([
+            "verify-hermetic", self.jobs_file(self.hermetic_jobs()),
+            "--pass", "pass1", "--locks", locks, "--set", json.dumps(sorted(SET)),
+            "--stage-dependency", "vulkan-loader=vulkan-headers",
+        ])
+
+    def test_verify_hermetic_accepts_locked_offline_builds(self) -> None:
+        code, out, err = self.run_hermetic(self.hermetic_locks())
+        self.assertEqual(code, 0)
+        self.assertIn("### Canary hermetic lane", out)
+        self.assertIn("- `vulkan-loader`: compiled, 1 locked packages", out)
+        self.assertEqual(err, "")
+
+    def test_verify_hermetic_fails_when_a_stage_provider_came_from_the_network(self) -> None:
+        code, _, err = self.run_hermetic(self.hermetic_locks(staged=False))
+        self.assertEqual(code, 1)
+        self.assertIn("::error title=canary hermetic::", err)
+
+    # -- verify-built (canary.yml:417) -------------------------------------
+
+    def built_jobs(self, conclusion: str = "success") -> list[dict]:
+        return [
+            job(f'pass6 / rebuild0 (["{package}"]) / build ({package})', conclusion, "success")
+            for package in sorted(SET)
+        ]
+
+    def test_verify_built_accepts_the_whole_set_and_summarises_it(self) -> None:
+        code, out, err = self.run_main([
+            "verify-built", self.jobs_file(self.built_jobs()),
+            "--pass", "pass6", "--set", json.dumps(sorted(SET)),
+        ])
+        self.assertEqual(code, 0)
+        self.assertIn("### Canary pass6", out)
+        for package in SET:
+            self.assertIn(f"- `{package}`: compiled", out)
+        self.assertEqual(err, "")
+
+    def test_verify_built_fails_when_a_package_did_not_build(self) -> None:
+        code, _, err = self.run_main([
+            "verify-built", self.jobs_file(self.built_jobs()[:1]),
+            "--pass", "pass6", "--set", json.dumps(sorted(SET)),
+        ])
+        self.assertEqual(code, 1)
+        self.assertIn("::error title=canary pass6::", err)
+
+    # -- verify-early (canary.yml:220) -------------------------------------
+
+    def early_jobs(self, oci: str = "success") -> list[dict]:
+        return [
+            {"name": "pass1 / publish0 / publish", "completed_at": "2026-09-26T02:05:00Z",
+             "steps": [{"name": "Publish the repository as an OCI image", "conclusion": oci}]},
+            {"name": "pass1 / publish / publish", "started_at": "2026-09-26T02:09:00Z",
+             "steps": []},
+        ]
+
+    def test_verify_early_accepts_a_wave_published_before_the_final_image(self) -> None:
+        code, out, err = self.run_main([
+            "verify-early", self.jobs_file(self.early_jobs()), "--pass", "pass1", "--wave", "0",
+        ])
+        self.assertEqual(code, 0)
+        self.assertIn("wave 0 published on its own", out)
+        self.assertEqual(err, "")
+
+    def test_verify_early_fails_when_the_wave_pushed_no_image(self) -> None:
+        code, _, err = self.run_main([
+            "verify-early", self.jobs_file(self.early_jobs(oci="skipped")),
+            "--pass", "pass1", "--wave", "0",
+        ])
+        self.assertEqual(code, 1)
+        self.assertIn("::error title=canary early publish::", err)
+
+    # -- verify-cache (canary.yml:435) -------------------------------------
+
+    def run_cache(self, jobs: list[dict]) -> tuple[int, str, str]:
+        return self.run_main([
+            "verify-cache", self.jobs_file(jobs),
+            "--set", json.dumps(sorted(SET)), "--perturbed", "python-typing-inspection",
+        ])
+
+    def test_verify_cache_accepts_a_healthy_run_and_prints_the_step_summary(self) -> None:
+        code, out, err = self.run_cache(healthy_jobs())
+        self.assertEqual(code, 0)
+        self.assertIn("| pass2 | `vulkan-headers` | cache hit |", out)
+        self.assertIn("pass3 compiled only the perturbed package", out)
+        self.assertEqual(err, "")
+
+    def test_verify_cache_fails_when_a_cached_package_was_recompiled(self) -> None:
+        jobs = healthy_jobs()
+        for entry in jobs:
+            if entry["name"].startswith("pass2") and entry["name"].endswith("(vulkan-headers)"):
+                entry["steps"][1]["conclusion"] = "success"
+        code, out, err = self.run_cache(jobs)
+        self.assertEqual(code, 1)
+        self.assertIn("**Failed:**", out)
+        self.assertIn("::error title=canary cache::pass2: vulkan-headers was compiled", err)
+
+    # -- the subcommand set itself -----------------------------------------
+
+    def test_every_subcommand_the_workflow_invokes_is_dispatched(self) -> None:
+        """A rename in canary.py that canary.yml did not follow fails here."""
+        invoked = set(re.findall(
+            r"canary\.py\s+([a-z-]+)", (ROOT / ".github" / "workflows" / "canary.yml").read_text()
+        ))
+        self.assertTrue(invoked)
+        for command in sorted(invoked):
+            with self.subTest(command=command):
+                with self.assertRaises(SystemExit) as raised:
+                    self.run_main([command, "--help"])
+                self.assertEqual(raised.exception.code, 0)
+
+    def test_an_unknown_subcommand_is_refused(self) -> None:
+        with self.assertRaises(SystemExit) as raised:
+            self.run_main(["verify-everything"])
+        self.assertNotEqual(raised.exception.code, 0)
 
 
 if __name__ == "__main__":

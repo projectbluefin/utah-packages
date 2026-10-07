@@ -1,0 +1,24 @@
+From d18d7763f5dbf16ba108b3443ed9ef866ff1fbe1 Mon Sep 17 00:00:00 2001
+From: Fabio Valentini <decathorpe@gmail.com>
+Date: Fri, 26 Dec 2025 14:14:11 +0100
+Subject: [PATCH] Bump nix from 0.22 to 0.30
+
+This requires enabling some feature flags that are no longer enabled
+by default, but no actual code changes.
+---
+ Cargo.toml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Cargo.toml b/Cargo.toml
+index 744b827..bd67fe5 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -23,7 +23,7 @@ fasteval = { version = "0.2", default-features = false }
+ [dev-dependencies]
+ tempfile = "3"
+ fs_extra = "1.3"
+-nix = ">=0.22, <0.24"
++nix = { version = "0.30", features = ["mount", "sched", "user"] }
+ ctor = "0.2"
+ 
+ [profile.release]

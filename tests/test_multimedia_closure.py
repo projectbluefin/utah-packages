@@ -486,6 +486,17 @@ class RepositoryClosureTests(unittest.TestCase):
         self.assertEqual(unresolved, [])
         self.assertGreater(report["counts"]["built"], 0)
 
+    def test_missing_indexed_primary_never_uses_stale_metadata(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            repodata = Path(directory)
+            (repodata / "stale-primary.xml").write_text(PRIMARY)
+            (repodata / "repomd.xml").write_text(
+                "<repomd xmlns='http://linux.duke.edu/metadata/repo'>"
+                "<data type='primary'><location href='repodata/current-primary.xml'/></data></repomd>"
+            )
+            with self.assertRaisesRegex(ClosureError, "primary metadata is missing"):
+                published_nevra(repodata)
+
     def test_the_committed_report_is_current(self) -> None:
         self.assertEqual(
             json.loads(REPORT.read_text()),

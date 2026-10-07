@@ -37,7 +37,7 @@ Based on KSNI it also works in KDE and will fallback to generic
 Systray support if none of those are available.}
 
 Name:           libayatana-appindicator
-Version:        0.5.94
+Version:        0.6.0
 Release:        %autorelease
 Summary:        %{_summary}
 
@@ -47,6 +47,10 @@ URL:            https://github.com/AyatanaIndicators/%{name}
 Source0:        %{url}/archive/%{version}/%{name}-%{version}.tar.gz
 # Fix Mono bindings from installing in %%{_libdir}/cli
 Patch0:         0001-fix-mono-dir.patch
+# The gapi metadata supplies the C# name/cname for every signal, but the entries
+# for new-tooltip and activate (both added in 0.6.0) are missing, so gapi emits
+# events with an empty identifier and the C# bindings fail to compile.
+Patch1:         0002-mono-add-missing-signal-metadata.patch
 
 BuildRequires:  gcc
 BuildRequires:  cmake

@@ -12,8 +12,8 @@ ROOT = Path(__file__).resolve().parent.parent
 PACKIT_CONFIG = ROOT / ".packit.yaml"
 PACKIT_WORKFLOW = ROOT / ".github" / "workflows" / "packit-srpm-pilot.yml"
 # The per-package steps moved into a reusable workflow so the pilot can fan out
-# over chunks: 401 packages in one matrix exceeds the 256-job cap, which GitHub
-# expands to nothing rather than rejecting.
+# over chunks: any count above the 256-job cap expands to nothing rather than
+# failing, so the pilot must chunk regardless of the recipe set size.
 PACKIT_CHUNK_WORKFLOW = ROOT / ".github" / "workflows" / "packit-srpm-chunk.yml"
 SOURCE_CONFIG = ROOT / "config" / "upstream-sources.json"
 
@@ -35,8 +35,11 @@ class PackitSrpmTests(unittest.TestCase):
             for package in json.loads(SOURCE_CONFIG.read_text())["packages"]
         }
 
-        self.assertEqual(len(config_packages), 401)
-        self.assertEqual(config_packages - source_packages, set())
+        # The .packit.yaml block and the source lock describe the same set;
+        # the agreement gate catches any drift, so the equality below is what
+        # makes this test a real inventory invariant rather than a snapshot
+        # of today's count.
+        self.assertEqual(config_packages, source_packages)
         self.assertTrue(
             {"adw-gtk3-theme", "igt-gpu-tools", "mesa", "runc", "webkitgtk"}
             <= config_packages
@@ -79,7 +82,7 @@ class PackitSrpmTests(unittest.TestCase):
 
 
     def test_every_chunk_fits_inside_the_matrix_cap(self) -> None:
-        """401 packages in one matrix expands to zero jobs, not an error."""
+        """More than 256 packages in one matrix expands to zero jobs, not an error."""
         names = package_names(PACKIT_CONFIG)
         chunks = package_chunks(names)
         rebuilt = [name for chunk in chunks for name in json.loads(chunk)]

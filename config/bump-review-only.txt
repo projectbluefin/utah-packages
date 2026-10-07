@@ -1,0 +1,32 @@
+# Packages whose upstream bytes never self-merge through the bump gate.
+#
+# tools/upstream_bump.py pins the SHA-512 of whatever the project's forge
+# serves at bump time and .github/workflows/bump-upstream-gate.yml merges the
+# result once it builds, so nothing but the forge vouches for the bytes and
+# no human reads the diff before they are signed and published to latest. For
+# a package that runs as root, sits in the boot chain or ships firmware, a
+# replaced release asset or a stolen upstream account would reach every Utah
+# install within a day. These are reported as "needs review" instead and
+# bumped in an ordinary pull request (docs/skills/upstream-version-bumps.md);
+# bump_gate.py plan refuses a bump that moves one of their lock entries.
+#
+# One `name` from config/upstream-sources.json per line; tools/validate.py
+# fails on a name the lock does not carry. Edits to this file are themselves
+# outside what a bump may commit, so only a reviewed pull request can shorten
+# it.
+accountsservice
+cups-browsed
+cups-filters
+fprintd
+gdm
+libblockdev
+libfprint
+# gvfs is linked to the libcdio 2.3 ABI; upgrades require a consumer rebuild.
+libcdio
+microcode_ctl
+plymouth
+ppp
+switcheroo-control
+tpm2-tools
+usbmuxd
+zram-generator

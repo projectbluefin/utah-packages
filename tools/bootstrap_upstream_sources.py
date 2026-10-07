@@ -239,6 +239,13 @@ def main() -> int:
     report.write_text(json.dumps({"accepted": len(candidates), "already_supplied_by_hummingbird": already_supplied,
                                   "rejected": rejected}, indent=2) + "\n")
     print(f"accepted direct sources: {len(candidates)}; already supplied: {len(already_supplied)}; needs explicit mapping: {len(rejected)}")
+    # An explicit --package selection is the contract the workflow's gate
+    # depends on; a rejection means the lock did not actually pin what the
+    # operator asked for. Surface that as a non-zero exit so the workflow
+    # fails at the lock step instead of silently proceeding to render_packit
+    # and failing at the agreement-gate pytest with a confusing diff (#366).
+    if args.package and rejected:
+        return 1
     return 0
 
 

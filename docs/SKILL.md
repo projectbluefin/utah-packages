@@ -22,11 +22,13 @@ Both are indexed below. A skill that exists but is not listed here fails
 | Work out why a rebuild job failed, and whose bug it is | [`.agents/skills/build-failure-triage/SKILL.md`](../.agents/skills/build-failure-triage/SKILL.md) |
 | Query Hummingbird's image catalog, tags, CVEs, or SBOMs | [`.agents/skills/hummingbird/SKILL.md`](../.agents/skills/hummingbird/SKILL.md) |
 | Verify buildroot lock or recipe provenance contracts | [`skills/supply-chain-provenance.md`](skills/supply-chain-provenance.md) |
+| Change unit-test coverage instrumentation or its CI floor | [`skills/test-coverage.md`](skills/test-coverage.md) |
 | Finish a task and decide what learning to write back | [`skills/skill-improvement.md`](skills/skill-improvement.md) |
 | Change a stage, a container pin, a bcond, the rebuild workflow, or drop a recipe, without repeating a fix the history already reverted | [`skills/repeated-mistakes.md`](skills/repeated-mistakes.md) |
 | Change package-cache keys, eligibility, restore/publish ordering, or cache storage | [`skills/package-build-cache.md`](skills/package-build-cache.md) |
 | Add a codec recipe, sync Bluefin's package manifest, or answer whether the factory covers Bluefin's multimedia | [`skills/multimedia-closure.md`](skills/multimedia-closure.md) |
-| Change upstream version bumps or their RPM release and rebuild counters | [`skills/upstream-version-bumps.md`](skills/upstream-version-bumps.md) |
+| Change upstream version bumps, their RPM release and rebuild counters, or the gate that merges the daily bump | [`skills/upstream-version-bumps.md`](skills/upstream-version-bumps.md) |
+| Change which Rawhide recipe moves the daily `bump/rawhide-imports` PR takes unattended | [`skills/rawhide-recipe-reimports.md`](skills/rawhide-recipe-reimports.md) |
 | Import, configure, or verify font package recipes | [`skills/font-package-recipes.md`](skills/font-package-recipes.md) |
 | Carry or verify GNOME Shell theme fixes | [`skills/gnome-shell-theme-patches.md`](skills/gnome-shell-theme-patches.md) |
 | Interpret or regenerate the GNOME-vs-gnome-build-meta audit | [`skills/gnome-build-meta-audit.md`](skills/gnome-build-meta-audit.md) |

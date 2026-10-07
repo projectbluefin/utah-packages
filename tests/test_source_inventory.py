@@ -68,7 +68,12 @@ class TargetSelectionTests(unittest.TestCase):
     def test_hummingbird_supplied_packages_are_skipped_by_default(self):
         targets = plan_targets(ROOT / "packages", {"mesa": ["mesa"]})
         self.assertNotIn("mesa", [path.name for path in targets])
-        self.assertEqual(len(targets), 400)
+        # Targets are the recipe set minus whatever Hummingbird already
+        # supplies. Today that is `mesa`; the count is whatever the inventory
+        # returns minus one. The agreement gate keeps the recipe set in sync
+        # with packages/, so this assertion stays correct as recipes move.
+        expected = sum(1 for entry in (ROOT / "packages").iterdir() if entry.is_dir()) - 1
+        self.assertEqual(len(targets), expected)
 
     def test_explicit_selection_processes_a_hummingbird_supplied_package(self):
         targets = plan_targets(ROOT / "packages", {"mesa": ["mesa"]}, only="mesa")

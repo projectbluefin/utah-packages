@@ -1,20 +1,32 @@
 name: Bump upstream source locks
 
 # Opens one reviewable PR when a source this factory tracks ships a newer
-# release. Three feeds are polled, covering 80 of the 373 locks:
+# release. Three feeds are polled, plus explicit per-lock feeds, covering
+# 382 of the 402 locks (measured 2026-10-03):
 #
-#   download.gnome.org  20  cache.json per-module release index
-#   github.com          47  tags, or releases where a project publishes them
-#   gitlab (3 hosts)    13  repository tags API
+#   download.gnome.org   67  cache.json per-module release index: 26 read
+#                            off GNOME primaries, 41 from an explicit `feed`
+#                            (gtk3's module is "gtk")
+#   git forges          165  tags, or releases where a project publishes them:
+#                            81 read off lock URLs, 84 from an explicit `feed`
+#   release-monitoring  150  Anitya, for upstreams that publish only a
+#                            directory listing (x.org, freedesktop.org,
+#                            kernel.org, SourceForge); the project is the one
+#                            Fedora's own package mapping names
 #
-# A lock whose stable primary is the lookaside still tracks the feed its
-# fallback mirror names, but only as a review-only proposal: the new bytes
-# are not in the lookaside until Fedora uploads them.
+# Every explicit feed was derived from the spec's Source0 and checked to list
+# the locked version (issue #134).
 #
-# The remaining 293 are locked on Fedora's lookaside cache or on a bare
-# directory listing. A lookaside URL carries its own digest in the path, so
-# there is nothing to poll for "latest"; reaching those needs each project's
-# real upstream feed identified per package, which is tracked separately.
+# A lock whose primary is still the lookaside only ever yields a review-only
+# proposal on the scheduled run: the new bytes are not in the lookaside until
+# Fedora uploads them, and no unattended run moves a primary. Dispatching
+# this workflow with `package` set relocks one such package onto the GNOME
+# module or forge its explicit feed names (Anitya names no download, so never
+# for those), retiring it from config/fedora-primary-sources.txt.
+#
+# The remaining 20 have no usable feed: git snapshots, Fedora-only or
+# repacked sources, compat pins, and tag streams whose versions do not match
+# the lock's spelling. They are listed in docs/skills/upstream-version-bumps.md.
 #
 # renovate.json has a custom manager aimed at config/upstream-sources.json,
 # but it keys on datasource and depName and 0 of 340 entries carry either, so
@@ -30,9 +42,28 @@ name: Bump upstream source locks
 # dispatch this workflow there with target-cycle set (e.g. 52). The override
 # only widens the in-cycle window; prereleases stay unproposable.
 #
-# Deliberately proposes, never merges. The bump changes what the factory
-# builds, so it goes through the same review and the same eleven-stage run as
-# any other recipe change.
+# This workflow proposes; bump-upstream-gate.yml decides. Once the daily
+# in-cycle pull request is opened or updated, the gate is dispatched: it
+# builds exactly the bumped recipes through rebuild-rpms.yml, publishing
+# nothing, and merges only when every one of them built, then dispatches the
+# factory on main to publish latest. When only some bumped packages fail, the
+# gate holds those in config/bump-holds.json at the failing version, drops
+# them from the pull request and gates the rest again; this workflow then
+# skips a held version until upstream ships a newer one or a human deletes
+# the hold. Applying a newer release retires its hold, which is why the
+# holds file is committed with the bump. Cross-cycle and major candidates
+# are still only reported above, never applied, so they never reach the
+# gate. A target-cycle run is never gated: GNOME-next merges stay human.
+#
+# Three branch rules, in priority order:
+#   - target-cycle  -> bump/upstream-sources-cycle-<N>
+#   - --package     -> bump/upstream-sources (when no relock is proposed)
+#                     or bump/upstream-sources-relock-<pkg> (when one is)
+#   - otherwise     -> bump/upstream-sources (the daily in-cycle PR)
+# A `--package` dispatch that proposes a relock writes to its own branch
+# because a relock moves the primary URL and the next scheduled run
+# rebuilds it from a plan based on the old lookaside lock, which would
+# silently drop the relock commit (#341).
 
 on:
   workflow_dispatch:
@@ -62,6 +93,9 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+      # gh workflow run: dispatch the gate. GITHUB_TOKEN-created pull requests
+      # start no pull_request workflows; a dispatch does start one.
+      actions: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
@@ -81,6 +115,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Rewrite the locks, specs and source manifests
+        id: bump
         run: |
           python3 tools/upstream_bump.py --apply ${PACKAGE:+--package "$PACKAGE"} ${CYCLE:+--cycle "$CYCLE"}
         env:
@@ -106,12 +141,29 @@ jobs:
             --report-dir work/reports
 
       - name: Open reviewable update
+        id: cpr
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8
         with:
-          # A target-cycle run (GNOME-next branches) gets its own PR branch so
-          # it never collides with the daily in-cycle PR.
-          branch: ${{ inputs.target-cycle != '' && format('bump/upstream-sources-cycle-{0}', inputs.target-cycle) || 'bump/upstream-sources' }}
+          # Three branch rules, in priority order:
+          #   1. A target-cycle run (GNOME-next branches) gets its own PR
+          #      branch so it never collides with the daily in-cycle PR.
+          #   2. A `--package` dispatch that proposes a relock gets its own
+          #      PR branch (bump/upstream-sources-relock-<pkg>): a relock
+          #      moves the primary URL, and writing it to bump/upstream-
+          #      sources means the next scheduled create-pull-request run
+          #      rebuilds that branch from its own non-relocking plan and
+          #      force-updates the relock commit away (#341).
+          #   3. Otherwise, the daily in-cycle branch.
+          branch: ${{ inputs.target-cycle != '' && format('bump/upstream-sources-cycle-{0}', inputs.target-cycle) || (inputs.package != '' && steps.bump.outputs.relock == 'true' && format('bump/upstream-sources-relock-{0}', inputs.package)) || 'bump/upstream-sources' }}
           delete-branch: true
+          # Only the lock and the recipes. The verification steps above leave
+          # source_pipeline.py reports in work/; without this the PR committed
+          # dozens of work/reports/*.json files alongside the bumps.
+          add-paths: |
+            config/upstream-sources.json
+            config/fedora-primary-sources.txt
+            config/bump-holds.json
+            packages/
           title: 'chore(sources): bump upstream locks to released versions'
           commit-message: 'chore(sources): bump upstream locks to released versions'
           body: |
@@ -132,6 +184,38 @@ jobs:
             `tools/source_pipeline.py`, which re-downloads every rewritten
             source and rejects a digest that does not match.
 
-            **Not verified: the build.** A GNOME major bump usually needs spec
-            patch refreshes, and this is a large rebuild. That is what this
-            PR's own factory run is for.
+            **The build is verified next**, by `bump-upstream-gate.yml`: it
+            builds exactly the bumped recipes against the published factory,
+            publishing nothing, and merges this pull request only if every
+            one of them built and the head is still the commit it built. If
+            some fail, it comments naming them, holds them in
+            `config/bump-holds.json` at the failing version, drops them from
+            this pull request and gates the rest again.
+
+            A `--package` dispatch that proposes a relock — a move that
+            also shifts the primary off the Fedora lookaside — opens on its
+            own branch (`bump/upstream-sources-relock-<pkg>`) and stays
+            human-merged: a relock changes the upstream URL a future build
+            fetches from, and the gate does not auto-merge it.
+
+      # Every day the pull request is still open, including a day on which
+      # nothing new moved (operation none): a gate that failed on a flaky
+      # build gets another try, and one that already merged left nothing open.
+      # Relock branches stay human-merged: a relock moves the primary URL, so
+      # it needs a human eye on the build before the lock is replaced.
+      - name: Gate the update on its own build
+        if: inputs.target-cycle == '' && steps.bump.outputs.relock != 'true' && steps.cpr.outputs.pull-request-operation != 'closed'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          pr=$(gh pr list -R "$REPOSITORY" --head bump/upstream-sources --base main \
+            --state open --json number --jq '.[0].number // empty')
+          if [ -z "$pr" ]; then
+            echo "no open bump pull request; nothing to gate"
+            exit 0
+          fi
+          gh workflow run bump-upstream-gate.yml -R "$REPOSITORY" \
+            --ref bump/upstream-sources -f pr="$pr"
+          echo "dispatched the bump gate for pull request $pr"

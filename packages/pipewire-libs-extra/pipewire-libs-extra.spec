@@ -3,7 +3,7 @@
 
 Name:       pipewire-libs-extra
 Summary:    PipeWire extra plugins
-Version:    1.6.8
+Version:    1.6.9
 Release:    1%{?dist}
 License:    MIT
 URL:        https://pipewire.org/

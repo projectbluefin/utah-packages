@@ -1,7 +1,7 @@
 Name:       ilbc
 Summary:    Internet Low Bitrate Codec
 Version:    3.0.4
-Release:    21%{?dist}
+Release:    22%{?dist}
 License:    BSD-3-Clause
 URL:        https://github.com/TimothyGu/libilbc
 
@@ -60,6 +60,9 @@ rm -fr %{buildroot}%{_docdir}/libilbc
 %{_libdir}/lib%{name}.so
 
 %changelog
+* Fri Sep 25 2026 Benjamin A. Beasley <code@musicinmybrain.net> - 3.0.4-22
+- Rebuilt for abseil-cpp 20260817.0
+
 * Thu Jul 16 2026 Fedora Release Engineering <releng@fedoraproject.org> - 3.0.4-21
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_45_Mass_Rebuild
 

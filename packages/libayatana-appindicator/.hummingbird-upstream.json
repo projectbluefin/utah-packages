@@ -2,7 +2,7 @@
   "package": "libayatana-appindicator",
   "branch": "rawhide",
   "remote": "https://src.fedoraproject.org/rpms/libayatana-appindicator.git",
-  "commit": "312f883eec980cbae5eb87c3b48ad2a1f38a800f",
-  "tree": "fc3c70e48723b542b500bfa68dbc678d33ce0564",
-  "imported_at": "2026-08-29T06:02:48.849257+00:00"
+  "commit": "ce72ea52e5d7382ee718df25f2bd132124232d79",
+  "tree": "7aeabf5052ffaa9afb4fa0ce0ed5f7cdf808af92",
+  "imported_at": "2026-10-03T20:34:29.597008+00:00"
 }

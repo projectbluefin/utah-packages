@@ -16,6 +16,7 @@ URL:            https://gitlab.gnome.org/GNOME/gdk-pixbuf
 Source0:        https://download.gnome.org/sources/gdk-pixbuf/%{gnome_major_minor_version}/gdk-pixbuf-%{version}.tar.xz
 
 Patch0:         CVE-2026-16768.patch
+Patch1:         CVE-2026-81893.patch
 
 BuildRequires:  docbook-style-xsl
 BuildRequires:  gettext

@@ -188,3 +188,8 @@ Then regenerate the report:
 ```sh
 python3 tools/multimedia_closure.py --output reports/multimedia-closure.json
 ```
+
+When `repomd.xml` exists, its primary metadata location is authoritative.
+A missing or malformed indexed file must fail the report rather than select
+a stale primary file left in the directory. Use an XML parser so namespace
+formatting and single-quoted attributes do not change which file is read.

@@ -33,7 +33,7 @@
       "parity_note": "Imported from Fedora dist-git rather than negativo17's spec. The library itself is codec-neutral, but it is version-coupled to the media driver and media SDK it is built against, so it is listed here until the Intel stack moves together.",
       "recipe": "packages/intel-gmmlib",
       "stage": 0,
-      "version": "22.10.1",
+      "version": "22.10.2",
       "nevra": null,
       "recipe_provenance": "https://src.fedoraproject.org/rpms/intel-gmmlib.git"
     },
@@ -63,7 +63,7 @@
       "parity_note": "Imported from Fedora dist-git rather than negativo17's spec, and, like intel-mediasdk, limited by the free media driver underneath it. Moves with the rest of the Intel stack.",
       "recipe": "packages/intel-vpl-gpu-rt",
       "stage": 0,
-      "version": "26.1.6",
+      "version": "26.3.5",
       "nevra": null,
       "recipe_provenance": "https://src.fedoraproject.org/rpms/intel-vpl-gpu-rt.git"
     },
@@ -78,7 +78,7 @@
       "parity_note": "Imported from src.fedoraproject.org/rpms/libheif, which disables the HEVC encoder and decoder plugins. HEIC files therefore do not decode. negativo17's libheif enables them.",
       "recipe": "packages/libheif",
       "stage": 1,
-      "version": "1.23.1",
+      "version": "1.23.6",
       "nevra": null,
       "recipe_provenance": "https://src.fedoraproject.org/rpms/libheif.git"
     },
@@ -524,7 +524,7 @@
       "parity_note": null,
       "recipe": "packages/pipewire",
       "stage": 6,
-      "version": "1.6.8",
+      "version": "1.6.9",
       "nevra": null,
       "recipe_provenance": "https://src.fedoraproject.org/rpms/pipewire.git"
     },
@@ -539,7 +539,7 @@
       "parity_note": null,
       "recipe": "packages/pipewire",
       "stage": 6,
-      "version": "1.6.8",
+      "version": "1.6.9",
       "nevra": null,
       "recipe_provenance": "https://src.fedoraproject.org/rpms/pipewire.git"
     },
@@ -554,7 +554,7 @@
       "parity_note": null,
       "recipe": "packages/pipewire",
       "stage": 6,
-      "version": "1.6.8",
+      "version": "1.6.9",
       "nevra": null,
       "recipe_provenance": "https://src.fedoraproject.org/rpms/pipewire.git"
     },
@@ -569,7 +569,7 @@
       "parity_note": null,
       "recipe": "packages/pipewire",
       "stage": 6,
-      "version": "1.6.8",
+      "version": "1.6.9",
       "nevra": null,
       "recipe_provenance": "https://src.fedoraproject.org/rpms/pipewire.git"
     },
@@ -584,7 +584,7 @@
       "parity_note": null,
       "recipe": "packages/pipewire",
       "stage": 6,
-      "version": "1.6.8",
+      "version": "1.6.9",
       "nevra": null,
       "recipe_provenance": "https://src.fedoraproject.org/rpms/pipewire.git"
     },

@@ -1,0 +1,8 @@
+{
+  "holds": {
+    "libcdio": {
+      "version": "2.4.0",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/37156147163"
+    }
+  }
+}

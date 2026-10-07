@@ -2,8 +2,8 @@
 # RPM repository.
 
 Name:           libmtp
-Version:        1.1.22
-Release:        4%{?dist}
+Version:        1.1.23
+Release:        1%{?dist}
 Summary:        Software library for MTP media players
 URL:            http://libmtp.sourceforge.net/
 
@@ -22,11 +22,6 @@ BuildRequires:  doxygen
 BuildRequires:  libgcrypt-devel
 %endif
 BuildRequires:  chrpath
-
-# https://github.com/libmtp/libmtp/pull/356
-Patch0:         0001-doc-Don-t-document-internal-endian-macros.patch
-# https://github.com/libmtp/libmtp/issues/346
-Patch1:         0001-disabled-foxconn-487-e111-id.-https-github.com-libmt.patch
 
 %description
 This package provides a software library for communicating with MTP
@@ -125,6 +120,11 @@ chrpath --delete $RPM_BUILD_ROOT{%{_bindir},/usr/lib/udev}/mtp*
 %{_libdir}/pkgconfig/libmtp.pc
 
 %changelog
+* Sat Oct 03 2026 Utah package factory <noreply@anthropic.com> - 1.1.23-1
+- Update to 1.1.23
+- Drop the Doxygen endian-macro and Foxconn 0489:e111 patches, both upstream
+  in 1.1.23
+
 * Thu Jul 16 2026 Fedora Release Engineering <releng@fedoraproject.org> - 1.1.22-4
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_45_Mass_Rebuild
 
