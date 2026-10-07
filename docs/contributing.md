@@ -49,6 +49,14 @@ workstation without `rpmspec`, lock the source in the pinned
 `quay.io/packit/packit` image as the workflow does. See
 [`repeated-mistakes.md` section 23](skills/repeated-mistakes.md#23-an-import-pull-request-is-a-recipe-not-a-package).
 
+If the imported name (or any `%package` subpackage the recipe builds) is in
+the factory build backlog (`config/factory-build-backlog.toml`), the same
+branch must also move it from its `[areas.<area>]` list to `[resolved]` and
+regenerate `reports/factory-build-backlog.json` with
+`python3 tools/factory_build_backlog.py`; the `factory-build-backlog` gate in
+`just check` and CI fails on a stale snapshot. See
+[`factory-build-backlog.md`](skills/factory-build-backlog.md#closing-a-backlog-gap).
+
 Build order is solved from the recipe's BuildRequires: a package builds after
 every factory package it BuildRequires, and a merge that changes it rebuilds it
 plus everything that BuildRequires it. You do not assign a `stage`. The one
@@ -93,6 +101,11 @@ same four places an import writes to, or the next `just check` fails:
   the inventory reads from `packages/`, so deleting the recipe directory is
   enough to keep the counts in sync.
 
+If the package (or a subpackage its recipe builds) is a factory build backlog
+name, its auditor state changes too: regenerate
+`reports/factory-build-backlog.json` with `python3 tools/factory_build_backlog.py`
+or the `factory-build-backlog` gate fails.
+
 The image manifest (`config/bluefin-packages.toml`) and
 `config/hummingbird-provided-sources.json` are intentionally left alone: the
 image still wants the package, it just resolves from Hummingbird now. Re-add by
@@ -125,7 +138,7 @@ removal fails legibly.
 ## Before you commit
 
 ```sh
-just check   # all CI gates: contract, validate, quoting, runtime contract, tests
+just check   # all CI gates: contract, validate, quoting, runtime contract, factory-build-backlog, tests
 just test    # pytest
 pre-commit run --all-files
 ```
