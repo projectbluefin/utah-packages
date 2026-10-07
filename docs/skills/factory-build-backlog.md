@@ -117,3 +117,5 @@ itself fails when the catalog totals do not reconcile with the report.
   under an undecidable one (`%if 0%{?fedora} %bcond_without X %else
   %bcond_with X %endif`) the bcond is left unknown, so any `%if %{with X}`
   it guards is undecidable too.
+
+After a recipe PR lands, regenerate `reports/factory-build-backlog.json`; the inventory-driven gate deliberately rejects a snapshot made before that import. Refresh it together with recipe and Packit inventory changes when preparing concurrent PRs.

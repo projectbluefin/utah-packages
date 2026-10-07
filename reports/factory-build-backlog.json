@@ -6,8 +6,8 @@
       "total": 49
     },
     "dev-tools": {
-      "already_recipe": 1,
-      "pending": 149,
+      "already_recipe": 2,
+      "pending": 148,
       "total": 150
     },
     "fonts-i18n": {
@@ -621,7 +621,7 @@
     {
       "area": "dev-tools",
       "name": "nvtop",
-      "state": "pending"
+      "state": "already_recipe"
     },
     {
       "area": "dev-tools",
@@ -2811,9 +2811,9 @@
   ],
   "issue": "projectbluefin/utah-packages#308",
   "states": {
-    "already_recipe": 20,
+    "already_recipe": 21,
     "manifest_wants": 1,
-    "pending": 530
+    "pending": 529
   },
   "totals": {
     "backlog": 551,
