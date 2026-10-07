@@ -165,7 +165,7 @@ jobs:
           for name in $(jq -r '.[]' <<<"$PERTURB"); do
             spec=$(find "packages/$name" -maxdepth 1 -name '*.spec' -print -quit)
             test -n "$spec"
-            printf '\n# canary perturbation %s\n' "$GITHUB_RUN_ID" >> "$spec"
+            printf '\n# canary perturbation %s.%s\n' "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" >> "$spec"
             echo "perturbed $spec"
           done
       - uses: ./.github/actions/setup-sccache

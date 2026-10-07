@@ -165,3 +165,9 @@ run retries every package whose last attempt failed; push runs hold a
 package that failed at exactly its current inputs, since rebuilding it
 unchanged on every merge buys nothing. The weekly scheduled run rebuilds
 everything, against the cache, as a safety net.
+
+Canary perturbations must include both `GITHUB_RUN_ID` and `GITHUB_RUN_ATTEMPT`
+in planner and build checkouts. A retried run reuses its run ID; an identical
+perturbation correctly hits the previous cache, contradicting the test that the
+perturbed recipe must compile. Keep baseline cache namespaces stable, change
+only the deliberate perturbation, and execute both workflow bodies in tests.
