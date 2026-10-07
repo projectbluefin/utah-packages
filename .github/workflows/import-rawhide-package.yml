@@ -102,6 +102,7 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+      actions: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -136,6 +137,7 @@ jobs:
           python3 tools/validate.py
           python3 tools/check_workflow_quoting.py
       - name: Open reviewable update
+        id: cpr
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8
         with:
           branch: import/rawhide-${{ inputs.package }}
@@ -154,9 +156,8 @@ jobs:
             Imports Fedora dist-git at the exact commit recorded in
             `packages/${{ inputs.package }}/.hummingbird-upstream.json`,
             writes the SHA-512 source lock via
-            `tools/bootstrap_upstream_sources.py --package <name> --merge`
-            (inside the pinned packit image, because
-            `bootstrap_upstream_sources.py` needs `rpmspec`), regenerates
+            an isolated `bootstrap_upstream_sources.py` candidate accepted
+            as data by the fresh proposal job’s trusted `import_proposal.py`, regenerates
             `.packit.yaml` via `tools/render_packit_config.py --write`,
             refreshes the inventory counts in `docs/architecture.md` via
             `tools/render_architecture_counts.py --write`, and passes
@@ -164,3 +165,19 @@ jobs:
             `tools/check_workflow_quoting.py` before opening.
 
             Review and patch the snapshot here before enabling it in a rebuild set.
+      - name: Dispatch bot-pr-validate on the PR head (#378)
+        # workflow_run cannot attach checks to GITHUB_TOKEN-opened bot PRs
+        # because pull_requests[] is empty for schedule/workflow_dispatch
+        # triggers. Dispatch bot-pr-validate explicitly so its check suite
+        # attaches to the PR head (#377).
+        if: steps.cpr.outputs.pull-request-number != ''
+        env:
+          PR: ${{ steps.cpr.outputs.pull-request-number }}
+          BRANCH: import/rawhide-${{ inputs.package }}
+          REPOSITORY: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh workflow run bot-pr-validate.yml -R "$REPOSITORY" \
+            --ref "$BRANCH" -f pr="$PR"
+          echo "dispatched bot-pr-validate for PR #$PR"

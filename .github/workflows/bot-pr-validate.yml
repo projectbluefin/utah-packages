@@ -1,0 +1,94 @@
+# Dispatch on the proposed branch: GitHub attaches the check to the dispatch
+# SHA, not an arbitrary later checkout. Require that ref/SHA to be the current
+# same-repository bot PR, and keep all candidate execution read-only.
+name: Validate bot pull requests
+
+permissions:
+  contents: read
+  pull-requests: read
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: "Pull request number the dispatching bot workflow just opened."
+        required: true
+        type: string
+
+jobs:
+  validate:
+    # Resolve the PR's head SHA and branch once, then check out the same
+    # commit the PR's checks need to attach to. The dispatcher passes only the
+    # PR number; everything else is on the API.
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Require the current same-repository bot head
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ inputs.pr }}
+          REPOSITORY: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          gh pr view "$PR" -R "$REPOSITORY" \
+            --json state,baseRefName,headRefName,headRefOid,headRepository,author > pr.json
+          python3 -m tools.bot_pr_trust pr.json "$REPOSITORY" "$SHA" "$BRANCH"
+      - name: Validate factory configuration
+        run: |
+          # gate
+          python3 tools/validate.py
+      - name: Validate the factory onboarding contract
+        run: |
+          # gate
+          python3 tools/factory_contract.py
+      - name: Workflow build-script quoting
+        run: |
+          # gate
+          python3 tools/check_workflow_quoting.py
+      - name: Runtime contract
+        run: |
+          # gate
+          python3 tools/runtime_contract.py \
+            config/bluefin-packages.toml config/runtime-contract.toml --check
+      - name: Install test dependencies
+        run: |
+          pip install --disable-pip-version-check pytest==8.3.5 pyyaml==6.0.3
+      - name: Unit tests
+        run: |
+          # gate
+          python3 -m pytest tests -q
+  report:
+    needs: validate
+    if: failure() && needs.validate.result == 'failure'
+    runs-on: ubuntu-24.04
+    permissions:
+      pull-requests: write
+    steps:
+      # No checkout, candidate code, or downloaded artifacts in this job.
+      - name: Report failure only for the current bot head
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ inputs.pr }}
+          REPOSITORY: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+          BRANCH: ${{ github.ref_name }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          [[ "$BRANCH" =~ ^(chore/buildroot-mirror|import/rawhide-[A-Za-z0-9][A-Za-z0-9_.+-]*)$ ]] || exit 1
+          gh pr view "$PR" -R "$REPOSITORY" \
+            --json state,baseRefName,headRefName,headRefOid,headRepository,author > pr.json
+          jq -e --arg sha "$SHA" --arg branch "$BRANCH" --arg repo "$REPOSITORY" '
+            .state == "OPEN" and .baseRefName == "main" and .headRefOid == $sha
+            and .headRefName == $branch and .headRepository.nameWithOwner == $repo
+            and .author.login == "app/github-actions"' pr.json > /dev/null
+          gh pr comment "$PR" -R "$REPOSITORY" \
+            --body "Factory validation failed for $SHA. Inspect $RUN_URL before merging."

@@ -526,6 +526,18 @@ then renders configuration with its own trusted checkout. No artifact script
 runs in the write-permission job. Keep these job and filesystem boundaries
 when extending import automation.
 
+## Validate bot heads without giving candidate code a write token
+
+Dispatch on the proposed bot branch, require an open same-repository bot PR
+whose current head matches the dispatch SHA, and check out that SHA without
+persisted credentials. Candidate tests run with read permissions. A separate
+reporter has PR write access but never checks out or executes candidate code;
+it repeats the identity and SHA guard before commenting. Allow Fedora package
+names containing `+` in both guards. Checking out a different head does not
+move a workflow’s check suite; a moved PR must be redispatched on its new head.
+Re-review force-pushed heads: a passing check on discarded repair commits
+proves nothing about their replacement.
+
 ## Quick checks before pushing a fix
 
 - [ ] Does `git log --oneline -- <file>` show this file being fixed for the

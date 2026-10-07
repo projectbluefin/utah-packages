@@ -26,6 +26,7 @@ permissions:
   contents: write
   packages: write
   pull-requests: write
+  actions: write
 
 concurrency:
   group: buildroot-mirror
@@ -79,6 +80,7 @@ jobs:
           python3 tools/buildroot_pin.py set "$PIN"
           git diff --stat
       - name: Open a pull request for the new pin
+        id: cpr
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8
         with:
           branch: chore/buildroot-mirror
@@ -94,3 +96,19 @@ jobs:
             Merging this moves every factory build to the new root, which
             changes every package cache key, so the next run rebuilds cold
             once. Batch it with other root-wide changes where possible.
+      - name: Dispatch bot-pr-validate on the PR head (#378)
+        # workflow_run cannot attach checks to GITHUB_TOKEN-opened bot PRs
+        # because pull_requests[] is empty for schedule/workflow_dispatch
+        # triggers. Dispatch bot-pr-validate explicitly so its check suite
+        # attaches to the PR head (#377). Skipped if cpr produced no PR
+        # (the upstream publish already matched an open pin).
+        if: steps.cpr.outputs.pull-request-number != ''
+        env:
+          PR: ${{ steps.cpr.outputs.pull-request-number }}
+          REPOSITORY: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh workflow run bot-pr-validate.yml -R "$REPOSITORY" \
+            --ref chore/buildroot-mirror -f pr="$PR"
+          echo "dispatched bot-pr-validate for PR #$PR"

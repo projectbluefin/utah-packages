@@ -209,6 +209,33 @@ class BuildRootPinTests(unittest.TestCase):
         self.assertIn("ghcr.io/projectbluefin/utah-buildroot", refresh)
         self.assertIn("schedule:", refresh)
 
+    def test_a_dispatched_listener_validates_the_refreshed_pin(self) -> None:
+        # peter-evans/create-pull-request opens the chore/buildroot-mirror
+        # PR with the workflow's own GITHUB_TOKEN, so GitHub does not start a
+        # pull_request workflow for the resulting PR (#377): validate.yml
+        # would never see the new pin before merge. The bot workflow now
+        # dispatches bot-pr-validate.yml as its last step, in this
+        # repository's own context, so the validation steps re-run against the
+        # PR head SHA and the check suite attaches to the PR (#378).
+        listener = (WORKFLOWS / "bot-pr-validate.yml").read_text()
+        self.assertIn("workflow_dispatch:", listener)
+        self.assertIn("pr:", listener)
+        self.assertIn("python3 tools/validate.py", listener)
+        # Bot workflow must dispatch the validator at the end of its run,
+        # otherwise the validate job never fires for the bot PR.
+        refresh_text = (WORKFLOWS / "refresh-buildroot.yml").read_text()
+        self.assertIn("bot-pr-validate.yml", refresh_text)
+        # The listener resolves the PR head SHA at runtime, never pins
+        # workflow_run.head_sha (which is main's HEAD for schedule runs and
+        # would re-validate main, not the bot PR). workflow_run trigger is
+        # rejected altogether.
+        body = "\n".join(
+            line for line in listener.splitlines() if not line.lstrip().startswith("#")
+        )
+        self.assertNotIn("workflow_run:", body)
+        self.assertIn("inputs.pr", body)
+        self.assertIn("gh pr view", body)
+
 
 if __name__ == "__main__":
     unittest.main()
