@@ -509,7 +509,8 @@ pull request.
 The daily re-import of carried recipes (`tools/rawhide_reimport.py`, the
 `bump` job in `detect-rawhide-updates.yml`) cannot repeat this: it only
 replaces recipes already in every inventory, refuses any move that would
-touch the source lock (`sources` or `Version:` changed), and fails the run if
+touch the source lock or the spec's NEVR (`sources`, `Version:` or `Release:`
+changed), and fails the run if
 `.packit.yaml` or `config/upstream-sources.json` differ afterwards. It never
 adds a package. Keep it that way; see
 [`rawhide-recipe-reimports.md`](rawhide-recipe-reimports.md).

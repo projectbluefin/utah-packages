@@ -68,7 +68,8 @@ attestations, or image tags.
 You usually do not. `detect-rawhide-updates.yml` re-imports, once a day on
 `bump/rawhide-imports`, every carried recipe whose Koji Rawhide build moved
 and that `tools/rawhide_reimport.py` classifies safe: unmodified here, same
-`sources` and `Version:`, no new `BuildRequires`. Everything else it lists in
+`sources`, `Name:`, `Epoch:`, `Version:` and `Release:`, no new
+`BuildRequires`. Everything else it lists in
 the pull request body for a human. A recipe with Utah-local edits stays out
 of that pull request for good, so update it by hand on its own branch. See
 [`skills/rawhide-recipe-reimports.md`](skills/rawhide-recipe-reimports.md).

@@ -46,10 +46,15 @@ dependants for no change in bytes.
    divergence: the recipe stays out of automated re-imports until a human
    re-imports it by hand.
 5. Exactly one spec, same file name, on both commits.
-6. `sources`, `Name:`, `Epoch:` and `Version:` unchanged, so the SHA-512 lock
-   in `config/upstream-sources.json` still describes the payload. Version
-   moves stay with `tools/upstream_bump.py`: Fedora is a recipe feed, not a
-   source-update feed.
+6. `sources`, `Name:`, `Epoch:`, `Version:` and `Release:` unchanged, so the
+   SHA-512 lock in `config/upstream-sources.json` still describes the payload.
+   Version moves stay with `tools/upstream_bump.py`: Fedora is a recipe feed,
+   not a source-update feed. A `Release:` change -- including the
+   literal-`12%{?dist}` -> `%autorelease` swap that turned libnma into a
+   1.10.6-12 -> 1.10.6-1 downgrade (issue #382, reverted on `main` by
+   PR #383; see also issue #400) -- is left for a human: `%autorelease`
+   resolves against the build target's tag, so a value of 14 in Koji
+   becomes 1 here.
 7. No added `BuildRequires` item (literal, unexpanded; a tightened version
    constraint counts as added) and no newly added `%generate_buildrequires`.
 
