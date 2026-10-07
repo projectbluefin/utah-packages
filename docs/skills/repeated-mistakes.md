@@ -556,3 +556,5 @@ when extending import automation.
       a cancelled run and a canary pass?
 - [ ] Is a new recipe source-locked, in `.packit.yaml`, and counted, in
       the same pull request that imports it?
+
+When rebasing a package import, keep the current data-driven inventory assertions rather than replacing them with old hardcoded package counts. Verify the primary archive bytes against both the SHA-512 lock and manifest before a pinned GitHub Actions package build. A passing build proves the recipe; GPU monitoring still needs a separate hardware check.

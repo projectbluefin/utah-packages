@@ -1714,6 +1714,12 @@ packages:
     downstream_package_name: ntfs-3g
     paths:
       - packages/ntfs-3g
+  nvtop:
+    specfile_path: nvtop.spec
+    upstream_package_name: nvtop
+    downstream_package_name: nvtop
+    paths:
+      - packages/nvtop
   openapv:
     specfile_path: openapv.spec
     upstream_package_name: openapv
