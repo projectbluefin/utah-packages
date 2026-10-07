@@ -45,6 +45,16 @@ jobs:
           python3 tools/runtime_contract.py \
             config/bluefin-packages.toml config/runtime-contract.toml --check
 
+  factory-build-backlog:
+    name: Factory build backlog
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      # The committed snapshot must match the live inventory; every recipe
+      # import moves recipes between states, and the Justfile `check`
+      # target (and this CI job) catches drift before a merge.  See #309.
+      - run: python3 tools/factory_build_backlog.py --check
+
   tests:
     name: Unit tests
     runs-on: ubuntu-24.04

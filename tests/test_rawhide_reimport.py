@@ -62,14 +62,52 @@ def classify(local_tree=None, pinned=None, target=None, *, lock=LOCK, provenance
     pinned = tree() if pinned is None else pinned
     return reimport.classify(
         "demo", provenance, lock, local(pinned) if local_tree is None else local_tree,
-        pinned, target if target is not None else tree(SPEC.replace("%autorelease", "2%{?dist}")),
+        pinned, target if target is not None else pinned,
         fast_forward=fast_forward,
     )
 
 
 class ClassifierTests(unittest.TestCase):
-    def test_release_only_move_on_a_clean_recipe_is_safe(self) -> None:
+    def test_noop_target_is_safe(self) -> None:
+        # `classify()`'s default target equals the pinned tree, so a recipe that
+        # Koji has not moved past is reported as safe. The legacy
+        # `test_release_only_move_on_a_clean_recipe_is_safe` swapped the spec's
+        # `Release:` between pinned and target; that swap is exactly what the
+        # classifier now rejects (see #382).
         self.assertEqual(classify(), [])
+
+    def test_literal_to_autorelease_blocks(self) -> None:
+        # The libnma case from issue #382: the local copy held `12%{?dist}`
+        # at the pinned commit, then Koji's newer commit swapped to `%autorelease`,
+        # which would resolve to 1 in the factory's build tag (was 14 in Koji's).
+        pinned = tree(SPEC.replace("Release:        %autorelease", "Release:        12%{?dist}"))
+        target = tree(SPEC)
+        reasons = classify(local_tree=local(pinned), pinned=pinned, target=target)
+        self.assertIn(
+            "Release: changed ['12%{?dist}'] -> ['%autorelease']", reasons,
+        )
+
+    def test_autorelease_to_literal_blocks(self) -> None:
+        # The mirror direction: the spec dropped `%autorelease` in favour of a
+        # literal. The literal might be smaller than what %autorelease would
+        # have produced (14 -> 2 here), and the classifier cannot tell.
+        pinned = tree(SPEC)
+        target = tree(SPEC.replace("Release:        %autorelease", "Release:        2%{?dist}"))
+        reasons = classify(target=target)
+        self.assertIn(
+            "Release: changed ['%autorelease'] -> ['2%{?dist}']", reasons,
+        )
+
+    def test_literal_value_bump_blocks(self) -> None:
+        # A literal-to-literal move is the same case the libnma re-import
+        # missed: the new value can be smaller than the published NVR (down-
+        # grade) or just be a mass-rebuild bump nobody cross-checked.
+        pinned = tree(SPEC.replace("Release:        %autorelease", "Release:        12%{?dist}"))
+        target = tree(SPEC.replace("Release:        %autorelease", "Release:        13%{?dist}"))
+        reasons = classify(local_tree=local(pinned), pinned=pinned, target=target)
+        self.assertIn(
+            "Release: changed ['12%{?dist}'] -> ['13%{?dist}']", reasons,
+        )
 
     def test_new_patch_and_dropped_build_requires_are_safe(self) -> None:
         target = tree(SPEC.replace("BuildRequires:  gcc, ", "BuildRequires:  ")

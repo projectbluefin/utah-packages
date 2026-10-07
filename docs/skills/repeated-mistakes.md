@@ -509,7 +509,8 @@ pull request.
 The daily re-import of carried recipes (`tools/rawhide_reimport.py`, the
 `bump` job in `detect-rawhide-updates.yml`) cannot repeat this: it only
 replaces recipes already in every inventory, refuses any move that would
-touch the source lock (`sources` or `Version:` changed), and fails the run if
+touch the source lock or the spec's NEVR (`sources`, `Version:` or `Release:`
+changed), and fails the run if
 `.packit.yaml` or `config/upstream-sources.json` differ afterwards. It never
 adds a package. Keep it that way; see
 [`rawhide-recipe-reimports.md`](rawhide-recipe-reimports.md).
@@ -556,3 +557,5 @@ when extending import automation.
       a cancelled run and a canary pass?
 - [ ] Is a new recipe source-locked, in `.packit.yaml`, and counted, in
       the same pull request that imports it?
+
+When rebasing a package import, keep the current data-driven inventory assertions rather than replacing them with old hardcoded package counts. Verify the primary archive bytes against both the SHA-512 lock and manifest before a pinned GitHub Actions package build. A passing build proves the recipe; GPU monitoring still needs a separate hardware check.
