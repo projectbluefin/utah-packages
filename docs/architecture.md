@@ -332,6 +332,31 @@ and `pre-commit run --all-files` adds YAML, JSON, and TOML hygiene plus
 actionlint and the SHA-pinning rule for third-party actions. None of these
 publish anything; publication gates live in the rebuild and compose workflows.
 
+### Checks versus merge requirements
+
+The gate table describes executed validation, not branch protection.
+`Validate bot pull requests / validate` runs only when dispatched for an
+allowed bot branch; its failure reporter posts a comment. A red check or that
+comment does not itself prevent merging. The current `main — review policy`
+ruleset requires `Canary` from GitHub Actions (app ID 15368). Operators can
+inspect the live requirements with:
+
+```sh
+gh api repos/projectbluefin/utah-packages/rules/branches/main \
+  --jq '.[] | select(.type == "required_status_checks") | .parameters'
+```
+
+For a bot PR, inspect validation on its current head before merging, in
+addition to the required Canary. To make static validation merge-blocking,
+first provide one consistently named aggregate check for **every** PR head,
+including explicitly dispatched `GITHUB_TOKEN` bot proposals. Then add that
+exact check context, with the GitHub Actions source, under required status
+checks in the `main — review policy` ruleset. Verify a failing candidate is
+blocked and a passing candidate is mergeable before relying on enforcement.
+Do not simply require the current bot-only `validate` check: ordinary PRs
+cannot satisfy its bot identity guard and would wait forever for that check.
+Do not remove Canary when adding a static requirement.
+
 ## Agreed direction, not yet built
 
 Recorded from a design review against Hummingbird's own factory. The sections

@@ -550,6 +550,18 @@ move a workflow’s check suite; a moved PR must be redispatched on its new head
 Re-review force-pushed heads: a passing check on discarded repair commits
 proves nothing about their replacement.
 
+## A workflow check is not automatically a merge requirement
+
+Separate execution coverage from ruleset enforcement when documenting gates.
+The bot-only validator reports failures but is not required by the main
+ruleset. Check live required contexts with the rules API rather than inferring
+protection from a red check or comment. Before requiring a new static gate,
+provide the same aggregate context on ordinary PR heads and explicitly
+triggered bot heads; then bind that context to GitHub Actions in the ruleset
+and verify both failing and passing candidates. Requiring the existing
+bot-only job globally strands ordinary PRs. See the operator procedure in
+[`architecture.md`](../architecture.md#checks-versus-merge-requirements).
+
 ## Quick checks before pushing a fix
 
 - [ ] Does `git log --oneline -- <file>` show this file being fixed for the
