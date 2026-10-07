@@ -114,6 +114,24 @@ Every recipe in `packages/<name>/` carries `.hummingbird-upstream.json`, and
 Do not hand-edit these files. Re-import; editing provenance makes a recipe
 claim an origin it does not have.
 
+## Moving a lookaside lock to an upstream release
+
+A `feed` discovers versions; it does not change the payload fetched from `url`.
+For GNOME releases, an existing `https://download.gnome.org/sources/` feed can
+also name the exact locked archive. Download it and compare its SHA-512 with
+the committed lock before promoting it to `url`. Keep the version, filename,
+and digest unchanged when the bytes match, retain the former lookaside URL in
+`fallback_urls`, and remove the package from
+[`config/fedora-primary-sources.txt`](../../config/fedora-primary-sources.txt)
+in the same change. The validator rejects stale ratchet entries.
+
+Use the archive's upstream name and version spelling, not the recipe name or
+RPM version: `gcr3` downloads `gcr`, `rest` downloads `librest`, and an RPM
+`~alpha` version can correspond to a `.alpha` archive. Do not generalize a
+verified GNOME release URL into a blanket promotion of all feeds: forge tag
+archives can differ from Fedora's pinned bytes. A digest mismatch must fail
+closed; Fedora fallbacks cover transport failures, not integrity failures.
+
 ## Source verification reporting
 
 `tools/source_pipeline.py` records how each accepted source was verified:
@@ -196,3 +214,5 @@ and not attested" are different answers to the question asked after a bad
 package ships. With no `--buildroot-digest` — standalone use, or a run whose
 own digest resolution failed — nothing can be judged and nothing is discarded;
 that case is covered by the prune, not by the tool.
+
+A fork source migration must also pass the native Canary on a maintainer-owned branch. Independently stream and hash every promoted primary archive; a preserved feed or a fallback download alone does not prove the new primary URL serves the locked bytes.
