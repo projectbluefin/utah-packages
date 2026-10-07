@@ -3597,6 +3597,40 @@
       "url": "https://github.com/Syllo/nvtop/archive/3.3.2/nvtop-3.3.2.tar.gz",
       "filename": "nvtop-3.3.2.tar.gz",
       "sha512": "a88f7d6a09712462f1448ec8e3b86285c423e20767b07ac2ead20bfbb219e78c04da6ac08781b213c41bde6997ad56a6dc08be45de465986633781464a5a1a58"
+    },
+    {
+      "name": "ptyxis",
+      "version": "50.1",
+      "url": "https://download.gnome.org/sources/ptyxis/50/ptyxis-50.1.tar.xz",
+      "filename": "ptyxis-50.1.tar.xz",
+      "sha512": "34fafdcfa5c51155ebc026814daf5bbb82e24a6565a621a268cce0042d209dc633095ab148c2198b43fb612f995efc46426361b8b8eb616d94b319ec6b170977",
+      "sha256_url": "https://download.gnome.org/sources/ptyxis/50/ptyxis-50.1.sha256sum",
+      "stage": 7,
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/ptyxis/ptyxis-50.1.tar.xz/sha512/34fafdcfa5c51155ebc026814daf5bbb82e24a6565a621a268cce0042d209dc633095ab148c2198b43fb612f995efc46426361b8b8eb616d94b319ec6b170977/ptyxis-50.1.tar.xz"
+      ]
+    },
+    {
+      "name": "vte291",
+      "version": "0.84.1",
+      "url": "https://download.gnome.org/sources/vte/0.84/vte-0.84.1.tar.xz",
+      "filename": "vte-0.84.1.tar.xz",
+      "sha512": "34ac77e712b12b62518a09122ce36c816e4c14a53b01be55f233c8749dd234b6b60a9ab47730e34be44fef1994364002a5f31a0af937e95ed1804752a8dd645e",
+      "sha256_url": "https://download.gnome.org/sources/vte/0.84/vte-0.84.1.sha256sum",
+      "stage": 5,
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/vte291/vte-0.84.1.tar.xz/sha512/34ac77e712b12b62518a09122ce36c816e4c14a53b01be55f233c8749dd234b6b60a9ab47730e34be44fef1994364002a5f31a0af937e95ed1804752a8dd645e/vte-0.84.1.tar.xz"
+      ]
+    },
+    {
+      "name": "simdutf",
+      "version": "9.0.0",
+      "url": "https://github.com/simdutf/simdutf/archive/v9.0.0/simdutf-9.0.0.tar.gz",
+      "filename": "simdutf-9.0.0.tar.gz",
+      "sha512": "0c74226247cbe95368efa87ab84f5217485f16bcdf7a9def8741c6086cb86e6c378f0c437030d2be0934726e3ea9c28b5df2e593d0c654c78291c455a8d1e103",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/simdutf/simdutf-9.0.0.tar.gz/sha512/0c74226247cbe95368efa87ab84f5217485f16bcdf7a9def8741c6086cb86e6c378f0c437030d2be0934726e3ea9c28b5df2e593d0c654c78291c455a8d1e103/simdutf-9.0.0.tar.gz"
+      ]
     }
   ]
 }

@@ -31,6 +31,7 @@ Both are indexed below. A skill that exists but is not listed here fails
 | Change upstream version bumps, their RPM release and rebuild counters, or the gate that merges the daily bump | [`skills/upstream-version-bumps.md`](skills/upstream-version-bumps.md) |
 | Change which Rawhide recipe moves the daily `bump/rawhide-imports` PR takes unattended | [`skills/rawhide-recipe-reimports.md`](skills/rawhide-recipe-reimports.md) |
 | Import, configure, or verify font package recipes | [`skills/font-package-recipes.md`](skills/font-package-recipes.md) |
+| Import a terminal emulator (ptyxis, gnome-console, kgx) or its vte291 stack | [`skills/terminal-emulator-recipes.md`](skills/terminal-emulator-recipes.md) |
 | Carry or verify GNOME Shell theme fixes | [`skills/gnome-shell-theme-patches.md`](skills/gnome-shell-theme-patches.md) |
 | Interpret or regenerate the GNOME-vs-gnome-build-meta audit | [`skills/gnome-build-meta-audit.md`](skills/gnome-build-meta-audit.md) |
 | Diff a GNOME source version, patch line, feature flag, or dependency edge against BuildStream intent | [`skills/gnome-build-meta-audit.md`](skills/gnome-build-meta-audit.md) |

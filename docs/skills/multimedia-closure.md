@@ -195,3 +195,5 @@ a stale primary file left in the directory. Use an XML parser so namespace
 formatting and single-quoted attributes do not change which file is read.
 
 When another recipe lands during review, refresh Packit inventory and architecture counts after merging main; keep both the multimedia and backlog gates in the combined Justfile.
+
+Stack concurrent recipe imports when they edit the same generated inventory reports; regenerate against the combined recipes and retarget the dependent PR only after its prerequisite merges to main.

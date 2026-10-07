@@ -1870,6 +1870,12 @@ packages:
     downstream_package_name: protobuf3
     paths:
       - packages/protobuf3
+  ptyxis:
+    specfile_path: ptyxis.spec
+    upstream_package_name: ptyxis
+    downstream_package_name: ptyxis
+    paths:
+      - packages/ptyxis
   pulseaudio:
     specfile_path: pulseaudio.spec
     upstream_package_name: pulseaudio
@@ -2026,6 +2032,12 @@ packages:
     downstream_package_name: shared-mime-info
     paths:
       - packages/shared-mime-info
+  simdutf:
+    specfile_path: simdutf.spec
+    upstream_package_name: simdutf
+    downstream_package_name: simdutf
+    paths:
+      - packages/simdutf
   snowball:
     specfile_path: snowball.spec
     upstream_package_name: snowball
@@ -2176,6 +2188,12 @@ packages:
     downstream_package_name: volume_key
     paths:
       - packages/volume_key
+  vte291:
+    specfile_path: vte291.spec
+    upstream_package_name: vte291
+    downstream_package_name: vte291
+    paths:
+      - packages/vte291
   vulkan-headers:
     specfile_path: vulkan-headers.spec
     upstream_package_name: vulkan-headers

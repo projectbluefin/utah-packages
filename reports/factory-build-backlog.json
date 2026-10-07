@@ -15,13 +15,14 @@
       "total": 59
     },
     "gnome-apps": {
-      "pending": 38,
+      "already_recipe": 4,
+      "pending": 34,
       "total": 38
     },
     "long-tail": {
-      "already_recipe": 8,
+      "already_recipe": 9,
       "manifest_wants": 1,
-      "pending": 175,
+      "pending": 174,
       "total": 184
     },
     "power": {
@@ -1511,7 +1512,7 @@
     {
       "area": "gnome-apps",
       "name": "ptyxis",
-      "state": "pending"
+      "state": "already_recipe"
     },
     {
       "area": "gnome-apps",
@@ -1521,17 +1522,17 @@
     {
       "area": "gnome-apps",
       "name": "vte-profile",
-      "state": "pending"
+      "state": "already_recipe"
     },
     {
       "area": "gnome-apps",
       "name": "vte291",
-      "state": "pending"
+      "state": "already_recipe"
     },
     {
       "area": "gnome-apps",
       "name": "vte291-gtk4",
-      "state": "pending"
+      "state": "already_recipe"
     },
     {
       "area": "long-tail",
@@ -2281,7 +2282,7 @@
     {
       "area": "long-tail",
       "name": "simdutf",
-      "state": "pending"
+      "state": "already_recipe"
     },
     {
       "area": "long-tail",
@@ -2811,9 +2812,9 @@
   ],
   "issue": "projectbluefin/utah-packages#308",
   "states": {
-    "already_recipe": 23,
+    "already_recipe": 28,
     "manifest_wants": 1,
-    "pending": 527
+    "pending": 522
   },
   "totals": {
     "backlog": 551,
