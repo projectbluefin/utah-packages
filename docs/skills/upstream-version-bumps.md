@@ -43,11 +43,36 @@ fetched from Fedora's lookaside by digest (`source_pipeline.py`
 tree. `rewrite_sources()` replaces only the primary line, in place, and
 keeps every other line verbatim, in either manifest form: the BSD
 `ALGO (file) = hex` lines and the legacy md5sum `hex  file` lines ten carried
-recipes still use (#326). Keeping only the BSD lines dropped those pins too.
+recipes used at the time of #326. Keeping only the BSD lines dropped those pins too.
 Rewriting the manifest to the tarball alone dropped them, and in the first
 gated bump (run 37129679613) adw-gtk3-theme, fish, gum and ppp all died in
 `rpmbuild -bs`, reported as "lock resolve failed 3 times", before
-anything compiled. `check_bumpable()` refuses, before fetching anything, two
+anything compiled.
+
+> MD5 is collision-weak; the lookaside fetch path is gated only by the
+> manifest's recorded digest (#385). `tools/validate.py`
+> `check_sources_digests` refuses any `sources` file with a line that is
+> not a `SHA512 (file) = <128 hex>` pin, so an MD5 pin in either form
+> fails. `rewrite_sources()` only writes the SHA-512 form for the primary
+> pin; bundled entries are kept verbatim, so a legacy md5 line on a bundled
+> entry survives the bump and the tree then fails `check_sources_digests`
+> (see `rewrite_sources()` in `tools/upstream_bump.py`). Repin bundled entries by hand;
+> a hand edit that re-introduces one fails the gate.
+
+For a manifest repin, distinguish the primary Source0 from bundled lookaside
+objects. The nine legacy primary pins in #388 already had SHA-512 entries
+in `config/upstream-sources.json`: streamed downloads matched those locks and the new
+manifest lines. That changes the recorded algorithm without changing source
+bytes or requiring a new lookaside object. A bundled-file repin needs its own
+verified bytes and reachable digest URL; a passing format check proves neither.
+
+For the nine primary manifest repins in #388, streamed archive downloads
+matched both the existing `source_locks.json` SHA-512 values and the new
+manifest lines. No source bytes changed and no new lookaside object is
+needed for those Source0 entries. Bundled-file repins need separate byte
+verification and a reachable digest URL; a format check proves neither.
+
+`check_bumpable()` refuses, before fetching anything, two
 recipes a bump cannot move on its own: a bundled entry whose name carries
 the old version, in either its RPM or tarball spelling
 (`gum-2.0.0-vendor.tar.bz2`, `fish-4.6.0.tar.xz.asc`,

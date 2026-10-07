@@ -92,3 +92,5 @@ Adding recipes updates the data-driven inventory checks, listed in
 `tests/test_source_inventory.py` tracks the recipe count *minus the
 Hummingbird-supplied ones* it skips, so it is one lower than the other three
 and moves by the same delta, not to the same number.
+
+Refresh the generated backlog report when importing terminal recipes; each newly provided binary changes its inventory-derived state even when the audit total stays fixed.

@@ -27,12 +27,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from tools.package_inventory import load_source_locks
 
+# One `SHA512 (file) = <128 hex>` manifest line; tools/validate.py gates on it too.
+SHA512_SOURCES_LINE = re.compile(r"SHA512 \((\S+)\) = ([0-9a-f]{128})")
+
 
 def digest(path: Path, algorithm: str) -> str:
-    # usedforsecurity=False bypasses the FIPS-mode block on md5. md5 is
-    # collision-broken and the pipeline accepts it only where the dist-git
-    # pin itself is md5; those recipes are listed in factory_manifest under
-    # source_verification as the checksum-only class to shorten. sha512 and
+    # usedforsecurity=False bypasses the FIPS-mode block on md5. sha512 and
     # sha256 stay FIPS-strict so a future algorithm addition cannot silently
     # opt out of policy.
     value = hashlib.new(algorithm, usedforsecurity=algorithm != "md5")
@@ -153,7 +153,7 @@ def source_manifest(package: dict) -> list[tuple[str, str]]:
         return []
     entries = []
     for line in manifest.read_text().splitlines():
-        match = re.fullmatch(r"SHA512 \((\S+)\) = ([0-9a-f]{128})", line.strip())
+        match = SHA512_SOURCES_LINE.fullmatch(line.strip())
         if match:
             entries.append(match.groups())
     return entries

@@ -10,6 +10,15 @@ import urllib.parse
 from pathlib import Path
 
 FULL_SHA = re.compile(r"^[0-9a-f]{40}$")
+# The only `sources` line form the factory accepts: the BSD-style SHA-512 pin
+# that source_pipeline.source_manifest parses. Legacy Fedora dist-git lines
+# pin the MD5 hash-first (`<32 hex>  file`), and the BSD form can name MD5 or
+# another algorithm (`MD5 (file) = <hex>`). MD5 is collision-weak and the
+# lookaside fetch path is gated only by the manifest's recorded digest.
+# source_pipeline ignores every other form today, so such lines are inert;
+# this check refuses them on a live tree so none can become a fetch path
+# later (it pre-empts the md5 parsing proposed in open PR #351).
+# SHA512_SOURCES_LINE is shared with source_pipeline so gate and parser agree.
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
@@ -18,6 +27,7 @@ from tools.check_suppressed_tests import main as check_suppressed_tests
 from tools.bootstrap_upstream_sources import FEDORA_HOSTS
 from tools.bump_gate import REVIEW_ONLY, load_review_only
 from tools.package_inventory import inventory
+from tools.source_pipeline import SHA512_SOURCES_LINE
 
 
 def check_buildroot_drift(data: dict, pin_file: Path) -> None:
@@ -214,6 +224,45 @@ def validated_summary(records) -> str:
     return f"validated {len(records)} source RPMs ({summary})"
 
 
+def check_sources_digests(root: Path) -> None:
+    """Fail when any `sources` file pins a bundled tarball by anything but SHA-512.
+
+    The legacy md5 form (`<32 hex>  file`) is what older dist-git recipes
+    shipped; the BSD form can also name MD5 or another algorithm
+    (`MD5 (file) = <hex>`, `SHA256 (file) = <hex>`). `source_pipeline` currently ignores it (only the SHA-512 form is
+    parsed), so such a line is inert rather than a live fetch path; refusing
+    it here pre-empts any future md5 parsing (e.g. open PR #351) from
+    becoming reachable. Every carried recipe must use the SHA-512 form
+    instead -- MD5 is collision-weak, the lookaside fetch path is gated only
+    by the manifest's recorded digest, and the same digest is the only thing
+    standing between a published RPM and a substituted archive
+    (utah-packages#385). Only a SHA-512 line (`SHA512 (file) = <128 hex>`)
+    or a blank line passes; any other line is named as the offender so the
+    repin is mechanical.
+    """
+    packages_dir = root / "packages"
+    if not packages_dir.is_dir():
+        return
+    offenders: list[str] = []
+    for directory in sorted(packages_dir.iterdir()):
+        if not directory.is_dir():
+            continue
+        manifest = directory / "sources"
+        if not manifest.is_file():
+            continue
+        for line in manifest.read_text().splitlines():
+            stripped = line.strip()
+            if stripped and not SHA512_SOURCES_LINE.fullmatch(stripped):
+                offenders.append(f"{manifest}: {stripped}")
+                break
+    if offenders:
+        raise SystemExit(
+            "sources manifest pins a bundled tarball by MD5 or another non-SHA-512 "
+            "form; repin to SHA-512:\n"
+            + "\n".join(offenders)
+        )
+
+
 def main(root: Path = Path(".")) -> int:
     packages_dir = root / "packages"
     if not packages_dir.is_dir():
@@ -235,6 +284,7 @@ def main(root: Path = Path(".")) -> int:
     # Before the tally too: a lock that builds from the lookaside is a
     # provenance failure whether or not every recipe is otherwise accounted for.
     check_fedora_primary_sources(root)
+    check_sources_digests(root)
     check_bump_review_only(root)
     records = inventory(root)
     missing_locks = sorted(record.name for record in records if not record.source_locked)

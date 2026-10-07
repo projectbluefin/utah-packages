@@ -1,0 +1,76 @@
+name: CI queue-observability
+
+# Issue #304: CI runner saturation is chronic, and the evidence for it has so
+# far been captured by hand after the fact. This job makes queue wait a number
+# we watch: it measures, for every completed rebuild run, how long the run sat
+# pending before its first job actually started, and reports the p50/p90/max.
+#
+# It is deliberately read-only against the pipeline: it only lists runs and
+# their jobs (actions: read). It changes nothing about how runs are scheduled;
+# merging a mitigation for the saturation itself (#1 merge queue, #2 priority
+# lane) is a maintainer decision this job does not make.
+
+on:
+  schedule:
+    # 07:00 UTC, after the 03:17 rebuild and 06:41 bump crons have settled and
+    # before most interactive shepherding starts. Offsetting from those crons is
+    # mitigation #4, which is a maintainer call; this slot is a guess.
+    - cron: '0 7 * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/queue-observability.yml
+      - tools/queue_wait.py
+      - tests/test_queue_wait.py
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  queue-wait:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Measure queue wait for the rebuild workflow
+        # Actions does not export GITHUB_TOKEN as a step env var (unlike the
+        # built-in github.token); the tool reads it from GITHUB_TOKEN, so pass
+        # it in explicitly or the scheduled run fails before any API call.
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          # Documented repo variable is QUEUE_WAIT_THRESHOLD (#304 "Done when").
+          # Passed through env, not interpolated into run:, per repo convention.
+          QUEUE_WAIT_THRESHOLD: ${{ vars.QUEUE_WAIT_THRESHOLD }}
+        run: |
+          set -euo pipefail
+          threshold=()
+          if [ -n "$QUEUE_WAIT_THRESHOLD" ]; then
+            threshold=(--threshold "$QUEUE_WAIT_THRESHOLD")
+          fi
+          python3 tools/queue_wait.py \
+            --workflow rebuild-rpms.yml \
+            --limit 50 \
+            "${threshold[@]}" \
+            --output reports/queue-wait.json
+      - name: Keep the daily report
+        # The report is the durable record (#304: watch it for two weeks). The
+        # step summary is ephemeral; upload the JSON so history survives.
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: queue-wait-report
+          path: reports/queue-wait.json
+          if-no-files-found: ignore
+          retention-days: 30
+      - name: Summarise the result in the step
+        if: ${{ always() }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          report=reports/queue-wait.json
+          if [ ! -f "$report" ]; then
+            echo ":warning: Queue-observability produced no report (see logs)." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          python3 tools/queue_wait.py --render-summary "$report" >> "$GITHUB_STEP_SUMMARY"
