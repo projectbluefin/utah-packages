@@ -500,9 +500,10 @@ pull request.
   host has none. Add the Fedora lookaside as `fallback_urls`, never as `url`.
 - Regenerate `.packit.yaml` with `python3 tools/render_packit_config.py
   --write`.
-- Bump the recipe count in the tests listed under *Removing a package* in
-  [`contributing.md`](../contributing.md) and in `docs/architecture.md`,
-  including the quoted `validate.py` output line.
+- Refresh the counts in `docs/architecture.md` with
+  `python3 tools/render_architecture_counts.py --write`; the contract step
+  (`tests/test_architecture_counts.py`) reads the inventory directly, so the
+  four `tests/` files that used to carry the count no longer track it.
 - `just check` green on the import branch, not after merge.
 
 The daily re-import of carried recipes (`tools/rawhide_reimport.py`, the
@@ -523,6 +524,18 @@ need explicit `${VAR:?}` assertions when a similarly named lowercase variable
 causes shellcheck's SC2153 heuristic. Keep those checks specific rather than
 disabling shellcheck globally. README inventory descriptions should reference
 the live inventory tool instead of freezing another recipe-count snapshot.
+
+## Imported specs must not rewrite trusted proposal tools
+
+`rpmspec` expands executable macros. `persist-credentials: false` and a PR
+`add-paths` list do not make a writable checkout safe: a spec could replace a
+host script which runs later with the write token. The import job therefore
+has `contents: read`, mounts only trusted tools and the selected recipe
+read-only, and gives the container a disposable JSON output directory. A fresh
+proposal job accepts exactly one recipe and source candidate, rejects links,
+then renders configuration with its own trusted checkout. No artifact script
+runs in the write-permission job. Keep these job and filesystem boundaries
+when extending import automation.
 
 ## Quick checks before pushing a fix
 

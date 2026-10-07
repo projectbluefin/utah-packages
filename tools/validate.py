@@ -199,6 +199,21 @@ def check_bump_review_only(root: Path) -> None:
         )
 
 
+def validated_summary(records) -> str:
+    """Return the success line validate prints, e.g. ``validated N source RPMs (A rawhide, B upstream)``.
+
+    The split is the point of the count: a direct-upstream recipe carries a
+    different provenance form from a dist-git import, and both are mandatory.
+    tools/render_architecture_counts.py quotes this same line in
+    docs/architecture.md.
+    """
+    forms: dict[str, int] = {}
+    for record in records:
+        forms[record.provenance_branch] = forms.get(record.provenance_branch, 0) + 1
+    summary = ", ".join(f"{count} {form}" for form, count in sorted(forms.items()))
+    return f"validated {len(records)} source RPMs ({summary})"
+
+
 def main(root: Path = Path(".")) -> int:
     packages_dir = root / "packages"
     if not packages_dir.is_dir():
@@ -238,13 +253,7 @@ def main(root: Path = Path(".")) -> int:
     # a CI log whose last stdout line reads as success.
     if status:
         return status
-    # The split is the point of the count: a direct-upstream recipe carries a
-    # different provenance form from a dist-git import, and both are mandatory.
-    forms: dict[str, int] = {}
-    for record in records:
-        forms[record.provenance_branch] = forms.get(record.provenance_branch, 0) + 1
-    summary = ", ".join(f"{count} {form}" for form, count in sorted(forms.items()))
-    print(f"validated {len(records)} source RPMs ({summary})")
+    print(validated_summary(records))
     return 0
 
 
