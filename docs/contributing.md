@@ -21,9 +21,9 @@ URL whose bytes download directly — never Fedora's lookaside cache.
 
 Some Fedora `Source0` archives exist only in the lookaside because a packager
 repacked them by hand: `gpm` removes `doc/specs` from the upstream release for
-licensing reasons, and its `sources` file pins that hand-made tarball by SHA-512.
-No upstream URL serves those bytes. Do not lock the lookaside copy as `url`;
-add a deterministic transformation from the SHA-512-pinned upstream release to
+licensing reasons, and only Fedora's lookaside cache holds that hand-made
+tarball. No upstream URL serves those bytes. Do not lock the lookaside copy as
+`url`; add a deterministic transformation from the SHA-512-pinned upstream release to
 `tools/generated_sources.py`, lock it as a `generate` entry, and repin
 `packages/<name>/sources` to the generated digest. Diff the unpacked tree
 against Fedora's archive first: for `gpm` they are identical.

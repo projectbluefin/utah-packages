@@ -620,7 +620,11 @@ def rewrite_sources(manifest: Path, filename: str, digest: str, previous: str = 
     kept verbatim. Writing the new pin alone dropped them, and the build of
     every such package (ppp, adw-gtk3-theme, gum, fish) died in `rpmbuild -bs`
     on a missing source; keeping only BSD-form lines would still have dropped
-    the bundled pins of the legacy md5 manifests (#326).
+    the bundled pins of the legacy md5 manifests (#326). MD5 lines themselves
+    are no longer accepted on a live tree
+    (`tools/validate.py:check_sources_digests`, #385); this keeps them around
+    so a hand repin can land in the same commit as a bump, but a tree with
+    one still in it fails the validate gate.
     """
     primary = previous or filename
     pin = f"SHA512 ({filename}) = {digest}"
