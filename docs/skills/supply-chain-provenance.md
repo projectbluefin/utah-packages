@@ -214,3 +214,5 @@ and not attested" are different answers to the question asked after a bad
 package ships. With no `--buildroot-digest` — standalone use, or a run whose
 own digest resolution failed — nothing can be judged and nothing is discarded;
 that case is covered by the prune, not by the tool.
+
+A fork source migration must also pass the native Canary on a maintainer-owned branch. Independently stream and hash every promoted primary archive; a preserved feed or a fallback download alone does not prove the new primary URL serves the locked bytes.
