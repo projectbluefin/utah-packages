@@ -206,10 +206,13 @@
     {
       "name": "adwaita-icon-theme-legacy",
       "version": "46.2",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/adwaita-icon-theme-legacy/adwaita-icon-theme-legacy-46.2.tar.xz/sha512/01e4711e353d44914ed69a5d815046260c360f6da5586e419f54b33e9661abbb90bc8b675a505107e713d5b872d0d464491589498f40bad00f03183ddd81e791/adwaita-icon-theme-legacy-46.2.tar.xz",
+      "url": "https://download.gnome.org/sources/adwaita-icon-theme-legacy/46/adwaita-icon-theme-legacy-46.2.tar.xz",
       "filename": "adwaita-icon-theme-legacy-46.2.tar.xz",
       "feed": "https://download.gnome.org/sources/adwaita-icon-theme-legacy/46/adwaita-icon-theme-legacy-46.2.tar.xz",
-      "sha512": "01e4711e353d44914ed69a5d815046260c360f6da5586e419f54b33e9661abbb90bc8b675a505107e713d5b872d0d464491589498f40bad00f03183ddd81e791"
+      "sha512": "01e4711e353d44914ed69a5d815046260c360f6da5586e419f54b33e9661abbb90bc8b675a505107e713d5b872d0d464491589498f40bad00f03183ddd81e791",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/adwaita-icon-theme-legacy/adwaita-icon-theme-legacy-46.2.tar.xz/sha512/01e4711e353d44914ed69a5d815046260c360f6da5586e419f54b33e9661abbb90bc8b675a505107e713d5b872d0d464491589498f40bad00f03183ddd81e791/adwaita-icon-theme-legacy-46.2.tar.xz"
+      ]
     },
     {
       "name": "alsa-firmware",
@@ -261,10 +264,13 @@
     {
       "name": "at-spi2-core",
       "version": "2.61.1",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/at-spi2-core/at-spi2-core-2.61.1.tar.xz/sha512/201e7ed8bef8ddcdd0ff5c96aaf166edea95fb3d839c3bed9e5ef4778f6772aeaff62768c3fe05d4eb145583c63ff8a55bf9c504fa818a4d12abb7b3facaf7dc/at-spi2-core-2.61.1.tar.xz",
+      "url": "https://download.gnome.org/sources/at-spi2-core/2.61/at-spi2-core-2.61.1.tar.xz",
       "filename": "at-spi2-core-2.61.1.tar.xz",
       "feed": "https://download.gnome.org/sources/at-spi2-core/2.61/at-spi2-core-2.61.1.tar.xz",
-      "sha512": "201e7ed8bef8ddcdd0ff5c96aaf166edea95fb3d839c3bed9e5ef4778f6772aeaff62768c3fe05d4eb145583c63ff8a55bf9c504fa818a4d12abb7b3facaf7dc"
+      "sha512": "201e7ed8bef8ddcdd0ff5c96aaf166edea95fb3d839c3bed9e5ef4778f6772aeaff62768c3fe05d4eb145583c63ff8a55bf9c504fa818a4d12abb7b3facaf7dc",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/at-spi2-core/at-spi2-core-2.61.1.tar.xz/sha512/201e7ed8bef8ddcdd0ff5c96aaf166edea95fb3d839c3bed9e5ef4778f6772aeaff62768c3fe05d4eb145583c63ff8a55bf9c504fa818a4d12abb7b3facaf7dc/at-spi2-core-2.61.1.tar.xz"
+      ]
     },
     {
       "name": "bluez",
@@ -415,11 +421,14 @@
     {
       "name": "evolution-data-server",
       "version": "3.61.3",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/evolution-data-server/evolution-data-server-3.61.3.tar.xz/sha512/5473d9b64d07603ec2bb775cb126c0104b1768d04f5c75e591bcd50d60017f1d839b2bb8af75f15fa77184a6b53594559a80632085bef7b0030a34be3d07baa2/evolution-data-server-3.61.3.tar.xz",
+      "url": "https://download.gnome.org/sources/evolution-data-server/3.61/evolution-data-server-3.61.3.tar.xz",
       "filename": "evolution-data-server-3.61.3.tar.xz",
       "feed": "https://download.gnome.org/sources/evolution-data-server/3.61/evolution-data-server-3.61.3.tar.xz",
       "sha512": "5473d9b64d07603ec2bb775cb126c0104b1768d04f5c75e591bcd50d60017f1d839b2bb8af75f15fa77184a6b53594559a80632085bef7b0030a34be3d07baa2",
-      "stage": 9
+      "stage": 9,
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/evolution-data-server/evolution-data-server-3.61.3.tar.xz/sha512/5473d9b64d07603ec2bb775cb126c0104b1768d04f5c75e591bcd50d60017f1d839b2bb8af75f15fa77184a6b53594559a80632085bef7b0030a34be3d07baa2/evolution-data-server-3.61.3.tar.xz"
+      ]
     },
     {
       "name": "evtest",
@@ -567,27 +576,36 @@
     {
       "name": "gcr",
       "version": "4.4.0.1",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/gcr/gcr-4.4.0.1.tar.xz/sha512/f84724e0e9850c6150ec93430a0c3a714f4b4376df2fd3fd68340463acf04d89de236510b40bab4f3dc8fd82a2e8dc98b53c2684df07fdb9a6a3528ed35652d1/gcr-4.4.0.1.tar.xz",
+      "url": "https://download.gnome.org/sources/gcr/4.4/gcr-4.4.0.1.tar.xz",
       "filename": "gcr-4.4.0.1.tar.xz",
       "feed": "https://download.gnome.org/sources/gcr/4.4/gcr-4.4.0.1.tar.xz",
-      "sha512": "f84724e0e9850c6150ec93430a0c3a714f4b4376df2fd3fd68340463acf04d89de236510b40bab4f3dc8fd82a2e8dc98b53c2684df07fdb9a6a3528ed35652d1"
+      "sha512": "f84724e0e9850c6150ec93430a0c3a714f4b4376df2fd3fd68340463acf04d89de236510b40bab4f3dc8fd82a2e8dc98b53c2684df07fdb9a6a3528ed35652d1",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/gcr/gcr-4.4.0.1.tar.xz/sha512/f84724e0e9850c6150ec93430a0c3a714f4b4376df2fd3fd68340463acf04d89de236510b40bab4f3dc8fd82a2e8dc98b53c2684df07fdb9a6a3528ed35652d1/gcr-4.4.0.1.tar.xz"
+      ]
     },
     {
       "name": "gcr3",
       "version": "3.41.1",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/gcr3/gcr-3.41.1.tar.xz/sha512/dd70d41636ede863d05824b26823a8f572902f7a9b6f09b0c70586ef0d4c046864e6956130b9231850a515a9fbfcd56faf20354c1cf8f697f005827c048a2325/gcr-3.41.1.tar.xz",
+      "url": "https://download.gnome.org/sources/gcr/3.41/gcr-3.41.1.tar.xz",
       "filename": "gcr-3.41.1.tar.xz",
       "feed": "https://download.gnome.org/sources/gcr/3.41/gcr-3.41.1.tar.xz",
-      "sha512": "dd70d41636ede863d05824b26823a8f572902f7a9b6f09b0c70586ef0d4c046864e6956130b9231850a515a9fbfcd56faf20354c1cf8f697f005827c048a2325"
+      "sha512": "dd70d41636ede863d05824b26823a8f572902f7a9b6f09b0c70586ef0d4c046864e6956130b9231850a515a9fbfcd56faf20354c1cf8f697f005827c048a2325",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/gcr3/gcr-3.41.1.tar.xz/sha512/dd70d41636ede863d05824b26823a8f572902f7a9b6f09b0c70586ef0d4c046864e6956130b9231850a515a9fbfcd56faf20354c1cf8f697f005827c048a2325/gcr-3.41.1.tar.xz"
+      ]
     },
     {
       "name": "gdk-pixbuf2",
       "version": "2.44.8",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/gdk-pixbuf2/gdk-pixbuf-2.44.8.tar.xz/sha512/5fa8066abbfc29d7d9f07d95af2cfa2668e90381ecf1055ea449d35661b997d55e84e64ae1dedc14cf13d66912d05b1398075c560ce1aeeea7ae60a7d73c873a/gdk-pixbuf-2.44.8.tar.xz",
+      "url": "https://download.gnome.org/sources/gdk-pixbuf/2.44/gdk-pixbuf-2.44.8.tar.xz",
       "filename": "gdk-pixbuf-2.44.8.tar.xz",
       "feed": "https://download.gnome.org/sources/gdk-pixbuf/2.44/gdk-pixbuf-2.44.8.tar.xz",
       "sha512": "5fa8066abbfc29d7d9f07d95af2cfa2668e90381ecf1055ea449d35661b997d55e84e64ae1dedc14cf13d66912d05b1398075c560ce1aeeea7ae60a7d73c873a",
-      "stage": 4
+      "stage": 4,
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/gdk-pixbuf2/gdk-pixbuf-2.44.8.tar.xz/sha512/5fa8066abbfc29d7d9f07d95af2cfa2668e90381ecf1055ea449d35661b997d55e84e64ae1dedc14cf13d66912d05b1398075c560ce1aeeea7ae60a7d73c873a/gdk-pixbuf-2.44.8.tar.xz"
+      ]
     },
     {
       "name": "gdm",
@@ -612,10 +630,13 @@
     {
       "name": "geocode-glib",
       "version": "3.26.4",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/geocode-glib/geocode-glib-3.26.4.tar.xz/sha512/998c2f02a8d3d34a8b6a4b031da2e7c28df27014bcf58f3374fbc0c829fff6257c2622fd9bf331e05b85fbc761c64554fb77ce2d986e0f8b59b17aa486f9f609/geocode-glib-3.26.4.tar.xz",
+      "url": "https://download.gnome.org/sources/geocode-glib/3.26/geocode-glib-3.26.4.tar.xz",
       "filename": "geocode-glib-3.26.4.tar.xz",
       "feed": "https://download.gnome.org/sources/geocode-glib/3.26/geocode-glib-3.26.4.tar.xz",
-      "sha512": "998c2f02a8d3d34a8b6a4b031da2e7c28df27014bcf58f3374fbc0c829fff6257c2622fd9bf331e05b85fbc761c64554fb77ce2d986e0f8b59b17aa486f9f609"
+      "sha512": "998c2f02a8d3d34a8b6a4b031da2e7c28df27014bcf58f3374fbc0c829fff6257c2622fd9bf331e05b85fbc761c64554fb77ce2d986e0f8b59b17aa486f9f609",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/geocode-glib/geocode-glib-3.26.4.tar.xz/sha512/998c2f02a8d3d34a8b6a4b031da2e7c28df27014bcf58f3374fbc0c829fff6257c2622fd9bf331e05b85fbc761c64554fb77ce2d986e0f8b59b17aa486f9f609/geocode-glib-3.26.4.tar.xz"
+      ]
     },
     {
       "name": "git",
@@ -631,44 +652,59 @@
     {
       "name": "gjs",
       "version": "1.89.2",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/gjs/gjs-1.89.2.tar.xz/sha512/b318cd6b0ad46b261832f7dc384f19ffd19dc5839b0919b41ba303c15696dc999ca2ab6b67885010a70f393743e589de9c1b6a84f6be1c7d5f8093f438e365e9/gjs-1.89.2.tar.xz",
+      "url": "https://download.gnome.org/sources/gjs/1.89/gjs-1.89.2.tar.xz",
       "filename": "gjs-1.89.2.tar.xz",
       "feed": "https://download.gnome.org/sources/gjs/1.89/gjs-1.89.2.tar.xz",
       "sha512": "b318cd6b0ad46b261832f7dc384f19ffd19dc5839b0919b41ba303c15696dc999ca2ab6b67885010a70f393743e589de9c1b6a84f6be1c7d5f8093f438e365e9",
-      "stage": 7
+      "stage": 7,
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/gjs/gjs-1.89.2.tar.xz/sha512/b318cd6b0ad46b261832f7dc384f19ffd19dc5839b0919b41ba303c15696dc999ca2ab6b67885010a70f393743e589de9c1b6a84f6be1c7d5f8093f438e365e9/gjs-1.89.2.tar.xz"
+      ]
     },
     {
       "name": "glib-networking",
       "version": "2.90~alpha",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/glib-networking/glib-networking-2.90.alpha.tar.xz/sha512/843c550febcebf272a04cc780ab251c9e6bfd5f9cb6aa3b2b447ad049b31a7330102a9d4ec55995b20eb7e28085d957afb5ea293369ac4b82cc6835d24c1cb2e/glib-networking-2.90.alpha.tar.xz",
+      "url": "https://download.gnome.org/sources/glib-networking/2.90/glib-networking-2.90.alpha.tar.xz",
       "filename": "glib-networking-2.90.alpha.tar.xz",
       "feed": "https://download.gnome.org/sources/glib-networking/2.90/glib-networking-2.90.alpha.tar.xz",
-      "sha512": "843c550febcebf272a04cc780ab251c9e6bfd5f9cb6aa3b2b447ad049b31a7330102a9d4ec55995b20eb7e28085d957afb5ea293369ac4b82cc6835d24c1cb2e"
+      "sha512": "843c550febcebf272a04cc780ab251c9e6bfd5f9cb6aa3b2b447ad049b31a7330102a9d4ec55995b20eb7e28085d957afb5ea293369ac4b82cc6835d24c1cb2e",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/glib-networking/glib-networking-2.90.alpha.tar.xz/sha512/843c550febcebf272a04cc780ab251c9e6bfd5f9cb6aa3b2b447ad049b31a7330102a9d4ec55995b20eb7e28085d957afb5ea293369ac4b82cc6835d24c1cb2e/glib-networking-2.90.alpha.tar.xz"
+      ]
     },
     {
       "name": "glycin",
       "version": "2.2~beta",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/glycin/glycin-2.2.beta.tar.xz/sha512/e6b9ba38e3cd8f121f344f53fc8643c29f679d1347973a89d517d6ef2712364849dafdf55e7143a9a49f13282539ad2c34fb0176bb083a01458feda02a3efdb8/glycin-2.2.beta.tar.xz",
+      "url": "https://download.gnome.org/sources/glycin/2.2/glycin-2.2.beta.tar.xz",
       "filename": "glycin-2.2.beta.tar.xz",
       "feed": "https://download.gnome.org/sources/glycin/2.2/glycin-2.2.beta.tar.xz",
       "sha512": "e6b9ba38e3cd8f121f344f53fc8643c29f679d1347973a89d517d6ef2712364849dafdf55e7143a9a49f13282539ad2c34fb0176bb083a01458feda02a3efdb8",
-      "stage": 0
+      "stage": 0,
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/glycin/glycin-2.2.beta.tar.xz/sha512/e6b9ba38e3cd8f121f344f53fc8643c29f679d1347973a89d517d6ef2712364849dafdf55e7143a9a49f13282539ad2c34fb0176bb083a01458feda02a3efdb8/glycin-2.2.beta.tar.xz"
+      ]
     },
     {
       "name": "gnome-autoar",
       "version": "0.5.0",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/gnome-autoar/gnome-autoar-0.5.0.tar.xz/sha512/6badb1498a9c70cccf46c22dc85d319e37432a41381adc605ba78f12a050df58335cfb0612eb7157ef8bbbf335d782ab90e37988e586638524b24fe900118b55/gnome-autoar-0.5.0.tar.xz",
+      "url": "https://download.gnome.org/sources/gnome-autoar/0.5/gnome-autoar-0.5.0.tar.xz",
       "filename": "gnome-autoar-0.5.0.tar.xz",
       "feed": "https://download.gnome.org/sources/gnome-autoar/0.5/gnome-autoar-0.5.0.tar.xz",
-      "sha512": "6badb1498a9c70cccf46c22dc85d319e37432a41381adc605ba78f12a050df58335cfb0612eb7157ef8bbbf335d782ab90e37988e586638524b24fe900118b55"
+      "sha512": "6badb1498a9c70cccf46c22dc85d319e37432a41381adc605ba78f12a050df58335cfb0612eb7157ef8bbbf335d782ab90e37988e586638524b24fe900118b55",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/gnome-autoar/gnome-autoar-0.5.0.tar.xz/sha512/6badb1498a9c70cccf46c22dc85d319e37432a41381adc605ba78f12a050df58335cfb0612eb7157ef8bbbf335d782ab90e37988e586638524b24fe900118b55/gnome-autoar-0.5.0.tar.xz"
+      ]
     },
     {
       "name": "gnome-bluetooth",
       "version": "47.2",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/gnome-bluetooth/gnome-bluetooth-47.2.tar.xz/sha512/bd86e314afa6979655e643c8d7566504b92ec0b29ad44d1a9bd12e67913b9dad44b3ed57ef67330abe368948ba0e14e59a8fd2bb2a542252a8b885f8c4aee413/gnome-bluetooth-47.2.tar.xz",
+      "url": "https://download.gnome.org/sources/gnome-bluetooth/47/gnome-bluetooth-47.2.tar.xz",
       "filename": "gnome-bluetooth-47.2.tar.xz",
       "feed": "https://download.gnome.org/sources/gnome-bluetooth/47/gnome-bluetooth-47.2.tar.xz",
-      "sha512": "bd86e314afa6979655e643c8d7566504b92ec0b29ad44d1a9bd12e67913b9dad44b3ed57ef67330abe368948ba0e14e59a8fd2bb2a542252a8b885f8c4aee413"
+      "sha512": "bd86e314afa6979655e643c8d7566504b92ec0b29ad44d1a9bd12e67913b9dad44b3ed57ef67330abe368948ba0e14e59a8fd2bb2a542252a8b885f8c4aee413",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/gnome-bluetooth/gnome-bluetooth-47.2.tar.xz/sha512/bd86e314afa6979655e643c8d7566504b92ec0b29ad44d1a9bd12e67913b9dad44b3ed57ef67330abe368948ba0e14e59a8fd2bb2a542252a8b885f8c4aee413/gnome-bluetooth-47.2.tar.xz"
+      ]
     },
     {
       "name": "gnome-control-center",
@@ -709,18 +745,24 @@
     {
       "name": "gnome-keyring",
       "version": "50.0",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/gnome-keyring/gnome-keyring-50.0.tar.xz/sha512/20786486655c2188d8d0eae129d1c14a61d995d55a2339b166aa914287cf5ddd29b67d6a2fbc9d4b3d73705459cd3d17c696369500e4a0f0d12087aac78a8c15/gnome-keyring-50.0.tar.xz",
+      "url": "https://download.gnome.org/sources/gnome-keyring/50/gnome-keyring-50.0.tar.xz",
       "filename": "gnome-keyring-50.0.tar.xz",
       "feed": "https://download.gnome.org/sources/gnome-keyring/50/gnome-keyring-50.0.tar.xz",
-      "sha512": "20786486655c2188d8d0eae129d1c14a61d995d55a2339b166aa914287cf5ddd29b67d6a2fbc9d4b3d73705459cd3d17c696369500e4a0f0d12087aac78a8c15"
+      "sha512": "20786486655c2188d8d0eae129d1c14a61d995d55a2339b166aa914287cf5ddd29b67d6a2fbc9d4b3d73705459cd3d17c696369500e4a0f0d12087aac78a8c15",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/gnome-keyring/gnome-keyring-50.0.tar.xz/sha512/20786486655c2188d8d0eae129d1c14a61d995d55a2339b166aa914287cf5ddd29b67d6a2fbc9d4b3d73705459cd3d17c696369500e4a0f0d12087aac78a8c15/gnome-keyring-50.0.tar.xz"
+      ]
     },
     {
       "name": "gnome-online-accounts",
       "version": "3.58.1",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/gnome-online-accounts/gnome-online-accounts-3.58.1.tar.xz/sha512/4d466a14086ec199b5693727c29e8c159e85eef9949c2b30f5680c25b791653b1c468aedfd3176662dc934927d35df5f1e0c2ae8d6ec37d7d9515bbb8ca2ea15/gnome-online-accounts-3.58.1.tar.xz",
+      "url": "https://download.gnome.org/sources/gnome-online-accounts/3.58/gnome-online-accounts-3.58.1.tar.xz",
       "filename": "gnome-online-accounts-3.58.1.tar.xz",
       "feed": "https://download.gnome.org/sources/gnome-online-accounts/3.58/gnome-online-accounts-3.58.1.tar.xz",
-      "sha512": "4d466a14086ec199b5693727c29e8c159e85eef9949c2b30f5680c25b791653b1c468aedfd3176662dc934927d35df5f1e0c2ae8d6ec37d7d9515bbb8ca2ea15"
+      "sha512": "4d466a14086ec199b5693727c29e8c159e85eef9949c2b30f5680c25b791653b1c468aedfd3176662dc934927d35df5f1e0c2ae8d6ec37d7d9515bbb8ca2ea15",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/gnome-online-accounts/gnome-online-accounts-3.58.1.tar.xz/sha512/4d466a14086ec199b5693727c29e8c159e85eef9949c2b30f5680c25b791653b1c468aedfd3176662dc934927d35df5f1e0c2ae8d6ec37d7d9515bbb8ca2ea15/gnome-online-accounts-3.58.1.tar.xz"
+      ]
     },
     {
       "name": "gnome-ponytail-daemon",
@@ -791,10 +833,13 @@
     {
       "name": "gobject-introspection",
       "version": "1.86.0",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/gobject-introspection/gobject-introspection-1.86.0.tar.xz/sha512/a9d2edbe1cea710e10ef1ea8059a45cf5689bace43b5d2a6861809e863a6de7114b4763db8df3916ad6202c9967f48f7997acd0810a86e5e88dea7e0be88b585/gobject-introspection-1.86.0.tar.xz",
+      "url": "https://download.gnome.org/sources/gobject-introspection/1.86/gobject-introspection-1.86.0.tar.xz",
       "filename": "gobject-introspection-1.86.0.tar.xz",
       "feed": "https://download.gnome.org/sources/gobject-introspection/1.86/gobject-introspection-1.86.0.tar.xz",
-      "sha512": "a9d2edbe1cea710e10ef1ea8059a45cf5689bace43b5d2a6861809e863a6de7114b4763db8df3916ad6202c9967f48f7997acd0810a86e5e88dea7e0be88b585"
+      "sha512": "a9d2edbe1cea710e10ef1ea8059a45cf5689bace43b5d2a6861809e863a6de7114b4763db8df3916ad6202c9967f48f7997acd0810a86e5e88dea7e0be88b585",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/gobject-introspection/gobject-introspection-1.86.0.tar.xz/sha512/a9d2edbe1cea710e10ef1ea8059a45cf5689bace43b5d2a6861809e863a6de7114b4763db8df3916ad6202c9967f48f7997acd0810a86e5e88dea7e0be88b585/gobject-introspection-1.86.0.tar.xz"
+      ]
     },
     {
       "name": "google-noto-color-emoji-fonts",
@@ -869,18 +914,24 @@
     {
       "name": "gsound",
       "version": "1.0.3",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/gsound/gsound-1.0.3.tar.xz/sha512/5d7c4f17154b840abb94b432c33ba950929ddc5aba8c2795b54834d6c6b0280d3d8846acebb1e4e02688045bfb44cfac7dbb96fef44af5a73a12a70f3ece84eb/gsound-1.0.3.tar.xz",
+      "url": "https://download.gnome.org/sources/gsound/1.0/gsound-1.0.3.tar.xz",
       "filename": "gsound-1.0.3.tar.xz",
       "feed": "https://download.gnome.org/sources/gsound/1.0/gsound-1.0.3.tar.xz",
-      "sha512": "5d7c4f17154b840abb94b432c33ba950929ddc5aba8c2795b54834d6c6b0280d3d8846acebb1e4e02688045bfb44cfac7dbb96fef44af5a73a12a70f3ece84eb"
+      "sha512": "5d7c4f17154b840abb94b432c33ba950929ddc5aba8c2795b54834d6c6b0280d3d8846acebb1e4e02688045bfb44cfac7dbb96fef44af5a73a12a70f3ece84eb",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/gsound/gsound-1.0.3.tar.xz/sha512/5d7c4f17154b840abb94b432c33ba950929ddc5aba8c2795b54834d6c6b0280d3d8846acebb1e4e02688045bfb44cfac7dbb96fef44af5a73a12a70f3ece84eb/gsound-1.0.3.tar.xz"
+      ]
     },
     {
       "name": "gssdp",
       "version": "1.6.6",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/gssdp/gssdp-1.6.6.tar.xz/sha512/23143fcf2ce75a9a9ec5e8fc841c866d8e765948a11352e982e7c6d7320266bc4cabe71a640307d28f9e231ac6e2b24a03c03bfc9491934ed06544f0d90b2012/gssdp-1.6.6.tar.xz",
+      "url": "https://download.gnome.org/sources/gssdp/1.6/gssdp-1.6.6.tar.xz",
       "filename": "gssdp-1.6.6.tar.xz",
       "feed": "https://download.gnome.org/sources/gssdp/1.6/gssdp-1.6.6.tar.xz",
-      "sha512": "23143fcf2ce75a9a9ec5e8fc841c866d8e765948a11352e982e7c6d7320266bc4cabe71a640307d28f9e231ac6e2b24a03c03bfc9491934ed06544f0d90b2012"
+      "sha512": "23143fcf2ce75a9a9ec5e8fc841c866d8e765948a11352e982e7c6d7320266bc4cabe71a640307d28f9e231ac6e2b24a03c03bfc9491934ed06544f0d90b2012",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/gssdp/gssdp-1.6.6.tar.xz/sha512/23143fcf2ce75a9a9ec5e8fc841c866d8e765948a11352e982e7c6d7320266bc4cabe71a640307d28f9e231ac6e2b24a03c03bfc9491934ed06544f0d90b2012/gssdp-1.6.6.tar.xz"
+      ]
     },
     {
       "name": "gstreamer1",
@@ -920,18 +971,24 @@
     {
       "name": "gtk2",
       "version": "2.24.33",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/gtk2/gtk+-2.24.33.tar.xz/sha512/71b588797c81f727dfac8dcb1be193f7436f717d30ecf18eae2d3aeb0f445b3be4743400acac16435490db8f564f01032065d3f42d27871317f80c98aef929d5/gtk+-2.24.33.tar.xz",
+      "url": "https://download.gnome.org/sources/gtk+/2.24/gtk+-2.24.33.tar.xz",
       "filename": "gtk+-2.24.33.tar.xz",
       "feed": "https://download.gnome.org/sources/gtk+/2.24/gtk+-2.24.33.tar.xz",
-      "sha512": "71b588797c81f727dfac8dcb1be193f7436f717d30ecf18eae2d3aeb0f445b3be4743400acac16435490db8f564f01032065d3f42d27871317f80c98aef929d5"
+      "sha512": "71b588797c81f727dfac8dcb1be193f7436f717d30ecf18eae2d3aeb0f445b3be4743400acac16435490db8f564f01032065d3f42d27871317f80c98aef929d5",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/gtk2/gtk+-2.24.33.tar.xz/sha512/71b588797c81f727dfac8dcb1be193f7436f717d30ecf18eae2d3aeb0f445b3be4743400acac16435490db8f564f01032065d3f42d27871317f80c98aef929d5/gtk+-2.24.33.tar.xz"
+      ]
     },
     {
       "name": "gtk3",
       "version": "3.24.52",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/gtk3/gtk-3.24.52.tar.xz/sha512/20c119cf1a8c390c9d572729f36215fe034731d9e741a0a30c96671f4606ef8b7cdbe5d5ebe986f6f6c9ac03b3ba5cddd8d63da0ebfc5341d179ec9dea5e82eb/gtk-3.24.52.tar.xz",
+      "url": "https://download.gnome.org/sources/gtk/3.24/gtk-3.24.52.tar.xz",
       "filename": "gtk-3.24.52.tar.xz",
       "feed": "https://download.gnome.org/sources/gtk/3.24/gtk-3.24.52.tar.xz",
-      "sha512": "20c119cf1a8c390c9d572729f36215fe034731d9e741a0a30c96671f4606ef8b7cdbe5d5ebe986f6f6c9ac03b3ba5cddd8d63da0ebfc5341d179ec9dea5e82eb"
+      "sha512": "20c119cf1a8c390c9d572729f36215fe034731d9e741a0a30c96671f4606ef8b7cdbe5d5ebe986f6f6c9ac03b3ba5cddd8d63da0ebfc5341d179ec9dea5e82eb",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/gtk3/gtk-3.24.52.tar.xz/sha512/20c119cf1a8c390c9d572729f36215fe034731d9e741a0a30c96671f4606ef8b7cdbe5d5ebe986f6f6c9ac03b3ba5cddd8d63da0ebfc5341d179ec9dea5e82eb/gtk-3.24.52.tar.xz"
+      ]
     },
     {
       "name": "gtk4",
@@ -948,11 +1005,14 @@
     {
       "name": "gtksourceview4",
       "version": "4.8.4",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/gtksourceview4/gtksourceview-4.8.4.tar.xz/sha512/9e4262e52a92b3a052f33b799622d4fd4dcc7cc5355df12f160d0e60a6d6c135bc52f07eb40c06b357d5d74bec7228d4ec545a69ee5af69429d4170cc1e2243d/gtksourceview-4.8.4.tar.xz",
+      "url": "https://download.gnome.org/sources/gtksourceview/4.8/gtksourceview-4.8.4.tar.xz",
       "filename": "gtksourceview-4.8.4.tar.xz",
       "feed": "https://download.gnome.org/sources/gtksourceview/4.8/gtksourceview-4.8.4.tar.xz",
       "sha512": "9e4262e52a92b3a052f33b799622d4fd4dcc7cc5355df12f160d0e60a6d6c135bc52f07eb40c06b357d5d74bec7228d4ec545a69ee5af69429d4170cc1e2243d",
-      "buildroot_icu77": true
+      "buildroot_icu77": true,
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/gtksourceview4/gtksourceview-4.8.4.tar.xz/sha512/9e4262e52a92b3a052f33b799622d4fd4dcc7cc5355df12f160d0e60a6d6c135bc52f07eb40c06b357d5d74bec7228d4ec545a69ee5af69429d4170cc1e2243d/gtksourceview-4.8.4.tar.xz"
+      ]
     },
     {
       "name": "gum",
@@ -967,18 +1027,24 @@
     {
       "name": "gupnp",
       "version": "1.6.10",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/gupnp/gupnp-1.6.10.tar.xz/sha512/c9a91cdef4da79565291f1ade0c683b3015bc89e3849794461bd6d47eccc45cda8fba120ec3422aa77bf6d352d45f82f434e7db5dcb9545fe612d2f34d1c9116/gupnp-1.6.10.tar.xz",
+      "url": "https://download.gnome.org/sources/gupnp/1.6/gupnp-1.6.10.tar.xz",
       "filename": "gupnp-1.6.10.tar.xz",
       "feed": "https://download.gnome.org/sources/gupnp/1.6/gupnp-1.6.10.tar.xz",
-      "sha512": "c9a91cdef4da79565291f1ade0c683b3015bc89e3849794461bd6d47eccc45cda8fba120ec3422aa77bf6d352d45f82f434e7db5dcb9545fe612d2f34d1c9116"
+      "sha512": "c9a91cdef4da79565291f1ade0c683b3015bc89e3849794461bd6d47eccc45cda8fba120ec3422aa77bf6d352d45f82f434e7db5dcb9545fe612d2f34d1c9116",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/gupnp/gupnp-1.6.10.tar.xz/sha512/c9a91cdef4da79565291f1ade0c683b3015bc89e3849794461bd6d47eccc45cda8fba120ec3422aa77bf6d352d45f82f434e7db5dcb9545fe612d2f34d1c9116/gupnp-1.6.10.tar.xz"
+      ]
     },
     {
       "name": "gupnp-igd",
       "version": "1.6.0",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/gupnp-igd/gupnp-igd-1.6.0.tar.xz/sha512/ebec5f9d7fafc3614dc1c503aa86c7675aedfa05325554576160eaa83386b3da1fef72ef3c79a6fe7213fe64efcb24296ef99da87e90073813af3306df89a7bd/gupnp-igd-1.6.0.tar.xz",
+      "url": "https://download.gnome.org/sources/gupnp-igd/1.6/gupnp-igd-1.6.0.tar.xz",
       "filename": "gupnp-igd-1.6.0.tar.xz",
       "feed": "https://download.gnome.org/sources/gupnp-igd/1.6/gupnp-igd-1.6.0.tar.xz",
-      "sha512": "ebec5f9d7fafc3614dc1c503aa86c7675aedfa05325554576160eaa83386b3da1fef72ef3c79a6fe7213fe64efcb24296ef99da87e90073813af3306df89a7bd"
+      "sha512": "ebec5f9d7fafc3614dc1c503aa86c7675aedfa05325554576160eaa83386b3da1fef72ef3c79a6fe7213fe64efcb24296ef99da87e90073813af3306df89a7bd",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/gupnp-igd/gupnp-igd-1.6.0.tar.xz/sha512/ebec5f9d7fafc3614dc1c503aa86c7675aedfa05325554576160eaa83386b3da1fef72ef3c79a6fe7213fe64efcb24296ef99da87e90073813af3306df89a7bd/gupnp-igd-1.6.0.tar.xz"
+      ]
     },
     {
       "name": "gvfs",
@@ -994,10 +1060,13 @@
     {
       "name": "gweather-locations",
       "version": "2026.2",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/gweather-locations/gweather-locations-2026.2.tar.xz/sha512/88ec27c27efb69df3668f8b2dd774ac0d8bbe3fc75cf9089c8f64f00bf839c1f8aac04b644075bc4b51ce61b8f62b1bd24a466a82887538f743807e79309c804/gweather-locations-2026.2.tar.xz",
+      "url": "https://download.gnome.org/sources/gweather-locations/2026/gweather-locations-2026.2.tar.xz",
       "filename": "gweather-locations-2026.2.tar.xz",
       "feed": "https://download.gnome.org/sources/gweather-locations/2026/gweather-locations-2026.2.tar.xz",
-      "sha512": "88ec27c27efb69df3668f8b2dd774ac0d8bbe3fc75cf9089c8f64f00bf839c1f8aac04b644075bc4b51ce61b8f62b1bd24a466a82887538f743807e79309c804"
+      "sha512": "88ec27c27efb69df3668f8b2dd774ac0d8bbe3fc75cf9089c8f64f00bf839c1f8aac04b644075bc4b51ce61b8f62b1bd24a466a82887538f743807e79309c804",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/gweather-locations/gweather-locations-2026.2.tar.xz/sha512/88ec27c27efb69df3668f8b2dd774ac0d8bbe3fc75cf9089c8f64f00bf839c1f8aac04b644075bc4b51ce61b8f62b1bd24a466a82887538f743807e79309c804/gweather-locations-2026.2.tar.xz"
+      ]
     },
     {
       "name": "hicolor-icon-theme",
@@ -1230,10 +1299,13 @@
     {
       "name": "json-glib",
       "version": "1.10.8",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/json-glib/json-glib-1.10.8.tar.xz/sha512/f4ba8660b586a4e738803e4dbfdfcd34fa7ceba9189e7bf3f2b50e21f4d4886f99535ceb3453c89b1d1ae8d96bf4168a135b73b7e1a2dbc46b19e9b710ad56a1/json-glib-1.10.8.tar.xz",
+      "url": "https://download.gnome.org/sources/json-glib/1.10/json-glib-1.10.8.tar.xz",
       "filename": "json-glib-1.10.8.tar.xz",
       "feed": "https://download.gnome.org/sources/json-glib/1.10/json-glib-1.10.8.tar.xz",
-      "sha512": "f4ba8660b586a4e738803e4dbfdfcd34fa7ceba9189e7bf3f2b50e21f4d4886f99535ceb3453c89b1d1ae8d96bf4168a135b73b7e1a2dbc46b19e9b710ad56a1"
+      "sha512": "f4ba8660b586a4e738803e4dbfdfcd34fa7ceba9189e7bf3f2b50e21f4d4886f99535ceb3453c89b1d1ae8d96bf4168a135b73b7e1a2dbc46b19e9b710ad56a1",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/json-glib/json-glib-1.10.8.tar.xz/sha512/f4ba8660b586a4e738803e4dbfdfcd34fa7ceba9189e7bf3f2b50e21f4d4886f99535ceb3453c89b1d1ae8d96bf4168a135b73b7e1a2dbc46b19e9b710ad56a1/json-glib-1.10.8.tar.xz"
+      ]
     },
     {
       "name": "kde-filesystem",
@@ -1606,10 +1678,13 @@
       "name": "libepoxy",
       "stage": 6,
       "version": "1.5.10",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/libepoxy/libepoxy-1.5.10.tar.xz/sha512/d7b53bb34188412d93fd4c46a353038a6883fbaa9942f30df119d0e6de85cd93e0c0366fa40cbd75ffce64ac2cc509e65f94aefd710c4ff8a42324e235eabc44/libepoxy-1.5.10.tar.xz",
+      "url": "https://download.gnome.org/sources/libepoxy/1.5/libepoxy-1.5.10.tar.xz",
       "filename": "libepoxy-1.5.10.tar.xz",
       "feed": "https://download.gnome.org/sources/libepoxy/1.5/libepoxy-1.5.10.tar.xz",
-      "sha512": "d7b53bb34188412d93fd4c46a353038a6883fbaa9942f30df119d0e6de85cd93e0c0366fa40cbd75ffce64ac2cc509e65f94aefd710c4ff8a42324e235eabc44"
+      "sha512": "d7b53bb34188412d93fd4c46a353038a6883fbaa9942f30df119d0e6de85cd93e0c0366fa40cbd75ffce64ac2cc509e65f94aefd710c4ff8a42324e235eabc44",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libepoxy/libepoxy-1.5.10.tar.xz/sha512/d7b53bb34188412d93fd4c46a353038a6883fbaa9942f30df119d0e6de85cd93e0c0366fa40cbd75ffce64ac2cc509e65f94aefd710c4ff8a42324e235eabc44/libepoxy-1.5.10.tar.xz"
+      ]
     },
     {
       "name": "libevdev",
@@ -1680,18 +1755,24 @@
     {
       "name": "libgtop2",
       "version": "2.41.3",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/libgtop2/libgtop-2.41.3.tar.xz/sha512/17eca4214229b7b4e40ef572ea61feb60829f3db7870db2c474a813e59c4723d67da8e1c2d22be6ab3b19a6beeab05edbc4833a115196c2288f9a7a0de3d6ef2/libgtop-2.41.3.tar.xz",
+      "url": "https://download.gnome.org/sources/libgtop/2.41/libgtop-2.41.3.tar.xz",
       "filename": "libgtop-2.41.3.tar.xz",
       "feed": "https://download.gnome.org/sources/libgtop/2.41/libgtop-2.41.3.tar.xz",
-      "sha512": "17eca4214229b7b4e40ef572ea61feb60829f3db7870db2c474a813e59c4723d67da8e1c2d22be6ab3b19a6beeab05edbc4833a115196c2288f9a7a0de3d6ef2"
+      "sha512": "17eca4214229b7b4e40ef572ea61feb60829f3db7870db2c474a813e59c4723d67da8e1c2d22be6ab3b19a6beeab05edbc4833a115196c2288f9a7a0de3d6ef2",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libgtop2/libgtop-2.41.3.tar.xz/sha512/17eca4214229b7b4e40ef572ea61feb60829f3db7870db2c474a813e59c4723d67da8e1c2d22be6ab3b19a6beeab05edbc4833a115196c2288f9a7a0de3d6ef2/libgtop-2.41.3.tar.xz"
+      ]
     },
     {
       "name": "libgudev",
       "version": "238",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/libgudev/libgudev-238.tar.xz/sha512/684061b4fc64a6ea3dd1ac34835279330c7eb2728fad6e3a9d34c0d501be3103d0f96c6d6866c8e257a0027e4f78a6314cb8ba81cda5ddf42ee9ea1a576ec5dc/libgudev-238.tar.xz",
+      "url": "https://download.gnome.org/sources/libgudev/238/libgudev-238.tar.xz",
       "filename": "libgudev-238.tar.xz",
       "feed": "https://download.gnome.org/sources/libgudev/238/libgudev-238.tar.xz",
-      "sha512": "684061b4fc64a6ea3dd1ac34835279330c7eb2728fad6e3a9d34c0d501be3103d0f96c6d6866c8e257a0027e4f78a6314cb8ba81cda5ddf42ee9ea1a576ec5dc"
+      "sha512": "684061b4fc64a6ea3dd1ac34835279330c7eb2728fad6e3a9d34c0d501be3103d0f96c6d6866c8e257a0027e4f78a6314cb8ba81cda5ddf42ee9ea1a576ec5dc",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libgudev/libgudev-238.tar.xz/sha512/684061b4fc64a6ea3dd1ac34835279330c7eb2728fad6e3a9d34c0d501be3103d0f96c6d6866c8e257a0027e4f78a6314cb8ba81cda5ddf42ee9ea1a576ec5dc/libgudev-238.tar.xz"
+      ]
     },
     {
       "name": "libgusb",
@@ -1704,10 +1785,13 @@
     {
       "name": "libgweather",
       "version": "4.6.0",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/libgweather/libgweather-4.6.0.tar.xz/sha512/1ca6ffe7cc8b6cf98b39137a7bf50c3e065def32c31ba40431b82020fc8f62da5e9903a27c850d234760581430bccc0eeb9c74b495e7c7f3312252c31cbbb8d6/libgweather-4.6.0.tar.xz",
+      "url": "https://download.gnome.org/sources/libgweather/4.6/libgweather-4.6.0.tar.xz",
       "filename": "libgweather-4.6.0.tar.xz",
       "feed": "https://download.gnome.org/sources/libgweather/4.6/libgweather-4.6.0.tar.xz",
-      "sha512": "1ca6ffe7cc8b6cf98b39137a7bf50c3e065def32c31ba40431b82020fc8f62da5e9903a27c850d234760581430bccc0eeb9c74b495e7c7f3312252c31cbbb8d6"
+      "sha512": "1ca6ffe7cc8b6cf98b39137a7bf50c3e065def32c31ba40431b82020fc8f62da5e9903a27c850d234760581430bccc0eeb9c74b495e7c7f3312252c31cbbb8d6",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libgweather/libgweather-4.6.0.tar.xz/sha512/1ca6ffe7cc8b6cf98b39137a7bf50c3e065def32c31ba40431b82020fc8f62da5e9903a27c850d234760581430bccc0eeb9c74b495e7c7f3312252c31cbbb8d6/libgweather-4.6.0.tar.xz"
+      ]
     },
     {
       "name": "libheif",
@@ -1796,10 +1880,13 @@
     {
       "name": "libmanette",
       "version": "0.2.13",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/libmanette/libmanette-0.2.13.tar.xz/sha512/ba7b3a7b15d26b720f4f55241f0a5d9b1c37ab9c7205428da74264ba3f6b7b6f4a8d1c087a61b6e4f8469fa1437d2475bca87ca987bc73d64da144a27652ff6e/libmanette-0.2.13.tar.xz",
+      "url": "https://download.gnome.org/sources/libmanette/0.2/libmanette-0.2.13.tar.xz",
       "filename": "libmanette-0.2.13.tar.xz",
       "feed": "https://download.gnome.org/sources/libmanette/0.2/libmanette-0.2.13.tar.xz",
-      "sha512": "ba7b3a7b15d26b720f4f55241f0a5d9b1c37ab9c7205428da74264ba3f6b7b6f4a8d1c087a61b6e4f8469fa1437d2475bca87ca987bc73d64da144a27652ff6e"
+      "sha512": "ba7b3a7b15d26b720f4f55241f0a5d9b1c37ab9c7205428da74264ba3f6b7b6f4a8d1c087a61b6e4f8469fa1437d2475bca87ca987bc73d64da144a27652ff6e",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libmanette/libmanette-0.2.13.tar.xz/sha512/ba7b3a7b15d26b720f4f55241f0a5d9b1c37ab9c7205428da74264ba3f6b7b6f4a8d1c087a61b6e4f8469fa1437d2475bca87ca987bc73d64da144a27652ff6e/libmanette-0.2.13.tar.xz"
+      ]
     },
     {
       "name": "libnfs",
@@ -1820,18 +1907,24 @@
     {
       "name": "libnma",
       "version": "1.10.6",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/libnma/libnma-1.10.6.tar.xz/sha512/4801db35a8d510c651fc91da4f394a665a4ba5c35fbefe0496363c404b49d5f4e103f49084220ee58b995684d2ac93643320b7d1777ebeea555e7657768a1f6a/libnma-1.10.6.tar.xz",
+      "url": "https://download.gnome.org/sources/libnma/1.10/libnma-1.10.6.tar.xz",
       "filename": "libnma-1.10.6.tar.xz",
       "feed": "https://download.gnome.org/sources/libnma/1.10/libnma-1.10.6.tar.xz",
-      "sha512": "4801db35a8d510c651fc91da4f394a665a4ba5c35fbefe0496363c404b49d5f4e103f49084220ee58b995684d2ac93643320b7d1777ebeea555e7657768a1f6a"
+      "sha512": "4801db35a8d510c651fc91da4f394a665a4ba5c35fbefe0496363c404b49d5f4e103f49084220ee58b995684d2ac93643320b7d1777ebeea555e7657768a1f6a",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libnma/libnma-1.10.6.tar.xz/sha512/4801db35a8d510c651fc91da4f394a665a4ba5c35fbefe0496363c404b49d5f4e103f49084220ee58b995684d2ac93643320b7d1777ebeea555e7657768a1f6a/libnma-1.10.6.tar.xz"
+      ]
     },
     {
       "name": "libnotify",
       "version": "0.8.8",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/libnotify/libnotify-0.8.8.tar.xz/sha512/0fedd230d3c8b9bd3c783794e690752cf6388fc178854267effe3ba26aaa9248415cdf0ab994f596ace8bef59e0c1e41196f42a225221d7f0e1efc54683c310a/libnotify-0.8.8.tar.xz",
+      "url": "https://download.gnome.org/sources/libnotify/0.8/libnotify-0.8.8.tar.xz",
       "filename": "libnotify-0.8.8.tar.xz",
       "feed": "https://download.gnome.org/sources/libnotify/0.8/libnotify-0.8.8.tar.xz",
-      "sha512": "0fedd230d3c8b9bd3c783794e690752cf6388fc178854267effe3ba26aaa9248415cdf0ab994f596ace8bef59e0c1e41196f42a225221d7f0e1efc54683c310a"
+      "sha512": "0fedd230d3c8b9bd3c783794e690752cf6388fc178854267effe3ba26aaa9248415cdf0ab994f596ace8bef59e0c1e41196f42a225221d7f0e1efc54683c310a",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libnotify/libnotify-0.8.8.tar.xz/sha512/0fedd230d3c8b9bd3c783794e690752cf6388fc178854267effe3ba26aaa9248415cdf0ab994f596ace8bef59e0c1e41196f42a225221d7f0e1efc54683c310a/libnotify-0.8.8.tar.xz"
+      ]
     },
     {
       "name": "libnvme",
@@ -1932,11 +2025,14 @@
     {
       "name": "librsvg2",
       "version": "2.62.3",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/librsvg2/librsvg-2.62.3.tar.xz/sha512/c2c0f28268e47ec78f98d86cd2536be3e0c3706039b04ac2286d87a6ac7ee0dfb75a4adc4f8bd9c3b6b1f5c94fecafc6d84dfe67f7e4ebfad59f7227e509300d/librsvg-2.62.3.tar.xz",
+      "url": "https://download.gnome.org/sources/librsvg/2.62/librsvg-2.62.3.tar.xz",
       "filename": "librsvg-2.62.3.tar.xz",
       "feed": "https://download.gnome.org/sources/librsvg/2.62/librsvg-2.62.3.tar.xz",
       "sha512": "c2c0f28268e47ec78f98d86cd2536be3e0c3706039b04ac2286d87a6ac7ee0dfb75a4adc4f8bd9c3b6b1f5c94fecafc6d84dfe67f7e4ebfad59f7227e509300d",
-      "stage": 1
+      "stage": 1,
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/librsvg2/librsvg-2.62.3.tar.xz/sha512/c2c0f28268e47ec78f98d86cd2536be3e0c3706039b04ac2286d87a6ac7ee0dfb75a4adc4f8bd9c3b6b1f5c94fecafc6d84dfe67f7e4ebfad59f7227e509300d/librsvg-2.62.3.tar.xz"
+      ]
     },
     {
       "name": "libsass",
@@ -1949,10 +2045,13 @@
     {
       "name": "libsecret",
       "version": "0.21.7",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/libsecret/libsecret-0.21.7.tar.xz/sha512/f5ee1244338ba324ae403096ddd7357899f55fa9f961d2473515ac924164fe9b33f87e39eea2a30b99fc32f2300c0e626d20c98509dbbcadb2c99628a1caa0e4/libsecret-0.21.7.tar.xz",
+      "url": "https://download.gnome.org/sources/libsecret/0.21/libsecret-0.21.7.tar.xz",
       "filename": "libsecret-0.21.7.tar.xz",
       "feed": "https://download.gnome.org/sources/libsecret/0.21/libsecret-0.21.7.tar.xz",
-      "sha512": "f5ee1244338ba324ae403096ddd7357899f55fa9f961d2473515ac924164fe9b33f87e39eea2a30b99fc32f2300c0e626d20c98509dbbcadb2c99628a1caa0e4"
+      "sha512": "f5ee1244338ba324ae403096ddd7357899f55fa9f961d2473515ac924164fe9b33f87e39eea2a30b99fc32f2300c0e626d20c98509dbbcadb2c99628a1caa0e4",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libsecret/libsecret-0.21.7.tar.xz/sha512/f5ee1244338ba324ae403096ddd7357899f55fa9f961d2473515ac924164fe9b33f87e39eea2a30b99fc32f2300c0e626d20c98509dbbcadb2c99628a1caa0e4/libsecret-0.21.7.tar.xz"
+      ]
     },
     {
       "name": "libshout",
@@ -1973,11 +2072,14 @@
     {
       "name": "libsoup3",
       "version": "3.7.2",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/libsoup3/libsoup-3.7.2.tar.xz/sha512/89642fe052557754e151f0d705fa6bca135bc01b1f5e3d2b1f8da67b708a9ffba4b40f923b6a1019a6e2fa28fedb7dc30bed64f98613e4b7139e98dc197fca49/libsoup-3.7.2.tar.xz",
+      "url": "https://download.gnome.org/sources/libsoup/3.7/libsoup-3.7.2.tar.xz",
       "filename": "libsoup-3.7.2.tar.xz",
       "feed": "https://download.gnome.org/sources/libsoup/3.7/libsoup-3.7.2.tar.xz",
       "sha512": "89642fe052557754e151f0d705fa6bca135bc01b1f5e3d2b1f8da67b708a9ffba4b40f923b6a1019a6e2fa28fedb7dc30bed64f98613e4b7139e98dc197fca49",
-      "buildroot_icu77": true
+      "buildroot_icu77": true,
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libsoup3/libsoup-3.7.2.tar.xz/sha512/89642fe052557754e151f0d705fa6bca135bc01b1f5e3d2b1f8da67b708a9ffba4b40f923b6a1019a6e2fa28fedb7dc30bed64f98613e4b7139e98dc197fca49/libsoup-3.7.2.tar.xz"
+      ]
     },
     {
       "name": "libtalloc",
@@ -2187,11 +2289,14 @@
     {
       "name": "localsearch",
       "version": "3.12~beta",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/localsearch/localsearch-3.12.beta.tar.xz/sha512/448f48ab7ea9d3368cec374c929a73c6b914d0364a6a7c7a62e68bfbf42826280da483385db855121c5cdc9eba16ffe97387c0a660c3c79b63a0e0eade13e851/localsearch-3.12.beta.tar.xz",
+      "url": "https://download.gnome.org/sources/localsearch/3.12/localsearch-3.12.beta.tar.xz",
       "filename": "localsearch-3.12.beta.tar.xz",
       "feed": "https://download.gnome.org/sources/localsearch/3.12/localsearch-3.12.beta.tar.xz",
       "sha512": "448f48ab7ea9d3368cec374c929a73c6b914d0364a6a7c7a62e68bfbf42826280da483385db855121c5cdc9eba16ffe97387c0a660c3c79b63a0e0eade13e851",
-      "stage": 4
+      "stage": 4,
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/localsearch/localsearch-3.12.beta.tar.xz/sha512/448f48ab7ea9d3368cec374c929a73c6b914d0364a6a7c7a62e68bfbf42826280da483385db855121c5cdc9eba16ffe97387c0a660c3c79b63a0e0eade13e851/localsearch-3.12.beta.tar.xz"
+      ]
     },
     {
       "name": "lpcnetfreedv",
@@ -2279,10 +2384,13 @@
     {
       "name": "mobile-broadband-provider-info",
       "version": "20240407",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/mobile-broadband-provider-info/mobile-broadband-provider-info-20240407.tar.xz/sha512/988d6a2b455580d16dd60f19f0057f440e5f9e57ea84723440c515039b23e1d76d77f18c0316ea5ca43eb2ed291c44c290c83b1e965df09ed75176c8df9728cd/mobile-broadband-provider-info-20240407.tar.xz",
+      "url": "https://download.gnome.org/sources/mobile-broadband-provider-info/20240407/mobile-broadband-provider-info-20240407.tar.xz",
       "filename": "mobile-broadband-provider-info-20240407.tar.xz",
       "feed": "https://download.gnome.org/sources/mobile-broadband-provider-info/20240407/mobile-broadband-provider-info-20240407.tar.xz",
-      "sha512": "988d6a2b455580d16dd60f19f0057f440e5f9e57ea84723440c515039b23e1d76d77f18c0316ea5ca43eb2ed291c44c290c83b1e965df09ed75176c8df9728cd"
+      "sha512": "988d6a2b455580d16dd60f19f0057f440e5f9e57ea84723440c515039b23e1d76d77f18c0316ea5ca43eb2ed291c44c290c83b1e965df09ed75176c8df9728cd",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/mobile-broadband-provider-info/mobile-broadband-provider-info-20240407.tar.xz/sha512/988d6a2b455580d16dd60f19f0057f440e5f9e57ea84723440c515039b23e1d76d77f18c0316ea5ca43eb2ed291c44c290c83b1e965df09ed75176c8df9728cd/mobile-broadband-provider-info-20240407.tar.xz"
+      ]
     },
     {
       "name": "mozc",
@@ -2312,10 +2420,13 @@
     {
       "name": "msgraph",
       "version": "0.3.5",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/msgraph/msgraph-0.3.5.tar.xz/sha512/23f8f83df26709263e00a314cd399bd574b06436b46de10fc37a0b9364946d2896db8ddfeed520734b4552394b8f7e29dc0ec6fdf39966c92f492a608b585773/msgraph-0.3.5.tar.xz",
+      "url": "https://download.gnome.org/sources/msgraph/0.3/msgraph-0.3.5.tar.xz",
       "filename": "msgraph-0.3.5.tar.xz",
       "feed": "https://download.gnome.org/sources/msgraph/0.3/msgraph-0.3.5.tar.xz",
-      "sha512": "23f8f83df26709263e00a314cd399bd574b06436b46de10fc37a0b9364946d2896db8ddfeed520734b4552394b8f7e29dc0ec6fdf39966c92f492a608b585773"
+      "sha512": "23f8f83df26709263e00a314cd399bd574b06436b46de10fc37a0b9364946d2896db8ddfeed520734b4552394b8f7e29dc0ec6fdf39966c92f492a608b585773",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/msgraph/msgraph-0.3.5.tar.xz/sha512/23f8f83df26709263e00a314cd399bd574b06436b46de10fc37a0b9364946d2896db8ddfeed520734b4552394b8f7e29dc0ec6fdf39966c92f492a608b585773/msgraph-0.3.5.tar.xz"
+      ]
     },
     {
       "name": "mtdev",
@@ -2349,10 +2460,13 @@
       "name": "nautilus-python",
       "stage": 7,
       "version": "4.1.0",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/nautilus-python/nautilus-python-4.1.0.tar.xz/sha512/410694f37b2bafb22afe21301a86211ada547973a17505b3a3f6f7370e7d22e2a5590c4bdde5b68fa3e1232fd9b4bae4ccf1aa21fc7119eb4d43905fb1747c26/nautilus-python-4.1.0.tar.xz",
+      "url": "https://download.gnome.org/sources/nautilus-python/4.1/nautilus-python-4.1.0.tar.xz",
       "filename": "nautilus-python-4.1.0.tar.xz",
       "feed": "https://download.gnome.org/sources/nautilus-python/4.1/nautilus-python-4.1.0.tar.xz",
-      "sha512": "410694f37b2bafb22afe21301a86211ada547973a17505b3a3f6f7370e7d22e2a5590c4bdde5b68fa3e1232fd9b4bae4ccf1aa21fc7119eb4d43905fb1747c26"
+      "sha512": "410694f37b2bafb22afe21301a86211ada547973a17505b3a3f6f7370e7d22e2a5590c4bdde5b68fa3e1232fd9b4bae4ccf1aa21fc7119eb4d43905fb1747c26",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/nautilus-python/nautilus-python-4.1.0.tar.xz/sha512/410694f37b2bafb22afe21301a86211ada547973a17505b3a3f6f7370e7d22e2a5590c4bdde5b68fa3e1232fd9b4bae4ccf1aa21fc7119eb4d43905fb1747c26/nautilus-python-4.1.0.tar.xz"
+      ]
     },
     {
       "name": "noopenh264",
@@ -2634,10 +2748,13 @@
       "name": "rest",
       "stage": 4,
       "version": "0.10.2",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/rest/librest-0.10.2.tar.xz/sha512/ef4080041953bd9d2264ffc533bd6a0f022a4c7fdea4494b3d5c313705f9c753fe75af78fdde2d75ef28402cc59b6ee40d73b7c4ee8d4b5620d8385763372f19/librest-0.10.2.tar.xz",
+      "url": "https://download.gnome.org/sources/librest/0.10/librest-0.10.2.tar.xz",
       "filename": "librest-0.10.2.tar.xz",
       "feed": "https://download.gnome.org/sources/librest/0.10/librest-0.10.2.tar.xz",
-      "sha512": "ef4080041953bd9d2264ffc533bd6a0f022a4c7fdea4494b3d5c313705f9c753fe75af78fdde2d75ef28402cc59b6ee40d73b7c4ee8d4b5620d8385763372f19"
+      "sha512": "ef4080041953bd9d2264ffc533bd6a0f022a4c7fdea4494b3d5c313705f9c753fe75af78fdde2d75ef28402cc59b6ee40d73b7c4ee8d4b5620d8385763372f19",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/rest/librest-0.10.2.tar.xz/sha512/ef4080041953bd9d2264ffc533bd6a0f022a4c7fdea4494b3d5c313705f9c753fe75af78fdde2d75ef28402cc59b6ee40d73b7c4ee8d4b5620d8385763372f19/librest-0.10.2.tar.xz"
+      ]
     },
     {
       "name": "rtkit",
@@ -3136,10 +3253,13 @@
       "name": "xdg-user-dirs-gtk",
       "stage": 4,
       "version": "0.16",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/xdg-user-dirs-gtk/xdg-user-dirs-gtk-0.16.tar.xz/sha512/e491931b53480fcf067eb4077a1c547b196f27bf37d3ab56cf6849345c24b66af1d2d58c0b4818c144ad062cab47cbff951f547f27b5b574fde19c0d1eacfd19/xdg-user-dirs-gtk-0.16.tar.xz",
+      "url": "https://download.gnome.org/sources/xdg-user-dirs-gtk/0.16/xdg-user-dirs-gtk-0.16.tar.xz",
       "filename": "xdg-user-dirs-gtk-0.16.tar.xz",
       "feed": "https://download.gnome.org/sources/xdg-user-dirs-gtk/0.16/xdg-user-dirs-gtk-0.16.tar.xz",
-      "sha512": "e491931b53480fcf067eb4077a1c547b196f27bf37d3ab56cf6849345c24b66af1d2d58c0b4818c144ad062cab47cbff951f547f27b5b574fde19c0d1eacfd19"
+      "sha512": "e491931b53480fcf067eb4077a1c547b196f27bf37d3ab56cf6849345c24b66af1d2d58c0b4818c144ad062cab47cbff951f547f27b5b574fde19c0d1eacfd19",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/xdg-user-dirs-gtk/xdg-user-dirs-gtk-0.16.tar.xz/sha512/e491931b53480fcf067eb4077a1c547b196f27bf37d3ab56cf6849345c24b66af1d2d58c0b4818c144ad062cab47cbff951f547f27b5b574fde19c0d1eacfd19/xdg-user-dirs-gtk-0.16.tar.xz"
+      ]
     },
     {
       "name": "xevd",
