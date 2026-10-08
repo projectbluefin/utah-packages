@@ -75,7 +75,7 @@ jobs:
             -v "$PWD/packages/$PACKAGE:/input/packages/$PACKAGE:ro" \
             -v "$RUNNER_TEMP/import-output:/output:rw" \
             -w /input \
-            quay.io/packit/packit:latest@sha256:f7c0ef0d7ef6edda1788c9fc3eb0e9aafe800d8ff517b227da827b809c3533a1 bash -exc '
+            quay.io/packit/packit:latest@sha256:43e546e82850abc08bec850a46d69dba87fa77902f08dff8d5cc9ab1613f8c84 bash -exc '
               python3 /trusted/tools/bootstrap_upstream_sources.py \
                 --root /input --package "$PACKAGE" \
                 --output /output/candidate.json --report /output/report.json
