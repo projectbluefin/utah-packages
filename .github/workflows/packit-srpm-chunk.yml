@@ -66,7 +66,7 @@ jobs:
             -v "$PWD:/repo:Z" \
             -v "$PWD/work/srpm:/out:Z" \
             -w /repo \
-            quay.io/packit/packit:latest@sha256:fed8ce4b0ef1c2778e6d4f18723b208f1b4c7f1115d8a33b8507c9f2c78765b5 bash -exc '
+            quay.io/packit/packit:latest@sha256:f7c0ef0d7ef6edda1788c9fc3eb0e9aafe800d8ff517b227da827b809c3533a1 bash -exc '
               git config --global --add safe.directory "*"
               packit srpm --preserve-spec --output "/out/$PACKAGE.src.rpm" -p "$PACKAGE"
               python3 tools/source_pipeline.py "$PACKAGE" --verify-staged packages
