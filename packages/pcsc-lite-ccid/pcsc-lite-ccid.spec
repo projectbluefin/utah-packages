@@ -54,7 +54,7 @@ cp -p src/openct/LICENSE LICENSE.openct
 
 
 %post
-%systemd_postun_with_restart pcscd.service
+%systemd_post pcscd.service
 
 
 %preun
