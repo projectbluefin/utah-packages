@@ -460,6 +460,12 @@ packages:
     downstream_package_name: gnome-ponytail-daemon
     paths:
       - packages/gnome-ponytail-daemon
+  gnome-rounded-blur:
+    specfile_path: gnome-rounded-blur.spec
+    upstream_package_name: gnome-rounded-blur
+    downstream_package_name: gnome-rounded-blur
+    paths:
+      - packages/gnome-rounded-blur
   gnome-session:
     specfile_path: gnome-session.spec
     upstream_package_name: gnome-session

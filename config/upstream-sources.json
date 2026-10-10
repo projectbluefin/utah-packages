@@ -783,6 +783,16 @@
       ]
     },
     {
+      "name": "gnome-rounded-blur",
+      "version": "1.0.0",
+      "url": "https://github.com/kancko/gnome-rounded-blur/archive/f3bfcc796e1214c1e1d4287ee35cb132ad8133f0/gnome-rounded-blur-f3bfcc7.tar.gz",
+      "filename": "gnome-rounded-blur-f3bfcc7.tar.gz",
+      "sha512": "6c8c4cb7938db8492c36b7834f7d08f0dfd8a9420dbe9ca4f0b031f6cfcacabc3b23d2d5ab407c02aef79151d1c90287bc9c6d25ed9ac911adf1d83583826eae",
+      "fallback_urls": [
+        "https://codeload.github.com/kancko/gnome-rounded-blur/tar.gz/f3bfcc796e1214c1e1d4287ee35cb132ad8133f0"
+      ]
+    },
+    {
       "name": "gnome-session",
       "version": "51.0",
       "url": "https://download.gnome.org/sources/gnome-session/51/gnome-session-51.0.tar.xz",

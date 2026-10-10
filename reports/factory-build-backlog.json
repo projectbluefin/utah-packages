@@ -15,8 +15,8 @@
       "total": 59
     },
     "gnome-apps": {
-      "already_recipe": 4,
-      "pending": 34,
+      "already_recipe": 5,
+      "pending": 33,
       "total": 38
     },
     "long-tail": {
@@ -1407,7 +1407,7 @@
     {
       "area": "gnome-apps",
       "name": "gnome-rounded-blur",
-      "state": "pending"
+      "state": "already_recipe"
     },
     {
       "area": "gnome-apps",
@@ -2812,9 +2812,9 @@
   ],
   "issue": "projectbluefin/utah-packages#308",
   "states": {
-    "already_recipe": 28,
+    "already_recipe": 29,
     "manifest_wants": 1,
-    "pending": 522
+    "pending": 521
   },
   "totals": {
     "backlog": 551,
