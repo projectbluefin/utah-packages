@@ -1,0 +1,8 @@
+{
+  "package": "htop",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/htop.git",
+  "commit": "34725ad1521ebc38322a2d74abf6b599000d37f1",
+  "tree": "c4340c737b923b4341b67c765280d0096cc2b767",
+  "imported_at": "2026-10-10T11:15:17.620235+00:00"
+}

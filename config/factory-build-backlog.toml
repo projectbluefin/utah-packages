@@ -252,7 +252,6 @@ packages = [
     "gssproxy",
     "hdparm",
     "hfsplus-tools",
-    "htop",
     "ifuse",
     "iwd",
     "kernel-devel-matched",
@@ -274,7 +273,6 @@ packages = [
     "lsof",
     "man-pages",
     "mtr",
-    "nano",
     "nano-default-editor",
     "nfs-client-utils",
     "nfs-common-utils",
@@ -336,7 +334,6 @@ packages = [
     "restic",
     "rpm-ostree",
     "rpm-ostree-libs",
-    "rsync",
     "smartmontools",
     "smartmontools-selinux",
     "speech-dispatcher",
@@ -354,7 +351,6 @@ packages = [
     "symlinks",
     "tcpdump",
     "time",
-    "tmux",
     "toolbox",
     "tpm2-tools",
     "traceroute",
@@ -369,7 +365,6 @@ packages = [
     "wget2-wget",
     "whois",
     "whois-nls",
-    "xdg-utils",
 ]
 
 [areas.fonts-i18n]
@@ -648,7 +643,13 @@ packages = [
 [resolved]
 # Packages that left the backlog because a recipe was imported.
 # Each entry: package name and the commit that closed the gap.
-packages = []
+packages = [
+    { name = "htop", commit = "0000000000000000000000000000000000000000" },
+    { name = "nano", commit = "0000000000000000000000000000000000000000" },
+    { name = "rsync", commit = "0000000000000000000000000000000000000000" },
+    { name = "tmux", commit = "0000000000000000000000000000000000000000" },
+    { name = "xdg-utils", commit = "0000000000000000000000000000000000000000" },
+]
 
 [wontfix]
 # Packages deliberately decided not to carry. Each entry: package

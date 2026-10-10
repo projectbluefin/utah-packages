@@ -7,8 +7,8 @@
     },
     "dev-tools": {
       "already_recipe": 2,
-      "pending": 148,
-      "total": 150
+      "pending": 143,
+      "total": 145
     },
     "fonts-i18n": {
       "pending": 59,
@@ -461,11 +461,6 @@
     },
     {
       "area": "dev-tools",
-      "name": "htop",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
       "name": "ifuse",
       "state": "pending"
     },
@@ -567,11 +562,6 @@
     {
       "area": "dev-tools",
       "name": "mtr",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "nano",
       "state": "pending"
     },
     {
@@ -881,11 +871,6 @@
     },
     {
       "area": "dev-tools",
-      "name": "rsync",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
       "name": "smartmontools",
       "state": "pending"
     },
@@ -971,11 +956,6 @@
     },
     {
       "area": "dev-tools",
-      "name": "tmux",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
       "name": "toolbox",
       "state": "pending"
     },
@@ -1042,11 +1022,6 @@
     {
       "area": "dev-tools",
       "name": "whois-nls",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "xdg-utils",
       "state": "pending"
     },
     {
@@ -2814,11 +2789,11 @@
   "states": {
     "already_recipe": 28,
     "manifest_wants": 1,
-    "pending": 522
+    "pending": 517
   },
   "totals": {
-    "backlog": 551,
-    "resolved": 0,
+    "backlog": 546,
+    "resolved": 5,
     "wontfix": 0
   }
 }

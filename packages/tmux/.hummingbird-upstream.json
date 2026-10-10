@@ -1,0 +1,8 @@
+{
+  "package": "tmux",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/tmux.git",
+  "commit": "c362e0446cf6c89ee9ba8da46bc58458e5bc5563",
+  "tree": "16cf60f8b5dd985f87a0ca825286177ffe0c9862",
+  "imported_at": "2026-10-10T11:15:10.760907+00:00"
+}

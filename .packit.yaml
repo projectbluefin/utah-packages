@@ -652,6 +652,12 @@ packages:
     downstream_package_name: highway
     paths:
       - packages/highway
+  htop:
+    specfile_path: htop.spec
+    upstream_package_name: htop
+    downstream_package_name: htop
+    paths:
+      - packages/htop
   hunspell:
     specfile_path: hunspell.spec
     upstream_package_name: hunspell
@@ -1696,6 +1702,12 @@ packages:
     downstream_package_name: mutter
     paths:
       - packages/mutter
+  nano:
+    specfile_path: nano.spec
+    upstream_package_name: nano
+    downstream_package_name: nano
+    paths:
+      - packages/nano
   nautilus:
     specfile_path: nautilus.spec
     upstream_package_name: nautilus
@@ -1966,6 +1978,12 @@ packages:
     downstream_package_name: rest
     paths:
       - packages/rest
+  rsync:
+    specfile_path: rsync.spec
+    upstream_package_name: rsync
+    downstream_package_name: rsync
+    paths:
+      - packages/rsync
   rtkit:
     specfile_path: rtkit.spec
     upstream_package_name: rtkit
@@ -2128,6 +2146,12 @@ packages:
     downstream_package_name: tinyxml2
     paths:
       - packages/tinyxml2
+  tmux:
+    specfile_path: tmux.spec
+    upstream_package_name: tmux
+    downstream_package_name: tmux
+    paths:
+      - packages/tmux
   totem-pl-parser:
     specfile_path: totem-pl-parser.spec
     upstream_package_name: totem-pl-parser
@@ -2350,6 +2374,12 @@ packages:
     downstream_package_name: xdg-user-dirs-gtk
     paths:
       - packages/xdg-user-dirs-gtk
+  xdg-utils:
+    specfile_path: xdg-utils.spec
+    upstream_package_name: xdg-utils
+    downstream_package_name: xdg-utils
+    paths:
+      - packages/xdg-utils
   xevd:
     specfile_path: xevd.spec
     upstream_package_name: xevd

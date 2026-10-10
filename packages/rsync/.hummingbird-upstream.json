@@ -1,0 +1,8 @@
+{
+  "package": "rsync",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/rsync.git",
+  "commit": "84ccdc1cebf07000716192181d9a9af7592fb1f1",
+  "tree": "90a1cdd898d538cc370db8765042b43806344a6b",
+  "imported_at": "2026-10-10T11:15:09.067200+00:00"
+}
