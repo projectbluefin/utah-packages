@@ -64,7 +64,11 @@ Two edits — never one, never none:
     and `tools/factory_build_backlog.py:356-357` only reads `entry["name"]`.
     Do not pre-fill `commit` with a SHA from a future commit that does not
     exist yet at PR-open time, and do not let a rebase or squash-merge
-    invalidate it. The `pr` field links the entry to its closing PR for
+    invalidate it: a fork or pre-squash SHA never reaches `main`. Write
+    `commit = "0000000000000000000000000000000000000000"` in the import PR;
+    `pr = <n>` is then the provenance, because the PR resolves to the
+    commit that landed it. Fill in `commit` only from a SHA already on
+    `main`. The `pr` field links the entry to its closing PR for
     cross-referencing.
   - `[wontfix].packages` (`{ name = "<n>", reason = "..." }`) — Utah decided
     not to carry it, with a link to the decision issue. `reason` is also

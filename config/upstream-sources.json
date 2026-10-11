@@ -3751,6 +3751,56 @@
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/simdutf/simdutf-9.0.0.tar.gz/sha512/0c74226247cbe95368efa87ab84f5217485f16bcdf7a9def8741c6086cb86e6c378f0c437030d2be0934726e3ea9c28b5df2e593d0c654c78291c455a8d1e103/simdutf-9.0.0.tar.gz"
       ]
+    },
+    {
+      "name": "xdg-utils",
+      "version": "1.2.1",
+      "url": "https://gitlab.freedesktop.org/xdg/xdg-utils/-/archive/v1.2.1/xdg-utils-v1.2.1.tar.gz",
+      "filename": "xdg-utils-v1.2.1.tar.gz",
+      "sha512": "9b031d9c65247d0bbe0ce11fba10f88e68fa11e8d0fe5d1b09876edd21f59896a4d3be9a23f10afb7436446580b4d38fba99c622767eecec3951be4f5e4aad3e",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/xdg-utils/xdg-utils-v1.2.1.tar.gz/sha512/9b031d9c65247d0bbe0ce11fba10f88e68fa11e8d0fe5d1b09876edd21f59896a4d3be9a23f10afb7436446580b4d38fba99c622767eecec3951be4f5e4aad3e/xdg-utils-v1.2.1.tar.gz"
+      ]
+    },
+    {
+      "name": "rsync",
+      "version": "3.5.1",
+      "url": "https://download.samba.org/pub/rsync/src/rsync-3.5.1.tar.gz",
+      "filename": "rsync-3.5.1.tar.gz",
+      "sha512": "76f3c60eb12bbde9dd0edfb35c2584526298efea8eace446cbfc11791a593e3716daae313ae6ea30598c03f6c30f38492a4248482351b807ba653a23c808a4aa",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/rsync/rsync-3.5.1.tar.gz/sha512/76f3c60eb12bbde9dd0edfb35c2584526298efea8eace446cbfc11791a593e3716daae313ae6ea30598c03f6c30f38492a4248482351b807ba653a23c808a4aa/rsync-3.5.1.tar.gz"
+      ]
+    },
+    {
+      "name": "nano",
+      "version": "9.2",
+      "url": "https://www.nano-editor.org/dist/latest/nano-9.2.tar.xz",
+      "filename": "nano-9.2.tar.xz",
+      "sha512": "944156519cf981b08df46c248c323ba41eb2063ed804d070d7ee8639cbbe6bf68c038c8f0c094ef28e3a8e569ce321f4494617066c69c7585af41617b08e6dbe",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/nano/nano-9.2.tar.xz/sha512/944156519cf981b08df46c248c323ba41eb2063ed804d070d7ee8639cbbe6bf68c038c8f0c094ef28e3a8e569ce321f4494617066c69c7585af41617b08e6dbe/nano-9.2.tar.xz"
+      ]
+    },
+    {
+      "name": "tmux",
+      "version": "3.7c",
+      "url": "https://github.com/tmux/tmux/archive/refs/tags/3.7c.tar.gz",
+      "filename": "tmux-3.7c.tar.gz",
+      "sha512": "62139a277371238b56ca7cf2f1f339d8a04614034ce801457dc115ccd10cd45a42cec72a6354dbb82acc472970888ddb13e85bebe772a3d17cd32b3fb33c7bf8",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/tmux/tmux-3.7c.tar.gz/sha512/62139a277371238b56ca7cf2f1f339d8a04614034ce801457dc115ccd10cd45a42cec72a6354dbb82acc472970888ddb13e85bebe772a3d17cd32b3fb33c7bf8/tmux-3.7c.tar.gz"
+      ]
+    },
+    {
+      "name": "htop",
+      "version": "3.5.3",
+      "url": "https://github.com/htop-dev/htop/releases/download/3.5.3/htop-3.5.3.tar.xz",
+      "filename": "htop-3.5.3.tar.xz",
+      "sha512": "54def5519eb63493740542012f29d3e9f31d58d9438fae63ac59cfb2d9bcab2139505130466ccdf4447217f0ac076234ef4e1c4eb760a502ee1aa5fedf02cb19",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/htop/htop-3.5.3.tar.xz/sha512/54def5519eb63493740542012f29d3e9f31d58d9438fae63ac59cfb2d9bcab2139505130466ccdf4447217f0ac076234ef4e1c4eb760a502ee1aa5fedf02cb19/htop-3.5.3.tar.xz"
+      ]
     }
   ]
 }

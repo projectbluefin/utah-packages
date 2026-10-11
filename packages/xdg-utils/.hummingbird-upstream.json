@@ -1,0 +1,8 @@
+{
+  "package": "xdg-utils",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/xdg-utils.git",
+  "commit": "af97234f0f04dfa8f38c8ea535c31981160ff532",
+  "tree": "0076a5c6cabb3ab85219e3d2a351239a7d07de32",
+  "imported_at": "2026-10-10T11:11:53.665573+00:00"
+}
