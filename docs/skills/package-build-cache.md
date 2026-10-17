@@ -171,3 +171,14 @@ in planner and build checkouts. A retried run reuses its run ID; an identical
 perturbation correctly hits the previous cache, contradicting the test that the
 perturbed recipe must compile. Keep baseline cache namespaces stable, change
 only the deliberate perturbation, and execute both workflow bodies in tests.
+
+Canary multi-pass cache verification (`canary.py verify-cache`) expects cache
+hits for unchanged packages in pass 2 and pass 3. When upstream Hummingbird RPM
+repositories update while the canary is in flight, resolved buildroot package
+NEVRAs can advance between passes. Because cache keys strictly include the
+resolved root NEVRAs, changing the buildroot invalidates the cache and forces a
+compile. `verify-cache` inspects the downloaded pass lockfiles (`buildroot_lock.json`)
+across passes: if an unexpected compile occurred because the resolved root NEVRAs
+diverged from pass 1, the assertion accepts the compile as a legitimate cache
+invalidation rather than a caching defect.
+

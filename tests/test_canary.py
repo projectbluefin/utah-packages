@@ -157,6 +157,80 @@ class CacheVerdictTests(unittest.TestCase):
         jobs = [j for j in healthy_jobs() if not j["name"].startswith("pass2")]
         self.assertTrue(any(p.startswith("pass2 built []") for p in self.verdict(jobs)))
 
+    def test_a_compile_in_pass2_with_buildroot_nevra_shift_passes(self) -> None:
+        jobs = healthy_jobs()
+        for entry in jobs:
+            if entry["name"].startswith("pass2") and entry["name"].endswith("(vulkan-headers)"):
+                entry["steps"][1]["conclusion"] = "success"
+        locks = {
+            "pass1": {
+                "vulkan-headers": {
+                    "buildroot": {
+                        "rpms": [{"name": "gettext", "version": "0.22", "release": "4.hum1", "arch": "x86_64"}]
+                    }
+                }
+            },
+            "pass2": {
+                "vulkan-headers": {
+                    "buildroot": {
+                        "rpms": [{"name": "gettext", "version": "0.22", "release": "4.1.hum1", "arch": "x86_64"}]
+                    }
+                }
+            },
+        }
+        outcomes = canary.build_outcomes(jobs)
+        problems = canary.cache_problems(
+            outcomes, SET, "python-typing-inspection", locks=locks
+        )
+        self.assertEqual(problems, [])
+
+    def test_a_compile_in_pass2_with_identical_buildroot_fails(self) -> None:
+        jobs = healthy_jobs()
+        for entry in jobs:
+            if entry["name"].startswith("pass2") and entry["name"].endswith("(vulkan-headers)"):
+                entry["steps"][1]["conclusion"] = "success"
+        locks = {
+            "pass1": {
+                "vulkan-headers": {
+                    "buildroot": {
+                        "rpms": [{"name": "gettext", "version": "0.22", "release": "4.hum1", "arch": "x86_64"}]
+                    }
+                }
+            },
+            "pass2": {
+                "vulkan-headers": {
+                    "buildroot": {
+                        "rpms": [{"name": "gettext", "version": "0.22", "release": "4.hum1", "arch": "x86_64"}]
+                    }
+                }
+            },
+        }
+        outcomes = canary.build_outcomes(jobs)
+        problems = canary.cache_problems(
+            outcomes, SET, "python-typing-inspection", locks=locks
+        )
+        self.assertEqual(len(problems), 1)
+        self.assertIn("pass2: vulkan-headers was compiled", problems[0])
+
+    def test_read_pass_locks_discovers_prefixes(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            p1 = root / "p1-lock-s0-libical"
+            p1.mkdir(parents=True)
+            (p1 / "buildroot_lock.json").write_text(json.dumps({
+                "buildroot": {"rpms": [{"name": "bash", "version": "5.2", "release": "1.fc44", "arch": "x86_64"}]}
+            }))
+            p2 = root / "p2-lock-s0-libical"
+            p2.mkdir(parents=True)
+            (p2 / "buildroot_lock.json").write_text(json.dumps({
+                "buildroot": {"rpms": [{"name": "bash", "version": "5.2", "release": "2.fc44", "arch": "x86_64"}]}
+            }))
+            locks = canary.read_pass_locks(root)
+            self.assertIn("pass1", locks)
+            self.assertIn("pass2", locks)
+            self.assertEqual(canary.lock_nevras(locks["pass1"]["libical"]), ["bash-5.2-1.fc44.x86_64"])
+            self.assertEqual(canary.lock_nevras(locks["pass2"]["libical"]), ["bash-5.2-2.fc44.x86_64"])
+
     def test_the_summary_names_every_outcome(self) -> None:
         outcomes = canary.build_outcomes(healthy_jobs())
         text = canary.summary(outcomes, [])

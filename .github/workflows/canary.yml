@@ -443,6 +443,11 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          pattern: p*-lock-*
+          path: locks
+        continue-on-error: true
       - name: Count compiles and cache hits in every pass
         env:
           GH_TOKEN: ${{ github.token }}
@@ -455,7 +460,8 @@ jobs:
           gh api --paginate "repos/$REPOSITORY/actions/runs/$RUN_ID/attempts/$RUN_ATTEMPT/jobs?per_page=100" \
             --jq '.jobs[]' | jq -s . > jobs.json
           python3 tools/canary.py verify-cache jobs.json --set "$SET" \
-            --perturbed python-typing-inspection >> "$GITHUB_STEP_SUMMARY"
+            --perturbed python-typing-inspection \
+            ${{ hashFiles('locks/**/buildroot_lock.json') != '' && '--locks locks' || '' }} >> "$GITHUB_STEP_SUMMARY"
 
   canary:
     name: Canary
