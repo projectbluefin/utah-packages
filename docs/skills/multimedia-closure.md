@@ -196,4 +196,6 @@ formatting and single-quoted attributes do not change which file is read.
 
 When another recipe lands during review, refresh Packit inventory and architecture counts after merging main; keep both the multimedia and backlog gates in the combined Justfile.
 
+`reports/multimedia-closure.json` records locked upstream versions for codec recipes. Any automated workflow that bumps upstream version locks (`.github/workflows/bump-upstream-sources.yml`) must regenerate `reports/multimedia-closure.json` and include it in `add-paths` so validation tests pass and the refreshed report is committed alongside the lock bump.
+
 Stack concurrent recipe imports when they edit the same generated inventory reports; regenerate against the combined recipes and retarget the dependent PR only after its prerequisite merges to main.

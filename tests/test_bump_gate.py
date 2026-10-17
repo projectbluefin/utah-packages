@@ -56,6 +56,7 @@ class PathTests(unittest.TestCase):
             disallowed([
                 "config/upstream-sources.json",
                 "config/bump-holds.json",
+                "reports/multimedia-closure.json",
                 "packages/glib2/glib2.spec",
                 "packages/glib2/sources",
             ]),

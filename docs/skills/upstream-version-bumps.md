@@ -154,7 +154,8 @@ Constraints that shaped it, so they are not rediscovered:
 - Fail closed: no named packages, a build that was skipped or cancelled, a
   missing output, a bumped package that was not selected, or any failure
   blocks the merge. The diff from main may touch only
-  `config/upstream-sources.json`, `config/bump-holds.json` and `packages/**`.
+  `config/upstream-sources.json`, `config/bump-holds.json`,
+  `reports/multimedia-closure.json` and `packages/**`.
 - Review-only packages never self-merge. A bump pins the SHA-512 of
   whatever the forge serves, and the gate merges it once it builds, so the
   forge is the only party vouching for the bytes. `config/bump-review-only.txt`

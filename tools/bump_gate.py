@@ -72,8 +72,9 @@ HOLDS = "config/bump-holds.json"
 # entries, whoever pushed it. The file itself is outside ALLOWED, so no
 # self-merging pull request can shorten it.
 REVIEW_ONLY = "config/bump-review-only.txt"
+MULTIMEDIA_REPORT = "reports/multimedia-closure.json"
 # Exactly what bump-upstream-sources.yml commits (create-pull-request add-paths).
-ALLOWED = (LOCK, HOLDS, "packages/")
+ALLOWED = (LOCK, HOLDS, MULTIMEDIA_REPORT, "packages/")
 MARKER = re.compile(r"<!-- bump-gate: sha=([0-9a-f]+) failed=(\[.*?\]) -->")
 
 
@@ -81,7 +82,7 @@ def disallowed(paths: list[str]) -> list[str]:
     """Changed paths outside what a bump commits."""
     return sorted(
         path for path in paths
-        if path and path not in (LOCK, HOLDS) and not path.startswith("packages/")
+        if path and path not in (LOCK, HOLDS, MULTIMEDIA_REPORT) and not path.startswith("packages/")
     )
 
 

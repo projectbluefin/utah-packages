@@ -123,6 +123,14 @@ jobs:
           CYCLE: ${{ inputs.target-cycle }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      # reports/multimedia-closure.json records each codec recipe's locked
+      # version, so a bump that moves one leaves the committed report stale
+      # and tests/test_multimedia_closure.py rejects it. Regenerate it here
+      # and commit it with the bump (add-paths below).
+      - name: Refresh the multimedia closure report
+        run: |
+          python3 tools/multimedia_closure.py --output reports/multimedia-closure.json
+
       # The same gates a contributor runs. A bump that cannot pass these is a
       # bump nobody should be asked to review.
       - name: Validate the result
@@ -163,6 +171,7 @@ jobs:
             config/upstream-sources.json
             config/fedora-primary-sources.txt
             config/bump-holds.json
+            reports/multimedia-closure.json
             packages/
           title: 'chore(sources): bump upstream locks to released versions'
           commit-message: 'chore(sources): bump upstream locks to released versions'
