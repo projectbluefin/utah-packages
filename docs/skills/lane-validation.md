@@ -26,6 +26,11 @@ gh workflow run canary.yml -R projectbluefin/utah-packages --ref <branch> \
   factory for BuildRequires it does not build itself. A recipe whose
   dependencies are themselves unmerged and unpublished fails here by design;
   land dependencies first, then retry the dependent.
+- `lane_backend` selects the pass6 backend. The dispatch default is
+  `container` (`canary.yml`), while production builds `hermetic`
+  (`rebuild-rpms.yml` default; AGENTS.md). A green lane therefore proves the
+  container lane only — pass `-f lane_backend=hermetic` when the claim needs
+  the production backend.
 - API-opened PRs currently produce no `pull_request` workflow runs in this
   repository, so a dispatched lane is the working validation path and the
   required-check display needs admin interpretation at merge time.

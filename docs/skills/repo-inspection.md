@@ -26,8 +26,13 @@ podman unshare bash -c '
 M=$(podman image mount ghcr.io/projectbluefin/utah-packages@sha256:<digest>)
 R="$M/repository"; P=$(ls "$R"/repodata/*primary.xml.gz | head -1)
 zcat "$P" | grep -o "<name>[^<]*</name>" | sort -u   # published binary names
-zcat "$P" | python3 -c "import sys,re  # per-package requires/provides
-xml = sys.stdin.read()"'
+zcat "$P" | python3 -c "import sys, re
+xml = sys.stdin.read()
+for pkg in re.findall(\"<package>(.*?)</package>\", xml, re.S):
+    name = re.search(\"<name>([^<]*)</name>\", pkg).group(1)
+    reqs = re.findall(\"<rpm:requires>(.*?)</rpm:requires>\", pkg, re.S)
+    req = sorted(set(re.findall(\"entry name=\\\"([^\\\"]*)\\\"\", reqs[0]))) if reqs else []
+    print(name + \": \" + (\", \".join(req) if req else \"(no requires)\"))"  # per-package requires/provides
 podman image unmount ghcr.io/projectbluefin/utah-packages@sha256:<digest>'
 ```
 
