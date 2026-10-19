@@ -1,4 +1,6 @@
-%bcond bundled_rust_deps %{defined rhel}
+# Hummingbird has no Rust crate RPMs, so the Fedora model (system crates)
+# cannot resolve. The vendor tarball is Source1; always use it, as RHEL does.
+%bcond bundled_rust_deps 1
 
 # djvulibre is not available in RHEL 10+
 %bcond djvu %{undefined rhel}
