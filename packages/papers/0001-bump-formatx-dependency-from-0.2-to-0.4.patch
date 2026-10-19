@@ -1,0 +1,25 @@
+From 42aaa3f52ac33c82137f4a7752821f2d8b492dff Mon Sep 17 00:00:00 2001
+From: Fabio Valentini <decathorpe@gmail.com>
+Date: Tue, 11 Aug 2026 22:30:09 +0200
+Subject: [PATCH] bump formatx dependency from 0.2 to 0.4
+
+---
+ shell/Cargo.toml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/shell/Cargo.toml b/shell/Cargo.toml
+index ee4fa87..520a4da 100644
+--- a/shell/Cargo.toml
++++ b/shell/Cargo.toml
+@@ -27,7 +27,7 @@ chrono.workspace = true
+ lru = "0.16"
+ futures = "0.3"
+ git-version = "0.3"
+-formatx = "0.2"
++formatx = "0.4"
+ ink-stroke-modeler-rs = { version = "0.1" }
+ image.workspace = true
+ imageproc = "0.26"
+-- 
+2.55.0
+

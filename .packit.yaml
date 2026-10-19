@@ -1924,6 +1924,12 @@ packages:
     downstream_package_name: pango
     paths:
       - packages/pango
+  papers:
+    specfile_path: papers.spec
+    upstream_package_name: papers
+    downstream_package_name: papers
+    paths:
+      - packages/papers
   parted:
     specfile_path: parted.spec
     upstream_package_name: parted

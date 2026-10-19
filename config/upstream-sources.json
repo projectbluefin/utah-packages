@@ -4082,6 +4082,16 @@
         "input": "https://downloads.sourceforge.net/project/hplip/hplip/3.26.6/hplip-3.26.6.tar.gz (sha512-pinned)",
         "method": "remove locatedriver (license-related, per hplip.spec/hplip-repack.sh) from the upstream release and repack deterministically as hplip-3.26.6-repack.tar.gz"
       }
+    },
+    {
+      "name": "papers",
+      "version": "51.1",
+      "url": "https://download.gnome.org/sources/papers/51/papers-51.1.tar.xz",
+      "filename": "papers-51.1.tar.xz",
+      "sha512": "835f28d9c01a59a720c2dba4cd8fdb5b7c97a4cfbdad97023eccb5069ba0e04a573f4a742a3ae019a19d3459cbca6d36fa43fe68a1ca52efb100001c5cb70895",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/papers/papers-51.1.tar.xz/sha512/835f28d9c01a59a720c2dba4cd8fdb5b7c97a4cfbdad97023eccb5069ba0e04a573f4a742a3ae019a19d3459cbca6d36fa43fe68a1ca52efb100001c5cb70895/papers-51.1.tar.xz"
+      ]
     }
   ]
 }

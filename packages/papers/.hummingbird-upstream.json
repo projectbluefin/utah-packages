@@ -1,0 +1,8 @@
+{
+  "package": "papers",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/papers.git",
+  "commit": "647c1edc73b2e6409ffbb2ad8250cd94d700ff63",
+  "tree": "8d14d3e32e7e91b54ff40a4130499f5f0da4dcf8",
+  "imported_at": "2026-10-19T02:00:21.445655+00:00"
+}
