@@ -110,6 +110,27 @@ def is_prerelease(version: str) -> bool:
     return bool(PRERELEASE.search(version))
 
 
+def is_gnome_prerelease(version: str) -> bool:
+    """is_prerelease(), plus the library scheme's numeric betas and rcs.
+
+    GNOME libraries spell the beta and rc of the next stable as a micro of 90
+    or more on the development minor: at-spi2-core 2.61.90 and gjs 1.89.90 sit
+    in cache.json directly before 2.62.0 and 1.90.0, and carry no marker for
+    is_prerelease() to see. Only the GNOME feed gets this rule: forge projects
+    such as libdrm 2.4.134 or libfprint 1.94.100 ship stables with large
+    micros. The app scheme (GNOME 40+) spells its prereleases with a marker.
+    """
+    if is_prerelease(version):
+        return True
+    parts = tarball_version(version).split(".")
+    return (
+        len(parts) == 3
+        and all(part.isdigit() for part in parts)
+        and int(parts[0]) < 40
+        and int(parts[2]) >= 90
+    )
+
+
 def version_key(version: str) -> tuple[int, ...]:
     """Sort key for a stable GNOME version.
 
@@ -121,12 +142,12 @@ def version_key(version: str) -> tuple[int, ...]:
     return tuple(int(part) if part.isdigit() else -1 for part in version.split("."))
 
 
-def newest_stable(versions: list[str]) -> str | None:
+def newest_stable(versions: list[str], prerelease=is_prerelease) -> str | None:
     """The highest non-prerelease in a cache.json version list, or None.
 
     "Not alpha/beta/rc" is not the same as "stable" -- see cycle_final.
     """
-    stable = [v for v in versions if not is_prerelease(v)]
+    stable = [v for v in versions if not prerelease(v)]
     return max(stable, key=version_key) if stable else None
 
 
@@ -152,7 +173,7 @@ def cycle_final(versions: list[str], cycle: str) -> str | None:
     inside = [
         v
         for v in versions
-        if not is_prerelease(v) and release_cycle(tarball_version(v)) == cycle
+        if not is_gnome_prerelease(v) and release_cycle(tarball_version(v)) == cycle
     ]
     return max(inside, key=version_key) if inside else None
 
@@ -872,7 +893,7 @@ def plan(
             )
             continue
 
-        newest = newest_stable(available)
+        newest = newest_stable(available, prerelease=is_gnome_prerelease)
         if newest is not None and version_key(newest) > version_key(current):
             proposals.append(
                 {

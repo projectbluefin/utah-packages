@@ -15,6 +15,7 @@ from tools.upstream_bump import (
     cycle_final,
     release_cycle,
     gnome_module,
+    is_gnome_prerelease,
     is_prerelease,
     major,
     newest_stable,
@@ -76,6 +77,29 @@ class VersionSpellingTests(unittest.TestCase):
     def test_the_two_spellings_round_trip(self) -> None:
         for version in ("51.beta", "51.0", "1.10.beta.1"):
             self.assertEqual(tarball_version(rpm_version(version)), version)
+
+    def test_a_library_micro_of_90_or_more_is_a_gnome_prerelease(self) -> None:
+        # at-spi2-core 2.61.90 and gjs 1.89.90 are the betas of 2.62.0 and
+        # 1.90.0; gvfs 1.61.91 is an rc. None carries a marker.
+        for version in ("2.61.90", "1.89.90", "1.61.91", "1.89.92"):
+            self.assertTrue(is_gnome_prerelease(version), version)
+            self.assertFalse(is_prerelease(version), version)
+
+    def test_a_gnome_prerelease_still_covers_the_marker_spellings(self) -> None:
+        for version in ("51.beta", "51~rc", "1.10.beta.1"):
+            self.assertTrue(is_gnome_prerelease(version), version)
+
+    def test_a_library_stable_is_not_a_gnome_prerelease(self) -> None:
+        # 1.90.0 is the stable after the 1.89.9x betas; the minor is not the
+        # marker. The app scheme never uses a numeric beta.
+        for version in ("2.62.0", "2.62.1", "1.90.0", "1.58.2", "4.23.3", "51.0.1", "51.0"):
+            self.assertFalse(is_gnome_prerelease(version), version)
+
+    def test_a_numeric_gnome_prerelease_round_trips_unchanged(self) -> None:
+        for version in ("2.61.90", "1.89.90", "1.61.91"):
+            self.assertEqual(rpm_version(version), version)
+            self.assertEqual(tarball_version(rpm_version(version)), version)
+            self.assertEqual(release_cycle(version), ".".join(version.split(".")[:2]))
 
     def test_major_is_the_leading_component(self) -> None:
         self.assertEqual(major("51.0"), "51")
@@ -784,6 +808,63 @@ class CyclePolicyTests(unittest.TestCase):
         for proposal in proposals:
             self.assertNotIn(proposal.get("kind"), ("final", "update", "relock"))
             self.assertFalse(is_prerelease(proposal["latest"]))
+
+
+class LibraryBetaPolicyTests(unittest.TestCase):
+    """A library-scheme .90 beta is never applied as the cycle's final."""
+
+    # The real at-spi2-core index, trimmed: 2.61.90 is the beta of 2.62.0.
+    CACHE = [
+        4,
+        {},
+        {"gnome-shell": ["2.60.1", "2.61.1", "2.61.90", "2.62.0", "2.62.1"]},
+        {},
+    ]
+
+    def test_a_numeric_beta_is_not_proposed_inside_its_cycle(self) -> None:
+        root, tmp = gnome_lock_root("2.61.1")
+        try:
+            proposals = plan(
+                root,
+                only="gnome-shell",
+                opener=fake_opener(
+                    {
+                        "https://download.gnome.org/sources/gnome-shell/cache.json": json.dumps(
+                            self.CACHE
+                        ).encode()
+                    }
+                ),
+            )
+        finally:
+            tmp.cleanup()
+        self.assertEqual(len(proposals), 1)
+        self.assertEqual(proposals[0]["kind"], "review")
+        self.assertEqual(proposals[0]["latest"], "2.62.1")
+
+    def test_cycle_final_skips_the_numeric_beta(self) -> None:
+        self.assertEqual(cycle_final(self.CACHE[2]["gnome-shell"], "2.61"), "2.61.1")
+
+    def test_a_lock_already_on_a_numeric_rc_is_not_moved_backwards(self) -> None:
+        # gvfs is locked at 1.61.91; the cycle's last marker-free micro is
+        # older, so nothing is applied.
+        root, tmp = gnome_lock_root("1.61.91")
+        cache = [4, {}, {"gnome-shell": ["1.61.1", "1.61.91", "1.62.0"]}, {}]
+        try:
+            proposals = plan(
+                root,
+                only="gnome-shell",
+                opener=fake_opener(
+                    {
+                        "https://download.gnome.org/sources/gnome-shell/cache.json": json.dumps(
+                            cache
+                        ).encode()
+                    }
+                ),
+            )
+        finally:
+            tmp.cleanup()
+        for proposal in proposals:
+            self.assertNotIn(proposal.get("kind"), ("final", "update", "relock"))
 
 
 class ReleaseResetTests(unittest.TestCase):
