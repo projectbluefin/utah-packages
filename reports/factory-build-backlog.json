@@ -2,8 +2,8 @@
   "areas": {
     "codecs-media": {
       "already_recipe": 10,
-      "pending": 35,
-      "total": 45
+      "pending": 31,
+      "total": 41
     },
     "dev-tools": {
       "already_recipe": 2,
@@ -227,26 +227,6 @@
     {
       "area": "codecs-media",
       "name": "libxavs",
-      "state": "pending"
-    },
-    {
-      "area": "codecs-media",
-      "name": "papers-libs",
-      "state": "pending"
-    },
-    {
-      "area": "codecs-media",
-      "name": "papers-nautilus",
-      "state": "pending"
-    },
-    {
-      "area": "codecs-media",
-      "name": "papers-previewer",
-      "state": "pending"
-    },
-    {
-      "area": "codecs-media",
-      "name": "papers-thumbnailer",
       "state": "pending"
     },
     {
@@ -2539,11 +2519,11 @@
   "states": {
     "already_recipe": 31,
     "manifest_wants": 1,
-    "pending": 464
+    "pending": 460
   },
   "totals": {
-    "backlog": 496,
-    "resolved": 55,
+    "backlog": 492,
+    "resolved": 59,
     "wontfix": 0
   }
 }

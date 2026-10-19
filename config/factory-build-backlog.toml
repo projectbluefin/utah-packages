@@ -73,10 +73,6 @@ packages = [
     "libudfread",
     "libultrahdr",
     "libxavs",
-    "papers-libs",
-    "papers-nautilus",
-    "papers-previewer",
-    "papers-thumbnailer",
     "svt-vp9-libs",
     "vvdec-libs",
     "vvenc-libs",
@@ -668,6 +664,12 @@ packages = [
     { name = "libsane-hpaio", pr = 525 },
     { name = "system-config-printer-libs", pr = 525 },
     { name = "system-config-printer-udev", pr = 525 },
+    # Papers retry (landing PR #532) after libspelling published (#523).
+    # All four are %package subpackages of papers.spec.
+    { name = "papers-libs", pr = 532 },
+    { name = "papers-nautilus", pr = 532 },
+    { name = "papers-previewer", pr = 532 },
+    { name = "papers-thumbnailer", pr = 532 },
 ]
 
 [wontfix]
