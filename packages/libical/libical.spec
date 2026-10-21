@@ -11,6 +11,9 @@ Source:		https://github.com/%{name}/%{name}/archive/v%{version}/%{name}-%{versio
 # https://github.com/libical/libical/issues/1361
 Patch:          0001-CVE-2026-88383-bsearch-incompatible-callback-pointer.patch
 
+# https://github.com/libical/libical/pull/1455
+Patch:          0002-CVE-2026-111269-Out-of-bounds-read-in-value-decode.patch
+
 BuildRequires:	gcc
 BuildRequires:	gcc-c++
 BuildRequires:	cmake
