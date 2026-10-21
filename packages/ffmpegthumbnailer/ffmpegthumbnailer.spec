@@ -1,5 +1,5 @@
 %global forgeurl https://github.com/dirkvdb/ffmpegthumbnailer
-Version:        2.3.0
+Version:        2.3.1
 %global tag v%{version}
 %forgemeta
 

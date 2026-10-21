@@ -2,8 +2,8 @@
 %global libname ponytail
 
 Name:           gnome-ponytail-daemon
-Version:        0.0.11
-Release:        11%{?dist}
+Version:        0.0.12
+Release:        1%{?dist}
 Summary:        Sort of a bridge for dogtail for GNOME on Wayland
 
 License:        GPL-2.0-or-later

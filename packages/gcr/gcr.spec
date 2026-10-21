@@ -3,7 +3,7 @@
 %endif
 
 Name:           gcr
-Version:        4.4.0.1
+Version:        4.4.1
 Release:        %autorelease
 Summary:        A library for bits of crypto UI and parsing
 

@@ -382,7 +382,7 @@
       "parity_note": null,
       "recipe": "packages/ffmpegthumbnailer",
       "stage": 4,
-      "version": "2.3.0",
+      "version": "2.3.1",
       "nevra": null,
       "recipe_provenance": "https://src.fedoraproject.org/rpms/ffmpegthumbnailer.git"
     },

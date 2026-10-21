@@ -8,7 +8,7 @@
 %global test_features test_proto
 
 Name:           waypipe
-Version:        0.11.2
+Version:        0.11.3
 Release:        %autorelease
 Summary:        Wayland forwarding proxy
 

@@ -22,7 +22,7 @@
 %define gnome_settings_daemon_version 3.37.1
 
 Name:           gnome-shell
-Version:        51.0
+Version:        51.1
 Release:        %autorelease
 Summary:        Window management and application launching for GNOME
 

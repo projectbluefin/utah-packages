@@ -1,5 +1,5 @@
 Name:           gnome-autoar
-Version:        0.5.0
+Version:        0.5.2
 Release:        %autorelease
 Summary:        Archive library
 

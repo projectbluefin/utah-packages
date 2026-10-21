@@ -3,8 +3,8 @@
 %endif
 
 Name:           gcr3
-Version:        3.41.1
-Release:        13%{?dist}
+Version:        3.41.2
+Release:        1%{?dist}
 Summary:        A library for bits of crypto UI and parsing
 
 # gck/pkcs11n.h is MPL 1.1/GPL 2.0/LGPL 2.1
