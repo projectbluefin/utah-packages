@@ -3,6 +3,10 @@
     "libcdio": {
       "version": "2.4.0",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/37156147163"
+    },
+    "simdutf": {
+      "version": "9.3.2",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/39740272212"
     }
   }
 }
