@@ -3757,12 +3757,12 @@
     },
     {
       "name": "simdutf",
-      "version": "9.0.0",
-      "url": "https://github.com/simdutf/simdutf/archive/v9.0.0/simdutf-9.0.0.tar.gz",
-      "filename": "simdutf-9.0.0.tar.gz",
-      "sha512": "0c74226247cbe95368efa87ab84f5217485f16bcdf7a9def8741c6086cb86e6c378f0c437030d2be0934726e3ea9c28b5df2e593d0c654c78291c455a8d1e103",
+      "version": "9.3.2",
+      "url": "https://github.com/simdutf/simdutf/archive/v9.3.2/simdutf-9.3.2.tar.gz",
+      "filename": "simdutf-9.3.2.tar.gz",
+      "sha512": "cba5850d7182305da9f4e4f6029c3f1b46a1b407d54ae2661c805e734490cb435ad2a641e44bcfcf05726f5d927b0ac37d510b858e61c352118e0e63c323d980",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/simdutf/simdutf-9.0.0.tar.gz/sha512/0c74226247cbe95368efa87ab84f5217485f16bcdf7a9def8741c6086cb86e6c378f0c437030d2be0934726e3ea9c28b5df2e593d0c654c78291c455a8d1e103/simdutf-9.0.0.tar.gz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/simdutf/simdutf-9.3.2.tar.gz/sha512/cba5850d7182305da9f4e4f6029c3f1b46a1b407d54ae2661c805e734490cb435ad2a641e44bcfcf05726f5d927b0ac37d510b858e61c352118e0e63c323d980/simdutf-9.3.2.tar.gz"
       ]
     },
     {
