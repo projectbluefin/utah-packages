@@ -1,6 +1,6 @@
 Name:           libjwt
-Version:        1.12.1
-Release:        23%{?dist}
+Version:        1.18.3
+Release:        1%{?dist}
 Summary:        A Javascript Web Token library in C
 
 License:        MPL-2.0

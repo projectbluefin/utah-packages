@@ -2601,10 +2601,10 @@
     },
     {
       "name": "pipewire-libs-extra",
-      "version": "1.6.9",
-      "url": "https://gitlab.freedesktop.org/pipewire/pipewire/-/archive/1.6.9/pipewire-1.6.9.tar.gz",
-      "filename": "pipewire-1.6.9.tar.gz",
-      "sha512": "91a4790123f95c2a52592e4dcd7de90add681883710d3baa068f973c1477c4a9b7696df6afedbcb6c9f42abfdfa10dc01c383aa5d7ced33d781287a07bb18fd3",
+      "version": "1.6.10",
+      "url": "https://gitlab.freedesktop.org/pipewire/pipewire/-/archive/1.6.10/pipewire-1.6.10.tar.gz",
+      "filename": "pipewire-1.6.10.tar.gz",
+      "sha512": "72e9dec0d464b9cadd9a1762541fca6436cf5b6f70236ff47603364e40a294a254451305c088ef9619cbb2747c4b284de971dfe73d91f7ff4a486635ff42588c",
       "stage": 6
     },
     {
@@ -3985,10 +3985,10 @@
     },
     {
       "name": "openh264",
-      "version": "2.6.0",
-      "url": "https://github.com/cisco/openh264/archive/v2.6.0/openh264-2.6.0.tar.gz",
-      "filename": "openh264-2.6.0.tar.gz",
-      "sha512": "26a03acde7153a6b40b99f00641772433a244c72a3cc4bca6d903cf3b770174d028369a2fb73b2f0774e1124db0e269758eed6d88975347a815e0366c820d247"
+      "version": "2.7.0",
+      "url": "https://github.com/cisco/openh264/archive/v2.7.0/openh264-2.7.0.tar.gz",
+      "filename": "openh264-2.7.0.tar.gz",
+      "sha512": "caa52cbc73e9b6096c5ba4066d85d34ea63e81573c36d06ccd3f54ba34d95b133b5c507fc6e1ba81552673de01bed50c35de4b90428b4da9942ade442bd47a13"
     },
     {
       "name": "rust-gst-plugin-dav1d",
@@ -4329,17 +4329,17 @@
     },
     {
       "name": "sso-mib",
-      "version": "0.9.0",
-      "url": "https://github.com/siemens/sso-mib/archive/v0.9.0/sso-mib-0.9.0.tar.gz",
-      "filename": "sso-mib-0.9.0.tar.gz",
-      "sha512": "90ad72c473769effa250efedaaf7b9a520ab29cc0e29170dacc082fa215803d213370351b694274665ee4e2329f343d6a096321ef09e8955110c2f209a61d782"
+      "version": "0.10.2",
+      "url": "https://github.com/siemens/sso-mib/archive/v0.10.2/sso-mib-0.10.2.tar.gz",
+      "filename": "sso-mib-0.10.2.tar.gz",
+      "sha512": "d2950336fceaa55f13791afbb23695f193c639f81e24f210eb8a8d91225e84037f80944cc81304c23bac30ea1fd7ff4c093f6be6aa093333c45bd650f8f0336e"
     },
     {
       "name": "libjwt",
-      "version": "1.12.1",
-      "url": "https://github.com/benmcollins/libjwt/archive/v1.12.1.tar.gz",
-      "filename": "v1.12.1.tar.gz",
-      "sha512": "facbd82607363f7fc8767b3299b6f8b4e0aeb1e7a65d956bedf5ef1719304aac2f420f763ac2c08167f2176475f04b6c6c30fd448b7991a6fc6756793b8ad92c"
+      "version": "1.18.3",
+      "url": "https://github.com/benmcollins/libjwt/archive/v1.18.3.tar.gz",
+      "filename": "v1.18.3.tar.gz",
+      "sha512": "1b59164e56ceffd2078d06f9d74e4c991b8928e290da9e91cec495c3763480dde4de0320e348210092133d859db0a95195487edf51e645dac06266c04df7b586"
     }
   ]
 }

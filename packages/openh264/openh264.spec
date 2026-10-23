@@ -16,8 +16,8 @@
 #    fedpkg build --target=f*-openh264
 #
 Name:           openh264
-Version:        2.6.0
-Release:        4%{?dist}
+Version:        2.7.0
+Release:        1%{?dist}
 Summary:        H.264 codec library
 
 License:        BSD-2-Clause
