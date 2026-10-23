@@ -7,6 +7,10 @@
     "simdutf": {
       "version": "9.3.2",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/39740272212"
+    },
+    "sso-mib": {
+      "version": "0.10.2",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/40032133559"
     }
   }
 }

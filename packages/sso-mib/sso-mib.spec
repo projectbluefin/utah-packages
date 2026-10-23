@@ -6,7 +6,7 @@
 %define soversion 0
 
 Name:           sso-mib
-Version:        0.10.2
+Version:        0.9.0
 Release:        %autorelease
 Summary:        Tools and library for Single-Sign-On with CA for Entra via Himmelblau
 
@@ -104,12 +104,10 @@ on O365.
 %files tool
 %license LICENSES/GPL-2.0-only.txt
 %{_bindir}/sso-mib-tool
-%{_mandir}/man1/sso-mib-tool.1*
 
 %files gch-smtp-o365
 %license LICENSES/MIT.txt
 %{_bindir}/sso-mib-gch-smtp-o365
-%{_mandir}/man1/sso-mib-gch-smtp-o365.1*
 
 %changelog
 %autochangelog
