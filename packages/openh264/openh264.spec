@@ -25,8 +25,6 @@ URL:            https://www.openh264.org/
 Source0:        https://github.com/cisco/openh264/archive/v%{version}/openh264-%{version}.tar.gz
 Source1:        https://github.com/mozilla/gmp-api/archive/%{commit1}/gmp-api-%{shortcommit1}.tar.gz
 
-Patch0:         0001-Update-shared-lib-version-for-meson-3860.patch
-
 BuildRequires:  gcc-c++
 BuildRequires:  make
 BuildRequires:  nasm
@@ -63,7 +61,6 @@ browsers.
 
 %prep
 %setup -q
-%patch -P 0 -p1
 
 # Extract gmp-api archive
 tar -xf %{S:1}

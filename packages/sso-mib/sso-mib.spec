@@ -104,10 +104,12 @@ on O365.
 %files tool
 %license LICENSES/GPL-2.0-only.txt
 %{_bindir}/sso-mib-tool
+%{_mandir}/man1/sso-mib-tool.1*
 
 %files gch-smtp-o365
 %license LICENSES/MIT.txt
 %{_bindir}/sso-mib-gch-smtp-o365
+%{_mandir}/man1/sso-mib-gch-smtp-o365.1*
 
 %changelog
 %autochangelog

@@ -2601,10 +2601,10 @@
     },
     {
       "name": "pipewire-libs-extra",
-      "version": "1.6.10",
-      "url": "https://gitlab.freedesktop.org/pipewire/pipewire/-/archive/1.6.10/pipewire-1.6.10.tar.gz",
-      "filename": "pipewire-1.6.10.tar.gz",
-      "sha512": "72e9dec0d464b9cadd9a1762541fca6436cf5b6f70236ff47603364e40a294a254451305c088ef9619cbb2747c4b284de971dfe73d91f7ff4a486635ff42588c",
+      "version": "1.6.9",
+      "url": "https://gitlab.freedesktop.org/pipewire/pipewire/-/archive/1.6.9/pipewire-1.6.9.tar.gz",
+      "filename": "pipewire-1.6.9.tar.gz",
+      "sha512": "91a4790123f95c2a52592e4dcd7de90add681883710d3baa068f973c1477c4a9b7696df6afedbcb6c9f42abfdfa10dc01c383aa5d7ced33d781287a07bb18fd3",
       "stage": 6
     },
     {
@@ -4336,10 +4336,10 @@
     },
     {
       "name": "libjwt",
-      "version": "1.18.3",
-      "url": "https://github.com/benmcollins/libjwt/archive/v1.18.3.tar.gz",
-      "filename": "v1.18.3.tar.gz",
-      "sha512": "1b59164e56ceffd2078d06f9d74e4c991b8928e290da9e91cec495c3763480dde4de0320e348210092133d859db0a95195487edf51e645dac06266c04df7b586"
+      "version": "1.12.1",
+      "url": "https://github.com/benmcollins/libjwt/archive/v1.12.1.tar.gz",
+      "filename": "v1.12.1.tar.gz",
+      "sha512": "facbd82607363f7fc8767b3299b6f8b4e0aeb1e7a65d956bedf5ef1719304aac2f420f763ac2c08167f2176475f04b6c6c30fd448b7991a6fc6756793b8ad92c"
     }
   ]
 }
