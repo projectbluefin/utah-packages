@@ -8,6 +8,10 @@
       "version": "2.4.0",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/37156147163"
     },
+    "pipewire-libs-extra": {
+      "version": "1.6.10",
+      "run": "https://github.com/projectbluefin/utah-packages/pull/591"
+    },
     "python-msgpack": {
       "version": "1.2.3",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/40072946213"
