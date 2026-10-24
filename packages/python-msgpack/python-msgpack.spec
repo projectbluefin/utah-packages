@@ -1,8 +1,8 @@
 %global srcname msgpack
 
 Name:           python-%{srcname}
-Version:        1.2.3
-Release:        1%{?dist}
+Version:        1.1.2
+Release:        5%{?dist}
 Summary:        Python MessagePack (de)serializer
 
 License:        Apache-2.0

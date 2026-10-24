@@ -671,13 +671,13 @@
     },
     {
       "name": "glib-networking",
-      "version": "2.90.1",
-      "url": "https://download.gnome.org/sources/glib-networking/2.90/glib-networking-2.90.1.tar.xz",
-      "filename": "glib-networking-2.90.1.tar.xz",
+      "version": "2.90.0",
+      "url": "https://download.gnome.org/sources/glib-networking/2.90/glib-networking-2.90.0.tar.xz",
+      "filename": "glib-networking-2.90.0.tar.xz",
       "feed": "https://download.gnome.org/sources/glib-networking/2.90/glib-networking-2.90.alpha.tar.xz",
-      "sha512": "9d5ef7bfaa9ee00b10c65959528def32a48212fc4abf835aab940f893c0bde2c023c916ae4b714c21e2038ec7bd27795b3c8ea62b8ef75cdef4b10571e1c74f6",
+      "sha512": "a94c5d0e9775cf7d6bf1cfd6132ff2bb90ec53915bf169d59548fe6a914007837a9a139d2aee8c562006c53e78ddf74b0279c542c10c95cd9ae8929c4af4e46e",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/glib-networking/glib-networking-2.90.1.tar.xz/sha512/9d5ef7bfaa9ee00b10c65959528def32a48212fc4abf835aab940f893c0bde2c023c916ae4b714c21e2038ec7bd27795b3c8ea62b8ef75cdef4b10571e1c74f6/glib-networking-2.90.1.tar.xz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/glib-networking/glib-networking-2.90.0.tar.xz/sha512/a94c5d0e9775cf7d6bf1cfd6132ff2bb90ec53915bf169d59548fe6a914007837a9a139d2aee8c562006c53e78ddf74b0279c542c10c95cd9ae8929c4af4e46e/glib-networking-2.90.0.tar.xz"
       ]
     },
     {
@@ -4502,10 +4502,10 @@
     },
     {
       "name": "python-msgpack",
-      "version": "1.2.3",
-      "url": "https://github.com/msgpack/msgpack-python/archive/v1.2.3/msgpack-1.2.3.tar.gz",
-      "filename": "msgpack-1.2.3.tar.gz",
-      "sha512": "a50e0c831819e3a0b20286c6214a6d01282639453444e4d440eb6f8d682f6bc730ff631a98a73df80307b602d0629d667e4a60e30f87860a0d69995d8605484f"
+      "version": "1.1.2",
+      "url": "https://github.com/msgpack/msgpack-python/archive/v1.1.2/msgpack-1.1.2.tar.gz",
+      "filename": "msgpack-1.1.2.tar.gz",
+      "sha512": "bd5bc3498875fd17fcfaeb1a79c49e61313976341950c385cacbe3c6cf85bf1acfc9ccf06046ddeb1848f52929f1d71aac6b67bac41479c1333e42bd1d461542"
     },
     {
       "name": "gstreamer1-plugin-libav",

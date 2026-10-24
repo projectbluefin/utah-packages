@@ -1,8 +1,16 @@
 {
   "holds": {
+    "glib-networking": {
+      "version": "2.90.1",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/40072946213"
+    },
     "libcdio": {
       "version": "2.4.0",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/37156147163"
+    },
+    "python-msgpack": {
+      "version": "1.2.3",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/40072946213"
     },
     "simdutf": {
       "version": "9.3.2",

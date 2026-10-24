@@ -6,7 +6,7 @@
 %global with_libproxy 1
 
 Name:           glib-networking
-Version:        2.90.1
+Version:        2.90.0
 Release:        %autorelease
 Summary:        Networking support for GLib
 
