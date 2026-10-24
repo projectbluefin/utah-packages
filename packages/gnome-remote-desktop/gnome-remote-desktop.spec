@@ -23,8 +23,10 @@ Source0:        https://download.gnome.org/sources/%{name}/%{gnome_major_version
 
 %gnome_check_version
 
+Patch0:         CVE-2026-96541.patch
+
 # Adds encryption support (requires patched LibVNCServer)
-Patch0:         gnutls-anontls.patch
+Patch1:         gnutls-anontls.patch
 
 BuildRequires:  asciidoc
 BuildRequires:  gcc

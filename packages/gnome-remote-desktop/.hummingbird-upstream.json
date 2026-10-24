@@ -2,7 +2,7 @@
   "package": "gnome-remote-desktop",
   "branch": "rawhide",
   "remote": "https://src.fedoraproject.org/rpms/gnome-remote-desktop.git",
-  "commit": "2489bbbc841d55665d2d2408adfa61fa6fbe6d4b",
-  "tree": "922ff271e76ff411dfa6e8b8a3a0b75e6ecdc28c",
-  "imported_at": "2026-10-20T20:24:56.376118+00:00"
+  "commit": "092a9979c0c3027c3e2481eb11a6ea907d6d39b7",
+  "tree": "84aacbaa8018a2954a710831137b3f71892fe187",
+  "imported_at": "2026-10-24T05:25:47.082861+00:00"
 }
