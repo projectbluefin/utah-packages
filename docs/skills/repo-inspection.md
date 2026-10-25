@@ -69,7 +69,11 @@ appears. Since libkrun 1.11, the guest-kernel library libkrunfw is loaded at
 runtime rather than linked at build time. Retain the explicit
 `Requires: libkrunfw >= 5.0.0` in libkrun, and request `crun-krun` in the
 runtime contract so publication tests the command and both libraries together.
-There is no BuildRequires ordering edge between these two recipes.
+Until both recipes have built and appeared in a successful publication, also
+list `crun-krun` in `[unavailable]`: an unproven runtime request must not block
+publication of unrelated packages. Remove the exception once that publication
+is verified (#457). There is no BuildRequires ordering edge between these two
+recipes.
 
 For the headless agent-container use case, disable libkrun's `gpu` bcond
 in the recipe itself; a one-off build flag does not describe the published

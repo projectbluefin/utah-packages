@@ -15,7 +15,7 @@
 
 Name:           libkrun
 Version:        1.19.7
-Release:        1.1%{?dist}
+Release:        2%{?dist}
 Summary:        Dynamic library providing Virtualization-based process isolation capabilities
 
 License:        Apache-2.0
@@ -242,6 +242,9 @@ capabilities.
 %endif
 
 %changelog
+* Sun Oct 25 2026 Utah package factory - 1.19.7-2
+- Build without the gpu feature so libkrun does not require virglrenderer (#457)
+
 * Thu Oct 22 2026 Sergio Lopez <slp@redhat.com> - 1.19.7-1
 - Update to version 1.19.7
 
