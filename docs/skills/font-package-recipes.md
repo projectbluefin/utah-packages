@@ -68,10 +68,11 @@ hides those names from the backlog's static `%package` scan.
 
 The modern URW release includes Type 1, AFM and OTF files used by Ghostscript.
 The separate `legacy` subpackage contains old PFB/PFM files for X11 clients;
-it is outside the requested output set and disabled by default here because
-its archive has no verified upstream download. Do not replace the modern Type 1
-files with OTF alone: the recipe documents Ghostscript PDF conversion problems
-with that substitution. Enabling legacy requires a verified source lock first.
+it is disabled by default here because its archive is a lookaside-only source
+and legacy is not a requested output, so it is not locked here. Do not replace
+the modern Type 1 files with OTF alone: the recipe documents Ghostscript PDF
+conversion problems with that substitution. Enabling legacy requires adding a
+lookaside source lock for that archive first.
 
 Check virtual provides before importing dependencies: Hummingbird's
 `fonts-filesystem` provides `fontpackages-filesystem`, and `fonts-rpm-macros`
