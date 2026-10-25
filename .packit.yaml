@@ -1588,6 +1588,18 @@ packages:
     downstream_package_name: libjwt
     paths:
       - packages/libjwt
+  libkrun:
+    specfile_path: libkrun.spec
+    upstream_package_name: libkrun
+    downstream_package_name: libkrun
+    paths:
+      - packages/libkrun
+  libkrunfw:
+    specfile_path: libkrunfw.spec
+    upstream_package_name: libkrunfw
+    downstream_package_name: libkrunfw
+    paths:
+      - packages/libkrunfw
   liblc3:
     specfile_path: liblc3.spec
     upstream_package_name: liblc3

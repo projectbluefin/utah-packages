@@ -48,6 +48,9 @@ packages = [
   "libadwaita",
   "mutter",
   "tailscale",
+  # Hummingbird supplies the krun command; the factory supplies its VM library
+  # and guest kernel. Validate the entire runtime chain before publication (#457).
+  "crun-krun",
   "xdg-desktop-portal",
   "xdg-desktop-portal-gnome",
 ]
