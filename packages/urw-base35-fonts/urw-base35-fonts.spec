@@ -152,7 +152,7 @@ Release:          29%{?dist}
 # NOTE: (URW)++ holds the copyright, but Artifex Software has obtained rights to
 #       release these fonts under GNU Affero General Public License (version 3).
 #       Also contains subpackage legacy with older version of the fonts (with GPLv2.0+ license) still needed by a few applications.
-License:          AGPL-3.0-only AND GPL-2.0-or-later
+License:          AGPL-3.0-only%{?with_legacy: AND GPL-2.0-or-later}
 
 URL:              https://github.com/ArtifexSoftware/urw-base35-fonts
 Source:           https://github.com/ArtifexSoftware/urw-base35-fonts/archive/%{version}.tar.gz#/%{name}-%{version}.tar.gz

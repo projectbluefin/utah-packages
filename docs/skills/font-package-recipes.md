@@ -61,7 +61,10 @@ Utah rejected bulk desktop font parity in
 [utah#393](https://github.com/projectbluefin/utah/issues/393#issuecomment-5920428811).
 Reconcile optional desktop faces against that decision, but inspect runtime
 consumers before applying it to printing resources: `ghostscript`'s `libgs`
-requires `urw-base35-fonts` when system resources are enabled. One URW source
+requires `urw-base35-fonts` only when system resources are enabled, and Utah's
+`packages/ghostscript/ghostscript.spec` currently builds with
+`%bcond system_resources 0` (bundled `Resource/` tree). No factory recipe
+consumes URW until a follow-up flips that switch. One URW source
 recipe emits the metapackage, common files, ten font families and build macros;
 do not import each family separately. Its custom `%fontfamily_subpkg` macro
 hides those names from the backlog's static `%package` scan.
