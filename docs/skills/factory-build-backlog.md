@@ -604,7 +604,8 @@ recognizer or generated model. Do not add a runtime recipe just because a
 BuildRequires is absent from Hummingbird (the build root also uses Fedora).
 
 Qt 6 submodule specs (`qt6-qtdeclarative`, `qt6-qttranslations`,
-`qt6-qtwayland`) compute `%global majmin %[%{qt_version}]` inside `Source0`,
+`qt6-qtwayland`) define `%global majmin %(echo %{version} | cut -d. -f1-2)` and
+expand `%{majmin}` inside `Source0`,
 which `bootstrap_upstream_sources.py` reports as `needs explicit mapping`
 without `rpmspec`; write the resolved `https://download.qt.io/official_releases/qt/...`
 entry and Fedora lookaside `fallback_urls` directly in
