@@ -72,73 +72,48 @@ All six names already have closing records pointing to #466 in
 `config/factory-build-backlog.toml`; do not expand the immutable original audit
 or import another recipe for these binary names.
 
-### Publication snapshot
+### Source-to-binary map
 
-Queried on 2026-10-26 at 06:13 UTC using `tools/package_index.py`'s registry
-reader and the Hummingbird HTTPS metadata endpoint above. Factory image:
+Use the [audit issue (#510)](https://github.com/projectbluefin/utah-packages/issues/510)
+and its linked PR for dated publication and solver evidence. Re-query before
+quoting current suppliers, NEVRAs, digests or metadata checksums; keep those
+snapshots in the issue or PR evidence rather than this reusable guide.
 
-```text
-ghcr.io/projectbluefin/utah-packages@sha256:2ae7b475632f416b759c3160d27ceef62c087089ebf54bb3e2a6961f4d85f222
-```
+| Binary output | Source recipe |
+| --- | --- |
+| `brlapi` | `packages/brltty/brltty.spec` |
+| `brltty` | `packages/brltty/brltty.spec` |
+| `espeak-ng` | `packages/espeak-ng/espeak-ng.spec` |
+| `orca` | `packages/orca/orca.spec` |
+| `speech-dispatcher` | `packages/speech-dispatcher/speech-dispatcher.spec` |
+| `speech-dispatcher-utils` | `packages/speech-dispatcher/speech-dispatcher.spec` |
 
-The image identifies revision `8990424b4028b5535e4635c323dd7435d4e6afaf` and
-[factory run 40265243289](https://github.com/projectbluefin/utah-packages/actions/runs/40265243289).
-Its final publication job succeeded; the overall run failed on another
-package, `gstreamer1-plugins-good`, the only source in the image's failed map.
-None of the four accessibility sources is marked failed.
-
-Each row is a binary found in factory primary metadata. Epoch is explicitly
-zero in every NEVRA (name, epoch, version, release and architecture). None of
-these six binary names is present in the Hummingbird primary snapshot.
-
-| Binary output | Source recipe | Published NEVRA | Supplier |
-| --- | --- | --- | --- |
-| `brlapi` | `packages/brltty/brltty.spec` | `brlapi-0:0.8.8-9.hum1.bfin.x86_64` | Factory |
-| `brltty` | `packages/brltty/brltty.spec` | `brltty-0:6.9.1-9.hum1.bfin.x86_64` | Factory |
-| `espeak-ng` | `packages/espeak-ng/espeak-ng.spec` | `espeak-ng-0:1.52.0-4.hum1.bfin.x86_64` | Factory |
-| `orca` | `packages/orca/orca.spec` | `orca-0:51.1-1.hum1.bfin.noarch` | Factory |
-| `speech-dispatcher` | `packages/speech-dispatcher/speech-dispatcher.spec` | `speech-dispatcher-0:0.12.1-9.hum1.bfin.x86_64` | Factory |
-| `speech-dispatcher-utils` | `packages/speech-dispatcher/speech-dispatcher.spec` | `speech-dispatcher-utils-0:0.12.1-9.hum1.bfin.x86_64` | Factory |
-
-In particular, `brlapi` is a subpackage of `brltty` with its own version;
+`brlapi` is a subpackage of `brltty` with its own version;
 `speech-dispatcher-utils` is a subpackage of `speech-dispatcher`. Search
 `sourcerpm` in primary metadata rather than assuming the binary name or
 version identifies a separate source recipe.
 
-Snapshot SHA-256 checksums (factory primary is decompressed XML; Hummingbird
-primary, filelists and other are the compressed bytes named by repomd):
-
-| Metadata | SHA-256 |
-| --- | --- |
-| Factory repomd | `a5a3703d531ce345c4f62b0d9cd80c3fb46b680dd9f0a58920118335a580c353` |
-| Factory primary | `e3596acaaa0140ef66b9d34d040ac1ee58232afd2dfa5832ba43d642ada734c5` |
-| Hummingbird repomd | `eb56a38f63ab02af3b019c9643e7adb41e5fd475f2ba920a7148460de4675d62` |
-| Hummingbird primary | `e28983db652a7c317d51cb54efd75de45b63a4c29e01e0bd9bedb5b46bb6225a` |
-| Hummingbird filelists | `3db83a1c47e325349936d272d5b4270b32518c40a86104aa5a2a9f31b9481faa` |
-| Hummingbird other | `30ab12a6d641ae173a5d1f08ac84c5fc26722b4ec5f19ab7207db7289458063c` |
-
-Hummingbird's repomd response was dated `Mon, 26 Oct 2026 06:13:57 GMT`,
-with `Last-Modified: Sun, 25 Oct 2026 05:09:06 GMT` and an ETag equal to its
-quoted repomd SHA-256 above.
-
 ### Resolution evidence and downstream boundary
 
-[The maintainer's six-name solver check](https://github.com/projectbluefin/utah-packages/issues/510#issuecomment-6241961819)
-on 2026-10-17 resolved every requested name with
-`dnf install --assumeno --disablerepo=* --enablerepo=factory,hbird`, without
-Fedora or negativo17. That check used Utah testing image `e556a075` and
-factory pin `951d030d`; it is historical closure evidence, not a solver test
-of the newer digest above.
+Test all six names in one solver transaction, including `brltty`, against the
+exact factory digest being handed downstream and a dated Hummingbird snapshot:
 
-The newer image's
-[final publication job](https://github.com/projectbluefin/utah-packages/actions/runs/40265243289/job/121396157222)
-also reports that all 316 names in Utah's install set resolve against factory
-plus Hummingbird. This covers the current install set, not an explicit
-six-name transaction: do not infer that every requested binary is installed.
+```bash
+dnf install --assumeno --disablerepo='*' --enablerepo=factory,hbird \
+  brlapi brltty espeak-ng orca speech-dispatcher speech-dispatcher-utils
+```
 
-[The maintainer's clarification](https://github.com/projectbluefin/utah-packages/issues/510#issuecomment-6241978215)
-records five requested names as installed through dependencies, with `brltty`
-absent but resolvable. Whether Utah should name those five directly or document
+Point `factory` at the repository extracted from that digest, and `hbird` at
+the permitted Hummingbird repository. Record the base image or empty install
+root, enabled repositories, command and transaction result with the digest.
+An expected nonzero exit from `--assumeno` is not enough: require a transaction
+summary (or `Nothing to do`) and reject dependency or repository errors.
+Historical solver checks of older pins and checks of Utah's install set do
+not prove all six resolve from a newly cited digest: the install set can omit
+`brltty`. An empty-root check proves dependency closure, while checking in
+Utah's pinned base also tests compatibility with its installed RPM database.
+
+Whether Utah should name dependency-installed packages directly or document
 dependency reliance, and whether it should install `brltty`, belong to
 [Utah's integration work (#263)](https://github.com/projectbluefin/utah/issues/263).
 Publication, dependency resolution, installed presence and direct manifest
