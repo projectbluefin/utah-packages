@@ -85,6 +85,10 @@ from tools.package_inventory import (
     source_locks,
 )
 
+AUTOMATION_IDENTITY = (
+    "github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>"
+)
+
 GNOME_SOURCES = "https://download.gnome.org/sources/"
 
 # The git forges this factory locks sources on. Both expose an ordered tag
@@ -586,8 +590,7 @@ def update_changelog(text: str, version: str) -> str:
     weekday, day, month, year, *_ = formatdate().split()
     date = f"{weekday.rstrip(',')} {month} {day} {year}"
     entry = (
-        f"* {date} github-actions[bot] "
-        f"<41898282+github-actions[bot]@users.noreply.github.com> - {evr}\n"
+        f"* {date} {AUTOMATION_IDENTITY} - {evr}\n"
         f"- Update to {version}\n\n"
     )
     end = section.end()

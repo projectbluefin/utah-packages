@@ -25,6 +25,8 @@ live macros in history would make later bumps change old entries. Use an
 English UTC date and the automation identity; a bump must not attribute its
 new entry to the packager who wrote the previous one. Cover manual history,
 automatic history, and both feed paths in `tests/test_upstream_bump.py`.
+Keep the module docstring's write-target summary in sync when changing what
+the updater writes to a spec.
 
 Retire the package's `dist_bump` entry when applying a new upstream version,
 for both GNOME and forge feeds. Its baseline records only the release, so a
