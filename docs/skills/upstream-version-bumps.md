@@ -12,7 +12,7 @@ and source manifest together. A changed `Version:` resets the numeric leading
 literal of `Release:` to `1`; preserve following macros and comments. Leave
 macro-only releases (`%autorelease`, `%{baserelease}`, `%{samba_release}`)
 alone because their expanded value cannot be inferred from the recipe.
-A no-op version rewrite must preserve the release.
+A no-op version rewrite must preserve the release and changelog.
 
 When the version changes, prepend a dated entry to an existing manual
 `%changelog`, preserving the old history. Leave `%autochangelog` sections

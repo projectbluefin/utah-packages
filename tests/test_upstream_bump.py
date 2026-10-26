@@ -3,6 +3,7 @@
 import io
 import json
 import os
+import re
 from pathlib import Path
 import sys
 import tempfile
@@ -385,6 +386,31 @@ class SpecRewriteTests(unittest.TestCase):
             spec = Path(tmp) / "x.spec"
             spec.write_text("Version:        51.0\n")
             self.assertFalse(rewrite_spec(spec, "51.0"))
+
+    def test_prepends_manual_changelog_and_preserves_history(self) -> None:
+        for release, evr in (("5%{?dist}", "2:51~rc-1"),
+                             ("%autorelease", "2:51~rc")):
+            with self.subTest(release=release), tempfile.TemporaryDirectory() as tmp:
+                spec = Path(tmp) / "x.spec"
+                history = "\n* Mon Jan 01 2024 Previous Author - 50-5\n- Old entry\n"
+                spec.write_text(f"Version: 50\nEpoch: 2\nRelease: {release}\n"
+                                "%changelog" + history)
+                self.assertTrue(rewrite_spec(spec, "51.rc"))
+                result = spec.read_text()
+                self.assertRegex(result, r"%changelog\n\* [A-Z][a-z]{2} [A-Z][a-z]{2} "
+                                 r"[0-9]{2} [0-9]{4} github-actions\[bot\] <[^>]+> - " + re.escape(evr))
+                self.assertIn("\n- Update to 51~rc\n" + history, result)
+                self.assertFalse(rewrite_spec(spec, "51.rc"))
+                self.assertEqual(spec.read_text(), result)
+
+    def test_preserves_generated_changelog(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            spec = Path(tmp) / "x.spec"
+            spec.write_text("Version: 50\nRelease: %autorelease\n"
+                            "%changelog\n%autochangelog\n")
+            rewrite_spec(spec, "51.0")
+            self.assertEqual(spec.read_text(), "Version: 51.0\nRelease: %autorelease\n"
+                             "%changelog\n%autochangelog\n")
 
     def test_refuses_a_spec_with_no_version_field(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
