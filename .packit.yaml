@@ -2932,6 +2932,12 @@ packages:
     downstream_package_name: tree-pkg
     paths:
       - packages/tree-pkg
+  tslib:
+    specfile_path: tslib.spec
+    upstream_package_name: tslib
+    downstream_package_name: tslib
+    paths:
+      - packages/tslib
   tuned:
     specfile_path: tuned.spec
     upstream_package_name: tuned

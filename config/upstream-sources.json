@@ -4863,6 +4863,13 @@
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/urw-base35-fonts/urw-base35-fonts-20200910.tar.gz/sha512/71fb27baadf5abc4ff624cdede02038681acd5fffdc728a5b2e7808713b80cb2f2174f90a1862e69d390c4434c49d5167ab095100032fa3ba80b586eb8ae51d1/urw-base35-fonts-20200910.tar.gz"
       ]
+    },
+    {
+      "name": "tslib",
+      "version": "1.24",
+      "url": "https://github.com/kergoth/tslib/releases/download/1.24/tslib-1.24.tar.bz2",
+      "filename": "tslib-1.24.tar.bz2",
+      "sha512": "4d271a5f3e7d5e70daf7581f1c6417b77effa3d84ac34ce8d74acd9557407ffe7a293f28a4239c8a750e05f21dd04616d91361e2d049ecae0d1b7b0a330cdb98"
     }
   ]
 }

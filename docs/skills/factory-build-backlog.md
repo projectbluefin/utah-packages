@@ -74,7 +74,11 @@ Two edits — never one, never none:
 two-edit move in the same PR; `already_recipe` is the auditor's observation
 of an area name whose move is still owed (for example a recipe that landed
 before the name was catalogued), not an alternative way to close it, and the
-next PR that touches the name sweeps it into `[resolved]`.
+next PR that touches the name sweeps it into `[resolved]`. A pull request
+that advances only one source family of a multi-package batch issue — or leaves
+its entry in `already_recipe` pending hosted build and runtime verification —
+must link the tracking issue with `Refs #<n>`, never `Closes #<n>`, so merging
+does not auto-close the batch while other outputs remain open.
 
 The `Import Rawhide package` workflow does **not** make this move: its pull
 request carries the recipe, lock, `.packit.yaml` and counts, but leaves the
@@ -92,6 +96,16 @@ substitution fails even when all counts remain unchanged; moving an existing
 name to a closing record preserves the digest. The baseline was verified
 against the pinned gist's `nowhere-551.txt`; changing it requires a new audit. The auditor
 itself fails when the catalog totals do not reconcile with the report.
+
+### Touchscreen library imports
+
+`tslib` builds its SDL2 test utilities with `SDL2-devel`. The factory
+recipe providing that build dependency is `sdl2-compat`, whose devel
+subpackage explicitly provides `SDL2-devel`; do not import a second SDL2
+source recipe. The main `tslib` binary contains both the filtering plugins
+and touchscreen tools. A successful package build does not establish touch
+input or calibration behavior: exercise those tools with a real input device
+in the consumer image before claiming hardware parity.
 
 ### Locking sources for a hand import
 
@@ -170,3 +184,6 @@ backlog with the import.
   it guards is undecidable too.
 
 After a recipe PR lands, regenerate `reports/factory-build-backlog.json`; the inventory-driven gate deliberately rejects a snapshot made before that import. Refresh it together with recipe and Packit inventory changes when preparing concurrent PRs.
+When rebasing a recipe PR, resolve conflicts in this generated report by rerunning
+`python3 tools/factory_build_backlog.py` against the combined inventory, then
+verify with `--check`; choosing either side can discard another import’s state.
