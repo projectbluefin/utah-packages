@@ -33,7 +33,7 @@
       "total": 0
     },
     "unblockers": {
-      "pending": 4,
+      "already_recipe": 4,
       "total": 4
     },
     "vpn": {
@@ -881,22 +881,22 @@
     {
       "area": "unblockers",
       "name": "qt6-qtdeclarative",
-      "state": "pending"
+      "state": "already_recipe"
     },
     {
       "area": "unblockers",
       "name": "qt6-qttranslations",
-      "state": "pending"
+      "state": "already_recipe"
     },
     {
       "area": "unblockers",
       "name": "qt6-qtwayland",
-      "state": "pending"
+      "state": "already_recipe"
     },
     {
       "area": "unblockers",
       "name": "qt6-qtwayland-adwaita-decoration",
-      "state": "pending"
+      "state": "already_recipe"
     },
     {
       "area": "vpn",
@@ -921,9 +921,9 @@
   ],
   "issue": "projectbluefin/utah-packages#308",
   "states": {
-    "already_recipe": 7,
+    "already_recipe": 11,
     "manifest_wants": 1,
-    "pending": 166
+    "pending": 162
   },
   "totals": {
     "backlog": 174,

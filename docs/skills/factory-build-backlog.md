@@ -603,6 +603,20 @@ source lock and validate model loading as well as the Python binding import.
 recognizer or generated model. Do not add a runtime recipe just because a
 BuildRequires is absent from Hummingbird (the build root also uses Fedora).
 
+Qt 6 submodule specs (`qt6-qtdeclarative`, `qt6-qttranslations`,
+`qt6-qtwayland`) compute `%global majmin %[%{qt_version}]` inside `Source0`,
+which `bootstrap_upstream_sources.py` reports as `needs explicit mapping`
+without `rpmspec`; write the resolved `https://download.qt.io/official_releases/qt/...`
+entry and Fedora lookaside `fallback_urls` directly in
+`config/upstream-sources.json`. Each submodule enforces
+`BuildRequires: qt6-qtbase-devel >= %{version}`,
+`%{?_qt6:Requires: %{_qt6}%{?_isa} = %{_qt6_version}}`, and
+`Qt_6.<minor>_PRIVATE_API` symbol versions, so pass `--ref <commit>` to
+`tools/import_rawhide.py` for the `rawhide` ancestor matching Hummingbird's
+`qt6-qtbase` version (`6.11.2`, not Rawhide HEAD `6.12.0`). `qt6-qtwayland.spec`
+also ships `qt6-qtwayland-adwaita-decoration` via `%package adwaita-decoration`
+(not the standalone `qadwaitadecorations` package).
+
 ## Diagnosing drift
 
 - `--check` compares the whole live report with the committed snapshot —

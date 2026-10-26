@@ -3148,6 +3148,24 @@ packages:
     downstream_package_name: qpdf
     paths:
       - packages/qpdf
+  qt6-qtdeclarative:
+    specfile_path: qt6-qtdeclarative.spec
+    upstream_package_name: qt6-qtdeclarative
+    downstream_package_name: qt6-qtdeclarative
+    paths:
+      - packages/qt6-qtdeclarative
+  qt6-qttranslations:
+    specfile_path: qt6-qttranslations.spec
+    upstream_package_name: qt6-qttranslations
+    downstream_package_name: qt6-qttranslations
+    paths:
+      - packages/qt6-qttranslations
+  qt6-qtwayland:
+    specfile_path: qt6-qtwayland.spec
+    upstream_package_name: qt6-qtwayland
+    downstream_package_name: qt6-qtwayland
+    paths:
+      - packages/qt6-qtwayland
   quota:
     specfile_path: quota.spec
     upstream_package_name: quota

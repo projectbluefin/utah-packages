@@ -1,0 +1,8 @@
+{
+  "package": "qt6-qttranslations",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/qt6-qttranslations.git",
+  "commit": "b84b32fc04c56d3d844e2b5dc5cee713dbd3d2a4",
+  "tree": "5706864b87a418386bc2bd9cee6086d9aef9aef2",
+  "imported_at": "2026-10-26T05:45:54.468093+00:00"
+}
