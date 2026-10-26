@@ -2968,6 +2968,12 @@ packages:
     downstream_package_name: upower
     paths:
       - packages/upower
+  urw-base35-fonts:
+    specfile_path: urw-base35-fonts.spec
+    upstream_package_name: urw-base35-fonts
+    downstream_package_name: urw-base35-fonts
+    paths:
+      - packages/urw-base35-fonts
   usbmuxd:
     specfile_path: usbmuxd.spec
     upstream_package_name: usbmuxd

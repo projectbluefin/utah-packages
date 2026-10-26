@@ -11,8 +11,8 @@
       "total": 97
     },
     "fonts-i18n": {
-      "pending": 59,
-      "total": 59
+      "pending": 46,
+      "total": 46
     },
     "gnome-apps": {
       "already_recipe": 5,
@@ -924,71 +924,6 @@
       "state": "pending"
     },
     {
-      "area": "fonts-i18n",
-      "name": "urw-base35-bookman-fonts",
-      "state": "pending"
-    },
-    {
-      "area": "fonts-i18n",
-      "name": "urw-base35-c059-fonts",
-      "state": "pending"
-    },
-    {
-      "area": "fonts-i18n",
-      "name": "urw-base35-d050000l-fonts",
-      "state": "pending"
-    },
-    {
-      "area": "fonts-i18n",
-      "name": "urw-base35-fonts",
-      "state": "pending"
-    },
-    {
-      "area": "fonts-i18n",
-      "name": "urw-base35-fonts-common",
-      "state": "pending"
-    },
-    {
-      "area": "fonts-i18n",
-      "name": "urw-base35-gothic-fonts",
-      "state": "pending"
-    },
-    {
-      "area": "fonts-i18n",
-      "name": "urw-base35-nimbus-mono-ps-fonts",
-      "state": "pending"
-    },
-    {
-      "area": "fonts-i18n",
-      "name": "urw-base35-nimbus-roman-fonts",
-      "state": "pending"
-    },
-    {
-      "area": "fonts-i18n",
-      "name": "urw-base35-nimbus-sans-fonts",
-      "state": "pending"
-    },
-    {
-      "area": "fonts-i18n",
-      "name": "urw-base35-p052-fonts",
-      "state": "pending"
-    },
-    {
-      "area": "fonts-i18n",
-      "name": "urw-base35-standard-symbols-ps-fonts",
-      "state": "pending"
-    },
-    {
-      "area": "fonts-i18n",
-      "name": "urw-base35-z003-fonts",
-      "state": "pending"
-    },
-    {
-      "area": "fonts-i18n",
-      "name": "vazirmatn-vf-fonts",
-      "state": "pending"
-    },
-    {
       "area": "gnome-apps",
       "name": "epiphany-runtime",
       "state": "pending"
@@ -1893,11 +1828,11 @@
   "states": {
     "already_recipe": 32,
     "manifest_wants": 1,
-    "pending": 334
+    "pending": 321
   },
   "totals": {
-    "backlog": 367,
-    "resolved": 178,
-    "wontfix": 6
+    "backlog": 354,
+    "resolved": 190,
+    "wontfix": 7
   }
 }

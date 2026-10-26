@@ -469,11 +469,23 @@ jobs:
     if: always()
     runs-on: ubuntu-24.04
     steps:
+      # A fork pull request cannot publish, so it passes only on proof: a
+      # maintainer-run Canary (canary-fork-pr.yml) that passed on exactly this
+      # head commit. The proof is read from the API, so the fork's own run turns
+      # green by being re-run after that one finishes (canary-fork-pr.yml, job refresh);
+      # the check run of the dispatched run itself is not counted by the pull
+      # request, which only rolls up the run for its own branch.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        if: needs.changes.outputs.fork == 'true'
       - name: Decide
         env:
           RUN: ${{ needs.changes.outputs.run }}
           FORK: ${{ needs.changes.outputs.fork }}
           RESULTS: ${{ toJSON(needs) }}
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number || inputs.pr }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           set -euo pipefail
           if [ "$RUN" != true ]; then
@@ -481,7 +493,11 @@ jobs:
             exit 0
           fi
           if [ "$FORK" = true ]; then
-            echo "::error::a fork pull request cannot publish the canary image. This is expected, not something the author can fix: a maintainer reviews the change, then runs the 'Canary for a fork pull request' workflow (Actions tab) with this pull request's number and head commit; the result lands on this commit as the Canary check (#369)" >&2
+            gh api "repos/$REPO/actions/workflows/canary.yml/runs?event=workflow_dispatch&status=completed&head_sha=${HEAD_SHA}&per_page=50" > proof.json
+            if python3 tools/fork_canary.py proof --runs-json proof.json --pr "$PR" --head-sha "$HEAD_SHA"; then
+              exit 0
+            fi
+            echo "::error::a fork pull request cannot publish the canary image, and no maintainer-run Canary has passed on ${HEAD_SHA}. This is expected, not something the author can fix: a maintainer reviews the change, then runs the 'Canary for a fork pull request' workflow (Actions tab) with this pull request's number and head commit. This check turns green by itself when that run passes (#369)" >&2
             exit 1
           fi
           echo "$RESULTS" | jq -r 'to_entries[] | "\(.key): \(.value.result)"'

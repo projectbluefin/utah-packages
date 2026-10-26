@@ -4903,6 +4903,16 @@
       "filename": "vvdec-3.2.0.tar.gz",
       "sha512": "bb0085fbcd02fc22fe4e3a277907da8ca2b84b6e0769680a6792eb558fff62d1e7ae0a15a1377967562bb06513046e5eb38749dd08ee06f8badb5b8c246af17e",
       "lookaside": "rpmfusion-free"
+    },
+    {
+      "name": "urw-base35-fonts",
+      "version": "20200910",
+      "url": "https://github.com/ArtifexSoftware/urw-base35-fonts/archive/refs/tags/20200910.tar.gz",
+      "filename": "urw-base35-fonts-20200910.tar.gz",
+      "sha512": "71fb27baadf5abc4ff624cdede02038681acd5fffdc728a5b2e7808713b80cb2f2174f90a1862e69d390c4434c49d5167ab095100032fa3ba80b586eb8ae51d1",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/urw-base35-fonts/urw-base35-fonts-20200910.tar.gz/sha512/71fb27baadf5abc4ff624cdede02038681acd5fffdc728a5b2e7808713b80cb2f2174f90a1862e69d390c4434c49d5167ab095100032fa3ba80b586eb8ae51d1/urw-base35-fonts-20200910.tar.gz"
+      ]
     }
   ]
 }

@@ -1,0 +1,358 @@
+From 965bea8798ffe76885e4ea4556155a6df5e7fc4d Mon Sep 17 00:00:00 2001
+From: "David Kaspar [Dee'Kej]" <dkaspar@redhat.com>
+Date: Tue, 9 Jan 2018 13:51:09 +0100
+Subject: [PATCH] appstream/fontconfig: Nimbus Sans Narrow merged into Nimbus
+ Sans
+
+  "As mentioned by Microsoft in its WPF font model whitepaper, the CSS
+  model and apps only know to manage weight, width or slant qualifiers.
+  So anything which is a weight, width or slant qualifier is a font face
+  name, and anything else is a different font family." - Nicolas Mailhot
+
+  More info: https://goo.gl/n2unfn
+
+  By this definition, the Nimbus Sans and Nimbus Sans Narrow are the
+  same font typefaces, so the AppStream and fontconfig files for Nimbus
+  Sans Narrow were merged into corresponding Nimbus Sans files.
+---
+ appstream/de.urwpp.NimbusSans.metainfo.xml       |   5 +
+ appstream/de.urwpp.NimbusSansNarrow.metainfo.xml | 190 -----------------------
+ fontconfig/urw-nimbus-sans-narrow.conf           |  42 -----
+ fontconfig/urw-nimbus-sans.conf                  |  35 +++++
+ 4 files changed, 40 insertions(+), 232 deletions(-)
+ delete mode 100644 appstream/de.urwpp.NimbusSansNarrow.metainfo.xml
+ delete mode 100644 fontconfig/urw-nimbus-sans-narrow.conf
+
+diff --git a/appstream/de.urwpp.NimbusSans.metainfo.xml b/appstream/de.urwpp.NimbusSans.metainfo.xml
+index 28d9c96..be65054 100644
+--- a/appstream/de.urwpp.NimbusSans.metainfo.xml
++++ b/appstream/de.urwpp.NimbusSans.metainfo.xml
+@@ -29,6 +29,11 @@
+     <font>Nimbus Sans Italic</font>
+     <font>Nimbus Sans Bold</font>
+     <font>Nimbus Sans Bold Italic</font>
++
++    <font>Nimbus Sans Narrow Regular</font>
++    <font>Nimbus Sans Narrow Oblique</font>
++    <font>Nimbus Sans Narrow Bold</font>
++    <font>Nimbus Sans Narrow Bold Oblique</font>
+   </provides>
+ 
+   <suggests>
+diff --git a/appstream/de.urwpp.NimbusSansNarrow.metainfo.xml b/appstream/de.urwpp.NimbusSansNarrow.metainfo.xml
+deleted file mode 100644
+index 3db3163..0000000
+--- a/appstream/de.urwpp.NimbusSansNarrow.metainfo.xml
++++ /dev/null
+@@ -1,190 +0,0 @@
+-<?xml version="1.0" encoding="UTF-8"?>
+-<component type="font">
+-  <id>de.urwpp.NimbusSansNarrow</id>
+-  <developer_name>URW++ Design and Development GmbH</developer_name>
+-
+-  <metadata_license>CC-BY-4.0</metadata_license>
+-  <project_license>AGPL-3.0</project_license>
+-
+-  <url type="homepage">https://www.urwpp.de/en/</url>
+-  <url type="bugtracker">https://bugs.ghostscript.com/</url>
+-
+-  <update_contact>dkaspar@redhat.com</update_contact>
+-
+-  <name>Nimbus Sans Narrow</name>
+-  <summary>An alternative font family for Helvetica Condensed typeface</summary>
+-  <description>
+-    <p>
+-      This sans-serif font family is an alternative for the Helvetica Condensed
+-      typeface, and is part of Level 2 Core Font Set - PostScript specification
+-      of 35 base fonts that can be used with any PostScript file.
+-    </p>
+-    <p>
+-      These 35 base fonts are provided freely by (URW++) company,
+-      and are mainly utilized by Ghostscript, or other applications using it.
+-  </description>
+-
+-  <provides>
+-    <font>Nimbus Sans Narrow Regular</font>
+-    <font>Nimbus Sans Narrow Oblique</font>
+-    <font>Nimbus Sans Narrow Bold</font>
+-    <font>Nimbus Sans Narrow Bold Oblique</font>
+-  </provides>
+-
+-  <suggests>
+-    <id>de.urwpp.URWCoreFontSetLevel2</id>
+-    <id>de.urwpp.C059</id>
+-    <id>de.urwpp.D050000L</id>
+-    <id>de.urwpp.NimbusMonoPS</id>
+-    <id>de.urwpp.NimbusRoman</id>
+-    <id>de.urwpp.NimbusSans</id>
+-    <id>de.urwpp.P052</id>
+-    <id>de.urwpp.StandardSymbolsPS</id>
+-    <id>de.urwpp.URWBookman</id>
+-    <id>de.urwpp.URWGothic</id>
+-    <id>de.urwpp.Z003</id>
+-  </suggests>
+-
+-  <!-- NOTE: Medium urgency of updates is implicitly assumed with AppStream -->
+-  <releases>
+-    <release version="20170801" date="2017-08-01" />
+-    <release version="20160926" date="2016-09-26" />
+-  </releases>
+-
+-  <languages>
+-    <lang>aa</lang>
+-    <lang>af</lang>
+-    <lang>an</lang>
+-    <lang>av</lang>
+-    <lang>ay</lang>
+-    <lang>ba</lang>
+-    <lang>be</lang>
+-    <lang>bg</lang>
+-    <lang>bi</lang>
+-    <lang>br</lang>
+-    <lang>bs</lang>
+-    <lang>bua</lang>
+-    <lang>ca</lang>
+-    <lang>ce</lang>
+-    <lang>ch</lang>
+-    <lang>co</lang>
+-    <lang>crh</lang>
+-    <lang>cs</lang>
+-    <lang>csb</lang>
+-    <lang>cy</lang>
+-    <lang>da</lang>
+-    <lang>de</lang>
+-    <lang>el</lang>
+-    <lang>en</lang>
+-    <lang>eo</lang>
+-    <lang>es</lang>
+-    <lang>et</lang>
+-    <lang>eu</lang>
+-    <lang>fi</lang>
+-    <lang>fil</lang>
+-    <lang>fj</lang>
+-    <lang>fo</lang>
+-    <lang>fr</lang>
+-    <lang>fur</lang>
+-    <lang>fy</lang>
+-    <lang>gd</lang>
+-    <lang>gl</lang>
+-    <lang>gv</lang>
+-    <lang>ho</lang>
+-    <lang>hr</lang>
+-    <lang>hsb</lang>
+-    <lang>ht</lang>
+-    <lang>hu</lang>
+-    <lang>ia</lang>
+-    <lang>id</lang>
+-    <lang>ie</lang>
+-    <lang>ik</lang>
+-    <lang>io</lang>
+-    <lang>is</lang>
+-    <lang>it</lang>
+-    <lang>jv</lang>
+-    <lang>kaa</lang>
+-    <lang>ki</lang>
+-    <lang>kj</lang>
+-    <lang>kk</lang>
+-    <lang>kl</lang>
+-    <lang>ku-tr</lang>
+-    <lang>kum</lang>
+-    <lang>kwm</lang>
+-    <lang>ky</lang>
+-    <lang>la</lang>
+-    <lang>lb</lang>
+-    <lang>lez</lang>
+-    <lang>lg</lang>
+-    <lang>li</lang>
+-    <lang>lt</lang>
+-    <lang>lv</lang>
+-    <lang>mg</lang>
+-    <lang>mh</lang>
+-    <lang>mk</lang>
+-    <lang>mn-mn</lang>
+-    <lang>mo</lang>
+-    <lang>ms</lang>
+-    <lang>mt</lang>
+-    <lang>na</lang>
+-    <lang>nb</lang>
+-    <lang>nds</lang>
+-    <lang>ng</lang>
+-    <lang>nl</lang>
+-    <lang>nn</lang>
+-    <lang>no</lang>
+-    <lang>nr</lang>
+-    <lang>nso</lang>
+-    <lang>ny</lang>
+-    <lang>oc</lang>
+-    <lang>om</lang>
+-    <lang>os</lang>
+-    <lang>pap-an</lang>
+-    <lang>pap-aw</lang>
+-    <lang>pl</lang>
+-    <lang>pt</lang>
+-    <lang>rm</lang>
+-    <lang>rn</lang>
+-    <lang>ro</lang>
+-    <lang>ru</lang>
+-    <lang>rw</lang>
+-    <lang>sc</lang>
+-    <lang>se</lang>
+-    <lang>sel</lang>
+-    <lang>sg</lang>
+-    <lang>sh</lang>
+-    <lang>sk</lang>
+-    <lang>sl</lang>
+-    <lang>sma</lang>
+-    <lang>smj</lang>
+-    <lang>smn</lang>
+-    <lang>sn</lang>
+-    <lang>so</lang>
+-    <lang>sq</lang>
+-    <lang>sr</lang>
+-    <lang>ss</lang>
+-    <lang>st</lang>
+-    <lang>su</lang>
+-    <lang>sv</lang>
+-    <lang>sw</lang>
+-    <lang>tg</lang>
+-    <lang>tk</lang>
+-    <lang>tl</lang>
+-    <lang>tn</lang>
+-    <lang>tr</lang>
+-    <lang>ts</lang>
+-    <lang>tt</lang>
+-    <lang>tyv</lang>
+-    <lang>uk</lang>
+-    <lang>uz</lang>
+-    <lang>vo</lang>
+-    <lang>vot</lang>
+-    <lang>wa</lang>
+-    <lang>wen</lang>
+-    <lang>wo</lang>
+-    <lang>xh</lang>
+-    <lang>yap</lang>
+-    <lang>za</lang>
+-    <lang>zu</lang>
+-  </languages>
+-</component>
+diff --git a/fontconfig/urw-nimbus-sans-narrow.conf b/fontconfig/urw-nimbus-sans-narrow.conf
+deleted file mode 100644
+index 16ef7ac..0000000
+--- a/fontconfig/urw-nimbus-sans-narrow.conf
++++ /dev/null
+@@ -1,42 +0,0 @@
+-<?xml version="1.0" encoding="UTF-8"?>
+-<!DOCTYPE fontconfig SYSTEM "fonts.dtd">
+-<fontconfig>
+-  <!-- Generic name aliasing -->
+-  <alias>
+-    <family>sans-serif</family>
+-    <prefer>
+-      <family>Nimbus Sans Narrow</family>
+-    </prefer>
+-  </alias>
+-
+-  <!-- Generic name assignment -->
+-  <alias>
+-    <family>Nimbus Sans Narrow</family>
+-    <default>
+-      <family>sans-serif</family>
+-    </default>
+-  </alias>
+-
+-  <!-- Original PostScript base font mapping -->
+-  <alias binding="same">
+-    <family>Nimbus Sans Narrow</family>
+-    <default>
+-      <family>Helvetica Narrow</family>
+-    </default>
+-  </alias>
+-
+-  <!-- Font substitution rules -->
+-  <alias binding="same">
+-    <family>Helvetica Narrow</family>
+-    <accept>
+-      <family>Nimbus Sans Narrow</family>
+-    </accept>
+-  </alias>
+-
+-  <alias binding="same">
+-    <family>TeX Gyre Heroes Cn</family>
+-    <accept>
+-      <family>Nimbus Sans Narrow</family>
+-    </accept>
+-  </alias>
+-</fontconfig>
+diff --git a/fontconfig/urw-nimbus-sans.conf b/fontconfig/urw-nimbus-sans.conf
+index 782e5e0..0d78408 100644
+--- a/fontconfig/urw-nimbus-sans.conf
++++ b/fontconfig/urw-nimbus-sans.conf
+@@ -9,6 +9,13 @@
+     </prefer>
+   </alias>
+ 
++  <alias>
++    <family>sans-serif</family>
++    <prefer>
++      <family>Nimbus Sans Narrow</family>
++    </prefer>
++  </alias>
++
+   <!-- Generic name assignment -->
+   <alias>
+     <family>Nimbus Sans</family>
+@@ -17,6 +24,13 @@
+     </default>
+   </alias>
+ 
++  <alias>
++    <family>Nimbus Sans Narrow</family>
++    <default>
++      <family>sans-serif</family>
++    </default>
++  </alias>
++
+   <!-- Original PostScript base font mapping -->
+   <alias binding="same">
+     <family>Nimbus Sans</family>
+@@ -25,6 +39,13 @@
+     </default>
+   </alias>
+ 
++  <alias binding="same">
++    <family>Nimbus Sans Narrow</family>
++    <default>
++      <family>Helvetica Narrow</family>
++    </default>
++  </alias>
++
+   <!-- Font substitution rules -->
+   <alias binding="same">
+     <family>Helvetica</family>
+@@ -34,9 +55,23 @@
+   </alias>
+ 
+   <alias binding="same">
++    <family>Helvetica Narrow</family>
++    <accept>
++      <family>Nimbus Sans Narrow</family>
++    </accept>
++  </alias>
++
++  <alias binding="same">
+     <family>TeX Gyre Heroes</family>
+     <accept>
+       <family>Nimbus Sans</family>
+     </accept>
+   </alias>
++
++  <alias binding="same">
++    <family>TeX Gyre Heroes Cn</family>
++    <accept>
++      <family>Nimbus Sans Narrow</family>
++    </accept>
++  </alias>
+ </fontconfig>
+-- 
+2.9.5
+

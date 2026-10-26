@@ -284,19 +284,6 @@ packages = [
     "rit-rachana-fonts",
     "sil-padauk-fonts",
     "unicode-ucd",
-    "urw-base35-bookman-fonts",
-    "urw-base35-c059-fonts",
-    "urw-base35-d050000l-fonts",
-    "urw-base35-fonts",
-    "urw-base35-fonts-common",
-    "urw-base35-gothic-fonts",
-    "urw-base35-nimbus-mono-ps-fonts",
-    "urw-base35-nimbus-roman-fonts",
-    "urw-base35-nimbus-sans-fonts",
-    "urw-base35-p052-fonts",
-    "urw-base35-standard-symbols-ps-fonts",
-    "urw-base35-z003-fonts",
-    "vazirmatn-vf-fonts",
 ]
 
 [areas.ujust-deps]
@@ -701,6 +688,18 @@ packages = [
     { name = "libbasicobjects", pr = 597 },
     { name = "libpath_utils", pr = 597 },
     { name = "libref_array", pr = 597 },
+    { name = "urw-base35-bookman-fonts", pr = 631 },
+    { name = "urw-base35-c059-fonts", pr = 631 },
+    { name = "urw-base35-d050000l-fonts", pr = 631 },
+    { name = "urw-base35-fonts", pr = 631 },
+    { name = "urw-base35-fonts-common", pr = 631 },
+    { name = "urw-base35-gothic-fonts", pr = 631 },
+    { name = "urw-base35-nimbus-mono-ps-fonts", pr = 631 },
+    { name = "urw-base35-nimbus-roman-fonts", pr = 631 },
+    { name = "urw-base35-nimbus-sans-fonts", pr = 631 },
+    { name = "urw-base35-p052-fonts", pr = 631 },
+    { name = "urw-base35-standard-symbols-ps-fonts", pr = 631 },
+    { name = "urw-base35-z003-fonts", pr = 631 },
 ]
 
 [wontfix]
@@ -716,4 +715,5 @@ packages = [
     { name = "gnome-shell-extension-launch-new-instance", reason = "Utah uses Git submodules for GNOME extensions (projectbluefin/utah#391); no factory RPM." },
     { name = "gnome-shell-extension-places-menu", reason = "Utah uses Git submodules for GNOME extensions (projectbluefin/utah#391); no factory RPM." },
     { name = "gnome-shell-extension-window-list", reason = "Utah uses Git submodules for GNOME extensions (projectbluefin/utah#391); no factory RPM." },
+    { name = "vazirmatn-vf-fonts", reason = "Bulk desktop font parity rejected by Utah: https://github.com/projectbluefin/utah/issues/393#issuecomment-5920428811; no individual addition accepted." },
 ]
