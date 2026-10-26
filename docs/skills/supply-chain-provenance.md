@@ -110,6 +110,12 @@ Every recipe in `packages/<name>/` carries `.hummingbird-upstream.json`, and
 - **`branch: upstream`** — imported from the project's own release repository,
   so it carries a non-empty `remote` and no dist-git `commit`/`tree`. Its
   source lock lives in `config/upstream-sources.json` instead.
+- **`branch: master`** — a codec recipe from RPM Fusion or negativo17.
+  Accepted only when `remote` is `https://github.com/rpmfusion/<package>.git`
+  or `https://github.com/negativo17/<package>.git` and `package` matches the
+  recipe directory. Full 40-character `commit` and `tree` SHAs are required,
+  as for `rawhide`. See [multimedia-closure](multimedia-closure.md) for the
+  import workflow.
 
 Do not hand-edit these files. Re-import; editing provenance makes a recipe
 claim an origin it does not have.
