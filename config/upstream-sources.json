@@ -4863,6 +4863,76 @@
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/urw-base35-fonts/urw-base35-fonts-20200910.tar.gz/sha512/71fb27baadf5abc4ff624cdede02038681acd5fffdc728a5b2e7808713b80cb2f2174f90a1862e69d390c4434c49d5167ab095100032fa3ba80b586eb8ae51d1/urw-base35-fonts-20200910.tar.gz"
       ]
+    },
+    {
+      "name": "symlinks",
+      "version": "1.7",
+      "url": "https://www.ibiblio.org/pub/Linux/utils/file/symlinks-1.7.tar.gz",
+      "filename": "symlinks-1.7.tar.gz",
+      "sha512": "4a60440fc10f74256639086b28de52fdda8cad41d0935bd49729b0e4c787b40f6a75dc0fbc8b775c7a860d2929a808b1a165c05aa5b885e3c1eb0f05ab49cc5e",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/symlinks/symlinks-1.7.tar.gz/sha512/4a60440fc10f74256639086b28de52fdda8cad41d0935bd49729b0e4c787b40f6a75dc0fbc8b775c7a860d2929a808b1a165c05aa5b885e3c1eb0f05ab49cc5e/symlinks-1.7.tar.gz"
+      ]
+    },
+    {
+      "name": "time",
+      "version": "1.9",
+      "url": "https://ftp.gnu.org/gnu/time/time-1.9.tar.gz",
+      "filename": "time-1.9.tar.gz",
+      "sha512": "5c6dabbbe71e9103a47b892b86bb914c1704122d4fe7dff1e2cbd28503297163118d295077d8e062b035d673a1f91c36f8a45c7383f374fd766942b32bde4406",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/time/time-1.9.tar.gz/sha512/5c6dabbbe71e9103a47b892b86bb914c1704122d4fe7dff1e2cbd28503297163118d295077d8e062b035d673a1f91c36f8a45c7383f374fd766942b32bde4406/time-1.9.tar.gz"
+      ]
+    },
+    {
+      "name": "toolbox",
+      "version": "0.3",
+      "url": "https://github.com/containers/toolbox/releases/download/0.3/toolbox-0.3-vendored.tar.xz",
+      "filename": "toolbox-0.3-vendored.tar.xz",
+      "sha512": "e464aba1c40b37b0ed027a560a0685e5dc8f07684d33d0e2bac5f0ba8c2b2c2a4c585db8847b23bd0753e33d37e3e88c87ab71d3999c3afedf315717f468c0ba",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/toolbox/toolbox-0.3-vendored.tar.xz/sha512/e464aba1c40b37b0ed027a560a0685e5dc8f07684d33d0e2bac5f0ba8c2b2c2a4c585db8847b23bd0753e33d37e3e88c87ab71d3999c3afedf315717f468c0ba/toolbox-0.3-vendored.tar.xz"
+      ]
+    },
+    {
+      "name": "usb_modeswitch",
+      "version": "2.6.2",
+      "url": "https://www.draisberghof.de/usb_modeswitch/usb-modeswitch-2.6.2.tar.bz2",
+      "filename": "usb-modeswitch-2.6.2.tar.bz2",
+      "sha512": "adaedf89de3c5f9dc55da7bb5bb3fe8165c0424cffacb00f83876094b7abdc386ced9959e5dbdf46ab06aa1d03fbfca13df539421489ef4d2dd0f72742057f3d",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/usb_modeswitch/usb-modeswitch-2.6.2.tar.bz2/sha512/adaedf89de3c5f9dc55da7bb5bb3fe8165c0424cffacb00f83876094b7abdc386ced9959e5dbdf46ab06aa1d03fbfca13df539421489ef4d2dd0f72742057f3d/usb-modeswitch-2.6.2.tar.bz2"
+      ]
+    },
+    {
+      "name": "usb_modeswitch-data",
+      "version": "20191128",
+      "url": "https://www.draisberghof.de/usb_modeswitch/usb-modeswitch-data-20191128.tar.bz2",
+      "filename": "usb-modeswitch-data-20191128.tar.bz2",
+      "sha512": "4b5954ad83f7281e42321c16f5cc5b956923cc0e2db5f238cc64b3ea37a419768f01f2e26310f2b4fe9a9a5b1d901517933effd6e6edd23bc9b8d0c039ed0ba2",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/usb_modeswitch-data/usb-modeswitch-data-20191128.tar.bz2/sha512/4b5954ad83f7281e42321c16f5cc5b956923cc0e2db5f238cc64b3ea37a419768f01f2e26310f2b4fe9a9a5b1d901517933effd6e6edd23bc9b8d0c039ed0ba2/usb-modeswitch-data-20191128.tar.bz2"
+      ]
+    },
+    {
+      "name": "wget2",
+      "version": "2.3.0",
+      "url": "https://ftp.gnu.org/gnu/wget/wget2-2.3.0.tar.gz",
+      "filename": "wget2-2.3.0.tar.gz",
+      "sha512": "f2521eade2f20c5c9a9c4484f48b16039cd7bb4d8e9d75318181167c196aa60784b8a896a28b26c814f92dbfe46cf3f41b4dd49358c0c58d6f86fdc79449dd30",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/wget2/wget2-2.3.0.tar.gz/sha512/f2521eade2f20c5c9a9c4484f48b16039cd7bb4d8e9d75318181167c196aa60784b8a896a28b26c814f92dbfe46cf3f41b4dd49358c0c58d6f86fdc79449dd30/wget2-2.3.0.tar.gz"
+      ]
+    },
+    {
+      "name": "whois",
+      "version": "5.6.6",
+      "url": "https://ftp.debian.org/debian/pool/main/w/whois/whois_5.6.6.tar.xz",
+      "filename": "whois_5.6.6.tar.xz",
+      "sha512": "4b68f1748f378dfaa966077911fcadfd299d41470f9d785191742e2a77e111bf0151422c732d03ab3bd9a7065e6eb48053ed8ed9dae2affb594c88be3dc5cd78",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/whois/whois_5.6.6.tar.xz/sha512/4b68f1748f378dfaa966077911fcadfd299d41470f9d785191742e2a77e111bf0151422c732d03ab3bd9a7065e6eb48053ed8ed9dae2affb594c88be3dc5cd78/whois_5.6.6.tar.xz"
+      ]
     }
   ]
 }

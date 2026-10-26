@@ -6,9 +6,9 @@
       "total": 38
     },
     "dev-tools": {
-      "already_recipe": 2,
-      "pending": 95,
-      "total": 97
+      "already_recipe": 1,
+      "pending": 85,
+      "total": 86
     },
     "fonts-i18n": {
       "pending": 46,
@@ -670,62 +670,7 @@
     },
     {
       "area": "dev-tools",
-      "name": "symlinks",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "time",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "toolbox",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "tpm2-tools",
-      "state": "already_recipe"
-    },
-    {
-      "area": "dev-tools",
-      "name": "usb_modeswitch",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "usb_modeswitch-data",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
       "name": "usbip",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "wget2",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "wget2-libs",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "wget2-wget",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "whois",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "whois-nls",
       "state": "pending"
     },
     {
@@ -1861,13 +1806,13 @@
   ],
   "issue": "projectbluefin/utah-packages#308",
   "states": {
-    "already_recipe": 32,
+    "already_recipe": 31,
     "manifest_wants": 1,
-    "pending": 328
+    "pending": 318
   },
   "totals": {
-    "backlog": 361,
-    "resolved": 183,
+    "backlog": 350,
+    "resolved": 194,
     "wontfix": 7
   }
 }

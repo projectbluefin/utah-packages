@@ -2848,6 +2848,12 @@ packages:
     downstream_package_name: switcheroo-control
     paths:
       - packages/switcheroo-control
+  symlinks:
+    specfile_path: symlinks.spec
+    upstream_package_name: symlinks
+    downstream_package_name: symlinks
+    paths:
+      - packages/symlinks
   sysstat:
     specfile_path: sysstat.spec
     upstream_package_name: sysstat
@@ -2890,6 +2896,12 @@ packages:
     downstream_package_name: thermald
     paths:
       - packages/thermald
+  time:
+    specfile_path: time.spec
+    upstream_package_name: time
+    downstream_package_name: time
+    paths:
+      - packages/time
   tinyxml2:
     specfile_path: tinyxml2.spec
     upstream_package_name: tinyxml2
@@ -2902,6 +2914,12 @@ packages:
     downstream_package_name: tmux
     paths:
       - packages/tmux
+  toolbox:
+    specfile_path: toolbox.spec
+    upstream_package_name: toolbox
+    downstream_package_name: toolbox
+    paths:
+      - packages/toolbox
   totem:
     specfile_path: totem.spec
     upstream_package_name: totem
@@ -2962,6 +2980,18 @@ packages:
     downstream_package_name: urw-base35-fonts
     paths:
       - packages/urw-base35-fonts
+  usb_modeswitch:
+    specfile_path: usb_modeswitch.spec
+    upstream_package_name: usb_modeswitch
+    downstream_package_name: usb_modeswitch
+    paths:
+      - packages/usb_modeswitch
+  usb_modeswitch-data:
+    specfile_path: usb_modeswitch-data.spec
+    upstream_package_name: usb_modeswitch-data
+    downstream_package_name: usb_modeswitch-data
+    paths:
+      - packages/usb_modeswitch-data
   usbmuxd:
     specfile_path: usbmuxd.spec
     upstream_package_name: usbmuxd
@@ -3076,6 +3106,18 @@ packages:
     downstream_package_name: webrtc-audio-processing
     paths:
       - packages/webrtc-audio-processing
+  wget2:
+    specfile_path: wget2.spec
+    upstream_package_name: wget2
+    downstream_package_name: wget2
+    paths:
+      - packages/wget2
+  whois:
+    specfile_path: whois.spec
+    upstream_package_name: whois
+    downstream_package_name: whois
+    paths:
+      - packages/whois
   wireguard-tools:
     specfile_path: wireguard-tools.spec
     upstream_package_name: wireguard-tools

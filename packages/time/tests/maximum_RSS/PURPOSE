@@ -1,0 +1,3 @@
+PURPOSE of /CoreOS/time/Sanity/maximum_RSS
+Description: check if RSS usage is measured reasonable (in bug, reported value vas 4-times bigger)
+Author: Ondrej Ptak <optak@redhat.com>

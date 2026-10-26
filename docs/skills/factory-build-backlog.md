@@ -133,7 +133,15 @@ with `--disable-pcp`, which only removes `sadf`'s PCP output format. When
 upstream merges libraries into one source (`ding-libs` 0.7.0 folds
 libcollection, libbasicobjects, libpath_utils and libref_array into
 `libini_config` through `Obsoletes:`), the retired binary names still leave the
-backlog with the import.
+backlog with the import. `usb_modeswitch` and `usb_modeswitch-data` declare a
+mutual runtime `Requires:` and both carry `http://www.draisberghof.de/...` in
+`Source0` (served with matching SHA-512 over `https://`), so import and lock
+them together. When an upstream host answers `HTTP 503` (`ibiblio.org` for
+`symlinks`), keep the HTTPS primary `url` and put Fedora's SHA-512 lookaside URL
+in `fallback_urls` instead of growing `config/fedora-primary-sources.txt`.
+`usbip` requires `kernel-modules-extra` and `kmod(usbip-*.ko)` /
+`kmod(vhci-hcd.ko)` at runtime and extracts its archive from the kernel source
+tree (`extract_usbip.sh`), so it remains `pending` on kernel policy (#487).
 
 ## Diagnosing drift
 
@@ -166,7 +174,10 @@ backlog with the import.
   false `already_recipe` hides a gap. A `%bcond` declared inside such a
   branch is likewise not applied: under an untaken branch it is ignored,
   under an undecidable one (`%if 0%{?fedora} %bcond_without X %else
-  %bcond_with X %endif`) the bcond is left unknown, so any `%if %{with X}`
-  it guards is undecidable too.
+  %bcond_with X %endif`, as with `wget2-wget`'s `as_wget`) or when written with
+  curly-brace macro syntax (`%{bcond_without whois_enables_mkpasswd}` in
+  `whois.spec`) the bcond is left unknown, so any `%if %{with X}` it guards is
+  undecidable too and its subpackage must be closed explicitly in `[resolved]`
+  by the batch that owns it.
 
 After a recipe PR lands, regenerate `reports/factory-build-backlog.json`; the inventory-driven gate deliberately rejects a snapshot made before that import. Refresh it together with recipe and Packit inventory changes when preparing concurrent PRs.

@@ -227,18 +227,9 @@ packages = [
     "sssd-kcm",
     "sssd-krb5-common",
     "sssd-nfs-idmap",
-    "symlinks",
-    "time",
-    "toolbox",
-    "tpm2-tools",
-    "usb_modeswitch",
-    "usb_modeswitch-data",
+    # usbip: requires kernel-modules-extra and kmod(usbip-core.ko) /
+    # kmod(usbip-host.ko) / kmod(vhci-hcd.ko) tracked in #487 (kernel policy).
     "usbip",
-    "wget2",
-    "wget2-libs",
-    "wget2-wget",
-    "whois",
-    "whois-nls",
 ]
 
 [areas.fonts-i18n]
@@ -699,6 +690,21 @@ packages = [
     { name = "urw-base35-p052-fonts", pr = 631 },
     { name = "urw-base35-standard-symbols-ps-fonts", pr = 631 },
     { name = "urw-base35-z003-fonts", pr = 631 },
+    # Dev-tools symlinks through whois-nls (projectbluefin/utah-packages#491, utah#392).
+    # tpm2-tools landed in PR #364 (a09ec58) before the backlog catalog; wget2-libs
+    # and wget2-wget are %package subpackages of wget2.spec; whois-nls is a %package
+    # subpackage of whois.spec.
+    { name = "tpm2-tools", commit = "a09ec58", pr = 364 },
+    { name = "symlinks", pr = 655 },
+    { name = "time", pr = 655 },
+    { name = "toolbox", pr = 655 },
+    { name = "usb_modeswitch", pr = 655 },
+    { name = "usb_modeswitch-data", pr = 655 },
+    { name = "wget2", pr = 655 },
+    { name = "wget2-libs", pr = 655 },
+    { name = "wget2-wget", pr = 655 },
+    { name = "whois", pr = 655 },
+    { name = "whois-nls", pr = 655 },
 ]
 
 [wontfix]

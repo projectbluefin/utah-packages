@@ -1,0 +1,8 @@
+{
+  "package": "wget2",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/wget2.git",
+  "commit": "caadc402d05af870eb2ab68dc4d9e9ceb22f220f",
+  "tree": "f8f3fce8471abb0881de6dc89b03fb60b5a1de49",
+  "imported_at": "2026-10-26T06:07:21.951777+00:00"
+}
