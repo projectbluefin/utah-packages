@@ -5376,6 +5376,13 @@
       "url": "https://ftp.gnu.org/gnu/parallel/parallel-20260922.tar.bz2",
       "filename": "parallel-20260922.tar.bz2",
       "sha512": "ae7bcead31b3a068900c851fc48c0239cd39d7a8310ac7cbd885ab41bee4ff6e5786bcbfeafb31bb6f445ba4142a151a464f8f9fcfbd889909e503ef18b5ee56"
+    },
+    {
+      "name": "uchardet",
+      "version": "0.0.8",
+      "url": "https://www.freedesktop.org/software/uchardet/releases/uchardet-0.0.8.tar.xz",
+      "filename": "uchardet-0.0.8.tar.xz",
+      "sha512": "4a5dcc9ff021352f3b252e103ff1475cec62c974294b264ee9243f024633c3ae44be8c7733608624066113e635f8b156ecb08c8ff87c736d04b07641eb166382"
     }
   ]
 }

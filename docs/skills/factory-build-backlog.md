@@ -441,6 +441,16 @@ verify the signature download against its own `sources` digest as well as
 checking the main archive. Recipe-level closing records do not establish
 publication, runtime dependency resolution, or a working WebDAV mount.
 
+### Encoding detection library imports
+
+`uchardet` is both the source recipe and the runtime binary name; the same
+recipe also builds `uchardet-devel`. Keep its CTest `%check` and the imported
+CMake policy compatibility setting when registering the source. For runtime
+acceptance, exercise the installed detector with known non-ASCII input (for
+example UTF-8 text) and record its reported encoding alongside the permitted
+repository transaction. Matching an upstream archive checksum proves source
+identity, not that the installed detector works.
+
 ## Diagnosing drift
 
 - `--check` compares the whole live report with the committed snapshot —

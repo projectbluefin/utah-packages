@@ -1,0 +1,8 @@
+{
+  "package": "uchardet",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/uchardet.git",
+  "commit": "baadb8d3e45f3f09a047a068842ad639c621c340",
+  "tree": "34de909b57094d92bccb5aa8456a89c59c5e5433",
+  "imported_at": "2026-10-27T13:50:47.776007+00:00"
+}

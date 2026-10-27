@@ -22,8 +22,8 @@
     "long-tail": {
       "already_recipe": 4,
       "manifest_wants": 1,
-      "pending": 100,
-      "total": 105
+      "pending": 99,
+      "total": 104
     },
     "power": {
       "total": 0
@@ -1272,11 +1272,6 @@
     },
     {
       "area": "long-tail",
-      "name": "uchardet",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
       "name": "udftools",
       "state": "pending"
     },
@@ -1390,11 +1385,11 @@
   "states": {
     "already_recipe": 19,
     "manifest_wants": 1,
-    "pending": 247
+    "pending": 246
   },
   "totals": {
-    "backlog": 267,
-    "resolved": 250,
+    "backlog": 266,
+    "resolved": 251,
     "wontfix": 34
   }
 }

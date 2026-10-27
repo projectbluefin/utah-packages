@@ -3238,6 +3238,12 @@ packages:
     downstream_package_name: twolame
     paths:
       - packages/twolame
+  uchardet:
+    specfile_path: uchardet.spec
+    upstream_package_name: uchardet
+    downstream_package_name: uchardet
+    paths:
+      - packages/uchardet
   udisks2:
     specfile_path: udisks2.spec
     upstream_package_name: udisks2
