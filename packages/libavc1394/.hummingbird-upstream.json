@@ -1,0 +1,8 @@
+{
+  "package": "libavc1394",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libavc1394.git",
+  "commit": "6ce4ef9abc918f8a590ca08059fcc00f50967f01",
+  "tree": "3431ca0a289d9b99bfd8f9cdf389a04455b685f2",
+  "imported_at": "2026-10-27T04:19:55.278931+00:00"
+}

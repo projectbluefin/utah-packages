@@ -1,0 +1,8 @@
+{
+  "package": "neon",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/neon.git",
+  "commit": "a7075c64dc8139ce6747017d1380c4bcf904390c",
+  "tree": "6391ce2fe16557c01f02bd6232f3e34bd8bce00d",
+  "imported_at": "2026-10-27T06:02:46.477309+00:00"
+}

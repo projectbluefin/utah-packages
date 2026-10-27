@@ -1,0 +1,8 @@
+{
+  "package": "python-pexpect",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/python-pexpect.git",
+  "commit": "4c48204f6d88e9ecfad17a3fbadf9586c0c5e515",
+  "tree": "f1ff796dd4ac9a1285622aa0ae721b262475ffc2",
+  "imported_at": "2026-10-27T04:24:07.553328+00:00"
+}

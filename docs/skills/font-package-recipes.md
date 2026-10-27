@@ -15,6 +15,24 @@ Font packages in Fedora have specific packaging conventions driven by
 `fonts-rpm-macros`. This guide captures subtleties encountered when resolving
 dependencies and importing font recipes into `utah-packages`.
 
+## Reconcile consumer decisions before importing
+
+[Utah's font decision](https://github.com/projectbluefin/utah/issues/393#issuecomment-5920428811)
+rejects bulk font parity with Bluefin classic. A font's presence in the
+original audit is not approval to import it: record the rejected parity
+request in `[wontfix]` with that decision link, preserving the audit name,
+and regenerate `reports/factory-build-backlog.json`. A deliberate individual
+font addition needs its own proposal. This does not remove existing recipes
+or claim their binaries are published.
+
+Do not extend that font decision to character mappings or input-method data.
+In particular, `adobe-mappings-*`, `anthy-unicode`, and
+`cldr-emoji-annotation*` remain separate functionality work; the maintainer
+explicitly distinguishes input methods from fonts. Likewise, an existing
+variable-font recipe is not proof that an older, differently named binary
+is provided. Check its actual provides and published metadata rather than
+closing a name based on a similar recipe directory.
+
 ## Source package names vs. provided binary subpackages
 
 When satisfying a runtime or metapackage font requirement (e.g., from
@@ -80,6 +98,14 @@ lookaside source lock for that archive first.
 Check virtual provides before importing dependencies: Hummingbird's
 `fonts-filesystem` provides `fontpackages-filesystem`, and `fonts-rpm-macros`
 provides `fontpackages-devel`; the old `fontpackages` dist-git is retired.
+
+A font's publishing run is often not the run that built it: an image built from
+cached RPMs lists the package build jobs as skipped. Record the build job (it may
+sit in an aggregate run that failed on other packages) and the publishing run
+separately, with the image digest. Without `dnf`, a static check that every
+`Requires` of each output is provided by the factory layer or a dated Hummingbird
+`primary.xml` is dependency-closure evidence only. It is not a solver
+transaction (see `repo-inspection`) and does not prove font rendering.
 
 ## Refreshing the inventory
 

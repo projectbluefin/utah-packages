@@ -29,6 +29,10 @@ libjwt
 microcode_ctl
 plymouth
 ppp
+# borgbackup 1.4.5 requires msgpack <= 1.2.1 (pyproject.toml); a newer
+# python-msgpack breaks its python3dist(msgpack) Requires at install. Move it
+# by hand with borgbackup.
+python-msgpack
 switcheroo-control
 tpm2-tools
 usbmuxd

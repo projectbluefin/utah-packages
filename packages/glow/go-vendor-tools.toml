@@ -1,0 +1,24 @@
+[archive]
+
+[archive.dependency_overrides]
+# https://github.com/mattn/go-localereader/pull/1
+"github.com/mattn/go-localereader" = "2491eb6c1c75720122ef321ed7acc3a8d9de95b1"
+# https://github.com/alecthomas/chroma/pull/1233
+"github.com/alecthomas/chroma/v2" = "fc18a483e6c89d611edccd82090faa05abbd49eb"
+# CVE-2026-5160
+"github.com/yuin/goldmark" = "v1.7.17"
+# CVE-2026-25681
+"golang.org/x/net" = "v0.55.0"
+
+[licensing]
+detector = "askalono"
+
+[[licensing.licenses]]
+path = "vendor/github.com/alecthomas/chroma/v2/COPYING"
+sha256sum = "13654b052f885cb3fa47d7343e13975d9c8a64c3bcd84993c35d5eb01f22b23f"
+expression = "MIT AND OFL-1.1"
+
+[[licensing.licenses]]
+path = "vendor/go.yaml.in/yaml/v3/LICENSE"
+sha256sum = "d18f6323b71b0b768bb5e9616e36da390fbd39369a81807cca352de4e4e6aa0b"
+expression = "Apache-2.0 AND MIT"

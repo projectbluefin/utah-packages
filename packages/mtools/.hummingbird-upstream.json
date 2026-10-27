@@ -1,0 +1,8 @@
+{
+  "package": "mtools",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/mtools.git",
+  "commit": "d2aadd21e09f2876d9fef85e333c3687c53ad1de",
+  "tree": "ed39df4d1f5b9e44bb89b6337d67775c7b5f3993",
+  "imported_at": "2026-10-26T07:33:27.396425+00:00"
+}

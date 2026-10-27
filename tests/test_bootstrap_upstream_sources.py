@@ -307,7 +307,7 @@ class MainTests(unittest.TestCase):
         self.fetched.append(url)
         return self.downloads[url]
 
-    def run_main(self, *argv: str) -> tuple[int, dict, dict]:
+    def run_main(self, *argv: str) -> tuple[int, dict | None, dict]:
         module = "tools.bootstrap_upstream_sources"
         with patch(f"{module}.rpm_value", side_effect=self._rpm_value), \
                 patch(f"{module}.sources", side_effect=self._sources), \
@@ -315,7 +315,8 @@ class MainTests(unittest.TestCase):
                 patch("sys.argv", ["bootstrap_upstream_sources.py", "--root", str(self.root), *argv]), \
                 patch("sys.stdout", new_callable=io.StringIO):
             code = main()
-        output = json.loads((self.root / "config/upstream-sources.json").read_text())
+        output_path = self.root / "config/upstream-sources.json"
+        output = json.loads(output_path.read_text()) if output_path.exists() else None
         report = json.loads((self.root / "reports/direct-source-bootstrap.json").read_text())
         return code, output, report
 
@@ -401,7 +402,7 @@ class MainTests(unittest.TestCase):
         package = self.recipe("pkg", [(0, url)])
         (package / "sources").write_text(f"SHA512 (pkg-1.0.tar.xz) = {pinned}\n")
         _, output, report = self.run_main("--package", "pkg")
-        self.assertEqual(output["packages"], [])
+        self.assertIsNone(output)
         self.assertEqual(self.reasons(report)["pkg"],
                          f"upstream bytes for pkg-1.0.tar.xz do not match the pinned manifest: "
                          f"expected {pinned}, got {served}")
@@ -454,8 +455,77 @@ class MainTests(unittest.TestCase):
                 patch(f"{module}.generated_candidate", return_value={"name": "gen"}), \
                 patch(f"{module}.prove_generated", side_effect=ValueError("non-deterministic generation")):
             _, output, report = self.run_main("--package", "gen")
-        self.assertEqual(output["packages"], [])
+        self.assertIsNone(output)
         self.assertEqual(self.reasons(report), {"gen": "non-deterministic generation"})
+
+    def test_rejected_explicit_selection_preserves_existing_lock_bytes(self) -> None:
+        self.recipe("manual", [(0, "manual-1.0.tar.gz")])
+        output_path = self.root / "config/upstream-sources.json"
+        output_path.parent.mkdir()
+        original = '{ "schema": 1, "note": "kept", "packages": [{"name": "old", "stage": 3}] }\n'
+        for flags in ((), ("--merge",)):
+            with self.subTest(flags=flags):
+                output_path.write_text(original)
+                code, output, report = self.run_main("--package", "manual", *flags)
+                self.assertEqual(code, 1)
+                self.assertEqual(output_path.read_text(), original)
+                self.assertEqual(output, json.loads(original))
+                self.assertEqual(report["accepted"], 0)
+                self.assertEqual(self.reasons(report), {"manual": "Source0 is not a direct HTTP(S) URL"})
+        self.assertEqual(self.fetched, [])
+
+    def test_rejected_explicit_selection_does_not_create_a_lock(self) -> None:
+        self.recipe("manual", [(0, "manual-1.0.tar.gz")])
+        output_path = self.root / "config/upstream-sources.json"
+        for flags in ((), ("--merge",)):
+            with self.subTest(flags=flags):
+                code, output, report = self.run_main("--package", "manual", *flags)
+                self.assertEqual(code, 1)
+                self.assertIsNone(output)
+                self.assertFalse(output_path.exists())
+                self.assertEqual(self.reasons(report), {"manual": "Source0 is not a direct HTTP(S) URL"})
+
+    def test_explicit_recipe_without_a_spec_preserves_the_lock(self) -> None:
+        self.recipe("empty", specs=0)
+        output_path = self.root / "config/upstream-sources.json"
+        output_path.parent.mkdir()
+        original = '{"schema": 1, "packages": [{"name": "old"}]}\n'
+        output_path.write_text(original)
+        code, _, report = self.run_main("--package", "empty")
+        self.assertEqual(code, 1)
+        self.assertEqual(output_path.read_text(), original)
+        self.assertEqual(self.reasons(report), {"empty": "expected one spec, found 0"})
+
+    def test_report_cannot_overwrite_the_source_lock(self) -> None:
+        output_path = self.root / "config/upstream-sources.json"
+        output_path.parent.mkdir()
+        (self.root / "reports").mkdir()
+        original = '{"schema": 1, "packages": [{"name": "old"}]}\n'
+        for alias in ("same", "relative", "symlink", "hardlink"):
+            with self.subTest(alias=alias):
+                output_path.write_text(original)
+                if alias == "same":
+                    report_arg = str(output_path)
+                elif alias == "relative":
+                    report_arg = "reports/../config/upstream-sources.json"
+                else:
+                    report_path = self.root / "reports" / f"{alias}.json"
+                    if alias == "symlink":
+                        report_path.symlink_to(output_path)
+                    else:
+                        report_path.hardlink_to(output_path)
+                    report_arg = str(report_path)
+                with patch("sys.argv", ["bootstrap_upstream_sources.py", "--root", str(self.root),
+                                        "--package", "manual", "--report", report_arg]), \
+                        patch("sys.stderr", new_callable=io.StringIO) as error, \
+                        patch("sys.stdout", new_callable=io.StringIO), \
+                        patch("tools.bootstrap_upstream_sources.plan_targets", return_value=[]) as plan:
+                    with self.assertRaises(SystemExit) as raised:
+                        main()
+                self.assertEqual(raised.exception.code, 2)
+                self.assertIn("--output and --report must name different files", error.getvalue())
+                self.assertEqual(output_path.read_text(), original)
+                plan.assert_not_called()
 
     def write_resolution(self, mapping: dict[str, str]) -> None:
         path = self.root / "reports/bluefin-rawhide-resolution.json"

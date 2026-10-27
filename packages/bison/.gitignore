@@ -1,0 +1,6 @@
+# Release tarballs.
+/bison-*.tar.[bgx]z*
+# Generated (source) RPMs.
+/*.rpm
+# Expanded source trees.
+/bison-*/

@@ -1,0 +1,8 @@
+{
+  "package": "liblouisutdml",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/liblouisutdml.git",
+  "commit": "d9c699d20dd4a26f3526f77c49eb51c53d0fc29b",
+  "tree": "24dfd9f85dbdb9473f00cd84594006c79931f38b",
+  "imported_at": "2026-10-25T16:19:00.207861+00:00"
+}

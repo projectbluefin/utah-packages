@@ -127,6 +127,9 @@ rm -rf $RPM_BUILD_ROOT%{_userunitdir}/gcr-ssh-agent.socket
 %{_libdir}/libgcr-base-3.so.1*
 
 %changelog
+* Thu Oct 22 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 3.41.2-1
+- Update to 3.41.2
+
 * Wed Jul 15 2026 Fedora Release Engineering <releng@fedoraproject.org> - 3.41.1-13
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_45_Mass_Rebuild
 

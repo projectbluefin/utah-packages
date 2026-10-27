@@ -5,6 +5,9 @@ The canary runs rebuild-rpms.yml itself over a fixed handful of packages. The
 workflow is plumbing; what it concludes lives here, where it is under test:
 
     canary.py touches-pipeline < changed-paths   exit 0 when the canary must run
+    canary.py pr-relevant --repository R --pr N --set JSON
+                                                 the same, judged on a pull request's
+                                                 files and the lock entries they change
     canary.py salt                               the cache namespace for pass1
     canary.py verify-image REF@DIGEST --utah-reader PATH --expect JSON
     canary.py verify-cache JOBS.json --set JSON --perturbed NAME
@@ -63,6 +66,122 @@ BUILD_JOB = re.compile(r"^(?P<pass>pass\d+) / rebuild\d+ .*/ build \((?P<package
 
 def touches_pipeline(paths: list[str]) -> bool:
     return any(path.startswith(PIPELINE_PATHS) for path in paths if path)
+
+
+# Recipe inventory, not pipeline. The canary reads only the canary set's own
+# entries in these files, so a pull request that adds recipes and new entries
+# changes nothing it can prove anything about. They stay under config/ for the
+# tools that read them; PIPELINE_PATHS only counts a change to them when it
+# could reach the canary set (pipeline_relevant).
+SOURCES_LOCK = "config/upstream-sources.json"
+DATA_FILES = frozenset({
+    SOURCES_LOCK,
+    "config/factory-build-backlog.toml",
+    "config/fedora-primary-sources.txt",
+})
+# pass3 perturbs this recipe and reads its lock entry; it is not in CANARY_SET.
+PERTURBED = ("python-typing-inspection",)
+
+
+def sources_touch_existing(base: object, head: object) -> bool:
+    """Whether head changes anything base already had in the lock.
+
+    Adding entries is the import case and cannot affect packages that were
+    already locked. Any modified or removed entry, any change outside the
+    package list, or anything unparseable counts as touching.
+    """
+    try:
+        base_rows, head_rows = base["packages"], head["packages"]  # type: ignore[index]
+        before = {row["name"]: row for row in base_rows}
+        after = {row["name"]: row for row in head_rows}
+        other_before = {key: value for key, value in base.items() if key != "packages"}  # type: ignore[union-attr]
+        other_after = {key: value for key, value in head.items() if key != "packages"}  # type: ignore[union-attr]
+    except (KeyError, TypeError, AttributeError):
+        return True
+    if len(before) != len(base_rows) or len(after) != len(head_rows):
+        return True
+    if other_before != other_after:
+        return True
+    return any(name not in after or after[name] != row for name, row in before.items())
+
+
+def patch_mentions(patch: str, names: Sequence[str]) -> bool:
+    """Whether a changed line of a unified diff names one of these packages."""
+    changed = [
+        line[1:] for line in patch.splitlines()
+        if line[:1] in "+-" and not line.startswith(("+++", "---"))
+    ]
+    return any(
+        re.search(rf"(?<![\w.+-]){re.escape(name)}(?![\w.+-])", line)
+        for line in changed for name in names
+    )
+
+
+def pipeline_relevant(
+    files: Sequence[dict],
+    canary_set: Sequence[str],
+    base_sources: object = None,
+    head_sources: object = None,
+) -> bool:
+    """Whether a pull request's files can change what the canary proves.
+
+    Everything under PIPELINE_PATHS counts, except the inventory files above:
+    those count only when the change reaches an entry that already existed or
+    names a canary package. A file whose diff GitHub did not return (binary,
+    too large) is judged relevant.
+    """
+    for entry in files:
+        for path in {entry.get("filename"), entry.get("previous_filename")} - {None, ""}:
+            if not path.startswith(PIPELINE_PATHS):
+                continue
+            if path not in DATA_FILES:
+                return True
+            if path == SOURCES_LOCK:
+                if base_sources is None or head_sources is None:
+                    return True
+                if sources_touch_existing(base_sources, head_sources):
+                    return True
+            elif entry.get("patch") is None or patch_mentions(entry["patch"], canary_set):
+                return True
+    return False
+
+
+def _gh(args: Sequence[str]) -> str:
+    return subprocess.run(["gh", *args], capture_output=True, text=True, check=True).stdout
+
+
+def _json_stream(text: str) -> list[dict]:
+    """Every JSON value in text (gh --paginate prints one array per page)."""
+    decoder, index, items = json.JSONDecoder(), 0, []
+    while index < len(text):
+        while index < len(text) and text[index].isspace():
+            index += 1
+        if index >= len(text):
+            break
+        value, index = decoder.raw_decode(text, index)
+        items.extend(value if isinstance(value, list) else [value])
+    return items
+
+
+def pr_relevant(repository: str, pr: int, canary_set: Sequence[str], gh=_gh) -> bool:
+    """pipeline_relevant for a pull request, fetching what the rule needs."""
+    files = _json_stream(gh(["api", "--paginate", f"repos/{repository}/pulls/{pr}/files"]))
+    touches_lock = any(
+        SOURCES_LOCK in (entry.get("filename"), entry.get("previous_filename")) for entry in files
+    )
+    base_sources = head_sources = None
+    if touches_lock:
+        meta = json.loads(gh(["api", f"repos/{repository}/pulls/{pr}"]))
+        head = meta["head"]["sha"]
+        compare = json.loads(gh(["api", f"repos/{repository}/compare/{meta['base']['sha']}...{head}"]))
+        merge_base = compare["merge_base_commit"]["sha"]
+        raw = ["-H", "Accept: application/vnd.github.raw"]
+        try:
+            base_sources = json.loads(gh(["api", *raw, f"repos/{repository}/contents/{SOURCES_LOCK}?ref={merge_base}"]))
+            head_sources = json.loads(gh(["api", *raw, f"repos/{repository}/contents/{SOURCES_LOCK}?ref={head}"]))
+        except (subprocess.CalledProcessError, json.JSONDecodeError):
+            base_sources = head_sources = None
+    return pipeline_relevant(files, [*canary_set, *PERTURBED], base_sources, head_sources)
 
 
 def salt(root: Path = ROOT) -> str:
@@ -399,6 +518,10 @@ def main(argv: list[str] | None = None) -> int:
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser("touches-pipeline")
     commands.add_parser("salt")
+    relevant = commands.add_parser("pr-relevant")
+    relevant.add_argument("--repository", required=True)
+    relevant.add_argument("--pr", required=True, type=int)
+    relevant.add_argument("--set", required=True, help="JSON array of canary package names")
     image = commands.add_parser("verify-image")
     image.add_argument("image")
     image.add_argument("--utah-reader", type=Path, required=True)
@@ -436,6 +559,8 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "touches-pipeline":
         return 0 if touches_pipeline(sys.stdin.read().splitlines()) else 1
+    if args.command == "pr-relevant":
+        return 0 if pr_relevant(args.repository, args.pr, json.loads(args.set)) else 1
     if args.command == "salt":
         print(salt())
         return 0

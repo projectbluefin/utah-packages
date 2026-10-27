@@ -1,0 +1,21 @@
+diff -up tslib-1.22/src/ts_config.c.check-pointer-before-calling-sprintf tslib-1.22/src/ts_config.c
+--- tslib-1.22/src/ts_config.c.check-pointer-before-calling-sprintf	2023-01-11 11:25:58.052907042 -0500
++++ tslib-1.22/src/ts_config.c	2023-01-11 11:26:50.806468613 -0500
+@@ -131,7 +131,7 @@ static int __ts_config(struct tsdev *ts,
+ 					module_name, p);
+ 			#endif
+ 				sprintf(conffile_modules[line], "%s", module_name);
+-				if (conffile_params)
++				if (conffile_params && p)
+ 					sprintf(conffile_params[line], "%s", p);
+ 			}
+ 		} else if (strcasecmp(tok, "module_raw") == 0) {
+@@ -149,7 +149,7 @@ static int __ts_config(struct tsdev *ts,
+ 					module_name, p);
+ 			#endif
+ 				sprintf(conffile_modules[line], "%s", module_name);
+-				if (conffile_params)
++				if (conffile_params && p)
+ 					sprintf(conffile_params[line], "%s", p);
+ 
+ 				if (raw)

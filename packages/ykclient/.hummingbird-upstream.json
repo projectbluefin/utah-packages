@@ -1,0 +1,8 @@
+{
+  "package": "ykclient",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/ykclient.git",
+  "commit": "d1d8bcdd6b86e70c4582ae2e17590d6b84af4ffd",
+  "tree": "b1e1e9182faf9176ccaabacbba88a732fa1b102b",
+  "imported_at": "2026-10-26T05:19:18.214032+00:00"
+}

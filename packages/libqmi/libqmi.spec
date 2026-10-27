@@ -96,6 +96,9 @@ cp -a src/qmicli/qmicli %{buildroot}%{_datadir}/bash-completion/completions/
 
 
 %changelog
+* Sat Oct 03 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 1.38.0-1
+- Update to 1.38.0
+
 * Thu Jul 16 2026 Fedora Release Engineering <releng@fedoraproject.org> - 1.36.0-4
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_45_Mass_Rebuild
 

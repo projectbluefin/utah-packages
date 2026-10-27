@@ -1,0 +1,8 @@
+{
+  "package": "ifuse",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/ifuse.git",
+  "commit": "9834d45a822f20c0e35dfbcad56adaa2943cd188",
+  "tree": "9cd35cd1e1fe300e7b0d0ea39c8d541bef81f578",
+  "imported_at": "2026-10-27T08:40:38.032664+00:00"
+}

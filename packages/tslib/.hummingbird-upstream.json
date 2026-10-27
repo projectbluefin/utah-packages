@@ -1,0 +1,8 @@
+{
+  "package": "tslib",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/tslib.git",
+  "commit": "f0754011463782215317e00bb9ec0d855f673c77",
+  "tree": "c958adbdb6fa3cae21e49032f30ee93ab867ddc9",
+  "imported_at": "2026-10-26T04:42:01.979356+00:00"
+}

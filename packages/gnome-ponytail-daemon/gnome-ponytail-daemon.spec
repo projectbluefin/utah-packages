@@ -73,6 +73,9 @@ Python module for D-BUS interactions with gnome-ponytail-daemon interfaces.
 %{python3_sitelib}/%{libname}/
 
 %changelog
+* Thu Oct 22 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 0.0.12-1
+- Update to 0.0.12
+
 * Thu Jul 16 2026 Fedora Release Engineering <releng@fedoraproject.org> - 0.0.11-11
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_45_Mass_Rebuild
 

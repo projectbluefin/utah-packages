@@ -1,0 +1,8 @@
+{
+  "package": "glslang",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/glslang.git",
+  "commit": "6e48b79ba607a5db21a75a9588e5b641ebc2b57b",
+  "tree": "a493b76fc2cd8cd3951277eda034b223dd4791e0",
+  "imported_at": "2026-10-27T08:50:32.877900+00:00"
+}

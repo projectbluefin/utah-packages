@@ -1,0 +1,8 @@
+{
+  "package": "python-six",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/python-six.git",
+  "commit": "329ba9af15f120a55f3f2cb78546378d02119bd4",
+  "tree": "8f818ec2abbd56f3528ca5689a8c243a32c51b51",
+  "imported_at": "2026-10-25T15:56:03.662778+00:00"
+}
