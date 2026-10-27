@@ -376,7 +376,7 @@ packages = [
 # Each entry: package name and the commit that closed the gap.
 packages = [
     # Recipe import only; build, publication and runtime proof remain on #508.
-    { name = "uchardet", commit = "", pr = 0 },
+    { name = "uchardet", pr = 729 },
     # Published boot-screen outputs; recipe #312, source lock #320; runtime proof stays on #505.
     { name = "plymouth", commit = "9565b33477aa10c8af48774fff2598f028a3241a", pr = 320, published_run = 40416793064, published_nevra = "plymouth-0:26.134.222-1.hum1.bfin.x86_64" },
     { name = "plymouth-core-libs", commit = "9565b33477aa10c8af48774fff2598f028a3241a", pr = 320, published_run = 40416793064, published_nevra = "plymouth-core-libs-0:26.134.222-1.hum1.bfin.x86_64" },

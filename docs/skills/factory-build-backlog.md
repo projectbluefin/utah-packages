@@ -80,6 +80,9 @@ Two edits — never one, never none:
     cross-referencing.
     Once the import PR has a number, populate `pr` before requesting review;
     `--check` validates names and report drift, not this provenance field.
+    For a recipe-only record, use `{ name = "<n>", pr = <n> }` and omit
+    `commit` until a stable commit is known; do not retain an empty `commit`
+    or `pr = 0` placeholder after opening the PR.
   - `[wontfix].packages` (`{ name = "<n>", reason = "..." }`) — Utah decided
     not to carry it, with a link to the decision issue. `reason` is also
     informational and not validated. Catalog comments should describe the
