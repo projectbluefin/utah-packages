@@ -99,6 +99,14 @@ Check virtual provides before importing dependencies: Hummingbird's
 `fonts-filesystem` provides `fontpackages-filesystem`, and `fonts-rpm-macros`
 provides `fontpackages-devel`; the old `fontpackages` dist-git is retired.
 
+A font's publishing run is often not the run that built it: an image built from
+cached RPMs lists the package build jobs as skipped. Record the build job (it may
+sit in an aggregate run that failed on other packages) and the publishing run
+separately, with the image digest. Without `dnf`, a static check that every
+`Requires` of each output is provided by the factory layer or a dated Hummingbird
+`primary.xml` is dependency-closure evidence only. It is not a solver
+transaction (see `repo-inspection`) and does not prove font rendering.
+
 ## Refreshing the inventory
 
 After importing a font source, regenerate `.packit.yaml` with

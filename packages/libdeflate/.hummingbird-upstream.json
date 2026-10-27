@@ -1,0 +1,8 @@
+{
+  "package": "libdeflate",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libdeflate.git",
+  "commit": "bdc4138c4313bfbd18dc1c63cc1cd6c6bc162449",
+  "tree": "78a6d334f531e3ad433d96312bb63fdf9c9134e0",
+  "imported_at": "2026-10-27T05:56:16.999912+00:00"
+}

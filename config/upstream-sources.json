@@ -2,6 +2,13 @@
   "schema": 1,
   "packages": [
     {
+      "name": "chromaprint",
+      "version": "1.6.2",
+      "url": "https://github.com/acoustid/chromaprint/releases/download/v1.6.2/chromaprint-1.6.2.tar.gz",
+      "filename": "chromaprint-1.6.2.tar.gz",
+      "sha512": "73d9612abe689f290b333e89506449bfc3c9b1f2c2c5a9302bef01b87d14ac37f612c9979f07e7c409b3e9fd7a89f384caaf5892c0b27b700fee015de7a704a4"
+    },
+    {
       "name": "sshpass",
       "version": "1.09",
       "url": "https://downloads.sourceforge.net/sshpass/sshpass-1.09.tar.gz",
@@ -4960,6 +4967,20 @@
       "sha512": "fcfa58b03877ac3ac00a4f85b5fea4fecb2a010244451aa95013637a0aa21529f3dcfe25c0a07c72da46da1fa12bc0c16b6c641c40c6ab2133e5b5cbb5a71e4b"
     },
     {
+      "name": "python-ptyprocess",
+      "version": "0.7.0",
+      "url": "https://files.pythonhosted.org/packages/source/p/ptyprocess/ptyprocess-0.7.0.tar.gz",
+      "filename": "ptyprocess-0.7.0.tar.gz",
+      "sha512": "791d8f2e79900627215ce80ce67ee9c79173dbc08297c6219d5058f9b80c5e323b93049e6836a70c4073f43548d22e3cf310f2e9948ef12f96bcaa15b0ddb2f3"
+    },
+    {
+      "name": "python-pexpect",
+      "version": "4.9.0",
+      "url": "https://github.com/pexpect/pexpect/archive/refs/tags/4.9.tar.gz",
+      "filename": "4.9.tar.gz",
+      "sha512": "222aa3a2aba174f1f9c9e5bbf71aa59fbc1c1830fce6691ecb01ec4f0613b1f2141da489a6bd7bfd226f46d98d52a16e1f5a5b7345bcf6557110bfd52cd5f31e"
+    },
+    {
       "name": "python-dateutil",
       "version": "2.9.0.post0",
       "url": "https://files.pythonhosted.org/packages/source/p/python-dateutil/python-dateutil-2.9.0.post0.tar.gz",
@@ -5022,7 +5043,8 @@
       "version": "2.12.0",
       "url": "https://github.com/liblouis/liblouisutdml/releases/download/v2.12.0/liblouisutdml-2.12.0.tar.gz",
       "filename": "liblouisutdml-2.12.0.tar.gz",
-      "sha512": "f4ec1b8c3e8dbb5012f63bf85bd7ba47897c60896f3329daa7a89709002c0fdfb178034ad11024c9cee447afe556542401ed4e97be991b822c46fdbfbcc8ad32"
+      "sha512": "f4ec1b8c3e8dbb5012f63bf85bd7ba47897c60896f3329daa7a89709002c0fdfb178034ad11024c9cee447afe556542401ed4e97be991b822c46fdbfbcc8ad32",
+      "buildroot_icu77": true
     },
     {
       "name": "bison",
@@ -5181,13 +5203,40 @@
       ]
     },
     {
+      "name": "libdeflate",
+      "version": "1.26",
+      "url": "https://github.com/ebiggers/libdeflate/archive/v1.26/libdeflate-1.26.tar.gz",
+      "filename": "libdeflate-1.26.tar.gz",
+      "sha512": "06605eabce8635b82e03863c87b515696d08b8a1fc36b746b44b660989613d2ebd6ca1bb13dd0f88244846894dbf5a15169dd443c34dcda64e960fdbd08a8d3b"
+    },
+    {
+      "name": "iptstate",
+      "version": "2.3.0",
+      "url": "https://github.com/jaymzh/iptstate/archive/refs/tags/v2.3.0.tar.gz",
+      "filename": "v2.3.0.tar.gz",
+      "sha512": "355f48f45965ed7bf79a59249c20505c96ec51a06711cf9df02b5a32dcf4bfd5e90d2aa97c08ee9b19ae738583b4d16094050a469bece295910926253eb6acc7",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/iptstate/v2.3.0.tar.gz/sha512/355f48f45965ed7bf79a59249c20505c96ec51a06711cf9df02b5a32dcf4bfd5e90d2aa97c08ee9b19ae738583b4d16094050a469bece295910926253eb6acc7/v2.3.0.tar.gz"
+      ]
+    },
+    {
+      "name": "nilfs-utils",
+      "version": "2.2.11",
+      "url": "https://nilfs.sourceforge.io/download/nilfs-utils-2.2.11.tar.bz2",
+      "filename": "nilfs-utils-2.2.11.tar.bz2",
+      "sha512": "8c238f961f429c12674695d2481202c8fac4582d04e838ce7244647b8a9997e38b4dafa280314acb57ae40137711c7678de6aaf65708c110028df97c1c76089e",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/nilfs-utils/nilfs-utils-2.2.11.tar.bz2/sha512/8c238f961f429c12674695d2481202c8fac4582d04e838ce7244647b8a9997e38b4dafa280314acb57ae40137711c7678de6aaf65708c110028df97c1c76089e/nilfs-utils-2.2.11.tar.bz2"
+      ]
+    },
+    {
       "name": "ifuse",
       "version": "1.2.1",
       "url": "https://github.com/libimobiledevice/ifuse/releases/download/1.2.1/ifuse-1.2.1.tar.bz2",
       "filename": "ifuse-1.2.1.tar.bz2",
-      "sha512": "92e829b902839e4457f9272753a5bbecef387d87c6523d067a1b90a2446c9ae64cf42ac7293c589c6c3fb041147928693ab99d21ab63ff4ab611fa80b778fd83",
+      "sha512": "2817882207b99d454045f8f91dbf0466be979b0bf31c9e83161c9e6caec74bf702a00c6d9bf3c990cc1b7738f71295fcbb5785f886f4a86162fffa56db8ff39e",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/ifuse/ifuse-1.2.1.tar.bz2/sha512/92e829b902839e4457f9272753a5bbecef387d87c6523d067a1b90a2446c9ae64cf42ac7293c589c6c3fb041147928693ab99d21ab63ff4ab611fa80b778fd83/ifuse-1.2.1.tar.bz2"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/ifuse/ifuse-1.2.1.tar.bz2/sha512/2817882207b99d454045f8f91dbf0466be979b0bf31c9e83161c9e6caec74bf702a00c6d9bf3c990cc1b7738f71295fcbb5785f886f4a86162fffa56db8ff39e/ifuse-1.2.1.tar.bz2"
       ]
     }
   ]

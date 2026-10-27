@@ -196,6 +196,12 @@ packages:
     downstream_package_name: cdparanoia
     paths:
       - packages/cdparanoia
+  chromaprint:
+    specfile_path: chromaprint.spec
+    upstream_package_name: chromaprint
+    downstream_package_name: chromaprint
+    paths:
+      - packages/chromaprint
   cifs-utils:
     specfile_path: cifs-utils.spec
     upstream_package_name: cifs-utils
@@ -1150,6 +1156,12 @@ packages:
     downstream_package_name: ipp-usb
     paths:
       - packages/ipp-usb
+  iptstate:
+    specfile_path: iptstate.spec
+    upstream_package_name: iptstate
+    downstream_package_name: iptstate
+    paths:
+      - packages/iptstate
   iputils:
     specfile_path: iputils.spec
     upstream_package_name: iputils
@@ -1474,6 +1486,12 @@ packages:
     downstream_package_name: libdecor
     paths:
       - packages/libdecor
+  libdeflate:
+    specfile_path: libdeflate.spec
+    upstream_package_name: libdeflate
+    downstream_package_name: libdeflate
+    paths:
+      - packages/libdeflate
   libdisplay-info:
     specfile_path: libdisplay-info.spec
     upstream_package_name: libdisplay-info
@@ -2326,6 +2344,12 @@ packages:
     downstream_package_name: nfs-utils
     paths:
       - packages/nfs-utils
+  nilfs-utils:
+    specfile_path: nilfs-utils.spec
+    upstream_package_name: nilfs-utils
+    downstream_package_name: nilfs-utils
+    paths:
+      - packages/nilfs-utils
   noopenh264:
     specfile_path: noopenh264.spec
     upstream_package_name: noopenh264
@@ -2710,6 +2734,12 @@ packages:
     downstream_package_name: python-pam
     paths:
       - packages/python-pam
+  python-pexpect:
+    specfile_path: python-pexpect.spec
+    upstream_package_name: python-pexpect
+    downstream_package_name: python-pexpect
+    paths:
+      - packages/python-pexpect
   python-pillow:
     specfile_path: python-pillow.spec
     upstream_package_name: python-pillow
@@ -2722,6 +2752,12 @@ packages:
     downstream_package_name: python-psutil
     paths:
       - packages/python-psutil
+  python-ptyprocess:
+    specfile_path: python-ptyprocess.spec
+    upstream_package_name: python-ptyprocess
+    downstream_package_name: python-ptyprocess
+    paths:
+      - packages/python-ptyprocess
   python-pydantic:
     specfile_path: python-pydantic.spec
     upstream_package_name: python-pydantic

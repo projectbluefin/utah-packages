@@ -7,8 +7,8 @@
     },
     "dev-tools": {
       "already_recipe": 1,
-      "pending": 88,
-      "total": 89
+      "pending": 84,
+      "total": 85
     },
     "fonts-i18n": {
       "pending": 24,
@@ -20,10 +20,10 @@
       "total": 10
     },
     "long-tail": {
-      "already_recipe": 12,
+      "already_recipe": 10,
       "manifest_wants": 1,
-      "pending": 113,
-      "total": 126
+      "pending": 111,
+      "total": 122
     },
     "power": {
       "total": 0
@@ -327,11 +327,6 @@
     },
     {
       "area": "dev-tools",
-      "name": "libchromaprint",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
       "name": "libsss_autofs",
       "state": "pending"
     },
@@ -358,11 +353,6 @@
     {
       "area": "dev-tools",
       "name": "lsb_release",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "nilfs-utils",
       "state": "pending"
     },
     {
@@ -488,16 +478,6 @@
     {
       "area": "dev-tools",
       "name": "python3-more-itertools",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "python3-pexpect",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "python3-ptyprocess",
       "state": "pending"
     },
     {
@@ -977,11 +957,6 @@
     },
     {
       "area": "long-tail",
-      "name": "iptstate",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
       "name": "jbig2dec-libs",
       "state": "pending"
     },
@@ -1018,11 +993,6 @@
     {
       "area": "long-tail",
       "name": "kyotocabinet-libs",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
-      "name": "libdeflate",
       "state": "pending"
     },
     {
@@ -1327,11 +1297,6 @@
     },
     {
       "area": "long-tail",
-      "name": "simdutf",
-      "state": "already_recipe"
-    },
-    {
-      "area": "long-tail",
       "name": "slang",
       "state": "pending"
     },
@@ -1379,11 +1344,6 @@
       "area": "long-tail",
       "name": "tesseract-tessdata-doc",
       "state": "pending"
-    },
-    {
-      "area": "long-tail",
-      "name": "tslib",
-      "state": "already_recipe"
     },
     {
       "area": "long-tail",
@@ -1543,13 +1503,13 @@
   ],
   "issue": "projectbluefin/utah-packages#308",
   "states": {
-    "already_recipe": 27,
+    "already_recipe": 25,
     "manifest_wants": 1,
-    "pending": 270
+    "pending": 264
   },
   "totals": {
-    "backlog": 298,
-    "resolved": 223,
+    "backlog": 290,
+    "resolved": 231,
     "wontfix": 30
   }
 }
