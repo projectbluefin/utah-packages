@@ -96,8 +96,8 @@ outputs and missing evidence explicitly.
 A 404 on a guessed dist-git name is not evidence that a source was removed
 from Fedora. Resolve the binary's actual source package first (the
 `sourcerpm` of the binary in Fedora's repodata): `python3-pyaudio` comes from
-`pyaudio` and `python3-pskc` from `python-pskc`, and #506 once recorded both
-as "removed from dist-git" because `python-pyaudio` and `PyAudio` 404.
+`pyaudio` and `python3-pskc` from `python-pskc`; #506 once recorded these as
+"removed from dist-git" because `PyAudio` and `python-libpskc` 404.
 
 Before importing an audit name, read Utah's current `baselines/triage.toml` and
 pin the decision's commit when reconciling an existing `waived` entry into
@@ -679,3 +679,20 @@ Fedora pins it by MD5, so confirm the `https://www.ohse.de/` bytes match that
 pin, repin `sources` to SHA-512, and use the `/md5/<md5>/` lookaside path as
 the fallback. `liburing` locks only `Source0`; like `dnsmasq`, its `.asc`
 signature is fetched from Fedora's lookaside by its `sources` SHA-512.
+
+### GNOME apps batch #484: terminal outputs and publication reconciliation
+
+The terminal and terminal-widget outputs (`ptyxis`, `vte291`, `vte-profile`,
+`vte291-gtk4`) were imported in #413 (`ptyxis.spec` and `vte291.spec`), with
+`vte-profile` and `vte291-gtk4` produced as subpackages of `vte291`. When
+reconciling batch outputs against published image repodata, verify their NEVRAs
+in `ghcr.io/projectbluefin/utah-packages:latest` and move them from
+`[areas.gnome-apps]` to `[resolved]` citing import PR #413 and merge commit
+`ded82d6174382a397a2d7ddc066daeabe2e31232`.
+
+Previously resolved GNOME outputs (`gtkmm4.0`, `pangomm2.48`, `gtksourceview5`,
+`libhandy`, `libspelling`) also populate their observed `published_run` and
+`published_nevra` fields. Remaining outputs without recipes or source locks
+(`imath`, `libgee`, `libmediaart`, `libwnck3`, `rygel`) stay pending in
+`[areas.gnome-apps]`, and the batch issue remains open with `Refs #484`.
+

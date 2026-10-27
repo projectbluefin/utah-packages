@@ -103,20 +103,11 @@ packages = [
 consumer_issue = "projectbluefin/utah#391"
 packages = [
     "epiphany-runtime",
-
-
-
-
-
     "imath",
     "libgee",
     "libmediaart",
     "libwnck3",
-    "ptyxis",
     "rygel",
-    "vte-profile",
-    "vte291",
-    "vte291-gtk4",
 ]
 
 [areas.dev-tools]
@@ -516,9 +507,10 @@ packages = [
     { name = "soundtouch", pr = 526 },
     # Thumbnailers + Disks wave (landing PR #523). libspelling ships as a
     # standalone recipe; papers/gst-thumbnailers deferred to #527.
+    # Publication verified in run 40569848351.
     { name = "gnome-disk-utility", pr = 523 },
     { name = "gnome-epub-thumbnailer", pr = 523, published_run = 40151594832, published_nevra = "gnome-epub-thumbnailer-0:1.8-6.hum1.bfin.x86_64" },
-    { name = "libspelling", pr = 523 },
+    { name = "libspelling", pr = 523, published_run = 40569848351, published_nevra = "libspelling-0:0.4.10-1.hum1.bfin.x86_64" },
     # Printing/scanning core wave (landing PR #525). hplip-common,
     # hplip-libs and libsane-hpaio are %package subpackages of hplip.spec;
     # system-config-printer-libs and -udev are %package subpackages of
@@ -540,10 +532,10 @@ packages = [
     # GNOME display and sharing apps: importer source URLs normalized to HTTPS (PR #556).
     { name = "gnome-color-manager", pr = 556, published_run = 40151594832, published_nevra = "gnome-color-manager-0:3.36.2-1.hum1.bfin.x86_64" },
     { name = "gnome-user-share", pr = 556, published_run = 40151594832, published_nevra = "gnome-user-share-0:48.3-1.hum1.bfin.x86_64" },
-    # GNOME C++ binding recipes (PR #544).
+    # GNOME C++ binding recipes (PR #544); publication verified in run 40569848351.
     { name = "cairomm1.16", pr = 544 },
-    { name = "gtkmm4.0", pr = 544 },
-    { name = "pangomm2.48", pr = 544 },
+    { name = "gtkmm4.0", pr = 544, published_run = 40569848351, published_nevra = "gtkmm4.0-0:4.24.0-1.hum1.bfin.x86_64" },
+    { name = "pangomm2.48", pr = 544, published_run = 40569848351, published_nevra = "pangomm2.48-0:2.58.0-1.hum1.bfin.x86_64" },
     # GNOME wallpaper package import (PR #546).
     { name = "gnome-backgrounds", pr = 546, published_run = 40151594832, published_nevra = "gnome-backgrounds-0:51.0.1-1.hum1.bfin.noarch" },
     { name = "glibmm2.68", pr = 543 },
@@ -643,14 +635,16 @@ packages = [
     { name = "words", pr = 587 },
     # Media runtime providers (landing PR #594): libsrtp2.so.1, liba52/libmpeg2, gtksourceview-5, libdjvulibre.
     # liba52 is a52dec.spec's %package -n liba52; djvulibre-libs is djvulibre.spec's %package libs.
+    # Publication of gtksourceview5 verified in run 40569848351.
     { name = "djvulibre-libs", pr = 594 },
-    { name = "gtksourceview5", pr = 594 },
+    { name = "gtksourceview5", pr = 594, published_run = 40569848351, published_nevra = "gtksourceview5-0:5.22.0-1.hum1.bfin.x86_64" },
     { name = "liba52", pr = 594 },
     { name = "libmpeg2", pr = 594 },
     { name = "libsrtp", pr = 594 },
     # tmux/nfs-utils/gnome-disk-utility runtime providers: libutempter, gssproxy, quota, libhandy, ding-libs (projectbluefin/utah#392).
+    # Publication of libhandy verified in run 40569848351.
     { name = "libutempter", pr = 597 },
-    { name = "libhandy", pr = 597 },
+    { name = "libhandy", pr = 597, published_run = 40569848351, published_nevra = "libhandy-0:1.8.3-1.hum1.bfin.x86_64" },
     { name = "gssproxy", pr = 597 },
     { name = "quota", pr = 597 },
     { name = "quota-nls", pr = 597 },
@@ -730,6 +724,13 @@ packages = [
     # library it links against (#506); both long-tail names.
     { name = "portaudio", pr = 748 },
     { name = "python3-pyaudio", pr = 748 },
+    # Terminal and VTE emulator outputs (PR #413); publication verified in run 40569848351.
+    # vte-profile and vte291-gtk4 are subpackages of vte291.spec.
+    # Recipe and publication closure for projectbluefin/utah-packages#484.
+    { name = "ptyxis", commit = "ded82d6174382a397a2d7ddc066daeabe2e31232", pr = 413, published_run = 40569848351, published_nevra = "ptyxis-0:50.1-1.hum1.bfin.x86_64" },
+    { name = "vte-profile", commit = "ded82d6174382a397a2d7ddc066daeabe2e31232", pr = 413, published_run = 40569848351, published_nevra = "vte-profile-0:0.84.1-1.hum1.bfin.x86_64" },
+    { name = "vte291", commit = "ded82d6174382a397a2d7ddc066daeabe2e31232", pr = 413, published_run = 40569848351, published_nevra = "vte291-0:0.84.1-1.hum1.bfin.x86_64" },
+    { name = "vte291-gtk4", commit = "ded82d6174382a397a2d7ddc066daeabe2e31232", pr = 413, published_run = 40569848351, published_nevra = "vte291-gtk4-0:0.84.1-1.hum1.bfin.x86_64" },
 ]
 
 [wontfix]

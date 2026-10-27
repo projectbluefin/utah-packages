@@ -14,9 +14,8 @@
       "total": 19
     },
     "gnome-apps": {
-      "already_recipe": 4,
       "pending": 6,
-      "total": 10
+      "total": 6
     },
     "long-tail": {
       "already_recipe": 3,
@@ -681,28 +680,8 @@
     },
     {
       "area": "gnome-apps",
-      "name": "ptyxis",
-      "state": "already_recipe"
-    },
-    {
-      "area": "gnome-apps",
       "name": "rygel",
       "state": "pending"
-    },
-    {
-      "area": "gnome-apps",
-      "name": "vte-profile",
-      "state": "already_recipe"
-    },
-    {
-      "area": "gnome-apps",
-      "name": "vte291",
-      "state": "already_recipe"
-    },
-    {
-      "area": "gnome-apps",
-      "name": "vte291-gtk4",
-      "state": "already_recipe"
     },
     {
       "area": "long-tail",
@@ -1247,13 +1226,13 @@
   ],
   "issue": "projectbluefin/utah-packages#308",
   "states": {
-    "already_recipe": 17,
+    "already_recipe": 13,
     "manifest_wants": 1,
     "pending": 221
   },
   "totals": {
-    "backlog": 239,
-    "resolved": 278,
+    "backlog": 235,
+    "resolved": 282,
     "wontfix": 34
   }
 }
