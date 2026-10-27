@@ -128,6 +128,9 @@ find src/logo/ascii -type d -empty -delete
 
 
 %changelog
+* Thu Oct 22 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 2.70.0-1
+- Update to 2.70.0
+
 * Wed Jul 15 2026 Fedora Release Engineering <releng@fedoraproject.org> - 2.66.0-2
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_45_Mass_Rebuild
 

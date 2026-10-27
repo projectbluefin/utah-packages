@@ -1,0 +1,8 @@
+{
+  "package": "libudfread",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libudfread.git",
+  "commit": "d55350673727a8f91dd13a261eeedc5b05f9b2d8",
+  "tree": "fdab7ea804b6604930e106b800f4f2b01614502b",
+  "imported_at": "2026-10-26T06:18:13.266442+00:00"
+}

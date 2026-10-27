@@ -1,0 +1,61 @@
+--- neon-0.34.0/neon-config.in.1
++++ neon-0.34.0/neon-config.in
+@@ -7,6 +7,11 @@
+ includedir=@includedir@
+ libdir=@libdir@
+ 
++libdir=`pkg-config --variable=libdir neon`
++CFLAGS=`pkg-config --cflags neon`
++LIBS=`pkg-config --libs neon`
++has_lfs=`pkg-config --variable=has_lfs neon`
++
+ usage()
+ {
+     cat <<EOF
+@@ -15,7 +20,7 @@
+ Known values for OPTION are:
+ 
+   --prefix=DIR		change neon prefix [default $prefix]
+-  --libs		print library linking information
++  --libs          	print library linking information
+   --la-file		print location of libtool .la file
+   --cflags		print pre-processor and compiler flags
+   --help		display this help and exit
+@@ -23,7 +28,7 @@
+   --support FEATURE     exit with success if feature is supported
+ 
+  Known features: 
+-    dav [@NE_FLAG_DAV@], ssl [@NE_FLAG_SSL@], zlib [@NE_FLAG_ZLIB@], ipv6 [@NE_FLAG_IPV6@], lfs [@NE_FLAG_LFS@],
++    dav [@NE_FLAG_DAV@], ssl [@NE_FLAG_SSL@], zlib [@NE_FLAG_ZLIB@], ipv6 [@NE_FLAG_IPV6@], lfs [${has_lfs}],
+     i18n [@NE_FLAG_I18N@], ts_ssl [@NE_FLAG_TS_SSL@], gssapi [@NE_FLAG_GSSAPI@], libpxy [@NE_FLAG_LIBPXY@]
+ 
+ EOF
+@@ -69,16 +74,11 @@
+ 	;;
+ 
+     --cflags)
+-       	echo -I${includedir}/neon @NEON_CFLAGS@
++       	echo ${CFLAGS}
+        	;;
+ 
+     --libs)
+-        LIBS="-lneon @NEON_LIBS@"
+-	# Don't add standard library paths
+-        if test "$prefix" != "/usr"; then
+-           LIBS="-L${libdir} ${LIBS}"
+-        fi
+-	echo @user_LDFLAGS@ ${LIBS}
++	echo ${LIBS}
+ 	;;
+ 
+     --la-file)
+--- neon-0.34.0/neon.pc.in.1
++++ neon-0.34.0/neon.pc.in
+@@ -2,6 +2,7 @@
+ exec_prefix=@exec_prefix@
+ libdir=@libdir@
+ includedir=@includedir@
++has_lfs=@NE_FLAG_LFS@
+ 
+ Name: neon
+ Description: HTTP/WebDAV client library

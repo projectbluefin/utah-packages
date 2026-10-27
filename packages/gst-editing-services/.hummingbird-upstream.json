@@ -1,0 +1,8 @@
+{
+  "package": "gst-editing-services",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/gst-editing-services.git",
+  "commit": "df7269352ef09938c1782f1e640f7a89402c7d46",
+  "tree": "53f3ee7ca82ca07739c45937e8198179393aa2b3",
+  "imported_at": "2026-10-25T13:26:16.153801+00:00"
+}

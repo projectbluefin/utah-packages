@@ -1,0 +1,8 @@
+{
+  "package": "freeglut",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/freeglut.git",
+  "commit": "f9019868903a139a666549c870a13a3136c949b8",
+  "tree": "3fe20d5c82d28edf09d1571dae6feff135d2595f",
+  "imported_at": "2026-10-25T13:26:13.982547+00:00"
+}

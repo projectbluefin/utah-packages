@@ -1,0 +1,12 @@
+# packit config for spirv-headers
+# Build Stage 1 - no internal dependencies
+
+jobs:
+  - job: koji_build
+    trigger: commit
+    allowed_committers: [all_admins]
+    dist_git_branches:
+      - fedora-all
+    sidetag_group: vulkan-sdk-releases
+    dependents:
+      - spirv-tools

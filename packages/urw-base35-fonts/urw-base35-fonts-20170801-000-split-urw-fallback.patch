@@ -1,0 +1,755 @@
+From 70aaae73a0dba9c94c001bfc464b6cb6d1f3d0f9 Mon Sep 17 00:00:00 2001
+From: "David Kaspar [Dee'Kej]" <dkaspar@redhat.com>
+Date: Mon, 25 Sep 2017 14:50:09 +0200
+Subject: [PATCH] fontconfig: split urw-fallback.conf into 3 files
+
+  According to fontconfig upstream, this provides a better granularity,
+  so some distributions do not have to ship all of these mappings.
+---
+ fontconfig/urw-fallback-backwards.conf | 136 ++++++++++++++
+ fontconfig/urw-fallback-generics.conf  | 104 +++++++++++
+ fontconfig/urw-fallback-specifics.conf | 138 ++++++++++++++
+ fontconfig/urw-fallback.conf           | 332 ---------------------------------
+ 4 files changed, 378 insertions(+), 332 deletions(-)
+ create mode 100644 fontconfig/urw-fallback-backwards.conf
+ create mode 100644 fontconfig/urw-fallback-generics.conf
+ create mode 100644 fontconfig/urw-fallback-specifics.conf
+ delete mode 100644 fontconfig/urw-fallback.conf
+
+diff --git a/fontconfig/urw-fallback-backwards.conf b/fontconfig/urw-fallback-backwards.conf
+new file mode 100644
+index 0000000..d714ac6
+--- /dev/null
++++ b/fontconfig/urw-fallback-backwards.conf
+@@ -0,0 +1,136 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<!DOCTYPE fontconfig SYSTEM "fonts.dtd">
++
++<!--
++This file is used to alias/map previous versions of font families from (URW)++
++to similar/metric-conmpatible font families of latest font versions from
++(URW)++ itself.
++
++Most likely this aliasing/mapping will be useful for people who:
++ * have latest versions of (URW)++ fonts, but their documents still reference
++   or requires older versions of these fonts
++
++latest URW fonts:     previous URW fonts:
++====================  =============================================
++Nimbus Mono PS        Nimbus Mono L | Nimbus Mono
++URW Gothic            URW Gothic L
++URW Bookman           URW Bookman L | Bookman URW
++Z003                  URW Chancery L | Chancery URW
++D050000L              Dingbats
++Nimbus Sans           Nimbus Sans L
++Nimbus Sans Narrow    Nimbus Sans Narrow (same as current name)
++C059                  Century Schoolbook L | Century SchoolBook URW
++P052                  URW Palladio L | Palladio URW
++Standard Symbols PS   Standard Symbols L
++Nimbus Roman          Nimbus Roman No9 L
++-->
++
++<fontconfig>
++  <!-- Substitutions for backward compatibility with previous versions -->
++  <alias binding="same">
++    <family>Century Schoolbook L</family>
++    <accept>
++      <family>C059</family>
++    </accept>
++  </alias>
++
++  <alias binding="same">
++    <family>Century SchoolBook URW</family>
++    <accept>
++      <family>C059</family>
++    </accept>
++  </alias>
++
++  <alias binding="same">
++    <family>Dingbats</family>
++    <accept>
++      <family>D050000L</family>
++    </accept>
++  </alias>
++
++  <alias binding="same">
++    <family>Nimbus Mono</family>
++    <accept>
++      <family>Nimbus Mono PS</family>
++    </accept>
++  </alias>
++
++  <alias binding="same">
++    <family>Nimbus Mono L</family>
++    <accept>
++      <family>Nimbus Mono PS</family>
++    </accept>
++  </alias>
++
++  <alias binding="same">
++    <family>Nimbus Roman No9 L</family>
++    <accept>
++      <family>Nimbus Roman</family>
++    </accept>
++  </alias>
++
++  <alias binding="same">
++    <family>Nimbus Sans L</family>
++    <accept>
++      <family>Nimbus Sans</family>
++    </accept>
++  </alias>
++
++  <!-- NOTE: Currently there are no previous versions for Nimbus Sans Narrow -->
++
++  <alias binding="same">
++    <family>Palladio URW</family>
++    <accept>
++      <family>P052</family>
++    </accept>
++  </alias>
++
++  <alias binding="same">
++    <family>URW Palladio L</family>
++    <accept>
++      <family>P052</family>
++    </accept>
++  </alias>
++
++  <alias binding="same">
++    <family>Standard Symbols L</family>
++    <accept>
++      <family>Standard Symbols PS</family>
++    </accept>
++  </alias>
++
++  <alias binding="same">
++    <family>Bookman URW</family>
++    <accept>
++      <family>URW Bookman</family>
++    </accept>
++  </alias>
++
++  <alias binding="same">
++    <family>URW Bookman L</family>
++    <accept>
++      <family>URW Bookman</family>
++    </accept>
++  </alias>
++
++  <alias binding="same">
++    <family>URW Gothic L</family>
++    <accept>
++      <family>URW Gothic</family>
++    </accept>
++  </alias>
++
++  <alias binding="same">
++    <family>Chancery URW</family>
++    <accept>
++      <family>Z003</family>
++    </accept>
++  </alias>
++
++  <alias binding="same">
++    <family>URW Chancery L</family>
++    <accept>
++      <family>Z003</family>
++    </accept>
++  </alias>
++</fontconfig>
+diff --git a/fontconfig/urw-fallback-generics.conf b/fontconfig/urw-fallback-generics.conf
+new file mode 100644
+index 0000000..5a51868
+--- /dev/null
++++ b/fontconfig/urw-fallback-generics.conf
+@@ -0,0 +1,104 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<!DOCTYPE fontconfig SYSTEM "fonts.dtd">
++
++<!--
++This file is used to alias/map previous versions of font families from (URW)++
++to similar/metric-compatible font families - in this case the original
++PostScript fonts (as generics).
++
++Most likely this aliasing/mapping will be useful for people who:
++ * have original PostScript fonts installed, but their documents require some
++   older versions of (URW)++ fonts
++
++PostScript fonts:       previous URW fonts:
++======================  =============================================
++Courier                 Nimbus Mono L | Nimbus Mono
++ITC Avant Garde Gothic  URW Gothic L
++ITC Bookman             URW Bookman L | Bookman URW
++ITC Zapf Chancery       URW Chancery L | Chancery URW
++ITC Zapf Dingbats       Dingbats
++Helvetica               Nimbus Sans L
++Helvetica Narrow        Nimbus Sans Narrow (same as current name)
++New Century Schoolbook  Century Schoolbook L | Century SchoolBook URW
++Palatino                URW Palladio L | Palladio URW
++Symbol                  Standard Symbols L
++Times                   Nimbus Roman No9 L
++-->
++
++<fontconfig>
++  <!-- Map generics to specifics -->
++  <alias binding="same">
++    <family>Courier</family>
++    <accept>
++      <family>Nimbus Mono</family>
++      <family>Nimbus Mono L</family>
++    </accept>
++  </alias>
++
++  <alias binding="same">
++    <family>Helvetica</family>
++    <accept>
++      <family>Nimbus Sans L</family>
++    </accept>
++  </alias>
++
++  <alias binding="same">
++    <family>ITC Avant Garde Gothic</family>
++    <accept>
++      <family>URW Gothic L</family>
++    </accept>
++  </alias>
++
++  <alias binding="same">
++    <family>ITC Bookman</family>
++    <accept>
++      <family>Bookman URW</family>
++      <family>URW Bookman L</family>
++    </accept>
++  </alias>
++
++  <alias binding="same">
++    <family>ITC Zapf Chancery</family>
++    <accept>
++      <family>Chancery URW</family>
++      <family>URW Chancery L</family>
++    </accept>
++  </alias>
++
++  <alias binding="same">
++    <family>ITC Zapf Dingbats</family>
++    <accept>
++      <family>Dingbats</family>
++    </accept>
++  </alias>
++
++  <alias binding="same">
++    <family>New Century Schoolbook</family>
++    <accept>
++      <family>Century Schoolbook L</family>
++      <family>Century SchoolBook URW</family>
++    </accept>
++  </alias>
++
++  <alias binding="same">
++    <family>Palatino</family>
++    <accept>
++      <family>Palladio URW</family>
++      <family>URW Palladio L</family>
++    </accept>
++  </alias>
++
++  <alias binding="same">
++    <family>Symbol</family>
++    <accept>
++      <family>Standard Symbols L</family>
++    </accept>
++  </alias>
++
++  <alias binding="same">
++    <family>Times</family>
++    <accept>
++      <family>Nimbus Roman No9 L</family>
++    </accept>
++  </alias>
++</fontconfig>
+diff --git a/fontconfig/urw-fallback-specifics.conf b/fontconfig/urw-fallback-specifics.conf
+new file mode 100644
+index 0000000..04241a9
+--- /dev/null
++++ b/fontconfig/urw-fallback-specifics.conf
+@@ -0,0 +1,138 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<!DOCTYPE fontconfig SYSTEM "fonts.dtd">
++
++<!--
++This file is used to alias/map previous versions of font families from (URW)++
++to similar/metric-compatible font families - in this case as original PostScript
++fonts (as specifics).
++
++NOTE: These mappings are already part of fontconfig's config files by default.
++      We are keeping this file just to be complete, or if some distribution
++      needs it in some special case.
++
++Most likely this aliasing/mapping will be useful for people who:
++ * have documents referencing older versions of the (URW)++ fonts, and need to
++   map their similar/metric-compatible fonts via generic font names
++
++PostScript fonts:       latest URW fonts:     previous URW fonts:
++======================  ====================  =============================================
++Courier                 Nimbus Mono PS        Nimbus Mono L | Nimbus Mono
++ITC Avant Garde Gothic  URW Gothic            URW Gothic L
++ITC Bookman             URW Bookman           URW Bookman L | Bookman URW
++ITC Zapf Chancery       Z003                  URW Chancery L | Chancery URW
++ITC Zapf Dingbats       D050000L              Dingbats
++Helvetica               Nimbus Sans           Nimbus Sans L
++Helvetica Narrow        Nimbus Sans Narrow    Nimbus Sans Narrow (same as current name)
++New Century Schoolbook  C059                  Century Schoolbook L | Century SchoolBook URW
++Palatino                P052                  URW Palladio L | Palladio URW
++Symbol                  Standard Symbols PS   Standard Symbols L
++Times                   Nimbus Roman          Nimbus Roman No9 L
++-->
++
++<fontconfig>
++  <!-- Original PostScript base font mapping -->
++  <alias binding="same">
++    <family>Nimbus Mono</family>
++    <default>
++      <family>Courier</family>
++    </default>
++  </alias>
++
++  <alias binding="same">
++    <family>Nimbus Mono L</family>
++    <default>
++      <family>Courier</family>
++    </default>
++  </alias>
++
++  <alias binding="same">
++    <family>Nimbus Sans L</family>
++    <default>
++      <family>Helvetica</family>
++    </default>
++  </alias>
++
++  <alias binding="same">
++    <family>URW Gothic L</family>
++    <default>
++      <family>ITC Avant Garde Gothic</family>
++    </default>
++  </alias>
++
++  <alias binding="same">
++    <family>Bookman URW</family>
++    <default>
++      <family>ITC Bookman</family>
++    </default>
++  </alias>
++
++  <alias binding="same">
++    <family>URW Bookman L</family>
++    <default>
++      <family>ITC Bookman</family>
++    </default>
++  </alias>
++
++  <alias binding="same">
++    <family>Chancery URW</family>
++    <default>
++      <family>ITC Zapf Chancery</family>
++    </default>
++  </alias>
++
++  <alias binding="same">
++    <family>URW Chancery L</family>
++    <default>
++      <family>ITC Zapf Chancery</family>
++    </default>
++  </alias>
++
++  <alias binding="same">
++    <family>Dingbats</family>
++    <default>
++      <family>ITC Zapf Dingbats</family>
++    </default>
++  </alias>
++
++  <alias binding="same">
++    <family>Century Schoolbook L</family>
++    <default>
++      <family>New Century Schoolbook</family>
++    </default>
++  </alias>
++
++  <alias binding="same">
++    <family>Century SchoolBook URW</family>
++    <default>
++      <family>New Century Schoolbook</family>
++    </default>
++  </alias>
++
++  <alias binding="same">
++    <family>Palladio URW</family>
++    <default>
++      <family>Palatino</family>
++    </default>
++  </alias>
++
++  <alias binding="same">
++    <family>URW Palladio L</family>
++    <default>
++      <family>Palatino</family>
++    </default>
++  </alias>
++
++  <alias binding="same">
++    <family>Standard Symbols L</family>
++    <default>
++      <family>Symbol</family>
++    </default>
++  </alias>
++
++  <alias binding="same">
++    <family>Nimbus Roman No9 L</family>
++    <default>
++      <family>Times</family>
++    </default>
++  </alias>
++</fontconfig>
+diff --git a/fontconfig/urw-fallback.conf b/fontconfig/urw-fallback.conf
+deleted file mode 100644
+index b9771b1..0000000
+--- a/fontconfig/urw-fallback.conf
++++ /dev/null
+@@ -1,332 +0,0 @@
+-<?xml version="1.0" encoding="UTF-8"?>
+-<!DOCTYPE fontconfig SYSTEM "fonts.dtd">
+-
+-<!--
+-This file is used to alias/map previous versions of font families from (URW)++
+-to similar/metric-compatible font families - either original PostScript fonts
+-(as generics), or newer font versions from (URW)++ itself.
+-
+-Most likely this aliasing/mapping will be useful for people who:
+- * have latest versions of (URW)++ fonts, but their documents still reference
+-   or requires older versions of these fonts
+- * have original PostScript fons installed, but their documents require some
+-   older versions of (URW)++ fonts
+-
+-PostScript fonts:       latest URW fonts:     previous URW fonts:
+-======================  ====================  =============================================
+-Courier                 Nimbus Mono PS        Nimbus Mono L | Nimbus Mono
+-ITC Avant Garde Gothic  URW Gothic            URW Gothic L
+-ITC Bookman             URW Bookman           URW Bookman L | Bookman URW
+-ITC Zapf Chancery       Z003                  URW Chancery L | Chancery URW
+-ITC Zapf Dingbats       D050000L              Dingbats
+-Helvetica               Nimbus Sans           Nimbus Sans L
+-Helvetica Narrow        Nimbus Sans Narrow    Nimbus Sans Narrow (same as current name)
+-New Century Schoolbook  C059                  Century Schoolbook L | Century SchoolBook URW
+-Palatino                P052                  URW Palladio L | Palladio URW
+-Symbol                  Standard Symbols PS   Standard Symbols L
+-Times                   Nimbus Roman          Nimbus Roman No9 L
+-
+-We want for each of them to fallback to any of these available,
+-but in an order preferring similar designs first. We do this in three steps:
+-
+-1) Map each specific font to original PostScript font family,
+-   e.g. Nimbus Mono to Courier
+-
+-2) Map each original PostScript family to its specific font,
+-   e.g. Courier to Nimbus Mono
+-
+-3) Alias all previous names of URW fonts to the latest released version,
+-   e.g. Nimbus Mono to Nimbus Mono PS
+--->
+-
+-<fontconfig>
+-  <!-- Original PostScript base font mapping -->
+-  <alias binding="same">
+-    <family>Nimbus Mono</family>
+-    <default>
+-      <family>Courier</family>
+-    </default>
+-  </alias>
+-
+-  <alias binding="same">
+-    <family>Nimbus Mono L</family>
+-    <default>
+-      <family>Courier</family>
+-    </default>
+-  </alias>
+-
+-  <alias binding="same">
+-    <family>Nimbus Sans L</family>
+-    <default>
+-      <family>Helvetica</family>
+-    </default>
+-  </alias>
+-
+-  <alias binding="same">
+-    <family>URW Gothic L</family>
+-    <default>
+-      <family>ITC Avant Garde Gothic</family>
+-    </default>
+-  </alias>
+-
+-  <alias binding="same">
+-    <family>Bookman URW</family>
+-    <default>
+-      <family>ITC Bookman</family>
+-    </default>
+-  </alias>
+-
+-  <alias binding="same">
+-    <family>URW Bookman L</family>
+-    <default>
+-      <family>ITC Bookman</family>
+-    </default>
+-  </alias>
+-
+-  <alias binding="same">
+-    <family>Chancery URW</family>
+-    <default>
+-      <family>ITC Zapf Chancery</family>
+-    </default>
+-  </alias>
+-
+-  <alias binding="same">
+-    <family>URW Chancery L</family>
+-    <default>
+-      <family>ITC Zapf Chancery</family>
+-    </default>
+-  </alias>
+-
+-  <alias binding="same">
+-    <family>Dingbats</family>
+-    <default>
+-      <family>ITC Zapf Dingbats</family>
+-    </default>
+-  </alias>
+-
+-  <alias binding="same">
+-    <family>Century Schoolbook L</family>
+-    <default>
+-      <family>New Century Schoolbook</family>
+-    </default>
+-  </alias>
+-
+-  <alias binding="same">
+-    <family>Century SchoolBook URW</family>
+-    <default>
+-      <family>New Century Schoolbook</family>
+-    </default>
+-  </alias>
+-
+-  <alias binding="same">
+-    <family>Palladio URW</family>
+-    <default>
+-      <family>Palatino</family>
+-    </default>
+-  </alias>
+-
+-  <alias binding="same">
+-    <family>URW Palladio L</family>
+-    <default>
+-      <family>Palatino</family>
+-    </default>
+-  </alias>
+-
+-  <alias binding="same">
+-    <family>Standard Symbols L</family>
+-    <default>
+-      <family>Symbol</family>
+-    </default>
+-  </alias>
+-
+-  <alias binding="same">
+-    <family>Nimbus Roman No9 L</family>
+-    <default>
+-      <family>Times</family>
+-    </default>
+-  </alias>
+-
+-  <!-- Map generics to specifics -->
+-  <alias binding="same">
+-    <family>Courier</family>
+-    <accept>
+-      <family>Nimbus Mono</family>
+-      <family>Nimbus Mono L</family>
+-    </accept>
+-  </alias>
+-
+-  <alias binding="same">
+-    <family>Helvetica</family>
+-    <accept>
+-      <family>Nimbus Sans L</family>
+-    </accept>
+-  </alias>
+-
+-  <alias binding="same">
+-    <family>ITC Avant Garde Gothic</family>
+-    <accept>
+-      <family>URW Gothic L</family>
+-    </accept>
+-  </alias>
+-
+-  <alias binding="same">
+-    <family>ITC Bookman</family>
+-    <accept>
+-      <family>Bookman URW</family>
+-      <family>URW Bookman L</family>
+-    </accept>
+-  </alias>
+-
+-  <alias binding="same">
+-    <family>ITC Zapf Chancery</family>
+-    <accept>
+-      <family>Chancery URW</family>
+-      <family>URW Chancery L</family>
+-    </accept>
+-  </alias>
+-
+-  <alias binding="same">
+-    <family>ITC Zapf Dingbats</family>
+-    <accept>
+-      <family>Dingbats</family>
+-    </accept>
+-  </alias>
+-
+-  <alias binding="same">
+-    <family>New Century Schoolbook</family>
+-    <accept>
+-      <family>Century Schoolbook L</family>
+-      <family>Century SchoolBook URW</family>
+-    </accept>
+-  </alias>
+-
+-  <alias binding="same">
+-    <family>Palatino</family>
+-    <accept>
+-      <family>Palladio URW</family>
+-      <family>URW Palladio L</family>
+-    </accept>
+-  </alias>
+-
+-  <alias binding="same">
+-    <family>Symbol</family>
+-    <accept>
+-      <family>Standard Symbols L</family>
+-    </accept>
+-  </alias>
+-
+-  <alias binding="same">
+-    <family>Times</family>
+-    <accept>
+-      <family>Nimbus Roman No9 L</family>
+-    </accept>
+-  </alias>
+-
+-  <!-- Substitutions for backward compatibility with previous versions -->
+-  <alias binding="same">
+-    <family>Century Schoolbook L</family>
+-    <accept>
+-      <family>C059</family>
+-    </accept>
+-  </alias>
+-
+-  <alias binding="same">
+-    <family>Century SchoolBook URW</family>
+-    <accept>
+-      <family>C059</family>
+-    </accept>
+-  </alias>
+-
+-  <alias binding="same">
+-    <family>Dingbats</family>
+-    <accept>
+-      <family>D050000L</family>
+-    </accept>
+-  </alias>
+-
+-  <alias binding="same">
+-    <family>Nimbus Mono</family>
+-    <accept>
+-      <family>Nimbus Mono PS</family>
+-    </accept>
+-  </alias>
+-
+-  <alias binding="same">
+-    <family>Nimbus Mono L</family>
+-    <accept>
+-      <family>Nimbus Mono PS</family>
+-    </accept>
+-  </alias>
+-
+-  <alias binding="same">
+-    <family>Nimbus Roman No9 L</family>
+-    <accept>
+-      <family>Nimbus Roman</family>
+-    </accept>
+-  </alias>
+-
+-  <alias binding="same">
+-    <family>Nimbus Sans L</family>
+-    <accept>
+-      <family>Nimbus Sans</family>
+-    </accept>
+-  </alias>
+-
+-  <!-- NOTE: Currently there are no previous versions for Nimbus Sans Narrow -->
+-
+-  <alias binding="same">
+-    <family>Palladio URW</family>
+-    <accept>
+-      <family>P052</family>
+-    </accept>
+-  </alias>
+-
+-  <alias binding="same">
+-    <family>URW Palladio L</family>
+-    <accept>
+-      <family>P052</family>
+-    </accept>
+-  </alias>
+-
+-  <alias binding="same">
+-    <family>Standard Symbols L</family>
+-    <accept>
+-      <family>Standard Symbols PS</family>
+-    </accept>
+-  </alias>
+-
+-  <alias binding="same">
+-    <family>Bookman URW</family>
+-    <accept>
+-      <family>URW Bookman</family>
+-    </accept>
+-  </alias>
+-
+-  <alias binding="same">
+-    <family>URW Bookman L</family>
+-    <accept>
+-      <family>URW Bookman</family>
+-    </accept>
+-  </alias>
+-
+-  <alias binding="same">
+-    <family>URW Gothic L</family>
+-    <accept>
+-      <family>URW Gothic</family>
+-    </accept>
+-  </alias>
+-
+-  <alias binding="same">
+-    <family>Chancery URW</family>
+-    <accept>
+-      <family>Z003</family>
+-    </accept>
+-  </alias>
+-
+-  <alias binding="same">
+-    <family>URW Chancery L</family>
+-    <accept>
+-      <family>Z003</family>
+-    </accept>
+-  </alias>
+-</fontconfig>
+-- 
+2.9.5
+

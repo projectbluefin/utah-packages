@@ -1,0 +1,39 @@
+From 15193de2d6e421af88f9a3297833530b60c40a09 Mon Sep 17 00:00:00 2001
+From: "David Kaspar [Dee'Kej]" <dkaspar@redhat.com>
+Date: Mon, 4 Dec 2017 12:06:02 +0100
+Subject: [PATCH] fonts: NimbusSansNarrow-BdOblique.* renamed to *-BoldOblique
+
+  To sync with:
+    https://git.ghostscript.com/?p=ghostpdl.git;a=commitdiff;h=efc24229b0ba
+  Resolves:
+    https://bugs.ghostscript.com/show_bug.cgi?id=698784
+---
+ ...arrow-BdOblique.afm => NimbusSansNarrow-BoldOblique.afm} |   0
+ ...arrow-BdOblique.otf => NimbusSansNarrow-BoldOblique.otf} | Bin
+ ...sNarrow-BdOblique.t1 => NimbusSansNarrow-BoldOblique.t1} | Bin
+ ...arrow-BdOblique.ttf => NimbusSansNarrow-BoldOblique.ttf} | Bin
+ 4 files changed, 0 insertions(+), 0 deletions(-)
+ rename fonts/{NimbusSansNarrow-BdOblique.afm => NimbusSansNarrow-BoldOblique.afm} (100%)
+ rename fonts/{NimbusSansNarrow-BdOblique.otf => NimbusSansNarrow-BoldOblique.otf} (100%)
+ rename fonts/{NimbusSansNarrow-BdOblique.t1 => NimbusSansNarrow-BoldOblique.t1} (100%)
+ rename fonts/{NimbusSansNarrow-BdOblique.ttf => NimbusSansNarrow-BoldOblique.ttf} (100%)
+
+diff --git a/fonts/NimbusSansNarrow-BdOblique.afm b/fonts/NimbusSansNarrow-BoldOblique.afm
+similarity index 100%
+rename from fonts/NimbusSansNarrow-BdOblique.afm
+rename to fonts/NimbusSansNarrow-BoldOblique.afm
+diff --git a/fonts/NimbusSansNarrow-BdOblique.otf b/fonts/NimbusSansNarrow-BoldOblique.otf
+similarity index 100%
+rename from fonts/NimbusSansNarrow-BdOblique.otf
+rename to fonts/NimbusSansNarrow-BoldOblique.otf
+diff --git a/fonts/NimbusSansNarrow-BdOblique.t1 b/fonts/NimbusSansNarrow-BoldOblique.t1
+similarity index 100%
+rename from fonts/NimbusSansNarrow-BdOblique.t1
+rename to fonts/NimbusSansNarrow-BoldOblique.t1
+diff --git a/fonts/NimbusSansNarrow-BdOblique.ttf b/fonts/NimbusSansNarrow-BoldOblique.ttf
+similarity index 100%
+rename from fonts/NimbusSansNarrow-BdOblique.ttf
+rename to fonts/NimbusSansNarrow-BoldOblique.ttf
+-- 
+2.9.5
+

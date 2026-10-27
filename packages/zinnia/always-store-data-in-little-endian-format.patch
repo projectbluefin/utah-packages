@@ -1,0 +1,163 @@
+From 09f01b0afcb4408af2e1af0294425eac420cd7a5 Mon Sep 17 00:00:00 2001
+From: Peng Huang <shawn.p.huang@gmail.com>
+Date: Fri, 23 Apr 2010 16:09:07 +0800
+Subject: [PATCH] Always store data in little endian format
+
+---
+ configure.in   |    5 +++++
+ recognizer.cpp |   24 ++++++++++++++++++++++--
+ trainer.cpp    |   48 +++++++++++++++++++++++++++++++++++++-----------
+ 3 files changed, 64 insertions(+), 13 deletions(-)
+
+diff --git a/configure.in b/configure.in
+index 2731d36..f25c83a 100644
+--- a/configure.in
++++ b/configure.in
+@@ -14,6 +14,11 @@ AC_PROG_LIBTOOL
+ 
+ dnl Checks for libraries.
+ 
++dnl Checks endian
++AC_C_BIGENDIAN([], [
++    AC_DEFINE(WORDS_LITENDIAN, 1, [Define if target is little endian])
++])
++
+ dnl Checks for header files.
+ AC_HEADER_STDC
+ AC_CHECK_HEADERS(string.h stdlib.h unistd.h fcntl.h \
+diff --git a/recognizer.cpp b/recognizer.cpp
+index b4d292a..b231607 100644
+--- a/recognizer.cpp
++++ b/recognizer.cpp
+@@ -5,6 +5,9 @@
+ //
+ //  Copyright(C) 2008 Taku Kudo <taku@chasen.org>
+ //
++#ifdef HAVE_CONFIG_H
++#  include "config.h"
++#endif
+ #include <iostream>
+ #include <vector>
+ #include <cmath>
+@@ -23,11 +26,28 @@ static inline char *read_ptr(char **ptr, size_t size) {
+   return r;
+ }
+ 
+-template <class T>
+-static inline void read_static(char **ptr, T *value) {
++template <typename T>
++inline void read_static(char **ptr, T *value) {
+   char *r = read_ptr(ptr, sizeof(T));
+   memcpy(value, r, sizeof(T));
+ }
++
++#ifndef WORDS_LITENDIAN
++template <>
++inline void read_static<unsigned int>(char **ptr, unsigned int *value) {
++    unsigned char *buf = reinterpret_cast<unsigned char *>(*ptr);
++    *value = (buf[0]) | (buf[1] << 8) | (buf[2] << 16) | (buf[3] << 24);
++    *ptr += 4;
++}
++
++template <>
++inline void read_static<float>(char **ptr, float *value) {
++    unsigned int x;
++    read_static<unsigned int>(ptr, &x);
++    memcpy(value, &x, sizeof(x));
++}
++#endif
++
+ }
+ 
+ namespace zinnia {
+diff --git a/trainer.cpp b/trainer.cpp
+index 287a882..e150760 100644
+--- a/trainer.cpp
++++ b/trainer.cpp
+@@ -243,6 +243,31 @@ bool Trainer::makeHeader(const char *text_filename,
+   return true;
+ }
+ 
++template<typename T>
++inline void write_static(std::ofstream & bofs, const T value)
++{
++    bofs.write(reinterpret_cast<const char *>(&value), sizeof(T));
++}
++
++#ifndef WORDS_LITENDIAN
++template<>
++inline void write_static<unsigned int>(std::ofstream & bofs, const unsigned int value)
++{
++    bofs.put ((value) & 0xff);
++    bofs.put ((value >> 8) & 0xff);
++    bofs.put ((value >> 16) & 0xff);
++    bofs.put ((value >> 24) & 0xff);
++}
++
++template<>
++inline void write_static<float>(std::ofstream & bofs, const float value)
++{
++    unsigned int x;
++    memcpy(&x, &value, sizeof(x));
++    write_static<unsigned int>(bofs, x);
++}
++#endif
++
+ bool Trainer::convert(const char *text_filename,
+                       const char *binary_filename,
+                       double compression_threshold) {
+@@ -261,9 +286,9 @@ bool Trainer::convert(const char *text_filename,
+   unsigned int magic = 0;
+   const unsigned int version = DIC_VERSION;
+   unsigned int msize = 0;
+-  bofs.write(reinterpret_cast<const char *>(&magic), sizeof(magic));
+-  bofs.write(reinterpret_cast<const char *>(&version), sizeof(version));
+-  bofs.write(reinterpret_cast<const char *>(&msize), sizeof(msize));
++  write_static<unsigned int> (bofs, magic);
++  write_static<unsigned int> (bofs, version);
++  write_static<unsigned int> (bofs, msize);
+ 
+   std::string line;
+   const size_t array_size = 8192 * 16;
+@@ -277,19 +302,19 @@ bool Trainer::convert(const char *text_filename,
+     char character[16];
+     std::strncpy(character, col[0], sizeof(character));
+     bofs.write(character, sizeof(character));
+-    bofs.write(reinterpret_cast<const char *>(&bias), sizeof(bias));
++    write_static<float> (bofs, bias);
+     for (size_t i = 2; i < size; i += 2) {
+       const int index = std::atoi(col[i]);
+       const float value = std::atof(col[i + 1]);
+       if (fabs(value) > compression_threshold) {
+-        bofs.write(reinterpret_cast<const char *>(&index), sizeof(index));
+-        bofs.write(reinterpret_cast<const char *>(&value), sizeof(value));
++        write_static<int> (bofs, index);
++        write_static<float> (bofs, value);
+       }
+     }
+     const int index = -1;
+     const float value = 0.0;
+-    bofs.write(reinterpret_cast<const char *>(&index), sizeof(index));
+-    bofs.write(reinterpret_cast<const char *>(&value), sizeof(value));
++    write_static<int> (bofs, index);
++    write_static<float> (bofs, value);
+     ++msize;
+   }
+ 
+@@ -297,9 +322,10 @@ bool Trainer::convert(const char *text_filename,
+   bofs.seekp(0);
+   magic ^= DIC_MAGIC_ID;
+   bofs.seekp(0);
+-  bofs.write(reinterpret_cast<const char *>(&magic), sizeof(magic));
+-  bofs.write(reinterpret_cast<const char *>(&version), sizeof(version));
+-  bofs.write(reinterpret_cast<const char *>(&msize),  sizeof(msize));
++
++  write_static<unsigned int> (bofs, magic);
++  write_static<unsigned int> (bofs, version);
++  write_static<unsigned int> (bofs, msize);
+ 
+   return true;
+ }
+-- 
+1.7.0.1
+

@@ -1,0 +1,8 @@
+{
+  "package": "lrzsz",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/lrzsz.git",
+  "commit": "d66b4813a725aab89d1f41e566885592577b7e05",
+  "tree": "ee3de8db23363594bd621cfde46355d9e7559323",
+  "imported_at": "2026-10-27T20:17:58.072762+00:00"
+}

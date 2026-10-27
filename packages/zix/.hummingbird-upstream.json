@@ -1,0 +1,8 @@
+{
+  "package": "zix",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/zix.git",
+  "commit": "f22864f7da720ba6a34cfc8b2be8c2301ae1ae84",
+  "tree": "faec8d6cbb5cf059a353f307ef8a79808fea1a20",
+  "imported_at": "2026-10-25T19:09:27.128137+00:00"
+}

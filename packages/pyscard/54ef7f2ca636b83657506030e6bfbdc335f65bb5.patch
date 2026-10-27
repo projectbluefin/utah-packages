@@ -1,0 +1,30 @@
+From 54ef7f2ca636b83657506030e6bfbdc335f65bb5 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Jitka=20Plesn=C3=ADkov=C3=A1?= <jplesnik@redhat.com>
+Date: Fri, 5 Sep 2025 12:00:56 +0200
+Subject: [PATCH] Replace deprecated $function by new $action
+
+The long-deprecated $function was removed from future SWIG 4.4.0.
+It can be safely replaced by $action.
+
+From SWIG 4.4.0 CHANGES:
+  2025-06-09: olly
+    The $function variable in %exception/feature:except typemaps is
+    no longer recognised.  It was marked as deprecated in 2008.
+    Use $action (added in 2001) instead which has exactly the same
+    value.
+---
+ src/smartcard/scard/PcscTypemaps.i | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/smartcard/scard/PcscTypemaps.i b/src/smartcard/scard/PcscTypemaps.i
+index c8d783e4..c90f1f47 100644
+--- a/src/smartcard/scard/PcscTypemaps.i
++++ b/src/smartcard/scard/PcscTypemaps.i
+@@ -23,6 +23,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ %exception
+ {
+     Py_BEGIN_ALLOW_THREADS;
+-    $function
++    $action
+     Py_END_ALLOW_THREADS;
+ }

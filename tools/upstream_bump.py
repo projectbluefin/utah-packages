@@ -15,7 +15,7 @@ only the first:
 
   config/upstream-sources.json  version, url, filename, sha512, sha256_url,
                                 fallback_urls
-  packages/<pkg>/<pkg>.spec     Version:, Release:
+  packages/<pkg>/<pkg>.spec     Version:, Release:, manual %changelog
   packages/<pkg>/sources        SHA512 (<tarball>) = <digest>
 
 A version bump with a stale checksum is rejected by source_pipeline.py -- a
@@ -61,6 +61,7 @@ string rather than restated, so they cannot disagree.
 from __future__ import annotations
 
 import argparse
+from email.utils import formatdate
 import hashlib
 import json
 import os
@@ -563,8 +564,39 @@ def refuse_macro_sources(spec: Path, text: str) -> None:
         )
 
 
+def update_changelog(text: str, version: str) -> str:
+    """Prepend a dated entry to an existing manual changelog, keeping history."""
+    section = re.search(r"(?m)^%changelog[ \t]*(?:\n|$)", text)
+    if section is None or re.search(r"(?m)^[ \t]*%autochangelog\b", text[section.end():]):
+        return text
+    # Never put live macros in history: a later bump would change old entries.
+    # Macro-derived releases cannot be resolved without executing the spec;
+    # record the known version alone in that case.
+    preamble = text[:section.start()]
+    release = re.search(r"(?m)^Release:[ \t]*(\S+)", preamble)
+    # rpmlint expects epoch:version-release when the main package sets Epoch:.
+    main = re.split(r"(?m)^%(?:package|description)\b", preamble, maxsplit=1)[0]
+    epoch = re.search(r"(?m)^Epoch:[ \t]*(\d+)[ \t]*(?:#.*)?$", main)
+    evr = f"{epoch.group(1)}:{version}" if epoch else version
+    if release:
+        literal = release.group(1).replace("%{?dist}", "").replace("%{dist}", "")
+        if literal and "%" not in literal:
+            evr += f"-{literal}"
+    # formatdate is English and UTC regardless of the process locale/timezone.
+    weekday, day, month, year, *_ = formatdate().split()
+    date = f"{weekday.rstrip(',')} {month} {day} {year}"
+    entry = (
+        f"* {date} github-actions[bot] "
+        f"<41898282+github-actions[bot]@users.noreply.github.com> - {evr}\n"
+        f"- Update to {version}\n\n"
+    )
+    end = section.end()
+    separator = "" if text[:end].endswith("\n") else "\n"
+    return text[:end] + separator + entry + text[end:]
+
+
 def rewrite_spec(spec: Path, release: str) -> bool:
-    """Update Version: and reset a literal Release:. True when changed."""
+    """Update Version:, reset a literal Release:, and record manual history."""
     text = spec.read_text()
     wanted = rpm_version(release)
     pattern = VERSION_LINE
@@ -575,7 +607,7 @@ def rewrite_spec(spec: Path, release: str) -> bool:
     if match.group(2) == wanted:
         return False
     text = pattern.sub(lambda m: m.group(1) + wanted, text, count=1)
-    spec.write_text(reset_release(text))
+    spec.write_text(update_changelog(reset_release(text), wanted))
     return True
 
 

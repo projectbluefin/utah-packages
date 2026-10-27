@@ -1,0 +1,282 @@
+# Run Canary on a fork pull request a maintainer has reviewed (#369).
+#
+# Canary is a required check, and a fork pull request cannot satisfy it: its
+# token has no packages: write, so canary.yml fails it before building anything
+# ("a fork pull request cannot publish the canary image"). The fix a maintainer
+# used to do by hand is a push of the reviewed branch into this repository. This
+# is that push as a button.
+#
+#   Actions -> "Canary for a fork pull request" -> Run workflow
+#     pr        the pull request number
+#     head_sha  the full commit you reviewed (the run refuses if the head moved)
+#
+# It copies exactly that commit to canary/pr-<N> and dispatches canary.yml on
+# it. The dispatch deliberately names no pr input: canary.yml runs from the copy,
+# so it is the pull request's own (possibly older) canary.yml that decides, and
+# every version of it treats a dispatch without pr as an unconditional,
+# same-repository run. That run's own Canary check is NOT the one the pull
+# request waits for (it rolls up its own branch's suite only; seen on #622), so
+# the fork's own Canary job passes on proof of this run, and the refresh job
+# below waits for this run and re-runs the pull request's Canary on it. (A
+# workflow_run refresher was tried first and never fired for a run started by
+# this workflow's GITHUB_TOKEN dispatch; waiting here does not depend on it.) Nothing
+# from the fork is built, checked out or executed in THIS workflow: it only
+# moves a ref. The canary run that follows does build the fork's code with
+# packages: write, which is why a maintainer's review of the diff comes first and
+# why head_sha is mandatory.
+#
+# Pull requests that change .github/ are refused: a push with GITHUB_TOKEN may
+# not carry workflow changes, and those workflows hold this repository's
+# credentials, so a maintainer must push those by hand.
+name: Canary for a fork pull request
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: Fork pull request number
+        required: true
+        type: string
+      head_sha:
+        description: Full 40-character head commit you reviewed
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+
+concurrency:
+  group: canary-fork-pr-${{ inputs.pr }}
+  cancel-in-progress: false
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-24.04
+    outputs:
+      action: ${{ steps.check.outputs.action }}
+      since: ${{ steps.dispatch.outputs.since }}
+    steps:
+      # Trusted code only: this workflow's own ref, which is main's tooling.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Check the pull request is the one that was reviewed
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ inputs.pr }}
+          HEAD_SHA: ${{ inputs.head_sha }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          [[ "$PR" =~ ^[0-9]+$ ]] || { echo "::error::pr must be a number"; exit 1; }
+          gh api "repos/$REPOSITORY/pulls/$PR" > pr.json
+          gh api --paginate "repos/$REPOSITORY/pulls/$PR/files" \
+            --jq '.[] | .filename, (.previous_filename // empty)' > files.txt
+          python3 tools/fork_canary.py \
+            --pr-json pr.json --files files.txt \
+            --repository "$REPOSITORY" --head-sha "$HEAD_SHA" \
+            | tee decision.txt
+          action=$(sed -n 's/^action=//p' decision.txt)
+          # A change that cannot affect what Canary proves passes it on its own;
+          # the same rule canary.yml applies (tools/canary.py pipeline_relevant),
+          # with the set read from the trusted canary.yml on main.
+          CANARY_SET=$(python3 -c "import yaml; print(yaml.safe_load(open('.github/workflows/canary.yml'))['env']['CANARY_SET'])")
+          if [ "$action" = copy ] && ! python3 tools/canary.py pr-relevant --repository "$REPOSITORY" --pr "$PR" --set "$CANARY_SET"; then
+            echo "::notice title=fork canary::no pipeline path changed; its own Canary run already passes"
+            action=skip
+          fi
+          echo "action=$action" >> "$GITHUB_OUTPUT"
+      - name: Copy the reviewed commit into this repository
+        if: steps.check.outputs.action == 'copy'
+        env:
+          PR: ${{ inputs.pr }}
+          HEAD_SHA: ${{ inputs.head_sha }}
+        run: |
+          set -euo pipefail
+          # The pull request's head ref lives in this repository's network, so
+          # this fetches the fork's commit without adding a remote or running
+          # anything from it.
+          git fetch --no-tags --depth=1 origin "refs/pull/${PR}/head"
+          test "$(git rev-parse FETCH_HEAD)" = "$HEAD_SHA"
+          git push --force origin "${HEAD_SHA}:refs/heads/canary/pr-${PR}"
+      - name: Dispatch Canary on the copy
+        id: dispatch
+        if: steps.check.outputs.action == 'copy'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ inputs.pr }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          echo "since=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
+          gh workflow run canary.yml -R "$REPOSITORY" --ref "canary/pr-${PR}"
+      - name: Tell the pull request
+        if: steps.check.outputs.action == 'copy'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ inputs.pr }}
+          HEAD_SHA: ${{ inputs.head_sha }}
+          ACTOR: ${{ github.actor }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          gh pr comment "$PR" -R "$REPOSITORY" --body "Canary was run on this pull request at \`${HEAD_SHA}\` by @${ACTOR} after review, from the in-repository copy \`canary/pr-${PR}\`: https://github.com/${REPOSITORY}/actions/workflows/canary.yml?query=branch%3Acanary%2Fpr-${PR}. When that run passes, this pull request's own \`Canary\` check is re-run and turns green by itself. A new push to the pull request needs a new review and a new run."
+      # The copies are only needed while their pull request is open.
+      - name: Delete copies of closed pull requests
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          gh api --paginate "repos/$REPOSITORY/branches?per_page=100" --jq '.[].name' > branches.txt
+          # grep exits 1 when there are no copies; anything higher is an error.
+          grep -E '^canary/pr-[0-9]+$' branches.txt > copies.txt || test $? -eq 1
+          while read -r branch; do
+            n="${branch#canary/pr-}"
+            state=$(gh api "repos/$REPOSITORY/pulls/$n" --jq .state)
+            if [ "$state" != open ]; then
+              gh api -X DELETE "repos/$REPOSITORY/git/refs/heads/$branch"
+              echo "deleted $branch ($state)"
+            fi
+          done < copies.txt
+
+  # A pull request rolls up only its own branch's check suite, so the dispatched
+  # run's green Canary is not the check it waits for. The fork's own Canary job
+  # passes on proof of that run (canary.yml, "Decide"); this job waits for the
+  # run and re-runs the pull request's Canary once the proof exists. Like the
+  # job above it runs this workflow's own code from main and executes nothing
+  # from the pull request: it only calls the API with values validated above.
+  refresh:
+    needs: dispatch
+    if: needs.dispatch.outputs.action == 'copy'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 150
+    steps:
+      - name: Wait for the maintainer-run Canary
+        id: wait
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ inputs.pr }}
+          REPOSITORY: ${{ github.repository }}
+          SINCE: ${{ needs.dispatch.outputs.since }}
+        run: |
+          set -euo pipefail
+          [[ "$PR" =~ ^[0-9]+$ ]] || { echo "::error::pr must be a number"; exit 1; }
+          branch="canary/pr-${PR}"
+          run_id=""
+          for _ in $(seq 1 40); do
+            run_id=$(gh api "repos/$REPOSITORY/actions/workflows/canary.yml/runs?event=workflow_dispatch&branch=${branch}&per_page=10" \
+              | jq -r --arg since "$SINCE" '[.workflow_runs[] | select(.created_at >= $since)] | sort_by(.created_at) | first | .id // empty')
+            [ -n "$run_id" ] && break
+            sleep 15
+          done
+          [ -n "$run_id" ] || { echo "::error::the dispatched Canary never appeared on ${branch}"; exit 1; }
+          echo "run_id=$run_id" >> "$GITHUB_OUTPUT"
+          conclusion=none
+          for _ in $(seq 1 140); do
+            read -r status conclusion <<<"$(gh api "repos/$REPOSITORY/actions/runs/$run_id" --jq '"\(.status) \(.conclusion // "none")"')"
+            [ "$status" = completed ] && break
+            sleep 60
+          done
+          echo "conclusion=$conclusion" >> "$GITHUB_OUTPUT"
+      - name: Say so when the maintainer-run Canary did not pass
+        if: steps.wait.outputs.conclusion != 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ inputs.pr }}
+          HEAD_SHA: ${{ inputs.head_sha }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ steps.wait.outputs.run_id }}
+          CONCLUSION: ${{ steps.wait.outputs.conclusion }}
+        run: |
+          set -euo pipefail
+          gh pr comment "$PR" -R "$REPOSITORY" --body "The maintainer-run Canary on \`${HEAD_SHA}\` finished \`${CONCLUSION}\`: https://github.com/${REPOSITORY}/actions/runs/${RUN_ID}. This pull request's Canary check stays red until a run passes on this exact commit."
+          exit 1
+      - name: Re-run the pull request's Canary on the proof
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ inputs.pr }}
+          HEAD_SHA: ${{ inputs.head_sha }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          gh api "repos/$REPOSITORY/pulls/$PR" > pr.json
+          # Only the exact commit that was proven, on a pull request still open:
+          # a moved head needs its own review and run.
+          if [ "$(jq -r .state pr.json)" != open ] || [ "$(jq -r .head.sha pr.json)" != "$HEAD_SHA" ]; then
+            echo "::notice title=fork canary::pull request $PR is closed or its head moved since this run; nothing to refresh"
+            exit 0
+          fi
+
+          pr_run() {
+            gh api "repos/$REPOSITORY/actions/workflows/canary.yml/runs?event=pull_request&head_sha=${HEAD_SHA}&per_page=20" \
+              --jq '[.workflow_runs[]] | sort_by(.created_at) | last // empty | "\(.id) \(.status) \(.conclusion // "none")"'
+          }
+          wait_done() {
+            local line id status conclusion
+            for _ in $(seq 1 60); do
+              line=$(pr_run)
+              [ -n "$line" ] || { sleep 10; continue; }
+              read -r id status conclusion <<<"$line"
+              [ "$status" = completed ] && { echo "$id $conclusion"; return 0; }
+              sleep 10
+            done
+            echo "none timeout"
+          }
+
+          read -r id conclusion <<<"$(wait_done)"
+          if [ "$id" = none ]; then
+            echo "::error::no pull_request Canary run found for $HEAD_SHA"; exit 1
+          fi
+          if [ "$conclusion" = success ]; then
+            echo "pull request Canary already passes (run $id)"; exit 0
+          fi
+
+          # A re-run is quiet, but it reuses the workflow file the run started
+          # with: a run from before canary.yml could read the proof fails again.
+          gh run rerun "$id" -R "$REPOSITORY" --failed
+          sleep 15
+          read -r id conclusion <<<"$(wait_done)"
+          if [ "$conclusion" = success ]; then
+            echo "pull request Canary passes after a re-run (run $id)"; exit 0
+          fi
+
+          # A pull request's run takes its workflow file from the pull request's
+          # merge commit, and GitHub recomputes that commit only when the pull
+          # request is reopened -- after the run the reopen starts has already
+          # taken the old one (seen on #622: the fresh run printed the old
+          # message). So reopen until the merge commit sits on the current base
+          # tip; the run that reopen starts has the current canary.yml, which
+          # can read the proof. Closing and reopening keeps the head commit, so
+          # nothing needs a new review.
+          base_tip() { gh api "repos/$REPOSITORY/commits/$(jq -r .base.ref pr.json)" --jq .sha; }
+          fresh() {
+            local merge
+            merge=$(gh api "repos/$REPOSITORY/git/ref/pull/$PR/merge" --jq .object.sha 2>/dev/null) || return 1
+            [ "$(gh api "repos/$REPOSITORY/commits/$merge" --jq '.parents[0].sha')" = "$(base_tip)" ]
+          }
+          echo "::notice title=fork canary::run $id predates the proof lookup; reopening pull request $PR until its merge commit is current"
+          started_fresh=false
+          for _ in 1 2 3; do
+            started_fresh=false
+            if fresh; then started_fresh=true; fi
+            gh pr close "$PR" -R "$REPOSITORY"
+            gh pr reopen "$PR" -R "$REPOSITORY"
+            [ "$started_fresh" = true ] && break
+            # The reopen queued a recompute; give it time, then go again.
+            for _ in $(seq 1 12); do fresh && break; sleep 5; done
+          done
+          [ "$started_fresh" = true ] || { echo "::error::the merge commit of pull request $PR never caught up with the base branch"; exit 1; }
+          sleep 15
+          read -r id status conclusion <<<"$(pr_run)"
+          # A reopen by this workflow's bot starts a fork run that waits for a
+          # maintainer's approval. The diff was reviewed when this workflow was
+          # pressed, so approve that one run; a run that needs none says so.
+          if [ "$conclusion" = action_required ]; then
+            gh api -X POST "repos/$REPOSITORY/actions/runs/$id/approve" > /dev/null
+            sleep 20
+          fi
+          read -r id conclusion <<<"$(wait_done)"
+          test "$conclusion" = success || { echo "::error::pull request Canary is still $conclusion (run $id) after the proof"; exit 1; }
+          echo "pull request Canary passes on a fresh run ($id)"

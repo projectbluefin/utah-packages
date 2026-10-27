@@ -1,0 +1,8 @@
+{
+  "package": "gupnp-dlna",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/gupnp-dlna.git",
+  "commit": "d0a0bfe6be8de3b10708bcbccbfcae4e2c94053e",
+  "tree": "e71d6e143f9ba31f5ea853951053f96e4799bd86",
+  "imported_at": "2026-10-25T13:26:15.393221+00:00"
+}

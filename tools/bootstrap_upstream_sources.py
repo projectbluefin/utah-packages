@@ -167,6 +167,11 @@ def main() -> int:
                         help="process only this recipe, even if Hummingbird already supplies it")
     args = parser.parse_args()
     root = args.root.resolve()
+    output, report = root / args.output, root / args.report
+    if output.resolve() == report.resolve() or (
+        output.exists() and report.exists() and output.samefile(report)
+    ):
+        parser.error("--output and --report must name different files")
     packages = (root / args.packages).resolve()
     provided_names = set(args.provided_packages.read_text().split()) if args.provided_packages else set()
     resolution_path = root / "reports/bluefin-rawhide-resolution.json"
@@ -227,15 +232,17 @@ def main() -> int:
             candidates.append({"name": name, "version": version, "url": url, "filename": filename, "sha512": digest})
         except Exception as error:
             rejected.append({"package": package.name, "spec": str(spec.relative_to(root)), "reason": str(error)})
-    output, report = root / args.output, root / args.report
-    output.parent.mkdir(parents=True, exist_ok=True)
+    # A rejected explicit selection is a diagnostic, not a new source lock.
+    # Leave the output untouched even if the caller omitted --merge (#520).
+    if not (args.package and rejected):
+        output.parent.mkdir(parents=True, exist_ok=True)
+        if args.merge:
+            existing = json.loads(output.read_text()) if output.exists() else {"schema": 1, "packages": []}
+            payload = merge_candidates(existing, candidates)
+        else:
+            payload = {"schema": 1, "packages": candidates}
+        output.write_text(json.dumps(payload, indent=2) + "\n")
     report.parent.mkdir(parents=True, exist_ok=True)
-    if args.merge:
-        existing = json.loads(output.read_text()) if output.exists() else {"schema": 1, "packages": []}
-        payload = merge_candidates(existing, candidates)
-    else:
-        payload = {"schema": 1, "packages": candidates}
-    output.write_text(json.dumps(payload, indent=2) + "\n")
     report.write_text(json.dumps({"accepted": len(candidates), "already_supplied_by_hummingbird": already_supplied,
                                   "rejected": rejected}, indent=2) + "\n")
     print(f"accepted direct sources: {len(candidates)}; already supplied: {len(already_supplied)}; needs explicit mapping: {len(rejected)}")

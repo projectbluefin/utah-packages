@@ -1,0 +1,8 @@
+{
+  "package": "glow",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/glow.git",
+  "commit": "699bf7372169dc428698bfa10166404d4f2b100b",
+  "tree": "6a708b689dfba8cbfa4de6835735b7178dc4e48a",
+  "imported_at": "2026-10-26T05:36:21.136974+00:00"
+}

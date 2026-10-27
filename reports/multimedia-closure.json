@@ -78,7 +78,7 @@
       "parity_note": "Imported from src.fedoraproject.org/rpms/libheif, which disables the HEVC encoder and decoder plugins. HEIC files therefore do not decode. negativo17's libheif enables them.",
       "recipe": "packages/libheif",
       "stage": 1,
-      "version": "1.23.6",
+      "version": "1.23.7",
       "nevra": null,
       "recipe_provenance": "https://src.fedoraproject.org/rpms/libheif.git"
     },

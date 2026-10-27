@@ -1,0 +1,8 @@
+{
+  "package": "toolbox",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/toolbox.git",
+  "commit": "fa0e6feeff653126fb5a4f3ab4951565bb3a3b19",
+  "tree": "0ca82859485dcc39485b0c652ae26515a77f2040",
+  "imported_at": "2026-10-26T06:07:19.793952+00:00"
+}

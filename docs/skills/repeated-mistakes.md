@@ -556,6 +556,13 @@ reaching for `buildroot_icu77`, check the package's own `libicu-devel`.
   --merge`. It needs `rpmspec`; run it inside the pinned
   `quay.io/packit/packit` image (digest in `packit-srpm-chunk.yml`) when the
   host has none. Add the Fedora lookaside as `fallback_urls`, never as `url`.
+  An explicit rejection must leave the existing lock byte-for-byte unchanged
+  (or absent) while writing its diagnostic report and returning nonzero.
+  The report and source lock must be distinct files; reject path aliases
+  before processing a recipe so the report cannot overwrite the lock.
+  Check that path with and without `--merge`: omitting the flag used to empty
+  the catalog before reporting the rejection (#520). A successful command
+  without `--merge` still replaces the catalog, so keep the flag for imports.
 - Regenerate `.packit.yaml` with `python3 tools/render_packit_config.py
   --write`.
 - Refresh the counts in `docs/architecture.md` with

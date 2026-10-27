@@ -1,0 +1,8 @@
+{
+  "package": "hyperv-daemons",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/hyperv-daemons.git",
+  "commit": "3ec700c3c09a4ba31a09516f52c5cc19fb0cf21b",
+  "tree": "5f7ec419e91a158333d2ca2fc2237c5fadfbdfb2",
+  "imported_at": "2026-10-25T13:26:17.596188+00:00"
+}

@@ -201,6 +201,9 @@ install -m0644 -D ppp.sysusers.conf %{buildroot}%{_sysusersdir}/ppp.conf
 %{_libdir}/pkgconfig/pppd.pc
 
 %changelog
+* Sat Oct 03 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 2.5.4-1
+- Update to 2.5.4
+
 * Thu Jul 16 2026 Fedora Release Engineering <releng@fedoraproject.org> - 2.5.3-3
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_45_Mass_Rebuild
 

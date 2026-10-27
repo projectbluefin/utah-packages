@@ -1,0 +1,8 @@
+{
+  "package": "time",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/time.git",
+  "commit": "c59b262763d1d9fa4403dc0173df3c3d1fd6b417",
+  "tree": "9c7adf5dde70913f15c875f3babb6d4291eef176",
+  "imported_at": "2026-10-26T06:07:18.926094+00:00"
+}

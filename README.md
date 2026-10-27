@@ -71,7 +71,10 @@ source entry cannot build.
 The RPM workflow locks source checksums, rebuilds each package in staged
 matrix jobs, creates repodata, keylessly signs `repomd.xml` using GitHub
 OIDC/Cosign, and publishes the result as an OCI image. Pull requests from
-forks never publish RPMs or images.
+forks never publish RPMs or images on their own; a maintainer can run Canary on
+a reviewed fork pull request, which builds the fork's code and publishes a
+`utah-packages:canary-…` image (see
+[docs/skills/lane-validation.md](docs/skills/lane-validation.md)).
 
 The build does **not** currently run in Mock, despite installing it. See
 *Agreed direction* in [docs/architecture.md](docs/architecture.md).

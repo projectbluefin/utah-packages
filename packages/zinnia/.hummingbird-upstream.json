@@ -1,0 +1,8 @@
+{
+  "package": "zinnia",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/zinnia.git",
+  "commit": "ff85a7ea9ebc8b39f628e1f41274d98235ddfcbf",
+  "tree": "3b6f317f7099a154d5653bc6f5804a24fcf81934",
+  "imported_at": "2026-10-25T19:09:25.894694+00:00"
+}

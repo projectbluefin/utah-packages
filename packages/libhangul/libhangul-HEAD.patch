@@ -1,0 +1,843 @@
+From 285e92d744e85e7643a37b120f54f2fca735d90a Mon Sep 17 00:00:00 2001
+From: Weng Xuetian <wengxt@gmail.com>
+Date: Fri, 16 May 2025 09:41:08 -0700
+Subject: [PATCH 01/13] Improve cmake support
+
+1. Generate pkg-config file when build with cmake
+2. Install hangul-config*.cmake file to the directory that follows the
+   cmake find_package procedure.
+
+https://github.com/libhangul/libhangul/issues/88
+https://github.com/libhangul/libhangul/issues/89
+---
+ CMakeLists.txt | 31 +++++++++++++++++++++++++++++--
+ 1 file changed, 29 insertions(+), 2 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index afac588..17d3ca0 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -65,11 +65,14 @@ configure_file(
+     "${CMAKE_CURRENT_BINARY_DIR}/config.h"
+ )
+ 
++# cmake subdirectory name need to be sync with the config filename
++# to allow find_package(hangul) works.
++# https://cmake.org/cmake/help/latest/command/find_package.html#search-procedure
+ include(CMakePackageConfigHelpers)
+ configure_package_config_file(hangul-config.cmake.in
+     "${CMAKE_CURRENT_BINARY_DIR}/hangul-config.cmake"
+     INSTALL_DESTINATION
+-        "${CMAKE_INSTALL_LIBDIR}/cmake/${CMAKE_PROJECT_NAME}"
++        "${CMAKE_INSTALL_LIBDIR}/cmake/hangul"
+     PATH_VARS
+         LIBHANGUL_INCLUDE_DIR
+         LIBHANGUL_LIBRARY_DIR
+@@ -86,7 +89,31 @@ install(
+         "${CMAKE_CURRENT_BINARY_DIR}/hangul-config.cmake"
+         "${CMAKE_CURRENT_BINARY_DIR}/hangul-config-version.cmake"
+     DESTINATION
+-        "${CMAKE_INSTALL_LIBDIR}/cmake/${CMAKE_PROJECT_NAME}"
++        "${CMAKE_INSTALL_LIBDIR}/cmake/hangul"
++    COMPONENT
++        dev
++)
++
++function(generate_pkgconfig_file)
++    # Define a function to avoid pollute into global scope
++    set(prefix "${CMAKE_INSTALL_PREFIX}")
++    set(exec_prefix "${CMAKE_INSTALL_PREFIX}")
++    set(libdir "${CMAKE_INSTALL_FULL_LIBDIR}")
++    set(includedir "${CMAKE_INSTALL_FULL_INCLUDEDIR}")
++    set(PACKAGE_VERSION "${PROJECT_VERSION}")
++    configure_file(
++        libhangul.pc.in
++        "${CMAKE_CURRENT_BINARY_DIR}/libhangul.pc"
++        @ONLY
++    )
++endfunction()
++
++generate_pkgconfig_file()
++install(
++    FILES
++        "${CMAKE_CURRENT_BINARY_DIR}/libhangul.pc"
++    DESTINATION
++        "${CMAKE_INSTALL_LIBDIR}/pkgconfig/libhangul.pc"
+     COMPONENT
+         dev
+ )
+-- 
+2.55.0
+
+From 9d271e25596e79cd53ce41f2869eb5dda9b86d17 Mon Sep 17 00:00:00 2001
+From: Choe Hwanjin <choe.hwanjin@gmail.com>
+Date: Sat, 24 May 2025 13:29:08 +0900
+Subject: [PATCH 02/13] Downgrade gettext to 0.22.5
+
+The org.freedesktop.Sdk runtime 24.04 does not include gettext 0.23.1.
+Since the exact version of gettext is not critical for this project,
+downgrading would be fine. This change may simplify Flatpak packaging.
+
+See: https://github.com/libhangul/libhangul/pull/90#issuecomment-2903135853
+---
+ configure.ac | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/configure.ac b/configure.ac
+index e5c6e8a..e098c56 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -27,7 +27,7 @@ AC_SUBST(LIBHANGUL_AGE)
+ 
+ AM_MAINTAINER_MODE
+ 
+-AM_GNU_GETTEXT_VERSION([0.23.1])
++AM_GNU_GETTEXT_VERSION([0.22.5])
+ AM_GNU_GETTEXT([external])
+ 
+ # Checks for programs.
+-- 
+2.55.0
+
+From 1f0321124ebb24bcbc504feeac5da48daa9825dd Mon Sep 17 00:00:00 2001
+From: Choe Hwanjin <choe.hwanjin@gmail.com>
+Date: Sat, 24 May 2025 14:11:40 +0900
+Subject: [PATCH 03/13] cmake: Fix install directory for `.pc` file
+
+The `DESTINATION` option of the CMake `install()` command
+must specify a directory.
+---
+ CMakeLists.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 17d3ca0..a9afc27 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -113,7 +113,7 @@ install(
+     FILES
+         "${CMAKE_CURRENT_BINARY_DIR}/libhangul.pc"
+     DESTINATION
+-        "${CMAKE_INSTALL_LIBDIR}/pkgconfig/libhangul.pc"
++        "${CMAKE_INSTALL_LIBDIR}/pkgconfig"
+     COMPONENT
+         dev
+ )
+-- 
+2.55.0
+
+From ac79b37b776a80e4ba453496ce4bb25fc48dd93f Mon Sep 17 00:00:00 2001
+From: Qijia Liu <liumeo@pku.edu.cn>
+Date: Sat, 20 Dec 2025 20:39:37 -0500
+Subject: [PATCH 04/13] cmake: make tools optional
+
+Support platforms without requiring tool builds
+
+https://github.com/libhangul/libhangul/pull/97
+---
+ CMakeLists.txt | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index a9afc27..ea78945 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -40,6 +40,11 @@ option(ENABLE_UNIT_TEST
+     ON
+ )
+ 
++option(ENABLE_TOOLS
++    "Enable/Disable tools."
++    ON
++)
++
+ include(CTest)
+ 
+ include(GNUInstallDirs)
+@@ -52,7 +57,9 @@ add_subdirectory(data/hanja)
+ if(ENABLE_EXTERNAL_KEYBOARDS)
+ add_subdirectory(data/keyboards)
+ endif()
++if(ENABLE_TOOLS)
+ add_subdirectory(tools)
++endif()
+ add_subdirectory(po)
+ 
+ if(BUILD_TESTING)
+-- 
+2.55.0
+
+From a34aef73378c0992316861bbf13fc914ee7577d9 Mon Sep 17 00:00:00 2001
+From: Ekaterine Papava <papava.e@gtu.ge>
+Date: Thu, 15 Jan 2026 10:52:03 +0400
+Subject: [PATCH 05/13] po: Add Georgian translation
+
+https://github.com/libhangul/libhangul/pull/98
+---
+ po/LINGUAS |   1 +
+ po/ka.po   | 139 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 140 insertions(+)
+ create mode 100644 po/ka.po
+
+diff --git a/po/LINGUAS b/po/LINGUAS
+index d031295..4b398c4 100644
+--- a/po/LINGUAS
++++ b/po/LINGUAS
+@@ -1 +1,2 @@
++ka
+ ko
+diff --git a/po/ka.po b/po/ka.po
+new file mode 100644
+index 0000000..4fff3ee
+--- /dev/null
++++ b/po/ka.po
+@@ -0,0 +1,139 @@
++# Georgian translation for libhangul.
++# Copyright (C) 2026 Free Software Foundation, Inc.
++# This file is distributed under the same license as the libhangul package.
++# Ekaterine Papava <papava.e@gtu.ge>, 2026.
++#
++msgid ""
++msgstr ""
++"Project-Id-Version: libhangul 0.2.0\n"
++"Report-Msgid-Bugs-To: https://github.com/libhangul/libhangul\n"
++"POT-Creation-Date: 2025-05-06 04:59+0200\n"
++"PO-Revision-Date: 2026-01-15 07:47+0100\n"
++"Last-Translator: Ekaterine Papava <papava.e@gtu.ge>\n"
++"Language-Team: Georgian <(nothing)>\n"
++"Language: ka\n"
++"MIME-Version: 1.0\n"
++"Content-Type: text/plain; charset=UTF-8\n"
++"Content-Transfer-Encoding: 8bit\n"
++"X-Generator: Poedit 3.8\n"
++
++#: hangul/hangulkeyboard.c:135
++msgid "Dubeolsik"
++msgstr "დუბეოლსკი"
++
++#: hangul/hangulkeyboard.c:144
++msgid "Dubeolsik Yetgeul"
++msgstr "დუბეოლსკი იესგეული"
++
++#: hangul/hangulkeyboard.c:153
++msgid "Sebeolsik Dubeol Layout"
++msgstr "Sebeolsik Dubeol განლაგება"
++
++#: hangul/hangulkeyboard.c:162
++msgid "Sebeolsik 390"
++msgstr "Sebeolsik 390"
++
++#: hangul/hangulkeyboard.c:171
++msgid "Sebeolsik Final"
++msgstr "Sebeolsik საბოლოო"
++
++#: hangul/hangulkeyboard.c:180
++msgid "Sebeolsik Noshift"
++msgstr "Sebeolsik Noshift"
++
++#: hangul/hangulkeyboard.c:189
++msgid "Sebeolsik Yetgeul"
++msgstr "Sebeolsik Yetgeul"
++
++#: hangul/hangulkeyboard.c:198
++msgid "Romaja"
++msgstr "რომაჯა"
++
++#: hangul/hangulkeyboard.c:207
++msgid "Ahnmatae"
++msgstr "აჰნმატაე"
++
++#: tools/hangul.c:72
++#, c-format
++msgid "Usage: %s [OPTION]... [FILE]...\n"
++msgstr "გამოყენება: %s [პარამეტრი].. [ფაილი]...\n"
++
++#: tools/hangul.c:76
++msgid ""
++"Convert string into korean characters according to korean keyboard "
++"layout.\n"
++"\n"
++"Mandatory arguments to long options are mandatory for short options "
++"too.\n"
++"  -k, --keyboard=KEYBOARDID   select keyboard layout by KEYBOARDID\n"
++"  -l, --list                  list available keyboard and exit\n"
++"  -i, --input=STRING          use STRING as input instead of standard "
++"input\n"
++"  -o, --output=FILE           write result to FILE instead of standard "
++"output\n"
++"  -s, --strict-order          do not allow wrong input sequence\n"
++msgstr ""
++"სტრიქონის გადაყვანა კორეულ სიმბოლოებში კორეული კლავიატურის განლაგების "
++"მიხედვით.\n"
++"\n"
++"არგუმენტები, რომლებიც აუცილებელია გრძელი პარამეტრებისთვის, ასევე "
++"აუცილებელია მოკლეებისთვისაც.\n"
++"  -k, --keyboard=KEYBOARDID   კლავიატურის განლაგების არჩევა KEYBOARDID-"
++"ის მიხედვით\n"
++"  -l, --list                  ხელმისაწვდომი კლავიატურების სიის "
++"გამოტანა და გასვლა\n"
++"  -i, --input=STRING          მითითებული სტრიქონის გამოყენება "
++"შეყვანისთვის სტანდარტული შეყვანის მაგიერ\n"
++"  -o, --output=FILE           მითითებულ ფაილში ჩაწერა სტანდარტულ "
++"გამოტანაზე ჩვენების მაგიერ\n"
++"  -s, --strict-order          არასწორი შეყვანის მიმდევრობები დაშვებული "
++"არ იქნება\n"
++
++#: tools/hangul.c:87
++msgid ""
++"      --help                  display this help and exit\n"
++"      --version               output version information and exit\n"
++msgstr ""
++"      --help                  ამ დახმარების გამოტანა და გასვლა\n"
++"      --version               ვერსიის ინფორმაციის გამოტანა და გასვლა\n"
++
++#: tools/hangul.c:92
++msgid ""
++"\n"
++"With no FILE, or when FILE is -, read standard input.\n"
++msgstr ""
++"\n"
++"როცა ფაილი არ არსებობს ან '-'-ია, წაკითხვა stdin-დან მოხდება.\n"
++
++#: tools/hangul.c:97
++#, c-format
++msgid ""
++"\n"
++"Examples:\n"
++"  %s -i gksrmfdlqfur  Convert specified string into korean characters\n"
++"                          and print them to standard output.\n"
++"  %s                  Convert standard input into korean characters\n"
++"                          and print them to standard output.\n"
++msgstr ""
++"\n"
++"მაგალითები:\n"
++"  %s -i gksrmfdlqfur  მითითებული სტრიქონის გადაყვანა კორეულ "
++"სიმბოლოებში\n"
++"                          და მათი ჩვენება სტანდარტულ გამოტანაზე.\n"
++"  %s                  სტანდარტული შეყვანის გადაყვანა კორეულ "
++"სიმბოლოებში\n"
++"                          და მათი ჩვენება სტანდარტულ გამოტანაზე.\n"
++
++#: tools/hangul.c:107
++#, c-format
++msgid "Try `%s --help' for more information.\n"
++msgstr "მეტი ინფორმაციისთვის სცადეთ '%s --help'\n"
++
++#: tools/hangul.c:237 tools/hangul.c:276
++msgid "standard output"
++msgstr "სტანდარტული გამოტანა"
++
++#: tools/hangul.c:358
++#, c-format
++msgid "conversion from %s to UTF-8"
++msgstr "გადაყვანა %s-დან UTF-8-ში"
+-- 
+2.55.0
+
+From 717409ce61524bb3d8426060a384822f21354c62 Mon Sep 17 00:00:00 2001
+From: Choe Hwanjin <choe.hwanjin@gmail.com>
+Date: Sun, 15 Feb 2026 19:32:52 +0900
+Subject: [PATCH 06/13] =?UTF-8?q?hanja:=20=EB=B2=94=EC=9A=A9(=E6=B1=8E?=
+ =?UTF-8?q?=E7=94=A8)=20=EC=B6=94=EA=B0=80?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+汎用의 사용 빈도가 가장 높다는 실질적인 근거는 없지만
+개인적인 판단으로 맨 앞에 배치한다.
+
+https://github.com/fcitx/fcitx5-hangul/issues/6
+---
+ data/hanja/hanja.txt | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/data/hanja/hanja.txt b/data/hanja/hanja.txt
+index 199cfd7..0ce2f86 100644
+--- a/data/hanja/hanja.txt
++++ b/data/hanja/hanja.txt
+@@ -96105,11 +96105,12 @@
+ 범오:泛惡:
+ 범왕:梵王:
+ 범왕궁:梵王宮:
++범용:汎用:
+ 범용:犯用:
+ 범용:凡庸:
+ 범용:凡容:
+ 범용기관:汎用機關:
+-범용전자계산기:汎用전자계산기:
++범용전자계산기:汎用電子計算機:
+ 범용컴퓨터:汎用컴퓨터:
+ 범우:凡愚:
+ 범우:梵宇:
+-- 
+2.55.0
+
+From 3f8573c2044da5833d9f5a7d74b1ad50faef710a Mon Sep 17 00:00:00 2001
+From: Choe Hwanjin <choe.hwanjin@gmail.com>
+Date: Mon, 14 Sep 2026 22:16:42 +0900
+Subject: [PATCH 07/13] Downgrade gettext to 0.21 (fixes #102)
+
+This is required to support Ubuntu 24.04.
+
+https://github.com/libhangul/libhangul/issues/102
+---
+ configure.ac | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/configure.ac b/configure.ac
+index e098c56..631dc45 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -27,7 +27,7 @@ AC_SUBST(LIBHANGUL_AGE)
+ 
+ AM_MAINTAINER_MODE
+ 
+-AM_GNU_GETTEXT_VERSION([0.22.5])
++AM_GNU_GETTEXT_VERSION([0.21])
+ AM_GNU_GETTEXT([external])
+ 
+ # Checks for programs.
+-- 
+2.55.0
+
+From 45abb567e4a0d6b09cd0b83d15c3a87d52244b64 Mon Sep 17 00:00:00 2001
+From: Li kunyu <kunyu@nfschina.com>
+Date: Thu, 29 Sep 2022 14:18:30 +0800
+Subject: [PATCH 08/13] test: remove a redunduant semicolon
+
+Signed-off-by: Li kunyu <kunyu@nfschina.com>
+
+https://github.com/libhangul/libhangul/pull/67
+---
+ test/test.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/test/test.c b/test/test.c
+index 6e64683..4a0dddd 100644
+--- a/test/test.c
++++ b/test/test.c
+@@ -69,7 +69,7 @@ check_preedit(const char* keyboard, const char* input, const wchar_t* output)
+ 
+     ic = get_ic(keyboard);
+ 
+-    res = check_preedit_with_ic(ic, input, output);;
++    res = check_preedit_with_ic(ic, input, output);
+ 
+     return res;
+ }
+-- 
+2.55.0
+
+From 386f73c85f28b63604cd2ccb65e3ef497e213ff8 Mon Sep 17 00:00:00 2001
+From: Changwoo Ryu <cwryu@debian.org>
+Date: Wed, 6 May 2026 04:34:39 +0900
+Subject: [PATCH 09/13] =?UTF-8?q?MS=20IME=20=EC=8B=AC=EB=B3=BC=20=EB=B3=80?=
+ =?UTF-8?q?=ED=99=98=20=ED=85=8C=EC=9D=B4=EB=B8=94=EC=97=90=20'=E3=89=BE'?=
+ =?UTF-8?q?=20=EC=B6=94=EA=B0=80?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+* Windows Vista 이후 MS IME에서 ㅁ+한자 키 목록에 추가됨.
+
+https://github.com/libhangul/libhangul/issues/100
+---
+ data/hanja/mssymbol.txt | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/data/hanja/mssymbol.txt b/data/hanja/mssymbol.txt
+index 31c4e63..6861d10 100644
+--- a/data/hanja/mssymbol.txt
++++ b/data/hanja/mssymbol.txt
+@@ -413,6 +413,7 @@
+ ㅁ:®:
+ ㅁ:ª:
+ ㅁ:º:
++ㅁ:㉾:
+ ㅂ:─:
+ ㅂ:│:
+ ㅂ:┌:
+-- 
+2.55.0
+
+From 5094421d9586294b2aad09924b9a54e2e6060f06 Mon Sep 17 00:00:00 2001
+From: Taewook Kim <chatmate@gmail.com>
+Date: Fri, 12 Jun 2026 16:59:48 +0900
+Subject: [PATCH 10/13] Fix hanja table loading on Windows (MSVC text-mode
+ ftell drift)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+On Windows with MSVC, opening a file in text mode and using ftell() to
+record key-block offsets produces incorrect values when the file uses
+LF-only line endings. MSVC text mode assumes CRLF (2 bytes/newline),
+so ftell() over-counts preceding newlines by 1 byte each. fseek() then
+lands in the middle of a key block instead of at the start, and
+hanja_table_seek_key() immediately fails the comparison, returning
+0 hanja candidates for most hangul syllables.
+
+Fix: open the hanja data file in binary mode (fopen "rb") so that
+ftell() and fseek() agree on raw byte positions. On Linux/macOS, text
+mode and binary mode are equivalent for LF-only files, so this is a
+no-op on those platforms.
+
+Tested on Windows 11 + MSVC via a standalone C harness:
+before fix: 기/한/살 = 0 candidates; after fix: 307/100/17 candidates.
+
+https://github.com/libhangul/libhangul/pull/103
+---
+ hangul/hanja.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/hangul/hanja.c b/hangul/hanja.c
+index 7812813..feb8eb9 100644
+--- a/hangul/hanja.c
++++ b/hangul/hanja.c
+@@ -501,7 +501,7 @@ hanja_table_load(const char* filename)
+ 	return NULL;
+ #endif /* LIBHANGUL_DEFAULT_HANJA_DIC */
+ 
+-    file = fopen(filename, "r");
++    file = fopen(filename, "rb");
+     if (file == NULL) {
+ 	return NULL;
+     }
+-- 
+2.55.0
+
+From 21c2931a8a5d78d538aa648e23cc21b3ffc3d363 Mon Sep 17 00:00:00 2001
+From: Choe Hwanjin <choe.hwanjin@gmail.com>
+Date: Sun, 11 Oct 2026 14:42:04 +0900
+Subject: [PATCH 11/13] Handle malformed hanja dictionary files (#106)
+
+Avoid a NULL pointer dereference when parsing records without
+a value field.
+
+Replace strtok_r() with strpbrk() because strtok_r() cannot handle
+consecutive delimiters correctly. Do not use strsep() because it
+is not supported on Windows.
+
+Fix a bug that prevented dictionaries containing a single entry
+from being loaded, discovered while adding tests.
+
+A bug in handling dictionaries with no entries was also found
+and will be fixed in a separate commit.
+
+https://github.com/libhangul/libhangul/issues/106
+---
+ hangul/hanja.c | 64 +++++++++++++++++++++++++++++++++-----------------
+ 1 file changed, 42 insertions(+), 22 deletions(-)
+
+diff --git a/hangul/hanja.c b/hangul/hanja.c
+index feb8eb9..aa7848f 100644
+--- a/hangul/hanja.c
++++ b/hangul/hanja.c
+@@ -26,7 +26,6 @@
+ #include <unistd.h>
+ #else
+ #include <io.h>
+-#define strtok_r strtok_s
+ #endif
+ 
+ #ifdef HAVE_MMAP
+@@ -437,10 +436,32 @@ hanja_table_match(const HanjaTable* table,
+ 	fseek(table->file, offset, SEEK_SET);
+ 
+ 	while (fgets(buf, sizeof(buf), table->file) != NULL) {
+-	    char* save = NULL;
+-	    char* p = strtok_r(buf, ":", &save);
+-	    res = strcmp(p, key);
+-	    if (res == 0) {
++            char* k = buf;
++            char* p = strpbrk(k, ":");
++            if (p == NULL) {                    // no key
++                break;
++            }
++
++            p[0] = '\0';
++            p++;
++
++            res = strcmp(k, key);
++            if (res == 0) {
++                char* value = p;
++                p = strpbrk(value, ":");
++                if (p == NULL || p == value) {  // no value
++                    break;
++                }
++
++                p[0] = '\0';
++                p++;
++
++                char* comment = p;
++                p = strpbrk(comment, "\r\n");
++                if (p != NULL) {
++                    p[0] = '\0';
++                }
++
+                 if (*list == NULL) {
+                     *list = hanja_list_new(key);
+                 }
+@@ -449,12 +470,8 @@ hanja_table_match(const HanjaTable* table,
+                     break;
+                 }
+ 
+-		char* value   = strtok_r(NULL, ":", &save);
+-		char* comment = strtok_r(NULL, "\r\n", &save);
+-
+-		Hanja* hanja = hanja_new(p, value, comment);
+-
+-		hanja_list_append_n(*list, hanja, 1);
++                Hanja* hanja = hanja_new(k, value, comment);
++                hanja_list_append_n(*list, hanja, 1);
+ 	    } else if (res > 0) {
+ 		break;
+ 	    }
+@@ -486,7 +503,6 @@ hanja_table_load(const char* filename)
+     char buf[512];
+     int key_size = 5;
+     char last_key[8] = { '\0', };
+-    char* save_ptr = NULL;
+     char* key;
+     long offset;
+     unsigned i;
+@@ -512,11 +528,12 @@ hanja_table_load(const char* filename)
+ 	if (buf[0] == '#' || buf[0] == '\r' || buf[0] == '\n' || buf[0] == '\0')
+ 	    continue;
+ 
+-	save_ptr = NULL;
+-	key = strtok_r(buf, ":", &save_ptr);
+-
+-	if (key == NULL || strlen(key) == 0)
+-	    continue;
++        key = buf;
++        char* p = strpbrk(key, ":");
++        if (p == NULL || p == key) {
++            continue;
++        }
++        p[0] = '\0';
+ 
+ 	if (strncmp(last_key, key, key_size) != 0) {
+ 	    nkeys++;
+@@ -525,6 +542,8 @@ hanja_table_load(const char* filename)
+     }
+ 
+     rewind(file);
++    last_key[0] = '\0';
++
+     keytable = malloc(nkeys * sizeof(keytable[0]));
+     memset(keytable, 0, nkeys * sizeof(keytable[0]));
+ 
+@@ -535,11 +554,12 @@ hanja_table_load(const char* filename)
+ 	if (buf[0] == '#' || buf[0] == '\r' || buf[0] == '\n' || buf[0] == '\0')
+ 	    continue;
+ 
+-	save_ptr = NULL;
+-	key = strtok_r(buf, ":", &save_ptr);
+-
+-	if (key == NULL || strlen(key) == 0)
+-	    continue;
++        key = buf;
++        char* p = strpbrk(key, ":");
++        if (p == NULL || p == key) {
++            continue;
++        }
++        p[0] = '\0';
+ 
+ 	if (strncmp(last_key, key, key_size) != 0) {
+ 	    keytable[i].offset = offset;
+-- 
+2.55.0
+
+From 911f30fa9be6f4571db60a436c1dc3ac7cbba557 Mon Sep 17 00:00:00 2001
+From: Choe Hwanjin <choe.hwanjin@gmail.com>
+Date: Sun, 11 Oct 2026 16:09:48 +0900
+Subject: [PATCH 12/13] Fix handling of hanja dictionary files with no valid
+ records
+
+If a hanja dictionary file contains no valid records, keytable gets
+a size of 0 and must not be accessed.
+
+- Skip keytable creation when there are no valid records.
+- Skip search operations if keytable is not present.
+
+Whether table creation itself should fail in this case remains
+undecided, so it is left unchanged for now.
+---
+ hangul/hanja.c | 51 +++++++++++++++++++++++++++-----------------------
+ 1 file changed, 28 insertions(+), 23 deletions(-)
+
+diff --git a/hangul/hanja.c b/hangul/hanja.c
+index aa7848f..c0f2540 100644
+--- a/hangul/hanja.c
++++ b/hangul/hanja.c
+@@ -408,6 +408,9 @@ hanja_table_match(const HanjaTable* table,
+     int low, high, mid;
+     int res = -1;
+ 
++    if (table->nkeys == 0 || table->keytable == NULL)
++        return;
++
+     low = 0;
+     high = table->nkeys - 1;
+ 
+@@ -507,7 +510,7 @@ hanja_table_load(const char* filename)
+     long offset;
+     unsigned i;
+     FILE* file;
+-    HanjaIndex* keytable;
++    HanjaIndex* keytable = NULL;
+     HanjaTable* table;
+ 
+     if (filename == NULL)
+@@ -544,30 +547,32 @@ hanja_table_load(const char* filename)
+     rewind(file);
+     last_key[0] = '\0';
+ 
+-    keytable = malloc(nkeys * sizeof(keytable[0]));
+-    memset(keytable, 0, nkeys * sizeof(keytable[0]));
+-
+-    i = 0;
+-    offset = ftell(file);
+-    while (fgets(buf, sizeof(buf), file) != NULL) {
+-	/* skip comments and empty lines */
+-	if (buf[0] == '#' || buf[0] == '\r' || buf[0] == '\n' || buf[0] == '\0')
+-	    continue;
++    if (nkeys > 0) {
++        keytable = malloc(nkeys * sizeof(keytable[0]));
++        memset(keytable, 0, nkeys * sizeof(keytable[0]));
++
++        i = 0;
++        offset = ftell(file);
++        while (fgets(buf, sizeof(buf), file) != NULL) {
++            /* skip comments and empty lines */
++            if (buf[0] == '#' || buf[0] == '\r' || buf[0] == '\n' || buf[0] == '\0')
++                continue;
++
++            key = buf;
++            char* p = strpbrk(key, ":");
++            if (p == NULL || p == key) {
++                continue;
++            }
++            p[0] = '\0';
+ 
+-        key = buf;
+-        char* p = strpbrk(key, ":");
+-        if (p == NULL || p == key) {
+-            continue;
++            if (strncmp(last_key, key, key_size) != 0) {
++                keytable[i].offset = offset;
++                strncpy(keytable[i].key, key, key_size);
++                strncpy(last_key, key, key_size);
++                i++;
++            }
++            offset = ftell(file);
+         }
+-        p[0] = '\0';
+-
+-	if (strncmp(last_key, key, key_size) != 0) {
+-	    keytable[i].offset = offset;
+-	    strncpy(keytable[i].key, key, key_size);
+-	    strncpy(last_key, key, key_size);
+-	    i++;
+-	}
+-	offset = ftell(file);
+     }
+ 
+     table = malloc(sizeof(*table));
+-- 
+2.55.0
+
+From 23d2cd9d10d516d523d60c562dbcc7ea08139a09 Mon Sep 17 00:00:00 2001
+From: Choe Hwanjin <choe.hwanjin@gmail.com>
+Date: Sun, 11 Oct 2026 16:19:01 +0900
+Subject: [PATCH 13/13] test: add test cases for hanja dictionary file format
+
+Add test cases for loading records with incomplete fields.
+---
+ test/test.c | 62 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 62 insertions(+)
+
+diff --git a/test/test.c b/test/test.c
+index 4a0dddd..23b980d 100644
+--- a/test/test.c
++++ b/test/test.c
+@@ -593,6 +593,64 @@ START_TEST(test_hangul_jamo_to_cjamo)
+ }
+ END_TEST
+ 
++static int
++test_hanja_table_format_helper(const char* content, const char* key)
++{
++    const char* filename = "test_hanja_format.txt";
++
++    size_t size = strlen(content);
++
++    FILE* fp = fopen(filename, "wb");
++    ck_assert(fp != NULL);
++    fwrite(content, 1, size, fp);
++    fclose(fp);
++
++    HanjaTable* table = hanja_table_load(filename);
++    ck_assert(table != NULL);
++
++    HanjaList* list = hanja_table_match_exact(table, key);
++    int res = hanja_list_get_size(list);
++    hanja_list_delete(list);
++
++    hanja_table_delete(table);
++    remove(filename);
++
++    return res;
++}
++
++START_TEST(test_hanja_table_format)
++{
++    /* https://github.com/libhangul/libhangul/issues/106 */
++    /* malformed entry: missing or incomplete value */
++    ck_assert(test_hanja_table_format_helper("", "key0") == 0);
++    ck_assert(test_hanja_table_format_helper("\n", "key0") == 0);
++    ck_assert(test_hanja_table_format_helper(":\n", "key0") == 0);
++    ck_assert(test_hanja_table_format_helper("::\n", "key0") == 0);
++    ck_assert(test_hanja_table_format_helper(":value0:\n", "key0") == 0);
++    ck_assert(test_hanja_table_format_helper(":value0:comment0\n", "key0") == 0);
++
++    ck_assert(test_hanja_table_format_helper("key0", "key0") == 0);
++    ck_assert(test_hanja_table_format_helper("key0:", "key0") == 0);
++    ck_assert(test_hanja_table_format_helper("key0::", "key0") == 0);
++    ck_assert(test_hanja_table_format_helper("key0::comment0", "key0") == 0);
++
++    ck_assert(test_hanja_table_format_helper("key0:value0", "key0") == 0);
++    ck_assert(test_hanja_table_format_helper("key0:value0\n", "key0") == 0);
++    ck_assert(test_hanja_table_format_helper("key0:value0\r", "key0") == 0);
++    ck_assert(test_hanja_table_format_helper("key0:value0\r\n", "key0") == 0);
++
++    ck_assert(test_hanja_table_format_helper("key0:value0:", "key0") == 1);
++    ck_assert(test_hanja_table_format_helper("key0:value0:\n", "key0") == 1);
++    ck_assert(test_hanja_table_format_helper("key0:value0:\r", "key0") == 1);
++    ck_assert(test_hanja_table_format_helper("key0:value0:\r\n", "key0") == 1);
++
++    ck_assert(test_hanja_table_format_helper("key0:value0:comment0", "key0") == 1);
++    ck_assert(test_hanja_table_format_helper("key0:value0:comment0\n", "key0") == 1);
++    ck_assert(test_hanja_table_format_helper("key0:value0:comment0\r", "key0") == 1);
++    ck_assert(test_hanja_table_format_helper("key0:value0:comment0\r\n", "key0") == 1);
++}
++END_TEST
++
+ Suite* libhangul_suite()
+ {
+     Suite* s = suite_create("libhangul");
+@@ -613,6 +671,10 @@ Suite* libhangul_suite()
+     tcase_add_test(hangul, test_hangul_jamo_to_cjamo);
+     suite_add_tcase(s, hangul);
+ 
++    TCase* hanja = tcase_create("hanja");
++    tcase_add_test(hanja, test_hanja_table_format);
++    suite_add_tcase(s, hanja);
++
+     return s;
+ }
+ 
+-- 
+2.55.0
+

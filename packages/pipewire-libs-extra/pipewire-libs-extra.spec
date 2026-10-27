@@ -67,6 +67,9 @@ install -pm 0755 -D %{_vpath_builddir}/spa/plugins/ffmpeg/libspa-ffmpeg.so \
 %{_libdir}/spa-%{spaversion}/ffmpeg/libspa-ffmpeg.so
 
 %changelog
+* Sat Oct 03 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 1.6.9-1
+- Update to 1.6.9
+
 * Sun Aug 30 2026 Project Bluefin <bot@projectbluefin.io> - 1.6.8-1
 - Initial Hummingbird-targeted build from upstream release, ported from
   negativo17/fedora-multimedia. Enables aptX, LC3plus and FFmpeg SPA plugins.
