@@ -1,0 +1,8 @@
+{
+  "package": "whois",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/whois.git",
+  "commit": "9a0fcf825fc52b778e6ac9eeb3e26d0e60d862cf",
+  "tree": "7c04a2219d537956751ba5eb3118cb70c28a425d",
+  "imported_at": "2026-10-26T06:07:22.902949+00:00"
+}

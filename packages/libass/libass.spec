@@ -65,6 +65,9 @@ make check
 %{_libdir}/pkgconfig/%{name}.pc
 
 %changelog
+* Sun Sep 27 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 0.17.5-1
+- Update to 0.17.5
+
 * Thu Jul 16 2026 Fedora Release Engineering <releng@fedoraproject.org> - 0.17.4-3
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_45_Mass_Rebuild
 

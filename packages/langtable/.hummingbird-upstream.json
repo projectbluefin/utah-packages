@@ -1,0 +1,8 @@
+{
+  "package": "langtable",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/langtable.git",
+  "commit": "4cd3207be1f5c6ff5d995f4b4ffa4e991c3e25e7",
+  "tree": "add77fd930527d037820a3cd7ff5cf59eb809403",
+  "imported_at": "2026-10-27T06:43:04.482754+00:00"
+}

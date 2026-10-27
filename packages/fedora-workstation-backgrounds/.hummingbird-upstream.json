@@ -1,0 +1,8 @@
+{
+  "package": "fedora-workstation-backgrounds",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/fedora-workstation-backgrounds.git",
+  "commit": "6cb5e62c5a668c4e692c058c1e96f26bfe345483",
+  "tree": "1399fe160f4fb478c155c62ae3087f14e50acf60",
+  "imported_at": "2026-10-25T13:21:39.822381+00:00"
+}

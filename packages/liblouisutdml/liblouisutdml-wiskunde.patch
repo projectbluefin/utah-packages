@@ -1,0 +1,30 @@
+From 228386099b45d93884fd4b4ddfc67bbc2f81a9f0 Mon Sep 17 00:00:00 2001
+From: Attila Hammer <hammera@pickup.hu>
+Date: Wed, 5 Jun 2024 13:10:08 +0200
+Subject: [PATCH] lbu_files/wiskunde.ctb: Replace dot 4569 to 456a (underscore
+ simbol) In dutch table changed the underscore virtual dot from 4569 to 456a
+ with Liblouis 3.30 release. Without this change follow up in Liblouisutdml,
+ 18 voluve math tests are failing. Fixes issue #106
+
+Signed-off-by: Attila Hammer <hammera@pickup.hu>
+---
+ lbu_files/wiskunde.ctb | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/lbu_files/wiskunde.ctb b/lbu_files/wiskunde.ctb
+index 6e59e73e..7b99b585 100644
+--- a/lbu_files/wiskunde.ctb
++++ b/lbu_files/wiskunde.ctb
+@@ -148,9 +148,9 @@ exactdots @56
+   noback pass3    @1b-24-1b-34-1235                        @34         # \ei\e⠌r
+   noback pass3    @1b-24-1b-34-14                          @456@34     # \ei\e⠌c
+   noback pass3    @1b-24-1b-34-123                         @3456@34    # \ei\e⠌l
+-  noback pass3    @1b-24-1b-4569-1235                      @16         # \ei\e_r
+-  noback pass3    @1b-24-1b-4569-14                        @4569@16    # \ei\e_c
+-  noback pass3    @1b-24-1b-4569-123                       @3456@16    # \ei\e_l
++  noback pass3    @1b-24-1b-456a-1235                      @16         # \ei\e_r
++  noback pass3    @1b-24-1b-456a-14                        @456a@16    # \ei\e_c
++  noback pass3    @1b-24-1b-456a-123                       @3456@16    # \ei\e_l
+   noback pass3    @1b-24                                   ?           # \ei
+   noback pass3    @1b-34-1235                              @4          # \e⠌r
+   noback pass3    @1b-34-14                                @45         # \e⠌c

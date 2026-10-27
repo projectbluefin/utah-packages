@@ -1,0 +1,8 @@
+{
+  "package": "python-dateutil",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/python-dateutil.git",
+  "commit": "079512baf8c99bfb022a6c6522bb70535720bbec",
+  "tree": "2ea65136c7295cc2751b744dbc1ddd766bae9ee7",
+  "imported_at": "2026-10-25T15:56:13.823045+00:00"
+}

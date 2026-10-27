@@ -1,0 +1,16 @@
+# https://github.com/rpminspect/rpminspect/blob/master/data/generic.yaml
+# https://github.com/rpminspect/rpminspect-data-fedora/blob/main/fedora.yaml
+
+---
+
+annocheck:
+    extra_opts:
+        hardened: --skip-run-path --skip-stack-prot
+
+elf:
+    exclude_path: /usr/bin/toolbox
+
+runpath:
+    allowed_paths:
+        - /run/host/usr/lib
+        - /run/host/usr/lib64

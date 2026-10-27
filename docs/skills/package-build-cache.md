@@ -157,7 +157,7 @@ builds whatever the cancelled one did not finish.
 
 Pull requests do not run the factory. Pipeline changes are proven by the
 canary (`.github/workflows/canary.yml`) on their pull request, and recipe
-changes are validated there and built on merge.
+changes, including new lock entries, are validated there and built on merge.
 
 A failed run's successful packages are published (incremental publication)
 and also cached, so a retry recompiles only what failed. The daily scheduled

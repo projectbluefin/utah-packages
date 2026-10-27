@@ -1,0 +1,8 @@
+{
+  "package": "chromaprint",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/chromaprint.git",
+  "commit": "66ab9c9affbbca7105bdf119eb03ac42eee2f2a0",
+  "tree": "6067f12e084f0b5dd4e0d2c9ff6d0222db540b39",
+  "imported_at": "2026-10-27T04:43:55.776462+00:00"
+}

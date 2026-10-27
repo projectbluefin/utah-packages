@@ -1,0 +1,49 @@
+From e3cf80c95a1c67d05dded68ec171bfde4686003f Mon Sep 17 00:00:00 2001
+From: Lubomir Rintel <lkundrak@v3.sk>
+Date: Thu, 14 Aug 2025 16:35:56 +0200
+Subject: [PATCH] service: Do not ever send SIGTERM to the unit
+
+Following happens when modem 03f0:a31d (HP lt4132 LTE/HSPA+ 4G Module) is
+plugged:
+
+- systemd-udevd emits "add" action
+- The "add" action triggers restart of usb_modeswitch@<port>.service
+- usb_modeswitch@<port>.service starts usb_modeswitch
+- Another udev rule renames the network interface from usb0 to enp0...
+- Above causes systemd-udevd emit "change" action for the device
+- The "change" action triggers another restart of usb_modeswitch@<port>.service
+- usb_modeswitch run initially gets terminated mid-air
+- Device drops off the bus
+- Infinite sadness
+
+Possible solutions:
+
+- The udev rule could just emit the "change" action. I have no idea why
+  it handles "change" actions, but it looks intentional -> No touchy
+  from me.
+- usb_modeswitch could just trap TERM and shut down gracefully. This
+  involves Tcl -> No touchy.
+- The systemd unit could just send an innocent signal instead of TERM
+  and just let usb_modeswitch end its life journey naturally.
+  Let's do this, because it involves least brain.
+
+Anybody please feel free to send this upstream.
+---
+ usb_modeswitch@.service | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/usb_modeswitch@.service b/usb_modeswitch@.service
+index 22d2ea7..23d4ed0 100644
+--- a/usb_modeswitch@.service
++++ b/usb_modeswitch@.service
+@@ -7,3 +7,7 @@ ExecStart=/usr/sbin/usb_modeswitch_dispatcher --switch-mode %i
+ # Testing
+ #ExecStart=/bin/echo "usb_modeswitch.service: device name is %i"
+ 
++# Do not ever terminate violently on restart -- interrupting the switching
++# transaction will crash some modems! We'll terminate shortly anyways.
++# If we hang, FinalKillSignal (defaults to SIGKILL) will take care of that.
++KillSignal=SIGCONT
+-- 
+2.50.1
+

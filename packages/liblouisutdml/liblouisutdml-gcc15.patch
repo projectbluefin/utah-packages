@@ -1,0 +1,123 @@
+From 4ff52b8cbb9ba9a3f35befc44be6c4156f127356 Mon Sep 17 00:00:00 2001
+From: Samuel Thibault <samuel.thibault@ens-lyon.org>
+Date: Mon, 17 Feb 2025 22:39:14 +0100
+Subject: [PATCH] Fix build with gcc-15
+
+Which now defaults to C23.
+---
+ liblouisutdml/louisutdml.h           | 4 ++--
+ liblouisutdml/makeContents.c         | 2 +-
+ liblouisutdml/makeEndnotes.c         | 6 +++---
+ liblouisutdml/transcribe_paragraph.c | 2 +-
+ liblouisutdml/transcriber.c          | 6 +++---
+ 5 files changed, 10 insertions(+), 10 deletions(-)
+
+diff --git a/liblouisutdml/louisutdml.h b/liblouisutdml/louisutdml.h
+index a7897a0b..5c159508 100644
+--- a/liblouisutdml/louisutdml.h
++++ b/liblouisutdml/louisutdml.h
+@@ -359,7 +359,7 @@ int make_endnotes();
+ int link_endnote(xmlNode* node);
+ void set_notes_header();
+ void set_notes_description();
+-int start_endnote();
++int start_endnote(void);
+ int finish_endnote(xmlNode* node);
+ void do_reverse (xmlNode * node);
+ int do_boxline (xmlNode * node);
+@@ -389,7 +389,7 @@ StyleType *find_current_style ();
+ void insert_text (xmlNode * node);
+ int insert_linkOrTarget (xmlNode * node, int which);
+ int start_style (StyleType * curStyle, xmlNode * node);
+-int end_style ();
++int end_style (void);
+ int find_action (const char **actions, const char *action);
+ int find_group_length (const char groupSym[2], const char *groupStart);
+ char *alloc_string (const char *inString);
+diff --git a/liblouisutdml/makeContents.c b/liblouisutdml/makeContents.c
+index b5149283..f5b47a8c 100644
+--- a/liblouisutdml/makeContents.c
++++ b/liblouisutdml/makeContents.c
+@@ -270,7 +270,7 @@ make_contents (void)
+ 		  currentHeading->headingLength * CHARSIZE);
+ 	  ud->translated_length = currentHeading->headingLength;
+ 	  ud->in_sync = 0;
+-	  end_style (style);
++	  end_style ();
+ 	  currentHeading = currentHeading->next;
+ 	}
+       do_newpage ();
+diff --git a/liblouisutdml/makeEndnotes.c b/liblouisutdml/makeEndnotes.c
+index b1b18499..009c5301 100644
+--- a/liblouisutdml/makeEndnotes.c
++++ b/liblouisutdml/makeEndnotes.c
+@@ -519,7 +519,7 @@ int make_endnotes(void)
+ 			start_style(style,NULL);
+ 			memcpy(&ud->translated_buffer[ud->translated_length],notes_header,notes_header_length*CHARSIZE);
+ 			ud->translated_length+=notes_header_length;
+-			end_style(style);
++			end_style();
+ 			do_blankline();
+ 			has_newline=1;
+ 			free(notes_header);
+@@ -530,7 +530,7 @@ int make_endnotes(void)
+ 			start_style(style,NULL);
+ 			memcpy(&ud->translated_buffer[ud->translated_length],notes_description,notes_description_length*CHARSIZE);
+ 			ud->translated_length+=notes_description_length;
+-			end_style(style);
++			end_style();
+ 			do_blankline();
+ 			has_newline=1;
+ 			free(notes_description);
+@@ -564,7 +564,7 @@ int make_endnotes(void)
+ 			ud->translated_buffer[ud->translated_length++] = ' ';
+ 			memcpy(&ud->translated_buffer[ud->translated_length],current_endnote->endnote,current_endnote->endnote_length*CHARSIZE);
+ 			ud->translated_length += current_endnote->endnote_length;
+-			end_style(style);
++			end_style();
+ 			ud->in_sync=0;
+ 			current_endnote = current_endnote->next;
+ 		}
+diff --git a/liblouisutdml/transcribe_paragraph.c b/liblouisutdml/transcribe_paragraph.c
+index 5eb37aec..0deb1e7e 100644
+--- a/liblouisutdml/transcribe_paragraph.c
++++ b/liblouisutdml/transcribe_paragraph.c
+@@ -318,7 +318,7 @@ transcribe_paragraph (xmlNode * node, int action)
+       break;
+ 	case noteref:							////
+ 		if(ud->endnotes)
+-			start_endnote(node);
++			start_endnote();
+ 		else
+ 		{
+ 			if(action!=0)
+diff --git a/liblouisutdml/transcriber.c b/liblouisutdml/transcriber.c
+index 512da8c7..07d7b5a6 100644
+--- a/liblouisutdml/transcriber.c
++++ b/liblouisutdml/transcriber.c
+@@ -331,14 +331,14 @@ transcribe_text_string ()
+ 	return 0;
+       if (ch == 10)
+ 	do_blankline ();
+-      end_style (paraStyle);
++      end_style ();
+       charsInParagraph = 0;
+       pch = 0;
+       if (ch > 32)
+ 	paragraphBuffer[charsInParagraph++] = ch;
+     }
+   ud->input_encoding = lbu_utf8;
+-  end_style (docStyle);
++  end_style ();
+   end_document ();
+   return 1;
+ }
+@@ -3917,7 +3917,7 @@ start_style (StyleType * curStyle, xmlNode * node)
+ }
+ 
+ int
+-end_style ()
++end_style (void)
+ {
+   logMessage(LOU_LOG_DEBUG, "Begin end_style");
+   styleSpec = &ud->style_stack[ud->style_top];

@@ -28,6 +28,7 @@ packages/*/*.asc
 !packages/*/*key*.asc
 !packages/*/*keyring*.asc
 !packages/bc/kevin_pizzini.asc
+!packages/pkcs11-provider/simo_redhat.asc
 packages/*/*.sha256sum
 packages/*/*.upstream
 

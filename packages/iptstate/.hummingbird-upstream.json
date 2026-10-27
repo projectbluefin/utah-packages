@@ -1,0 +1,8 @@
+{
+  "package": "iptstate",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/iptstate.git",
+  "commit": "e636d72cfaab53d56259355c3b22771e1e9cc598",
+  "tree": "f95844e485b149afb0c458f10e7228f28853541a",
+  "imported_at": "2026-10-27T06:08:16.343876+00:00"
+}

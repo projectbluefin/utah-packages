@@ -1,0 +1,8 @@
+{
+  "package": "ykpers",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/ykpers.git",
+  "commit": "97c03f491214a405cd666ba38d2f5ce72a75b6fb",
+  "tree": "43350b608569457878a0f0c06c8aa101e0ecbf6f",
+  "imported_at": "2026-10-26T05:19:19.741052+00:00"
+}

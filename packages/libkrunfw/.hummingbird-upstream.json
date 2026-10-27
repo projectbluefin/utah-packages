@@ -1,0 +1,8 @@
+{
+  "package": "libkrunfw",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libkrunfw.git",
+  "commit": "9c62cf5eb19e59e271ebcaf66e67e06601c2e3a0",
+  "tree": "9729967b4e0d3b863c639017005293f161faba70",
+  "imported_at": "2026-10-25T07:19:55.904733+00:00"
+}

@@ -1,0 +1,8 @@
+{
+  "package": "compsize",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/compsize.git",
+  "commit": "51cab42191b33fa7a5efe5a804a1bbf554db2074",
+  "tree": "cfc03c5d748552c9c33016e2599ce55bd991448d",
+  "imported_at": "2026-10-26T05:28:05.117176+00:00"
+}

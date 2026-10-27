@@ -1,0 +1,11 @@
+discover:
+  - name: Smoke tests
+    how: shell
+    tests:
+    - name: import works
+      test: python3 -c 'import six'
+      require:
+      - python3-six
+      duration: 1m
+execute:
+  how: tmt

@@ -4,6 +4,12 @@ actions:
   create-archive:
     - bash -c 'python3 "$(git rev-parse --show-toplevel)/tools/packit_source0.py"'
 packages:
+  LibRaw:
+    specfile_path: LibRaw.spec
+    upstream_package_name: LibRaw
+    downstream_package_name: LibRaw
+    paths:
+      - packages/LibRaw
   ModemManager:
     specfile_path: ModemManager.spec
     upstream_package_name: ModemManager
@@ -94,6 +100,12 @@ packages:
     downstream_package_name: alsa-utils
     paths:
       - packages/alsa-utils
+  antiword:
+    specfile_path: antiword.spec
+    upstream_package_name: antiword
+    downstream_package_name: antiword
+    paths:
+      - packages/antiword
   appstream:
     specfile_path: appstream.spec
     upstream_package_name: appstream
@@ -124,12 +136,30 @@ packages:
     downstream_package_name: autofs
     paths:
       - packages/autofs
+  bash-color-prompt:
+    specfile_path: bash-color-prompt.spec
+    upstream_package_name: bash-color-prompt
+    downstream_package_name: bash-color-prompt
+    paths:
+      - packages/bash-color-prompt
+  bats:
+    specfile_path: bats.spec
+    upstream_package_name: bats
+    downstream_package_name: bats
+    paths:
+      - packages/bats
   bc:
     specfile_path: bc.spec
     upstream_package_name: bc
     downstream_package_name: bc
     paths:
       - packages/bc
+  bison:
+    specfile_path: bison.spec
+    upstream_package_name: bison
+    downstream_package_name: bison
+    paths:
+      - packages/bison
   bluez:
     specfile_path: bluez.spec
     upstream_package_name: bluez
@@ -178,6 +208,12 @@ packages:
     downstream_package_name: cdparanoia
     paths:
       - packages/cdparanoia
+  chromaprint:
+    specfile_path: chromaprint.spec
+    upstream_package_name: chromaprint
+    downstream_package_name: chromaprint
+    paths:
+      - packages/chromaprint
   cifs-utils:
     specfile_path: cifs-utils.spec
     upstream_package_name: cifs-utils
@@ -214,6 +250,12 @@ packages:
     downstream_package_name: colord-gtk
     paths:
       - packages/colord-gtk
+  compsize:
+    specfile_path: compsize.spec
+    upstream_package_name: compsize
+    downstream_package_name: compsize
+    paths:
+      - packages/compsize
   containerd:
     specfile_path: containerd.spec
     upstream_package_name: containerd
@@ -238,6 +280,12 @@ packages:
     downstream_package_name: cups-pk-helper
     paths:
       - packages/cups-pk-helper
+  davfs2:
+    specfile_path: davfs2.spec
+    upstream_package_name: davfs2
+    downstream_package_name: davfs2
+    paths:
+      - packages/davfs2
   dconf:
     specfile_path: dconf.spec
     upstream_package_name: dconf
@@ -388,6 +436,12 @@ packages:
     downstream_package_name: fdk-aac-free
     paths:
       - packages/fdk-aac-free
+  fedora-workstation-backgrounds:
+    specfile_path: fedora-workstation-backgrounds.spec
+    upstream_package_name: fedora-workstation-backgrounds
+    downstream_package_name: fedora-workstation-backgrounds
+    paths:
+      - packages/fedora-workstation-backgrounds
   ffmpeg:
     specfile_path: ffmpeg.spec
     upstream_package_name: ffmpeg
@@ -424,6 +478,12 @@ packages:
     downstream_package_name: flatpak-xdg-utils
     paths:
       - packages/flatpak-xdg-utils
+  flex:
+    specfile_path: flex.spec
+    upstream_package_name: flex
+    downstream_package_name: flex
+    paths:
+      - packages/flex
   flite:
     specfile_path: flite.spec
     upstream_package_name: flite
@@ -454,6 +514,12 @@ packages:
     downstream_package_name: fprintd
     paths:
       - packages/fprintd
+  freeglut:
+    specfile_path: freeglut.spec
+    upstream_package_name: freeglut
+    downstream_package_name: freeglut
+    paths:
+      - packages/freeglut
   freerdp:
     specfile_path: freerdp.spec
     upstream_package_name: freerdp
@@ -478,6 +544,12 @@ packages:
     downstream_package_name: fwupd
     paths:
       - packages/fwupd
+  fwupd-efi:
+    specfile_path: fwupd-efi.spec
+    upstream_package_name: fwupd-efi
+    downstream_package_name: fwupd-efi
+    paths:
+      - packages/fwupd-efi
   fxload:
     specfile_path: fxload.spec
     upstream_package_name: fxload
@@ -574,6 +646,18 @@ packages:
     downstream_package_name: glibmm2.68
     paths:
       - packages/glibmm2.68
+  glow:
+    specfile_path: glow.spec
+    upstream_package_name: glow
+    downstream_package_name: glow
+    paths:
+      - packages/glow
+  glslang:
+    specfile_path: glslang.spec
+    upstream_package_name: glslang
+    downstream_package_name: glslang
+    paths:
+      - packages/glslang
   glycin:
     specfile_path: glycin.spec
     upstream_package_name: glycin
@@ -808,6 +892,12 @@ packages:
     downstream_package_name: gssproxy
     paths:
       - packages/gssproxy
+  gst-editing-services:
+    specfile_path: gst-editing-services.spec
+    upstream_package_name: gst-editing-services
+    downstream_package_name: gst-editing-services
+    paths:
+      - packages/gst-editing-services
   gstreamer1:
     specfile_path: gstreamer1.spec
     upstream_package_name: gstreamer1
@@ -892,6 +982,12 @@ packages:
     downstream_package_name: gupnp
     paths:
       - packages/gupnp
+  gupnp-dlna:
+    specfile_path: gupnp-dlna.spec
+    upstream_package_name: gupnp-dlna
+    downstream_package_name: gupnp-dlna
+    paths:
+      - packages/gupnp-dlna
   gupnp-igd:
     specfile_path: gupnp-igd.spec
     upstream_package_name: gupnp-igd
@@ -976,6 +1072,12 @@ packages:
     downstream_package_name: hwinfo
     paths:
       - packages/hwinfo
+  hyperv-daemons:
+    specfile_path: hyperv-daemons.spec
+    upstream_package_name: hyperv-daemons
+    downstream_package_name: hyperv-daemons
+    paths:
+      - packages/hyperv-daemons
   hyphen:
     specfile_path: hyphen.spec
     upstream_package_name: hyphen
@@ -1006,6 +1108,12 @@ packages:
     downstream_package_name: icu
     paths:
       - packages/icu
+  ifuse:
+    specfile_path: ifuse.spec
+    upstream_package_name: ifuse
+    downstream_package_name: ifuse
+    paths:
+      - packages/ifuse
   igt-gpu-tools:
     specfile_path: igt-gpu-tools.spec
     upstream_package_name: igt-gpu-tools
@@ -1072,6 +1180,12 @@ packages:
     downstream_package_name: ipp-usb
     paths:
       - packages/ipp-usb
+  iptstate:
+    specfile_path: iptstate.spec
+    upstream_package_name: iptstate
+    downstream_package_name: iptstate
+    paths:
+      - packages/iptstate
   iputils:
     specfile_path: iputils.spec
     upstream_package_name: iputils
@@ -1132,6 +1246,12 @@ packages:
     downstream_package_name: lame
     paths:
       - packages/lame
+  langtable:
+    specfile_path: langtable.spec
+    upstream_package_name: langtable
+    downstream_package_name: langtable
+    paths:
+      - packages/langtable
   lcms:
     specfile_path: lcms.spec
     upstream_package_name: lcms
@@ -1210,6 +1330,12 @@ packages:
     downstream_package_name: libXrandr
     paths:
       - packages/libXrandr
+  libXres:
+    specfile_path: libXres.spec
+    upstream_package_name: libXres
+    downstream_package_name: libXres
+    paths:
+      - packages/libXres
   libXt:
     specfile_path: libXt.spec
     upstream_package_name: libXt
@@ -1270,6 +1396,12 @@ packages:
     downstream_package_name: libatasmart
     paths:
       - packages/libatasmart
+  libavc1394:
+    specfile_path: libavc1394.spec
+    upstream_package_name: libavc1394
+    downstream_package_name: libavc1394
+    paths:
+      - packages/libavc1394
   libayatana-appindicator:
     specfile_path: libayatana-appindicator.spec
     upstream_package_name: libayatana-appindicator
@@ -1294,12 +1426,24 @@ packages:
     downstream_package_name: libblockdev
     paths:
       - packages/libblockdev
+  libbluray:
+    specfile_path: libbluray.spec
+    upstream_package_name: libbluray
+    downstream_package_name: libbluray
+    paths:
+      - packages/libbluray
   libbs2b:
     specfile_path: libbs2b.spec
     upstream_package_name: libbs2b
     downstream_package_name: libbs2b
     paths:
       - packages/libbs2b
+  libbsd:
+    specfile_path: libbsd.spec
+    upstream_package_name: libbsd
+    downstream_package_name: libbsd
+    paths:
+      - packages/libbsd
   libburn:
     specfile_path: libburn.spec
     upstream_package_name: libburn
@@ -1378,6 +1522,12 @@ packages:
     downstream_package_name: libdecor
     paths:
       - packages/libdecor
+  libdeflate:
+    specfile_path: libdeflate.spec
+    upstream_package_name: libdeflate
+    downstream_package_name: libdeflate
+    paths:
+      - packages/libdeflate
   libdisplay-info:
     specfile_path: libdisplay-info.spec
     upstream_package_name: libdisplay-info
@@ -1534,6 +1684,12 @@ packages:
     downstream_package_name: libhandy
     paths:
       - packages/libhandy
+  libhangul:
+    specfile_path: libhangul.spec
+    upstream_package_name: libhangul
+    downstream_package_name: libhangul
+    paths:
+      - packages/libhangul
   libheif:
     specfile_path: libheif.spec
     upstream_package_name: libheif
@@ -1588,6 +1744,18 @@ packages:
     downstream_package_name: libjwt
     paths:
       - packages/libjwt
+  libkrun:
+    specfile_path: libkrun.spec
+    upstream_package_name: libkrun
+    downstream_package_name: libkrun
+    paths:
+      - packages/libkrun
+  libkrunfw:
+    specfile_path: libkrunfw.spec
+    upstream_package_name: libkrunfw
+    downstream_package_name: libkrunfw
+    paths:
+      - packages/libkrunfw
   liblc3:
     specfile_path: liblc3.spec
     upstream_package_name: liblc3
@@ -1612,6 +1780,12 @@ packages:
     downstream_package_name: liblouis
     paths:
       - packages/liblouis
+  liblouisutdml:
+    specfile_path: liblouisutdml.spec
+    upstream_package_name: liblouisutdml
+    downstream_package_name: liblouisutdml
+    paths:
+      - packages/liblouisutdml
   libmanette:
     specfile_path: libmanette.spec
     upstream_package_name: libmanette
@@ -1624,6 +1798,12 @@ packages:
     downstream_package_name: libmbim
     paths:
       - packages/libmbim
+  libmd:
+    specfile_path: libmd.spec
+    upstream_package_name: libmd
+    downstream_package_name: libmd
+    paths:
+      - packages/libmd
   libmediainfo:
     specfile_path: libmediainfo.spec
     upstream_package_name: libmediainfo
@@ -1678,6 +1858,12 @@ packages:
     downstream_package_name: libnotify
     paths:
       - packages/libnotify
+  libntlm:
+    specfile_path: libntlm.spec
+    upstream_package_name: libntlm
+    downstream_package_name: libntlm
+    paths:
+      - packages/libntlm
   libnvme:
     specfile_path: libnvme.spec
     upstream_package_name: libnvme
@@ -1774,6 +1960,12 @@ packages:
     downstream_package_name: libratbag
     paths:
       - packages/libratbag
+  libraw1394:
+    specfile_path: libraw1394.spec
+    upstream_package_name: libraw1394
+    downstream_package_name: libraw1394
+    paths:
+      - packages/libraw1394
   librist:
     specfile_path: librist.spec
     upstream_package_name: librist
@@ -1888,12 +2080,24 @@ packages:
     downstream_package_name: libtracefs
     paths:
       - packages/libtracefs
+  libudfread:
+    specfile_path: libudfread.spec
+    upstream_package_name: libudfread
+    downstream_package_name: libudfread
+    paths:
+      - packages/libudfread
   libunibreak:
     specfile_path: libunibreak.spec
     upstream_package_name: libunibreak
     downstream_package_name: libunibreak
     paths:
       - packages/libunibreak
+  liburing:
+    specfile_path: liburing.spec
+    upstream_package_name: liburing
+    downstream_package_name: liburing
+    paths:
+      - packages/liburing
   libusbmuxd:
     specfile_path: libusbmuxd.spec
     upstream_package_name: libusbmuxd
@@ -2002,6 +2206,12 @@ packages:
     downstream_package_name: libxshmfence
     paths:
       - packages/libxshmfence
+  libyubikey:
+    specfile_path: libyubikey.spec
+    upstream_package_name: libyubikey
+    downstream_package_name: libyubikey
+    paths:
+      - packages/libyubikey
   libzen:
     specfile_path: libzen.spec
     upstream_package_name: libzen
@@ -2044,6 +2254,12 @@ packages:
     downstream_package_name: lpcnetfreedv
     paths:
       - packages/lpcnetfreedv
+  lrzsz:
+    specfile_path: lrzsz.spec
+    upstream_package_name: lrzsz
+    downstream_package_name: lrzsz
+    paths:
+      - packages/lrzsz
   lshw:
     specfile_path: lshw.spec
     upstream_package_name: lshw
@@ -2062,6 +2278,12 @@ packages:
     downstream_package_name: lttng-ust
     paths:
       - packages/lttng-ust
+  m17n-db:
+    specfile_path: m17n-db.spec
+    upstream_package_name: m17n-db
+    downstream_package_name: m17n-db
+    paths:
+      - packages/m17n-db
   malcontent:
     specfile_path: malcontent.spec
     upstream_package_name: malcontent
@@ -2164,6 +2386,12 @@ packages:
     downstream_package_name: mtdev
     paths:
       - packages/mtdev
+  mtools:
+    specfile_path: mtools.spec
+    upstream_package_name: mtools
+    downstream_package_name: mtools
+    paths:
+      - packages/mtools
   mtr:
     specfile_path: mtr.spec
     upstream_package_name: mtr
@@ -2194,6 +2422,12 @@ packages:
     downstream_package_name: nautilus-python
     paths:
       - packages/nautilus-python
+  neon:
+    specfile_path: neon.spec
+    upstream_package_name: neon
+    downstream_package_name: neon
+    paths:
+      - packages/neon
   net-snmp:
     specfile_path: net-snmp.spec
     upstream_package_name: net-snmp
@@ -2206,6 +2440,12 @@ packages:
     downstream_package_name: nfs-utils
     paths:
       - packages/nfs-utils
+  nilfs-utils:
+    specfile_path: nilfs-utils.spec
+    upstream_package_name: nilfs-utils
+    downstream_package_name: nilfs-utils
+    paths:
+      - packages/nilfs-utils
   noopenh264:
     specfile_path: noopenh264.spec
     upstream_package_name: noopenh264
@@ -2320,6 +2560,12 @@ packages:
     downstream_package_name: osinfo-db-tools
     paths:
       - packages/osinfo-db-tools
+  pam_yubico:
+    specfile_path: pam_yubico.spec
+    upstream_package_name: pam_yubico
+    downstream_package_name: pam_yubico
+    paths:
+      - packages/pam_yubico
   pango:
     specfile_path: pango.spec
     upstream_package_name: pango
@@ -2338,6 +2584,12 @@ packages:
     downstream_package_name: papers
     paths:
       - packages/papers
+  parallel:
+    specfile_path: parallel.spec
+    upstream_package_name: parallel
+    downstream_package_name: parallel
+    paths:
+      - packages/parallel
   parted:
     specfile_path: parted.spec
     upstream_package_name: parted
@@ -2350,6 +2602,12 @@ packages:
     downstream_package_name: passim
     paths:
       - packages/passim
+  passwdqc:
+    specfile_path: passwdqc.spec
+    upstream_package_name: passwdqc
+    downstream_package_name: passwdqc
+    paths:
+      - packages/passwdqc
   pcaudiolib:
     specfile_path: pcaudiolib.spec
     upstream_package_name: pcaudiolib
@@ -2416,6 +2674,12 @@ packages:
     downstream_package_name: pkcs11-helper
     paths:
       - packages/pkcs11-helper
+  pkcs11-provider:
+    specfile_path: pkcs11-provider.spec
+    upstream_package_name: pkcs11-provider
+    downstream_package_name: pkcs11-provider
+    paths:
+      - packages/pkcs11-provider
   plymouth:
     specfile_path: plymouth.spec
     upstream_package_name: plymouth
@@ -2500,6 +2764,12 @@ packages:
     downstream_package_name: pycairo
     paths:
       - packages/pycairo
+  pyscard:
+    specfile_path: pyscard.spec
+    upstream_package_name: pyscard
+    downstream_package_name: pyscard
+    paths:
+      - packages/pyscard
   python-annotated-types:
     specfile_path: python-annotated-types.spec
     upstream_package_name: python-annotated-types
@@ -2524,6 +2794,12 @@ packages:
     downstream_package_name: python-dasbus
     paths:
       - packages/python-dasbus
+  python-dateutil:
+    specfile_path: python-dateutil.spec
+    upstream_package_name: python-dateutil
+    downstream_package_name: python-dateutil
+    paths:
+      - packages/python-dateutil
   python-dbus-next:
     specfile_path: python-dbus-next.spec
     upstream_package_name: python-dbus-next
@@ -2572,6 +2848,12 @@ packages:
     downstream_package_name: python-pam
     paths:
       - packages/python-pam
+  python-pexpect:
+    specfile_path: python-pexpect.spec
+    upstream_package_name: python-pexpect
+    downstream_package_name: python-pexpect
+    paths:
+      - packages/python-pexpect
   python-pillow:
     specfile_path: python-pillow.spec
     upstream_package_name: python-pillow
@@ -2584,6 +2866,12 @@ packages:
     downstream_package_name: python-psutil
     paths:
       - packages/python-psutil
+  python-ptyprocess:
+    specfile_path: python-ptyprocess.spec
+    upstream_package_name: python-ptyprocess
+    downstream_package_name: python-ptyprocess
+    paths:
+      - packages/python-ptyprocess
   python-pydantic:
     specfile_path: python-pydantic.spec
     upstream_package_name: python-pydantic
@@ -2608,12 +2896,24 @@ packages:
     downstream_package_name: python-pyudev
     paths:
       - packages/python-pyudev
+  python-six:
+    specfile_path: python-six.spec
+    upstream_package_name: python-six
+    downstream_package_name: python-six
+    paths:
+      - packages/python-six
   python-typing-inspection:
     specfile_path: python-typing-inspection.spec
     upstream_package_name: python-typing-inspection
     downstream_package_name: python-typing-inspection
     paths:
       - packages/python-typing-inspection
+  qpdf:
+    specfile_path: qpdf.spec
+    upstream_package_name: qpdf
+    downstream_package_name: qpdf
+    paths:
+      - packages/qpdf
   quota:
     specfile_path: quota.spec
     upstream_package_name: quota
@@ -2728,6 +3028,12 @@ packages:
     downstream_package_name: setxkbmap
     paths:
       - packages/setxkbmap
+  shaderc:
+    specfile_path: shaderc.spec
+    upstream_package_name: shaderc
+    downstream_package_name: shaderc
+    paths:
+      - packages/shaderc
   shared-mime-info:
     specfile_path: shared-mime-info.spec
     upstream_package_name: shared-mime-info
@@ -2740,6 +3046,12 @@ packages:
     downstream_package_name: simdutf
     paths:
       - packages/simdutf
+  slang:
+    specfile_path: slang.spec
+    upstream_package_name: slang
+    downstream_package_name: slang
+    paths:
+      - packages/slang
   smartmontools:
     specfile_path: smartmontools.spec
     upstream_package_name: smartmontools
@@ -2794,6 +3106,24 @@ packages:
     downstream_package_name: speex
     paths:
       - packages/speex
+  spice-protocol:
+    specfile_path: spice-protocol.spec
+    upstream_package_name: spice-protocol
+    downstream_package_name: spice-protocol
+    paths:
+      - packages/spice-protocol
+  spice-vdagent:
+    specfile_path: spice-vdagent.spec
+    upstream_package_name: spice-vdagent
+    downstream_package_name: spice-vdagent
+    paths:
+      - packages/spice-vdagent
+  spirv-headers:
+    specfile_path: spirv-headers.spec
+    upstream_package_name: spirv-headers
+    downstream_package_name: spirv-headers
+    paths:
+      - packages/spirv-headers
   spirv-tools:
     specfile_path: spirv-tools.spec
     upstream_package_name: spirv-tools
@@ -2818,6 +3148,12 @@ packages:
     downstream_package_name: srt
     paths:
       - packages/srt
+  sshpass:
+    specfile_path: sshpass.spec
+    upstream_package_name: sshpass
+    downstream_package_name: sshpass
+    paths:
+      - packages/sshpass
   sso-mib:
     specfile_path: sso-mib.spec
     upstream_package_name: sso-mib
@@ -2848,6 +3184,12 @@ packages:
     downstream_package_name: switcheroo-control
     paths:
       - packages/switcheroo-control
+  symlinks:
+    specfile_path: symlinks.spec
+    upstream_package_name: symlinks
+    downstream_package_name: symlinks
+    paths:
+      - packages/symlinks
   sysstat:
     specfile_path: sysstat.spec
     upstream_package_name: sysstat
@@ -2890,6 +3232,12 @@ packages:
     downstream_package_name: thermald
     paths:
       - packages/thermald
+  time:
+    specfile_path: time.spec
+    upstream_package_name: time
+    downstream_package_name: time
+    paths:
+      - packages/time
   tinyxml2:
     specfile_path: tinyxml2.spec
     upstream_package_name: tinyxml2
@@ -2902,6 +3250,12 @@ packages:
     downstream_package_name: tmux
     paths:
       - packages/tmux
+  toolbox:
+    specfile_path: toolbox.spec
+    upstream_package_name: toolbox
+    downstream_package_name: toolbox
+    paths:
+      - packages/toolbox
   totem:
     specfile_path: totem.spec
     upstream_package_name: totem
@@ -2932,6 +3286,12 @@ packages:
     downstream_package_name: tree-pkg
     paths:
       - packages/tree-pkg
+  tslib:
+    specfile_path: tslib.spec
+    upstream_package_name: tslib
+    downstream_package_name: tslib
+    paths:
+      - packages/tslib
   tuned:
     specfile_path: tuned.spec
     upstream_package_name: tuned
@@ -2944,12 +3304,24 @@ packages:
     downstream_package_name: twolame
     paths:
       - packages/twolame
+  uchardet:
+    specfile_path: uchardet.spec
+    upstream_package_name: uchardet
+    downstream_package_name: uchardet
+    paths:
+      - packages/uchardet
   udisks2:
     specfile_path: udisks2.spec
     upstream_package_name: udisks2
     downstream_package_name: udisks2
     paths:
       - packages/udisks2
+  unicode-ucd:
+    specfile_path: unicode-ucd.spec
+    upstream_package_name: unicode-ucd
+    downstream_package_name: unicode-ucd
+    paths:
+      - packages/unicode-ucd
   upower:
     specfile_path: upower.spec
     upstream_package_name: upower
@@ -2962,6 +3334,18 @@ packages:
     downstream_package_name: urw-base35-fonts
     paths:
       - packages/urw-base35-fonts
+  usb_modeswitch:
+    specfile_path: usb_modeswitch.spec
+    upstream_package_name: usb_modeswitch
+    downstream_package_name: usb_modeswitch
+    paths:
+      - packages/usb_modeswitch
+  usb_modeswitch-data:
+    specfile_path: usb_modeswitch-data.spec
+    upstream_package_name: usb_modeswitch-data
+    downstream_package_name: usb_modeswitch-data
+    paths:
+      - packages/usb_modeswitch-data
   usbmuxd:
     specfile_path: usbmuxd.spec
     upstream_package_name: usbmuxd
@@ -3076,6 +3460,18 @@ packages:
     downstream_package_name: webrtc-audio-processing
     paths:
       - packages/webrtc-audio-processing
+  wget2:
+    specfile_path: wget2.spec
+    upstream_package_name: wget2
+    downstream_package_name: wget2
+    paths:
+      - packages/wget2
+  whois:
+    specfile_path: whois.spec
+    upstream_package_name: whois
+    downstream_package_name: whois
+    paths:
+      - packages/whois
   wireguard-tools:
     specfile_path: wireguard-tools.spec
     upstream_package_name: wireguard-tools
@@ -3124,6 +3520,12 @@ packages:
     downstream_package_name: xcb-util
     paths:
       - packages/xcb-util
+  xcb-util-cursor:
+    specfile_path: xcb-util-cursor.spec
+    upstream_package_name: xcb-util-cursor
+    downstream_package_name: xcb-util-cursor
+    paths:
+      - packages/xcb-util-cursor
   xcb-util-image:
     specfile_path: xcb-util-image.spec
     upstream_package_name: xcb-util-image
@@ -3286,6 +3688,18 @@ packages:
     downstream_package_name: yelp-xsl
     paths:
       - packages/yelp-xsl
+  ykclient:
+    specfile_path: ykclient.spec
+    upstream_package_name: ykclient
+    downstream_package_name: ykclient
+    paths:
+      - packages/ykclient
+  ykpers:
+    specfile_path: ykpers.spec
+    upstream_package_name: ykpers
+    downstream_package_name: ykpers
+    paths:
+      - packages/ykpers
   yyjson:
     specfile_path: yyjson.spec
     upstream_package_name: yyjson

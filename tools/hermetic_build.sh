@@ -170,8 +170,20 @@ json.dump(lock, open(sys.argv[2], "w"))
 open(sys.argv[3], "w").write("".join(unquote(urlparse(r["url"]).path) + "\n" for r in local))
 print(f"{len(remote)} to download, {len(local)} already local")
 PY
+  # On success three lines are enough. On failure the cause -- createrepo_c
+  # naming the RPM it could not read, a download error -- sits above the
+  # traceback, so show the log without the per-RPM download noise.
   fetch_remote() {
-    mock-hermetic-repo --lockfile "$H/lock/remote.json" --output-repo "$H/repo" 2>&1 | tail -3
+    fetch_log="$H/fetch.log"
+    fetch_status=0
+    mock-hermetic-repo --lockfile "$H/lock/remote.json" --output-repo "$H/repo" \
+      >"$fetch_log" 2>&1 || fetch_status=$?
+    if [ "$fetch_status" -eq 0 ]; then
+      tail -3 "$fetch_log"
+    else
+      grep -vE "Downloading |urllib3" "$fetch_log" | tail -40 || true
+    fi
+    return "$fetch_status"
   }
   clean_repo() { rm -rf "$H/repo"; }
   online "lock fetch" clean_repo fetch_remote

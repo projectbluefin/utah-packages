@@ -1,0 +1,8 @@
+{
+  "package": "passwdqc",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/passwdqc.git",
+  "commit": "40f22550bfb74e151d9b0ceab26c685fb5658c58",
+  "tree": "b1e345254e9391d7c2b88c2d5c09b6e1502bd9bb",
+  "imported_at": "2026-10-26T04:46:21.616749+00:00"
+}

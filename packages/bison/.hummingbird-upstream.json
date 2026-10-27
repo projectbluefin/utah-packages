@@ -1,0 +1,8 @@
+{
+  "package": "bison",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/bison.git",
+  "commit": "667566807f2d4a8a130c5218c7a48e040771ef0b",
+  "tree": "361f669832586188761efa233df91aeb13a570d0",
+  "imported_at": "2026-10-25T16:10:24.332536+00:00"
+}

@@ -1,0 +1,6 @@
+test: ./runtest.sh
+framework: beakerlib
+duration: 10m
+require:
+  - langtable
+  - python3-langtable

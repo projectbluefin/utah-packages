@@ -1,0 +1,8 @@
+{
+  "package": "libkrun",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libkrun.git",
+  "commit": "6bab5c47ab828c0faec8fa2ecc2a37a744196a31",
+  "tree": "742dcb56a4a0b4fb1f95af39d329e2f1f06ef103",
+  "imported_at": "2026-10-25T07:19:55.269906+00:00"
+}
