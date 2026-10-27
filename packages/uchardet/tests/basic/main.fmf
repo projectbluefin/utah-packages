@@ -1,0 +1,5 @@
+summary: Concise summary describing what the test does
+require:
+  - uchardet
+test: ./test.sh
+framework: beakerlib

@@ -1,0 +1,76 @@
+From 48d76414455ab6a7d270cec96d6e83673df8a00d Mon Sep 17 00:00:00 2001
+From: Fridrich Strba <fstrba@suse.com>
+Date: Sat, 25 Oct 2025 07:30:12 +0000
+Subject: [PATCH] Fix build with java 23
+
+1) Thread.stop and ThreadGroup.stop are deprecated since 1.2 and removed
+in Java 23. Before that, they only throw UnsupportedOperationException
+when called. So call them by reflection and if they don't exist, just
+ignore them.
+
+2) Implement the new WindowPeer interface method
+getAppropriateGraphicsConfiguration as a pass-through method
+
+Fixes #46.
+---
+ .../java-j2se/java/awt/peer/BDFramePeer.java  |  4 ++++
+ .../java-j2se/org/videolan/PortingHelper.java | 22 +++++++++++++++++--
+ 2 files changed, 24 insertions(+), 2 deletions(-)
+
+diff --git a/src/libbluray/bdj/java-j2se/java/awt/peer/BDFramePeer.java b/src/libbluray/bdj/java-j2se/java/awt/peer/BDFramePeer.java
+index 87895de7..45144083 100644
+--- a/src/libbluray/bdj/java-j2se/java/awt/peer/BDFramePeer.java
++++ b/src/libbluray/bdj/java-j2se/java/awt/peer/BDFramePeer.java
+@@ -157,6 +157,10 @@ public class BDFramePeer extends BDComponentPeer implements FramePeer
+         return true;
+     }
+ 
++    public GraphicsConfiguration getAppropriateGraphicsConfiguration(GraphicsConfiguration gc) {
++        return gc;
++    }
++
+     //
+     // ComponentPeer
+     //
+diff --git a/src/libbluray/bdj/java-j2se/org/videolan/PortingHelper.java b/src/libbluray/bdj/java-j2se/org/videolan/PortingHelper.java
+index 1cb5f43d..55fd1c20 100644
+--- a/src/libbluray/bdj/java-j2se/org/videolan/PortingHelper.java
++++ b/src/libbluray/bdj/java-j2se/org/videolan/PortingHelper.java
+@@ -19,14 +19,32 @@
+ 
+ package org.videolan;
+ 
++import java.lang.reflect.InvocationTargetException;
++
+ public class PortingHelper {
+ 
+     public static void stopThread(Thread t) {
+-        t.stop();
++        try {
++            Thread.class.getMethod("stop").invoke(t);
++        } catch (NoSuchMethodException e) {
++            // ignore
++        } catch (IllegalAccessException e) {
++            // ignore
++        } catch (InvocationTargetException e) {
++            // ignore
++        }
+     }
+ 
+     public static void stopThreadGroup(ThreadGroup t) {
+-        t.stop();
++        try {
++            ThreadGroup.class.getMethod("stop").invoke(t);
++        } catch (NoSuchMethodException e) {
++            // ignore
++        } catch (IllegalAccessException e) {
++            // ignore
++        } catch (InvocationTargetException e) {
++            // ignore
++        }
+     }
+ 
+     public static String dumpStack(Thread t) {
+-- 
+GitLab
+

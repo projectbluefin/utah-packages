@@ -149,6 +149,9 @@ rm $RPM_BUILD_ROOT%{_libdir}/*.a
 
 
 %changelog
+* Fri Oct 23 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 2.7.0-1
+- Update to 2.7.0
+
 * Tue Aug 11 2026 Kevin Fenzi <kevin@scrye.com> - 2.6.0-4
 - Rebuild for new release
 

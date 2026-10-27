@@ -1,0 +1,19 @@
+specfile_path: bats.spec
+
+upstream_package_name: bats-core
+upstream_project_url: https://github.com/bats-core/bats-core/
+downstream_package_name: bats
+
+upstream_tag_template: v{version}
+
+jobs:
+
+- job: pull_from_upstream
+  trigger: release
+  dist_git_branches:
+   - fedora-rawhide
+
+- job: koji_build
+  trigger: commit
+  dist_git_branches:
+    - fedora-rawhide

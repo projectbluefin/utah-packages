@@ -1,0 +1,8 @@
+{
+  "package": "pam_yubico",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/pam_yubico.git",
+  "commit": "2f448387f25e88384f66811aaa46c337920733cd",
+  "tree": "e223ab87a31fa4d01dbe00853a4a6009a7865dd9",
+  "imported_at": "2026-10-27T08:50:04.684473+00:00"
+}

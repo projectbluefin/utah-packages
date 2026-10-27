@@ -1,0 +1,8 @@
+{
+  "package": "sshpass",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/sshpass.git",
+  "commit": "16ed2d4d15c69c955997aa1ad3dae415ae3fd359",
+  "tree": "560edcc2a06b711947ceefbd7e1807b3565bbf0a",
+  "imported_at": "2026-10-25T15:49:12.784131+00:00"
+}

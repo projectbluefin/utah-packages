@@ -1,0 +1,8 @@
+{
+  "package": "libyubikey",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libyubikey.git",
+  "commit": "b2b9f634bc49ae34b0095bd94d976e90570559f8",
+  "tree": "ef1f13374c1d4c44378d512fa8da90f7de28d654",
+  "imported_at": "2026-10-26T05:19:18.933862+00:00"
+}

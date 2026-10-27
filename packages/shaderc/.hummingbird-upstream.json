@@ -1,0 +1,8 @@
+{
+  "package": "shaderc",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/shaderc.git",
+  "commit": "0b0f57cd06f28de9216ee3ed46bcdac6f3e17d3b",
+  "tree": "83db9539f5fd73dd4b642637243f27f33935d36c",
+  "imported_at": "2026-10-27T08:49:46.821469+00:00"
+}

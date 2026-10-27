@@ -1,0 +1,8 @@
+{
+  "package": "symlinks",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/symlinks.git",
+  "commit": "d13dd425768fccbbc9286b0b2e937008fd64cc60",
+  "tree": "b2f14d3179d3c210140d4ce4107e7b8a5cf94495",
+  "imported_at": "2026-10-26T06:07:18.130443+00:00"
+}

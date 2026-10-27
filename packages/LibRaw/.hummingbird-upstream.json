@@ -1,0 +1,8 @@
+{
+  "package": "LibRaw",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/LibRaw.git",
+  "commit": "4039c9e8259468acf60d5e200ab01cd526d67d60",
+  "tree": "8725553d4c71d26e0020f22ff8613adecc49b9ea",
+  "imported_at": "2026-10-25T16:34:39.870801+00:00"
+}

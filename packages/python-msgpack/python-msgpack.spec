@@ -1,8 +1,8 @@
 %global srcname msgpack
 
 Name:           python-%{srcname}
-Version:        1.1.2
-Release:        5%{?dist}
+Version:        1.2.1
+Release:        1%{?dist}
 Summary:        Python MessagePack (de)serializer
 
 License:        Apache-2.0
@@ -36,7 +36,7 @@ This is a Python %{python3_version} (de)serializer for MessagePack.
 %prep
 %autosetup -p1 -n %{srcname}-python-%{version}
 # Remove as soon as setuptools is available in a later release 
-sed -i "s/setuptools >= 69.5.1/setuptools/g" pyproject.toml
+sed -i "s/setuptools >= 78.1.1/setuptools/g" pyproject.toml
 # There is a circular dependency with python-msgpack-ext
 rm -rf test/test_timestamp.py
 
@@ -59,6 +59,10 @@ make cython
 %license COPYING
 
 %changelog
+* Sun Oct 25 2026 Utah Packages <noreply@projectbluefin.io> - 1.2.1-1
+- Update to 1.2.1
+- Stay at 1.2.1: borgbackup 1.4.5 requires msgpack <= 1.2.1
+
 * Wed Jul 22 2026 Python Maint <python-maint@redhat.com> - 1.1.2-5
 - Rebuilt for Python 3.15.0b4 ABI change
 

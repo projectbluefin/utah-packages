@@ -2,7 +2,7 @@
 """Create a deterministic Rawhide availability report.
 
 This is observability only. Rawhide metadata must not trigger a package update:
-Fedora dist-git snapshots are accepted by dist_git.py only after their NVR has
+Fedora dist-git snapshots are accepted by rawhide_reimport.py only after their NVR has
 passed the Koji gate.
 """
 

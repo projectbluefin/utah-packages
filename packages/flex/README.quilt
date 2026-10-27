@@ -1,0 +1,40 @@
+This package supports working with patch files using quilt.
+
+To regenerate the quilt series file run:
+./gen-quilt-series.sh
+
+Setup environment:
+export QUILT_PATCHES=$PWD
+
+Setup the source:
+./quilt-patch.sh [-f]
+
+Use `-f` if you want to have quilt-patch always remove the existing
+source directory before starting. Otherwise you'll be patching on top of
+an already patched tree generated perhaps by `*pkg prep`.
+
+To add a new patch:
+
+Option 1: Create a new patch:
+
+cd flex-2.6.1/
+quilt new flex-rh1439367.patch
+quilt add tests/test-bison-yylloc/parser.y
+# edit tests/test-bison-yylloc/parser.y
+# you may add and edit several files in the same fashion
+
+Option 2: Add an already prepared patch (e.g. from an upstream commit):
+
+cd flex-2.6.1/
+quilt import -P flex-rh1439367.patch ~/backport/obsolete-bison.patch
+quilt push # if this fails, manually deal with conflicts (as in Option 1)
+
+Finally:
+quilt refresh -p ab
+cd ..
+git add flex-rh1439367.patch
+# edit flex.spec to build with the new patch
+git add flex.spec
+git commit
+
+You're done!

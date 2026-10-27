@@ -1,0 +1,12 @@
+environment:
+    ROOTLESS_USER: "fedora"
+    TMPDIR: /var/tmp
+require:
+    - toolbox-tests
+
+/rootless:
+    summary: rootless test
+    test: |
+        rpm --erase p11-kit-server
+        bash ./rootless-test.sh
+    duration: 4h

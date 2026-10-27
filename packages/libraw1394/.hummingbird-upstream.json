@@ -1,0 +1,8 @@
+{
+  "package": "libraw1394",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libraw1394.git",
+  "commit": "ebbe16dab2700babbaee081a75570434ef9a5369",
+  "tree": "ee03a66021e8eefa06952879bf77433e42c599e1",
+  "imported_at": "2026-10-27T04:20:02.166451+00:00"
+}

@@ -1,0 +1,8 @@
+{
+  "package": "qpdf",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/qpdf.git",
+  "commit": "af71c72b69f769cbb3c6cba651fe1eb4d0843a0c",
+  "tree": "10db9990411beae0bbb67000ef8f78ada1146e20",
+  "imported_at": "2026-10-25T22:46:44.587647+00:00"
+}

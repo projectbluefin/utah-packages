@@ -1,0 +1,8 @@
+{
+  "package": "libbsd",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libbsd.git",
+  "commit": "9898eab66e65ef86a0e9295eaa0e6076cce24d98",
+  "tree": "d21a24b11bfd2668385bce4f0d5b17e1b5109c03",
+  "imported_at": "2026-10-25T16:04:49.325650+00:00"
+}

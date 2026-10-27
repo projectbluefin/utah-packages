@@ -1,0 +1,15 @@
+summary: Show your version. Build a one-file project.
+description: ''
+contact:
+- Vaclav Kadlcik <vkadlcik@redhat.com>
+component:
+- flex
+test: ./runtest.sh
+framework: beakerlib
+recommend:
+- flex
+- bison
+- gcc
+duration: 15m
+extra-summary: /tools/flex/Sanity/smoke-check-flex-runs
+extra-task: /tools/flex/Sanity/smoke-check-flex-runs

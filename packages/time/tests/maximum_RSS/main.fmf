@@ -1,0 +1,17 @@
+summary: check if RSS usage is measured reasonable (in bug, reported value vas 
+    4-times bigger)
+description: ''
+contact: Ondrej Ptak <optak@redhat.com>
+link:
+  - relates: https://bugzilla.redhat.com/show_bug.cgi?id=703865
+component:
+  - time
+test: ./runtest.sh
+framework: beakerlib
+recommend:
+  - time
+  - perl-interpreter
+  - bc
+duration: 5m
+extra-summary: /CoreOS/time/Sanity/maximum_RSS
+extra-task: /CoreOS/time/Sanity/maximum_RSS

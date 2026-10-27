@@ -1,0 +1,8 @@
+{
+  "package": "bash-color-prompt",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/bash-color-prompt.git",
+  "commit": "0e5b110ea035640b93b173ae04c132a06a40e5b8",
+  "tree": "855b7891b60643908c8da7a462fd60f05f1e8519",
+  "imported_at": "2026-10-27T06:33:58.946793+00:00"
+}

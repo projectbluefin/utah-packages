@@ -1,0 +1,8 @@
+{
+  "package": "libhangul",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libhangul.git",
+  "commit": "c8ea72fb3a23a5dfbb0420c88faec6c83ef2e7d6",
+  "tree": "79b811c1a0ba038574962ead619c1d2a717864bb",
+  "imported_at": "2026-10-27T13:50:00Z"
+}

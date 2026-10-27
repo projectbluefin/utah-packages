@@ -1,0 +1,8 @@
+{
+  "package": "liburing",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/liburing.git",
+  "commit": "13710e301f24734b58a639817508728388e90e1e",
+  "tree": "7200b68a8a0d33961e2bdbf4f7f35e944f69f5e7",
+  "imported_at": "2026-10-27T20:17:57.056951+00:00"
+}

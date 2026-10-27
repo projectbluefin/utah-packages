@@ -1,0 +1,16 @@
+# packit config for glslang
+# Build Stage 3 - depends on spirv-tools
+
+jobs:
+  - job: koji_build
+    trigger: commit | koji_build
+    allowed_committers: [all_admins]
+    dist_git_branches:
+      - fedora-all
+    sidetag_group: vulkan-sdk-releases
+    dependencies:
+      - spirv-tools
+    dependents:
+      - vulkan-validation-layers
+      - vulkan-tools
+      - shaderc

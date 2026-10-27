@@ -1,0 +1,22 @@
+# packit config for shaderc
+# Build Stage 4 - depends on glslang
+
+jobs:
+  - job: koji_build
+    trigger: commit | koji_build
+    allowed_committers: [all_committers]
+    allowed_pr_authors: ['asrivats','jexposit']
+    dist_git_branches:
+      - fedora-all
+    sidetag_group: vulkan-sdk-releases
+    dependencies:
+      - glslang
+
+  - job: bodhi_update
+    trigger: koji_build
+    dist_git_branches:
+      - fedora-all
+    sidetag_group: vulkan-sdk-releases
+    dependencies:
+      - vulkan-validation-layers
+      - vulkan-tools

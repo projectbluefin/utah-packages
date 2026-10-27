@@ -1,0 +1,8 @@
+{
+  "package": "nilfs-utils",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/nilfs-utils.git",
+  "commit": "5a06159cf3e823adc18c4b720b7d457de82edbf2",
+  "tree": "3e6b8221472e9a050f5ac88d7a5bc7603b425f58",
+  "imported_at": "2026-10-27T08:32:51.576670+00:00"
+}

@@ -1,0 +1,8 @@
+{
+  "package": "spirv-headers",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/spirv-headers.git",
+  "commit": "a3bc1fb5ad8451002ccc5bde778ed7c750a42592",
+  "tree": "f66dab863e01f35540068d5464819ebf83b3b31d",
+  "imported_at": "2026-10-27T08:52:15.869717+00:00"
+}
