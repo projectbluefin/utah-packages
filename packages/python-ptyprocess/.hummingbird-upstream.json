@@ -1,0 +1,8 @@
+{
+  "package": "python-ptyprocess",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/python-ptyprocess.git",
+  "commit": "d18a8225a365a9a55e6d231c6e10e1a1d24009c8",
+  "tree": "59ead2509ed2721cd8f695608a4204d6601a15ca",
+  "imported_at": "2026-10-27T04:24:06.754466+00:00"
+}

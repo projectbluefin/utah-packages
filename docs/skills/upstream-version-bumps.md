@@ -14,6 +14,22 @@ macro-only releases (`%autorelease`, `%{baserelease}`, `%{samba_release}`)
 alone because their expanded value cannot be inferred from the recipe.
 A no-op version rewrite must preserve the release.
 
+When the version changes, prepend a dated entry to an existing manual
+`%changelog`, preserving the old history. Leave `%autochangelog` sections
+alone, and do not add entries on same-version relocks or repeated applies.
+Record the RPM spelling of the new version and the reset literal release
+without `%{?dist}` or `%{dist}`, prefixed with the main package's literal `Epoch:` as
+`epoch:version-release` so rpmlint sees coherent history. If the release still depends on macros, record the known
+version alone: executing macros is outside this rewrite's scope, and leaving
+live macros in history would make later bumps change old entries. Use an
+English UTC date and the automation identity; a bump must not attribute its
+new entry to the packager who wrote the previous one. Cover manual history,
+automatic history, and both feed paths in `tests/test_upstream_bump.py`.
+A fix to this rewrite only reaches later bumps: specs already bumped keep the
+stale history until backfilled. Backfill through `update_changelog` itself,
+dated by the commit that changed `Version:`, so the entry matches what a bump
+writes today (projectbluefin/utah-packages#604).
+
 Retire the package's `dist_bump` entry when applying a new upstream version,
 for both GNOME and forge feeds. Its baseline records only the release, so a
 reset from `1` to `1` cannot invalidate it automatically: without removal the

@@ -142,8 +142,9 @@ jobs:
               exit 0
             fi
           fi
-          gh api --paginate "repos/$REPO/pulls/$PR/files" --jq '.[].filename' > files.txt
-          if python3 tools/canary.py touches-pipeline < files.txt; then
+          # Recipe inventory (new recipes and new lock entries) is not pipeline:
+          # see pipeline_relevant in tools/canary.
+          if python3 tools/canary.py pr-relevant --repository "$REPO" --pr "$PR" --set "$CANARY_SET"; then
             echo "run=true" >> "$GITHUB_OUTPUT"
           else
             echo "run=false" >> "$GITHUB_OUTPUT"

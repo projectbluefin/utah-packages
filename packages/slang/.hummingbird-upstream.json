@@ -1,0 +1,8 @@
+{
+  "package": "slang",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/slang.git",
+  "commit": "354e9920fa876d53ab95bf82747481306976bb51",
+  "tree": "abbc36581d6c34de8a0854fffe458579a8c65f09",
+  "imported_at": "2026-10-27T10:27:22.509473+00:00"
+}

@@ -55,8 +55,8 @@
 # DroidSansFallback) is used as upstream ships it. Fedora symlinks it to
 # urw-base35-fonts, adobe-mappings-cmap, adobe-mappings-pdf and
 # google-droid-sans-fonts and makes libgs Require all four; none is in
-# Hummingbird, and importing them would add four data recipes to replace files
-# the tarball already carries.
+# Hummingbird. This factory now carries urw-base35-fonts, but the other three
+# are in neither, so the switch stays off until they are imported too.
 %bcond system_resources 0
 # jbig2dec and ijs are built from the copies in the tarball. libjbig2dec.so.0
 # and libijs-0.35.so are in neither Hummingbird nor this factory, and libgs

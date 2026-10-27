@@ -1,0 +1,8 @@
+{
+  "package": "libmd",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libmd.git",
+  "commit": "825284bb08bbc11b949bec809ecae69b68cd48d7",
+  "tree": "cd3fc2f62d26b6ec6140d3e63960b131db6fb281",
+  "imported_at": "2026-10-25T16:04:47.926517+00:00"
+}

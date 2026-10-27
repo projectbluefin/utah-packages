@@ -1,0 +1,8 @@
+{
+  "package": "bats",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/bats.git",
+  "commit": "55d017346b079d403efbb9a315dcaf474721f2f2",
+  "tree": "93b660bbed4982e83c0d654103b11375054a7b11",
+  "imported_at": "2026-10-27T06:34:56.382667+00:00"
+}

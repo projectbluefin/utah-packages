@@ -1,0 +1,23 @@
+From e081f6725fbb49cae6eedab7010f517e8490859b Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Miro=20Hron=C4=8Dok?= <miro@hroncok.cz>
+Date: Mon, 28 Jul 2025 13:00:45 +0200
+Subject: [PATCH] Do not require wheel for building
+
+ - current version of setuptools (70.1+) does not need wheel at all
+ - older versions of setuptools would fetch wheel when building wheels (but not sdists)
+---
+ pyproject.toml | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/pyproject.toml b/pyproject.toml
+index b60971760..9e5511cff 100644
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -2,7 +2,6 @@
+ requires = [
+     "setuptools; python_version != '3.3'",
+     "setuptools<40.0; python_version == '3.3'",
+-    "wheel",
+     "setuptools_scm<8.0"
+ ]
+ build-backend = "setuptools.build_meta"

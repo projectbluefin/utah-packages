@@ -1,0 +1,8 @@
+{
+  "package": "libntlm",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libntlm.git",
+  "commit": "dc68b9ac92efc18da92edaf4f74714a9062cef40",
+  "tree": "694be7329d03a0c862c300f9ddb649d65fccde7d",
+  "imported_at": "2026-10-27T06:03:22.197966+00:00"
+}

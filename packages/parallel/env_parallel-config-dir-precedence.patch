@@ -1,0 +1,473 @@
+--- a/src/env_parallel.bash
++++ b/src/env_parallel.bash
+@@ -334,7 +334,18 @@
+                 $next_is_env=/^--env$/;
+             }
+             if(grep { /^_$/ } @envvar) {
+-                if(not open(IN, "<", "$ENV{HOME}/.parallel/ignored_vars")) {
++                
++            sub _parallel_config_dir {
++                my $xdg_config_home = $ENV{XDG_CONFIG_HOME} || $ENV{HOME} . "/.config";
++                my @dirs = grep { -d $_ }
++                    ($ENV{PARALLEL_HOME},
++                     (map { "$_/parallel" }
++                      $xdg_config_home,
++                      split(/:/, $ENV{XDG_CONFIG_DIRS} // "")),
++                     $ENV{HOME} . "/.parallel");
++                return $dirs[0] || $ENV{HOME} . "/.parallel";
++            }
++            if(not open(IN, "<", _parallel_config_dir() . "/ignored_vars")) {
+              	    print STDERR "parallel: Error: ",
+             	    "Run \"parallel --record-env\" in a clean environment first.\n";
+                 } else {
+@@ -416,10 +427,24 @@
+     if perl -e 'exit grep { /^--record-?env$/ } @ARGV' -- "$@"; then
+ 	true skip
+     else
++	_parallel_config_dir_SH=$(perl -e '
++            my $xdg_config_home = $ENV{XDG_CONFIG_HOME} || $ENV{HOME} . "/.config";
++            my @dirs = grep { -d $_ }
++                ($ENV{PARALLEL_HOME},
++                 (map { "$_/parallel" }
++                  $xdg_config_home,
++                  split(/:/, $ENV{XDG_CONFIG_DIRS} // "")),
++                 $ENV{HOME} . "/.parallel");
++            my $dir = $dirs[0] || $ENV{HOME} . "/.parallel";
++            # Create the directory if it does not exist
++            -d $dir or mkdir $dir;
++            print $dir;
++        ')
+ 	(_names_of_ALIASES;
+ 	 _names_of_FUNCTIONS;
+ 	 _names_of_VARIABLES) |
+-	    cat > "$HOME"/.parallel/ignored_vars
++	    cat > "$_parallel_config_dir_SH"/ignored_vars
++	unset _parallel_config_dir_SH
+ 	return 0
+     fi
+ 
+--- a/src/env_parallel.zsh
++++ b/src/env_parallel.zsh
+@@ -334,7 +334,18 @@
+                 $next_is_env=/^--env$/;
+             }
+             if(grep { /^_$/ } @envvar) {
+-                if(not open(IN, "<", "$ENV{HOME}/.parallel/ignored_vars")) {
++                
++            sub _parallel_config_dir {
++                my $xdg_config_home = $ENV{XDG_CONFIG_HOME} || $ENV{HOME} . "/.config";
++                my @dirs = grep { -d $_ }
++                    ($ENV{PARALLEL_HOME},
++                     (map { "$_/parallel" }
++                      $xdg_config_home,
++                      split(/:/, $ENV{XDG_CONFIG_DIRS} // "")),
++                     $ENV{HOME} . "/.parallel");
++                return $dirs[0] || $ENV{HOME} . "/.parallel";
++            }
++            if(not open(IN, "<", _parallel_config_dir() . "/ignored_vars")) {
+              	    print STDERR "parallel: Error: ",
+             	    "Run \"parallel --record-env\" in a clean environment first.\n";
+                 } else {
+@@ -416,10 +427,24 @@
+     if perl -e 'exit grep { /^--record-?env$/ } @ARGV' -- "$@"; then
+ 	true skip
+     else
++	_parallel_config_dir_SH=$(perl -e '
++            my $xdg_config_home = $ENV{XDG_CONFIG_HOME} || $ENV{HOME} . "/.config";
++            my @dirs = grep { -d $_ }
++                ($ENV{PARALLEL_HOME},
++                 (map { "$_/parallel" }
++                  $xdg_config_home,
++                  split(/:/, $ENV{XDG_CONFIG_DIRS} // "")),
++                 $ENV{HOME} . "/.parallel");
++            my $dir = $dirs[0] || $ENV{HOME} . "/.parallel";
++            # Create the directory if it does not exist
++            -d $dir or mkdir $dir;
++            print $dir;
++        ')
+ 	(_names_of_ALIASES;
+ 	 _names_of_FUNCTIONS;
+ 	 _names_of_VARIABLES) |
+-	    cat > "$HOME"/.parallel/ignored_vars
++	    cat > "$_parallel_config_dir_SH"/ignored_vars
++	unset _parallel_config_dir_SH
+ 	return 0
+     fi
+ 
+--- a/src/env_parallel.ksh
++++ b/src/env_parallel.ksh
+@@ -334,7 +334,18 @@
+                 $next_is_env=/^--env$/;
+             }
+             if(grep { /^_$/ } @envvar) {
+-                if(not open(IN, "<", "$ENV{HOME}/.parallel/ignored_vars")) {
++                
++            sub _parallel_config_dir {
++                my $xdg_config_home = $ENV{XDG_CONFIG_HOME} || $ENV{HOME} . "/.config";
++                my @dirs = grep { -d $_ }
++                    ($ENV{PARALLEL_HOME},
++                     (map { "$_/parallel" }
++                      $xdg_config_home,
++                      split(/:/, $ENV{XDG_CONFIG_DIRS} // "")),
++                     $ENV{HOME} . "/.parallel");
++                return $dirs[0] || $ENV{HOME} . "/.parallel";
++            }
++            if(not open(IN, "<", _parallel_config_dir() . "/ignored_vars")) {
+              	    print STDERR "parallel: Error: ",
+             	    "Run \"parallel --record-env\" in a clean environment first.\n";
+                 } else {
+@@ -416,10 +427,24 @@
+     if perl -e 'exit grep { /^--record-?env$/ } @ARGV' -- "$@"; then
+ 	true skip
+     else
++	_parallel_config_dir_SH=$(perl -e '
++            my $xdg_config_home = $ENV{XDG_CONFIG_HOME} || $ENV{HOME} . "/.config";
++            my @dirs = grep { -d $_ }
++                ($ENV{PARALLEL_HOME},
++                 (map { "$_/parallel" }
++                  $xdg_config_home,
++                  split(/:/, $ENV{XDG_CONFIG_DIRS} // "")),
++                 $ENV{HOME} . "/.parallel");
++            my $dir = $dirs[0] || $ENV{HOME} . "/.parallel";
++            # Create the directory if it does not exist
++            -d $dir or mkdir $dir;
++            print $dir;
++        ')
+ 	(_names_of_ALIASES;
+ 	 _names_of_FUNCTIONS;
+ 	 _names_of_VARIABLES) |
+-	    cat > "$HOME"/.parallel/ignored_vars
++	    cat > "$_parallel_config_dir_SH"/ignored_vars
++	unset _parallel_config_dir_SH
+ 	return 0
+     fi
+ 
+--- a/src/env_parallel.sh
++++ b/src/env_parallel.sh
+@@ -334,7 +334,18 @@
+                 $next_is_env=/^--env$/;
+             }
+             if(grep { /^_$/ } @envvar) {
+-                if(not open(IN, "<", "$ENV{HOME}/.parallel/ignored_vars")) {
++                
++            sub _parallel_config_dir {
++                my $xdg_config_home = $ENV{XDG_CONFIG_HOME} || $ENV{HOME} . "/.config";
++                my @dirs = grep { -d $_ }
++                    ($ENV{PARALLEL_HOME},
++                     (map { "$_/parallel" }
++                      $xdg_config_home,
++                      split(/:/, $ENV{XDG_CONFIG_DIRS} // "")),
++                     $ENV{HOME} . "/.parallel");
++                return $dirs[0] || $ENV{HOME} . "/.parallel";
++            }
++            if(not open(IN, "<", _parallel_config_dir() . "/ignored_vars")) {
+              	    print STDERR "parallel: Error: ",
+             	    "Run \"parallel --record-env\" in a clean environment first.\n";
+                 } else {
+@@ -416,10 +427,24 @@
+     if perl -e 'exit grep { /^--record-?env$/ } @ARGV' -- "$@"; then
+ 	true skip
+     else
++	_parallel_config_dir_SH=$(perl -e '
++            my $xdg_config_home = $ENV{XDG_CONFIG_HOME} || $ENV{HOME} . "/.config";
++            my @dirs = grep { -d $_ }
++                ($ENV{PARALLEL_HOME},
++                 (map { "$_/parallel" }
++                  $xdg_config_home,
++                  split(/:/, $ENV{XDG_CONFIG_DIRS} // "")),
++                 $ENV{HOME} . "/.parallel");
++            my $dir = $dirs[0] || $ENV{HOME} . "/.parallel";
++            # Create the directory if it does not exist
++            -d $dir or mkdir $dir;
++            print $dir;
++        ')
+ 	(_names_of_ALIASES;
+ 	 _names_of_FUNCTIONS;
+ 	 _names_of_VARIABLES) |
+-	    cat > "$HOME"/.parallel/ignored_vars
++	    cat > "$_parallel_config_dir_SH"/ignored_vars
++	unset _parallel_config_dir_SH
+ 	return 0
+     fi
+ 
+--- a/src/env_parallel.ash
++++ b/src/env_parallel.ash
+@@ -334,7 +334,18 @@
+                 $next_is_env=/^--env$/;
+             }
+             if(grep { /^_$/ } @envvar) {
+-                if(not open(IN, "<", "$ENV{HOME}/.parallel/ignored_vars")) {
++                
++            sub _parallel_config_dir {
++                my $xdg_config_home = $ENV{XDG_CONFIG_HOME} || $ENV{HOME} . "/.config";
++                my @dirs = grep { -d $_ }
++                    ($ENV{PARALLEL_HOME},
++                     (map { "$_/parallel" }
++                      $xdg_config_home,
++                      split(/:/, $ENV{XDG_CONFIG_DIRS} // "")),
++                     $ENV{HOME} . "/.parallel");
++                return $dirs[0] || $ENV{HOME} . "/.parallel";
++            }
++            if(not open(IN, "<", _parallel_config_dir() . "/ignored_vars")) {
+              	    print STDERR "parallel: Error: ",
+             	    "Run \"parallel --record-env\" in a clean environment first.\n";
+                 } else {
+@@ -416,10 +427,24 @@
+     if perl -e 'exit grep { /^--record-?env$/ } @ARGV' -- "$@"; then
+ 	true skip
+     else
++	_parallel_config_dir_SH=$(perl -e '
++            my $xdg_config_home = $ENV{XDG_CONFIG_HOME} || $ENV{HOME} . "/.config";
++            my @dirs = grep { -d $_ }
++                ($ENV{PARALLEL_HOME},
++                 (map { "$_/parallel" }
++                  $xdg_config_home,
++                  split(/:/, $ENV{XDG_CONFIG_DIRS} // "")),
++                 $ENV{HOME} . "/.parallel");
++            my $dir = $dirs[0] || $ENV{HOME} . "/.parallel";
++            # Create the directory if it does not exist
++            -d $dir or mkdir $dir;
++            print $dir;
++        ')
+ 	(_names_of_ALIASES;
+ 	 _names_of_FUNCTIONS;
+ 	 _names_of_VARIABLES) |
+-	    cat > "$HOME"/.parallel/ignored_vars
++	    cat > "$_parallel_config_dir_SH"/ignored_vars
++	unset _parallel_config_dir_SH
+ 	return 0
+     fi
+ 
+--- a/src/env_parallel.dash
++++ b/src/env_parallel.dash
+@@ -334,7 +334,18 @@
+                 $next_is_env=/^--env$/;
+             }
+             if(grep { /^_$/ } @envvar) {
+-                if(not open(IN, "<", "$ENV{HOME}/.parallel/ignored_vars")) {
++                
++            sub _parallel_config_dir {
++                my $xdg_config_home = $ENV{XDG_CONFIG_HOME} || $ENV{HOME} . "/.config";
++                my @dirs = grep { -d $_ }
++                    ($ENV{PARALLEL_HOME},
++                     (map { "$_/parallel" }
++                      $xdg_config_home,
++                      split(/:/, $ENV{XDG_CONFIG_DIRS} // "")),
++                     $ENV{HOME} . "/.parallel");
++                return $dirs[0] || $ENV{HOME} . "/.parallel";
++            }
++            if(not open(IN, "<", _parallel_config_dir() . "/ignored_vars")) {
+              	    print STDERR "parallel: Error: ",
+             	    "Run \"parallel --record-env\" in a clean environment first.\n";
+                 } else {
+@@ -416,10 +427,24 @@
+     if perl -e 'exit grep { /^--record-?env$/ } @ARGV' -- "$@"; then
+ 	true skip
+     else
++	_parallel_config_dir_SH=$(perl -e '
++            my $xdg_config_home = $ENV{XDG_CONFIG_HOME} || $ENV{HOME} . "/.config";
++            my @dirs = grep { -d $_ }
++                ($ENV{PARALLEL_HOME},
++                 (map { "$_/parallel" }
++                  $xdg_config_home,
++                  split(/:/, $ENV{XDG_CONFIG_DIRS} // "")),
++                 $ENV{HOME} . "/.parallel");
++            my $dir = $dirs[0] || $ENV{HOME} . "/.parallel";
++            # Create the directory if it does not exist
++            -d $dir or mkdir $dir;
++            print $dir;
++        ')
+ 	(_names_of_ALIASES;
+ 	 _names_of_FUNCTIONS;
+ 	 _names_of_VARIABLES) |
+-	    cat > "$HOME"/.parallel/ignored_vars
++	    cat > "$_parallel_config_dir_SH"/ignored_vars
++	unset _parallel_config_dir_SH
+ 	return 0
+     fi
+ 
+--- a/src/env_parallel.mksh
++++ b/src/env_parallel.mksh
+@@ -334,7 +334,18 @@
+                 $next_is_env=/^--env$/;
+             }
+             if(grep { /^_$/ } @envvar) {
+-                if(not open(IN, "<", "$ENV{HOME}/.parallel/ignored_vars")) {
++                
++            sub _parallel_config_dir {
++                my $xdg_config_home = $ENV{XDG_CONFIG_HOME} || $ENV{HOME} . "/.config";
++                my @dirs = grep { -d $_ }
++                    ($ENV{PARALLEL_HOME},
++                     (map { "$_/parallel" }
++                      $xdg_config_home,
++                      split(/:/, $ENV{XDG_CONFIG_DIRS} // "")),
++                     $ENV{HOME} . "/.parallel");
++                return $dirs[0] || $ENV{HOME} . "/.parallel";
++            }
++            if(not open(IN, "<", _parallel_config_dir() . "/ignored_vars")) {
+              	    print STDERR "parallel: Error: ",
+             	    "Run \"parallel --record-env\" in a clean environment first.\n";
+                 } else {
+@@ -416,10 +427,24 @@
+     if perl -e 'exit grep { /^--record-?env$/ } @ARGV' -- "$@"; then
+ 	true skip
+     else
++	_parallel_config_dir_SH=$(perl -e '
++            my $xdg_config_home = $ENV{XDG_CONFIG_HOME} || $ENV{HOME} . "/.config";
++            my @dirs = grep { -d $_ }
++                ($ENV{PARALLEL_HOME},
++                 (map { "$_/parallel" }
++                  $xdg_config_home,
++                  split(/:/, $ENV{XDG_CONFIG_DIRS} // "")),
++                 $ENV{HOME} . "/.parallel");
++            my $dir = $dirs[0] || $ENV{HOME} . "/.parallel";
++            # Create the directory if it does not exist
++            -d $dir or mkdir $dir;
++            print $dir;
++        ')
+ 	(_names_of_ALIASES;
+ 	 _names_of_FUNCTIONS;
+ 	 _names_of_VARIABLES) |
+-	    cat > "$HOME"/.parallel/ignored_vars
++	    cat > "$_parallel_config_dir_SH"/ignored_vars
++	unset _parallel_config_dir_SH
+ 	return 0
+     fi
+ 
+--- a/src/env_parallel.pdksh
++++ b/src/env_parallel.pdksh
+@@ -76,7 +76,18 @@
+                 $next_is_env=/^--env$/;
+             }
+             if(grep { /^_$/ } @envvar) {
+-                if(not open(IN, "<", "$ENV{HOME}/.parallel/ignored_vars")) {
++                
++            sub _parallel_config_dir {
++                my $xdg_config_home = $ENV{XDG_CONFIG_HOME} || $ENV{HOME} . "/.config";
++                my @dirs = grep { -d $_ }
++                    ($ENV{PARALLEL_HOME},
++                     (map { "$_/parallel" }
++                      $xdg_config_home,
++                      split(/:/, $ENV{XDG_CONFIG_DIRS} // "")),
++                     $ENV{HOME} . "/.parallel");
++                return $dirs[0] || $ENV{HOME} . "/.parallel";
++            }
++            if(not open(IN, "<", _parallel_config_dir() . "/ignored_vars")) {
+              	    print STDERR "parallel: Error: ",
+             	    "Run \"parallel --record-env\" in a clean environment first.\n";
+                 } else {
+@@ -127,10 +138,23 @@
+     if perl -e 'exit grep { /^--record-env$/ } @ARGV' -- "$@"; then
+ 	true skip
+     else
++	_parallel_config_dir_SH=$(perl -e '
++            my $xdg_config_home = $ENV{XDG_CONFIG_HOME} || $ENV{HOME} . "/.config";
++            my @dirs = grep { -d $_ }
++                ($ENV{PARALLEL_HOME},
++                 (map { "$_/parallel" }
++                  $xdg_config_home,
++                  split(/:/, $ENV{XDG_CONFIG_DIRS} // "")),
++                 $ENV{HOME} . "/.parallel");
++            my $dir = $dirs[0] || $ENV{HOME} . "/.parallel";
++            -d $dir or mkdir $dir;
++            print $dir;
++        ')
+ 	(_names_of_ALIASES;
+ 	 _names_of_FUNCTIONS;
+ 	 _names_of_VARIABLES) |
+-	    cat > $HOME/.parallel/ignored_vars
++	    cat > $_parallel_config_dir_SH/ignored_vars
++	unset _parallel_config_dir_SH
+ 	return 0
+     fi
+     
+--- a/src/env_parallel.fish
++++ b/src/env_parallel.fish
+@@ -80,7 +80,18 @@
+                 $next_is_env=/^--env$/;
+             }
+             if(grep { /^_$/ } @envvar) {
+-                if(not open(IN, "<", "$ENV{HOME}/.parallel/ignored_vars")) {
++                
++            sub _parallel_config_dir {
++                my $xdg_config_home = $ENV{XDG_CONFIG_HOME} || $ENV{HOME} . "/.config";
++                my @dirs = grep { -d $_ }
++                    ($ENV{PARALLEL_HOME},
++                     (map { "$_/parallel" }
++                      $xdg_config_home,
++                      split(/:/, $ENV{XDG_CONFIG_DIRS} // "")),
++                     $ENV{HOME} . "/.parallel");
++                return $dirs[0] || $ENV{HOME} . "/.parallel";
++            }
++            if(not open(IN, "<", _parallel_config_dir() . "/ignored_vars")) {
+              	    print STDERR "parallel: Error: ",
+             	    "Run \"parallel --record-env\" in a clean environment first.\n";
+                 } else {
+@@ -100,9 +111,22 @@
+       # --record-env
+       perl -e 'exit grep { /^--record-env$/ } @ARGV' -- $argv; or begin;
+         begin;
++          set _parallel_config_dir_FISH (perl -e '
++            my $xdg_config_home = $ENV{XDG_CONFIG_HOME} || $ENV{HOME} . "/.config";
++            my @dirs = grep { -d $_ }
++                ($ENV{PARALLEL_HOME},
++                 (map { "$_/parallel" }
++                  $xdg_config_home,
++                  split(/:/, $ENV{XDG_CONFIG_DIRS} // "")),
++                 $ENV{HOME} . "/.parallel");
++            my $dir = $dirs[0] || $ENV{HOME} . "/.parallel";
++            -d $dir or mkdir $dir;
++            print $dir;
++        ');
+ 	  functions -n | perl -pe 's/,/\n/g';
+ 	  set -n;
+-	end | cat > $HOME/.parallel/ignored_vars;
++	end | cat > $_parallel_config_dir_FISH/ignored_vars;
++          set -e _parallel_config_dir_FISH;
+       end;
+ 
+       # Export function definitions
+--- a/src/env_parallel.csh
++++ b/src/env_parallel.csh
+@@ -70,7 +70,18 @@
+                 $next_is_env=/^--env$/;
+             }
+             if(grep { /^_$/ } @envvar) {
+-                if(not open(IN, "<", "$ENV{HOME}/.parallel/ignored_vars")) {
++                
++            sub _parallel_config_dir {
++                my $xdg_config_home = $ENV{XDG_CONFIG_HOME} || $ENV{HOME} . "/.config";
++                my @dirs = grep { -d $_ }
++                    ($ENV{PARALLEL_HOME},
++                     (map { "$_/parallel" }
++                      $xdg_config_home,
++                      split(/:/, $ENV{XDG_CONFIG_DIRS} // "")),
++                     $ENV{HOME} . "/.parallel");
++                return $dirs[0] || $ENV{HOME} . "/.parallel";
++            }
++            if(not open(IN, "<", _parallel_config_dir() . "/ignored_vars")) {
+              	    print STDERR "parallel: Error: ",
+             	    "Run \"parallel --record-env\" in a clean environment first.\n";
+                 } else {
+--- a/src/env_parallel.tcsh
++++ b/src/env_parallel.tcsh
+@@ -71,7 +71,18 @@
+                 $next_is_env=/^--env$/;
+             }
+             if(grep { /^_$/ } @envvar) {
+-                if(not open(IN, "<", "$ENV{HOME}/.parallel/ignored_vars")) {
++                
++            sub _parallel_config_dir {
++                my $xdg_config_home = $ENV{XDG_CONFIG_HOME} || $ENV{HOME} . "/.config";
++                my @dirs = grep { -d $_ }
++                    ($ENV{PARALLEL_HOME},
++                     (map { "$_/parallel" }
++                      $xdg_config_home,
++                      split(/:/, $ENV{XDG_CONFIG_DIRS} // "")),
++                     $ENV{HOME} . "/.parallel");
++                return $dirs[0] || $ENV{HOME} . "/.parallel";
++            }
++            if(not open(IN, "<", _parallel_config_dir() . "/ignored_vars")) {
+              	    print STDERR "parallel: Error: ",
+             	    "Run \"parallel --record-env\" in a clean environment first.\n";
+                 } else {

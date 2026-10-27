@@ -1,0 +1,8 @@
+{
+  "package": "libXres",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libXres.git",
+  "commit": "2203f38fb8f323147638cfa16c00d4b8919e567e",
+  "tree": "85c2faf4e39f779b4a2ab89c1df11f9f4abd7541",
+  "imported_at": "2026-10-26T05:20:10.976682+00:00"
+}

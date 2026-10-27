@@ -132,6 +132,31 @@ verified GNOME release URL into a blanket promotion of all feeds: forge tag
 archives can differ from Fedora's pinned bytes. A digest mismatch must fail
 closed; Fedora fallbacks cover transport failures, not integrity failures.
 
+For a bulk migration, use direct archive feeds and the recipe's `Source0`
+as candidate locators, not as proof. A release-monitoring project page is
+metadata, not a source archive. Expand recipe macros explicitly and strip
+RPM's `#/local-filename` suffix from the download URL while preserving the
+lock's `filename`. Project names can differ from recipe names, as with
+`gstreamer1-plugins-base` and the upstream `gst-plugins-base` archive.
+
+Stream each candidate primary directly through SHA-512 without using the
+pipeline's fallback path. Promote only exact matches to the existing lock;
+leave mismatches and unavailable archives on the ratchet for separate
+investigation. A successful HTTP response can even be an HTML error page,
+so transport success alone is insufficient. Compare the old and new lock
+objects after editing: only `url` and `fallback_urls` should change in a
+transport-only migration. Preserve all existing fallbacks as well as the
+former primary, and remove exactly the promoted names from the ratchet.
+
+The fixed native Canary set has an additional lookaside-primary contract in
+`tests/test_canary.py`: libical, vulkan-headers, vulkan-loader, and the
+python-typing-inspection perturbation package. Treat their source migration
+as a separate change that also reconciles the Canary's availability contract
+and verifies it on the native runner; do not weaken that test during a bulk
+transport-only migration. Also check candidate hosts against the validator's
+Fedora-host policy before editing: a project's own repository on
+`forge.fedoraproject.org` still counts as Fedora infrastructure.
+
 ## Dead upstream hosts: releases.pagure.org
 
 `releases.pagure.org` stopped serving release tarballs around 2026-10-13

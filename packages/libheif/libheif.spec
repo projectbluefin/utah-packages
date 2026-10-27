@@ -51,7 +51,7 @@
 
 
 Name:           libheif
-Version:        1.23.6
+Version:        1.23.7
 Release:        %autorelease
 Summary:        HEIF and AVIF file format decoder and encoder
 

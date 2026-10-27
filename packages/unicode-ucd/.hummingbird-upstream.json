@@ -1,0 +1,8 @@
+{
+  "package": "unicode-ucd",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/unicode-ucd.git",
+  "commit": "5c5da87f637aa9cb85f58f454042b015180c72a4",
+  "tree": "4423902bf79ba2f3c96e769df9969ba5997b7576",
+  "imported_at": "2026-10-27T13:50:00Z"
+}

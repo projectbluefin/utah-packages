@@ -78,8 +78,11 @@ jobs:
             --repository "$REPOSITORY" --head-sha "$HEAD_SHA" \
             | tee decision.txt
           action=$(sed -n 's/^action=//p' decision.txt)
-          # A change that touches no pipeline path passes Canary on its own.
-          if [ "$action" = copy ] && ! python3 tools/canary.py touches-pipeline < files.txt; then
+          # A change that cannot affect what Canary proves passes it on its own;
+          # the same rule canary.yml applies (tools/canary.py pipeline_relevant),
+          # with the set read from the trusted canary.yml on main.
+          CANARY_SET=$(python3 -c "import yaml; print(yaml.safe_load(open('.github/workflows/canary.yml'))['env']['CANARY_SET'])")
+          if [ "$action" = copy ] && ! python3 tools/canary.py pr-relevant --repository "$REPOSITORY" --pr "$PR" --set "$CANARY_SET"; then
             echo "::notice title=fork canary::no pipeline path changed; its own Canary run already passes"
             action=skip
           fi

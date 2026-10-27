@@ -1,0 +1,79 @@
+diff -r 1798c04939ee liblouisutdml/liblouisutdml.c
+--- a/liblouisutdml/liblouisutdml.c	Fri Feb 02 14:15:15 2024 +0100
++++ b/liblouisutdml/liblouisutdml.c	Fri Feb 02 14:17:25 2024 +0100
+@@ -36,6 +36,7 @@
+ #include "louisutdml.h"
+ #include <libxml/HTMLparser.h>
+ #include <libxml/catalog.h>
++#include <libxml/xmlsave.h>
+ 
+ UserData *ud = NULL;
+ 
+diff -r 35eff920c807 liblouisutdml/utd2pef.c
+--- a/liblouisutdml/utd2pef.c	Fri Feb 02 14:22:46 2024 +0100
++++ b/liblouisutdml/utd2pef.c	Fri Feb 02 14:24:56 2024 +0100
+@@ -30,6 +30,7 @@
+    */
+ 
+ #include <stdio.h>
++#include <stdlib.h>
+ #include <string.h>
+ #include "louisutdml.h"
+ 
+diff -r 35eff920c807 liblouisutdml/utd2transinxml.c
+--- a/liblouisutdml/utd2transinxml.c	Fri Feb 02 14:22:46 2024 +0100
++++ b/liblouisutdml/utd2transinxml.c	Fri Feb 02 14:24:56 2024 +0100
+@@ -30,6 +30,7 @@
+    */
+ 
+ #include <stdio.h>
++#include <stdlib.h>
+ #include <string.h>
+ #include "louisutdml.h"
+ 
+diff -r 54dd1aeac7dd liblouisutdml/utd2brf.c
+--- a/liblouisutdml/utd2brf.c	Fri Feb 02 14:29:16 2024 +0100
++++ b/liblouisutdml/utd2brf.c	Fri Feb 02 14:31:06 2024 +0100
+@@ -30,6 +30,7 @@
+    */
+ 
+ #include <stdio.h>
++#include <stdlib.h>
+ #include <string.h>
+ #include "louisutdml.h"
+ 
+diff -r 54dd1aeac7dd liblouisutdml/utd2dsbible.c
+--- a/liblouisutdml/utd2dsbible.c	Fri Feb 02 14:29:16 2024 +0100
++++ b/liblouisutdml/utd2dsbible.c	Fri Feb 02 14:31:06 2024 +0100
+@@ -30,6 +30,7 @@
+    */
+ 
+ #include <stdio.h>
++#include <stdlib.h>
+ #include <string.h>
+ #include "louisutdml.h"
+ 
+diff -r 54dd1aeac7dd liblouisutdml/utd2volumes.c
+--- a/liblouisutdml/utd2volumes.c	Fri Feb 02 14:29:16 2024 +0100
++++ b/liblouisutdml/utd2volumes.c	Fri Feb 02 14:31:06 2024 +0100
+@@ -30,6 +30,7 @@
+    */
+ 
+ #include <stdio.h>
++#include <stdlib.h>
+ #include <string.h>
+ #include "louisutdml.h"
+ 
+diff -r f5077a7ec7e0 liblouisutdml/.transcriber.c.swp
+Binary file liblouisutdml/.transcriber.c.swp has changed
+diff -r f5077a7ec7e0 liblouisutdml/transcriber.c
+--- a/liblouisutdml/transcriber.c	Fri Feb 02 14:33:30 2024 +0100
++++ b/liblouisutdml/transcriber.c	Fri Feb 02 14:34:22 2024 +0100
+@@ -32,6 +32,7 @@
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
++#include <libxml/xmlsave.h>
+ #include "louisutdml.h"
+ 
+ static xmlNode *firstBrlNode;
