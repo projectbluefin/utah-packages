@@ -156,6 +156,14 @@ Bluefin/Utah ships Flathub only. A hand re-import of `packages/flatpak` must
 diff for that unit and leave it out, along with the `%autorelease -b 2` that
 records the drop.
 
+A declined runtime dependency is a local decision too. Utah declined
+`adobe-source-code-pro-fonts` and `open-sans-fonts`
+(`config/factory-build-backlog.toml`), and wayland's `book` bcond made
+`wayland-doc` Require both, so the factory's wayland sets `%bcond book 0`
+(issue #612). A re-import restores Fedora's `%{undefined rhel}`; keep it off.
+When a font or other runtime package is declined, grep `packages/*/*.spec`
+for `Requires:` on it in the same commit.
+
 ## 7. Repinning a digest that upstream garbage-collects is not a fix
 
 **What happened.** `quay.io/fedora/fedora:44` and `quay.io/packit/packit`

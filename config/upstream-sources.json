@@ -6031,6 +6031,16 @@
       "url": "https://files.pythonhosted.org/packages/91/a0/f439da954d78a987298cb8d1ca1b141c53b1d1d1c7a50e17198ed061b9ac/PyAudio-0.2.13.tar.gz",
       "filename": "PyAudio-0.2.13.tar.gz",
       "sha512": "1ae453cae442118ae1b0db44ca8736621a361af3686e47561bffa0d43352039ed5f882412ca22a2a4320b362f966e727b0e38bb9706e99b85d99bc16cc943008"
+    },
+    {
+      "name": "strace",
+      "version": "7.3",
+      "url": "https://strace.io/files/7.3/strace-7.3.tar.xz",
+      "filename": "strace-7.3.tar.xz",
+      "sha512": "177f6de73ba731cba4e71ea8407e663d8f96a4bd59b6aeba4db9b57c55b438d4b764b5f694ec4011e867ba70c55f75cecf6747b0afd0311aa4f23fc51a5351f6",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/strace/strace-7.3.tar.xz/sha512/177f6de73ba731cba4e71ea8407e663d8f96a4bd59b6aeba4db9b57c55b438d4b764b5f694ec4011e867ba70c55f75cecf6747b0afd0311aa4f23fc51a5351f6/strace-7.3.tar.xz"
+      ]
     }
   ]
 }
