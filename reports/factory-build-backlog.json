@@ -6,8 +6,8 @@
       "total": 30
     },
     "dev-tools": {
-      "pending": 69,
-      "total": 69
+      "pending": 67,
+      "total": 67
     },
     "fonts-i18n": {
       "pending": 19,
@@ -321,16 +321,6 @@
     {
       "area": "dev-tools",
       "name": "lsb_release",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "oddjob",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "oddjob-mkhomedir",
       "state": "pending"
     },
     {
@@ -1193,11 +1183,11 @@
   "states": {
     "already_recipe": 13,
     "manifest_wants": 1,
-    "pending": 214
+    "pending": 212
   },
   "totals": {
-    "backlog": 228,
-    "resolved": 289,
+    "backlog": 226,
+    "resolved": 291,
     "wontfix": 34
   }
 }

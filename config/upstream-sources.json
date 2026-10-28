@@ -6083,6 +6083,17 @@
       "url": "https://github.com/pallets/click/archive/8.4.2/click-8.4.2.tar.gz",
       "filename": "click-8.4.2.tar.gz",
       "sha512": "2731993c89d7386a8bfd4f51131384a2a67c4ee33e54f92a055b685ba4cf74c854fb5aca0c92e3a24d04bf7725e169edf457d1f18a660b5361aabbbcdd550657"
+    },
+    {
+      "name": "oddjob",
+      "version": "0.34.7",
+      "url": "https://releases.pagure.org/oddjob/oddjob-0.34.7.tar.gz",
+      "filename": "oddjob-0.34.7.tar.gz",
+      "feed": "https://release-monitoring.org/project/384596",
+      "sha512": "df98f3d2ce18de5d2db6d638995c01c80aec51f7ad979b879b2e8d8f7d6c2e464cbff3c70ed9b528399337f8fba31744f955ca17fdad1d4e9193fb0f10ea391a",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/oddjob/oddjob-0.34.7.tar.gz/sha512/df98f3d2ce18de5d2db6d638995c01c80aec51f7ad979b879b2e8d8f7d6c2e464cbff3c70ed9b528399337f8fba31744f955ca17fdad1d4e9193fb0f10ea391a/oddjob-0.34.7.tar.gz"
+      ]
     }
   ]
 }

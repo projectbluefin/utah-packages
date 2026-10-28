@@ -2512,6 +2512,12 @@ packages:
     downstream_package_name: oath-toolkit
     paths:
       - packages/oath-toolkit
+  oddjob:
+    specfile_path: oddjob.spec
+    upstream_package_name: oddjob
+    downstream_package_name: oddjob
+    paths:
+      - packages/oddjob
   openal-soft:
     specfile_path: openal-soft.spec
     upstream_package_name: openal-soft
