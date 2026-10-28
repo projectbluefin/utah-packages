@@ -1,0 +1,14 @@
+summary: bison basic test
+description: ''
+contact:
+- Edjunior Machado <emachado@redhat.com>
+component:
+- bison
+test: ./runtest.sh
+framework: beakerlib
+recommend:
+- bison
+- gcc
+duration: 1h
+extra-summary: /tools/bison/Sanity/basic-test
+extra-task: /tools/bison/Sanity/basic-test

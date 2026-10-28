@@ -88,6 +88,11 @@ Recommends: gnome-bluetooth%{?_isa} >= 1:%{gnome_bluetooth_version}
 %endif
 
 Requires: %{name}-filesystem = %{version}-%{release}
+# Utah: Settings > About draws the logo from the paths passed to meson in
+# %%build. They used to be Fedora's pixmaps, which the image filled with
+# older copies from projectbluefin/common; they now point at Bluefin's logos,
+# sourced from projectbluefin/artwork at a pinned commit (utah-packages#629).
+Requires: bluefin-artwork-logos
 # For user accounts
 Requires: accountsservice
 Requires: alsa-lib
@@ -160,14 +165,8 @@ utilities.
 %meson \
   -Ddocumentation=true \
   -Dlocation-services=enabled \
-%if 0%{?fedora}
-  -Ddistributor_logo=%{_datadir}/pixmaps/fedora_logo_med.png \
-  -Ddark_mode_distributor_logo=%{_datadir}/pixmaps/fedora_whitelogo_med.png \
-%endif
-%if 0%{?rhel}
-  -Ddistributor_logo=%{_datadir}/pixmaps/fedora-logo.png \
-  -Ddark_mode_distributor_logo=%{_datadir}/pixmaps/system-logo-white.png \
-%endif
+  -Ddistributor_logo=%{_datadir}/bluefin-artwork-logos/bluefin-logo-light.png \
+  -Ddark_mode_distributor_logo=%{_datadir}/bluefin-artwork-logos/bluefin-logo-dark.png \
 %if %{with malcontent}
   -Dmalcontent=true \
 %else

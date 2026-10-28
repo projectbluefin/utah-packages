@@ -78,7 +78,51 @@ def decide(pr: dict, files: list[str], repository: str, reviewed_sha: str) -> st
     return "copy"
 
 
+def has_proof(runs: list[dict], pr: int, head_sha: str) -> bool:
+    """Whether a maintainer-run Canary already passed on exactly this commit.
+
+    Only a run of canary.yml dispatched on this repository's own ``canary/pr-<N>``
+    branch counts, at the pull request's current head, to completion with success.
+    A fork cannot create that branch or dispatch that run, so it is not something
+    a pull request can claim for itself.
+    """
+    branch = branch_for(pr)
+    return any(
+        run.get("event") == "workflow_dispatch"
+        and run.get("head_branch") == branch
+        and run.get("head_sha") == head_sha
+        and run.get("status") == "completed"
+        and run.get("conclusion") == "success"
+        for run in runs
+    )
+
+
+def proof_main(argv: list[str]) -> int:
+    parser = argparse.ArgumentParser(prog="fork_canary.py proof")
+    parser.add_argument("--runs-json", required=True, type=Path)
+    parser.add_argument("--pr", required=True, type=int)
+    parser.add_argument("--head-sha", required=True)
+    args = parser.parse_args(argv)
+    if not FULL_SHA.fullmatch(args.head_sha):
+        print(f"::error title=fork canary::not a full commit sha: {args.head_sha!r}")
+        return 1
+    data = json.loads(args.runs_json.read_text())
+    runs = data.get("workflow_runs", []) if isinstance(data, dict) else data
+    if has_proof(runs, args.pr, args.head_sha):
+        print(
+            f"::notice title=fork canary::a maintainer-run Canary passed on "
+            f"{args.head_sha[:12]} from {branch_for(args.pr)}"
+        )
+        return 0
+    return 1
+
+
 def main(argv: list[str] | None = None) -> int:
+    # Called with no argument it is the command line; tests pass the list.
+    if argv is None:
+        argv = sys.argv[1:]
+    if argv and argv[0] == "proof":
+        return proof_main(argv[1:])
     parser = argparse.ArgumentParser()
     parser.add_argument("--pr-json", required=True, type=Path)
     parser.add_argument("--files", required=True, type=Path)

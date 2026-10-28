@@ -7,6 +7,7 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 import urllib.error
 
 from tools.upstream_bump import (
@@ -391,6 +392,83 @@ class SpecRewriteTests(unittest.TestCase):
             spec.write_text("Name: x\n")
             with self.assertRaises(ValueError):
                 rewrite_spec(spec, "51.0")
+
+
+class ManualChangelogTests(unittest.TestCase):
+    def test_prepends_dated_entry_with_reset_release_and_preserves_history(self):
+        history = (
+            "\n* Fri Oct 02 2026 Original Packager <packager@example.org> - 1.0-13\n"
+            "- Previous release\n"
+        )
+        for release, evr in (
+            ("13%{?dist}", "1.1~beta-1"),
+            ("3.2%{?dist} # comment", "1.1~beta-1"),
+            ("0.bootstrap%{?dist}", "1.1~beta-1.bootstrap"),
+            ("3%{dist}", "1.1~beta-1"),
+            ("%autorelease", "1.1~beta"),
+            ("%{baserelease}%{?dist}", "1.1~beta"),
+            ("2%{?pre_tag}%{?dist}", "1.1~beta"),
+        ):
+            with self.subTest(release=release), tempfile.TemporaryDirectory() as tmp:
+                spec = Path(tmp) / "test.spec"
+                spec.write_text(f"Version: 1.0\nRelease: {release}\n%changelog\n{history}")
+                with patch("tools.upstream_bump.formatdate",
+                           return_value="Sun, 25 Oct 2026 00:00:00 -0000"):
+                    self.assertTrue(rewrite_spec(spec, "1.1.beta"))
+                self.assertEqual(
+                    spec.read_text().split("%changelog\n", 1)[1],
+                    "* Sun Oct 25 2026 github-actions[bot] "
+                    "<41898282+github-actions[bot]@users.noreply.github.com> - "
+                    f"{evr}\n- Update to 1.1~beta\n\n{history}",
+                )
+                bumped = spec.read_text()
+                self.assertFalse(rewrite_spec(spec, "1.1.beta"))
+                self.assertEqual(spec.read_text(), bumped)
+                rewrite_spec(spec, "1.2")
+                self.assertTrue(spec.read_text().endswith(bumped.split("%changelog\n", 1)[1]))
+
+    def test_prefixes_main_package_epoch(self):
+        for preamble, evr in (
+            ("Epoch: 1\n", "1:1.1-1"),
+            ("Epoch:\t\t2 # bumped\n", "2:1.1-1"),
+            ("Epoch: %{base_epoch}\n", "1.1-1"),
+            ("%package sub\nEpoch: 3\n", "1.1-1"),
+        ):
+            with self.subTest(preamble=preamble), tempfile.TemporaryDirectory() as tmp:
+                spec = Path(tmp) / "test.spec"
+                spec.write_text(
+                    f"Version: 1.0\n{preamble}Release: 5%{{?dist}}\n%changelog\n"
+                    "* Fri Oct 02 2026 Packager <packager@example.org> - 1:1.0-5\n"
+                    "- Previous release\n"
+                )
+                rewrite_spec(spec, "1.1")
+                self.assertIn(f"> - {evr}\n- Update to 1.1\n\n* Fri", spec.read_text())
+
+    def test_keeps_autochangelog_and_ignores_commented_macro(self):
+        for body, manual in (
+            ("%autochangelog\n", False),
+            ("  %autochangelog\n", False),
+            ("# %autochangelog is not enabled\n", True),
+        ):
+            with self.subTest(body=body), tempfile.TemporaryDirectory() as tmp:
+                spec = Path(tmp) / "test.spec"
+                spec.write_text("Version: 1.0\nRelease: 3%{?dist}\n%changelog\n" + body)
+                rewrite_spec(spec, "1.1")
+                result = spec.read_text().split("%changelog\n", 1)[1]
+                if manual:
+                    self.assertIn("- Update to 1.1\n", result)
+                    self.assertTrue(result.endswith(body))
+                else:
+                    self.assertEqual(result, body)
+
+    def test_populates_empty_manual_section_with_or_without_final_newline(self):
+        for ending in ("\n", "", "  \n"):
+            with self.subTest(ending=ending), tempfile.TemporaryDirectory() as tmp:
+                spec = Path(tmp) / "test.spec"
+                spec.write_text("Version: 1.0\nRelease: 3\n%changelog" + ending)
+                rewrite_spec(spec, "1.1")
+                self.assertRegex(spec.read_text(), r"%changelog *\n\* ")
+                self.assertIn(" - 1.1-1\n- Update to 1.1\n", spec.read_text())
 
 
 class SourcesManifestTests(unittest.TestCase):
@@ -908,7 +986,12 @@ class ReleaseResetTests(unittest.TestCase):
                     package = root / "packages" / "test"
                     package.mkdir(parents=True)
                     spec = package / "test.spec"
-                    spec.write_text("Version: 1.0\nRelease: 1%{?dist}\n")
+                    original = (
+                        "Version: 1.0\nRelease: 1%{?dist}\n%changelog\n"
+                        "* Fri Oct 02 2026 Packager <packager@example.org> - 1.0-1\n"
+                        "- Previous release\n"
+                    )
+                    spec.write_text(original)
                     counter = {"count": 2, "baseline": "1"}
                     entry = {"name": "test", "version": "1.0", "url": url,
                              "filename": "test-1.0.tar.xz", "dist_bump": counter}
@@ -920,8 +1003,10 @@ class ReleaseResetTests(unittest.TestCase):
                     self.assertEqual(written, updated)
                     if version == "1.0":
                         self.assertEqual(written["dist_bump"], counter)
+                        self.assertEqual(spec.read_text(), original)
                     else:
                         self.assertNotIn("dist_bump", written)
+                        self.assertIn(" - 1.1-1\n- Update to 1.1\n", spec.read_text())
                     self.assertIn("Release: 1%{?dist}", spec.read_text())
 
 

@@ -92,6 +92,9 @@ cp -a src/mbimcli/mbimcli %{buildroot}%{_datadir}/bash-completion/completions/
 
 
 %changelog
+* Sat Oct 03 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 1.34.0-1
+- Update to 1.34.0
+
 * Thu Jul 16 2026 Fedora Release Engineering <releng@fedoraproject.org> - 1.32.0-4
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_45_Mass_Rebuild
 

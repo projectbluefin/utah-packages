@@ -11,6 +11,11 @@ It imports a recipe, never a binary RPM.
 Name the **source** package, not a binary subpackage: `gnome-desktop3`, not
 `gnome-desktop-4`. Fedora's source package name is often not the one you were
 looking for, which is why searching for the binary finds nothing to fork.
+`perf` is the extreme case: it has no dist-git of its own and is built from
+the `kernel` source package (`%package -n perf` in `kernel.spec`, sharing the
+kernel's version and release), so carrying it means importing the whole kernel
+recipe, not a small tool. `strace` is an ordinary standalone import (see #625);
+the `perf` work in that issue remains separate and unresolved.
 
 Flatpak-first (standing policy): do not import recipes for end-user
 applications Utah already ships as Flatpaks (see the `[flatpak]` app list in
@@ -37,24 +42,38 @@ tarball. No upstream URL serves those bytes. Do not lock the lookaside copy as
 `packages/<name>/sources` to the generated digest. Diff the unpacked tree
 against Fedora's archive first: for `gpm` they are identical.
 
-The import pull request carries the recipe plus the four artifacts the
-agreement gate compares (`.packit.yaml`, `config/upstream-sources.json`,
-`reports/import-source-bootstrap.json`, the refreshed
-`docs/architecture.md`), so when the lock step accepts the recipe the pull
-request is born green: `tools/validate.py` passes on the source lock and
-Packit block, and the recipe-count tests match the inventory. Dispatch
+The recipe-set agreement gate compares the package names in `packages/`,
+`.packit.yaml`, and `config/upstream-sources.json`. A separate test compares
+the refreshed `docs/architecture.md` counts with the inventory. The import
+pull request also carries `reports/import-source-bootstrap.json` as a
+diagnostic report; the agreement gate does not compare that report. Dispatch
 `.github/workflows/import-rawhide-package.yml` with the package name (the
-workflow runs the lock, the Packit-regen and the architecture-counts-refresh
-steps on `ubuntu-26.04`, and opens `import/rawhide-<name>`). The lock step fails the workflow, and no pull
-request opens, when `tools/bootstrap_upstream_sources.py --package <name>`
+workflow runs on `ubuntu-26.04` and opens `import/rawhide-<name>`). Source
+bootstrap runs in the pinned `quay.io/packit/packit` image with an isolated
+`--output` and `--report`, without `--merge`. Its accepted candidate, report,
+and recipe are uploaded as the `import-proposal` artifact. A fresh job uses
+`tools/import_proposal.py` to validate that data and merge the candidate into
+the source lock, then regenerates Packit and the architecture counts and runs
+the gates before opening the pull request.
+
+The lock step fails the workflow, and no pull request opens, when bootstrap
 rejects the recipe — for example a `Source0` hosted on Fedora
 infrastructure, a `Source0` that is not a direct HTTP(S) URL, or upstream
-bytes that differ from the pin in `packages/<name>/sources`. Rerun that
-command locally to read the reason in `reports/import-source-bootstrap.json`
-(the workflow does not upload it). Import those recipes by hand: lock the upstream release with Fedora in `fallback_urls` (or as a
-`generate` entry, above), then regenerate `.packit.yaml` and the
-architecture counts as the workflow does. When importing by hand on a
-workstation without `rpmspec`, lock the source in the pinned
+bytes that differ from the pin in `packages/<name>/sources`. The failed lock
+step stops before artifact upload. To investigate, rerun bootstrap in the
+pinned image with `--package <name> --output <candidate-path> --report
+<report-path>` and read that report. Keep the report under the gitignored
+`work/` directory: `reports/import-source-bootstrap.json` is tracked and
+written by the import workflow, so a local diagnostic must not replace it. A
+rejected explicit selection returns nonzero and leaves the source lock
+untouched; read the report before continuing. The report and the source lock
+must name different files, including when using symlinks or hard links. For an
+accepted manual import, use `--merge` to retain the other packages in the
+source lock: a successful run without it replaces the catalog with only the
+selected package. For rejected recipes, lock the upstream release by hand with
+Fedora in `fallback_urls` (or as a `generate` entry, above), then regenerate
+`.packit.yaml` and the architecture counts as the workflow does. When importing
+by hand on a workstation without `rpmspec`, lock the source in the pinned
 `quay.io/packit/packit` image as the workflow does. See
 [`repeated-mistakes.md` section 23](skills/repeated-mistakes.md#23-an-import-pull-request-is-a-recipe-not-a-package).
 

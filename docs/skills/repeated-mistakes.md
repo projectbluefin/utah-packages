@@ -156,6 +156,14 @@ Bluefin/Utah ships Flathub only. A hand re-import of `packages/flatpak` must
 diff for that unit and leave it out, along with the `%autorelease -b 2` that
 records the drop.
 
+A declined runtime dependency is a local decision too. Utah declined
+`adobe-source-code-pro-fonts` and `open-sans-fonts`
+(`config/factory-build-backlog.toml`), and wayland's `book` bcond made
+`wayland-doc` Require both, so the factory's wayland sets `%bcond book 0`
+(issue #612). A re-import restores Fedora's `%{undefined rhel}`; keep it off.
+When a font or other runtime package is declined, grep `packages/*/*.spec`
+for `Requires:` on it in the same commit.
+
 ## 7. Repinning a digest that upstream garbage-collects is not a fix
 
 **What happened.** `quay.io/fedora/fedora:44` and `quay.io/packit/packit`
@@ -556,6 +564,13 @@ reaching for `buildroot_icu77`, check the package's own `libicu-devel`.
   --merge`. It needs `rpmspec`; run it inside the pinned
   `quay.io/packit/packit` image (digest in `packit-srpm-chunk.yml`) when the
   host has none. Add the Fedora lookaside as `fallback_urls`, never as `url`.
+  An explicit rejection must leave the existing lock byte-for-byte unchanged
+  (or absent) while writing its diagnostic report and returning nonzero.
+  The report and source lock must be distinct files; reject path aliases
+  before processing a recipe so the report cannot overwrite the lock.
+  Check that path with and without `--merge`: omitting the flag used to empty
+  the catalog before reporting the rejection (#520). A successful command
+  without `--merge` still replaces the catalog, so keep the flag for imports.
 - Regenerate `.packit.yaml` with `python3 tools/render_packit_config.py
   --write`.
 - Refresh the counts in `docs/architecture.md` with

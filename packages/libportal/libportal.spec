@@ -219,6 +219,9 @@ This package provides development documentations for libportal.
 %{_datadir}/doc/libportal-1
 
 %changelog
+* Sat Oct 03 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 0.11.0-1
+- Update to 0.11.0
+
 * Thu Jul 16 2026 Fedora Release Engineering <releng@fedoraproject.org> - 0.10.0-2
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_45_Mass_Rebuild
 

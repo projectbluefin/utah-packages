@@ -1,0 +1,8 @@
+{
+  "package": "libwmf",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libwmf.git",
+  "commit": "dea87707b970b24d8992903197c8a6ba6700a50d",
+  "tree": "c7f12c13c1288aa88ffe9bf7af45479157c042f8",
+  "imported_at": "2026-10-28T00:23:10.250396+00:00"
+}

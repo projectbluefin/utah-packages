@@ -64,10 +64,37 @@ merge decisions cite upstream runs.
 
 ## Fork pull requests and the required Canary (#369)
 
+Most pull requests never need this: a pull request that only adds recipes and new
+inventory entries passes `Canary` at once, with nothing built, for forks and
+in-repository branches alike. `config/upstream-sources.json`,
+`config/factory-build-backlog.toml` and `config/fedora-primary-sources.txt` are
+recipe inventory, not pipeline, and count only when a change reaches an entry
+that already existed, names a canary package, or leaves them unreadable
+(`pipeline_relevant` in `tools/canary.py`; the lock is compared with the pull
+request's merge base, so a branch that is merely behind `main` is not a change).
+Everything else under `tools/`, `.github/`, `config/` and `Containerfile` still
+counts. The rest of this section is for those pull requests.
+
 The required `Canary` check cannot pass from a fork pull request that touches a
 pipeline path: its token has no `packages: write`, so `canary.yml` fails it with
 "a fork pull request cannot publish the canary image". The author cannot fix
 that, and neither can an agent working from a fork; do not ask them to.
+
+`tools/canary.py` treats every `config/` path as a pipeline path. A recipe
+import that registers its source in `config/upstream-sources.json` therefore
+needs this proof even when it changes no workflow or build tool. If
+configuration validation passed, the build jobs were skipped, and Canary's
+`Decide` step reports missing maintainer-run proof, classify the failure as a
+review prerequisite, not a failed package build. Keep the source registration
+and the gate intact; removing either does not validate the import.
+
+A repair request naming a generic failed check can refer to this prerequisite.
+Read the failed job before changing code. Do not push an empty commit or
+rerun the fork job without proof: neither supplies the missing build evidence,
+and any new head invalidates proof for the previous commit. Finish necessary
+changes first, then give the maintainer the final full head SHA for review and
+dispatch. The default Canary set still does not build the imported recipe;
+that recipe needs its own scoped build and runtime acceptance evidence.
 
 A maintainer who has reviewed the diff runs **Canary for a fork pull request**
 (Actions tab, `canary-fork-pr.yml`) with the pull request number and the full
@@ -82,9 +109,21 @@ review and a new run.
 
 The canary run builds the fork's code with `packages: write`, so the review is
 the security boundary, exactly as it was when a maintainer pushed the branch by
-hand. The fork's own red `pull_request` Canary run stays on the pull request.
-The dispatched run is a second `Canary` check on the same commit; it is
-expected to supersede the red one for the required-check rule (the newest run
-of a check name counts), but that was not observed when this was written. If a
-pull request still shows the check as failing after a green dispatched run,
-record it on #369 rather than bypassing the check.
+hand.
+
+The pull request does not count the dispatched run's own `Canary` check: it
+lives in the check suite of `canary/pr-<N>`, and the pull request rolls up only
+its own branch's suite (observed on #622: the dispatched run passed on the head
+commit while the pull request kept the fork run's red `Canary` and stayed
+`BLOCKED`). So the fork's own `Canary` job passes on proof instead: a
+`workflow_dispatch` run of `canary.yml` on `canary/pr-<N>` that completed with
+success at exactly the pull request's head (`tools/fork_canary.py proof`). When
+such a run finishes, the `refresh` job of the same workflow (it waits for the
+run it dispatched, executes nothing from the pull request, and holds the write
+permissions the re-run needs) re-runs the pull request's own `Canary`. A run
+that began before `canary.yml` could read the proof reuses its old workflow
+file and fails again, so the job then closes and reopens the pull request once
+to start a fresh run on the same commit. A maintainer-run Canary that does not
+pass is reported on the pull request and the check stays red. The press holds a
+runner for as long as that run takes (about half an hour). A push after review
+changes the head, so the old proof no longer applies.

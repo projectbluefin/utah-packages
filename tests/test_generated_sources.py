@@ -9,6 +9,7 @@ double-run gate covers the network path.
 
 import gzip
 import io
+import json
 import lzma
 from pathlib import Path
 import tarfile
@@ -410,6 +411,68 @@ class FreerdpTransformTests(unittest.TestCase):
         self.assertEqual(metadata["filename"], "FreeRDP-3.32.2-repack.tar.gz")
         self.assertIn("FreeRDP-3.32.2.tar.gz", metadata["generate"]["input"])
         self.assertIn("3.32.2", generated_sources.FREERDP_INPUT_SHA512)
+
+
+class BluefinArtworkTransformTests(unittest.TestCase):
+    COMMIT = "9ab493bf1fb3ae41594b6bb0a2c5f2350d81de01"
+    FILES = {
+        "LICENSE": b"Apache License",
+        "assets/vector/logos/bluefin/bluefin-logo-light.svg": b"<svg fill='#000'/>",
+        "assets/vector/logos/bluefin/bluefin-logo-dark.svg": b"<svg fill='#fff'/>",
+    }
+
+    def members(self, payload: bytes) -> list[tarfile.TarInfo]:
+        with tarfile.open(fileobj=io.BytesIO(payload), mode="r:xz") as tar:
+            return tar.getmembers()
+
+    def test_files_are_packed_flat_under_the_short_commit(self):
+        result = generated_sources._bluefin_artwork_transform(self.FILES, self.COMMIT)
+        with tarfile.open(fileobj=io.BytesIO(result), mode="r:xz") as tar:
+            self.assertEqual(tar.getnames(), [
+                "bluefin-artwork-logos-9ab493b",
+                "bluefin-artwork-logos-9ab493b/LICENSE",
+                "bluefin-artwork-logos-9ab493b/bluefin-logo-dark.svg",
+                "bluefin-artwork-logos-9ab493b/bluefin-logo-light.svg",
+            ])
+            self.assertEqual(tar.extractfile("bluefin-artwork-logos-9ab493b/bluefin-logo-dark.svg").read(),
+                             b"<svg fill='#fff'/>")
+
+    def test_transform_is_byte_reproducible_sorted_and_ownerless(self):
+        first = generated_sources._bluefin_artwork_transform(self.FILES, self.COMMIT)
+        reordered = dict(reversed(list(self.FILES.items())))
+        self.assertEqual(first, generated_sources._bluefin_artwork_transform(reordered, self.COMMIT))
+        for member in self.members(first):
+            self.assertEqual((member.uid, member.gid, member.uname, member.gname, member.mtime), (0, 0, "", "", 0))
+
+    def test_two_files_with_one_basename_fail_closed(self):
+        files = {"a/logo.svg": b"1", "b/logo.svg": b"2"}
+        with self.assertRaisesRegex(ValueError, "flatten to the same name"):
+            generated_sources._bluefin_artwork_transform(files, self.COMMIT)
+
+    def test_metadata_names_the_recipe_source_and_every_pinned_file(self):
+        metadata = generated_sources.metadata_for("bluefin-artwork-logos", ROOT / "packages" / "bluefin-artwork-logos")
+        self.assertEqual(metadata["filename"], "bluefin-artwork-logos-9ab493b.tar.xz")
+        pins = generated_sources.BLUEFIN_ARTWORK_FILES[self.COMMIT]
+        for path in pins:
+            self.assertIn(f"projectbluefin/artwork/{self.COMMIT}/{path}", metadata["generate"]["input"])
+        self.assertEqual(set(self.FILES), set(pins))
+
+    def test_the_lock_entry_matches_the_metadata(self):
+        lock = json.loads((ROOT / "config" / "upstream-sources.json").read_text())
+        entry = next(p for p in lock["packages"] if p["name"] == "bluefin-artwork-logos")
+        metadata = generated_sources.metadata_for("bluefin-artwork-logos", ROOT / "packages" / "bluefin-artwork-logos")
+        self.assertEqual({key: entry[key] for key in metadata}, metadata)
+        self.assertIn(f"SHA512 ({entry['filename']}) = {entry['sha512']}",
+                      (ROOT / "packages" / "bluefin-artwork-logos" / "sources").read_text())
+
+    def test_gnome_control_center_points_about_at_the_installed_logos(self):
+        recipe = (ROOT / "packages" / "bluefin-artwork-logos" / "bluefin-artwork-logos.spec").read_text()
+        consumer = (ROOT / "packages" / "gnome-control-center" / "gnome-control-center.spec").read_text()
+        self.assertIn("Requires: bluefin-artwork-logos\n", consumer)
+        self.assertNotIn("pixmaps/fedora", consumer)
+        for option, style in (("distributor_logo", "light"), ("dark_mode_distributor_logo", "dark")):
+            self.assertIn(f"-D{option}=%{{_datadir}}/bluefin-artwork-logos/bluefin-logo-{style}.png", consumer)
+            self.assertIn(f"bluefin-logo-{style}.png", recipe)
 
 
 class GeneratedMetadataTests(unittest.TestCase):

@@ -1,0 +1,8 @@
+{
+  "package": "flex",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/flex.git",
+  "commit": "6d2702313d2a6eaf942704b16fea874df533bed3",
+  "tree": "0ede7697149470824a9c207724bcdb60a9bd7d83",
+  "imported_at": "2026-10-26T06:04:43.563103+00:00"
+}

@@ -151,6 +151,26 @@ contract is the measurement that will show it, not the work it measures.
   pin instead (`git log` the dist-git repo; libav at 1.28.6 is the "Rebuilt
   for FFmpeg 9" commit 73e9b14, as ugly-free is at 207f329) rather than
   bumping the whole family for one plugin.
+- **Camera RAW support is not FireWire transport.** `LibRaw` supplies
+  `libraw.so` and `libraw_r.so` for decoding camera image files; it is not
+  `libraw1394`, the FireWire library needed by the `libavc1394` family.
+  Resolve these as separate source families, even when they share a media
+  backlog batch. LibRaw's default recipe enables JPEG, LCMS, zlib and
+  OpenMP, and emits `LibRaw`, `LibRaw-devel`, `LibRaw-static` and
+  `LibRaw-samples`; its upstream release is served directly under
+  `https://www.libraw.org/data/`. `libavc1394` BuildRequires
+  `libraw1394-devel`, and its devel package requires it too, so import and
+  publish `libraw1394` first. These recipes do not enable the disabled
+  FireWire feature in ffmpeg or establish hardware functionality; both need
+  separate validation. Fedora's imported manifests for these two older
+  releases use MD5: compare upstream bytes to that pin, then record their
+  SHA-512 digests in `sources` and the source lock.
+- **Recipe reconciliation is not runtime closure.** A `[resolved]` backlog
+  record required by an import tracks recipe coverage only. Keep the batch
+  issue open until the hosted build, published binary identities,
+  factory-plus-Hummingbird dependency transaction and representative payload
+  checks exist. In particular, `already_recipe` for ffmpeg libraries does
+  not replace checking those binaries in current primary metadata.
 - **"Present in the factory repository" means published, not committed.**
   `tools/multimedia_closure.py --repodata <dir>` reads a published
   repository's `primary.xml` and fills in each requirement's NEVRA, epoch
@@ -237,3 +257,31 @@ or the binary download mirror. For vvdec's `bitstreams.tar.xz`, set
 lookaside template only for auxiliary files; the primary archive still comes
 from upstream, and each auxiliary file must match its SHA-512 `sources` pin.
 The test archive is required by `%check`; do not disable tests to avoid it.
+## Shader compiler dependency order
+
+The audited `libshaderc` binary comes from the `shaderc` source recipe,
+not a separate source of that name. Its unbundled build needs `glslang-devel`,
+`spirv-headers-devel` and `spirv-tools-devel`. The existing `spirv-tools`
+recipe also needs `spirv-headers-devel`; register the missing source recipes
+and let their BuildRequires establish build order. Match glslang's Vulkan SDK
+version to the carried SPIR-V tools SDK (1.4.357.0 here), rather than
+importing a newer Rawhide head independently. The selected SPIR-V headers
+commit matches shaderc's upstream `DEPS`; Fedora temporarily changed its
+package version for that same commit and reverted it, so use its earlier
+1.5.5 recipe instead of the reverted version bump. This alignment is a
+preflight, not proof that the unbundled combination builds: the Fedora shaderc recipe
+already disables its upstream tests when unbundled. Verify the hosted build
+and compile a representative shader with `glslc`, then validate its SPIR-V
+output after installation from the permitted repositories.
+
+## Disc-reading dependency order
+
+`libbluray` 1.4.0 uses the external `libudfread-devel >= 1.2.0` and removes
+its bundled copy during preparation. Import and lock both source recipes;
+let the BuildRequires graph place `libudfread` first rather than assigning a
+stage. The VideoLAN `libudfread` tag archive and `libbluray` release archive
+match their Fedora `sources` SHA-512 pins. Keep the Blu-ray recipe's Java
+navigation support and utility subpackages when checking build dependencies;
+a successful library source download proves neither those builds nor runtime
+closure. A lane against the published factory needs `libudfread` published
+before it can build `libbluray`.

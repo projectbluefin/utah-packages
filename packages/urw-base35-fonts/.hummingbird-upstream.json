@@ -1,0 +1,8 @@
+{
+  "package": "urw-base35-fonts",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/urw-base35-fonts.git",
+  "commit": "2f974d01245c1caab0db5b2b6723ab39ddcb3ff2",
+  "tree": "c9a92ab92014c6efeda1858d4bfb164a91183d90",
+  "imported_at": "2026-10-25T19:15:29.280486+00:00"
+}

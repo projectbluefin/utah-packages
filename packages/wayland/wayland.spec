@@ -1,8 +1,12 @@
-%bcond book %{undefined rhel}
+# Utah factory: no mdbook book. wayland-doc would Require
+# adobe-source-code-pro-fonts and open-sans-fonts for it, and Utah declined
+# both fonts (projectbluefin/utah#393), so the subpackage could not install
+# from Hummingbird plus the factory. The Doxygen docs still ship in -doc.
+%bcond book 0
 
 Name:           wayland
 Version:        1.26.0
-Release:        3%{?dist}
+Release:        4%{?dist}
 Summary:        Wayland Compositor Infrastructure
 
 # SPDX
@@ -152,6 +156,9 @@ Wayland server library
 %meson_test
 
 %changelog
+* Tue Oct 27 2026 Utah package factory <noreply@anthropic.com> - 1.26.0-4
+- Build without the mdbook book: its font Requires are declined by Utah
+
 * Thu Sep 10 2026 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 1.26.0-3
 - Rebuilt for libxml-2.5.4
 

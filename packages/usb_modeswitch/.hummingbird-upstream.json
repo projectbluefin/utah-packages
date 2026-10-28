@@ -1,0 +1,8 @@
+{
+  "package": "usb_modeswitch",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/usb_modeswitch.git",
+  "commit": "d1134f50580081fdd195ea5c9ab24dac6b59f2d9",
+  "tree": "502f169dd2c9151812d2481f39900fef6406250a",
+  "imported_at": "2026-10-26T06:07:20.541673+00:00"
+}

@@ -23,6 +23,11 @@ that no upstream publishes verbatim:
   prefix the recipe's `%autosetup` expects. The recipe's Source0 host
   (pagure.io) was sunset in 2026 and the project publishes no release
   tarball; Fedora's lookaside copy is a hand-made tarball of the same tree
+- bluefin-artwork-logos: the Bluefin logo SVGs and the license from
+  projectbluefin/artwork at a pinned commit. The repository publishes no
+  release, and its archive carries every wallpaper (well over 100 MB) for
+  three small files, so each file is fetched at the commit, SHA-512-checked,
+  and packed into one archive
 
 For these, the source lock names this script and records the SHA-512 of the
 bytes the transformation produces. Verification re-runs the transformation
@@ -88,6 +93,18 @@ FPASTE_INPUT_SHA512 = {
 HPLIP_INPUT_SHA512 = {
     "3.26.6": "1bebae77c6a71029647e391b743dae1b52b0e4ea7ff4a728fbf592160f9f8607e0196d8045189b1f032654d1e9724de464bf9ad2c79c553c4d6ffe9af7d3c5fa",
 }
+
+# Commit -> SHA-512 of every file taken from it. A commit is immutable, but
+# raw.githubusercontent.com is a CDN; the digests make it fail closed anyway.
+BLUEFIN_ARTWORK_FILES = {
+    "9ab493bf1fb3ae41594b6bb0a2c5f2350d81de01": {
+        "LICENSE": "dc6b68d13b8cf959644b935f1192b02c71aa7a5cf653bd43b4480fa89eec8d4d3f16a2278ec8c3b40ab1fdb233b3173a78fd83590d6f739e0c9e8ff56c282557",
+        "assets/vector/logos/bluefin/bluefin-logo-dark.svg": "947ab6e7a24dcabcbef41a2d5f46400c815dbe0199933194e5cf5ffefaf6c547364b9222a60a2fbca01995ac9801778775cd018a93df35ba0442a14394c20ea5",
+        "assets/vector/logos/bluefin/bluefin-logo-light.svg": "97ec4f9a726a836928af9a50c8abeb2123205d6c3b1bdb19c1199d1d1429533510df6f78abd8c12b1d1a24047744c664ac47629298210d1aea8a2f797800b42a",
+    },
+}
+
+BLUEFIN_ARTWORK_RAW_URL = "https://raw.githubusercontent.com/projectbluefin/artwork/{commit}/{path}"
 
 
 def sha512_path(path: Path) -> str:
@@ -876,6 +893,86 @@ def _fpaste_generate(package_dir: Path, out_dir: Path) -> Path:
     return target
 
 
+# --- bluefin-artwork-logos -------------------------------------------------------
+
+
+def _bluefin_artwork_commit(package_dir: Path) -> str:
+    macros = recipe_macros((package_dir / "bluefin-artwork-logos.spec").read_text())
+    commit = macros.get("commit", "")
+    if not re.fullmatch(r"[0-9a-f]{40}", commit):
+        raise ValueError("bluefin-artwork-logos.spec must pin %global commit to a full SHA-1")
+    return commit
+
+
+def _bluefin_artwork_transform(files: dict[str, bytes], commit: str) -> bytes:
+    """Pack the fetched files flat under one top directory, deterministically.
+
+    Members are sorted by name, owned by root with no names, mode 0644, and
+    stamped with a fixed mtime, so the same inputs always give the same bytes.
+    """
+    top = f"bluefin-artwork-logos-{commit[:7]}"
+    raw = io.BytesIO()
+    with tarfile.open(fileobj=raw, mode="w", format=tarfile.PAX_FORMAT) as result:
+        directory = tarfile.TarInfo(top)
+        directory.type = tarfile.DIRTYPE
+        directory.mode = 0o755
+        directory.mtime = 0
+        result.addfile(directory)
+        names = {}
+        for path in files:
+            name = path.rsplit("/", 1)[-1]
+            if name in names:
+                raise ValueError(f"{path} and {names[name]} flatten to the same name")
+            names[name] = path
+        for name in sorted(names):
+            data = files[names[name]]
+            info = tarfile.TarInfo(f"{top}/{name}")
+            info.size = len(data)
+            info.mode = 0o644
+            info.mtime = 0
+            result.addfile(info, io.BytesIO(data))
+    out = io.BytesIO()
+    _xz_compress_stream(iter([raw.getvalue()]), out)
+    return out.getvalue()
+
+
+def _bluefin_artwork_metadata(package_dir: Path) -> dict:
+    commit = _bluefin_artwork_commit(package_dir)
+    filename = f"bluefin-artwork-logos-{commit[:7]}.tar.xz"
+    urls = ", ".join(BLUEFIN_ARTWORK_RAW_URL.format(commit=commit, path=path)
+                     for path in sorted(BLUEFIN_ARTWORK_FILES.get(commit, {})))
+    return {
+        "name": "bluefin-artwork-logos",
+        "version": spec_version(package_dir, "bluefin-artwork-logos.spec"),
+        "filename": filename,
+        "generate": {
+            "script": SCRIPT_PATH,
+            "input": f"{urls} (each sha512-pinned)",
+            "method": f"fetch each file from projectbluefin/artwork at {commit} and pack them flat and deterministically as {filename}",
+        },
+    }
+
+
+def _bluefin_artwork_generate(package_dir: Path, out_dir: Path) -> Path:
+    commit = _bluefin_artwork_commit(package_dir)
+    pins = BLUEFIN_ARTWORK_FILES.get(commit)
+    if pins is None:
+        raise RuntimeError(f"no pinned file SHA-512s for projectbluefin/artwork {commit}")
+    files = {}
+    for path, pin in sorted(pins.items()):
+        url = BLUEFIN_ARTWORK_RAW_URL.format(commit=commit, path=path)
+        request = urllib.request.Request(url, headers={"User-Agent": "utah-packages-generated-source/1"})
+        with urllib.request.urlopen(request, timeout=300) as response:
+            payload = response.read()
+        actual = hashlib.sha512(payload).hexdigest()
+        if actual != pin:
+            raise RuntimeError(f"input file mismatch for {url}: expected {pin}, got {actual}")
+        files[path] = payload
+    target = out_dir / f"bluefin-artwork-logos-{commit[:7]}.tar.xz"
+    target.write_bytes(_bluefin_artwork_transform(files, commit))
+    return target
+
+
 METADATA = {
     "intel-media-driver-free": _imd_metadata,
     "tailscale": _tailscale_metadata,
@@ -885,6 +982,7 @@ METADATA = {
     "openal-soft": _openal_soft_metadata,
     "freerdp": _freerdp_metadata,
     "fpaste": _fpaste_metadata,
+    "bluefin-artwork-logos": _bluefin_artwork_metadata,
 }
 
 GENERATORS = {
@@ -896,6 +994,7 @@ GENERATORS = {
     "openal-soft": _openal_soft_generate,
     "freerdp": _freerdp_generate,
     "fpaste": _fpaste_generate,
+    "bluefin-artwork-logos": _bluefin_artwork_generate,
 }
 
 

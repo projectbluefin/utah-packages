@@ -1,0 +1,8 @@
+{
+  "package": "strace",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/strace.git",
+  "commit": "6c23f132b92b0dd1b83e7264441be163e1bb4743",
+  "tree": "0b416dace9c3bff9cbe0bb8226ef43585c4c7d56",
+  "imported_at": "2026-10-27T23:44:08.867564+00:00"
+}

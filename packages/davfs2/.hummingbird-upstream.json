@@ -1,0 +1,8 @@
+{
+  "package": "davfs2",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/davfs2.git",
+  "commit": "0196d7844ff9478167f92f00ac8113049d5e4d90",
+  "tree": "255eac932ce4987baf5b00d8b670b70f15fafe9b",
+  "imported_at": "2026-10-27T06:02:08.167941+00:00"
+}

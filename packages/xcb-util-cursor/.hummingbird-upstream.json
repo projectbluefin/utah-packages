@@ -1,0 +1,8 @@
+{
+  "package": "xcb-util-cursor",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/xcb-util-cursor.git",
+  "commit": "bcb146d4e75281329fd998cca63c4ab780812684",
+  "tree": "9fc03d8de68c67103c79add8edd69b16371290cc",
+  "imported_at": "2026-10-25T17:27:12.897980+00:00"
+}

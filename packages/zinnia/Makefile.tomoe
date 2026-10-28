@@ -1,0 +1,20 @@
+TOMOE_MODEL_PATH = /usr/share/tomoe/recognizer/
+
+build: handwriting-ja.model handwriting-zh_CN.model tomoe2s.pl
+
+handwriting-ja.model: $(TOMOE_MODEL_PATH)/handwriting-ja.xml
+	perl tomoe2s.pl $(TOMOE_MODEL_PATH)/handwriting-ja.xml > handwriting-ja.s
+	LD_LIBRARY_PATH=.libs/ ./zinnia_learn handwriting-ja.s handwriting-ja.model
+	LD_LIBRARY_PATH=.libs/ ./zinnia_convert handwriting-ja.model.txt handwriting-ja.model
+
+handwriting-zh_CN.model: $(TOMOE_MODEL_PATH)/handwriting-zh_CN.xml
+	perl tomoe2s.pl $(TOMOE_MODEL_PATH)/handwriting-zh_CN.xml > handwriting-zh_CN.s
+	LD_LIBRARY_PATH=.libs/ ./zinnia_learn handwriting-zh_CN.s handwriting-zh_CN.model
+	LD_LIBRARY_PATH=.libs/ ./zinnia_convert handwriting-zh_CN.model.txt handwriting-zh_CN.model
+
+
+install: build
+	install -d  $(DESTDIR)/usr/share/zinnia//model/tomoe
+	install -m 0644 -p handwriting-ja.model handwriting-zh_CN.model $(DESTDIR)/usr/share/zinnia//model/tomoe
+
+

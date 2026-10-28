@@ -1,0 +1,37 @@
+/tier1-internal:
+  plan:
+    import:
+      url: https://gitlab.com/redhat/centos-stream/tests/urw-base35-fonts.git
+      name: /plans/tier1/internal
+
+/tier1-public:
+  plan:
+    import:
+      url: https://gitlab.com/redhat/centos-stream/tests/urw-base35-fonts.git
+      name: /plans/tier1/public
+
+/tier2-tier3-internal:
+  plan:
+    import:
+      url: https://gitlab.com/redhat/centos-stream/tests/urw-base35-fonts.git
+      name: /plans/tier2-tier3/internal
+
+/tier2-tier3-public:
+  plan:
+    import:
+      url: https://gitlab.com/redhat/centos-stream/tests/urw-base35-fonts.git
+      name: /plans/tier2-tier3/public
+
+
+/others-internal:
+  plan:
+    import:
+      url: https://gitlab.com/redhat/centos-stream/tests/urw-base35-fonts.git
+      name: /plans/others/internal
+
+/others-public:
+  plan:
+    import:
+      url: https://gitlab.com/redhat/centos-stream/tests/urw-base35-fonts.git
+      name: /plans/others/public
+

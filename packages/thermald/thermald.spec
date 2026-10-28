@@ -9,6 +9,10 @@ License:	GPL-2.0-or-later
 URL:		https://github.com/intel/%{pkgname}
 Source:		%{url}/archive/v%{version}/%{name}-%{version}.tar.gz
 
+# Defer service startup until intel_rapl sysfs is available
+# https://github.com/intel/thermal_daemon/pull/607
+Patch00001:     607.patch
+
 ExclusiveArch:	%{ix86} %{x86_64} %{arm64}
 
 BuildRequires:	make
@@ -109,6 +113,7 @@ install -m0644 -D thermald.sysusers.conf %{buildroot}%{_sysusersdir}/thermald.co
 %{_tmpfilesdir}/%{name}.conf
 %{_unitdir}/%{name}.service
 %{_sysusersdir}/thermald.conf
+%{_udevrulesdir}/99-thermald-powercap.rules
 
 
 %changelog

@@ -1,0 +1,8 @@
+{
+  "package": "librabbitmq",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/librabbitmq.git",
+  "commit": "88f340b7d4c3976a22225c44985b84b52d1d0d25",
+  "tree": "c0049b60202c49d17fd09d0dcd3ce8a6d6238621",
+  "imported_at": "2026-10-28T00:23:19.673855+00:00"
+}

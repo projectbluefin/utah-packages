@@ -216,6 +216,53 @@ class FpasteGenerateTests(PackageDirMixin, unittest.TestCase):
         self.assertEqual([url for url, _, _ in fetch.requests], [self.URL])
 
 
+class BluefinArtworkGenerateTests(PackageDirMixin, unittest.TestCase):
+    COMMIT = "9ab493bf1fb3ae41594b6bb0a2c5f2350d81de01"
+    FILES = {"LICENSE": b"Apache License", "logos/bluefin-logo-light.svg": b"<svg/>"}
+
+    def setUp(self):
+        super().setUp()
+        self.write_commit(self.COMMIT)
+        self.payloads = {generated_sources.BLUEFIN_ARTWORK_RAW_URL.format(commit=self.COMMIT, path=path): data
+                         for path, data in self.FILES.items()}
+        self.pins = {self.COMMIT: {path: sha512(data) for path, data in self.FILES.items()}}
+
+    def write_commit(self, commit: str) -> None:
+        (self.package_dir / "bluefin-artwork-logos.spec").write_text(
+            f"%global commit {commit}\nName: bluefin-artwork-logos\nVersion: 0\n")
+
+    def test_a_short_or_missing_commit_is_refused(self):
+        self.write_commit("9ab493b")
+        with self.assertRaisesRegex(ValueError, "full SHA-1"):
+            generated_sources.generate("bluefin-artwork-logos", self.package_dir, self.out_dir)
+
+    def test_an_unpinned_commit_fails_before_any_download(self):
+        fetch = UrlopenRecorder({})
+        with patch.object(generated_sources.urllib.request, "urlopen", fetch), \
+                patch.dict(generated_sources.BLUEFIN_ARTWORK_FILES, {}, clear=True):
+            with self.assertRaisesRegex(RuntimeError, f"no pinned file SHA-512s for projectbluefin/artwork {self.COMMIT}"):
+                generated_sources.generate("bluefin-artwork-logos", self.package_dir, self.out_dir)
+        self.assertEqual(fetch.requests, [])
+
+    def test_a_changed_file_fails_closed_and_writes_nothing(self):
+        self.pins[self.COMMIT]["LICENSE"] = sha512(b"something else")
+        fetch = UrlopenRecorder(self.payloads)
+        with patch.object(generated_sources.urllib.request, "urlopen", fetch), \
+                patch.dict(generated_sources.BLUEFIN_ARTWORK_FILES, self.pins, clear=True):
+            with self.assertRaisesRegex(RuntimeError, "input file mismatch for .*/LICENSE"):
+                generated_sources.generate("bluefin-artwork-logos", self.package_dir, self.out_dir)
+        self.assertEqual(list(self.out_dir.iterdir()), [])
+
+    def test_the_pinned_files_are_packed_into_the_named_target(self):
+        fetch = UrlopenRecorder(self.payloads)
+        with patch.object(generated_sources.urllib.request, "urlopen", fetch), \
+                patch.dict(generated_sources.BLUEFIN_ARTWORK_FILES, self.pins, clear=True):
+            target = generated_sources.generate("bluefin-artwork-logos", self.package_dir, self.out_dir)
+        self.assertEqual(target.name, "bluefin-artwork-logos-9ab493b.tar.xz")
+        self.assertEqual(target.read_bytes(), generated_sources._bluefin_artwork_transform(self.FILES, self.COMMIT))
+        self.assertEqual(sorted(url for url, _, _ in fetch.requests), sorted(self.payloads))
+
+
 class OpenALSoftGenerateTests(PackageDirMixin, unittest.TestCase):
     VERSION = "1.24.2"
     URL = f"https://openal-soft.org/openal-releases/openal-soft-{VERSION}.tar.bz2"

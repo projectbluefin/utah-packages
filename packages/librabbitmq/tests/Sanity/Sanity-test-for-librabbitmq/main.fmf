@@ -1,0 +1,14 @@
+summary: tests basic functionality
+description: ''
+contact: Than Ngo <than@redhat.com>
+component:
+  - librabbitmq
+test: ./runtest.sh
+framework: beakerlib
+recommend:
+  - librabbitmq
+  - librabbitmq-devel
+  - objdump
+duration: 5m
+extra-summary: /CoreOS/librabbitmq/Sanity/Sanity-test-for-librabbitmq
+extra-task: /CoreOS/librabbitmq/Sanity/Sanity-test-for-librabbitmq

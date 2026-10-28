@@ -15,6 +15,24 @@ Font packages in Fedora have specific packaging conventions driven by
 `fonts-rpm-macros`. This guide captures subtleties encountered when resolving
 dependencies and importing font recipes into `utah-packages`.
 
+## Reconcile consumer decisions before importing
+
+[Utah's font decision](https://github.com/projectbluefin/utah/issues/393#issuecomment-5920428811)
+rejects bulk font parity with Bluefin classic. A font's presence in the
+original audit is not approval to import it: record the rejected parity
+request in `[wontfix]` with that decision link, preserving the audit name,
+and regenerate `reports/factory-build-backlog.json`. A deliberate individual
+font addition needs its own proposal. This does not remove existing recipes
+or claim their binaries are published.
+
+Do not extend that font decision to character mappings or input-method data.
+In particular, `adobe-mappings-*`, `anthy-unicode`, and
+`cldr-emoji-annotation*` remain separate functionality work; the maintainer
+explicitly distinguishes input methods from fonts. Likewise, an existing
+variable-font recipe is not proof that an older, differently named binary
+is provided. Check its actual provides and published metadata rather than
+closing a name based on a similar recipe directory.
+
 ## Source package names vs. provided binary subpackages
 
 When satisfying a runtime or metapackage font requirement (e.g., from
@@ -55,11 +73,43 @@ Specs using `fonts-rpm-macros` generate binary package definitions using
   SHA-512 manifest.
 - Always include Fedora lookaside URLs in `fallback_urls` for mirror redundancy.
 
-## Updating package count test assertions
+## Ghostscript resources and desktop parity
 
-Importing new recipes expands the monorepo package inventory. Whenever adding or
-removing recipes, update the inventory count assertions across the test suite:
-- `tests/test_package_inventory.py`
-- `tests/test_packit_srpm.py`
-- `tests/test_render_packit_config.py`
-- `tests/test_source_inventory.py`
+Utah rejected bulk desktop font parity in
+[utah#393](https://github.com/projectbluefin/utah/issues/393#issuecomment-5920428811).
+Reconcile optional desktop faces against that decision, but inspect runtime
+consumers before applying it to printing resources: `ghostscript`'s `libgs`
+requires `urw-base35-fonts` only when system resources are enabled, and Utah's
+`packages/ghostscript/ghostscript.spec` currently builds with
+`%bcond system_resources 0` (bundled `Resource/` tree). No factory recipe
+consumes URW until a follow-up flips that switch. One URW source
+recipe emits the metapackage, common files, ten font families and build macros;
+do not import each family separately. Its custom `%fontfamily_subpkg` macro
+hides those names from the backlog's static `%package` scan.
+
+The modern URW release includes Type 1, AFM and OTF files used by Ghostscript.
+The separate `legacy` subpackage contains old PFB/PFM files for X11 clients;
+it is disabled by default here because its archive is a lookaside-only source
+and legacy is not a requested output, so it is not locked here. Do not replace
+the modern Type 1 files with OTF alone: the recipe documents Ghostscript PDF
+conversion problems with that substitution. Enabling legacy requires adding a
+lookaside source lock for that archive first.
+
+Check virtual provides before importing dependencies: Hummingbird's
+`fonts-filesystem` provides `fontpackages-filesystem`, and `fonts-rpm-macros`
+provides `fontpackages-devel`; the old `fontpackages` dist-git is retired.
+
+A font's publishing run is often not the run that built it: an image built from
+cached RPMs lists the package build jobs as skipped. Record the build job (it may
+sit in an aggregate run that failed on other packages) and the publishing run
+separately, with the image digest. Without `dnf`, a static check that every
+`Requires` of each output is provided by the factory layer or a dated Hummingbird
+`primary.xml` is dependency-closure evidence only. It is not a solver
+transaction (see `repo-inspection`) and does not prove font rendering.
+
+## Refreshing the inventory
+
+After importing a font source, regenerate `.packit.yaml` with
+`python3 tools/render_packit_config.py --write` and architecture counts with
+`python3 tools/render_architecture_counts.py --write`. Inventory tests now
+read the recipe set; do not restore old hardcoded package counts.

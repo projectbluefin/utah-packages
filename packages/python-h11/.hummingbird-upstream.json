@@ -1,0 +1,8 @@
+{
+  "package": "python-h11",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/python-h11.git",
+  "commit": "3a1a6d3d847e13a3e4159877b913b7164f6fd5ad",
+  "tree": "180edc3167bb6bba18205d45b332863c2ca03d19",
+  "imported_at": "2026-10-28T10:10:05.177851+00:00"
+}

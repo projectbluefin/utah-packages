@@ -1,0 +1,8 @@
+{
+  "package": "pyscard",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/pyscard.git",
+  "commit": "c9fbab05324ed8cab5a5627636736291c3ac426e",
+  "tree": "ba76a22ce99905d76b783e988efa4c0d6477aa2a",
+  "imported_at": "2026-10-27T08:46:01.937062+00:00"
+}

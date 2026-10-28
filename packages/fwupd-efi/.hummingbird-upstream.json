@@ -1,0 +1,8 @@
+{
+  "package": "fwupd-efi",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/fwupd-efi.git",
+  "commit": "83de3c8019c8cd21875f5bcdd9b4bca613deee3c",
+  "tree": "e60109a146ced36be014bba2ebe3ae34ce1f5542",
+  "imported_at": "2026-10-25T13:26:16.845890+00:00"
+}

@@ -1,0 +1,8 @@
+{
+  "package": "parallel",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/parallel.git",
+  "commit": "1c0176f88f60eb62751be521e285d2cc66972014",
+  "tree": "564a8fa2c834593899509b1bf7aca7d45e9dd249",
+  "imported_at": "2026-10-27T06:35:13.382817+00:00"
+}

@@ -48,6 +48,9 @@ packages = [
   "libadwaita",
   "mutter",
   "tailscale",
+  # Hummingbird supplies the krun command; the factory supplies its VM library
+  # and guest kernel. Validate the entire runtime chain before publication (#457).
+  "crun-krun",
   "xdg-desktop-portal",
   "xdg-desktop-portal-gnome",
 ]
@@ -75,4 +78,7 @@ packages = [
   "evolution-ews-core",
   "fish",
   "zsh",
+  # Requested above, but excused until libkrun and libkrunfw have built once.
+  # Remove after the first successful publication containing both (#457).
+  "crun-krun",
 ]

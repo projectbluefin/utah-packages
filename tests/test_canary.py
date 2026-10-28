@@ -461,7 +461,7 @@ class WorkflowShapeTests(unittest.TestCase):
         script = verify["steps"][-1]["run"]
         self.assertIn("\'[\"vulkan-loader\"]\'", script)
         self.assertIn('test "$DIGEST" != "$PASS1_DIGEST"', script)
-        gate = self.jobs["canary"]["steps"][0]["run"]
+        gate = next(s for s in self.jobs["canary"]["steps"] if s.get("name") == "Decide")["run"]
         self.assertIn('.key != "pass4"', gate)
 
     def test_pass5_is_incremental_against_pass1s_digest(self) -> None:
@@ -863,7 +863,7 @@ class MainTests(unittest.TestCase):
     def test_every_subcommand_the_workflow_invokes_is_dispatched(self) -> None:
         """A rename in canary.py that canary.yml did not follow fails here."""
         invoked = set(re.findall(
-            r"canary\.py\s+([a-z-]+)", (ROOT / ".github" / "workflows" / "canary.yml").read_text()
+            r"(?<!\w)canary\.py\s+([a-z-]+)", (ROOT / ".github" / "workflows" / "canary.yml").read_text()
         ))
         self.assertTrue(invoked)
         for command in sorted(invoked):

@@ -1,0 +1,8 @@
+{
+  "package": "ntfs-3g-system-compression",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/ntfs-3g-system-compression.git",
+  "commit": "a1207bc06735d7fd9a9864c0f11ff6c7e0124dc3",
+  "tree": "db014d83b528d0d448142e47d6a0e238dc8c4f0a",
+  "imported_at": "2026-10-28T10:21:55.846051+00:00"
+}

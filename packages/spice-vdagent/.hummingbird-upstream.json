@@ -1,0 +1,8 @@
+{
+  "package": "spice-vdagent",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/spice-vdagent.git",
+  "commit": "a1fb15b85e62ba7b174a5c2ae03624039a8a5240",
+  "tree": "770478adc670f39b92fbe75af6ef8e15a4b754a9",
+  "imported_at": "2026-10-27T04:05:55.208550+00:00"
+}

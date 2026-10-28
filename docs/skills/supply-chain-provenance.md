@@ -104,6 +104,9 @@ inventoried. Extend `parse_packages`, not the container.
 Every recipe in `packages/<name>/` carries `.hummingbird-upstream.json`, and
 `tools/validate.py` rejects the tree without it:
 
+- The `package` field must match the recipe directory name (`packages/<name>`),
+  ensuring any remote or identity derivation bound to the package name cannot
+  be bypassed by a mislabeled provenance file.
 - **`branch: rawhide`** — the Fedora dist-git snapshot, pinned by full
   40-character `commit` and `tree` SHAs. An abbreviated SHA is not a pin: it
   is ambiguous and it is not what `git` resolved at import.
@@ -132,6 +135,31 @@ verified GNOME release URL into a blanket promotion of all feeds: forge tag
 archives can differ from Fedora's pinned bytes. A digest mismatch must fail
 closed; Fedora fallbacks cover transport failures, not integrity failures.
 
+For a bulk migration, use direct archive feeds and the recipe's `Source0`
+as candidate locators, not as proof. A release-monitoring project page is
+metadata, not a source archive. Expand recipe macros explicitly and strip
+RPM's `#/local-filename` suffix from the download URL while preserving the
+lock's `filename`. Project names can differ from recipe names, as with
+`gstreamer1-plugins-base` and the upstream `gst-plugins-base` archive.
+
+Stream each candidate primary directly through SHA-512 without using the
+pipeline's fallback path. Promote only exact matches to the existing lock;
+leave mismatches and unavailable archives on the ratchet for separate
+investigation. A successful HTTP response can even be an HTML error page,
+so transport success alone is insufficient. Compare the old and new lock
+objects after editing: only `url` and `fallback_urls` should change in a
+transport-only migration. Preserve all existing fallbacks as well as the
+former primary, and remove exactly the promoted names from the ratchet.
+
+The fixed native Canary set has an additional lookaside-primary contract in
+`tests/test_canary.py`: libical, vulkan-headers, vulkan-loader, and the
+python-typing-inspection perturbation package. Treat their source migration
+as a separate change that also reconciles the Canary's availability contract
+and verifies it on the native runner; do not weaken that test during a bulk
+transport-only migration. Also check candidate hosts against the validator's
+Fedora-host policy before editing: a project's own repository on
+`forge.fedoraproject.org` still counts as Fedora infrastructure.
+
 ## Dead upstream hosts: releases.pagure.org
 
 `releases.pagure.org` stopped serving release tarballs around 2026-10-13
@@ -157,6 +185,20 @@ When a primary host dies:
   into a red pipeline.
 - Leave the recipe's `Source:` line alone: the spec is Fedora's, and the build
   stages sources from the lock, not from the spec URL.
+
+## A source with no release and a huge archive: pick files, pin each
+
+A recipe can only take one primary source from the lock; a second `sources`
+line is fetched from Fedora's lookaside, so a Utah-only recipe cannot use one.
+When the upstream has no release and its commit archive is far larger than
+what the recipe needs, add a `tools/generated_sources.py` generator that
+fetches only the needed files at a pinned commit, checks a SHA-512 per file,
+and packs them deterministically (sorted, owner-less, fixed mtime, single xz
+stream). `bluefin-artwork-logos` does this for three files of
+`projectbluefin/artwork`, whose archive carries every wallpaper. Take the
+commit from the spec's `%global commit`, so moving the pin is one spec edit
+plus a new digest table entry, and include the upstream `LICENSE` so the
+package can ship it.
 
 ## Source verification reporting
 
