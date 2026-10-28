@@ -342,7 +342,7 @@ packages = [
     # Recipe import only; build, publication and runtime proof remain on #484.
     { name = "libgee" },
     # Recipe import only (Orca recommends it); build, publication and runtime proof remain on #484.
-    { name = "libwnck3" },
+    { name = "libwnck3", pr = 786 },
     # NTFS-3G read-only plugin recipe for #488; hosted build, publication and runtime proof remain open.
     { name = "ntfs-3g-system-compression", pr = 771 },
     # Language data recipe; build/publication and consumer proof remain tracked in #494.
