@@ -1,0 +1,88 @@
+From a8461eb3465cc4418526db69baf5bfb893c88e48 Mon Sep 17 00:00:00 2001
+From: Kate Hsuan <hpa@redhat.com>
+Date: Thu, 15 Oct 2026 15:45:53 +0800
+Subject: [PATCH] Defer service startup until intel_rapl sysfs is available
+
+Fix a race condition where thermald starts before intel_rapl
+initialization completes, causing a "NO RAPL sysfs present" error. Add
+udev rules and adjust systemd unit configuration so the service waits
+for the intel_rapl driver to finish loading.
+
+Link: https://bugzilla.redhat.com/show_bug.cgi?id=2539078
+---
+ configure.ac                       | 6 ++++++
+ data/99-thermald-powercap.rules.in | 1 +
+ data/Makefile.am                   | 9 ++++++++-
+ data/thermald.service.in           | 1 +
+ 4 files changed, 16 insertions(+), 1 deletion(-)
+ create mode 100644 data/99-thermald-powercap.rules.in
+
+diff --git a/configure.ac b/configure.ac
+index 39e77918..49baad7b 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -50,12 +50,18 @@ if test "x$with_systemdsystemunitdir" != xno; then
+ fi
+ AM_CONDITIONAL(HAVE_SYSTEMD, [test -n "$with_systemdsystemunitdir" -a "x$with_systemdsystemunitdir" != xno ])
+ 
++AC_ARG_WITH([udevrulesdir],
++        [AS_HELP_STRING([--with-udevrulesdir=DIR], [Directory for udev rules [default=PREFIX/lib/udev/rules.d]])],
++        [], [with_udevrulesdir='${prefix}/lib/udev/rules.d'])
++AC_SUBST([udevrulesdir], [$with_udevrulesdir])
++
+ # print configuration
+ echo
+ echo "System paths:"
+ echo "  prefix: $prefix"
+ echo "  exec_prefix: $exec_prefix"
+ echo "  systemdunitdir: $with_systemdsystemunitdir"
++echo "  udevrulesdir: $with_udevrulesdir"
+ echo "  tdbinary: $tdbinary"
+ echo "  tdconfdir: $tdconfdir"
+ echo "  tdrundir: $tdrundir"
+diff --git a/data/99-thermald-powercap.rules.in b/data/99-thermald-powercap.rules.in
+new file mode 100644
+index 00000000..c9d080d5
+--- /dev/null
++++ b/data/99-thermald-powercap.rules.in
+@@ -0,0 +1 @@
++SUBSYSTEM=="powercap", TAG+="systemd"
+diff --git a/data/Makefile.am b/data/Makefile.am
+index 1328be63..525b7ff6 100644
+--- a/data/Makefile.am
++++ b/data/Makefile.am
+@@ -12,6 +12,12 @@ servicedir = $(datadir)/dbus-1/system-services
+ service_in_files = org.freedesktop.thermald.service.in
+ service_DATA = $(service_in_files:.service.in=.service)
+ 
++udev_in_files = 99-thermald-powercap.rules.in
++udevrules_DATA = $(udev_in_files:.rules.in=.rules)
++
++%.rules: %.rules.in Makefile
++	@$(service_edit) $< >$@
++
+ $(service_DATA): $(service_in_files) Makefile
+ 	@$(service_edit) $< >$@
+ 
+@@ -34,7 +40,8 @@ tdconfig_DATA = \
+ EXTRA_DIST = \
+ 	thermald.service.in \
+ 	org.freedesktop.thermald.service.in \
++	99-thermald-powercap.rules.in \
+ 	$(dbusservice_DATA) \
+ 	$(tdconfig_DATA)
+ 
+-CLEANFILES = thermald.service org.freedesktop.thermald.service
++CLEANFILES = thermald.service org.freedesktop.thermald.service 99-thermald-powercap.rules
+diff --git a/data/thermald.service.in b/data/thermald.service.in
+index b2ecafe9..5d7e70c2 100644
+--- a/data/thermald.service.in
++++ b/data/thermald.service.in
+@@ -1,6 +1,7 @@
+ [Unit]
+ Description=Thermal Daemon Service
+ ConditionVirtualization=no
++After=sys-class-powercap.device
+ 
+ [Service]
+ Type=dbus
