@@ -1216,6 +1216,12 @@ packages:
     downstream_package_name: iw
     paths:
       - packages/iw
+  iwd:
+    specfile_path: iwd.spec
+    upstream_package_name: iwd
+    downstream_package_name: iwd
+    paths:
+      - packages/iwd
   jpegxl:
     specfile_path: jpegxl.spec
     upstream_package_name: jpegxl
@@ -1570,6 +1576,12 @@ packages:
     downstream_package_name: libei
     paths:
       - packages/libei
+  libell:
+    specfile_path: libell.spec
+    upstream_package_name: libell
+    downstream_package_name: libell
+    paths:
+      - packages/libell
   libepoxy:
     specfile_path: libepoxy.spec
     upstream_package_name: libepoxy

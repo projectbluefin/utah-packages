@@ -6,8 +6,8 @@
       "total": 30
     },
     "dev-tools": {
-      "pending": 69,
-      "total": 69
+      "pending": 68,
+      "total": 68
     },
     "fonts-i18n": {
       "pending": 19,
@@ -18,9 +18,9 @@
       "total": 5
     },
     "long-tail": {
-      "already_recipe": 3,
+      "already_recipe": 4,
       "manifest_wants": 1,
-      "pending": 88,
+      "pending": 87,
       "total": 92
     },
     "power": {
@@ -256,11 +256,6 @@
     {
       "area": "dev-tools",
       "name": "hfsplus-tools",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "iwd",
       "state": "pending"
     },
     {
@@ -841,7 +836,7 @@
     {
       "area": "long-tail",
       "name": "libell",
-      "state": "pending"
+      "state": "already_recipe"
     },
     {
       "area": "long-tail",
@@ -1191,13 +1186,13 @@
   ],
   "issue": "projectbluefin/utah-packages#308",
   "states": {
-    "already_recipe": 13,
+    "already_recipe": 14,
     "manifest_wants": 1,
-    "pending": 214
+    "pending": 212
   },
   "totals": {
-    "backlog": 228,
-    "resolved": 289,
+    "backlog": 227,
+    "resolved": 290,
     "wontfix": 34
   }
 }

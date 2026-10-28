@@ -6083,6 +6083,26 @@
       "url": "https://github.com/pallets/click/archive/8.4.2/click-8.4.2.tar.gz",
       "filename": "click-8.4.2.tar.gz",
       "sha512": "2731993c89d7386a8bfd4f51131384a2a67c4ee33e54f92a055b685ba4cf74c854fb5aca0c92e3a24d04bf7725e169edf457d1f18a660b5361aabbbcdd550657"
+    },
+    {
+      "name": "libell",
+      "version": "0.83",
+      "url": "https://www.kernel.org/pub/linux/libs/ell/ell-0.83.tar.xz",
+      "filename": "ell-0.83.tar.xz",
+      "sha512": "4cf7f65fb0595158c2719d0b53b6059877f53e701fb708f4e5315f81af0d70a6083799bf1d11f33fede24edbccb78694ea5b598b286dcc60d9fb695261339879",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libell/ell-0.83.tar.xz/sha512/4cf7f65fb0595158c2719d0b53b6059877f53e701fb708f4e5315f81af0d70a6083799bf1d11f33fede24edbccb78694ea5b598b286dcc60d9fb695261339879/ell-0.83.tar.xz"
+      ]
+    },
+    {
+      "name": "iwd",
+      "version": "3.12",
+      "url": "https://www.kernel.org/pub/linux/network/wireless/iwd-3.12.tar.xz",
+      "filename": "iwd-3.12.tar.xz",
+      "sha512": "47ac85452d28ab238474b1f724383aca362bac41caa5ade6b34f5b53d43a7c4eacf3d6a2a6d4c7f39080bd041cc823f9b1de343c855249c45b342d37f1f084a7",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/iwd/iwd-3.12.tar.xz/sha512/47ac85452d28ab238474b1f724383aca362bac41caa5ade6b34f5b53d43a7c4eacf3d6a2a6d4c7f39080bd041cc823f9b1de343c855249c45b342d37f1f084a7/iwd-3.12.tar.xz"
+      ]
     }
   ]
 }

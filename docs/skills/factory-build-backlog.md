@@ -461,6 +461,21 @@ The `ifuse` recipe builds against the existing `libimobiledevice`,
 `libimobiledevice-glue`, and `libplist` recipes and needs `usbmuxd` at
 runtime. An imported recipe alone does not prove a device can be mounted;
 verify the published package and its runtime dependencies on a real device.
+
+### iwd and the Embedded Linux Library
+
+Fedora builds `iwd` with `--enable-external-ell`, so it links `libell.so` at
+runtime and Hummingbird does not ship it. Import the `libell` source package
+alongside it. Fedora's `ell` dist-git is an unrelated header-only C++ grammar
+library; do not import it for `pkgconfig(ell)`. The `libell-devel` `%files`
+list `ell.pc`, so the build graph orders `libell` before `iwd` without a
+`stage`. Fedora's `iwd` `.gitignore` ignores `iwd.spec` and `sources`: stage
+them with `git add -f`, or the import commits an empty recipe.
+
+Two other names in the same batch have no straightforward import. Fedora
+retired `fuse-encfs` in Rawhide (`dead.package`), and the `hfsplus-tools`
+`Source0` host returns 404 while dist-git still pins an MD5 `sources` entry.
+Each needs its own source decision rather than a Rawhide import.
 ### WebDAV filesystem runtime closure
 
 `davfs2` uses the `neon` HTTP/WebDAV library; its default build in turn links

@@ -1,0 +1,8 @@
+{
+  "package": "iwd",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/iwd.git",
+  "commit": "a4b3fa900dfacba2961ef7e65f816789c31e816e",
+  "tree": "79c4331f38e8bf60ec62559f548ad7ddffc27bc6",
+  "imported_at": "2026-10-28T15:21:54.502423+00:00"
+}
