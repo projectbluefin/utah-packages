@@ -2818,6 +2818,12 @@ packages:
     downstream_package_name: perl-Unicode-Normalize
     paths:
       - packages/perl-Unicode-Normalize
+  phodav:
+    specfile_path: phodav.spec
+    upstream_package_name: phodav
+    downstream_package_name: phodav
+    paths:
+      - packages/phodav
   pinentry:
     specfile_path: pinentry.spec
     upstream_package_name: pinentry

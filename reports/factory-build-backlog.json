@@ -6,8 +6,8 @@
       "total": 21
     },
     "dev-tools": {
-      "pending": 55,
-      "total": 55
+      "pending": 54,
+      "total": 54
     },
     "fonts-i18n": {
       "pending": 15,
@@ -396,11 +396,6 @@
     {
       "area": "dev-tools",
       "name": "rpm-ostree-libs",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "spice-webdavd",
       "state": "pending"
     },
     {
@@ -923,11 +918,11 @@
   "states": {
     "already_recipe": 7,
     "manifest_wants": 1,
-    "pending": 166
+    "pending": 165
   },
   "totals": {
-    "backlog": 174,
-    "resolved": 340,
+    "backlog": 173,
+    "resolved": 341,
     "wontfix": 37
   }
 }
