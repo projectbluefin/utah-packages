@@ -6300,6 +6300,28 @@
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/serd/serd-0.32.10.tar.xz/sha512/1ceb7caaa97195e829bec0436930c090698a6be8ba1b7ee0ef3f013c817dd7ae472bb9bcc271e55e8b6e12d110b2d1d3d8fe20c36672d6e63c53f151173cd897/serd-0.32.10.tar.xz"
       ]
+    },
+    {
+      "name": "libslirp",
+      "version": "4.9.6",
+      "filename": "libslirp-4.9.6.tar.xz",
+      "sha512": "66cf1461af281d6616fa75a338bc0fa439cbfdc38ffe4694cad93bd58b5affd36db52325535c200d01248c4e3f3a6d2e520baf35f1be97c2069ff10f2c00be49",
+      "generate": {
+        "script": "tools/generated_sources.py",
+        "input": "https://gitlab.freedesktop.org/slirp/libslirp.git tag v4.9.6 (commit 392af90207fc51dd9f9044ee9b1f963f3c851c2c)",
+        "method": "git archive --format=tar --prefix=libslirp-4.9.6/ of the pinned commit, compressed deterministically as libslirp-4.9.6.tar.xz"
+      }
+    },
+    {
+      "name": "rtmpdump",
+      "version": "2.6",
+      "filename": "rtmpdump-2.6.tar.gz",
+      "sha512": "423d7c94a02822a073840de1962c676d9eaf419347fc565086dbe995520c7bed8ff565a9d8283f80c4895bbb8dbba8e56bdd779a4b4ad58991e5e162ff7b9913",
+      "generate": {
+        "script": "tools/generated_sources.py",
+        "input": "https://git.ffmpeg.org/rtmpdump.git tag v2.6 (commit 138fdb258d9fc26f1843fd1b891180416c9dc575)",
+        "method": "git archive --format=tar --prefix=rtmpdump-2.6/ of the pinned commit, compressed deterministically as rtmpdump-2.6.tar.gz"
+      }
     }
   ]
 }

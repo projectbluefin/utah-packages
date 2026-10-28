@@ -10,10 +10,12 @@ downloads.
 """
 
 import contextlib
+import gzip
 import hashlib
 import io
 import json
 import lzma
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -322,6 +324,81 @@ class TailscaleGenerateTests(PackageDirMixin, unittest.TestCase):
         self.assertEqual(len(runs), 1)
         self.assertEqual(runs[0][:6], ["git", "clone", "-q", "--branch", f"v{self.VERSION}", "--depth"])
         self.assertFalse((self.out_dir / f"tailscale-{self.VERSION}-vendored.tar.xz").exists())
+
+
+class GitArchiveGenerateTests(PackageDirMixin, unittest.TestCase):
+    """libslirp and rtmpdump, generated from a local repository carrying the tag."""
+
+    VERSION = "1.0"
+
+    def git(self, *args: str) -> str:
+        env = {
+            **os.environ,
+            "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@example.com",
+            "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@example.com",
+            "GIT_AUTHOR_DATE": "1700000000 +0000", "GIT_COMMITTER_DATE": "1700000000 +0000",
+        }
+        return subprocess.check_output(["git", "-C", str(self.repo), *args], text=True, env=env).strip()
+
+    def setUp(self):
+        super().setUp()
+        self.repo = self.tmp / "upstream"
+        self.repo.mkdir()
+        self.git("init", "-q")
+        (self.repo / "README").write_text("readme\n")
+        self.git("add", "README")
+        self.git("commit", "-q", "-m", "release")
+        self.git("tag", "-a", f"v{self.VERSION}", "-m", "release")
+        self.commit = self.git("rev-parse", "HEAD")
+
+    def source(self, name: str, compression: str, commit: str | None = None):
+        entry = {"remote": str(self.repo), "tag": "v{version}", "compression": compression,
+                 "commits": {self.VERSION: commit or self.commit}}
+        self.write_spec(f"{name}.spec", self.VERSION)
+        return patch.dict(generated_sources.GIT_ARCHIVE_SOURCES, {name: entry})
+
+    def expected_tar(self, name: str) -> bytes:
+        return subprocess.check_output(
+            ["git", "-C", str(self.repo), "archive", "--format=tar", f"--prefix={name}-{self.VERSION}/", self.commit]
+        )
+
+    def test_an_unpinned_version_fails_before_running_git(self):
+        with self.source("libslirp", "xz"):
+            self.write_spec("libslirp.spec", "9.9")
+            with patch.object(generated_sources.subprocess, "run") as run:
+                with self.assertRaisesRegex(RuntimeError, "no pinned commit for libslirp 9.9"):
+                    generated_sources.generate("libslirp", self.package_dir, self.out_dir)
+        run.assert_not_called()
+
+    def test_the_xz_archive_is_the_git_archive_tar_at_preset_6(self):
+        with self.source("libslirp", "xz"):
+            target = generated_sources.generate("libslirp", self.package_dir, self.out_dir)
+        self.assertEqual(target.name, "libslirp-1.0.tar.xz")
+        raw = self.expected_tar("libslirp")
+        self.assertEqual(target.read_bytes(),
+                         lzma.compress(raw, format=lzma.FORMAT_XZ, check=lzma.CHECK_CRC64, preset=6))
+
+    def test_the_gz_archive_is_reproducible_and_carries_no_timestamp(self):
+        with self.source("rtmpdump", "gz"):
+            first = generated_sources.generate("rtmpdump", self.package_dir, self.out_dir).read_bytes()
+            second = generated_sources.generate("rtmpdump", self.package_dir, self.out_dir).read_bytes()
+        self.assertEqual(first, second)
+        self.assertEqual(first[4:8], b"\0\0\0\0")
+        self.assertEqual(gzip.decompress(first), self.expected_tar("rtmpdump"))
+
+    def test_a_moved_tag_fails_closed_and_writes_nothing(self):
+        with self.source("libslirp", "xz", commit="f" * 40):
+            with self.assertRaisesRegex(RuntimeError, f"tag v{self.VERSION} moved: expected ffff"):
+                generated_sources.generate("libslirp", self.package_dir, self.out_dir)
+        self.assertEqual(list(self.out_dir.iterdir()), [])
+
+    def test_metadata_pins_the_tag_commit_of_the_carried_recipes(self):
+        slirp = generated_sources.metadata_for("libslirp", ROOT / "packages" / "libslirp")
+        self.assertEqual(slirp["filename"], "libslirp-4.9.6.tar.xz")
+        self.assertIn("392af90207fc51dd9f9044ee9b1f963f3c851c2c", slirp["generate"]["input"])
+        rtmp = generated_sources.metadata_for("rtmpdump", ROOT / "packages" / "rtmpdump")
+        self.assertEqual(rtmp["filename"], "rtmpdump-2.6.tar.gz")
+        self.assertIn("git.ffmpeg.org/rtmpdump.git tag v2.6", rtmp["generate"]["input"])
 
 
 class CrateVendoringTests(unittest.TestCase):

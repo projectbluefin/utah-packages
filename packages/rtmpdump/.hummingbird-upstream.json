@@ -1,0 +1,8 @@
+{
+  "package": "rtmpdump",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/rtmpdump.git",
+  "commit": "4d382e199e486cd5b6bc0385cda916bda3b54753",
+  "tree": "0f95b8314e723024b5efabf6c498f8209c0944df",
+  "imported_at": "2026-10-28T14:43:14.255619+00:00"
+}

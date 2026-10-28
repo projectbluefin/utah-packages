@@ -2104,6 +2104,12 @@ packages:
     downstream_package_name: libsigc++30
     paths:
       - packages/libsigc++30
+  libslirp:
+    specfile_path: libslirp.spec
+    upstream_package_name: libslirp
+    downstream_package_name: libslirp
+    paths:
+      - packages/libslirp
   libsndfile:
     specfile_path: libsndfile.spec
     upstream_package_name: libsndfile
@@ -3148,6 +3154,12 @@ packages:
     downstream_package_name: rtkit
     paths:
       - packages/rtkit
+  rtmpdump:
+    specfile_path: rtmpdump.spec
+    upstream_package_name: rtmpdump
+    downstream_package_name: rtmpdump
+    paths:
+      - packages/rtmpdump
   rubberband:
     specfile_path: rubberband.spec
     upstream_package_name: rubberband

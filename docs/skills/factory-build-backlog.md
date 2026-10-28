@@ -859,12 +859,23 @@ the fallback. `liburing` locks only `Source0`; like `dnsmasq`, its `.asc`
 signature is fetched from Fedora's lookaside by its `sources` SHA-512.
 
 `librabbitmq` and `libwmf-lite` (a subpackage of `libwmf`) lock their GitHub
-tag archives directly: those bytes equal the dist-git SHA-512 pins. Two
-outputs need more than a lock. `libslirp`'s GitLab tag archive differs from
-Fedora's `.tar.xz` pin, so it needs a `generate` entry or a matching upstream
-release asset. `librtmp` comes from `rtmpdump`, whose `Source0` is a local
-`git archive` of tag `v2.6` with no download URL. Check the archive bytes
-against the pin before you lock a source.
+tag archives directly: those bytes equal the dist-git SHA-512 pins. Check the
+archive bytes against the pin before you lock a source.
+
+`libslirp` and `librtmp` (source `rtmpdump`) have no release file, so their
+locks are `generate` entries in `GIT_ARCHIVE_SOURCES`
+(`tools/generated_sources.py`): fetch the tag, check that it still resolves
+to the pinned commit, and `git archive --format=tar --prefix=<name>-<version>/`.
+To find out how Fedora made such a tarball, decompress its lookaside copy and
+compare the raw tar with `git archive`. Then try each compressor setting.
+`libslirp`'s tar is GitLab's archive, and Python's `lzma` preset 6 (CRC64)
+reproduces Fedora's `.tar.xz` pin exactly, so `sources` is unchanged. For
+`rtmpdump`, the tar is byte-identical but Fedora's gzip stream is not: it is
+zlib-ng output, which neither GNU gzip nor Python's zlib reproduces. So it is
+`gzip -n -9`, and `sources` is repinned to the generated digest.
+`git.ffmpeg.org/rtmpdump.git` advertises refs to the all-zero object, which
+makes `git clone` fail with `upload-pack: not our ref 0000…`. Fetch only
+`refs/tags/<tag>` into an empty repository instead.
 
 ### GNOME apps batch #484: terminal outputs and publication reconciliation
 

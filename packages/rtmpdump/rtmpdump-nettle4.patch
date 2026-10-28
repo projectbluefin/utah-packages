@@ -1,0 +1,36 @@
+diff -up rtmpdump-2.6/librtmp/hashswf.c.orig rtmpdump-2.6/librtmp/hashswf.c
+--- rtmpdump-2.6/librtmp/hashswf.c.orig	2025-11-14 13:19:40.000000000 +0100
++++ rtmpdump-2.6/librtmp/hashswf.c	2026-07-31 20:25:25.100403245 +0200
+@@ -51,7 +51,7 @@
+ #define HMAC_CTX	struct hmac_sha256_ctx
+ #define HMAC_setup(ctx, key, len)	hmac_sha256_set_key(&ctx, len, key)
+ #define HMAC_crunch(ctx, buf, len)	hmac_sha256_update(&ctx, len, buf)
+-#define HMAC_finish(ctx, dig, dlen)	dlen = SHA256_DIGEST_LENGTH; hmac_sha256_digest(&ctx, SHA256_DIGEST_LENGTH, dig)
++#define HMAC_finish(ctx, dig, dlen)	dlen = SHA256_DIGEST_LENGTH; hmac_sha256_digest(&ctx, dig)
+ #define HMAC_close(ctx)
+ #else	/* USE_OPENSSL */
+ #include <openssl/ssl.h>
+diff -up rtmpdump-2.6/librtmp/rtmp.c.orig rtmpdump-2.6/librtmp/rtmp.c
+--- rtmpdump-2.6/librtmp/rtmp.c.orig	2025-11-14 13:19:40.000000000 +0100
++++ rtmpdump-2.6/librtmp/rtmp.c	2026-07-31 20:27:59.280544205 +0200
+@@ -2492,7 +2492,7 @@ b64enc(const unsigned char *input, int l
+ typedef struct md5_ctx	MD5_CTX;
+ #define MD5_Init(ctx)	md5_init(ctx)
+ #define MD5_Update(ctx,data,len)	md5_update(ctx,len,data)
+-#define MD5_Final(dig,ctx)	md5_digest(ctx,MD5_DIGEST_LENGTH,dig)
++#define MD5_Final(dig,ctx)	md5_digest(ctx,dig)
+ #else
+ #endif
+ 
+diff -up rtmpdump-2.6/librtmp/handshake.h.orig rtmpdump-2.6/librtmp/handshake.h
+--- rtmpdump-2.6/librtmp/handshake.h.orig	2025-11-14 13:19:40.000000000 +0100
++++ rtmpdump-2.6/librtmp/handshake.h	2026-07-31 20:30:18.774576484 +0200
+@@ -52,7 +52,7 @@ typedef arc4_context *	RC4_handle;
+ #define HMAC_CTX	struct hmac_sha256_ctx
+ #define HMAC_setup(ctx, key, len)	hmac_sha256_set_key(&ctx, len, key)
+ #define HMAC_crunch(ctx, buf, len)	hmac_sha256_update(&ctx, len, buf)
+-#define HMAC_finish(ctx, dig, dlen)	dlen = SHA256_DIGEST_LENGTH; hmac_sha256_digest(&ctx, SHA256_DIGEST_LENGTH, dig)
++#define HMAC_finish(ctx, dig, dlen)	dlen = SHA256_DIGEST_LENGTH; hmac_sha256_digest(&ctx, dig)
+ #define HMAC_close(ctx)
+ 
+ typedef struct arcfour_ctx*	RC4_handle;
