@@ -384,7 +384,7 @@ packages = [
     # ifuse source import; publication and consumer validation remain tracked in #486.
     { name = "ifuse", pr = 703 },
     # iwd source import with its libell runtime library; publication and consumer validation remain tracked in #486.
-    { name = "iwd" },
+    { name = "iwd", pr = 793 },
     # Flex source import; publication and consumer validation remain tracked in #486.
     { name = "flex", pr = 654 },
     # Existing GPU monitor recipe; publication/runtime proof remains in #488.
