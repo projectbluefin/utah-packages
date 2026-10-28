@@ -6,8 +6,8 @@
       "total": 30
     },
     "dev-tools": {
-      "pending": 71,
-      "total": 71
+      "pending": 70,
+      "total": 70
     },
     "fonts-i18n": {
       "pending": 19,
@@ -321,11 +321,6 @@
     {
       "area": "dev-tools",
       "name": "lsb_release",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "ntfs-3g-system-compression",
       "state": "pending"
     },
     {
@@ -1208,11 +1203,11 @@
   "states": {
     "already_recipe": 13,
     "manifest_wants": 1,
-    "pending": 217
+    "pending": 216
   },
   "totals": {
-    "backlog": 231,
-    "resolved": 286,
+    "backlog": 230,
+    "resolved": 287,
     "wontfix": 34
   }
 }

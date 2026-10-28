@@ -138,7 +138,6 @@ packages = [
     "libsss_nss_idmap",
     "libsss_sudo",
     "lsb_release",
-    "ntfs-3g-system-compression",
     "oddjob",
     "oddjob-mkhomedir",
     "open-vm-tools",
@@ -345,6 +344,8 @@ packages = [
 packages = [
     # Recipe import only; build, publication and runtime proof remain on #484.
     { name = "libgee" },
+    # NTFS-3G read-only plugin recipe for #488; hosted build, publication and runtime proof remain open.
+    { name = "ntfs-3g-system-compression", pr = 771 },
     # Language data recipe; build/publication and consumer proof remain tracked in #494.
     { name = "langtable", pr = 700 },
     { name = "python3-langtable", pr = 700 },
