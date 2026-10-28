@@ -6055,6 +6055,27 @@
       "url": "https://github.com/caolanm/libwmf/archive/v0.2.17.tar.gz",
       "filename": "v0.2.17.tar.gz",
       "sha512": "758f62abf36d6993124b064eb1ec4295b0f571c02945861375474b93a1d68b4f298d64d295c836f4c34fc882192995845021ae69bb16d1e8e88630b7de4a5f08"
+    },
+    {
+      "name": "libgee",
+      "version": "0.20.8",
+      "url": "https://download.gnome.org/sources/libgee/0.20/libgee-0.20.8.tar.xz",
+      "filename": "libgee-0.20.8.tar.xz",
+      "sha512": "9af883bb4b2c25c429271201e634d1851378631b913bab282fe432b2b76a44674111e65caa99269fd403454c87b5474f2567c554bddd0b3ea58ca6e138c311e1"
+    },
+    {
+      "name": "ntfs-3g-system-compression",
+      "version": "1.1",
+      "url": "https://github.com/ebiggers/ntfs-3g-system-compression/archive/v1.1/ntfs-3g-system-compression-1.1.tar.gz",
+      "filename": "ntfs-3g-system-compression-1.1.tar.gz",
+      "sha512": "d383cc71e14a2ee25d9a6c458341e194710b822f449ce8e57040883d3843c48de91f0e64ddb686bbe30ddfe7de99d385a59279ea295a319cc716befbe01be3b9"
+    },
+    {
+      "name": "python-h11",
+      "version": "0.16.0",
+      "url": "https://files.pythonhosted.org/packages/source/h/h11/h11-0.16.0.tar.gz",
+      "filename": "h11-0.16.0.tar.gz",
+      "sha512": "3fac3b788de93e2fed27029c4e21e3ceb016ec0d601e57e22ad7dda465158f83c4e21aee4bceef272576b635ed09df574f92c6df1537ab4f51cdccf65075acce"
     }
   ]
 }

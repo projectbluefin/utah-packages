@@ -104,7 +104,6 @@ consumer_issue = "projectbluefin/utah#391"
 packages = [
     "epiphany-runtime",
     "imath",
-    "libgee",
     "libmediaart",
     "libwnck3",
     "rygel",
@@ -139,7 +138,6 @@ packages = [
     "libsss_nss_idmap",
     "libsss_sudo",
     "lsb_release",
-    "ntfs-3g-system-compression",
     "oddjob",
     "oddjob-mkhomedir",
     "open-vm-tools",
@@ -152,7 +150,6 @@ packages = [
     "python3-email-validator",
     "python3-enchant",
     "python3-fido2",
-    "python3-h11",
     "python3-html2text",
     "python3-httpcore",
     "python3-httpx",
@@ -276,7 +273,6 @@ packages = [
     "libmspack",
     "libnet",
     "libpaper",
-    "libpasswdqc",
     "libpfm",
     "libreport-filesystem",
     "librtmp",
@@ -331,6 +327,13 @@ packages = [
 ]
 
 [resolved]
+# Long-tail #506 publication fields from run 40626803772 describe these seven outputs:
+# python3-cups, python3-linux-procfs, python3-pyaudio, qpdf-libs, quota, quota-nls, redhat-menus.
+# Image: ghcr.io/projectbluefin/utah-packages@sha256:2ff39e76a1473cf0a4299952b951080a79650363b1ac9c3b8e372cadcba5a319
+# Source revision: d645fd21fdcc879ed9ad01f04a1acade5fd8fe1d (on main).
+# Primary metadata SHA-256: d364c5f677095a7d4aeb03cf0e86b13d524b7a07e514ef5e79e9f389f9e8178f
+# Run: https://github.com/projectbluefin/utah-packages/actions/runs/40626803772
+# This records published metadata, not successful runtime transactions or completion of #506.
 # GNOME batch #483 publication: ghcr.io/projectbluefin/utah-packages@sha256:7a18f83ef345e1c4f101e2ec00a2c8dffd7e5ef679089bf9d90238a58d99a593
 # Run: https://github.com/projectbluefin/utah-packages/actions/runs/40151594832
 # Published binaries can survive newer failed rebuilds; this is not a runtime validation claim.
@@ -338,6 +341,10 @@ packages = [
 # Packages that left the backlog because a recipe was imported.
 # Each entry: package name and the commit that closed the gap.
 packages = [
+    # Recipe import only; build, publication and runtime proof remain on #484.
+    { name = "libgee" },
+    # NTFS-3G read-only plugin recipe for #488; hosted build, publication and runtime proof remain open.
+    { name = "ntfs-3g-system-compression", pr = 771 },
     # Language data recipe; build/publication and consumer proof remain tracked in #494.
     { name = "langtable", pr = 700 },
     { name = "python3-langtable", pr = 700 },
@@ -354,7 +361,7 @@ packages = [
     { name = "plymouth-theme-spinner", commit = "9565b33477aa10c8af48774fff2598f028a3241a", pr = 320, published_run = 40416793064, published_nevra = "plymouth-theme-spinner-0:26.134.222-1.hum1.bfin.x86_64" },
     { name = "davfs2", pr = 696 },
     { name = "neon", pr = 696 },
-    { name = "libntlm", pr = 696 },
+    { name = "libntlm", pr = 696, published_run = 40626803772, published_nevra = "libntlm-0:1.8-1.hum1.bfin.x86_64" },
     # FireWire recipe coverage; hosted builds and runtime proof remain outstanding.
     { name = "libavc1394", pr = 681 },
     { name = "libraw1394", pr = 681 },
@@ -365,8 +372,11 @@ packages = [
     { name = "nilfs-utils", pr = 702 },
     # Recipe imported; hosted build, publication and runtime proof remain in #501.
     { name = "iptstate", pr = 697 },
-    # Recipe coverage; publication and runtime proof remain tracked in #502.
-    { name = "libdeflate", pr = 695 },
+    # Batch #502 publication: ghcr.io/projectbluefin/utah-packages@sha256:2ff39e76a1473cf0a4299952b951080a79650363b1ac9c3b8e372cadcba5a319
+    # Run: https://github.com/projectbluefin/utah-packages/actions/runs/40626803772
+    # Recipe/publication accounting only; dependency transactions and runtime proof remain in #502.
+    { name = "libpasswdqc", commit = "dfd06b47175b8c94d511c12ac995ecb5e25d7efa", pr = 676, published_run = 40626803772, published_nevra = "libpasswdqc-0:2.0.3-10.hum1.bfin.x86_64" },
+    { name = "libdeflate", pr = 695, published_run = 40626803772, published_nevra = "libdeflate-0:1.26-1.hum1.bfin.x86_64" },
     { name = "gnome-rounded-blur", commit = "f8589ccd95a48a1f26826c8764330c9f7811a09d", pr = 440, published_run = 40151594832, published_nevra = "gnome-rounded-blur-0:1.0.1^20260809gitf3bfcc7-1.hum1.bfin.x86_64" },
     # Disc-reading recipes; publication and runtime proof remain tracked in #475.
     { name = "libudfread", pr = 658 },
@@ -401,18 +411,19 @@ packages = [
     { name = "python3-ptyprocess", pr = 684 },
     { name = "python3-dateutil", pr = 613 },
     { name = "python3-six", pr = 613 },
+    { name = "python3-h11" },
     # Chromaprint recipe coverage only; publication and runtime proof remain in #487.
     { name = "libchromaprint", pr = 692 },
     # BSD compatibility library and its digest-library dependency (#487).
     # Recipe import only; build/publication and Utah consumption remain separate proof.
     { name = "libbsd", pr = 614 },
-    { name = "libmd", pr = 614 },
+    { name = "libmd", pr = 614, published_run = 40626803772, published_nevra = "libmd-0:1.3.0-1.hum1.bfin.x86_64" },
     { name = "spice-vdagent", pr = 679 }, # Recipe import; publication/installability tracked in #490.
     { name = "sshpass", pr = 611 }, # Recipe import; publication/installability tracked in #490.
-    # Password-quality source family: passwdqc builds all three (projectbluefin/utah-packages#644, #505).
-    { name = "pam_passwdqc", pr = 644 },
-    { name = "passwdqc", pr = 644 },
-    { name = "passwdqc-utils", pr = 644 },
+    # Password-quality source family: #676 merged the recipes from #644; publication is not runtime acceptance (#505).
+    { name = "pam_passwdqc", commit = "dfd06b47175b8c94d511c12ac995ecb5e25d7efa", pr = 676, published_run = 40626803772, published_nevra = "pam_passwdqc-0:2.0.3-10.hum1.bfin.x86_64" },
+    { name = "passwdqc", commit = "dfd06b47175b8c94d511c12ac995ecb5e25d7efa", pr = 676, published_run = 40626803772, published_nevra = "passwdqc-0:2.0.3-10.hum1.bfin.x86_64" },
+    { name = "passwdqc-utils", commit = "dfd06b47175b8c94d511c12ac995ecb5e25d7efa", pr = 676, published_run = 40626803772, published_nevra = "passwdqc-utils-0:2.0.3-10.hum1.bfin.x86_64" },
     # Smart-card recipes imported in #364; publication verified for #478.
     { name = "pcsc-lite", commit = "a09ec58", pr = 364 },
     { name = "pcsc-lite-libs", commit = "a09ec58", pr = 364 },
@@ -425,7 +436,7 @@ packages = [
     { name = "python3-pillow", pr = 596 },
     { name = "usbutils", pr = 596 },
     { name = "net-snmp-libs", pr = 596, published_run = 40511180133, published_nevra = "net-snmp-libs-1:5.9.5.2-10.hum1.bfin.x86_64" },
-    { name = "python3-cups", pr = 596 },
+    { name = "python3-cups", pr = 596, published_run = 40626803772, published_nevra = "python3-cups-0:2.0.4-11.hum1.bfin.x86_64" },
     { name = "libraqm", pr = 596 },
     # VPN stack + oath-toolkit/libuser/usermode closure (projectbluefin/utah-packages#585).
     { name = "NetworkManager-openconnect", pr = 585 },
@@ -435,7 +446,7 @@ packages = [
     { name = "vpnc-script", pr = 585 },
     { name = "stoken-libs", pr = 585 },
     { name = "pkcs11-helper", pr = 585 },
-    { name = "libpskc", pr = 585 },
+    { name = "libpskc", pr = 585, published_run = 40626803772, published_nevra = "libpskc-0:2.6.15-1.hum1.bfin.x86_64" },
     { name = "libuser", pr = 585 },
     { name = "usermode", pr = 585 },
     # Screen-reader stack (projectbluefin/utah-packages#447).
@@ -480,7 +491,7 @@ packages = [
     { name = "python3-pyudev", pr = 595 },
     { name = "virt-what", pr = 595 },
     { name = "libtraceevent", pr = 595 },
-    { name = "python3-linux-procfs", pr = 595 },
+    { name = "python3-linux-procfs", pr = 595, published_run = 40626803772, published_nevra = "python3-linux-procfs-0:0.7.4-5.hum1.bfin.noarch" },
     # Netfs/auth starters (landing PR #524). Subpackage closures:
     # cifs-utils-info (%package info), nfs-common/client/v3/v4 (%package -n),
     # pinentry-gnome3 (%package gnome3).
@@ -570,7 +581,7 @@ packages = [
     { name = "libvncserver", pr = 573 },
     { name = "mod_dnssd", pr = 573, published_run = 40511180133, published_nevra = "mod_dnssd-0:0.6-37.hum1.bfin.x86_64" },
     { name = "mozilla-filesystem", pr = 573, published_run = 40511180133, published_nevra = "mozilla-filesystem-0:1.9-39.hum1.bfin.x86_64" },
-    { name = "redhat-menus", pr = 573 },
+    { name = "redhat-menus", pr = 573, published_run = 40626803772, published_nevra = "redhat-menus-0:12.0.2-1.hum1.bfin.noarch" },
     # sso-mib-libs is a %package subpackage of sso-mib.spec (PR #574).
     { name = "sso-mib-libs", pr = 574 },
     # foo2zjs and its runtime dependencies (argyllcms, lcms 1.x, libXScrnSaver).
@@ -590,7 +601,7 @@ packages = [
     { name = "gutenprint-cups", pr = 586 },
     { name = "gutenprint-libs", pr = 586 },
     { name = "ipp-usb", pr = 586 },
-    { name = "libieee1284", pr = 586 },
+    { name = "libieee1284", pr = 586, published_run = 40626803772, published_nevra = "libieee1284-0:0.2.11-50.hum1.bfin.x86_64" },
     { name = "libsane-airscan", pr = 586 },
     { name = "mpage", pr = 586 },
     { name = "printer-driver-brlaser", pr = 586 },
@@ -622,7 +633,7 @@ packages = [
     { name = "man-pages", pr = 587 },
     { name = "mtr", pr = 587 },
     { name = "nvme-cli", pr = 587 },
-    { name = "pinfo", pr = 587 },
+    { name = "pinfo", commit = "c2c7cd8c3f440a81b9aafe204bc9d22b0532fe0e", pr = 587, published_run = 40626803772, published_nevra = "pinfo-0:0.6.13-11.hum1.bfin.x86_64" },
     { name = "python3-llfuse", pr = 587 },
     { name = "python3-msgpack", pr = 587 },
     { name = "smartmontools", pr = 587 },
@@ -644,13 +655,13 @@ packages = [
     { name = "libutempter", pr = 597 },
     { name = "libhandy", pr = 597, published_run = 40569848351, published_nevra = "libhandy-0:1.8.3-1.hum1.bfin.x86_64" },
     { name = "gssproxy", pr = 597 },
-    { name = "quota", pr = 597 },
-    { name = "quota-nls", pr = 597 },
+    { name = "quota", pr = 597, published_run = 40626803772, published_nevra = "quota-1:4.11-4.hum1.bfin.x86_64" },
+    { name = "quota-nls", pr = 597, published_run = 40626803772, published_nevra = "quota-nls-1:4.11-4.hum1.bfin.noarch" },
     { name = "libcollection", pr = 597 },
-    { name = "libini_config", pr = 597 },
-    { name = "libdhash", pr = 597 },
+    { name = "libini_config", pr = 597, published_run = 40626803772, published_nevra = "libini_config-0:2.0.0-63.hum1.bfin.x86_64" },
+    { name = "libdhash", pr = 597, published_run = 40626803772, published_nevra = "libdhash-0:0.5.0-63.hum1.bfin.x86_64" },
     # nfs-utils subpackage imported in #524; publication verified for #502.
-    { name = "libnfsidmap", pr = 524 },
+    { name = "libnfsidmap", pr = 524, published_run = 40626803772, published_nevra = "libnfsidmap-1:2.9.2-1.rc1.hum1.bfin.1.x86_64" },
     { name = "libbasicobjects", pr = 597 },
     { name = "libpath_utils", pr = 597 },
     { name = "libref_array", pr = 597 },
@@ -710,7 +721,7 @@ packages = [
     # librabbitmq (source librabbitmq) and libwmf-lite (source libwmf) recipe imports (#503).
     { name = "librabbitmq", pr = 756 },
     { name = "libwmf-lite", pr = 756 },
-    { name = "qpdf-libs", pr = 640 },
+    { name = "qpdf-libs", pr = 640, published_run = 40626803772, published_nevra = "qpdf-libs-0:12.4.2-1.hum1.bfin.x86_64" },
     # Handwriting recognition (zinnia also builds zinnia-tomoe-ja) and zix (#509).
     { name = "zinnia", pr = 630 },
     { name = "zinnia-tomoe-ja", pr = 630 },
@@ -723,8 +734,9 @@ packages = [
     { name = "svt-vp9-libs", pr = 626 },
     # PyAudio (Python bindings for audio capture/playback) and the PortAudio
     # library it links against (#506); both long-tail names.
-    { name = "portaudio", pr = 748 },
-    { name = "python3-pyaudio", pr = 748 },
+    # #752 adopted #748 and merged its source family.
+    { name = "portaudio", commit = "da68d0f0b38c2f8bacf3fbfc6dd13c0b17681134", pr = 752, published_run = 40626803772, published_nevra = "portaudio-0:19.7.0-1.hum1.bfin.x86_64" },
+    { name = "python3-pyaudio", pr = 748, published_run = 40626803772, published_nevra = "python3-pyaudio-0:0.2.13-14.hum1.bfin.x86_64" },
     # Terminal and VTE emulator outputs (PR #413); publication verified in run 40569848351.
     # vte-profile and vte291-gtk4 are subpackages of vte291.spec.
     # Recipe and publication closure for projectbluefin/utah-packages#484.

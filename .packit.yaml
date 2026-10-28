@@ -1630,6 +1630,12 @@ packages:
     downstream_package_name: libgedit-gtksourceview
     paths:
       - packages/libgedit-gtksourceview
+  libgee:
+    specfile_path: libgee.spec
+    upstream_package_name: libgee
+    downstream_package_name: libgee
+    paths:
+      - packages/libgee
   libgexiv2:
     specfile_path: libgexiv2.spec
     upstream_package_name: libgexiv2
@@ -2482,6 +2488,12 @@ packages:
     downstream_package_name: ntfs-3g
     paths:
       - packages/ntfs-3g
+  ntfs-3g-system-compression:
+    specfile_path: ntfs-3g-system-compression.spec
+    upstream_package_name: ntfs-3g-system-compression
+    downstream_package_name: ntfs-3g-system-compression
+    paths:
+      - packages/ntfs-3g-system-compression
   nvme-cli:
     specfile_path: nvme-cli.spec
     upstream_package_name: nvme-cli
@@ -2854,6 +2866,12 @@ packages:
     downstream_package_name: python-evdev
     paths:
       - packages/python-evdev
+  python-h11:
+    specfile_path: python-h11.spec
+    upstream_package_name: python-h11
+    downstream_package_name: python-h11
+    paths:
+      - packages/python-h11
   python-linux-procfs:
     specfile_path: python-linux-procfs.spec
     upstream_package_name: python-linux-procfs

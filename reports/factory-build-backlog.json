@@ -6,22 +6,22 @@
       "total": 30
     },
     "dev-tools": {
-      "pending": 72,
-      "total": 72
+      "pending": 70,
+      "total": 70
     },
     "fonts-i18n": {
       "pending": 19,
       "total": 19
     },
     "gnome-apps": {
-      "pending": 6,
-      "total": 6
+      "pending": 5,
+      "total": 5
     },
     "long-tail": {
       "already_recipe": 3,
       "manifest_wants": 1,
-      "pending": 89,
-      "total": 93
+      "pending": 88,
+      "total": 92
     },
     "power": {
       "total": 0
@@ -325,11 +325,6 @@
     },
     {
       "area": "dev-tools",
-      "name": "ntfs-3g-system-compression",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
       "name": "oddjob",
       "state": "pending"
     },
@@ -386,11 +381,6 @@
     {
       "area": "dev-tools",
       "name": "python3-fido2",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "python3-h11",
       "state": "pending"
     },
     {
@@ -665,11 +655,6 @@
     },
     {
       "area": "gnome-apps",
-      "name": "libgee",
-      "state": "pending"
-    },
-    {
-      "area": "gnome-apps",
       "name": "libmediaart",
       "state": "pending"
     },
@@ -891,11 +876,6 @@
     {
       "area": "long-tail",
       "name": "libpaper",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
-      "name": "libpasswdqc",
       "state": "pending"
     },
     {
@@ -1218,11 +1198,11 @@
   "states": {
     "already_recipe": 13,
     "manifest_wants": 1,
-    "pending": 219
+    "pending": 215
   },
   "totals": {
-    "backlog": 233,
-    "resolved": 284,
+    "backlog": 229,
+    "resolved": 288,
     "wontfix": 34
   }
 }
