@@ -1,0 +1,8 @@
+{
+  "package": "libell",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libell.git",
+  "commit": "4eef73d6390c72617d779cceb4d20063cbbe6dcc",
+  "tree": "2af8fa9f2bbe353f741dcc803e12d4c6ae9c93d6",
+  "imported_at": "2026-10-28T15:21:54.010949+00:00"
+}
