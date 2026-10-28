@@ -1,0 +1,8 @@
+{
+  "package": "portaudio",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/portaudio.git",
+  "commit": "ae07850cc16b7a189c8935268f0839a8d4819cb5",
+  "tree": "3695e70e721ba11dae4358a1786292d731a593b7",
+  "imported_at": "2026-10-27T23:28:44.695731+00:00"
+}

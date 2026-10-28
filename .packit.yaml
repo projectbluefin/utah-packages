@@ -2704,6 +2704,12 @@ packages:
     downstream_package_name: poppler-data
     paths:
       - packages/poppler-data
+  portaudio:
+    specfile_path: portaudio.spec
+    upstream_package_name: portaudio
+    downstream_package_name: portaudio
+    paths:
+      - packages/portaudio
   powerstat:
     specfile_path: powerstat.spec
     upstream_package_name: powerstat
@@ -2770,6 +2776,12 @@ packages:
     downstream_package_name: pyatspi
     paths:
       - packages/pyatspi
+  pyaudio:
+    specfile_path: pyaudio.spec
+    upstream_package_name: pyaudio
+    downstream_package_name: pyaudio
+    paths:
+      - packages/pyaudio
   pycairo:
     specfile_path: pycairo.spec
     upstream_package_name: pycairo

@@ -6017,6 +6017,20 @@
         "input": "https://raw.githubusercontent.com/projectbluefin/artwork/9ab493bf1fb3ae41594b6bb0a2c5f2350d81de01/LICENSE, https://raw.githubusercontent.com/projectbluefin/artwork/9ab493bf1fb3ae41594b6bb0a2c5f2350d81de01/assets/vector/logos/bluefin/bluefin-logo-dark.svg, https://raw.githubusercontent.com/projectbluefin/artwork/9ab493bf1fb3ae41594b6bb0a2c5f2350d81de01/assets/vector/logos/bluefin/bluefin-logo-light.svg (each sha512-pinned)",
         "method": "fetch each file from projectbluefin/artwork at 9ab493bf1fb3ae41594b6bb0a2c5f2350d81de01 and pack them flat and deterministically as bluefin-artwork-logos-9ab493b.tar.xz"
       }
+    },
+    {
+      "name": "portaudio",
+      "version": "19.7.0",
+      "url": "https://github.com/PortAudio/portaudio/archive/v19.7.0/portaudio-19.7.0.tar.gz",
+      "filename": "portaudio-19.7.0.tar.gz",
+      "sha512": "7e347a174109b661a685bcd617cc8fe00929c6fbf28f142fd7709a8ddbb9b5ed6e805be6647a44b4b9441b79e3474561de6f8e351b4ffc024952ed3e0e27ac1c"
+    },
+    {
+      "name": "pyaudio",
+      "version": "0.2.13",
+      "url": "https://files.pythonhosted.org/packages/91/a0/f439da954d78a987298cb8d1ca1b141c53b1d1d1c7a50e17198ed061b9ac/PyAudio-0.2.13.tar.gz",
+      "filename": "PyAudio-0.2.13.tar.gz",
+      "sha512": "1ae453cae442118ae1b0db44ca8736621a361af3686e47561bffa0d43352039ed5f882412ca22a2a4320b362f966e727b0e38bb9706e99b85d99bc16cc943008"
     }
   ]
 }

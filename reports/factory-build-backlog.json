@@ -14,15 +14,14 @@
       "total": 19
     },
     "gnome-apps": {
-      "already_recipe": 4,
       "pending": 6,
-      "total": 10
+      "total": 6
     },
     "long-tail": {
       "already_recipe": 3,
       "manifest_wants": 1,
-      "pending": 93,
-      "total": 97
+      "pending": 91,
+      "total": 95
     },
     "power": {
       "total": 0
@@ -681,28 +680,8 @@
     },
     {
       "area": "gnome-apps",
-      "name": "ptyxis",
-      "state": "already_recipe"
-    },
-    {
-      "area": "gnome-apps",
       "name": "rygel",
       "state": "pending"
-    },
-    {
-      "area": "gnome-apps",
-      "name": "vte-profile",
-      "state": "already_recipe"
-    },
-    {
-      "area": "gnome-apps",
-      "name": "vte291",
-      "state": "already_recipe"
-    },
-    {
-      "area": "gnome-apps",
-      "name": "vte291-gtk4",
-      "state": "already_recipe"
     },
     {
       "area": "long-tail",
@@ -1026,11 +1005,6 @@
     },
     {
       "area": "long-tail",
-      "name": "portaudio",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
       "name": "prefixdevname",
       "state": "pending"
     },
@@ -1042,11 +1016,6 @@
     {
       "area": "long-tail",
       "name": "python3-pskc",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
-      "name": "python3-pyaudio",
       "state": "pending"
     },
     {
@@ -1257,13 +1226,13 @@
   ],
   "issue": "projectbluefin/utah-packages#308",
   "states": {
-    "already_recipe": 17,
+    "already_recipe": 13,
     "manifest_wants": 1,
-    "pending": 223
+    "pending": 221
   },
   "totals": {
-    "backlog": 241,
-    "resolved": 276,
+    "backlog": 235,
+    "resolved": 282,
     "wontfix": 34
   }
 }

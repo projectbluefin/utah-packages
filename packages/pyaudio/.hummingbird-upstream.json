@@ -1,0 +1,8 @@
+{
+  "package": "pyaudio",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/pyaudio.git",
+  "commit": "c04049b1464c8087a842d7b9b0bad6872ebc8874",
+  "tree": "1b2168789e8775443fb01f4365f6890726090085",
+  "imported_at": "2026-10-27T23:28:46.223393+00:00"
+}
