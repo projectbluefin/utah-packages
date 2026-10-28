@@ -1630,6 +1630,12 @@ packages:
     downstream_package_name: libgedit-gtksourceview
     paths:
       - packages/libgedit-gtksourceview
+  libgee:
+    specfile_path: libgee.spec
+    upstream_package_name: libgee
+    downstream_package_name: libgee
+    paths:
+      - packages/libgee
   libgexiv2:
     specfile_path: libgexiv2.spec
     upstream_package_name: libgexiv2

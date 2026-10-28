@@ -104,7 +104,6 @@ consumer_issue = "projectbluefin/utah#391"
 packages = [
     "epiphany-runtime",
     "imath",
-    "libgee",
     "libmediaart",
     "libwnck3",
     "rygel",
@@ -338,6 +337,8 @@ packages = [
 # Packages that left the backlog because a recipe was imported.
 # Each entry: package name and the commit that closed the gap.
 packages = [
+    # Recipe import only; build, publication and runtime proof remain on #484.
+    { name = "libgee" },
     # Language data recipe; build/publication and consumer proof remain tracked in #494.
     { name = "langtable", pr = 700 },
     { name = "python3-langtable", pr = 700 },

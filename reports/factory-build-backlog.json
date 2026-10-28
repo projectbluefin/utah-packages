@@ -14,8 +14,8 @@
       "total": 19
     },
     "gnome-apps": {
-      "pending": 6,
-      "total": 6
+      "pending": 5,
+      "total": 5
     },
     "long-tail": {
       "already_recipe": 3,
@@ -665,11 +665,6 @@
     },
     {
       "area": "gnome-apps",
-      "name": "libgee",
-      "state": "pending"
-    },
-    {
-      "area": "gnome-apps",
       "name": "libmediaart",
       "state": "pending"
     },
@@ -1218,11 +1213,11 @@
   "states": {
     "already_recipe": 13,
     "manifest_wants": 1,
-    "pending": 219
+    "pending": 218
   },
   "totals": {
-    "backlog": 233,
-    "resolved": 284,
+    "backlog": 232,
+    "resolved": 285,
     "wontfix": 34
   }
 }
