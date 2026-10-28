@@ -255,7 +255,10 @@ description. Reserve `Closes #<issue>` for a batch whose named outputs and
 acceptance requirements are all resolved or explicitly blocked by linked
 decisions, as required by that issue. Check the entire description for closing
 keywords before pushing: a trailing `Closes` still auto-closes the issue even
-when the summary describes partial progress.
+when the summary describes partial progress. Repeat the live-body readback after
+the push and any automation that rewrites the description. If a closing footer
+returns, replace it with `Refs` in the saved PR body and read it back again;
+a new branch head does not by itself resolve a description-only review finding.
 
 ### Collection-library imports
 
