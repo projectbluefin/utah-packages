@@ -126,7 +126,6 @@ packages = [
     "hfsplus-tools",
     "iwd",
     "kernel-devel-matched",
-    "kernel-modules-extra",
     "kernel-tools",
     "kernel-tools-libs",
     "leptonica",
@@ -180,9 +179,6 @@ packages = [
     "sssd-kcm",
     "sssd-krb5-common",
     "sssd-nfs-idmap",
-    # usbip: requires kernel-modules-extra and kmod(usbip-core.ko) /
-    # kmod(usbip-host.ko) / kmod(vhci-hcd.ko) tracked in #487 (kernel policy).
-    "usbip",
 ]
 
 [areas.fonts-i18n]
@@ -752,6 +748,9 @@ packages = [
 # ``states``; they are surfaced as ``totals.wontfix`` so the count partition
 # (areas + resolved + wontfix) still equals the audit's 551.
 packages = [
+    # Kernel-policy decision applies to the module package and its USB/IP consumer.
+    { name = "usbip", reason = "USB-over-network requires excluded kernel-modules-extra and matching kmod providers; no named use case accepted. Maintainer decision: https://github.com/projectbluefin/utah-packages/issues/491#issuecomment-6475648707 (Utah D4; dependency tracked in #487)." },
+    { name = "kernel-modules-extra", reason = "Utah D4 excludes extra kernel modules unless a named use case is accepted. Maintainer decision: https://github.com/projectbluefin/utah-packages/issues/491#issuecomment-6475648707 (kernel batch #487)." },
     # Existing consumer waivers, not new exclusions: projectbluefin/utah#263.
     # https://github.com/projectbluefin/utah/blob/e11a7b297264251704af25d8920d2a2bb58241c9/baselines/triage.toml
     { name = "xdriinfo", reason = "Utah waives this X11 client tool because it ships a Wayland-only session (projectbluefin/utah#263; pinned triage above)." },

@@ -366,7 +366,14 @@ them together. When an upstream host answers `HTTP 503` (`ibiblio.org` for
 in `fallback_urls` instead of growing `config/fedora-primary-sources.txt`.
 `usbip` requires `kernel-modules-extra` and `kmod(usbip-*.ko)` /
 `kmod(vhci-hcd.ko)` at runtime and extracts its archive from the kernel source
-tree (`extract_usbip.sh`), so it remains `pending` on kernel policy (#487).
+tree (`extract_usbip.sh`). The [approved kernel-policy decision](https://github.com/projectbluefin/utah-packages/issues/491#issuecomment-6475648707)
+keeps both `usbip` and `kernel-modules-extra` in `[wontfix]`: Utah's D4
+excludes the extra modules until a named use case is accepted. Do not import
+the userspace tool while its mandatory kernel providers are excluded.
+Reconcile both catalog names against that explicit decision, not an assumed
+waiver for every kernel-related package. Consumer triage belongs in the Utah
+repository; a factory catalog change does not update that separate ledger or
+prove runtime acceptance of the other outputs in the batch.
 
 ### Optional changelog viewer
 

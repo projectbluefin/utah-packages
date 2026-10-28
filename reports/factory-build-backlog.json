@@ -6,8 +6,8 @@
       "total": 29
     },
     "dev-tools": {
-      "pending": 69,
-      "total": 69
+      "pending": 67,
+      "total": 67
     },
     "fonts-i18n": {
       "pending": 19,
@@ -261,11 +261,6 @@
     {
       "area": "dev-tools",
       "name": "kernel-devel-matched",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "kernel-modules-extra",
       "state": "pending"
     },
     {
@@ -531,11 +526,6 @@
     {
       "area": "dev-tools",
       "name": "sssd-nfs-idmap",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "usbip",
       "state": "pending"
     },
     {
@@ -1188,11 +1178,11 @@
   "states": {
     "already_recipe": 13,
     "manifest_wants": 1,
-    "pending": 213
+    "pending": 211
   },
   "totals": {
-    "backlog": 227,
+    "backlog": 225,
     "resolved": 290,
-    "wontfix": 34
+    "wontfix": 36
   }
 }
