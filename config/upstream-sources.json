@@ -6083,6 +6083,13 @@
       "url": "https://github.com/pallets/click/archive/8.4.2/click-8.4.2.tar.gz",
       "filename": "click-8.4.2.tar.gz",
       "sha512": "2731993c89d7386a8bfd4f51131384a2a67c4ee33e54f92a055b685ba4cf74c854fb5aca0c92e3a24d04bf7725e169edf457d1f18a660b5361aabbbcdd550657"
+    },
+    {
+      "name": "libwnck3",
+      "version": "43.3",
+      "url": "https://download.gnome.org/sources/libwnck/43/libwnck-43.3.tar.xz",
+      "filename": "libwnck-43.3.tar.xz",
+      "sha512": "51304ab6ad543d10e8542257b24964dbce454eb1bedfa26fc926797b01373b9effad8097fe0f18216439d0339525377abb9e3c88b58cc2e7ed04832cb40a27ed"
     }
   ]
 }

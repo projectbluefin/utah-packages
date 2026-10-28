@@ -14,8 +14,8 @@
       "total": 19
     },
     "gnome-apps": {
-      "pending": 5,
-      "total": 5
+      "pending": 4,
+      "total": 4
     },
     "long-tail": {
       "already_recipe": 3,
@@ -655,11 +655,6 @@
     },
     {
       "area": "gnome-apps",
-      "name": "libwnck3",
-      "state": "pending"
-    },
-    {
-      "area": "gnome-apps",
       "name": "rygel",
       "state": "pending"
     },
@@ -1193,11 +1188,11 @@
   "states": {
     "already_recipe": 13,
     "manifest_wants": 1,
-    "pending": 214
+    "pending": 213
   },
   "totals": {
-    "backlog": 228,
-    "resolved": 289,
+    "backlog": 227,
+    "resolved": 290,
     "wontfix": 34
   }
 }

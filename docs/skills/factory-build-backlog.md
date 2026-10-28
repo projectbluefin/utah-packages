@@ -755,8 +755,18 @@ in `ghcr.io/projectbluefin/utah-packages:latest` and move them from
 Previously resolved GNOME outputs (`gtkmm4.0`, `pangomm2.48`, `gtksourceview5`,
 `libhandy`, `libspelling`) also populate their observed `published_run` and
 `published_nevra` fields. Remaining outputs without recipes or source locks
-(`imath`, `libmediaart`, `libwnck3`, `rygel`) stay pending in
-`[areas.gnome-apps]`, and the batch issue remains open with `Refs #484`.
+(`imath`, `libmediaart`, `rygel`) stay pending in `[areas.gnome-apps]`, and
+the batch issue remains open with `Refs #484`.
+
+`libwnck3` is the X11 window-list library (GTK 3); Orca `Recommends` it and
+Utah triages it as `planned`. Fedora's source package is `libwnck3` but the
+upstream tarball is `libwnck`: lock
+`download.gnome.org/sources/libwnck/43/libwnck-<version>.tar.xz`, not a
+`libwnck3` path. The Rawhide recipe ships five patches with their `Patch`
+lines commented out (an unmerged upstream MR); import them unchanged and do
+not re-enable them. Its build and runtime dependencies (`gtk3`, `libXres`,
+`startup-notification`) are already factory recipes, so no extra source
+family is needed.
 
 
 ### NTFS system compression plugin

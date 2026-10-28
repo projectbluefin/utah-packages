@@ -1,0 +1,8 @@
+{
+  "package": "libwnck3",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libwnck3.git",
+  "commit": "9adf21972dfe1f6a1a443202a25d452e5d5dd0b2",
+  "tree": "2c5e3f86678bc2db7591fb1b31800ed80c1d1edf",
+  "imported_at": "2026-10-28T14:34:35.238259+00:00"
+}
