@@ -744,8 +744,8 @@ packages = [
     { name = "vte291-gtk4", commit = "ded82d6174382a397a2d7ddc066daeabe2e31232", pr = 413, published_run = 40569848351, published_nevra = "vte291-gtk4-0:0.84.1-1.hum1.bfin.x86_64" },
     # D-Bus helper service and its home-directory creator (#488). oddjob-mkhomedir
     # is an unconditional subpackage of oddjob.spec; build and runtime evidence pending.
-    { name = "oddjob" },
-    { name = "oddjob-mkhomedir" },
+    { name = "oddjob", pr = 784 },
+    { name = "oddjob-mkhomedir", pr = 784 },
 ]
 
 [wontfix]
