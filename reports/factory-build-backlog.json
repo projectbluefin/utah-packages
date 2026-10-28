@@ -6,8 +6,8 @@
       "total": 25
     },
     "dev-tools": {
-      "pending": 70,
-      "total": 70
+      "pending": 69,
+      "total": 69
     },
     "fonts-i18n": {
       "pending": 19,
@@ -331,11 +331,6 @@
     {
       "area": "dev-tools",
       "name": "python3-botocore",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "python3-click",
       "state": "pending"
     },
     {
@@ -1173,11 +1168,11 @@
   "states": {
     "already_recipe": 13,
     "manifest_wants": 1,
-    "pending": 210
+    "pending": 209
   },
   "totals": {
-    "backlog": 224,
-    "resolved": 293,
+    "backlog": 223,
+    "resolved": 294,
     "wontfix": 34
   }
 }

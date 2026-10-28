@@ -2830,6 +2830,12 @@ packages:
     downstream_package_name: python-argcomplete
     paths:
       - packages/python-argcomplete
+  python-click:
+    specfile_path: python-click.spec
+    upstream_package_name: python-click
+    downstream_package_name: python-click
+    paths:
+      - packages/python-click
   python-cups:
     specfile_path: python-cups.spec
     upstream_package_name: python-cups

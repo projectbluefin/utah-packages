@@ -6078,6 +6078,13 @@
       "sha512": "3fac3b788de93e2fed27029c4e21e3ceb016ec0d601e57e22ad7dda465158f83c4e21aee4bceef272576b635ed09df574f92c6df1537ab4f51cdccf65075acce"
     },
     {
+      "name": "python-click",
+      "version": "8.4.2",
+      "url": "https://github.com/pallets/click/archive/8.4.2/click-8.4.2.tar.gz",
+      "filename": "click-8.4.2.tar.gz",
+      "sha512": "2731993c89d7386a8bfd4f51131384a2a67c4ee33e54f92a055b685ba4cf74c854fb5aca0c92e3a24d04bf7725e169edf457d1f18a660b5361aabbbcdd550657"
+    },
+    {
       "name": "x264",
       "version": "0.165",
       "url": "https://code.videolan.org/videolan/x264/-/archive/b35605ace3ddf7c1a5d67a2eb553f034aef41d55/x264-b35605ace3ddf7c1a5d67a2eb553f034aef41d55.tar.bz2",

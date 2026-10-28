@@ -544,6 +544,12 @@ After a recipe PR lands, regenerate `reports/factory-build-backlog.json`; the in
 After combining recipe inventories during a rebase, also rerun `python3 tools/render_packit_config.py --write` and `python3 tools/render_architecture_counts.py --write` before `just check` to reconcile derived package lists and counts. A conflict resolution can leave valid package entries but stale architecture counts; regenerate from the final combined inventory even if the document itself had no conflict.
 After a recipe PR lands, regenerate `reports/factory-build-backlog.json`; the inventory-driven gate deliberately rejects a snapshot made before that import. Refresh it together with recipe and Packit inventory changes when preparing concurrent PRs.
 
+For Python recipes, check both the upstream project metadata and explicit RPM
+requirements when assessing runtime closure. For example, Click's upstream
+metadata only requires colorama on Windows, but its Fedora recipe also
+requires `less` for the default terminal pager. Recipe coverage alone does not
+prove that dependency resolves in an installed factory build.
+
 When concurrent disposition PRs conflict during rebase, retain each distinct
 `[resolved]` and `[wontfix]` record in the catalog, then regenerate the report
 with `python3 tools/factory_build_backlog.py`. Do not choose one side of the
