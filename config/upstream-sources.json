@@ -6076,6 +6076,16 @@
       "url": "https://files.pythonhosted.org/packages/source/h/h11/h11-0.16.0.tar.gz",
       "filename": "h11-0.16.0.tar.gz",
       "sha512": "3fac3b788de93e2fed27029c4e21e3ceb016ec0d601e57e22ad7dda465158f83c4e21aee4bceef272576b635ed09df574f92c6df1537ab4f51cdccf65075acce"
+    },
+    {
+      "name": "perl-Unicode-Normalize",
+      "version": "1.32",
+      "url": "https://cpan.metacpan.org/authors/id/K/KH/KHW/Unicode-Normalize-1.26.tar.gz",
+      "filename": "Unicode-Normalize-1.26.tar.gz",
+      "sha512": "7f624d2e3dd6fd7412b537898100e1cc96ea3c704b2ee6adcbbc5a0a67ac3f36a56cbc262bc79e7792af08c07153d855f651301797f29a85a8bb51a8ba077e0d",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/perl-Unicode-Normalize/Unicode-Normalize-1.26.tar.gz/sha512/7f624d2e3dd6fd7412b537898100e1cc96ea3c704b2ee6adcbbc5a0a67ac3f36a56cbc262bc79e7792af08c07153d855f651301797f29a85a8bb51a8ba077e0d/Unicode-Normalize-1.26.tar.gz"
+      ]
     }
   ]
 }

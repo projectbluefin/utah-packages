@@ -20,8 +20,8 @@
     "long-tail": {
       "already_recipe": 3,
       "manifest_wants": 1,
-      "pending": 88,
-      "total": 92
+      "pending": 87,
+      "total": 91
     },
     "power": {
       "total": 0
@@ -970,11 +970,6 @@
     },
     {
       "area": "long-tail",
-      "name": "perl-Unicode-Normalize",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
       "name": "prefixdevname",
       "state": "pending"
     },
@@ -1198,11 +1193,11 @@
   "states": {
     "already_recipe": 13,
     "manifest_wants": 1,
-    "pending": 215
+    "pending": 214
   },
   "totals": {
-    "backlog": 229,
-    "resolved": 288,
+    "backlog": 228,
+    "resolved": 289,
     "wontfix": 34
   }
 }

@@ -1,0 +1,5 @@
+summary: Sanity tests
+discover:
+    how: fmf
+execute:
+    how: tmt
