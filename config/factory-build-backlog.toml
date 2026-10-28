@@ -633,7 +633,7 @@ packages = [
     { name = "mtr", pr = 587 },
     { name = "nvme-cli", pr = 587 },
     { name = "pinfo", commit = "c2c7cd8c3f440a81b9aafe204bc9d22b0532fe0e", pr = 587, published_run = 40626803772, published_nevra = "pinfo-0:0.6.13-11.hum1.bfin.x86_64" },
-    { name = "perl-Unicode-Normalize" },
+    { name = "perl-Unicode-Normalize", pr = 783 },
     { name = "python3-llfuse", pr = 587 },
     { name = "python3-msgpack", pr = 587 },
     { name = "smartmontools", pr = 587 },
