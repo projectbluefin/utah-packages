@@ -1,0 +1,8 @@
+{
+  "package": "open-vm-tools",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/open-vm-tools.git",
+  "commit": "fde796d78f05621fce6852be53b70558ddb7f14e",
+  "tree": "7c25733ca9c2eb0a2ba84bedb647c5ec51e81620",
+  "imported_at": "2026-10-29T14:56:46.762275+00:00"
+}
