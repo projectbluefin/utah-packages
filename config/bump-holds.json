@@ -36,6 +36,10 @@
       "version": "0.9.6",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/40833963568"
     },
+    "libimobiledevice-glue": {
+      "version": "1.3.3",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/40843653428"
+    },
     "libplist": {
       "version": "2.8.0",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/40833963568"
