@@ -38,8 +38,6 @@ audit_measured_at = "2026-09-30T22:08:14Z"
 # projectbluefin/utah#383 - 49 names
 consumer_issue = "projectbluefin/utah#383"
 packages = [
-    "ImageMagick",
-    "ImageMagick-libs",
     "LCEVCdec",
     "davs2-libs",
     "ffmpeg",
@@ -136,8 +134,6 @@ packages = [
     "libsss_nss_idmap",
     "libsss_sudo",
     "lsb_release",
-    "oddjob",
-    "oddjob-mkhomedir",
     "open-vm-tools",
     "open-vm-tools-desktop",
     "python3-anyio",
@@ -241,10 +237,7 @@ packages = [
     "gupnp-av",
     "gvfs-afp",
     "gvfs-archive",
-    "initscripts-service",
     "intel-vaapi-driver",
-    "ipset",
-    "ipset-libs",
     "jbig2dec-libs",
     "kf6-filesystem",
     "kf6-karchive",
@@ -357,6 +350,8 @@ packages = [
     # NILFS filesystem utilities imported for issue #488; publication still requires validation.
     { name = "nilfs-utils", pr = 702 },
     # Recipe imported; hosted build, publication and runtime proof remain in #501.
+    { name = "ipset" },
+    { name = "ipset-libs" },
     { name = "iptstate", pr = 697 },
     { name = "kyotocabinet-libs", pr = 767 },
     # Batch #502 publication: ghcr.io/projectbluefin/utah-packages@sha256:2ff39e76a1473cf0a4299952b951080a79650363b1ac9c3b8e372cadcba5a319
@@ -692,6 +687,9 @@ packages = [
     { name = "bison", pr = 615 },
     # Recipe coverage only; hosted build/publication/runtime proof remains in #474.
     { name = "LibRaw", pr = 618 },
+    # ImageMagick.spec produces ImageMagick and its %package libs (ImageMagick-libs); recipe coverage only.
+    { name = "ImageMagick", pr = 787 },
+    { name = "ImageMagick-libs", pr = 787 },
     # Recipes imported before this reconciliation (#413, #643); publication is
     # observed in the image's repodata. Runtime proof for the batch remains in #507.
     { name = "simdutf", commit = "ded82d6174382a397a2d7ddc066daeabe2e31232", pr = 413, published_run = 40481255792, published_nevra = "simdutf-0:9.0.0-1.hum1.bfin.x86_64" },
@@ -746,6 +744,10 @@ packages = [
     { name = "vte-profile", commit = "ded82d6174382a397a2d7ddc066daeabe2e31232", pr = 413, published_run = 40569848351, published_nevra = "vte-profile-0:0.84.1-1.hum1.bfin.x86_64" },
     { name = "vte291", commit = "ded82d6174382a397a2d7ddc066daeabe2e31232", pr = 413, published_run = 40569848351, published_nevra = "vte291-0:0.84.1-1.hum1.bfin.x86_64" },
     { name = "vte291-gtk4", commit = "ded82d6174382a397a2d7ddc066daeabe2e31232", pr = 413, published_run = 40569848351, published_nevra = "vte291-gtk4-0:0.84.1-1.hum1.bfin.x86_64" },
+    # D-Bus helper service and its home-directory creator (#488). oddjob-mkhomedir
+    # is an unconditional subpackage of oddjob.spec; build and runtime evidence pending.
+    { name = "oddjob", pr = 784 },
+    { name = "oddjob-mkhomedir", pr = 784 },
 ]
 
 [wontfix]
@@ -754,6 +756,7 @@ packages = [
 # ``states``; they are surfaced as ``totals.wontfix`` so the count partition
 # (areas + resolved + wontfix) still equals the audit's 551.
 packages = [
+    { name = "initscripts-service", reason = "Utah already waives the legacy SysV service shim; reconcile existing consumer policy, not a new exclusion (projectbluefin/utah#263; https://github.com/projectbluefin/utah/blob/1bc07242296d039bca80412ec2b0e68579a61d3e/baselines/triage.toml#L384-L386)." },
     # Kernel-policy decision applies to the module package and its USB/IP consumer.
     { name = "usbip", reason = "USB-over-network requires excluded kernel-modules-extra and matching kmod providers; no named use case accepted. Maintainer decision: https://github.com/projectbluefin/utah-packages/issues/491#issuecomment-6475648707 (Utah D4; dependency tracked in #487)." },
     { name = "kernel-modules-extra", reason = "Utah D4 excludes extra kernel modules unless a named use case is accepted. Maintainer decision: https://github.com/projectbluefin/utah-packages/issues/491#issuecomment-6475648707 (kernel batch #487)." },
