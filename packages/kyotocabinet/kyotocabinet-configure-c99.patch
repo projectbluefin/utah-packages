@@ -1,0 +1,66 @@
+Avoid implicit ints in the configure script, to prevent checks from
+failing unconditionally with future compilers that do not support
+them by default.
+
+diff --git a/configure b/configure
+index 2dd357d4f253946f..cffa76cdb8d68887 100755
+--- a/configure
++++ b/configure
+@@ -4007,7 +4007,7 @@ $as_echo "#define AC_APPLE_UNIVERSAL_BUILD 1" >>confdefs.h
+ 
+ # System-depending optimization
+ printf 'checking for 64-bit availability... '
+-if printf 'main() {}' | $CC -xc -m64 -o config.tmp - >config.tmp 2>&1
++if printf 'int main(void) {return 0;}' | $CC -xc -m64 -o config.tmp - >config.tmp 2>&1
+ then
+   MYCFLAGS="-m64 $MYCFLAGS"
+   MYCXXFLAGS="-m64 $MYCXXFLAGS"
+@@ -4018,7 +4018,7 @@ fi
+ if test "$enable_opt" != "no"
+ then
+   printf 'checking for CPU optimization availability... '
+-  if printf 'main() {}' | $CC -xc -march=native -o config.tmp - >config.tmp 2>&1
++  if printf 'int main(void) {return 0;}' | $CC -xc -march=native -o config.tmp - >config.tmp 2>&1
+   then
+     MYCFLAGS="-march=native $MYCFLAGS"
+     MYCXXFLAGS="-march=native $MYCXXFLAGS"
+@@ -4028,7 +4028,7 @@ then
+   fi
+ fi
+ printf 'checking for useless warnings... '
+-if printf 'main() {}' | $CC -xc \
++if printf 'int main(void) {return 0;}' | $CC -xc \
+   -Wno-unused-but-set-variable -Wno-unused-but-set-parameter -o config.tmp - >config.tmp 2>&1
+ then
+   MYCFLAGS="$MYCFLAGS -Wno-unused-but-set-variable -Wno-unused-but-set-parameter"
+diff --git a/configure.in b/configure.in
+index 6ce03e3313a211de..5abb5c33281b9da8 100644
+--- a/configure.in
++++ b/configure.in
+@@ -204,7 +204,7 @@ AC_C_BIGENDIAN(MYCPPFLAGS="$MYCPPFLAGS -D_MYBIGEND")
+ 
+ # System-depending optimization
+ printf 'checking for 64-bit availability... '
+-if printf 'main() {}' | $CC -xc -m64 -o config.tmp - >config.tmp 2>&1
++if printf 'int main(void) {return 0;}' | $CC -xc -m64 -o config.tmp - >config.tmp 2>&1
+ then
+   MYCFLAGS="-m64 $MYCFLAGS"
+   MYCXXFLAGS="-m64 $MYCXXFLAGS"
+@@ -215,7 +215,7 @@ fi
+ if test "$enable_opt" != "no"
+ then
+   printf 'checking for CPU optimization availability... '
+-  if printf 'main() {}' | $CC -xc -march=native -o config.tmp - >config.tmp 2>&1
++  if printf 'int main(void) {return 0;}' | $CC -xc -march=native -o config.tmp - >config.tmp 2>&1
+   then
+     MYCFLAGS="-march=native $MYCFLAGS"
+     MYCXXFLAGS="-march=native $MYCXXFLAGS"
+@@ -225,7 +225,7 @@ then
+   fi
+ fi
+ printf 'checking for useless warnings... '
+-if printf 'main() {}' | $CC -xc \
++if printf 'int main(void) {return 0;}' | $CC -xc \
+   -Wno-unused-but-set-variable -Wno-unused-but-set-parameter -o config.tmp - >config.tmp 2>&1
+ then
+   MYCFLAGS="$MYCFLAGS -Wno-unused-but-set-variable -Wno-unused-but-set-parameter"

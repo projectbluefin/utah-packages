@@ -14,6 +14,25 @@ inputs decide the output — the recipe, the source archive, and the build root 
 and each of them used to be described by something mutable. This is what pins
 them and what the run publishes about them.
 
+## Choose the container by its job
+
+Binary package builds use the hermetic Mock lane by default (#264), with
+`ghcr.io/projectbluefin/utah-buildroot` pinned in
+[`config/buildroot-image`](../../config/buildroot-image) and refreshed by
+[`refresh-buildroot.yml`](../../.github/workflows/refresh-buildroot.yml).
+Mock resolves each package's BuildRequires, locks the root, then builds
+offline; installing those dependencies in the isolated root is not permission
+to patch the outer container's toolchain at runtime.
+
+The separately digest-pinned `quay.io/packit/packit` image serves SRPM
+generation/import in
+[`packit-srpm-chunk.yml`](../../.github/workflows/packit-srpm-chunk.yml) and
+[`import-rawhide-package.yml`](../../.github/workflows/import-rawhide-package.yml).
+Do not infer the binary build environment from an SRPM workflow's image.
+When repairing container guidance, check both `AGENTS.md` and the execution
+environment section of [`contributing.md`](../contributing.md) so the same
+obsolete single-container rule does not survive in a second entry point.
+
 ## The buildroot lock
 
 [`config/buildroot-lock.json`](../../config/buildroot-lock.json) is the
@@ -182,7 +201,13 @@ When a primary host dies:
 - Give every lock a Fedora lookaside entry in `fallback_urls`
   (`https://src.fedoraproject.org/repo/pkgs/rpms/<pkg>/<file>/sha512/<sha512>/<file>`),
   verified to serve the same digest. A lock without one turns a host outage
-  into a red pipeline.
+  into a red pipeline. A host does not have to die for this to bite: on
+  2026-10-27/28 the scheduled source check went red eight times on brief
+  timeouts or 503s from `www.argyllcms.com`, `download.drobilla.net`,
+  `download.samba.org`, and `download.savannah.nongnu.org`, all on locks
+  with no fallback (utah-packages#805). When a rejection reads
+  `all source URLs failed:` with a single URL, add the lookaside fallback;
+  do not re-run until it is green.
 - Leave the recipe's `Source:` line alone: the spec is Fedora's, and the build
   stages sources from the lock, not from the spec URL.
 

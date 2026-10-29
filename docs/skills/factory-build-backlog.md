@@ -99,6 +99,12 @@ from Fedora. Resolve the binary's actual source package first (the
 `pyaudio` and `python3-pskc` from `python-pskc`; #506 once recorded these as
 "removed from dist-git" because `PyAudio` and `python-libpskc` 404.
 
+For the audited `libell` binary, Fedora Rawhide's source package is named
+`libell`. Do not import the similarly named `ell` source package: its current
+recipe builds an unrelated, header-only EBNF library and does not provide
+`libell`. Check the binary's `sourcerpm` before inferring a source name from a
+shared prefix.
+
 Before importing an audit name, read Utah's current `baselines/triage.toml` and
 pin the decision's commit when reconciling an existing `waived` entry into
 `[wontfix]`. The audit can include deliberately absent X11 client utilities
@@ -151,9 +157,14 @@ request carries the recipe, lock, `.packit.yaml` and counts, but leaves the
 name in its area. Before merging one, add the `[resolved]` entry (with that
 PR's number) and rerun the auditor, or `--check` reports `entries drift` on
 `main`. Two such PRs open at once also conflict on the lock's last entry and
-the `docs/architecture.md` counts: merge `main` into the second, keep both lock
-entries, and regenerate the counts (`tools/render_packit_config.py --write`,
-`tools/render_architecture_counts.py --write`).
+the `docs/architecture.md` counts: rebase the existing PR branch onto `main`,
+keep both lock entries, and regenerate the counts
+(`tools/render_packit_config.py --write`,
+`tools/render_architecture_counts.py --write`) and backlog snapshot
+(`tools/factory_build_backlog.py`) from the combined inventory. Resolve these
+conflicts by regeneration, not by selecting either branch's stale totals.
+Use `git rebase --signoff` to preserve DCO coverage, then push to the same PR
+branch with `--force-with-lease` after validation.
 
 The catalog test (`tests/test_factory_build_backlog.py::CatalogConsistencyTests`)
 pins the count and sorted-name SHA-256 against the original audit. The auditor
@@ -366,7 +377,14 @@ them together. When an upstream host answers `HTTP 503` (`ibiblio.org` for
 in `fallback_urls` instead of growing `config/fedora-primary-sources.txt`.
 `usbip` requires `kernel-modules-extra` and `kmod(usbip-*.ko)` /
 `kmod(vhci-hcd.ko)` at runtime and extracts its archive from the kernel source
-tree (`extract_usbip.sh`), so it remains `pending` on kernel policy (#487).
+tree (`extract_usbip.sh`). The [approved kernel-policy decision](https://github.com/projectbluefin/utah-packages/issues/491#issuecomment-6475648707)
+keeps both `usbip` and `kernel-modules-extra` in `[wontfix]`: Utah's D4
+excludes the extra modules until a named use case is accepted. Do not import
+the userspace tool while its mandatory kernel providers are excluded.
+Reconcile both catalog names against that explicit decision, not an assumed
+waiver for every kernel-related package. Consumer triage belongs in the Utah
+repository; a factory catalog change does not update that separate ledger or
+prove runtime acceptance of the other outputs in the batch.
 
 ### Optional changelog viewer
 
@@ -557,13 +575,18 @@ BuildRequires is absent from Hummingbird (the build root also uses Fedora).
 After a recipe PR lands, regenerate `reports/factory-build-backlog.json`; the inventory-driven gate deliberately rejects a snapshot made before that import. Refresh it together with recipe and Packit inventory changes when preparing concurrent PRs. If a rebase conflicts in this generated report, resolve the catalog and recipe inputs first, then run `python3 tools/factory_build_backlog.py`; choosing either report wholesale can discard the other branch’s backlog updates.
 
 After combining recipe inventories during a rebase, also rerun `python3 tools/render_packit_config.py --write` and `python3 tools/render_architecture_counts.py --write` before `just check` to reconcile derived package lists and counts. A conflict resolution can leave valid package entries but stale architecture counts; regenerate from the final combined inventory even if the document itself had no conflict.
-After a recipe PR lands, regenerate `reports/factory-build-backlog.json`; the inventory-driven gate deliberately rejects a snapshot made before that import. Refresh it together with recipe and Packit inventory changes when preparing concurrent PRs.
 
 For Python recipes, check both the upstream project metadata and explicit RPM
 requirements when assessing runtime closure. For example, Click's upstream
 metadata only requires colorama on Windows, but its Fedora recipe also
 requires `less` for the default terminal pager. Recipe coverage alone does not
 prove that dependency resolves in an installed factory build.
+
+The AWS client libraries in the dev-tools area form one dependency chain:
+`python3-boto3` needs `python3-botocore` and `python3-s3transfer`, and
+`python3-botocore` needs `python3-jmespath` and `python3-dateutil` at runtime.
+Import the leaves first (`python-jmespath`, then `python-botocore`) so each
+recipe's runtime requirements already have a factory recipe when it lands.
 
 When concurrent disposition PRs conflict during rebase, retain each distinct
 `[resolved]` and `[wontfix]` record in the catalog, then regenerate the report
@@ -674,6 +697,12 @@ main but not yet in the published image stay in `[resolved]` without
 publication fields until a run ships them. Partial reconciliation PRs must
 link the tracking issue with `Refs #<issue>`, not a closing keyword.
 
+When rebasing an import over other backlog changes, retain the base branch's
+publication evidence and add only the new recipe's closing record. Regenerate
+`reports/factory-build-backlog.json` with `python3 tools/factory_build_backlog.py`
+after resolving the catalog; neither side's old totals describe the combined
+inventory. Recount the recipe totals in `docs/architecture.md` as well.
+
 Use `parse_primary(primary_from_layer(blob))` from `tools/package_index.py`
 when recording each binary's NEVRA. The rendered site's `packages` entries
 are grouped by source RPM: their version and release come from that source,
@@ -706,6 +735,24 @@ fields. Updating optional publication fields does not change the auditor's
 name-only snapshot; rerun it anyway and expect no report diff when no names
 or recipe classifications changed. Publication still does not prove password
 policy integration, audio-device operation, or a permitted-repository install.
+
+### Kyoto Cabinet library imports
+
+`kyotocabinet-libs` comes from source recipe `kyotocabinet`, which also
+builds the command-line tools, development files and API documentation. The
+recipe enables LZO and LZMA compression; check `lzo`, `xz-libs`, and the zlib
+provider in Hummingbird before importing additional runtime dependencies.
+Hummingbird's `zlib-ng-compat-devel` provides `zlib-devel`; match capabilities,
+not just package names. Keep the upstream `make check` enabled. Dist-git also
+carries an old random-failure suppression patch, but the imported spec does not
+declare it: do not enable it to turn a failing build green.
+
+After a hosted build and permitted-repository installation, exercise persistent
+storage rather than only loading the library: use `kchashmgr create test.kch`,
+`kchashmgr set test.kch key value`, `kchashmgr get test.kch key` (expect
+`value`), then `kchashmgr check test.kch`. These tools come from the main
+`kyotocabinet` binary and link the library subpackage. Record the transaction,
+NEVRAs and command results separately from the recipe closing record.
 
 ### S-Lang library imports
 
@@ -781,3 +828,13 @@ The `ntfs-3g-system-compression` source produces a plugin for the existing
 `pkgconfig(libntfs-3g)`, so keep the existing source in the factory graph.
 A catalog record for the recipe does not prove the plugin has been built,
 published, or loaded with the driver.
+
+## Hand-locking an import without `rpmspec`
+
+When the import workflow cannot be dispatched, import with
+`tools/import_rawhide.py`, download `Source0`, and confirm its SHA-512 equals
+the digest in the recipe's `sources` before adding the lock entry. Some Fedora
+specs use `http://kernel.org/...`; lock the `https://cdn.kernel.org/...` URL
+instead, since `tools/validate.py` rejects plain-http locks. Then run
+`render_packit_config.py --write` and `render_architecture_counts.py --write`.
+Hosted build evidence is still owed; a lock alone does not resolve a runtime gap.

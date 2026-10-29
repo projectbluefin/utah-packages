@@ -2,6 +2,13 @@
   "schema": 1,
   "packages": [
     {
+      "name": "kyotocabinet",
+      "version": "1.2.80",
+      "url": "https://dbmx.net/kyotocabinet/pkg/kyotocabinet-1.2.80.tar.gz",
+      "filename": "kyotocabinet-1.2.80.tar.gz",
+      "sha512": "9fe0a92c9a76db5ce06ef4d5a551c05930f2a9c065ab695b030fdaf45692bfe88d91f1b75791f50d0772c699567744cd74f3ef407172874d4bba467989d54328"
+    },
+    {
       "name": "chromaprint",
       "version": "1.6.2",
       "url": "https://github.com/acoustid/chromaprint/releases/download/v1.6.2/chromaprint-1.6.2.tar.gz",
@@ -1340,6 +1347,26 @@
       "sha512": "5e0bc188fe720014071c1c563c7bd3e92bc9e00d063c5c0647a9277fe3e05cb6c00a0aabb33e44ac5d31274f0fb03f495107195432bd7b0a89948ed3ba43d363",
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/ibus-unikey/ibus-unikey-0.7.0-beta1.tar.gz/sha512/5e0bc188fe720014071c1c563c7bd3e92bc9e00d063c5c0647a9277fe3e05cb6c00a0aabb33e44ac5d31274f0fb03f495107195432bd7b0a89948ed3ba43d363/ibus-unikey-0.7.0-beta1.tar.gz"
+      ]
+    },
+    {
+      "name": "ibus-chewing",
+      "version": "2.2.0",
+      "url": "https://codeberg.org/chewing/ibus-chewing/releases/download/v2.2.0/ibus-chewing-2.2.0.tar.xz",
+      "filename": "ibus-chewing-2.2.0.tar.xz",
+      "sha512": "7b0e9b9e7830f70b1e47ab08cb5bb02a6e5af63da640f534b48f6027041d907eb10dc5d474ef2dc7905c17a9d62cc1ffec9cac6ea266de00b10329f32aa3d61a",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/ibus-chewing/ibus-chewing-2.2.0.tar.xz/sha512/7b0e9b9e7830f70b1e47ab08cb5bb02a6e5af63da640f534b48f6027041d907eb10dc5d474ef2dc7905c17a9d62cc1ffec9cac6ea266de00b10329f32aa3d61a/ibus-chewing-2.2.0.tar.xz"
+      ]
+    },
+    {
+      "name": "libchewing",
+      "version": "0.13.1",
+      "url": "https://codeberg.org/chewing/libchewing/releases/download/v0.13.1/libchewing-0.13.1.tar.zst",
+      "filename": "libchewing-0.13.1.tar.zst",
+      "sha512": "85e68957a495e5f4b0c10a2552c5fdae08ba30c182ba92592329dd8c4275e4d5046a46bee1e43a7f9f7ca96d50a0a5ce1e6aa3771e9496fb12ad4aeb9d989020",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libchewing/libchewing-0.13.1.tar.zst/sha512/85e68957a495e5f4b0c10a2552c5fdae08ba30c182ba92592329dd8c4275e4d5046a46bee1e43a7f9f7ca96d50a0a5ce1e6aa3771e9496fb12ad4aeb9d989020/libchewing-0.13.1.tar.zst"
       ]
     },
     {
@@ -4522,7 +4549,10 @@
       "url": "https://download.samba.org/pub/linux-cifs/cifs-utils/cifs-utils-7.9.tar.bz2",
       "filename": "cifs-utils-7.9.tar.bz2",
       "sha512": "42034f9e50173eec859e3b65da5dd6f0aa905b881b8f145139e73fbca187dac8be350bc0944efc2cb0f0a0f16059abcbcae2a08d15908522d2eccf3dcad0d5ba",
-      "stage": 3
+      "stage": 3,
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/cifs-utils/cifs-utils-7.9.tar.bz2/sha512/42034f9e50173eec859e3b65da5dd6f0aa905b881b8f145139e73fbca187dac8be350bc0944efc2cb0f0a0f16059abcbcae2a08d15908522d2eccf3dcad0d5ba/cifs-utils-7.9.tar.bz2"
+      ]
     },
     {
       "name": "nfs-utils",
@@ -5135,7 +5165,10 @@
       "version": "2.6.15",
       "url": "https://download.savannah.nongnu.org/releases/oath-toolkit/oath-toolkit-2.6.15.tar.gz",
       "filename": "oath-toolkit-2.6.15.tar.gz",
-      "sha512": "9e202840215610629d32453b0b9dcedf12e36fa04b6ad84ad3c71f6fca23c34c96c4688c40e34fa7f30f985adef94208e074ff793a946a4fe28496649e5776f5"
+      "sha512": "9e202840215610629d32453b0b9dcedf12e36fa04b6ad84ad3c71f6fca23c34c96c4688c40e34fa7f30f985adef94208e074ff793a946a4fe28496649e5776f5",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/oath-toolkit/oath-toolkit-2.6.15.tar.gz/sha512/9e202840215610629d32453b0b9dcedf12e36fa04b6ad84ad3c71f6fca23c34c96c4688c40e34fa7f30f985adef94208e074ff793a946a4fe28496649e5776f5/oath-toolkit-2.6.15.tar.gz"
+      ]
     },
     {
       "name": "libuser",
@@ -5254,7 +5287,10 @@
       "version": "3.5.0",
       "url": "https://www.argyllcms.com/Argyll_V3.5.0_src.zip#/argyllcms-3.5.0.zip",
       "filename": "argyllcms-3.5.0.zip",
-      "sha512": "c0a995c090b44d3981cfed541140ae3422ea5ebaa8d5e3d4c3c71599b527b8808e17f037283b08b4c10ad6f48976b5f48e9c6802355a6940a52682020e820b17"
+      "sha512": "c0a995c090b44d3981cfed541140ae3422ea5ebaa8d5e3d4c3c71599b527b8808e17f037283b08b4c10ad6f48976b5f48e9c6802355a6940a52682020e820b17",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/argyllcms/argyllcms-3.5.0.zip/sha512/c0a995c090b44d3981cfed541140ae3422ea5ebaa8d5e3d4c3c71599b527b8808e17f037283b08b4c10ad6f48976b5f48e9c6802355a6940a52682020e820b17/argyllcms-3.5.0.zip"
+      ]
     },
     {
       "name": "foo2zjs",
@@ -5985,7 +6021,10 @@
       "version": "0.8.0",
       "url": "https://download.drobilla.net/zix-0.8.0.tar.xz",
       "filename": "zix-0.8.0.tar.xz",
-      "sha512": "fccb3e3b05c4d28e7fa6ed94537681167e2ee22a23dd4e1b4f3e5474da8dce3fe682cc6ccda219d140b956014c444a6f721d7272f3dba52df3a07e13b594f963"
+      "sha512": "fccb3e3b05c4d28e7fa6ed94537681167e2ee22a23dd4e1b4f3e5474da8dce3fe682cc6ccda219d140b956014c444a6f721d7272f3dba52df3a07e13b594f963",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/zix/zix-0.8.0.tar.xz/sha512/fccb3e3b05c4d28e7fa6ed94537681167e2ee22a23dd4e1b4f3e5474da8dce3fe682cc6ccda219d140b956014c444a6f721d7272f3dba52df3a07e13b594f963/zix-0.8.0.tar.xz"
+      ]
     },
     {
       "name": "svt-vp9",
@@ -6103,6 +6142,44 @@
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/iwd/iwd-3.12.tar.xz/sha512/47ac85452d28ab238474b1f724383aca362bac41caa5ade6b34f5b53d43a7c4eacf3d6a2a6d4c7f39080bd041cc823f9b1de343c855249c45b342d37f1f084a7/iwd-3.12.tar.xz"
       ]
+    },
+    {
+      "name": "udftools",
+      "version": "2.3",
+      "url": "https://github.com/pali/udftools/releases/download/2.3/udftools-2.3.tar.gz",
+      "filename": "udftools-2.3.tar.gz",
+      "sha512": "17304264388ae53e348d6aa870f0d23c29477344fee848236b46886c086221941872073974f804c0735eafd0cf9f7acdac7988132f03c0a87dba37467b5bda95"
+    },
+    {
+      "name": "uresourced",
+      "version": "0.5.5",
+      "url": "https://gitlab.freedesktop.org/benzea/uresourced/-/archive/v0.5.5/uresourced-v0.5.5.tar.bz2",
+      "filename": "uresourced-v0.5.5.tar.bz2",
+      "sha512": "5e146b74480ac5d77b950f4eac23448ddcc6e775e190c915291d00a12d4a4161ac0d87358c70205a6f5427b98364fe2c620caf46e1fa9dd866b1c8dc1e667148"
+    },
+    {
+      "name": "xfsprogs",
+      "version": "7.2.1",
+      "url": "https://cdn.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-7.2.1.tar.xz",
+      "filename": "xfsprogs-7.2.1.tar.xz",
+      "sha512": "c8d0779b50cb06df17ef24be48e878649fd5aa5e789806cc965655e93d695fe5751d0e606f288accea6f7c673bf8647b8e8f8e12f420d50cbdede84de79634fc"
+    },
+    {
+      "name": "libdc1394",
+      "version": "2.2.7",
+      "url": "https://downloads.sourceforge.net/project/libdc1394/libdc1394-2/2.2.7/libdc1394-2.2.7.tar.gz",
+      "filename": "libdc1394-2.2.7.tar.gz",
+      "sha512": "0d0b1861612f7c69753af7109ef226ea4e550353222e02663dfaac3fa8f456b94c2dd2579cac840047a42bac97692da436f10be3def1fa29109de05c1e871257",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libdc1394/libdc1394-2.2.7.tar.gz/sha512/0d0b1861612f7c69753af7109ef226ea4e550353222e02663dfaac3fa8f456b94c2dd2579cac840047a42bac97692da436f10be3def1fa29109de05c1e871257/libdc1394-2.2.7.tar.gz"
+      ]
+    },
+    {
+      "name": "python-jmespath",
+      "version": "1.0.1",
+      "url": "https://github.com/jmespath/jmespath.py/archive/1.0.1/jmespath.py-1.0.1.tar.gz",
+      "filename": "jmespath.py-1.0.1.tar.gz",
+      "sha512": "c1676a4b7565d25c2948569005c503a0ca33908de6ed16536767da2c00c634e4ee345bcaf88a01bf6cd2996aaf722faaedff80061ab65ee77e5bc0f494f86a70"
     }
   ]
 }

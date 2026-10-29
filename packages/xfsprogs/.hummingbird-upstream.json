@@ -1,0 +1,8 @@
+{
+  "package": "xfsprogs",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/xfsprogs.git",
+  "commit": "ba0c6cca2fe192c72fe8c9071c1480a47e08cf0b",
+  "tree": "544b1e12b65f6eb7a8d9ac32b9d0b4f765e501d3",
+  "imported_at": "2026-10-28T14:20:06.258790+00:00"
+}

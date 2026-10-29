@@ -2,16 +2,16 @@
   "areas": {
     "codecs-media": {
       "already_recipe": 10,
-      "pending": 20,
-      "total": 30
+      "pending": 19,
+      "total": 29
     },
     "dev-tools": {
-      "pending": 68,
-      "total": 68
+      "pending": 65,
+      "total": 65
     },
     "fonts-i18n": {
-      "pending": 19,
-      "total": 19
+      "pending": 17,
+      "total": 17
     },
     "gnome-apps": {
       "pending": 5,
@@ -20,8 +20,8 @@
     "long-tail": {
       "already_recipe": 4,
       "manifest_wants": 1,
-      "pending": 87,
-      "total": 92
+      "pending": 83,
+      "total": 88
     },
     "power": {
       "total": 0
@@ -117,11 +117,6 @@
       "area": "codecs-media",
       "name": "libavutil",
       "state": "already_recipe"
-    },
-    {
-      "area": "codecs-media",
-      "name": "libdc1394",
-      "state": "pending"
     },
     {
       "area": "codecs-media",
@@ -261,11 +256,6 @@
     {
       "area": "dev-tools",
       "name": "kernel-devel-matched",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "kernel-modules-extra",
       "state": "pending"
     },
     {
@@ -410,11 +400,6 @@
     },
     {
       "area": "dev-tools",
-      "name": "python3-jmespath",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
       "name": "python3-keyring",
       "state": "pending"
     },
@@ -534,11 +519,6 @@
       "state": "pending"
     },
     {
-      "area": "dev-tools",
-      "name": "usbip",
-      "state": "pending"
-    },
-    {
       "area": "fonts-i18n",
       "name": "adobe-mappings-cmap",
       "state": "pending"
@@ -580,11 +560,6 @@
     },
     {
       "area": "fonts-i18n",
-      "name": "ibus-chewing",
-      "state": "pending"
-    },
-    {
-      "area": "fonts-i18n",
       "name": "ibus-hangul",
       "state": "pending"
     },
@@ -611,11 +586,6 @@
     {
       "area": "fonts-i18n",
       "name": "kasumi-unicode",
-      "state": "pending"
-    },
-    {
-      "area": "fonts-i18n",
-      "name": "libchewing",
       "state": "pending"
     },
     {
@@ -826,11 +796,6 @@
     {
       "area": "long-tail",
       "name": "kvazaar-libs",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
-      "name": "kyotocabinet-libs",
       "state": "pending"
     },
     {
@@ -1090,16 +1055,6 @@
     },
     {
       "area": "long-tail",
-      "name": "udftools",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
-      "name": "uresourced",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
       "name": "uvg266-libs",
       "state": "pending"
     },
@@ -1111,11 +1066,6 @@
     {
       "area": "long-tail",
       "name": "virtualbox-guest-additions",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
-      "name": "xfsprogs",
       "state": "pending"
     },
     {
@@ -1188,11 +1138,11 @@
   "states": {
     "already_recipe": 14,
     "manifest_wants": 1,
-    "pending": 212
+    "pending": 202
   },
   "totals": {
-    "backlog": 227,
-    "resolved": 290,
-    "wontfix": 34
+    "backlog": 217,
+    "resolved": 298,
+    "wontfix": 36
   }
 }
