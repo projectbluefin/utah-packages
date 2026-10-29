@@ -5135,6 +5135,13 @@
       "sha512": "c61f5edee04475b013afbb91ba11e102cf4c925a0b2e16477473e0de9528d793121c1324f2c4d5ae03e0c8fb00dd9de444130c22e681f7a3408bc9a179ad7509"
     },
     {
+      "name": "NetworkManager-ssh",
+      "version": "1.4.5",
+      "url": "https://github.com/danfruehauf/NetworkManager-ssh/archive/1.4.5.tar.gz",
+      "filename": "NetworkManager-ssh-1.4.5.tar.gz",
+      "sha512": "5c75f2cfa714e3a5b87a8755c39bd279bb1e7556f4743affca90c0c655dce7e7852f2cfc1233ff8c48a0da1f500b59873794269ab088818df24ee58d527b861f"
+    },
+    {
       "name": "vpnc",
       "version": "0.5.3^20241114.git11e15a1",
       "url": "https://github.com/streambinder/vpnc/archive/11e15a143d6a00fb4e532cad271c70b401a6b9ef/vpnc-11e15a1.tar.gz",

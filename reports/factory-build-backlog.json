@@ -18,10 +18,10 @@
       "total": 5
     },
     "long-tail": {
-      "already_recipe": 3,
+      "already_recipe": 2,
       "manifest_wants": 1,
-      "pending": 84,
-      "total": 88
+      "pending": 81,
+      "total": 84
     },
     "power": {
       "total": 0
@@ -630,21 +630,6 @@
     },
     {
       "area": "long-tail",
-      "name": "NetworkManager-ssh",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
-      "name": "NetworkManager-ssh-gnome",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
-      "name": "NetworkManager-ssh-selinux",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
       "name": "OpenCL-ICD-Loader",
       "state": "pending"
     },
@@ -667,11 +652,6 @@
       "area": "long-tail",
       "name": "b43-openfwwf",
       "state": "pending"
-    },
-    {
-      "area": "long-tail",
-      "name": "bash-color-prompt",
-      "state": "already_recipe"
     },
     {
       "area": "long-tail",
@@ -1131,13 +1111,13 @@
   ],
   "issue": "projectbluefin/utah-packages#308",
   "states": {
-    "already_recipe": 13,
+    "already_recipe": 12,
     "manifest_wants": 1,
-    "pending": 202
+    "pending": 199
   },
   "totals": {
-    "backlog": 216,
-    "resolved": 299,
+    "backlog": 212,
+    "resolved": 303,
     "wontfix": 36
   }
 }

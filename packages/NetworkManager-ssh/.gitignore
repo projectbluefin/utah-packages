@@ -1,0 +1,4 @@
+/NetworkManager-ssh-*.tar.gz
+/NetworkManager-ssh-*.tar.xz
+/NetworkManager-ssh-*.tar.bz2
+/0001-fix-constness.patch
