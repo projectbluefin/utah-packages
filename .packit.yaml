@@ -2710,6 +2710,12 @@ packages:
     downstream_package_name: oddjob
     paths:
       - packages/oddjob
+  open-vm-tools:
+    specfile_path: open-vm-tools.spec
+    upstream_package_name: open-vm-tools
+    downstream_package_name: open-vm-tools
+    paths:
+      - packages/open-vm-tools
   openal-soft:
     specfile_path: openal-soft.spec
     upstream_package_name: openal-soft

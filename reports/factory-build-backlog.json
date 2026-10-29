@@ -7,8 +7,8 @@
     },
     "dev-tools": {
       "already_recipe": 5,
-      "pending": 42,
-      "total": 47
+      "pending": 40,
+      "total": 45
     },
     "fonts-i18n": {
       "pending": 14,
@@ -177,16 +177,6 @@
     {
       "area": "dev-tools",
       "name": "kernel-tools-libs",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "open-vm-tools",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "open-vm-tools-desktop",
       "state": "pending"
     },
     {
@@ -774,11 +764,11 @@
   "states": {
     "already_recipe": 16,
     "manifest_wants": 1,
-    "pending": 127
+    "pending": 125
   },
   "totals": {
-    "backlog": 144,
-    "resolved": 370,
+    "backlog": 142,
+    "resolved": 372,
     "wontfix": 37
   }
 }

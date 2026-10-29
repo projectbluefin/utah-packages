@@ -330,6 +330,24 @@ BuildRequires. The protocol recipe disables its Windows cross-build by default;
 that does not remove Linux headers. A successful build alone does not prove
 clipboard or display integration: test those in a SPICE guest after publication.
 
+For VMware guests, `open-vm-tools-desktop` is an unconditional subpackage of
+`open-vm-tools`; import the source family once. It needs `libmspack` for CAB
+extraction, so import that source too when neither published repository supplies
+it. Its `pkgconfig(libmspack)` BuildRequires gives the build graph the ordering
+edge; no manual stage is needed. Keep libmspack's upstream `make check` and
+Fedora's binary-content patch (`%autosetup -p2 -S git`). The main guest-tools
+recipe explicitly requires `xmlsec1-openssl`; match that provider in
+Hummingbird rather than importing a duplicate XML security library.
+
+The imported guest-tools recipe has no `%check`: its comment explains that
+`make check` regenerates a documentation font. Record that inherited limitation;
+do not describe configuration tests as guest integration tests. Runtime
+acceptance needs an actual VMware guest: verify `vmtoolsd`, query
+`vmware-toolbox-cmd stat hosttime`, and exercise desktop resizing and clipboard
+transfer. A version command on a generic runner cannot establish host/guest
+integration. Recipe catalog closure does not establish those results or
+publication.
+
 ### Touchscreen library imports
 
 `tslib` builds its SDL2 test utilities with `SDL2-devel`. The factory
