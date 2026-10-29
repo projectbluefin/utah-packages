@@ -1,0 +1,25 @@
+* Sat Jan 22 2022 Fedora Release Engineering <releng@fedoraproject.org> - 0.4.0-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_36_Mass_Rebuild
+
+* Fri Jul 23 2021 Fedora Release Engineering <releng@fedoraproject.org> - 0.4.0-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_35_Mass_Rebuild
+
+* Tue Mar 30 2021 Benjamin Berg <bberg@redhat.com> - 0.4.0-1
+- New upstream release including cgroupify
+  Resolves: #1931938
+  Resolves: #1931934
+
+* Wed Jan 27 2021 Fedora Release Engineering <releng@fedoraproject.org> - 0.3.0-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_34_Mass_Rebuild
+
+* Thu Sep 24 2020 Benjamin Berg <bberg@redhat.com> - 0.3.0-1
+- New upstream release fixing various issues
+
+* Wed Jul 29 2020 Fedora Release Engineering <releng@fedoraproject.org> - 0.2.0-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_33_Mass_Rebuild
+
+* Wed Jul 22 2020 Benjamin Berg <bberg@redhat.com> - 0.2.0-1
+- New upstream release enabling CPU/IO controllers for applications
+
+* Wed Jul 08 2020 Benjamin Berg <bberg@redhat.com> - 0.1.0-1
+- Initial package (rhbz#1854898)

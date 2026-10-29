@@ -1,0 +1,8 @@
+{
+  "package": "udftools",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/udftools.git",
+  "commit": "f72d4692883fb5c30395f05b820c3b440b5641dc",
+  "tree": "b9e21591a9fe42232128179e4ca9ce2c72b39f82",
+  "imported_at": "2026-10-28T14:20:17.413750+00:00"
+}

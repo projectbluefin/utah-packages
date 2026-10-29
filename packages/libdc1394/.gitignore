@@ -1,0 +1,5 @@
+/.build*
+/x86_64
+/libdc1394-2.2.2*
+/libdc1394-2.2.6.tar.gz
+/libdc1394-2.2.7.tar.gz

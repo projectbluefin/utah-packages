@@ -1,0 +1,8 @@
+{
+  "package": "python-click",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/python-click.git",
+  "commit": "531a08059a28964e8f2ebec4cbc0f9d7d2dbe73d",
+  "tree": "442fba86ad8f79cf0c4874cbfb542f575f86a6af",
+  "imported_at": "2026-10-28T14:16:40.635669+00:00"
+}
