@@ -4542,7 +4542,10 @@
       "url": "https://download.samba.org/pub/linux-cifs/cifs-utils/cifs-utils-7.9.tar.bz2",
       "filename": "cifs-utils-7.9.tar.bz2",
       "sha512": "42034f9e50173eec859e3b65da5dd6f0aa905b881b8f145139e73fbca187dac8be350bc0944efc2cb0f0a0f16059abcbcae2a08d15908522d2eccf3dcad0d5ba",
-      "stage": 3
+      "stage": 3,
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/cifs-utils/cifs-utils-7.9.tar.bz2/sha512/42034f9e50173eec859e3b65da5dd6f0aa905b881b8f145139e73fbca187dac8be350bc0944efc2cb0f0a0f16059abcbcae2a08d15908522d2eccf3dcad0d5ba/cifs-utils-7.9.tar.bz2"
+      ]
     },
     {
       "name": "nfs-utils",
@@ -5155,7 +5158,10 @@
       "version": "2.6.15",
       "url": "https://download.savannah.nongnu.org/releases/oath-toolkit/oath-toolkit-2.6.15.tar.gz",
       "filename": "oath-toolkit-2.6.15.tar.gz",
-      "sha512": "9e202840215610629d32453b0b9dcedf12e36fa04b6ad84ad3c71f6fca23c34c96c4688c40e34fa7f30f985adef94208e074ff793a946a4fe28496649e5776f5"
+      "sha512": "9e202840215610629d32453b0b9dcedf12e36fa04b6ad84ad3c71f6fca23c34c96c4688c40e34fa7f30f985adef94208e074ff793a946a4fe28496649e5776f5",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/oath-toolkit/oath-toolkit-2.6.15.tar.gz/sha512/9e202840215610629d32453b0b9dcedf12e36fa04b6ad84ad3c71f6fca23c34c96c4688c40e34fa7f30f985adef94208e074ff793a946a4fe28496649e5776f5/oath-toolkit-2.6.15.tar.gz"
+      ]
     },
     {
       "name": "libuser",
@@ -5274,7 +5280,10 @@
       "version": "3.5.0",
       "url": "https://www.argyllcms.com/Argyll_V3.5.0_src.zip#/argyllcms-3.5.0.zip",
       "filename": "argyllcms-3.5.0.zip",
-      "sha512": "c0a995c090b44d3981cfed541140ae3422ea5ebaa8d5e3d4c3c71599b527b8808e17f037283b08b4c10ad6f48976b5f48e9c6802355a6940a52682020e820b17"
+      "sha512": "c0a995c090b44d3981cfed541140ae3422ea5ebaa8d5e3d4c3c71599b527b8808e17f037283b08b4c10ad6f48976b5f48e9c6802355a6940a52682020e820b17",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/argyllcms/argyllcms-3.5.0.zip/sha512/c0a995c090b44d3981cfed541140ae3422ea5ebaa8d5e3d4c3c71599b527b8808e17f037283b08b4c10ad6f48976b5f48e9c6802355a6940a52682020e820b17/argyllcms-3.5.0.zip"
+      ]
     },
     {
       "name": "foo2zjs",
@@ -6005,7 +6014,10 @@
       "version": "0.8.0",
       "url": "https://download.drobilla.net/zix-0.8.0.tar.xz",
       "filename": "zix-0.8.0.tar.xz",
-      "sha512": "fccb3e3b05c4d28e7fa6ed94537681167e2ee22a23dd4e1b4f3e5474da8dce3fe682cc6ccda219d140b956014c444a6f721d7272f3dba52df3a07e13b594f963"
+      "sha512": "fccb3e3b05c4d28e7fa6ed94537681167e2ee22a23dd4e1b4f3e5474da8dce3fe682cc6ccda219d140b956014c444a6f721d7272f3dba52df3a07e13b594f963",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/zix/zix-0.8.0.tar.xz/sha512/fccb3e3b05c4d28e7fa6ed94537681167e2ee22a23dd4e1b4f3e5474da8dce3fe682cc6ccda219d140b956014c444a6f721d7272f3dba52df3a07e13b594f963/zix-0.8.0.tar.xz"
+      ]
     },
     {
       "name": "svt-vp9",
