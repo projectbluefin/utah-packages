@@ -1,0 +1,8 @@
+{
+  "package": "oddjob",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/oddjob.git",
+  "commit": "e75f1980050f8438411c7135afafdc4e095ca4b1",
+  "tree": "bdd779e4b85d3be9ce3569fbe9dbdda53bb4b5f3",
+  "imported_at": "2026-10-28T14:26:40.472429+00:00"
+}

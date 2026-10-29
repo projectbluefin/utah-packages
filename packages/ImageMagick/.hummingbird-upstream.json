@@ -1,0 +1,8 @@
+{
+  "package": "ImageMagick",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/ImageMagick.git",
+  "commit": "69e0cae1fac32e79d821d1d4f98c426bb54fa981",
+  "tree": "242ecc0ac49c4836e9fbe56cccee21865c8a0b9f",
+  "imported_at": "2026-10-28T14:37:06.050838+00:00"
+}

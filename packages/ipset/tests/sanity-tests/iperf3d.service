@@ -1,0 +1,10 @@
+[Unit]
+Description=iperf3d tests for ipset
+After=multi-user.target network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/iperf3 -s -d --bind 192.168.225.32 --port 55555 -V
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,8 @@
+summary: Validate the installed ImageMagick RPM and key delegates
+
+discover:
+  how: fmf
+  test: /tests/smoke
+
+execute:
+  how: tmt

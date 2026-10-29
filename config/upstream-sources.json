@@ -2,6 +2,13 @@
   "schema": 1,
   "packages": [
     {
+      "name": "ipset",
+      "version": "7.24",
+      "url": "https://ipset.netfilter.org/ipset-7.24.tar.bz2",
+      "filename": "ipset-7.24.tar.bz2",
+      "sha512": "18ccb49bd38083f0556b11e1d17f43791c52a2b094c9a500b6f770796b17e8e70c3860a628eac2252eb672b1fc9de734d3a0e0823d61dd9be7b4188adc6dd214"
+    },
+    {
       "name": "kyotocabinet",
       "version": "1.2.80",
       "url": "https://dbmx.net/kyotocabinet/pkg/kyotocabinet-1.2.80.tar.gz",
@@ -6138,6 +6145,17 @@
       "sha512": "51304ab6ad543d10e8542257b24964dbce454eb1bedfa26fc926797b01373b9effad8097fe0f18216439d0339525377abb9e3c88b58cc2e7ed04832cb40a27ed"
     },
     {
+      "name": "oddjob",
+      "version": "0.34.7",
+      "url": "https://releases.pagure.org/oddjob/oddjob-0.34.7.tar.gz",
+      "filename": "oddjob-0.34.7.tar.gz",
+      "feed": "https://release-monitoring.org/project/384596",
+      "sha512": "df98f3d2ce18de5d2db6d638995c01c80aec51f7ad979b879b2e8d8f7d6c2e464cbff3c70ed9b528399337f8fba31744f955ca17fdad1d4e9193fb0f10ea391a",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/oddjob/oddjob-0.34.7.tar.gz/sha512/df98f3d2ce18de5d2db6d638995c01c80aec51f7ad979b879b2e8d8f7d6c2e464cbff3c70ed9b528399337f8fba31744f955ca17fdad1d4e9193fb0f10ea391a/oddjob-0.34.7.tar.gz"
+      ]
+    },
+    {
       "name": "udftools",
       "version": "2.3",
       "url": "https://github.com/pali/udftools/releases/download/2.3/udftools-2.3.tar.gz",
@@ -6157,6 +6175,16 @@
       "url": "https://cdn.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-7.2.1.tar.xz",
       "filename": "xfsprogs-7.2.1.tar.xz",
       "sha512": "c8d0779b50cb06df17ef24be48e878649fd5aa5e789806cc965655e93d695fe5751d0e606f288accea6f7c673bf8647b8e8f8e12f420d50cbdede84de79634fc"
+    },
+    {
+      "name": "ImageMagick",
+      "version": "7.1.2.34",
+      "url": "https://download.imagemagick.org/archive/ImageMagick-7.1.2-34.tar.xz",
+      "filename": "ImageMagick-7.1.2-34.tar.xz",
+      "sha512": "de7199d525d65a029a0d088b1df3361cd2b9e958c076e9e15d2b7e9879b7486f0c285e66e544de3adb219b20cf4692538139f1b0cc7f31773cabf52e5d4ed8de",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/ImageMagick/ImageMagick-7.1.2-34.tar.xz/sha512/de7199d525d65a029a0d088b1df3361cd2b9e958c076e9e15d2b7e9879b7486f0c285e66e544de3adb219b20cf4692538139f1b0cc7f31773cabf52e5d4ed8de/ImageMagick-7.1.2-34.tar.xz"
+      ]
     },
     {
       "name": "libdc1394",
