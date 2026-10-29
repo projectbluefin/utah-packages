@@ -24,6 +24,10 @@
       "version": "0.412",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/40833963568"
     },
+    "libaribcaption": {
+      "version": "1.1.2",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/40838299842"
+    },
     "libcdio": {
       "version": "2.4.0",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/37156147163"
