@@ -1,0 +1,8 @@
+{
+  "package": "NetworkManager-ssh",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/NetworkManager-ssh.git",
+  "commit": "16549c24683c49eaa9d98ce5a93e5514325858b4",
+  "tree": "f72461b529bbd30f0f0e3c0c5c195b97ab038fbf",
+  "imported_at": "2026-10-28T09:50:24.952251+00:00"
+}

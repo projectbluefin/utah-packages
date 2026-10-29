@@ -222,15 +222,11 @@ packages = [
 consumer_issue = "projectbluefin/utah#396"
 packages = [
     "7zip",
-    "NetworkManager-ssh",
-    "NetworkManager-ssh-gnome",
-    "NetworkManager-ssh-selinux",
     "OpenCL-ICD-Loader",
     "PackageKit-glib",
     "appstream-data",
     "b43-fwcutter",
     "b43-openfwwf",
-    "bash-color-prompt",
     "braille-printer-app",
     "compsize",
     "criu",
@@ -374,6 +370,15 @@ packages = [
     # Disc-reading recipes; publication and runtime proof remain tracked in #475.
     { name = "libudfread", pr = 658 },
     { name = "libbluray", pr = 658 },
+    # NetworkManager-ssh VPN plugin (main + gnome + selinux subpackages); recipe
+    # import only, hosted build, publication and runtime proof remain outstanding.
+    { name = "NetworkManager-ssh", pr = 770 },
+    { name = "NetworkManager-ssh-gnome", pr = 770 },
+    { name = "NetworkManager-ssh-selinux", pr = 770 },
+    # bash-color-prompt recipe was already imported in #728 (commit e53a1bf5);
+    # record that existing PR and commit to close the catalog gap instead of
+    # re-importing the same source under this PR.
+    { name = "bash-color-prompt", commit = "e53a1bf5c5d30730b49132eab460e60699d5ddfc", pr = 728 },
     # Shader compiler recipe; hosted build and runtime proof remain tracked in #475.
     { name = "libshaderc" },
     # ifuse source import; publication and consumer validation remain tracked in #486.
