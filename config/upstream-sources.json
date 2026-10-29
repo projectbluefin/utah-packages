@@ -3515,13 +3515,13 @@
     },
     {
       "name": "upower",
-      "version": "1.91.5",
-      "url": "https://gitlab.freedesktop.org/upower/upower/-/archive/v1.91.5/upower-v1.91.5.tar.bz2",
-      "filename": "upower-v1.91.5.tar.bz2",
+      "version": "1.91.3",
+      "url": "https://gitlab.freedesktop.org/upower/upower/-/archive/v1.91.3/upower-v1.91.3.tar.bz2",
+      "filename": "upower-v1.91.3.tar.bz2",
       "feed": "https://gitlab.freedesktop.org/upower/upower/-/archive/v1.91.3/upower-v1.91.3.tar.bz2",
-      "sha512": "b6bc705db933c1f34ff77765df270d0bd8c4e0d25fff0d661937783785c1ab9a832d89e0118331e41cf6b3e0b26f87d97b1db4484fcc7086d2b0ebcbb31adf3d",
+      "sha512": "f880dcdf170c3b6c31c83edcdccfc60a93879224678dbe6aa1907e61b4690863ad5dc38421c0f98b5e3cff9993a15dbc9f07b2cf6fd4eccf576939ddd2b57802",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/upower/upower-v1.91.5.tar.bz2/sha512/b6bc705db933c1f34ff77765df270d0bd8c4e0d25fff0d661937783785c1ab9a832d89e0118331e41cf6b3e0b26f87d97b1db4484fcc7086d2b0ebcbb31adf3d/upower-v1.91.5.tar.bz2"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/upower/upower-v1.91.3.tar.bz2/sha512/f880dcdf170c3b6c31c83edcdccfc60a93879224678dbe6aa1907e61b4690863ad5dc38421c0f98b5e3cff9993a15dbc9f07b2cf6fd4eccf576939ddd2b57802/upower-v1.91.3.tar.bz2"
       ]
     },
     {

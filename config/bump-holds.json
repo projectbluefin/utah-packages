@@ -80,6 +80,10 @@
       "version": "0.3.1",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/40833963568"
     },
+    "upower": {
+      "version": "1.91.5",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/40848781435"
+    },
     "wsdd": {
       "version": "0.9",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/40833963568"
