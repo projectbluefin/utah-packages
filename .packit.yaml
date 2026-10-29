@@ -28,6 +28,12 @@ packages:
     downstream_package_name: NetworkManager-openvpn
     paths:
       - packages/NetworkManager-openvpn
+  NetworkManager-ssh:
+    specfile_path: NetworkManager-ssh.spec
+    upstream_package_name: NetworkManager-ssh
+    downstream_package_name: NetworkManager-ssh
+    paths:
+      - packages/NetworkManager-ssh
   SDL3:
     specfile_path: SDL3.spec
     upstream_package_name: SDL3
