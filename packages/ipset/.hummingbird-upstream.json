@@ -1,0 +1,8 @@
+{
+  "package": "ipset",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/ipset.git",
+  "commit": "5bcc83a333cd0e115ed2759d8533b4f4c19fabb2",
+  "tree": "eeefce9f040e31e9758c5d75b64ca160d1f9d79d",
+  "imported_at": "2026-10-29T10:24:10.070547+00:00"
+}

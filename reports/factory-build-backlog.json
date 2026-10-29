@@ -2,12 +2,12 @@
   "areas": {
     "codecs-media": {
       "already_recipe": 10,
-      "pending": 19,
-      "total": 29
+      "pending": 17,
+      "total": 27
     },
     "dev-tools": {
-      "pending": 65,
-      "total": 65
+      "pending": 63,
+      "total": 63
     },
     "fonts-i18n": {
       "pending": 17,
@@ -20,8 +20,8 @@
     "long-tail": {
       "already_recipe": 3,
       "manifest_wants": 1,
-      "pending": 80,
-      "total": 84
+      "pending": 77,
+      "total": 81
     },
     "power": {
       "total": 0
@@ -48,16 +48,6 @@
   "audit_names_sha256": "48210d268ba97da8da55f883529ee27f38bc48a4d8f3c4fad46913ef8614d07b",
   "audit_source": "https://gist.github.com/hanthor/b9b1e3a7f13c51376b771f97a7409a30",
   "entries": [
-    {
-      "area": "codecs-media",
-      "name": "ImageMagick",
-      "state": "pending"
-    },
-    {
-      "area": "codecs-media",
-      "name": "ImageMagick-libs",
-      "state": "pending"
-    },
     {
       "area": "codecs-media",
       "name": "LCEVCdec",
@@ -306,16 +296,6 @@
     {
       "area": "dev-tools",
       "name": "lsb_release",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "oddjob",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "oddjob-mkhomedir",
       "state": "pending"
     },
     {
@@ -725,22 +705,7 @@
     },
     {
       "area": "long-tail",
-      "name": "initscripts-service",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
       "name": "intel-vaapi-driver",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
-      "name": "ipset",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
-      "name": "ipset-libs",
       "state": "pending"
     },
     {
@@ -1118,11 +1083,11 @@
   "states": {
     "already_recipe": 13,
     "manifest_wants": 1,
-    "pending": 199
+    "pending": 192
   },
   "totals": {
-    "backlog": 213,
-    "resolved": 302,
-    "wontfix": 36
+    "backlog": 206,
+    "resolved": 308,
+    "wontfix": 37
   }
 }

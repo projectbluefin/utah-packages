@@ -1,0 +1,15 @@
+- hosts: localhost
+  roles:
+    - role: standard-test-beakerlib
+      tags:
+        - classic
+      tests:
+        - sanity-tests
+      required_packages:
+        - ipset
+        - iptables
+        - python3
+        - systemd
+        - iproute
+        - iperf3
+        - python3-pyroute2

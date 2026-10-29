@@ -231,6 +231,35 @@ tracking issue open when publication, runtime dependency resolution, or a
 representative command has not been verified. A reconciliation PR must state
 those remaining checks explicitly; `[resolved]` is not installability proof.
 
+### D-Bus helper services
+
+`oddjob-mkhomedir` is an unconditional subpackage of `oddjob.spec`; one
+`oddjob` import closes both names. Its `Source0` host, `releases.pagure.org`,
+is gone and the project has published no new release location, so the lock
+keeps the pagure URL as primary with the SHA-512-verified Fedora lookaside in
+`fallback_urls` (see
+[dead upstream hosts](supply-chain-provenance.md#dead-upstream-hosts-releasespagureorg)).
+Before relying on the Fedora 44 build root, check the runtime `Requires`
+against Hummingbird's primary metadata by name, file and SONAME provide:
+`dbus`, `dbus-tools` (`/usr/bin/dbus-send`), `psmisc`, `systemd` (provides
+`systemd-sysv`), `pam-libs`, `openldap`, `cyrus-sasl-lib`, `krb5-libs` and
+`libxml2` (`libxml2.so.16`) all resolve there. That static check is not a
+transaction: home-directory creation still needs a login on an enrolled host.
+
+### Legacy service wrapper waiver
+
+`initscripts-service` comes from the `initscripts` source recipe, but Utah's
+[committed consumer triage](https://github.com/projectbluefin/utah/blob/1bc07242296d039bca80412ec2b0e68579a61d3e/baselines/triage.toml#L384-L386)
+already waives it as a legacy SysV service shim. Reconcile that exact binary
+into `[wontfix]` with the pinned decision instead of importing the parent
+legacy-init suite. This is an existing consumer decision, not a new policy
+exclusion or evidence of publication. The existing `autofs` recipe still
+requires `/sbin/service` in its preun/postun scriptlets; preserve and report
+that dependency when reconciling the waiver rather than silently deleting it
+or claiming runtime closure. Do not extend the waiver to other pending
+long-tail names; each needs its own disposition. Keep the batch issue open
+when other outputs or their build/runtime evidence remain outstanding.
+
 ### Virtual machine guest integration
 
 `spice-vdagent` BuildRequires `spice-protocol` headers. Import the protocol
@@ -829,6 +858,17 @@ The `ntfs-3g-system-compression` source produces a plugin for the existing
 A catalog record for the recipe does not prove the plugin has been built,
 published, or loaded with the driver.
 
+### ImageMagick recipe (codecs-media, #474)
+
+`ImageMagick.spec` builds both `ImageMagick` and `ImageMagick-libs` (its
+`%package libs`), so one import resolves both names. It was imported without
+`rpmspec` or a container: the `Source0` SHA-512 in `packages/ImageMagick/sources`
+was checked against the upstream tarball before locking it. Its BuildRequires
+(libheif, libjxl, libuhdr, jasper and others) are separate graph dependencies;
+a catalog record does not prove the build succeeds. The ffmpeg family,
+`LCEVCdec`, `davs2-libs` and `gstreamer1-plugins-good-qt6` stay pending in
+`[areas.codecs-media]`, so `#474` stays open.
+
 ## Hand-locking an import without `rpmspec`
 
 When the import workflow cannot be dispatched, import with
@@ -838,3 +878,12 @@ specs use `http://kernel.org/...`; lock the `https://cdn.kernel.org/...` URL
 instead, since `tools/validate.py` rejects plain-http locks. Then run
 `render_packit_config.py --write` and `render_architecture_counts.py --write`.
 Hosted build evidence is still owed; a lock alone does not resolve a runtime gap.
+
+## IP set package family
+
+The `ipset` source builds both the command and `ipset-libs`; track both
+outputs from the same recipe. Its optional `ipset-service` subpackage also
+requires `iptables-services`, so check that provider when verifying the full
+built RPM set. Runtime verification needs a network namespace with the kernel
+IP set support and `CAP_NET_ADMIN`: create a set, add and query an address,
+then destroy the set. A version or help command does not exercise that path.
