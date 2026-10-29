@@ -654,13 +654,13 @@
     },
     {
       "name": "fribidi",
-      "version": "1.0.17",
-      "url": "https://github.com/fribidi/fribidi/releases/download/v1.0.17/fribidi-1.0.17.tar.xz",
-      "filename": "fribidi-1.0.17.tar.xz",
+      "version": "1.0.16",
+      "url": "https://github.com/fribidi/fribidi/releases/download/v1.0.16/fribidi-1.0.16.tar.xz",
+      "filename": "fribidi-1.0.16.tar.xz",
       "feed": "https://github.com/fribidi/fribidi/releases/download/v1.0.16/fribidi-1.0.16.tar.xz",
-      "sha512": "70df8b9b2b8e552e969122227192b04c45e3fa2d133ed3642ba1cf8a8c5855cfeace4e0b009cdb9f58431dfc63fbf7878419594d4d7be095ee4d154d3b7570cc",
+      "sha512": "e3a56f36155f6813e3609473639fc533de742309f561c463012dc90b412a1ac7694b765d92669b2cbfaee973ca0e92fa5e926e68a1a078921f26ef17d82ab651",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/fribidi/fribidi-1.0.17.tar.xz/sha512/70df8b9b2b8e552e969122227192b04c45e3fa2d133ed3642ba1cf8a8c5855cfeace4e0b009cdb9f58431dfc63fbf7878419594d4d7be095ee4d154d3b7570cc/fribidi-1.0.17.tar.xz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/fribidi/fribidi-1.0.16.tar.xz/sha512/e3a56f36155f6813e3609473639fc533de742309f561c463012dc90b412a1ac7694b765d92669b2cbfaee973ca0e92fa5e926e68a1a078921f26ef17d82ab651/fribidi-1.0.16.tar.xz"
       ]
     },
     {
@@ -1247,24 +1247,24 @@
     },
     {
       "name": "highway",
-      "version": "1.4.0",
-      "url": "https://github.com/google/highway/archive/1.4.0/highway-1.4.0.tar.gz",
-      "filename": "highway-1.4.0.tar.gz",
+      "version": "1.3.0",
+      "url": "https://github.com/google/highway/archive/1.3.0/highway-1.3.0.tar.gz",
+      "filename": "highway-1.3.0.tar.gz",
       "feed": "https://github.com/google/highway/archive/1.3.0/highway-1.3.0.tar.gz",
-      "sha512": "819422857d6a74e3a936c402698e078db5b7b88fb43767e62429ec7bd954fe93b017e75029a4df4a1a97ef3a2486107eef5247da751eb487640dea409f3f2fa2",
+      "sha512": "8b9f4fdc4fa60b6817417959853f5b55bf86aec9d35fc6664dda15179cc55e0a9940f3a46011a84b95263ba342dc47ca1cb93b04481ff4b63d724cce1815d7c6",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/highway/highway-1.4.0.tar.gz/sha512/819422857d6a74e3a936c402698e078db5b7b88fb43767e62429ec7bd954fe93b017e75029a4df4a1a97ef3a2486107eef5247da751eb487640dea409f3f2fa2/highway-1.4.0.tar.gz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/highway/highway-1.3.0.tar.gz/sha512/8b9f4fdc4fa60b6817417959853f5b55bf86aec9d35fc6664dda15179cc55e0a9940f3a46011a84b95263ba342dc47ca1cb93b04481ff4b63d724cce1815d7c6/highway-1.3.0.tar.gz"
       ]
     },
     {
       "name": "hunspell",
-      "version": "1.7.6",
-      "url": "https://github.com/hunspell/hunspell/releases/download/v1.7.6/hunspell-1.7.6.tar.gz",
-      "filename": "hunspell-1.7.6.tar.gz",
+      "version": "1.7.3",
+      "url": "https://github.com/hunspell/hunspell/releases/download/v1.7.3/hunspell-1.7.3.tar.gz",
+      "filename": "hunspell-1.7.3.tar.gz",
       "feed": "https://github.com/hunspell/hunspell/releases/download/v1.7.3/hunspell-1.7.3.tar.gz",
-      "sha512": "528b5042b81f5ba89eb5797eb51c6ab4c1ad02e4e9ae0d9f2ae212d52a0da1a69d0d5d7fe2dfd239127a61505a1d36b6219f42b0cecdddd509cd9deec5c03719",
+      "sha512": "0d6c6f43e478c426eaf9d14e963508880d3eacc7f40dea5677c2afa9bbe28b9fc8ebe3db67bbfcc1635c1396fa9474d2c7c775d3be00381cafeb2655215ee336",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/hunspell/hunspell-1.7.6.tar.gz/sha512/528b5042b81f5ba89eb5797eb51c6ab4c1ad02e4e9ae0d9f2ae212d52a0da1a69d0d5d7fe2dfd239127a61505a1d36b6219f42b0cecdddd509cd9deec5c03719/hunspell-1.7.6.tar.gz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/hunspell/hunspell-1.7.3.tar.gz/sha512/0d6c6f43e478c426eaf9d14e963508880d3eacc7f40dea5677c2afa9bbe28b9fc8ebe3db67bbfcc1635c1396fa9474d2c7c775d3be00381cafeb2655215ee336/hunspell-1.7.3.tar.gz"
       ]
     },
     {
@@ -1280,13 +1280,13 @@
     },
     {
       "name": "hwdata",
-      "version": "0.412",
-      "url": "https://github.com/vcrhonek/hwdata/archive/v0.412.tar.gz",
-      "filename": "v0.412.tar.gz",
+      "version": "0.410",
+      "url": "https://github.com/vcrhonek/hwdata/archive/v0.410.tar.gz",
+      "filename": "v0.410.tar.gz",
       "feed": "https://github.com/vcrhonek/hwdata/archive/v0.410.tar.gz",
-      "sha512": "2d9dfb74955d3de2df489b4102d1201f06162153d24797bee328f9d91f57c1f1fb786f8706d95912974fea503c021867fa8da7c3dee951339365a6145041d522",
+      "sha512": "b0032c74e31847b0985563e95746b4f34247be3ad00c4a7348d5f23d860cb28b73b2625950456c50e254c8a4472ff6027687a5c5e3be56b0a20022a4737c3327",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/hwdata/v0.412.tar.gz/sha512/2d9dfb74955d3de2df489b4102d1201f06162153d24797bee328f9d91f57c1f1fb786f8706d95912974fea503c021867fa8da7c3dee951339365a6145041d522/v0.412.tar.gz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/hwdata/v0.410.tar.gz/sha512/b0032c74e31847b0985563e95746b4f34247be3ad00c4a7348d5f23d860cb28b73b2625950456c50e254c8a4472ff6027687a5c5e3be56b0a20022a4737c3327/v0.410.tar.gz"
       ]
     },
     {
@@ -2019,13 +2019,13 @@
     },
     {
       "name": "libfyaml",
-      "version": "0.9.6",
-      "url": "https://github.com/pantoniou/libfyaml/archive/v0.9.6/libfyaml-0.9.6.tar.gz",
-      "filename": "libfyaml-0.9.6.tar.gz",
+      "version": "0.8",
+      "url": "https://github.com/pantoniou/libfyaml/archive/v0.8/libfyaml-0.8.tar.gz",
+      "filename": "libfyaml-0.8.tar.gz",
       "feed": "https://github.com/pantoniou/libfyaml/archive/v0.8/libfyaml-0.8.tar.gz",
-      "sha512": "e38f42b5d3e5e88300fd1c7b59868592afa5f2f88d30f61e778700c35435ebd14ecef7d82ac0213345dabdb3c562dc234ed1b2bfd84e40b47fdc4f84144c79f5",
+      "sha512": "7c9dd4e0d39a8dec71fa6e9518e81e4c1c5998e3de1db9ab7db58ebd4f99efaa41b071bf9575de88400a4aeff597cf36361d01f568122a6e1214a92fb1efd507",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/libfyaml/libfyaml-0.9.6.tar.gz/sha512/e38f42b5d3e5e88300fd1c7b59868592afa5f2f88d30f61e778700c35435ebd14ecef7d82ac0213345dabdb3c562dc234ed1b2bfd84e40b47fdc4f84144c79f5/libfyaml-0.9.6.tar.gz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libfyaml/libfyaml-0.8.tar.gz/sha512/7c9dd4e0d39a8dec71fa6e9518e81e4c1c5998e3de1db9ab7db58ebd4f99efaa41b071bf9575de88400a4aeff597cf36361d01f568122a6e1214a92fb1efd507/libfyaml-0.8.tar.gz"
       ]
     },
     {
@@ -2331,13 +2331,13 @@
     },
     {
       "name": "libplist",
-      "version": "2.8.0",
-      "url": "https://github.com/libimobiledevice/libplist/releases/download/2.8.0/libplist-2.8.0.tar.bz2",
-      "filename": "libplist-2.8.0.tar.bz2",
+      "version": "2.7.0",
+      "url": "https://github.com/libimobiledevice/libplist/releases/download/2.7.0/libplist-2.7.0.tar.bz2",
+      "filename": "libplist-2.7.0.tar.bz2",
       "feed": "https://github.com/libimobiledevice/libplist/releases/download/2.7.0/libplist-2.7.0.tar.bz2",
-      "sha512": "8adeb6357c3f4059f94002308d7f23b04d43156c5c7bcd62ea2a6bf077990957b8b53026d3ab31b9bfa892fe9d3b88b20219b1b0be208cb1c179ba88926eaa83",
+      "sha512": "83d0398b75ea9e610e49b4b96a7675b854c7551d4faf3e82e74c5c45cf04bbd95478cc40688f0995742e6a50601744d2a36641d0673aa7cc413f5ce2ec42f2d4",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/libplist/libplist-2.8.0.tar.bz2/sha512/8adeb6357c3f4059f94002308d7f23b04d43156c5c7bcd62ea2a6bf077990957b8b53026d3ab31b9bfa892fe9d3b88b20219b1b0be208cb1c179ba88926eaa83/libplist-2.8.0.tar.bz2"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libplist/libplist-2.7.0.tar.bz2/sha512/83d0398b75ea9e610e49b4b96a7675b854c7551d4faf3e82e74c5c45cf04bbd95478cc40688f0995742e6a50601744d2a36641d0673aa7cc413f5ce2ec42f2d4/libplist-2.7.0.tar.bz2"
       ]
     },
     {
@@ -3193,14 +3193,14 @@
     },
     {
       "name": "python-pydantic",
-      "version": "2.14.1",
-      "url": "https://github.com/pydantic/pydantic/archive/v2.14.1/pydantic-2.14.1.tar.gz",
-      "filename": "pydantic-2.14.1.tar.gz",
+      "version": "2.13.5",
+      "url": "https://github.com/pydantic/pydantic/archive/v2.13.5/pydantic-2.13.5.tar.gz",
+      "filename": "pydantic-2.13.5.tar.gz",
       "feed": "https://github.com/pydantic/pydantic/archive/v2.13.5/pydantic-2.13.5.tar.gz",
-      "sha512": "70d4a6513f49e4644c07acc7eba2fde0e05724db8ac8fb9777414ae65dbb30f796db94d5843e869d7a1655eb0f2c09f230454a394c095b97fcf5088795cc8493",
+      "sha512": "fd607e9bb5599737638401e9dedb4baa454b7f308b461319d59913b603f6e072354c40b161802c8198ee0961052207a2a4da7b861da6fbfd14f2dbb0f61ba762",
       "stage": 4,
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/python-pydantic/pydantic-2.14.1.tar.gz/sha512/70d4a6513f49e4644c07acc7eba2fde0e05724db8ac8fb9777414ae65dbb30f796db94d5843e869d7a1655eb0f2c09f230454a394c095b97fcf5088795cc8493/pydantic-2.14.1.tar.gz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/python-pydantic/pydantic-2.13.5.tar.gz/sha512/fd607e9bb5599737638401e9dedb4baa454b7f308b461319d59913b603f6e072354c40b161802c8198ee0961052207a2a4da7b861da6fbfd14f2dbb0f61ba762/pydantic-2.13.5.tar.gz"
       ]
     },
     {
@@ -3696,13 +3696,13 @@
     },
     {
       "name": "wsdd",
-      "version": "0.9",
-      "url": "https://github.com/christgau/wsdd/archive/v0.9/wsdd-0.9.tar.gz",
-      "filename": "wsdd-0.9.tar.gz",
+      "version": "0.8",
+      "url": "https://github.com/christgau/wsdd/archive/v0.8/wsdd-0.8.tar.gz",
+      "filename": "wsdd-0.8.tar.gz",
       "feed": "https://github.com/christgau/wsdd/archive/v0.8/wsdd-0.8.tar.gz",
-      "sha512": "245845c8d0f52a18e47411c8adfc5f9ef63a65f2caa04dd76ac033852b3d517000d88202b50be781ff0a4c7da344589dd79cdc1e0a88dbbd1f149d0dfe8db47f",
+      "sha512": "e3e5164f9ebe39c979456169bf1b0c6c4cd974792f08fa4dfab9c313fba88ae1208a8112db09c3655719b4e26bfc2616f844f17d2a245132c2f5b22e978e3c20",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/wsdd/wsdd-0.9.tar.gz/sha512/245845c8d0f52a18e47411c8adfc5f9ef63a65f2caa04dd76ac033852b3d517000d88202b50be781ff0a4c7da344589dd79cdc1e0a88dbbd1f149d0dfe8db47f/wsdd-0.9.tar.gz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/wsdd/wsdd-0.8.tar.gz/sha512/e3e5164f9ebe39c979456169bf1b0c6c4cd974792f08fa4dfab9c313fba88ae1208a8112db09c3655719b4e26bfc2616f844f17d2a245132c2f5b22e978e3c20/wsdd-0.8.tar.gz"
       ]
     },
     {
@@ -3807,12 +3807,12 @@
     },
     {
       "name": "xdg-terminal-exec",
-      "version": "0.14.4",
-      "url": "https://github.com/Vladimir-csp/xdg-terminal-exec/archive/v0.14.4/xdg-terminal-exec-0.14.4.tar.gz",
-      "filename": "xdg-terminal-exec-0.14.4.tar.gz",
-      "sha512": "71aab7e13e58075342c7f96e3254acc7f5bccb5cd9e3ede61bf5dd9a8f4a055a56dc6116106368a769c77ca0d0effa8d17c59904adb37a5202f251dd1865b88e",
+      "version": "0.14.3",
+      "url": "https://github.com/Vladimir-csp/xdg-terminal-exec/archive/v0.14.3/xdg-terminal-exec-0.14.3.tar.gz",
+      "filename": "xdg-terminal-exec-0.14.3.tar.gz",
+      "sha512": "65f1b633571b782cfffeac35890da372747e805d6dde659d68c568e9fd0e9a556bd792a80c6e8fc8b8fd4361adba9a761686c6daf9e94aa5512ebfe1f352ac70",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/xdg-terminal-exec/xdg-terminal-exec-0.14.4.tar.gz/sha512/71aab7e13e58075342c7f96e3254acc7f5bccb5cd9e3ede61bf5dd9a8f4a055a56dc6116106368a769c77ca0d0effa8d17c59904adb37a5202f251dd1865b88e/xdg-terminal-exec-0.14.4.tar.gz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/xdg-terminal-exec/xdg-terminal-exec-0.14.3.tar.gz/sha512/65f1b633571b782cfffeac35890da372747e805d6dde659d68c568e9fd0e9a556bd792a80c6e8fc8b8fd4361adba9a761686c6daf9e94aa5512ebfe1f352ac70/xdg-terminal-exec-0.14.3.tar.gz"
       ]
     },
     {
@@ -4349,12 +4349,12 @@
     },
     {
       "name": "simdutf",
-      "version": "9.3.3",
-      "url": "https://github.com/simdutf/simdutf/archive/v9.3.3/simdutf-9.3.3.tar.gz",
-      "filename": "simdutf-9.3.3.tar.gz",
-      "sha512": "3639f51386f14178fa6681d5c305fb21acb57a45c3dc95c78bfc27e796f714ea8f1d1bba84fd1027f7763e4fe53735bdfb68cd04ae8c2e34fa512dd1bc4e7318",
+      "version": "9.0.0",
+      "url": "https://github.com/simdutf/simdutf/archive/v9.0.0/simdutf-9.0.0.tar.gz",
+      "filename": "simdutf-9.0.0.tar.gz",
+      "sha512": "0c74226247cbe95368efa87ab84f5217485f16bcdf7a9def8741c6086cb86e6c378f0c437030d2be0934726e3ea9c28b5df2e593d0c654c78291c455a8d1e103",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/simdutf/simdutf-9.3.3.tar.gz/sha512/3639f51386f14178fa6681d5c305fb21acb57a45c3dc95c78bfc27e796f714ea8f1d1bba84fd1027f7763e4fe53735bdfb68cd04ae8c2e34fa512dd1bc4e7318/simdutf-9.3.3.tar.gz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/simdutf/simdutf-9.0.0.tar.gz/sha512/0c74226247cbe95368efa87ab84f5217485f16bcdf7a9def8741c6086cb86e6c378f0c437030d2be0934726e3ea9c28b5df2e593d0c654c78291c455a8d1e103/simdutf-9.0.0.tar.gz"
       ]
     },
     {
@@ -5804,10 +5804,10 @@
     },
     {
       "name": "pyscard",
-      "version": "2.3.2",
-      "url": "https://github.com/LudovicRousseau/pyscard/archive/2.3.2/pyscard-2.3.2.tar.gz",
-      "filename": "pyscard-2.3.2.tar.gz",
-      "sha512": "f96abbf02eba8816ccd6e088d7cb2e799556511055ab7be2c53b5177feed6534302b021b30e74ba969ab0e015fe01b477eea53a6362168e0ba01d4d8839e7aa2"
+      "version": "2.2.2",
+      "url": "https://github.com/LudovicRousseau/pyscard/archive/2.2.2/pyscard-2.2.2.tar.gz",
+      "filename": "pyscard-2.2.2.tar.gz",
+      "sha512": "2f5f4bbbdc65c4116ea04a01241c5c714cf62335a65591eb60a400499792749dd2c3408624be374d46885636cdef573db58d72b207512375318069cad3abb187"
     },
     {
       "name": "pam_yubico",
@@ -6021,12 +6021,12 @@
     },
     {
       "name": "svt-vp9",
-      "version": "0.3.1",
-      "url": "https://github.com/OpenVisualCloud/SVT-VP9/archive/v0.3.1/svt-vp9-0.3.1.tar.gz",
-      "filename": "svt-vp9-0.3.1.tar.gz",
-      "sha512": "98a36a154d0c62ed608f0f9a725d09aae6d679e6b310f81ebe3b02fd38db8e1a4843c6c8aac95ec75af94ecfc0599fc26a20e277028633170fb16dd4095db26d",
+      "version": "0.3.0",
+      "url": "https://github.com/OpenVisualCloud/SVT-VP9/archive/v0.3.0/svt-vp9-0.3.0.tar.gz",
+      "filename": "svt-vp9-0.3.0.tar.gz",
+      "sha512": "2b65d4cc731061c2a07010314f7c306664fd9cf122917f96b94ec87350c8bab1a1118527263eb39347a6f6f572088337e1c5f7ae738b52de30a28ccb54c321c1",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/svt-vp9/svt-vp9-0.3.1.tar.gz/sha512/98a36a154d0c62ed608f0f9a725d09aae6d679e6b310f81ebe3b02fd38db8e1a4843c6c8aac95ec75af94ecfc0599fc26a20e277028633170fb16dd4095db26d/svt-vp9-0.3.1.tar.gz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/svt-vp9/svt-vp9-0.3.0.tar.gz/sha512/2b65d4cc731061c2a07010314f7c306664fd9cf122917f96b94ec87350c8bab1a1118527263eb39347a6f6f572088337e1c5f7ae738b52de30a28ccb54c321c1/svt-vp9-0.3.0.tar.gz"
       ]
     },
     {
@@ -6111,10 +6111,10 @@
     },
     {
       "name": "python-click",
-      "version": "8.5.0",
-      "url": "https://github.com/pallets/click/archive/8.5.0/click-8.5.0.tar.gz",
-      "filename": "click-8.5.0.tar.gz",
-      "sha512": "f89931169f972be3a69496053876604d58e174e8a0a12ff352d712023201ee3244ddb021a14ee36be3b38e731cd14281522ad0e8466a64b2feb3d7c0971978eb"
+      "version": "8.4.2",
+      "url": "https://github.com/pallets/click/archive/8.4.2/click-8.4.2.tar.gz",
+      "filename": "click-8.4.2.tar.gz",
+      "sha512": "2731993c89d7386a8bfd4f51131384a2a67c4ee33e54f92a055b685ba4cf74c854fb5aca0c92e3a24d04bf7725e169edf457d1f18a660b5361aabbbcdd550657"
     },
     {
       "name": "udftools",
@@ -6149,10 +6149,10 @@
     },
     {
       "name": "python-jmespath",
-      "version": "1.1.0",
-      "url": "https://github.com/jmespath/jmespath.py/archive/1.1.0/jmespath.py-1.1.0.tar.gz",
-      "filename": "jmespath.py-1.1.0.tar.gz",
-      "sha512": "06ded51854f03eca9e036511eab21a214da883f68c307e10a40873ec19261178c6ee34b910f12a3e79ebe98ee485ed7eb9ae927aa9db68433ed37f841ea66a40"
+      "version": "1.0.1",
+      "url": "https://github.com/jmespath/jmespath.py/archive/1.0.1/jmespath.py-1.0.1.tar.gz",
+      "filename": "jmespath.py-1.0.1.tar.gz",
+      "sha512": "c1676a4b7565d25c2948569005c503a0ca33908de6ed16536767da2c00c634e4ee345bcaf88a01bf6cd2996aaf722faaedff80061ab65ee77e5bc0f494f86a70"
     }
   ]
 }

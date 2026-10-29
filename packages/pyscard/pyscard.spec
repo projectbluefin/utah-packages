@@ -1,5 +1,5 @@
 Name:           pyscard
-Version:        2.3.2
+Version:        2.2.2
 Release:        %autorelease
 Summary:        A framework for building smart card aware applications in Python
 
