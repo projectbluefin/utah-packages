@@ -18,9 +18,9 @@ Name:           protobuf
 # NOTE: perl-Alien-ProtoBuf has an exact-version dependency on the version of
 # protobuf with which it was built; it therefore needs to be rebuilt even for
 # “patch” updates of protobuf.
-Version:        33.5
+Version:        33.6
 %global so_version 33
-Release:        7%{?dist}
+Release:        1%{?dist}
 
 # See version.json:
 %global version_protoc %{version}
@@ -662,6 +662,9 @@ install -p -m 0644 %{SOURCE2} %{buildroot}%{_emacs_sitestartdir}
 
 
 %changelog
+* Thu Oct 29 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 33.6-1
+- Update to 33.6
+
 * Thu Jul 16 2026 Fedora Release Engineering <releng@fedoraproject.org> - 33.5-7
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_45_Mass_Rebuild
 

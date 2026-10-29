@@ -1,6 +1,6 @@
 Name:           libfyaml
-Version:        0.8
-Release:        10%{?dist}
+Version:        0.9.6
+Release:        1%{?dist}
 Summary:        Complete YAML parser and emitter
 
 # All files MIT except
@@ -108,6 +108,9 @@ make check
 %{_libdir}/pkgconfig/libfyaml.pc
 
 %changelog
+* Thu Oct 29 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 0.9.6-1
+- Update to 0.9.6
+
 * Thu Jul 16 2026 Fedora Release Engineering <releng@fedoraproject.org> - 0.8-10
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_45_Mass_Rebuild
 

@@ -1,5 +1,5 @@
 Name:           libimobiledevice-glue
-Version:        1.3.2
+Version:        1.3.3
 Release:        %autorelease
 Summary:        Library with common code among libimobiledevice projects
 

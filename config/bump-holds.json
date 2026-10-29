@@ -20,10 +20,6 @@
       "version": "1.2.3",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/40072946213"
     },
-    "simdutf": {
-      "version": "9.3.2",
-      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/39740272212"
-    },
     "splix": {
       "version": "2.0.2",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/40172661348"

@@ -10,7 +10,7 @@
 %global         nsversion 0.4
 
 Name:           libayatana-indicator
-Version:        0.9.4
+Version:        0.9.5
 Release:        %autorelease
 Summary:        Ayatana Indicators Shared Library
 

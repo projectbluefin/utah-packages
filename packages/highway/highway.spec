@@ -5,7 +5,7 @@ applying the same operation to 'lanes'.}
 %global toolchain clang
 
 Name:           highway
-Version:        1.3.0
+Version:        1.4.0
 Release:        %autorelease
 Summary:        Efficient and performance-portable SIMD
 

@@ -1,7 +1,7 @@
 %global forgeurl https://github.com/libimobiledevice/libplist
 
 Name:     libplist
-Version:  2.7.0
+Version:  2.8.0
 Release:  %autorelease
 Summary:  Library for manipulating Apple Binary and XML Property Lists
 
