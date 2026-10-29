@@ -1,0 +1,5 @@
+summary: Run tests
+description:
+    Run CI with ibus-desktop-testing-runner in GNOME Wayland.
+duration: 15m
+test: ./test.sh
