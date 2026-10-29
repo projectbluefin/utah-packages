@@ -52,7 +52,6 @@ packages = [
     "libavfilter",
     "libavformat",
     "libavutil",
-    "libdc1394",
     "libde265",
     "libdovi",
     "libfdk-aac",
@@ -127,7 +126,6 @@ packages = [
     "hfsplus-tools",
     "iwd",
     "kernel-devel-matched",
-    "kernel-modules-extra",
     "kernel-tools",
     "kernel-tools-libs",
     "leptonica",
@@ -154,7 +152,6 @@ packages = [
     "python3-jaraco-context",
     "python3-jaraco-functools",
     "python3-jeepney",
-    "python3-jmespath",
     "python3-keyring",
     "python3-keyring+completion",
     "python3-more-itertools",
@@ -179,9 +176,6 @@ packages = [
     "sssd-kcm",
     "sssd-krb5-common",
     "sssd-nfs-idmap",
-    # usbip: requires kernel-modules-extra and kmod(usbip-core.ko) /
-    # kmod(usbip-host.ko) / kmod(vhci-hcd.ko) tracked in #487 (kernel policy).
-    "usbip",
 ]
 
 [areas.fonts-i18n]
@@ -196,14 +190,12 @@ packages = [
     "cldr-emoji-annotation-dtd",
     "ibus-anthy",
     "ibus-anthy-python",
-    "ibus-chewing",
     "ibus-hangul",
     "ibus-libpinyin",
     "ibus-m17n",
     "ibus-typing-booster",
     "kasumi-common",
     "kasumi-unicode",
-    "libchewing",
     "libpinyin",
     "libpinyin-data",
     "m17n-lib",
@@ -262,7 +254,6 @@ packages = [
     "kmod-v4l2loopback",
     "kpartx",
     "kvazaar-libs",
-    "kyotocabinet-libs",
     "libell",
     "libev",
     "libijs",
@@ -315,12 +306,9 @@ packages = [
     "tesseract-tessdata-doc",
     "uavs3d-libs",
     "ublue-os-akmods-addons",
-    "udftools",
-    "uresourced",
     "uvg266-libs",
     "v4l2loopback",
     "virtualbox-guest-additions",
-    "xfsprogs",
 ]
 
 [resolved]
@@ -345,6 +333,9 @@ packages = [
     # Language data recipe; build/publication and consumer proof remain tracked in #494.
     { name = "langtable", pr = 700 },
     { name = "python3-langtable", pr = 700 },
+    # Chewing input-method engine + library recipe for #494; hosted build, publication and runtime proof remain open.
+    { name = "ibus-chewing" },
+    { name = "libchewing" },
     # Recipe import only; build, publication and runtime proof remain on #508.
     { name = "uchardet", pr = 729 },
     # Published boot-screen outputs; recipe #312, source lock #320; runtime proof stays on #505.
@@ -361,6 +352,7 @@ packages = [
     { name = "libntlm", pr = 696, published_run = 40626803772, published_nevra = "libntlm-0:1.8-1.hum1.bfin.x86_64" },
     # FireWire recipe coverage; hosted builds and runtime proof remain outstanding.
     { name = "libavc1394", pr = 681 },
+    { name = "libdc1394", pr = 794 },
     { name = "libraw1394", pr = 681 },
     { name = "pam_yubico", pr = 706 },
     # Smart-card Python binding; hosted build and runtime proof remain in #506.
@@ -369,6 +361,7 @@ packages = [
     { name = "nilfs-utils", pr = 702 },
     # Recipe imported; hosted build, publication and runtime proof remain in #501.
     { name = "iptstate", pr = 697 },
+    { name = "kyotocabinet-libs", pr = 767 },
     # Batch #502 publication: ghcr.io/projectbluefin/utah-packages@sha256:2ff39e76a1473cf0a4299952b951080a79650363b1ac9c3b8e372cadcba5a319
     # Run: https://github.com/projectbluefin/utah-packages/actions/runs/40626803772
     # Recipe/publication accounting only; dependency transactions and runtime proof remain in #502.
@@ -410,6 +403,7 @@ packages = [
     { name = "python3-six", pr = 613 },
     { name = "python3-h11" },
     { name = "python3-click" },
+    { name = "python3-jmespath", pr = 798 },
     # Chromaprint recipe coverage only; publication and runtime proof remain in #487.
     { name = "libchromaprint", pr = 692 },
     # BSD compatibility library and its digest-library dependency (#487).
@@ -735,6 +729,9 @@ packages = [
     # #752 adopted #748 and merged its source family.
     { name = "portaudio", commit = "da68d0f0b38c2f8bacf3fbfc6dd13c0b17681134", pr = 752, published_run = 40626803772, published_nevra = "portaudio-0:19.7.0-1.hum1.bfin.x86_64" },
     { name = "python3-pyaudio", pr = 748, published_run = 40626803772, published_nevra = "python3-pyaudio-0:0.2.13-14.hum1.bfin.x86_64" },
+    { name = "udftools", pr = 782 },
+    { name = "uresourced", pr = 782 },
+    { name = "xfsprogs", pr = 782 },
     # Terminal and VTE emulator outputs (PR #413); publication verified in run 40569848351.
     # vte-profile and vte291-gtk4 are subpackages of vte291.spec.
     # Recipe and publication closure for projectbluefin/utah-packages#484.
@@ -754,6 +751,9 @@ packages = [
 # ``states``; they are surfaced as ``totals.wontfix`` so the count partition
 # (areas + resolved + wontfix) still equals the audit's 551.
 packages = [
+    # Kernel-policy decision applies to the module package and its USB/IP consumer.
+    { name = "usbip", reason = "USB-over-network requires excluded kernel-modules-extra and matching kmod providers; no named use case accepted. Maintainer decision: https://github.com/projectbluefin/utah-packages/issues/491#issuecomment-6475648707 (Utah D4; dependency tracked in #487)." },
+    { name = "kernel-modules-extra", reason = "Utah D4 excludes extra kernel modules unless a named use case is accepted. Maintainer decision: https://github.com/projectbluefin/utah-packages/issues/491#issuecomment-6475648707 (kernel batch #487)." },
     # Existing consumer waivers, not new exclusions: projectbluefin/utah#263.
     # https://github.com/projectbluefin/utah/blob/e11a7b297264251704af25d8920d2a2bb58241c9/baselines/triage.toml
     { name = "xdriinfo", reason = "Utah waives this X11 client tool because it ships a Wayland-only session (projectbluefin/utah#263; pinned triage above)." },

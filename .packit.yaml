@@ -1102,6 +1102,12 @@ packages:
     downstream_package_name: ibus
     paths:
       - packages/ibus
+  ibus-chewing:
+    specfile_path: ibus-chewing.spec
+    upstream_package_name: ibus-chewing
+    downstream_package_name: ibus-chewing
+    paths:
+      - packages/ibus-chewing
   ibus-unikey:
     specfile_path: ibus-unikey.spec
     upstream_package_name: ibus-unikey
@@ -1246,6 +1252,12 @@ packages:
     downstream_package_name: kf5
     paths:
       - packages/kf5
+  kyotocabinet:
+    specfile_path: kyotocabinet.spec
+    upstream_package_name: kyotocabinet
+    downstream_package_name: kyotocabinet
+    paths:
+      - packages/kyotocabinet
   lame:
     specfile_path: lame.spec
     upstream_package_name: lame
@@ -1486,6 +1498,12 @@ packages:
     downstream_package_name: libcdio-paranoia
     paths:
       - packages/libcdio-paranoia
+  libchewing:
+    specfile_path: libchewing.spec
+    upstream_package_name: libchewing
+    downstream_package_name: libchewing
+    paths:
+      - packages/libchewing
   libcloudproviders:
     specfile_path: libcloudproviders.spec
     upstream_package_name: libcloudproviders
@@ -1522,6 +1540,12 @@ packages:
     downstream_package_name: libdbusmenu
     paths:
       - packages/libdbusmenu
+  libdc1394:
+    specfile_path: libdc1394.spec
+    upstream_package_name: libdc1394
+    downstream_package_name: libdc1394
+    paths:
+      - packages/libdc1394
   libdecor:
     specfile_path: libdecor.spec
     upstream_package_name: libdecor
@@ -2884,6 +2908,12 @@ packages:
     downstream_package_name: python-h11
     paths:
       - packages/python-h11
+  python-jmespath:
+    specfile_path: python-jmespath.spec
+    upstream_package_name: python-jmespath
+    downstream_package_name: python-jmespath
+    paths:
+      - packages/python-jmespath
   python-linux-procfs:
     specfile_path: python-linux-procfs.spec
     upstream_package_name: python-linux-procfs
@@ -3388,6 +3418,12 @@ packages:
     downstream_package_name: uchardet
     paths:
       - packages/uchardet
+  udftools:
+    specfile_path: udftools.spec
+    upstream_package_name: udftools
+    downstream_package_name: udftools
+    paths:
+      - packages/udftools
   udisks2:
     specfile_path: udisks2.spec
     upstream_package_name: udisks2
@@ -3406,6 +3442,12 @@ packages:
     downstream_package_name: upower
     paths:
       - packages/upower
+  uresourced:
+    specfile_path: uresourced.spec
+    upstream_package_name: uresourced
+    downstream_package_name: uresourced
+    paths:
+      - packages/uresourced
   urw-base35-fonts:
     specfile_path: urw-base35-fonts.spec
     upstream_package_name: urw-base35-fonts
@@ -3688,6 +3730,12 @@ packages:
     downstream_package_name: xeve
     paths:
       - packages/xeve
+  xfsprogs:
+    specfile_path: xfsprogs.spec
+    upstream_package_name: xfsprogs
+    downstream_package_name: xfsprogs
+    paths:
+      - packages/xfsprogs
   xhost:
     specfile_path: xhost.spec
     upstream_package_name: xhost

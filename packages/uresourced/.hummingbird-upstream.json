@@ -1,0 +1,8 @@
+{
+  "package": "uresourced",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/uresourced.git",
+  "commit": "d3e81dbd0f1d73de0707e2062fb0553cd7d034ee",
+  "tree": "2ef8e2bffce4d9b9390b68e12ad12b607d3f61e1",
+  "imported_at": "2026-10-28T14:20:07.240848+00:00"
+}

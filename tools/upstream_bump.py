@@ -96,18 +96,19 @@ LOOKASIDE = "https://src.fedoraproject.org/repo/pkgs/rpms"
 # prerelease filter, applied before is_prerelease() applies this tool's.
 ANITYA_VERSIONS = "https://release-monitoring.org/api/v2/versions/?project_id="
 
-# alpha/beta/rc in any spelling GNOME uses: 51.beta, 51~rc, 1.10.beta.1.
+# alpha/beta/rc in any spelling GNOME uses: 51.beta, 51~rc, 1.10.beta.1, plus
+# the -dev tags of release-less GitLab projects (ModemManager 1.25.95-dev).
 # The trailing context is a lookahead, not part of the match: consuming it made
 # rpm_version("1.10.beta.1") return "1.10~beta1", eating the separator before
 # the point release. Caught by the round-trip test.
-PRERELEASE = re.compile(r"(?:^|[.~-])(alpha|beta|rc)(?=[.~-]|\d|$)", re.IGNORECASE)
+PRERELEASE = re.compile(r"(?:^|[.~-])(alpha|beta|rc|dev)(?=[.~-]|\d|$)", re.IGNORECASE)
 # The same marker with its leading separator, for rewriting that separator to
 # the tilde RPM needs.
-PRERELEASE_SEPARATOR = re.compile(r"[.~-](alpha|beta|rc)(?=[.~-]|\d|$)", re.IGNORECASE)
+PRERELEASE_SEPARATOR = re.compile(r"[.~-](alpha|beta|rc|dev)(?=[.~-]|\d|$)", re.IGNORECASE)
 
 
 def is_prerelease(version: str) -> bool:
-    """True for a GNOME prerelease such as 51.beta, 51~rc or 1.10.beta.1."""
+    """True for a prerelease such as 51.beta, 51~rc, 1.10.beta.1 or 1.25.95-dev."""
     return bool(PRERELEASE.search(version))
 
 
