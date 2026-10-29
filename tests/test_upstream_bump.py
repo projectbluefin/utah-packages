@@ -54,6 +54,13 @@ class VersionSpellingTests(unittest.TestCase):
         for version in ("51.beta", "51~rc", "51.alpha", "1.10.beta.1", "3.12~beta"):
             self.assertTrue(is_prerelease(version), version)
 
+    def test_recognises_a_dev_tag_as_a_prerelease(self) -> None:
+        # ModemManager has no GitLab releases, so its tags are the feed and
+        # 1.25.95-dev (a 1.26 prerelease) was proposed as an update.
+        for version in ("1.25.95-dev", "1.0.dev", "2.0~dev1"):
+            self.assertTrue(is_prerelease(version), version)
+        self.assertFalse(is_prerelease("1.0-devel"))
+
     def test_a_final_release_is_not_a_prerelease(self) -> None:
         for version in ("51.0", "4.23.3", "1.58.2", "49.0"):
             self.assertFalse(is_prerelease(version), version)

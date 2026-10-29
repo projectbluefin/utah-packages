@@ -1,0 +1,8 @@
+{
+  "package": "libdc1394",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libdc1394.git",
+  "commit": "0904faf5bb741120752855da84d4f3508cc6da0f",
+  "tree": "19d6e18d7b08c0005630c079827c911e3a08d513",
+  "imported_at": "2026-10-28T15:27:07.625794+00:00"
+}

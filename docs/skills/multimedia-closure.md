@@ -252,3 +252,12 @@ navigation support and utility subpackages when checking build dependencies;
 a successful library source download proves neither those builds nor runtime
 closure. A lane against the published factory needs `libudfread` published
 before it can build `libbluray`.
+
+## FireWire camera library
+
+`libdc1394` provides camera-control libraries and tools. Its Fedora recipe
+requires `libraw1394-devel`, supplied by the existing `libraw1394` recipe;
+the BuildRequires graph orders the builds. Its upstream SourceForge archive
+matches the Fedora SHA-512 source manifest. A recipe and source lock do not
+prove that the package builds, publishes, or controls a camera: verify the
+hosted build and exercise a compatible device after installation.

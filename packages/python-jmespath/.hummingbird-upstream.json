@@ -1,0 +1,8 @@
+{
+  "package": "python-jmespath",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/python-jmespath.git",
+  "commit": "3fc6d08d32c20b94531c53eec0be8a0325d63ecc",
+  "tree": "56f812a1ee45c733cb8561958a797d848ef4e483",
+  "imported_at": "2026-10-28T18:21:38.801140+00:00"
+}
