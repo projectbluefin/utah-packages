@@ -38,8 +38,6 @@ audit_measured_at = "2026-09-30T22:08:14Z"
 # projectbluefin/utah#383 - 49 names
 consumer_issue = "projectbluefin/utah#383"
 packages = [
-    "ImageMagick",
-    "ImageMagick-libs",
     "LCEVCdec",
     "davs2-libs",
     "ffmpeg",
@@ -239,7 +237,6 @@ packages = [
     "gupnp-av",
     "gvfs-afp",
     "gvfs-archive",
-    "initscripts-service",
     "intel-vaapi-driver",
     "jbig2dec-libs",
     "kf6-filesystem",
@@ -690,6 +687,9 @@ packages = [
     { name = "bison", pr = 615 },
     # Recipe coverage only; hosted build/publication/runtime proof remains in #474.
     { name = "LibRaw", pr = 618 },
+    # ImageMagick.spec produces ImageMagick and its %package libs (ImageMagick-libs); recipe coverage only.
+    { name = "ImageMagick", pr = 787 },
+    { name = "ImageMagick-libs", pr = 787 },
     # Recipes imported before this reconciliation (#413, #643); publication is
     # observed in the image's repodata. Runtime proof for the batch remains in #507.
     { name = "simdutf", commit = "ded82d6174382a397a2d7ddc066daeabe2e31232", pr = 413, published_run = 40481255792, published_nevra = "simdutf-0:9.0.0-1.hum1.bfin.x86_64" },
@@ -756,6 +756,7 @@ packages = [
 # ``states``; they are surfaced as ``totals.wontfix`` so the count partition
 # (areas + resolved + wontfix) still equals the audit's 551.
 packages = [
+    { name = "initscripts-service", reason = "Utah already waives the legacy SysV service shim; reconcile existing consumer policy, not a new exclusion (projectbluefin/utah#263; https://github.com/projectbluefin/utah/blob/1bc07242296d039bca80412ec2b0e68579a61d3e/baselines/triage.toml#L384-L386)." },
     # Kernel-policy decision applies to the module package and its USB/IP consumer.
     { name = "usbip", reason = "USB-over-network requires excluded kernel-modules-extra and matching kmod providers; no named use case accepted. Maintainer decision: https://github.com/projectbluefin/utah-packages/issues/491#issuecomment-6475648707 (Utah D4; dependency tracked in #487)." },
     { name = "kernel-modules-extra", reason = "Utah D4 excludes extra kernel modules unless a named use case is accepted. Maintainer decision: https://github.com/projectbluefin/utah-packages/issues/491#issuecomment-6475648707 (kernel batch #487)." },

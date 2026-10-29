@@ -4,6 +4,12 @@ actions:
   create-archive:
     - bash -c 'python3 "$(git rev-parse --show-toplevel)/tools/packit_source0.py"'
 packages:
+  ImageMagick:
+    specfile_path: ImageMagick.spec
+    upstream_package_name: ImageMagick
+    downstream_package_name: ImageMagick
+    paths:
+      - packages/ImageMagick
   LibRaw:
     specfile_path: LibRaw.spec
     upstream_package_name: LibRaw

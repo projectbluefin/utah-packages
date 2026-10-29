@@ -1,0 +1,55 @@
+# See the documentation for more information:
+# https://packit.dev/docs/configuration/
+
+jobs:
+  # Update Rawhide first and reuse the exact release commit for active
+  # Fedora branches to keep dist-git history non-divergent.
+  #
+  # EPEL 10 is updated independently because its dependency set and
+  # feature policy can differ from Fedora.
+  #
+  # Fedora and EPEL 10 follow the ImageMagick 7 release stream.
+  - job: pull_from_upstream
+    trigger: release
+    version_update_specifiers: '>=7, <8'
+    dist_git_branches:
+      - rawhide
+      - fedora-branched
+      - epel-10-all
+
+  # EPEL 8 and EPEL 9 remain on the supported ImageMagick 6 release
+  # stream to avoid an incompatible major-version update. Release
+  # Monitoring supplies the RPM-compatible dotted version, and the
+  # branch spec files resolve it to the corresponding upstream archive.
+  - job: pull_from_upstream
+    trigger: release
+    version_update_specifiers: '>=6, <7'
+    dist_git_branches:
+      - epel-8
+      - epel-9
+
+  # Automatically build merged Packit release PRs and PRs opened by
+  # ImageMagick dist-git administrators.
+  #
+  # Direct maintainer pushes intentionally do not trigger Packit builds,
+  # leaving side-tag/rebuild workflows under manual control.
+  - job: koji_build
+    trigger: commit
+    allowed_pr_authors:
+      - packit
+      - all_admins
+    dist_git_branches:
+      - fedora-all
+      - epel-all
+
+  # Rawhide builds do not require the normal Bodhi update workflow.
+  # Create updates only for versioned Fedora branches and active EPEL
+  # branches. The epel-all alias includes EPEL 8, EPEL 9, and active EPEL
+  # 10 minor branches.
+  - job: bodhi_update
+    trigger: commit
+    dist_git_branches:
+      - fedora-branched
+      - epel-all
+
+
