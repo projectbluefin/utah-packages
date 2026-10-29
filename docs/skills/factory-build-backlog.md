@@ -99,6 +99,12 @@ from Fedora. Resolve the binary's actual source package first (the
 `pyaudio` and `python3-pskc` from `python-pskc`; #506 once recorded these as
 "removed from dist-git" because `PyAudio` and `python-libpskc` 404.
 
+For the audited `libell` binary, Fedora Rawhide's source package is named
+`libell`. Do not import the similarly named `ell` source package: its current
+recipe builds an unrelated, header-only EBNF library and does not provide
+`libell`. Check the binary's `sourcerpm` before inferring a source name from a
+shared prefix.
+
 Before importing an audit name, read Utah's current `baselines/triage.toml` and
 pin the decision's commit when reconciling an existing `waived` entry into
 `[wontfix]`. The audit can include deliberately absent X11 client utilities
@@ -366,7 +372,14 @@ them together. When an upstream host answers `HTTP 503` (`ibiblio.org` for
 in `fallback_urls` instead of growing `config/fedora-primary-sources.txt`.
 `usbip` requires `kernel-modules-extra` and `kmod(usbip-*.ko)` /
 `kmod(vhci-hcd.ko)` at runtime and extracts its archive from the kernel source
-tree (`extract_usbip.sh`), so it remains `pending` on kernel policy (#487).
+tree (`extract_usbip.sh`). The [approved kernel-policy decision](https://github.com/projectbluefin/utah-packages/issues/491#issuecomment-6475648707)
+keeps both `usbip` and `kernel-modules-extra` in `[wontfix]`: Utah's D4
+excludes the extra modules until a named use case is accepted. Do not import
+the userspace tool while its mandatory kernel providers are excluded.
+Reconcile both catalog names against that explicit decision, not an assumed
+waiver for every kernel-related package. Consumer triage belongs in the Utah
+repository; a factory catalog change does not update that separate ledger or
+prove runtime acceptance of the other outputs in the batch.
 
 ### Optional changelog viewer
 
@@ -542,7 +555,6 @@ BuildRequires is absent from Hummingbird (the build root also uses Fedora).
 After a recipe PR lands, regenerate `reports/factory-build-backlog.json`; the inventory-driven gate deliberately rejects a snapshot made before that import. Refresh it together with recipe and Packit inventory changes when preparing concurrent PRs. If a rebase conflicts in this generated report, resolve the catalog and recipe inputs first, then run `python3 tools/factory_build_backlog.py`; choosing either report wholesale can discard the other branch’s backlog updates.
 
 After combining recipe inventories during a rebase, also rerun `python3 tools/render_packit_config.py --write` and `python3 tools/render_architecture_counts.py --write` before `just check` to reconcile derived package lists and counts. A conflict resolution can leave valid package entries but stale architecture counts; regenerate from the final combined inventory even if the document itself had no conflict.
-After a recipe PR lands, regenerate `reports/factory-build-backlog.json`; the inventory-driven gate deliberately rejects a snapshot made before that import. Refresh it together with recipe and Packit inventory changes when preparing concurrent PRs.
 
 For Python recipes, check both the upstream project metadata and explicit RPM
 requirements when assessing runtime closure. For example, Click's upstream

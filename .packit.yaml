@@ -1522,6 +1522,12 @@ packages:
     downstream_package_name: libdbusmenu
     paths:
       - packages/libdbusmenu
+  libdc1394:
+    specfile_path: libdc1394.spec
+    upstream_package_name: libdc1394
+    downstream_package_name: libdc1394
+    paths:
+      - packages/libdc1394
   libdecor:
     specfile_path: libdecor.spec
     upstream_package_name: libdecor

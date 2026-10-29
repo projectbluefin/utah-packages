@@ -14,6 +14,25 @@ inputs decide the output — the recipe, the source archive, and the build root 
 and each of them used to be described by something mutable. This is what pins
 them and what the run publishes about them.
 
+## Choose the container by its job
+
+Binary package builds use the hermetic Mock lane by default (#264), with
+`ghcr.io/projectbluefin/utah-buildroot` pinned in
+[`config/buildroot-image`](../../config/buildroot-image) and refreshed by
+[`refresh-buildroot.yml`](../../.github/workflows/refresh-buildroot.yml).
+Mock resolves each package's BuildRequires, locks the root, then builds
+offline; installing those dependencies in the isolated root is not permission
+to patch the outer container's toolchain at runtime.
+
+The separately digest-pinned `quay.io/packit/packit` image serves SRPM
+generation/import in
+[`packit-srpm-chunk.yml`](../../.github/workflows/packit-srpm-chunk.yml) and
+[`import-rawhide-package.yml`](../../.github/workflows/import-rawhide-package.yml).
+Do not infer the binary build environment from an SRPM workflow's image.
+When repairing container guidance, check both `AGENTS.md` and the execution
+environment section of [`contributing.md`](../contributing.md) so the same
+obsolete single-container rule does not survive in a second entry point.
+
 ## The buildroot lock
 
 [`config/buildroot-lock.json`](../../config/buildroot-lock.json) is the

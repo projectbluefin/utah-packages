@@ -2,12 +2,12 @@
   "areas": {
     "codecs-media": {
       "already_recipe": 10,
-      "pending": 15,
-      "total": 25
+      "pending": 14,
+      "total": 24
     },
     "dev-tools": {
-      "pending": 69,
-      "total": 69
+      "pending": 67,
+      "total": 67
     },
     "fonts-i18n": {
       "pending": 19,
@@ -117,11 +117,6 @@
       "area": "codecs-media",
       "name": "libavutil",
       "state": "already_recipe"
-    },
-    {
-      "area": "codecs-media",
-      "name": "libdc1394",
-      "state": "pending"
     },
     {
       "area": "codecs-media",
@@ -241,11 +236,6 @@
     {
       "area": "dev-tools",
       "name": "kernel-devel-matched",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "kernel-modules-extra",
       "state": "pending"
     },
     {
@@ -511,11 +501,6 @@
     {
       "area": "dev-tools",
       "name": "sssd-nfs-idmap",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "usbip",
       "state": "pending"
     },
     {
@@ -1168,11 +1153,11 @@
   "states": {
     "already_recipe": 13,
     "manifest_wants": 1,
-    "pending": 209
+    "pending": 206
   },
   "totals": {
-    "backlog": 223,
-    "resolved": 294,
-    "wontfix": 34
+    "backlog": 220,
+    "resolved": 295,
+    "wontfix": 36
   }
 }

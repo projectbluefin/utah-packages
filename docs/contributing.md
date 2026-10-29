@@ -217,15 +217,23 @@ Pull request titles follow Conventional Commits (`feat:`, `fix:`, `docs:`,
 
 ## Execution environment
 
-Run package builds, generated-source reproduction, reproducibility probes, and
-environment-sensitive validation in GitHub Actions on GitHub-hosted
-`ubuntu-26.04` runners, inside the digest-pinned `quay.io/packit/packit`
-container. The container is the build environment and owns the toolchain.
+Run package builds in GitHub Actions on GitHub-hosted `ubuntu-26.04` runners
+using the hermetic Mock lane, the default since #264, with the digest-pinned
+`ghcr.io/projectbluefin/utah-buildroot` image. The pin is recorded in
+`config/buildroot-image` and refreshed by `refresh-buildroot.yml`.
 
-Do not install packages into it at runtime, replace the digest with a mutable
-tag, or substitute a generic distro image. If a required capability is
-missing, change the pinned digest deliberately rather than patching the
-container from a workflow step.
+The digest-pinned `quay.io/packit/packit` container is for SRPM
+generation/import only, through `packit-srpm-chunk.yml` and
+`import-rawhide-package.yml`, not binary package builds. Run generated-source
+reproduction, reproducibility probes, and other environment-sensitive
+validation in the corresponding pinned workflow environment.
+
+Each container owns its toolchain. Do not install toolchain packages into it
+at runtime, replace the digest with a mutable tag, or substitute a generic
+distro image. Mock resolving and installing locked BuildRequires into an
+isolated build root is part of the hermetic lane, not a toolchain override.
+If a required capability is missing, change the pinned digest deliberately
+rather than patching the container from a workflow step.
 
 This factory is GitHub Actions' replacement for Copr. Copr,
 Packit-as-a-Service, Koji, Bodhi, Testing Farm, Kubernetes, Argo, a local Zot
