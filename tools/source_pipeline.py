@@ -112,6 +112,10 @@ def verify_signature(package: dict, target: Path, directory: Path) -> None:
 
 
 LOOKASIDE = "https://src.fedoraproject.org/repo/pkgs/rpms/{pkg}/{name}/sha512/{hash}/{name}"
+LOOKASIDES = {
+    "fedora": LOOKASIDE,
+    "rpmfusion-free": "https://pkgs.rpmfusion.org/repo/pkgs/free/{pkg}/{name}/sha512/{hash}/{name}",
+}
 
 
 def generate_source(package: dict, target_dir: Path) -> Path:
@@ -177,8 +181,9 @@ def bundled_sources(package: dict, target_dir: Path, already: str) -> list[str]:
     for filename, expected in source_manifest(package):
         if filename == already:  # Source0 comes from upstream, with its own checks.
             continue
-        url = LOOKASIDE.format(pkg=package.get("dist_git_name", package["name"]),
-                               name=filename, hash=expected)
+        template = LOOKASIDES[package.get("lookaside", "fedora")]
+        url = template.format(pkg=package.get("dist_git_name", package["name"]),
+                              name=filename, hash=expected)
         candidate = target_dir / f"{filename}.candidate"
         fetch(url, candidate)
         actual = digest(candidate, "sha512")

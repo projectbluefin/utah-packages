@@ -1,0 +1,8 @@
+{
+  "package": "libmediaart",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libmediaart.git",
+  "commit": "1fc4bcb7f7820833577bebee9b595598461199b6",
+  "tree": "91f1a7fa0d0e5615468c618daea1614e6843b4b7",
+  "imported_at": "2026-10-29T20:16:07.361395+00:00"
+}

@@ -1246,6 +1246,12 @@ packages:
     downstream_package_name: iwd
     paths:
       - packages/iwd
+  jbig2dec:
+    specfile_path: jbig2dec.spec
+    upstream_package_name: jbig2dec
+    downstream_package_name: jbig2dec
+    paths:
+      - packages/jbig2dec
   jpegxl:
     specfile_path: jpegxl.spec
     upstream_package_name: jpegxl
@@ -1306,6 +1312,12 @@ packages:
     downstream_package_name: lcms2
     paths:
       - packages/lcms2
+  leptonica:
+    specfile_path: leptonica.spec
+    upstream_package_name: leptonica
+    downstream_package_name: leptonica
+    paths:
+      - packages/leptonica
   libICE:
     specfile_path: libICE.spec
     upstream_package_name: libICE
@@ -1870,6 +1882,12 @@ packages:
     downstream_package_name: libmd
     paths:
       - packages/libmd
+  libmediaart:
+    specfile_path: libmediaart.spec
+    upstream_package_name: libmediaart
+    downstream_package_name: libmediaart
+    paths:
+      - packages/libmediaart
   libmediainfo:
     specfile_path: libmediainfo.spec
     upstream_package_name: libmediainfo
@@ -2260,6 +2278,12 @@ packages:
     downstream_package_name: libwmf
     paths:
       - packages/libwmf
+  libwnck3:
+    specfile_path: libwnck3.spec
+    upstream_package_name: libwnck3
+    downstream_package_name: libwnck3
+    paths:
+      - packages/libwnck3
   libx86emu:
     specfile_path: libx86emu.spec
     upstream_package_name: libx86emu
@@ -2734,6 +2758,12 @@ packages:
     downstream_package_name: pdfio
     paths:
       - packages/pdfio
+  perl-Unicode-Normalize:
+    specfile_path: perl-Unicode-Normalize.spec
+    upstream_package_name: perl-Unicode-Normalize
+    downstream_package_name: perl-Unicode-Normalize
+    paths:
+      - packages/perl-Unicode-Normalize
   pinentry:
     specfile_path: pinentry.spec
     upstream_package_name: pinentry
@@ -2938,6 +2968,24 @@ packages:
     downstream_package_name: python-h11
     paths:
       - packages/python-h11
+  python-jaraco-classes:
+    specfile_path: python-jaraco-classes.spec
+    upstream_package_name: python-jaraco-classes
+    downstream_package_name: python-jaraco-classes
+    paths:
+      - packages/python-jaraco-classes
+  python-jaraco-context:
+    specfile_path: python-jaraco-context.spec
+    upstream_package_name: python-jaraco-context
+    downstream_package_name: python-jaraco-context
+    paths:
+      - packages/python-jaraco-context
+  python-jaraco-functools:
+    specfile_path: python-jaraco-functools.spec
+    upstream_package_name: python-jaraco-functools
+    downstream_package_name: python-jaraco-functools
+    paths:
+      - packages/python-jaraco-functools
   python-jmespath:
     specfile_path: python-jmespath.spec
     upstream_package_name: python-jmespath

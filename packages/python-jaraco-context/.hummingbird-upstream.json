@@ -1,0 +1,8 @@
+{
+  "package": "python-jaraco-context",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/python-jaraco-context.git",
+  "commit": "3f05a89524d655c6c82a558bbf92127243746db0",
+  "tree": "44dc2273e5a785f81c59044fc67d08fffbf1ad59",
+  "imported_at": "2026-10-29T05:46:36.513800+00:00"
+}

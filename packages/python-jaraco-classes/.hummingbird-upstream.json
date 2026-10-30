@@ -1,0 +1,8 @@
+{
+  "package": "python-jaraco-classes",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/python-jaraco-classes.git",
+  "commit": "31d7fced2ca5b21c4a279d86df2346140152d491",
+  "tree": "1dc49ca492316a645e9d59ac8946ffff6fb5f4b7",
+  "imported_at": "2026-10-29T05:46:37.175654+00:00"
+}

@@ -38,15 +38,15 @@ audit_measured_at = "2026-09-30T22:08:14Z"
 # projectbluefin/utah#383 - 49 names
 consumer_issue = "projectbluefin/utah#383"
 packages = [
+    # LCEVCdec (BSD-3-Clause-Clear, removed from Fedora rawhide), davs2-libs
+    # (absent from Fedora dist-git) and gstreamer1-plugins-good-qt6
+    # (--with qt6 build config) stay open in batch #474 (see #815).
+    # #474's ffmpeg outputs moved to [resolved] as recipe coverage; the
+    # remaining libav*/libsw* outputs of packages/ffmpeg listed here belong to
+    # a later batch. Build/publication proof stays in projectbluefin/utah#383.
     "LCEVCdec",
     "davs2-libs",
-    "ffmpeg",
-    "ffmpeg-libs",
-    "ffmpegthumbnailer",
-    "ffmpegthumbnailer-libs",
     "gstreamer1-plugins-good-qt6",
-    "libavcodec",
-    "libavdevice",
     "libavfilter",
     "libavformat",
     "libavutil",
@@ -101,13 +101,11 @@ consumer_issue = "projectbluefin/utah#391"
 packages = [
     "epiphany-runtime",
     "imath",
-    "libmediaart",
-    "libwnck3",
     "rygel",
 ]
 
 [areas.dev-tools]
-# projectbluefin/utah#392 - 150 names
+# projectbluefin/utah#392 - 147 names
 consumer_issue = "projectbluefin/utah#392"
 packages = [
     "adcli",
@@ -125,7 +123,6 @@ packages = [
     "kernel-devel-matched",
     "kernel-tools",
     "kernel-tools-libs",
-    "leptonica",
     "libcaca",
     "libsss_autofs",
     "libsss_certmap",
@@ -145,9 +142,6 @@ packages = [
     "python3-html2text",
     "python3-httpcore",
     "python3-httpx",
-    "python3-jaraco-classes",
-    "python3-jaraco-context",
-    "python3-jaraco-functools",
     "python3-jeepney",
     "python3-keyring",
     "python3-keyring+completion",
@@ -237,7 +231,6 @@ packages = [
     "gvfs-afp",
     "gvfs-archive",
     "intel-vaapi-driver",
-    "jbig2dec-libs",
     "kf6-filesystem",
     "kf6-karchive",
     "kf6-kimageformats",
@@ -270,7 +263,6 @@ packages = [
     "oversteer-udev",
     "pam_afs_session",
     "paps",
-    "perl-Unicode-Normalize",
     "prefixdevname",
     "python3-perf",
     "python3-pskc",
@@ -316,8 +308,17 @@ packages = [
 # Packages that left the backlog because a recipe was imported.
 # Each entry: package name and the commit that closed the gap.
 packages = [
+    # jaraco-family parity for #489 (partial source-family PR); hosted build,
+    # publication and runtime proof remain open until #489 closes.
+    { name = "python3-jaraco-context", pr = 808 },
+    { name = "python3-jaraco-classes", pr = 808 },
+    { name = "python3-jaraco-functools", pr = 808 },
     # Recipe import only; build, publication and runtime proof remain on #484.
     { name = "libgee" },
+    # Recipe import only (Orca recommends it); build, publication and runtime proof remain on #484.
+    { name = "libwnck3", pr = 786 },
+    # Recipe import only; hosted build, publication and runtime proof remain on #484.
+    { name = "libmediaart", pr = 816 },
     # NTFS-3G read-only plugin recipe for #488; hosted build, publication and runtime proof remain open.
     { name = "ntfs-3g-system-compression", pr = 771 },
     # Language data recipe; build/publication and consumer proof remain tracked in #494.
@@ -342,6 +343,22 @@ packages = [
     { name = "libntlm", pr = 696, published_run = 40626803772, published_nevra = "libntlm-0:1.8-1.hum1.bfin.x86_64" },
     # FireWire recipe coverage; hosted builds and runtime proof remain outstanding.
     { name = "libavc1394", pr = 681 },
+    # FFmpeg family recipe coverage. The recipe exists under packages/ffmpeg and
+    # is registered in .packit.yaml with a source lock, so it builds on the
+    # hosted packit/mock workflow; the public NEVRAs are recorded once that
+    # build publishes. This records recipe coverage, not a runtime transaction.
+    # ffmpeg-libs is negativo17's single bundle name for the split libav* libs
+    # the ffmpeg recipe ships (libavcodec-free, libavdevice-free, ...), which
+    # satisfy it. Full-codec (freeworld) ffmpeg, licensing-approved in #383,
+    # still needs the freeworld codec deps (x264-libs, x265-libs, libfdk-aac)
+    # and a hosted build first. Build/publication proof stays tracked in
+    # projectbluefin/utah#383.
+    { name = "ffmpeg", pr = 70 },
+    { name = "ffmpeg-libs", pr = 70 },
+    { name = "ffmpegthumbnailer", pr = 414 },
+    { name = "ffmpegthumbnailer-libs", pr = 414 },
+    { name = "libavcodec", pr = 70 },
+    { name = "libavdevice", pr = 70 },
     { name = "libdc1394", pr = 794 },
     { name = "libraw1394", pr = 681 },
     { name = "pam_yubico", pr = 706 },
@@ -350,6 +367,7 @@ packages = [
     # NILFS filesystem utilities imported for issue #488; publication still requires validation.
     { name = "nilfs-utils", pr = 702 },
     # Recipe imported; hosted build, publication and runtime proof remain in #501.
+    { name = "jbig2dec-libs", pr = 817 },
     { name = "ipset" },
     { name = "ipset-libs" },
     { name = "iptstate", pr = 697 },
@@ -409,6 +427,7 @@ packages = [
     { name = "python3-jmespath", pr = 798 },
     # Chromaprint recipe coverage only; publication and runtime proof remain in #487.
     { name = "libchromaprint", pr = 692 },
+    { name = "leptonica", pr = 772 }, # Recipe import; publication and runtime proof remain.
     # BSD compatibility library and its digest-library dependency (#487).
     # Recipe import only; build/publication and Utah consumption remain separate proof.
     { name = "libbsd", pr = 614 },
@@ -629,6 +648,7 @@ packages = [
     { name = "mtr", pr = 587 },
     { name = "nvme-cli", pr = 587 },
     { name = "pinfo", commit = "c2c7cd8c3f440a81b9aafe204bc9d22b0532fe0e", pr = 587, published_run = 40626803772, published_nevra = "pinfo-0:0.6.13-11.hum1.bfin.x86_64" },
+    { name = "perl-Unicode-Normalize", pr = 783 },
     { name = "python3-llfuse", pr = 587 },
     { name = "python3-msgpack", pr = 587 },
     { name = "smartmontools", pr = 587 },

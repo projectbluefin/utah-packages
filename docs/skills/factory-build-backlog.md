@@ -64,6 +64,8 @@ read it back with `gh pr view <pr> --json body --jq .body` and verify the
 saved description, including any generated footer; local prose alone does not establish
 that the live PR will keep the batch open. A branch push alone does not correct the PR description.
 Once the PR number is known, fill in the recipe record's `pr` field so reviewers can trace the partial import.
+Keep package-specific comment blocks adjacent to the entries they describe;
+insert unrelated records before the block rather than between it and its entries.
 
 Two edits — never one, never none:
 
@@ -846,9 +848,35 @@ in `ghcr.io/projectbluefin/utah-packages:latest` and move them from
 Previously resolved GNOME outputs (`gtkmm4.0`, `pangomm2.48`, `gtksourceview5`,
 `libhandy`, `libspelling`) also populate their observed `published_run` and
 `published_nevra` fields. Remaining outputs without recipes or source locks
-(`imath`, `libmediaart`, `libwnck3`, `rygel`) stay pending in
-`[areas.gnome-apps]`, and the batch issue remains open with `Refs #484`.
+(`imath`, `rygel`) stay pending in `[areas.gnome-apps]`, and
+the batch issue remains open with `Refs #484`.
 
+
+### Image-processing library
+
+`leptonica` builds its image-processing library from its own source recipe.
+Its optional gnuplot and MinGW build requirements depend on target macros;
+check the pinned buildroot and resulting binaries rather than assuming they
+are enabled. Recipe accounting does not establish publication or image-processing
+behavior; verify both with the hosted build and a representative image.
+`libwnck3` is the X11 window-list library (GTK 3); Orca `Recommends` it and
+Utah triages it as `planned`. Fedora's source package is `libwnck3` but the
+upstream tarball is `libwnck`: lock
+`download.gnome.org/sources/libwnck/43/libwnck-<version>.tar.xz`, not a
+`libwnck3` path. The Rawhide recipe ships five patches with their `Patch`
+lines commented out (an unmerged upstream MR); import them unchanged and do
+not re-enable them. Its build and runtime dependencies (`gtk3`, `libXres`,
+`startup-notification`) are already factory recipes, so no extra source
+family is needed.
+
+`libmediaart` also emits `libmediaart-devel` from the same recipe. Rawhide
+1.9.7 carries `21.patch` to use Glycin instead of GdkPixbuf; keep that patch,
+`pkgconfig(glycin-2)`, `-Dimage_library=glycin`, and `%meson_test` together.
+The existing `glycin` recipe provides the development files and the runtime
+`glycin-libs` / `glycin-loaders` outputs; no second source import is needed.
+Runtime acceptance must exercise JPEG extraction/cache creation with the
+published Glycin loaders, not just load `libmediaart-2.0.so.0`. A recipe-only
+closing record does not prove sandboxed image decoding or publication.
 
 ### NTFS system compression plugin
 
@@ -857,6 +885,19 @@ The `ntfs-3g-system-compression` source produces a plugin for the existing
 `pkgconfig(libntfs-3g)`, so keep the existing source in the factory graph.
 A catalog record for the recipe does not prove the plugin has been built,
 published, or loaded with the driver.
+
+### Perl modules split out of Hummingbird's perl
+
+Fedora splits dual-life core modules such as `perl-Unicode-Normalize` into
+their own source recipes. Hummingbird's `perl` metapackage still requires
+`perl-Unicode-Normalize` but does not ship it, so a full `perl` install needs
+the factory output; check `perl(...)` provides in Hummingbird's primary
+metadata before assuming a module is supplied. The Fedora recipe builds from
+the older CPAN archive (`base_version`) plus an upgrade patch, so its source
+lock pins that CPAN archive while `version` stays the RPM `Version:`. Its
+`-tests` subpackage requires `perl-Test-Harness`, which Hummingbird lacks;
+the audited name is the main package, and runtime acceptance is
+`perl -MUnicode::Normalize=NFD,NFC -e` round-tripping a composed string.
 
 ### ImageMagick recipe (codecs-media, #474)
 
@@ -887,3 +928,7 @@ requires `iptables-services`, so check that provider when verifying the full
 built RPM set. Runtime verification needs a network namespace with the kernel
 IP set support and `CAP_NET_ADMIN`: create a set, add and query an address,
 then destroy the set. A version or help command does not exercise that path.
+
+## JBIG2 decoder library
+
+`jbig2dec-libs` is an output of the `jbig2dec` source recipe, not a separate source. Ghostscript currently builds its bundled copy, so that does not establish availability of the separate library. The upstream recipe warns that consumers of its shared library must be rebuilt together on version changes; verify the hosted build, dependency transaction, and representative decoding before claiming runtime closure.
