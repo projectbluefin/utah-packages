@@ -6,8 +6,8 @@
       "total": 21
     },
     "dev-tools": {
-      "pending": 58,
-      "total": 58
+      "pending": 57,
+      "total": 57
     },
     "fonts-i18n": {
       "pending": 15,
@@ -20,8 +20,8 @@
     "long-tail": {
       "already_recipe": 2,
       "manifest_wants": 1,
-      "pending": 71,
-      "total": 74
+      "pending": 70,
+      "total": 73
     },
     "power": {
       "total": 0
@@ -201,11 +201,6 @@
     {
       "area": "dev-tools",
       "name": "hfsplus-tools",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "iwd",
       "state": "pending"
     },
     {
@@ -660,11 +655,6 @@
     },
     {
       "area": "long-tail",
-      "name": "libell",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
       "name": "libev",
       "state": "pending"
     },
@@ -963,11 +953,11 @@
   "states": {
     "already_recipe": 7,
     "manifest_wants": 1,
-    "pending": 174
+    "pending": 172
   },
   "totals": {
-    "backlog": 182,
-    "resolved": 332,
+    "backlog": 180,
+    "resolved": 334,
     "wontfix": 37
   }
 }
