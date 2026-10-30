@@ -20,8 +20,8 @@
     "long-tail": {
       "already_recipe": 2,
       "manifest_wants": 1,
-      "pending": 73,
-      "total": 76
+      "pending": 71,
+      "total": 74
     },
     "power": {
       "total": 0
@@ -705,16 +705,6 @@
     },
     {
       "area": "long-tail",
-      "name": "librtmp",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
-      "name": "libslirp",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
       "name": "lilv-libs",
       "state": "pending"
     },
@@ -973,11 +963,11 @@
   "states": {
     "already_recipe": 7,
     "manifest_wants": 1,
-    "pending": 176
+    "pending": 174
   },
   "totals": {
-    "backlog": 184,
-    "resolved": 330,
+    "backlog": 182,
+    "resolved": 332,
     "wontfix": 37
   }
 }
