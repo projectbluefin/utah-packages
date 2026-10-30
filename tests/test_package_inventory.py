@@ -57,6 +57,11 @@ class SourceLocksTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "unknown stage"):
             load_source_locks(config)
 
+    def test_unknown_lookaside_is_a_contract_violation(self):
+        config = self._write_config([{"name": "demo", "lookaside": "https://other.example"}])
+        with self.assertRaisesRegex(ValueError, "unknown lookaside"):
+            load_source_locks(config)
+
     def test_default_stage_is_zero(self):
         config = self._write_config([{"name": "demo", "sha512": "0" * 128}])
         assert load_source_locks(config)["demo"].get("stage", 0) == 0

@@ -91,11 +91,14 @@ def check_provenance(path: Path, data: dict) -> None:
     if set(data) != required:
         raise SystemExit(f"invalid upstream provenance: {path}")
     if data["package"] != path.parent.name:
-        raise SystemExit(
-            f"provenance package does not match its recipe directory: {path}"
-        )
-    if data["branch"] not in ("rawhide", "upstream"):
-        raise SystemExit(f"only rawhide or upstream imports are supported: {path}")
+        raise SystemExit(f"provenance package does not match its recipe directory: {path}")
+    if data["branch"] not in ("rawhide", "upstream", "master"):
+        raise SystemExit(f"only rawhide, upstream or codec master imports are supported: {path}")
+    if data["branch"] == "master" and data["remote"] not in (
+        f"https://github.com/rpmfusion/{data['package']}.git",
+        f"https://github.com/negativo17/{data['package']}.git",
+    ):
+        raise SystemExit(f"master imports require an RPM Fusion or negativo17 recipe remote: {path}")
     if data["branch"] == "upstream":
         # Direct-upstream recipes (e.g. liblc3plus, libfreeaptx,
         # pipewire-libs-extra) are imported from the project's own release
@@ -108,12 +111,13 @@ def check_provenance(path: Path, data: dict) -> None:
         if not data.get("remote"):
             raise SystemExit(f"upstream import must name its upstream remote: {path}")
     else:
-        # Fedora dist-git imports pin the exact rawhide snapshot.
+        # Recipe repositories pin an exact snapshot, including codec recipes
+        # whose packaging upstream uses master rather than Fedora's rawhide.
         for key in ("commit", "tree"):
             if not data.get(key):
-                raise SystemExit(f"rawhide import must carry {key}: {path}")
+                raise SystemExit(f"{data['branch']} import must carry {key}: {path}")
             if not FULL_SHA.fullmatch(data[key]):
-                raise SystemExit(f"rawhide import must carry a full {key} SHA: {path}")
+                raise SystemExit(f"{data['branch']} import must carry a full {key} SHA: {path}")
 
 
 def fedora_primary_sources(path: Path) -> list[str]:

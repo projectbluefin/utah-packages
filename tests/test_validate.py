@@ -159,22 +159,57 @@ class ValidateScriptTests(unittest.TestCase):
         assert "invalid upstream provenance" in result.stderr
 
     def test_rejects_provenance_naming_a_different_package(self) -> None:
-        # The provenance package field must match the enclosing recipe directory
-        # so downstream gates cannot be satisfied by a mislabeled package field.
+        # The master remote guard derives the permitted repository from the
+        # package field, so that field must be bound to the recipe directory.
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             self.build(root, provenance=RAWHIDE_PROVENANCE)
             (root / "packages" / "example" / ".hummingbird-upstream.json").write_text(
-                json.dumps({**RAWHIDE_PROVENANCE, "package": "different"})
+                json.dumps({
+                    **RAWHIDE_PROVENANCE, "package": "different", "branch": "master",
+                    "remote": "https://github.com/rpmfusion/different.git",
+                })
             )
             result = self.run_validate(root)
         assert result.returncode != 0
         assert "provenance package does not match its recipe directory" in result.stderr
 
-    def test_rejects_a_branch_that_is_neither_rawhide_nor_upstream(self) -> None:
+    def test_rejects_an_unsupported_recipe_branch(self) -> None:
         result = self.check(provenance={**RAWHIDE_PROVENANCE, "branch": "f43"})
         assert result.returncode != 0
-        assert "only rawhide or upstream imports are supported" in result.stderr
+        assert "only rawhide, upstream or codec master imports are supported" in result.stderr
+
+    def test_accepts_pinned_codec_recipe_repositories(self) -> None:
+        for owner in ("rpmfusion", "negativo17"):
+            with self.subTest(owner=owner):
+                result = self.check(provenance={
+                    **RAWHIDE_PROVENANCE, "branch": "master",
+                    "remote": f"https://github.com/{owner}/example.git",
+                })
+                assert result.returncode == 0, result.stderr
+
+    def test_rejects_unpinned_codec_recipe_snapshots(self) -> None:
+        for field, value in (("commit", ""), ("tree", "abc1234")):
+            with self.subTest(field=field):
+                result = self.check(provenance={
+                    **RAWHIDE_PROVENANCE, "branch": "master", field: value,
+                    "remote": "https://github.com/rpmfusion/example.git",
+                })
+                assert result.returncode != 0
+                assert "master import must carry" in result.stderr
+
+    def test_rejects_master_from_an_unrecognized_recipe_repository(self) -> None:
+        for remote in (
+            "https://github.com/other/example.git",
+            "https://github.com/rpmfusion/different.git",
+            "https://github.com/negativo17.example.org/example.git",
+        ):
+            with self.subTest(remote=remote):
+                result = self.check(provenance={
+                    **RAWHIDE_PROVENANCE, "branch": "master", "remote": remote,
+                })
+                assert result.returncode != 0
+                assert "master imports require" in result.stderr
 
     def test_rejects_an_upstream_import_that_carries_a_commit(self) -> None:
         result = self.check(provenance={**UPSTREAM_PROVENANCE, "commit": "a" * 40})

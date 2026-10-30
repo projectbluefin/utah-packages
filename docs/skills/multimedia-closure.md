@@ -224,6 +224,40 @@ When another recipe lands during review, refresh Packit inventory and architectu
 
 Stack concurrent recipe imports when they edit the same generated inventory reports; regenerate against the combined recipes and retarget the dependent PR only after its prerequisite merges to main.
 
+## Importing the codec tail
+
+Fedora does not carry every full-codec source. Query the packaging repositories
+in RPM Fusion (`https://github.com/rpmfusion/<source>.git`) and negativo17
+(`https://github.com/negativo17/<source>.git`) before declaring a binary
+unavailable. Use `tools/import_rawhide.py --branch master --remote-template`
+with the appropriate URL template: its snapshot writer records the actual
+branch, commit and tree. Validation accepts `master` only for those recipe
+owners and a remote whose repository name matches the source package; full
+commit and tree hashes remain mandatory. Never relabel that provenance as
+Fedora `rawhide` or a direct-upstream import to pass validation.
+
+Upstream archives still supply the payload. A packaging snapshot script may
+repack a VCS checkout even when the same commit has a first-party archive.
+For x264, lock the full VideoLAN commit archive, adjust the unpack directory,
+and retain the packaging repository's matching `version.h` and patches. The
+default bootstrap build emits the encoder library without the optional GPAC
+and FFmpeg CLI demuxers, breaking the FFmpeg build dependency cycle and
+avoiding an RPM Fusion-only runtime package. Its assembly tests still run.
+
+Inspect every `Source` entry, including test data, before registering a recipe.
+A valid primary archive does not cover a missing auxiliary archive. Keep the
+output pending until every payload has a verified fetch path; do not remove
+its tests or import a second source recipe under the binary name. A moved
+backlog entry records recipe availability, while publication, dependency
+resolution and a representative runtime command require separate evidence.
+
+RPM Fusion's auxiliary lookaside is `pkgs.rpmfusion.org`, not Fedora's host
+or the binary download mirror. For vvdec's `bitstreams.tar.xz`, set
+`lookaside: "rpmfusion-free"` on the source lock. This selects the fixed HTTPS
+lookaside template only for auxiliary files; the primary archive still comes
+from upstream, and each auxiliary file must match its SHA-512 `sources` pin.
+The test archive is required by `%check`; do not disable tests to avoid it.
+
 ## Shader compiler dependency order
 
 The audited `libshaderc` binary comes from the `shaderc` source recipe,
