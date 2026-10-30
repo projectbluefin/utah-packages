@@ -132,6 +132,12 @@ Every recipe in `packages/<name>/` carries `.hummingbird-upstream.json`, and
 - **`branch: upstream`** — imported from the project's own release repository,
   so it carries a non-empty `remote` and no dist-git `commit`/`tree`. Its
   source lock lives in `config/upstream-sources.json` instead.
+- **`branch: master`** — a codec recipe imported from RPM Fusion or
+  negativo17, whose packaging repositories use `master` rather than Fedora's
+  `rawhide`. Its `remote` must be exactly
+  `https://github.com/rpmfusion/<name>.git` or
+  `https://github.com/negativo17/<name>.git`, and like `rawhide` it is pinned
+  by full 40-character `commit` and `tree` SHAs.
 
 Do not hand-edit these files. Re-import; editing provenance makes a recipe
 claim an origin it does not have.
@@ -214,7 +220,9 @@ When a primary host dies:
 ## A source with no release and a huge archive: pick files, pin each
 
 A recipe can only take one primary source from the lock; a second `sources`
-line is fetched from Fedora's lookaside, so a Utah-only recipe cannot use one.
+line is fetched from a dist-git lookaside — Fedora's by default, or
+`pkgs.rpmfusion.org` when the lock entry sets `lookaside: rpmfusion-free` — so
+a Utah-only recipe cannot use one.
 When the upstream has no release and its commit archive is far larger than
 what the recipe needs, add a `tools/generated_sources.py` generator that
 fetches only the needed files at a pinned commit, checks a SHA-512 per file,

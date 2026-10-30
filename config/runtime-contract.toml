@@ -78,7 +78,4 @@ packages = [
   "evolution-ews-core",
   "fish",
   "zsh",
-  # Requested above, but excused until libkrun and libkrunfw have built once.
-  # Remove after the first successful publication containing both (#457).
-  "crun-krun",
 ]

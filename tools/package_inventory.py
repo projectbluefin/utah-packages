@@ -161,6 +161,8 @@ def load_source_locks(config: Path) -> dict[str, dict]:
         name = entry["name"]
         if name in locks:
             raise ValueError(f"duplicate source lock: {name}")
+        if entry.get("lookaside", "fedora") not in ("fedora", "rpmfusion-free"):
+            raise ValueError(f"unknown lookaside for {name}: {entry['lookaside']!r}")
         stage = entry.get("stage", 0)
         if not isinstance(stage, int) or stage not in KNOWN_STAGES:
             raise ValueError(f"unknown stage for {name}: {stage!r}")

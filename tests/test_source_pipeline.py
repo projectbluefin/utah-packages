@@ -447,6 +447,30 @@ class SourceManifestTests(unittest.TestCase):
             with working_directory(root):
                 self.assertEqual(source_manifest({"name": "demo"}), [])
 
+    def test_rpmfusion_auxiliary_sources_keep_the_manifest_digest_gate(self) -> None:
+        for payload in (b"verified test data", b"tampered test data"):
+            with self.subTest(payload=payload), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                expected = hashlib.sha512(b"verified test data").hexdigest()
+                self.write_manifest(root, "demo", f"SHA512 (tests.tar.xz) = {expected}\n")
+                target = root / "download"
+                target.mkdir()
+                package = {"name": "demo", "lookaside": "rpmfusion-free"}
+                with working_directory(root), patch("tools.source_pipeline.fetch") as fetched:
+                    fetched.side_effect = lambda url, path: path.write_bytes(payload)
+                    if payload == b"verified test data":
+                        self.assertEqual(bundled_sources(package, target, "source.tar.gz"), ["tests.tar.xz"])
+                        self.assertEqual((target / "tests.tar.xz").read_bytes(), payload)
+                    else:
+                        with self.assertRaisesRegex(ValueError, "SHA-512 mismatch"):
+                            bundled_sources(package, target, "source.tar.gz")
+                        self.assertFalse((target / "tests.tar.xz").exists())
+                        self.assertFalse((target / "tests.tar.xz.candidate").exists())
+                fetched.assert_called_once_with(
+                    f"https://pkgs.rpmfusion.org/repo/pkgs/free/demo/tests.tar.xz/sha512/{expected}/tests.tar.xz",
+                    target / "tests.tar.xz.candidate",
+                )
+
     def test_only_well_formed_sha512_lines_are_read(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
