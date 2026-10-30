@@ -1,0 +1,12 @@
+summary: Private (RHEL) beakerlib tests
+enabled: false
+adjust:
+  - when: distro == rhel
+    enabled: true
+    because: private tests are accesible only within rhel pipeline
+discover:
+  - name: rhel
+    how: fmf
+    url: https://pkgs.devel.redhat.com/git/tests/perl-Unicode-Normalize
+execute:
+    how: tmt

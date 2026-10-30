@@ -201,7 +201,13 @@ When a primary host dies:
 - Give every lock a Fedora lookaside entry in `fallback_urls`
   (`https://src.fedoraproject.org/repo/pkgs/rpms/<pkg>/<file>/sha512/<sha512>/<file>`),
   verified to serve the same digest. A lock without one turns a host outage
-  into a red pipeline.
+  into a red pipeline. A host does not have to die for this to bite: on
+  2026-10-27/28 the scheduled source check went red eight times on brief
+  timeouts or 503s from `www.argyllcms.com`, `download.drobilla.net`,
+  `download.samba.org`, and `download.savannah.nongnu.org`, all on locks
+  with no fallback (utah-packages#805). When a rejection reads
+  `all source URLs failed:` with a single URL, add the lookaside fallback;
+  do not re-run until it is green.
 - Leave the recipe's `Source:` line alone: the spec is Fedora's, and the build
   stages sources from the lock, not from the spec URL.
 

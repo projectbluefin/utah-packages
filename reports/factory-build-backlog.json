@@ -1,27 +1,27 @@
 {
   "areas": {
     "codecs-media": {
-      "already_recipe": 10,
-      "pending": 14,
-      "total": 24
+      "already_recipe": 5,
+      "pending": 11,
+      "total": 16
     },
     "dev-tools": {
-      "pending": 67,
-      "total": 67
+      "pending": 63,
+      "total": 63
     },
     "fonts-i18n": {
-      "pending": 19,
-      "total": 19
+      "pending": 17,
+      "total": 17
     },
     "gnome-apps": {
-      "pending": 5,
-      "total": 5
+      "pending": 3,
+      "total": 3
     },
     "long-tail": {
-      "already_recipe": 3,
+      "already_recipe": 2,
       "manifest_wants": 1,
-      "pending": 88,
-      "total": 92
+      "pending": 76,
+      "total": 79
     },
     "power": {
       "total": 0
@@ -50,16 +50,6 @@
   "entries": [
     {
       "area": "codecs-media",
-      "name": "ImageMagick",
-      "state": "pending"
-    },
-    {
-      "area": "codecs-media",
-      "name": "ImageMagick-libs",
-      "state": "pending"
-    },
-    {
-      "area": "codecs-media",
       "name": "LCEVCdec",
       "state": "pending"
     },
@@ -70,38 +60,8 @@
     },
     {
       "area": "codecs-media",
-      "name": "ffmpeg",
-      "state": "already_recipe"
-    },
-    {
-      "area": "codecs-media",
-      "name": "ffmpeg-libs",
-      "state": "pending"
-    },
-    {
-      "area": "codecs-media",
-      "name": "ffmpegthumbnailer",
-      "state": "already_recipe"
-    },
-    {
-      "area": "codecs-media",
-      "name": "ffmpegthumbnailer-libs",
-      "state": "already_recipe"
-    },
-    {
-      "area": "codecs-media",
       "name": "gstreamer1-plugins-good-qt6",
       "state": "pending"
-    },
-    {
-      "area": "codecs-media",
-      "name": "libavcodec",
-      "state": "already_recipe"
-    },
-    {
-      "area": "codecs-media",
-      "name": "libavdevice",
-      "state": "already_recipe"
     },
     {
       "area": "codecs-media",
@@ -250,11 +210,6 @@
     },
     {
       "area": "dev-tools",
-      "name": "leptonica",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
       "name": "libcaca",
       "state": "pending"
     },
@@ -286,16 +241,6 @@
     {
       "area": "dev-tools",
       "name": "lsb_release",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "oddjob",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "oddjob-mkhomedir",
       "state": "pending"
     },
     {
@@ -376,11 +321,6 @@
     {
       "area": "dev-tools",
       "name": "python3-jeepney",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "python3-jmespath",
       "state": "pending"
     },
     {
@@ -545,11 +485,6 @@
     },
     {
       "area": "fonts-i18n",
-      "name": "ibus-chewing",
-      "state": "pending"
-    },
-    {
-      "area": "fonts-i18n",
       "name": "ibus-hangul",
       "state": "pending"
     },
@@ -580,11 +515,6 @@
     },
     {
       "area": "fonts-i18n",
-      "name": "libchewing",
-      "state": "pending"
-    },
-    {
-      "area": "fonts-i18n",
       "name": "libpinyin",
       "state": "pending"
     },
@@ -610,37 +540,12 @@
     },
     {
       "area": "gnome-apps",
-      "name": "libmediaart",
-      "state": "pending"
-    },
-    {
-      "area": "gnome-apps",
-      "name": "libwnck3",
-      "state": "pending"
-    },
-    {
-      "area": "gnome-apps",
       "name": "rygel",
       "state": "pending"
     },
     {
       "area": "long-tail",
       "name": "7zip",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
-      "name": "NetworkManager-ssh",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
-      "name": "NetworkManager-ssh-gnome",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
-      "name": "NetworkManager-ssh-selinux",
       "state": "pending"
     },
     {
@@ -667,11 +572,6 @@
       "area": "long-tail",
       "name": "b43-openfwwf",
       "state": "pending"
-    },
-    {
-      "area": "long-tail",
-      "name": "bash-color-prompt",
-      "state": "already_recipe"
     },
     {
       "area": "long-tail",
@@ -740,27 +640,7 @@
     },
     {
       "area": "long-tail",
-      "name": "initscripts-service",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
       "name": "intel-vaapi-driver",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
-      "name": "ipset",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
-      "name": "ipset-libs",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
-      "name": "jbig2dec-libs",
       "state": "pending"
     },
     {
@@ -791,11 +671,6 @@
     {
       "area": "long-tail",
       "name": "kvazaar-libs",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
-      "name": "kyotocabinet-libs",
       "state": "pending"
     },
     {
@@ -925,11 +800,6 @@
     },
     {
       "area": "long-tail",
-      "name": "perl-Unicode-Normalize",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
       "name": "prefixdevname",
       "state": "pending"
     },
@@ -1055,16 +925,6 @@
     },
     {
       "area": "long-tail",
-      "name": "udftools",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
-      "name": "uresourced",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
       "name": "uvg266-libs",
       "state": "pending"
     },
@@ -1076,11 +936,6 @@
     {
       "area": "long-tail",
       "name": "virtualbox-guest-additions",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
-      "name": "xfsprogs",
       "state": "pending"
     },
     {
@@ -1151,13 +1006,13 @@
   ],
   "issue": "projectbluefin/utah-packages#308",
   "states": {
-    "already_recipe": 13,
+    "already_recipe": 7,
     "manifest_wants": 1,
-    "pending": 206
+    "pending": 183
   },
   "totals": {
-    "backlog": 220,
-    "resolved": 295,
-    "wontfix": 36
+    "backlog": 191,
+    "resolved": 323,
+    "wontfix": 37
   }
 }

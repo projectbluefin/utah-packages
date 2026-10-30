@@ -1,5 +1,5 @@
 Name: pycairo
-Version: 1.28.0
+Version: 1.29.2
 Release: %autorelease
 Summary: Python bindings for the cairo library
 

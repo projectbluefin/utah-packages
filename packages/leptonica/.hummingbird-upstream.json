@@ -1,0 +1,8 @@
+{
+  "package": "leptonica",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/leptonica.git",
+  "commit": "b60407e8091416d24dc860de61147bf24d91e20a",
+  "tree": "873c35c05e813c9f655ab33772d5e341adeed463",
+  "imported_at": "2026-10-28T10:29:28.432048+00:00"
+}

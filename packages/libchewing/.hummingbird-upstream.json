@@ -1,0 +1,8 @@
+{
+  "package": "libchewing",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libchewing.git",
+  "commit": "e58c0e37e84897fde58ed6ae69784fc4b1eae3d7",
+  "tree": "7945b9e72c6e9f0da8ee179b6c7e8bcdc1e2d2f4",
+  "imported_at": "2026-10-28T14:24:57.000000+00:00"
+}

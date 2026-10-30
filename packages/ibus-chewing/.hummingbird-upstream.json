@@ -1,0 +1,8 @@
+{
+  "package": "ibus-chewing",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/ibus-chewing.git",
+  "commit": "1a9ab5535093a11447a13b4a63ef02e7bfc4a934",
+  "tree": "c926c2b4901f0bc401657e39df28c70daca43d1e",
+  "imported_at": "2026-10-28T14:24:57.000000+00:00"
+}

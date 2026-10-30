@@ -38,17 +38,15 @@ audit_measured_at = "2026-09-30T22:08:14Z"
 # projectbluefin/utah#383 - 49 names
 consumer_issue = "projectbluefin/utah#383"
 packages = [
-    "ImageMagick",
-    "ImageMagick-libs",
+    # LCEVCdec (BSD-3-Clause-Clear, removed from Fedora rawhide), davs2-libs
+    # (absent from Fedora dist-git) and gstreamer1-plugins-good-qt6
+    # (--with qt6 build config) stay open in batch #474 (see #815).
+    # #474's ffmpeg outputs moved to [resolved] as recipe coverage; the
+    # remaining libav*/libsw* outputs of packages/ffmpeg listed here belong to
+    # a later batch. Build/publication proof stays in projectbluefin/utah#383.
     "LCEVCdec",
     "davs2-libs",
-    "ffmpeg",
-    "ffmpeg-libs",
-    "ffmpegthumbnailer",
-    "ffmpegthumbnailer-libs",
     "gstreamer1-plugins-good-qt6",
-    "libavcodec",
-    "libavdevice",
     "libavfilter",
     "libavformat",
     "libavutil",
@@ -98,8 +96,6 @@ consumer_issue = "projectbluefin/utah#391"
 packages = [
     "epiphany-runtime",
     "imath",
-    "libmediaart",
-    "libwnck3",
     "rygel",
 ]
 
@@ -123,7 +119,6 @@ packages = [
     "kernel-devel-matched",
     "kernel-tools",
     "kernel-tools-libs",
-    "leptonica",
     "libcaca",
     "libsss_autofs",
     "libsss_certmap",
@@ -131,8 +126,6 @@ packages = [
     "libsss_nss_idmap",
     "libsss_sudo",
     "lsb_release",
-    "oddjob",
-    "oddjob-mkhomedir",
     "open-vm-tools",
     "open-vm-tools-desktop",
     "python3-anyio",
@@ -149,7 +142,6 @@ packages = [
     "python3-jaraco-context",
     "python3-jaraco-functools",
     "python3-jeepney",
-    "python3-jmespath",
     "python3-keyring",
     "python3-keyring+completion",
     "python3-more-itertools",
@@ -188,14 +180,12 @@ packages = [
     "cldr-emoji-annotation-dtd",
     "ibus-anthy",
     "ibus-anthy-python",
-    "ibus-chewing",
     "ibus-hangul",
     "ibus-libpinyin",
     "ibus-m17n",
     "ibus-typing-booster",
     "kasumi-common",
     "kasumi-unicode",
-    "libchewing",
     "libpinyin",
     "libpinyin-data",
     "m17n-lib",
@@ -221,15 +211,11 @@ packages = [
 consumer_issue = "projectbluefin/utah#396"
 packages = [
     "7zip",
-    "NetworkManager-ssh",
-    "NetworkManager-ssh-gnome",
-    "NetworkManager-ssh-selinux",
     "OpenCL-ICD-Loader",
     "PackageKit-glib",
     "appstream-data",
     "b43-fwcutter",
     "b43-openfwwf",
-    "bash-color-prompt",
     "braille-printer-app",
     "compsize",
     "criu",
@@ -243,18 +229,13 @@ packages = [
     "gupnp-av",
     "gvfs-afp",
     "gvfs-archive",
-    "initscripts-service",
     "intel-vaapi-driver",
-    "ipset",
-    "ipset-libs",
-    "jbig2dec-libs",
     "kf6-filesystem",
     "kf6-karchive",
     "kf6-kimageformats",
     "kmod-v4l2loopback",
     "kpartx",
     "kvazaar-libs",
-    "kyotocabinet-libs",
     "libell",
     "libev",
     "libijs",
@@ -281,7 +262,6 @@ packages = [
     "oversteer-udev",
     "pam_afs_session",
     "paps",
-    "perl-Unicode-Normalize",
     "prefixdevname",
     "python3-perf",
     "python3-pskc",
@@ -307,12 +287,9 @@ packages = [
     "tesseract-tessdata-doc",
     "uavs3d-libs",
     "ublue-os-akmods-addons",
-    "udftools",
-    "uresourced",
     "uvg266-libs",
     "v4l2loopback",
     "virtualbox-guest-additions",
-    "xfsprogs",
 ]
 
 [resolved]
@@ -338,11 +315,18 @@ packages = [
     { name = "xavs2-libs", pr = 633 },
     # Recipe import only; build, publication and runtime proof remain on #484.
     { name = "libgee" },
+    # Recipe import only (Orca recommends it); build, publication and runtime proof remain on #484.
+    { name = "libwnck3", pr = 786 },
+    # Recipe import only; hosted build, publication and runtime proof remain on #484.
+    { name = "libmediaart", pr = 816 },
     # NTFS-3G read-only plugin recipe for #488; hosted build, publication and runtime proof remain open.
     { name = "ntfs-3g-system-compression", pr = 771 },
     # Language data recipe; build/publication and consumer proof remain tracked in #494.
     { name = "langtable", pr = 700 },
     { name = "python3-langtable", pr = 700 },
+    # Chewing input-method engine + library recipe for #494; hosted build, publication and runtime proof remain open.
+    { name = "ibus-chewing" },
+    { name = "libchewing" },
     # Recipe import only; build, publication and runtime proof remain on #508.
     { name = "uchardet", pr = 729 },
     # Published boot-screen outputs; recipe #312, source lock #320; runtime proof stays on #505.
@@ -359,6 +343,22 @@ packages = [
     { name = "libntlm", pr = 696, published_run = 40626803772, published_nevra = "libntlm-0:1.8-1.hum1.bfin.x86_64" },
     # FireWire recipe coverage; hosted builds and runtime proof remain outstanding.
     { name = "libavc1394", pr = 681 },
+    # FFmpeg family recipe coverage. The recipe exists under packages/ffmpeg and
+    # is registered in .packit.yaml with a source lock, so it builds on the
+    # hosted packit/mock workflow; the public NEVRAs are recorded once that
+    # build publishes. This records recipe coverage, not a runtime transaction.
+    # ffmpeg-libs is negativo17's single bundle name for the split libav* libs
+    # the ffmpeg recipe ships (libavcodec-free, libavdevice-free, ...), which
+    # satisfy it. Full-codec (freeworld) ffmpeg, licensing-approved in #383,
+    # still needs the freeworld codec deps (x264-libs, x265-libs, libfdk-aac)
+    # and a hosted build first. Build/publication proof stays tracked in
+    # projectbluefin/utah#383.
+    { name = "ffmpeg", pr = 70 },
+    { name = "ffmpeg-libs", pr = 70 },
+    { name = "ffmpegthumbnailer", pr = 414 },
+    { name = "ffmpegthumbnailer-libs", pr = 414 },
+    { name = "libavcodec", pr = 70 },
+    { name = "libavdevice", pr = 70 },
     { name = "libdc1394", pr = 794 },
     { name = "libraw1394", pr = 681 },
     { name = "pam_yubico", pr = 706 },
@@ -367,7 +367,11 @@ packages = [
     # NILFS filesystem utilities imported for issue #488; publication still requires validation.
     { name = "nilfs-utils", pr = 702 },
     # Recipe imported; hosted build, publication and runtime proof remain in #501.
+    { name = "jbig2dec-libs", pr = 817 },
+    { name = "ipset" },
+    { name = "ipset-libs" },
     { name = "iptstate", pr = 697 },
+    { name = "kyotocabinet-libs", pr = 767 },
     # Batch #502 publication: ghcr.io/projectbluefin/utah-packages@sha256:2ff39e76a1473cf0a4299952b951080a79650363b1ac9c3b8e372cadcba5a319
     # Run: https://github.com/projectbluefin/utah-packages/actions/runs/40626803772
     # Recipe/publication accounting only; dependency transactions and runtime proof remain in #502.
@@ -377,6 +381,15 @@ packages = [
     # Disc-reading recipes; publication and runtime proof remain tracked in #475.
     { name = "libudfread", pr = 658 },
     { name = "libbluray", pr = 658 },
+    # NetworkManager-ssh VPN plugin (main + gnome + selinux subpackages); recipe
+    # import only, hosted build, publication and runtime proof remain outstanding.
+    { name = "NetworkManager-ssh", pr = 770 },
+    { name = "NetworkManager-ssh-gnome", pr = 770 },
+    { name = "NetworkManager-ssh-selinux", pr = 770 },
+    # bash-color-prompt recipe was already imported in #728 (commit e53a1bf5);
+    # record that existing PR and commit to close the catalog gap instead of
+    # re-importing the same source under this PR.
+    { name = "bash-color-prompt", commit = "e53a1bf5c5d30730b49132eab460e60699d5ddfc", pr = 728 },
     # Shader compiler recipe; hosted build and runtime proof remain tracked in #475.
     { name = "libshaderc" },
     # ifuse source import; publication and consumer validation remain tracked in #486.
@@ -409,8 +422,10 @@ packages = [
     { name = "python3-six", pr = 613 },
     { name = "python3-h11" },
     { name = "python3-click" },
+    { name = "python3-jmespath", pr = 798 },
     # Chromaprint recipe coverage only; publication and runtime proof remain in #487.
     { name = "libchromaprint", pr = 692 },
+    { name = "leptonica", pr = 772 }, # Recipe import; publication and runtime proof remain.
     # BSD compatibility library and its digest-library dependency (#487).
     # Recipe import only; build/publication and Utah consumption remain separate proof.
     { name = "libbsd", pr = 614 },
@@ -631,6 +646,7 @@ packages = [
     { name = "mtr", pr = 587 },
     { name = "nvme-cli", pr = 587 },
     { name = "pinfo", commit = "c2c7cd8c3f440a81b9aafe204bc9d22b0532fe0e", pr = 587, published_run = 40626803772, published_nevra = "pinfo-0:0.6.13-11.hum1.bfin.x86_64" },
+    { name = "perl-Unicode-Normalize", pr = 783 },
     { name = "python3-llfuse", pr = 587 },
     { name = "python3-msgpack", pr = 587 },
     { name = "smartmontools", pr = 587 },
@@ -690,6 +706,9 @@ packages = [
     { name = "bison", pr = 615 },
     # Recipe coverage only; hosted build/publication/runtime proof remains in #474.
     { name = "LibRaw", pr = 618 },
+    # ImageMagick.spec produces ImageMagick and its %package libs (ImageMagick-libs); recipe coverage only.
+    { name = "ImageMagick", pr = 787 },
+    { name = "ImageMagick-libs", pr = 787 },
     # Recipes imported before this reconciliation (#413, #643); publication is
     # observed in the image's repodata. Runtime proof for the batch remains in #507.
     { name = "simdutf", commit = "ded82d6174382a397a2d7ddc066daeabe2e31232", pr = 413, published_run = 40481255792, published_nevra = "simdutf-0:9.0.0-1.hum1.bfin.x86_64" },
@@ -734,6 +753,9 @@ packages = [
     # #752 adopted #748 and merged its source family.
     { name = "portaudio", commit = "da68d0f0b38c2f8bacf3fbfc6dd13c0b17681134", pr = 752, published_run = 40626803772, published_nevra = "portaudio-0:19.7.0-1.hum1.bfin.x86_64" },
     { name = "python3-pyaudio", pr = 748, published_run = 40626803772, published_nevra = "python3-pyaudio-0:0.2.13-14.hum1.bfin.x86_64" },
+    { name = "udftools", pr = 782 },
+    { name = "uresourced", pr = 782 },
+    { name = "xfsprogs", pr = 782 },
     # Terminal and VTE emulator outputs (PR #413); publication verified in run 40569848351.
     # vte-profile and vte291-gtk4 are subpackages of vte291.spec.
     # Recipe and publication closure for projectbluefin/utah-packages#484.
@@ -741,6 +763,10 @@ packages = [
     { name = "vte-profile", commit = "ded82d6174382a397a2d7ddc066daeabe2e31232", pr = 413, published_run = 40569848351, published_nevra = "vte-profile-0:0.84.1-1.hum1.bfin.x86_64" },
     { name = "vte291", commit = "ded82d6174382a397a2d7ddc066daeabe2e31232", pr = 413, published_run = 40569848351, published_nevra = "vte291-0:0.84.1-1.hum1.bfin.x86_64" },
     { name = "vte291-gtk4", commit = "ded82d6174382a397a2d7ddc066daeabe2e31232", pr = 413, published_run = 40569848351, published_nevra = "vte291-gtk4-0:0.84.1-1.hum1.bfin.x86_64" },
+    # D-Bus helper service and its home-directory creator (#488). oddjob-mkhomedir
+    # is an unconditional subpackage of oddjob.spec; build and runtime evidence pending.
+    { name = "oddjob", pr = 784 },
+    { name = "oddjob-mkhomedir", pr = 784 },
 ]
 
 [wontfix]
@@ -749,6 +775,7 @@ packages = [
 # ``states``; they are surfaced as ``totals.wontfix`` so the count partition
 # (areas + resolved + wontfix) still equals the audit's 551.
 packages = [
+    { name = "initscripts-service", reason = "Utah already waives the legacy SysV service shim; reconcile existing consumer policy, not a new exclusion (projectbluefin/utah#263; https://github.com/projectbluefin/utah/blob/1bc07242296d039bca80412ec2b0e68579a61d3e/baselines/triage.toml#L384-L386)." },
     # Kernel-policy decision applies to the module package and its USB/IP consumer.
     { name = "usbip", reason = "USB-over-network requires excluded kernel-modules-extra and matching kmod providers; no named use case accepted. Maintainer decision: https://github.com/projectbluefin/utah-packages/issues/491#issuecomment-6475648707 (Utah D4; dependency tracked in #487)." },
     { name = "kernel-modules-extra", reason = "Utah D4 excludes extra kernel modules unless a named use case is accepted. Maintainer decision: https://github.com/projectbluefin/utah-packages/issues/491#issuecomment-6475648707 (kernel batch #487)." },

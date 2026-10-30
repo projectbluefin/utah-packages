@@ -1,0 +1,8 @@
+{
+  "package": "kyotocabinet",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/kyotocabinet.git",
+  "commit": "52c36d295cb19a88ff95b495f592c9b47c3ded61",
+  "tree": "2e41660bde966c4ff3ea5b2015b1495a2fbeddea",
+  "imported_at": "2026-10-28T09:29:33.499394+00:00"
+}

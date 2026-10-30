@@ -1,0 +1,8 @@
+{
+  "package": "perl-Unicode-Normalize",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/perl-Unicode-Normalize.git",
+  "commit": "78a89322be896c250fe1f3903327e2e71e9124f9",
+  "tree": "6d22cbee6a01d145640f9f584ffbc309db2041e2",
+  "imported_at": "2026-10-28T14:22:48.087656+00:00"
+}

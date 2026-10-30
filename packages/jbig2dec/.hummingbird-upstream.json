@@ -1,0 +1,8 @@
+{
+  "package": "jbig2dec",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/jbig2dec.git",
+  "commit": "71d5c85badc25b84422e2c30ef25c157fadeaff3",
+  "tree": "ceed5b28859b857f20a77e34a53b2f4fbd65cebb",
+  "imported_at": "2026-10-29T23:01:55.683082+00:00"
+}

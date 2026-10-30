@@ -1,0 +1,13 @@
+summary: Exercise ImageMagick commands, delegates, and common formats
+description: |
+  Verify the installed Fedora RPM rather than the build tree.  The test
+  checks essential delegates and performs round-trip conversions through
+  representative raster and modern image formats.
+test: ./test.sh
+framework: shell
+duration: 5m
+tier: 1
+require:
+  - ImageMagick
+  - ImageMagick-djvu
+  - ImageMagick-heic

@@ -521,7 +521,7 @@
       "parity_note": null,
       "recipe": "packages/pipewire",
       "stage": 6,
-      "version": "1.6.9",
+      "version": "1.6.10",
       "nevra": null,
       "recipe_provenance": "https://src.fedoraproject.org/rpms/pipewire.git"
     },
@@ -536,7 +536,7 @@
       "parity_note": null,
       "recipe": "packages/pipewire",
       "stage": 6,
-      "version": "1.6.9",
+      "version": "1.6.10",
       "nevra": null,
       "recipe_provenance": "https://src.fedoraproject.org/rpms/pipewire.git"
     },
@@ -551,7 +551,7 @@
       "parity_note": null,
       "recipe": "packages/pipewire",
       "stage": 6,
-      "version": "1.6.9",
+      "version": "1.6.10",
       "nevra": null,
       "recipe_provenance": "https://src.fedoraproject.org/rpms/pipewire.git"
     },
@@ -566,7 +566,7 @@
       "parity_note": null,
       "recipe": "packages/pipewire",
       "stage": 6,
-      "version": "1.6.9",
+      "version": "1.6.10",
       "nevra": null,
       "recipe_provenance": "https://src.fedoraproject.org/rpms/pipewire.git"
     },
@@ -581,7 +581,7 @@
       "parity_note": null,
       "recipe": "packages/pipewire",
       "stage": 6,
-      "version": "1.6.9",
+      "version": "1.6.10",
       "nevra": null,
       "recipe_provenance": "https://src.fedoraproject.org/rpms/pipewire.git"
     },
@@ -596,7 +596,7 @@
       "parity_note": null,
       "recipe": "packages/wireplumber",
       "stage": 4,
-      "version": "0.5.14",
+      "version": "0.5.18",
       "nevra": null,
       "recipe_provenance": "https://src.fedoraproject.org/rpms/wireplumber.git"
     }
