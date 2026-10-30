@@ -1,9 +1,14 @@
 # The canary for contribution (fork) pull requests: the same rebuild workflow
 # canary.yml runs, over the same fixed set, with a token that cannot write
 # anything. A fork's code builds here automatically, on every push, with no
-# maintainer step, because nothing in this workflow can publish: the token
-# grants read only, so an image, a cache entry, an attestation or a comment
-# is out of reach whatever the pull request changes.
+# maintainer step, because nothing in this workflow can publish: GitHub
+# hands a fork's pull_request run a read-only token whatever the workflow
+# declares, and every build runs with skip_publish, so an image, a cache
+# entry, an attestation or a comment is out of reach whatever the pull
+# request changes. The build jobs still declare the write scopes
+# rebuild-rpms.yml asks for, because a called workflow may not request more
+# than its caller grants; without them the nested call is refused. Never
+# move this to pull_request_target.
 #
 # What it proves: the canary set builds through the default (hermetic) lane
 # and the container lane, and every package was locked and built from its
@@ -69,9 +74,20 @@ jobs:
             echo "set=$CANARY_SET"
           } >> "$GITHUB_OUTPUT"
 
-  build:
+  # Named pass1 and pass6, as in canary.yml: tools/canary.py finds the build
+  # jobs by their caller's pass<N> job id.
+  pass1:
     needs: changes
     if: needs.changes.outputs.run == 'true'
+    # The scopes rebuild-rpms.yml declares (see the header); a fork's
+    # pull_request token stays read-only regardless.
+    permissions:
+      contents: read
+      id-token: write
+      packages: write
+      attestations: write
+      actions: read
+      issues: write
     uses: ./.github/workflows/rebuild-rpms.yml
     with:
       full: true
@@ -83,7 +99,7 @@ jobs:
       cache_salt: ${{ needs.changes.outputs.salt }}
 
   verify-hermetic:
-    needs: [changes, build]
+    needs: [changes, pass1]
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -102,12 +118,21 @@ jobs:
           set -euo pipefail
           gh api --paginate "repos/$REPOSITORY/actions/runs/$RUN_ID/attempts/$RUN_ATTEMPT/jobs?per_page=100" \
             --jq '.jobs[]' | jq -s . > jobs.json
-          python3 tools/canary.py verify-hermetic jobs.json --pass build --locks locks --set "$SET" \
+          python3 tools/canary.py verify-hermetic jobs.json --pass pass1 --locks locks --set "$SET" \
             --stage-dependency vulkan-loader=vulkan-headers >> "$GITHUB_STEP_SUMMARY"
 
-  lane:
+  pass6:
     needs: changes
     if: needs.changes.outputs.run == 'true'
+    # The scopes rebuild-rpms.yml declares (see the header); a fork's
+    # pull_request token stays read-only regardless.
+    permissions:
+      contents: read
+      id-token: write
+      packages: write
+      attestations: write
+      actions: read
+      issues: write
     uses: ./.github/workflows/rebuild-rpms.yml
     with:
       full: true
@@ -119,7 +144,7 @@ jobs:
       cache_salt: ${{ needs.changes.outputs.salt }}
 
   verify-lane:
-    needs: [changes, lane]
+    needs: [changes, pass6]
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -134,11 +159,11 @@ jobs:
           set -euo pipefail
           gh api --paginate "repos/$REPOSITORY/actions/runs/$RUN_ID/attempts/$RUN_ATTEMPT/jobs?per_page=100" \
             --jq '.jobs[]' | jq -s . > jobs.json
-          python3 tools/canary.py verify-built jobs.json --pass lane --set "$SET" >> "$GITHUB_STEP_SUMMARY"
+          python3 tools/canary.py verify-built jobs.json --pass pass6 --set "$SET" >> "$GITHUB_STEP_SUMMARY"
 
   canary:
     name: Canary (read-only)
-    needs: [changes, build, verify-hermetic, lane, verify-lane]
+    needs: [changes, pass1, verify-hermetic, pass6, verify-lane]
     if: always()
     runs-on: ubuntu-24.04
     steps:

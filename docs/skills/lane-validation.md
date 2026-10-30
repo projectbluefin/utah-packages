@@ -80,6 +80,16 @@ pipeline path: its token has no `packages: write`, so `canary.yml` fails it with
 "a fork pull request cannot publish the canary image". The author cannot fix
 that, and neither can an agent working from a fork; do not ask them to.
 
+The same fork pull request also gets **Canary (read-only)**
+(`canary-read-only.yml`) automatically, with no maintainer step. It builds the
+canary set from the fork's code through the hermetic lane and the container
+lane with a read-only token and no publish, and proves every package was
+locked and built from its lock. It cannot prove the signed image, cache
+stability across passes, incremental publish or incremental selection, all of
+which need a publish, so it does not replace the required `Canary` check: that
+still needs the maintainer run below. A failing read-only canary is a real
+build failure the author can fix.
+
 `tools/canary.py` treats every `config/` path as a pipeline path. A recipe
 import that registers its source in `config/upstream-sources.json` therefore
 needs this proof even when it changes no workflow or build tool. If
