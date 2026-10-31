@@ -863,11 +863,11 @@
   "states": {
     "already_recipe": 7,
     "manifest_wants": 1,
-    "pending": 156
+    "pending": 154
   },
   "totals": {
-    "backlog": 164,
-    "resolved": 350,
+    "backlog": 162,
+    "resolved": 352,
     "wontfix": 37
   }
 }
