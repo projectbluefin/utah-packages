@@ -11,7 +11,8 @@
       "total": 47
     },
     "fonts-i18n": {
-      "pending": 14,
+      "already_recipe": 1,
+      "pending": 13,
       "total": 14
     },
     "gnome-apps": {
@@ -427,7 +428,7 @@
     {
       "area": "fonts-i18n",
       "name": "m17n-lib",
-      "state": "pending"
+      "state": "already_recipe"
     },
     {
       "area": "gnome-apps",
@@ -772,9 +773,9 @@
   ],
   "issue": "projectbluefin/utah-packages#308",
   "states": {
-    "already_recipe": 16,
+    "already_recipe": 17,
     "manifest_wants": 1,
-    "pending": 127
+    "pending": 126
   },
   "totals": {
     "backlog": 144,

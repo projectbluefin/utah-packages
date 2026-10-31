@@ -1,0 +1,15 @@
+test: ./runtest.sh
+duration: 10m
+framework: beakerlib
+require:
+  - m17n-lib
+  - m17n-lib-devel
+  - m17n-lib-tools
+  - glibc-locale-source
+  - rpm-build
+  - autoconf
+  - automake
+  - libtool
+  - make
+  - gettext-devel
+  - gcc
