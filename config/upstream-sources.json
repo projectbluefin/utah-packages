@@ -183,6 +183,13 @@
       ]
     },
     {
+      "name": "anthy-unicode",
+      "version": "1.0.0.20260213",
+      "url": "https://github.com/fujiwarat/anthy-unicode/releases/download/1.0.0.20260213/anthy-unicode-1.0.0.20260213.tar.xz",
+      "filename": "anthy-unicode-1.0.0.20260213.tar.xz",
+      "sha512": "895d7f325214ae2174eafed98d3de466d59dd26b58e3220670c804078b94b718ab4a634bf5daddb9f6a0b13ffb9a132460f65ef512fa0af5e08077f85d84227e"
+    },
+    {
       "name": "antiword",
       "version": "0.37",
       "url": "https://github.com/grobian/antiword/archive/3f371a2fd2e8b7ba3c0793381e1a1df0d561f961/antiword-0.37.tar.gz",
@@ -942,6 +949,13 @@
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/gcr3/gcr-3.41.2.tar.xz/sha512/056c6c6a3910dae6997cef34fc95d22510ddea37be0ccc329996575a95e20582fa428bd491389aa77f8b6ffbd8674a2b3ba444cb83bdf3a2be5fd7aed276606d/gcr-3.41.2.tar.xz"
       ]
+    },
+    {
+      "name": "gd",
+      "version": "2.3.3",
+      "url": "https://github.com/libgd/libgd/releases/download/gd-2.3.3/libgd-2.3.3.tar.xz",
+      "filename": "libgd-2.3.3.tar.xz",
+      "sha512": "aa49d4381d604a4360d556419d603df2ffd689a6dcc10f8e5e1d158ddaa3ab89912f6077ca77da4e370055074007971cf6d356ec9bf26dcf39bcff3208bc7e6c"
     },
     {
       "name": "gdk-pixbuf2",
@@ -2161,6 +2175,13 @@
       "sha512": "1c0be0d15c5e7b50a3eb4a239e2c833c44b693b111c7f64c409f9abf8051356572acadebc8b295555683ff6bd4895acdbe32b15a538c971f15d8aa4e6b7fd51b"
     },
     {
+      "name": "libXaw",
+      "version": "1.0.16",
+      "url": "https://www.x.org/pub/individual/lib/libXaw-1.0.16.tar.xz",
+      "filename": "libXaw-1.0.16.tar.xz",
+      "sha512": "1cabad1a9b06dec7de601b977e844536823ee1a0045244acc42ca6b6107da9b4953736d94898a96cab40845eab77dae21e20e1fa66a3dfc4dedf575dfbca04aa"
+    },
+    {
       "name": "libXcursor",
       "version": "1.2.3",
       "url": "https://xorg.freedesktop.org/archive/individual/lib/libXcursor-1.2.3.tar.xz",
@@ -2471,6 +2492,16 @@
       "sha512": "90eaa77b9e2cdafa1ac9e286c11fd7304c00146d0c33e942e36636968933cc683c00de7a3f715123b302fd9b2013ac4620c52371be7c69a1b33e02570847b091",
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/libbytesize/libbytesize-2.12.tar.gz/sha512/90eaa77b9e2cdafa1ac9e286c11fd7304c00146d0c33e942e36636968933cc683c00de7a3f715123b302fd9b2013ac4620c52371be7c69a1b33e02570847b091/libbytesize-2.12.tar.gz"
+      ]
+    },
+    {
+      "name": "libcaca",
+      "version": "0.99",
+      "url": "https://github.com/cacalabs/libcaca/releases/download/v0.99.beta20/libcaca-0.99.beta20.tar.bz2",
+      "filename": "libcaca-0.99.beta20.tar.bz2",
+      "sha512": "8cfb84351f9022c62b655822a9558fbe187260fc18ad89ccf99863c499759fba497388066d066fa529f29d6f808be02a6948849ee19617617ade59b3f5c410eb",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libcaca/libcaca-0.99.beta20.tar.bz2/sha512/8cfb84351f9022c62b655822a9558fbe187260fc18ad89ccf99863c499759fba497388066d066fa529f29d6f808be02a6948849ee19617617ade59b3f5c410eb/libcaca-0.99.beta20.tar.bz2"
       ]
     },
     {
@@ -3250,6 +3281,13 @@
       ]
     },
     {
+      "name": "libotf",
+      "version": "0.9.16",
+      "url": "https://download.savannah.gnu.org/releases/m17n/libotf-0.9.16.tar.gz",
+      "filename": "libotf-0.9.16.tar.gz",
+      "sha512": "0f68c45c1224f02dc0f1a8e9915dd9c1c70d71259b4e2f7bbd4fbec6426e58d4a26e4cbf28dbb8ed051ba6f532f99fc4e74b4ddf97a93ec947fa6260c875d0b4"
+    },
+    {
       "name": "libpaper",
       "version": "2.3.0",
       "url": "https://github.com/rrthomas/libpaper/archive/v2.3.0/libpaper-2.3.0.tar.gz",
@@ -3932,6 +3970,16 @@
       ]
     },
     {
+      "name": "lsb_release",
+      "version": "3.3",
+      "url": "https://github.com/thkukuk/lsb-release_os-release/archive/v3.3/lsb-release_os-release-3.3.tar.gz",
+      "filename": "lsb-release_os-release-3.3.tar.gz",
+      "sha512": "123291295000d4ce827c692a9ab5ebe300a61cb1dabf9af8bfffdd5f20363159e61a98670aac37ae087aa3639b4ec7dfdb5528aa8c3520f43225e9eae50270db",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/lsb_release/lsb-release_os-release-3.3.tar.gz/sha512/123291295000d4ce827c692a9ab5ebe300a61cb1dabf9af8bfffdd5f20363159e61a98670aac37ae087aa3639b4ec7dfdb5528aa8c3520f43225e9eae50270db/lsb-release_os-release-3.3.tar.gz"
+      ]
+    },
+    {
       "name": "lshw",
       "version": "B.02.20",
       "url": "https://github.com/lyonel/lshw/archive/refs/tags/B.02.20.tar.gz",
@@ -4576,6 +4624,16 @@
       ]
     },
     {
+      "name": "phodav",
+      "version": "3.0",
+      "url": "https://download.gnome.org/sources/phodav/3.0/phodav-3.0.tar.xz",
+      "filename": "phodav-3.0.tar.xz",
+      "sha512": "a4720083fd581023ea78cc09e6df4b5d2f90894f916004cf28c7fa557da61d8c7a5539fa6b50647efcd9f771afd088889fdc40579a8e860c8ea20540b25eb26a",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/phodav/phodav-3.0.tar.xz/sha512/a4720083fd581023ea78cc09e6df4b5d2f90894f916004cf28c7fa557da61d8c7a5539fa6b50647efcd9f771afd088889fdc40579a8e860c8ea20540b25eb26a/phodav-3.0.tar.xz"
+      ]
+    },
+    {
       "name": "pinentry",
       "version": "1.3.3",
       "url": "https://gnupg.org/ftp/gcrypt/pinentry/pinentry-1.3.3.tar.bz2",
@@ -5046,6 +5104,36 @@
       "sha512": "97193fd5eb6460dcf2c179c445f756c553af5c3b8a0ab89ed78ea022bdbe147a73bc6e815e18d37b04d3a462fefe32ea3dd238c2a92a10616c3c38e170ce013e"
     },
     {
+      "name": "qt6-qtdeclarative",
+      "version": "6.11.2",
+      "url": "https://download.qt.io/official_releases/qt/6.11/6.11.2/submodules/qtdeclarative-everywhere-src-6.11.2.tar.xz",
+      "filename": "qtdeclarative-everywhere-src-6.11.2.tar.xz",
+      "sha512": "012eeaeb9c492d31a71d463a8abe13ebc5ae0661677977c738082f95576befe123df80cf45bd2733ef7a5ed897693234a3a6c5e7060be01757424dca397e0056",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/qt6-qtdeclarative/qtdeclarative-everywhere-src-6.11.2.tar.xz/sha512/012eeaeb9c492d31a71d463a8abe13ebc5ae0661677977c738082f95576befe123df80cf45bd2733ef7a5ed897693234a3a6c5e7060be01757424dca397e0056/qtdeclarative-everywhere-src-6.11.2.tar.xz"
+      ]
+    },
+    {
+      "name": "qt6-qttranslations",
+      "version": "6.11.2",
+      "url": "https://download.qt.io/official_releases/qt/6.11/6.11.2/submodules/qttranslations-everywhere-src-6.11.2.tar.xz",
+      "filename": "qttranslations-everywhere-src-6.11.2.tar.xz",
+      "sha512": "827b257708d83013b3dac75ca4275b7fbf48465addb96bac139ddb0ab518de83ca5a6aa7ebc24a38970b214bfbf0a99056d5ac4e9f3720876e11db6b7046eb67",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/qt6-qttranslations/qttranslations-everywhere-src-6.11.2.tar.xz/sha512/827b257708d83013b3dac75ca4275b7fbf48465addb96bac139ddb0ab518de83ca5a6aa7ebc24a38970b214bfbf0a99056d5ac4e9f3720876e11db6b7046eb67/qttranslations-everywhere-src-6.11.2.tar.xz"
+      ]
+    },
+    {
+      "name": "qt6-qtwayland",
+      "version": "6.11.2",
+      "url": "https://download.qt.io/official_releases/qt/6.11/6.11.2/submodules/qtwayland-everywhere-src-6.11.2.tar.xz",
+      "filename": "qtwayland-everywhere-src-6.11.2.tar.xz",
+      "sha512": "1bf50e38615010877e21f664b941d5227827cc4086631de885f7aff1e8c73fef9fcbbd7453b3132284134875458e748358fcdf3c823862f511178f63e6bc9918",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/qt6-qtwayland/qtwayland-everywhere-src-6.11.2.tar.xz/sha512/1bf50e38615010877e21f664b941d5227827cc4086631de885f7aff1e8c73fef9fcbbd7453b3132284134875458e748358fcdf3c823862f511178f63e6bc9918/qtwayland-everywhere-src-6.11.2.tar.xz"
+      ]
+    },
+    {
       "name": "quota",
       "version": "4.11",
       "url": "https://downloads.sourceforge.net/linuxquota/quota-4.11.tar.gz",
@@ -5475,6 +5563,17 @@
       "sha512": "d2950336fceaa55f13791afbb23695f193c639f81e24f210eb8a8d91225e84037f80944cc81304c23bac30ea1fd7ff4c093f6be6aa093333c45bd650f8f0336e"
     },
     {
+      "name": "sssd",
+      "version": "2.14.0~beta1",
+      "url": "https://github.com/SSSD/sssd/releases/download/2.14.0-beta1/sssd-2.14.0-beta1.tar.gz",
+      "filename": "sssd-2.14.0-beta1.tar.gz",
+      "sha512": "72be9fc8ddfa1c129b3aac2e6911ec75a944d42cffc3cbd5540ae194f213dfcc815a1b8fe6c823df3d03e077a579359e5b961a03b37bc417168e4806e98338ec",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/sssd/sssd-2.14.0-beta1.tar.gz/sha512/72be9fc8ddfa1c129b3aac2e6911ec75a944d42cffc3cbd5540ae194f213dfcc815a1b8fe6c823df3d03e077a579359e5b961a03b37bc417168e4806e98338ec/sssd-2.14.0-beta1.tar.gz"
+      ],
+      "stage": 3
+    },
+    {
       "name": "startup-notification",
       "version": "0.12",
       "url": "https://www.freedesktop.org/software/startup-notification/releases/startup-notification-0.12.tar.gz",
@@ -5596,6 +5695,20 @@
       "url": "https://download.gnome.org/sources/tecla/51/tecla-51.0.tar.xz",
       "filename": "tecla-51.0.tar.xz",
       "sha512": "4c54087f4742c14b94a80b50be32c3a891591f3ea1ae3ba8f4b677480a610beee9855ca7f000ed9869b8350bf54b61584799e371c35d706724fa3ea8f5406157"
+    },
+    {
+      "name": "tesseract",
+      "version": "5.5.4",
+      "url": "https://github.com/tesseract-ocr/tesseract/archive/5.5.4/tesseract-5.5.4.tar.gz",
+      "filename": "tesseract-5.5.4.tar.gz",
+      "sha512": "c1dd838f8c9cbba585d969c1c5edba52d1aa77dac2057775271f5bb8e22c0550f723d1de362e15263e2c540ae1175b08bff36c5a545dd5f84906c468036b4556"
+    },
+    {
+      "name": "tesseract-tessdata",
+      "version": "4.1.0",
+      "url": "https://github.com/tesseract-ocr/tessdata_fast/archive/4.1.0/tessdata_fast-4.1.0.tar.gz",
+      "filename": "tessdata_fast-4.1.0.tar.gz",
+      "sha512": "d5e3461d262e300ebf21abc39d19471a6aabed442eab8fdee772368a02c4fe0d2e5738701e31b2d0777989778c9db0169a57ea89537266bc66d2228fb96ea63e"
     },
     {
       "name": "thermald",
