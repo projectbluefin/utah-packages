@@ -226,7 +226,6 @@ packages = [
     "libijs",
     "liblqr-1",
     "libnet",
-    "libpaper",
     "libpfm",
     "libreport-filesystem",
     "lockdev",
@@ -263,7 +262,6 @@ packages = [
     "tesseract-tessdata-doc",
     "uavs3d-libs",
     "ublue-os-akmods-addons",
-    "uvg266-libs",
     "v4l2loopback",
     "virtualbox-guest-additions",
 ]
@@ -387,6 +385,8 @@ packages = [
     { name = "libev", pr = 844 },
     # Microsoft CAB compression library recipe import (#502); hosted build, publication and runtime proof remain outstanding.
     { name = "libmspack", pr = 846 },
+    # Paper-size library recipe import (#502); hosted build, publication and runtime proof remain outstanding.
+    { name = "libpaper", pr = 853 },
     { name = "gnome-rounded-blur", commit = "f8589ccd95a48a1f26826c8764330c9f7811a09d", pr = 440, published_run = 40151594832, published_nevra = "gnome-rounded-blur-0:1.0.1^20260809gitf3bfcc7-1.hum1.bfin.x86_64" },
     # Disc-reading recipes; publication and runtime proof remain tracked in #475.
     { name = "libudfread", pr = 658 },
@@ -796,6 +796,8 @@ packages = [
     { name = "udftools", pr = 782 },
     { name = "uresourced", pr = 782 },
     { name = "xfsprogs", pr = 782 },
+    # VVC encoder library from the negativo17 uvg266 recipe (#508); hosted build, publication and runtime proof remain outstanding.
+    { name = "uvg266-libs" },
     # Terminal and VTE emulator outputs (PR #413); publication verified in run 40569848351.
     # vte-profile and vte291-gtk4 are subpackages of vte291.spec.
     # Recipe and publication closure for projectbluefin/utah-packages#484.
