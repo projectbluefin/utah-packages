@@ -38,7 +38,7 @@ Both are indexed below. A skill that exists but is not listed here fails
 | Change the GitHub Pages package catalog, its data source, or its styling | [`skills/package-catalog.md`](skills/package-catalog.md) |
 | Track the factory build backlog from issue #308 (live totals from `just factory-build-backlog`; never committed), or close a backlog gap | [`skills/factory-build-backlog.md`](skills/factory-build-backlog.md) |
 | Answer what the factory or Hummingbird currently publishes, with snapshot evidence, or judge installability | [`skills/repo-inspection.md`](skills/repo-inspection.md) |
-| Validate a recipe wave with a dispatched Canary lane run, or read a lane result | [`skills/lane-validation.md`](skills/lane-validation.md) |
+| Validate a recipe wave with a dispatched Canary lane run, read a lane result, or read Canary's merge queue verdict | [`skills/lane-validation.md`](skills/lane-validation.md) |
 
 ## Reference docs (load on demand)
 
