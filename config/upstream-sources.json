@@ -6029,6 +6029,21 @@
       "stage": 4
     },
     {
+      "name": "vvdec",
+      "version": "3.2.0",
+      "url": "https://github.com/fraunhoferhhi/vvdec/archive/refs/tags/v3.2.0.tar.gz",
+      "filename": "vvdec-3.2.0.tar.gz",
+      "sha512": "bb0085fbcd02fc22fe4e3a277907da8ca2b84b6e0769680a6792eb558fff62d1e7ae0a15a1377967562bb06513046e5eb38749dd08ee06f8badb5b8c246af17e",
+      "lookaside": "rpmfusion-free"
+    },
+    {
+      "name": "vvenc",
+      "version": "1.14.0",
+      "url": "https://github.com/fraunhoferhhi/vvenc/archive/refs/tags/v1.14.0.tar.gz",
+      "filename": "vvenc-1.14.0.tar.gz",
+      "sha512": "2b73f10a32da28bdc51913b5ecc229fe56ef0afe0d66a9bb1e76a9044dc04427e55587b6b9a0ca8d315220d4362b663e038a68a89e5b38ecf3ed2e7b5dcb0c58"
+    },
+    {
       "name": "wavpack",
       "version": "5.9.0",
       "url": "https://www.wavpack.com/wavpack-5.9.0.tar.bz2",
@@ -6178,6 +6193,27 @@
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/wsdd/wsdd-0.8.tar.gz/sha512/e3e5164f9ebe39c979456169bf1b0c6c4cd974792f08fa4dfab9c313fba88ae1208a8112db09c3655719b4e26bfc2616f844f17d2a245132c2f5b22e978e3c20/wsdd-0.8.tar.gz"
       ]
+    },
+    {
+      "name": "x264",
+      "version": "0.165",
+      "url": "https://code.videolan.org/videolan/x264/-/archive/b35605ace3ddf7c1a5d67a2eb553f034aef41d55/x264-b35605ace3ddf7c1a5d67a2eb553f034aef41d55.tar.bz2",
+      "filename": "x264-b35605ace3ddf7c1a5d67a2eb553f034aef41d55.tar.bz2",
+      "sha512": "0d5f02bec8880af0fe2787df82df78a667df1f3a0ff72003ac9999e5438da10262590c43388749db2df419ef768679c3f2400e6eb245664d3b8391d4428aeb54"
+    },
+    {
+      "name": "x265",
+      "version": "4.3",
+      "url": "https://github.com/Multicorewareinc/x265/archive/4.3/x265-4.3.tar.gz",
+      "filename": "x265-4.3.tar.gz",
+      "sha512": "270d0db180ecebfc5c2f1fe6451be66042fab69273d073428f4af00420fa0f8b792ecdc71ec1a15ee2860e3b6a325c56295143f117e94fa3616f0ccecb2ded75"
+    },
+    {
+      "name": "xavs2",
+      "version": "1.4",
+      "url": "https://github.com/pkuvcl/xavs2/archive/1.4.tar.gz",
+      "filename": "xavs2-1.4.tar.gz",
+      "sha512": "2dd93fe94b85ba019adc808b6bc348a79fcecb812a1a9bfb7f67d5274c29fedbee87de3b2307627aa851d813eb142b270c235e8e17fee4e227f84530f9ce0926"
     },
     {
       "name": "xcb-util",

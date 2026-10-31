@@ -1,0 +1,8 @@
+{
+  "package": "vvdec",
+  "branch": "master",
+  "remote": "https://github.com/rpmfusion/vvdec.git",
+  "commit": "3b1c61b4cedc6e349445209df85cf77e709928ff",
+  "tree": "11e7e0bf356bf660a8f9b0b17630f787e7c12fbe",
+  "imported_at": "2026-10-25T19:44:51.673331+00:00"
+}

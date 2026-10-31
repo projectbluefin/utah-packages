@@ -3844,6 +3844,18 @@ packages:
     downstream_package_name: vulkan-loader
     paths:
       - packages/vulkan-loader
+  vvdec:
+    specfile_path: vvdec.spec
+    upstream_package_name: vvdec
+    downstream_package_name: vvdec
+    paths:
+      - packages/vvdec
+  vvenc:
+    specfile_path: vvenc.spec
+    upstream_package_name: vvenc
+    downstream_package_name: vvenc
+    paths:
+      - packages/vvenc
   wavpack:
     specfile_path: wavpack.spec
     upstream_package_name: wavpack
@@ -3934,6 +3946,24 @@ packages:
     downstream_package_name: wsdd
     paths:
       - packages/wsdd
+  x264:
+    specfile_path: x264.spec
+    upstream_package_name: x264
+    downstream_package_name: x264
+    paths:
+      - packages/x264
+  x265:
+    specfile_path: x265.spec
+    upstream_package_name: x265
+    downstream_package_name: x265
+    paths:
+      - packages/x265
+  xavs2:
+    specfile_path: xavs2.spec
+    upstream_package_name: xavs2
+    downstream_package_name: xavs2
+    paths:
+      - packages/xavs2
   xcb-util:
     specfile_path: xcb-util.spec
     upstream_package_name: xcb-util

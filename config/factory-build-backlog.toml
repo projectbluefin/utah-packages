@@ -60,11 +60,6 @@ packages = [
     "libswresample",
     "libswscale",
     "libxavs",
-    "vvdec-libs",
-    "vvenc-libs",
-    "x264-libs",
-    "x265-libs",
-    "xavs2-libs",
 ]
 
 [areas.power]
@@ -265,6 +260,12 @@ packages = [
 # Packages that left the backlog because a recipe was imported.
 # Each entry: package name and the commit that closed the gap.
 packages = [
+    # Codec recipe imports for #476; publication and runtime proof remain separate.
+    { name = "x264-libs", pr = 633 },
+    { name = "x265-libs", pr = 633 },
+    { name = "vvdec-libs", pr = 633 },
+    { name = "vvenc-libs", pr = 633 },
+    { name = "xavs2-libs", pr = 633 },
     # Recipe import only; build, publication, dependency closure and guest file-transfer proof remain on #490.
     { name = "spice-webdavd", pr = 761 },
     # Recipe coverage only; hosted build, publication and runtime proof remain on #486.
