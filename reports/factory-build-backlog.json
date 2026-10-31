@@ -11,8 +11,8 @@
       "total": 47
     },
     "fonts-i18n": {
-      "pending": 14,
-      "total": 14
+      "pending": 13,
+      "total": 13
     },
     "gnome-apps": {
       "pending": 1,
@@ -425,11 +425,6 @@
       "state": "pending"
     },
     {
-      "area": "fonts-i18n",
-      "name": "m17n-lib",
-      "state": "pending"
-    },
-    {
       "area": "gnome-apps",
       "name": "epiphany-runtime",
       "state": "pending"
@@ -774,11 +769,11 @@
   "states": {
     "already_recipe": 16,
     "manifest_wants": 1,
-    "pending": 127
+    "pending": 126
   },
   "totals": {
-    "backlog": 144,
-    "resolved": 370,
+    "backlog": 143,
+    "resolved": 371,
     "wontfix": 37
   }
 }
