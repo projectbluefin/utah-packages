@@ -1,0 +1,8 @@
+{
+  "package": "cryfs",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/cryfs.git",
+  "commit": "72dea347ed114cfe4369fb674e7f66dae3ba47e7",
+  "tree": "8f124406847e65d8d47e49465e74dfa376f8b0b4",
+  "imported_at": "2026-10-31T01:00:10.805147+00:00"
+}

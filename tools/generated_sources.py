@@ -989,6 +989,12 @@ def _bluefin_artwork_generate(package_dir: Path, out_dir: Path) -> Path:
 # Fedora's, but the packager's gzip (zlib-ng) is not reproducible here, so it
 # is `gzip -n -9` and the recipe's `sources` pins that digest.
 GIT_ARCHIVE_SOURCES = {
+    "distribution-gpg-keys": {
+        "remote": "https://github.com/rpm-software-management/distribution-gpg-keys.git",
+        "tag": "distribution-gpg-keys-{version}-1",
+        "compression": "gz",
+        "commits": {"1.123": "6f5f4883ceabd6c3d389ecd913b60675b61563da"},
+    },
     "libslirp": {
         "remote": "https://gitlab.freedesktop.org/slirp/libslirp.git",
         "tag": "v{version}",

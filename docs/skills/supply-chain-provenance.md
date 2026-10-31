@@ -230,6 +230,19 @@ When a primary host dies:
 - Leave the recipe's `Source:` line alone: the spec is Fedora's, and the build
   stages sources from the lock, not from the spec URL.
 
+## A source with no release archive: pin the tag's commit
+
+Some projects tag source revisions without publishing release files.
+`distribution-gpg-keys` is one example: its Fedora archive is made by the
+packaging repository, not published as an upstream release. Use the
+`GIT_ARCHIVE_SOURCES` resolver in
+[`tools/generated_sources.py`](../../tools/generated_sources.py): record the
+upstream remote, tag pattern, compression, and full commit resolved by that
+tag. The generator fetches the tag, fails if it no longer resolves to the
+pinned commit, then archives that immutable commit with a stable prefix and
+compression. Pin the resulting SHA-512 in both the source lock and the recipe's
+`sources` file.
+
 ## A source with no release and a huge archive: pick files, pin each
 
 A recipe can only take one primary source from the lock; a second `sources`
