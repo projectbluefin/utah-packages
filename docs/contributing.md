@@ -71,19 +71,34 @@ must name different files, including when using symlinks or hard links. For an
 accepted manual import, use `--merge` to retain the other packages in the
 source lock: a successful run without it replaces the catalog with only the
 selected package. For rejected recipes, lock the upstream release by hand with
-Fedora in `fallback_urls` (or as a `generate` entry, above), then regenerate
-`.packit.yaml` and the architecture counts as the workflow does. When importing
+Fedora in `fallback_urls` (or as a `generate` entry, above), then run
+`just regenerate-inventory` to refresh the derived inventory. When importing
 by hand on a workstation without `rpmspec`, lock the source in the pinned
 `quay.io/packit/packit` image as the workflow does. See
 [`repeated-mistakes.md` section 23](skills/repeated-mistakes.md#23-an-import-pull-request-is-a-recipe-not-a-package).
 
 If the imported name (or any `%package` subpackage the recipe builds) is in
 the factory build backlog (`config/factory-build-backlog.toml`), the same
-branch must also move it from its `[areas.<area>]` list to `[resolved]` and
-regenerate `reports/factory-build-backlog.json` with
-`python3 tools/factory_build_backlog.py`; the `factory-build-backlog` gate in
+branch must also move it from its `[areas.<area>]` list to `[resolved]` before
+running `just regenerate-inventory`; the `factory-build-backlog` gate in
 `just check` and CI fails on a stale snapshot. See
 [`factory-build-backlog.md`](skills/factory-build-backlog.md#closing-a-backlog-gap).
+
+For manual imports, removals, and PR recovery, first combine current `main`
+and the PR's recipe, source-lock, and backlog catalog changes, retaining
+independent records and existing publication evidence. Then run:
+
+```sh
+just regenerate-inventory
+```
+
+This writes `.packit.yaml`, refreshes `docs/architecture.md` counts, and
+regenerates `reports/factory-build-backlog.json`, in that order. Never resolve
+generated conflicts by choosing either branch's stale counts or report:
+regenerate from the combined source inventory even if a generated file merged
+without conflicts. Repeating the command with unchanged inputs produces the
+same files. The individual generator commands remain available; `just check`
+only checks for drift and does not repair it.
 
 Build order is solved from the recipe's BuildRequires: a package builds after
 every factory package it BuildRequires, and a merge that changes it rebuilds it
@@ -129,25 +144,21 @@ of that pull request for good, so update it by hand on its own branch. See
 Dropping a recipe out of the rebuild set (for example `gcc`, removed because
 Hummingbird ships the identical `gcc-16.2.1` and the factory scope is to build
 what Hummingbird does not -- projectbluefin/utah-packages#69) means editing the
-same four places an import writes to, or the next `just check` fails:
+source inputs and regenerating their derived inventory, or the next
+`just check` fails:
 
 - `config/upstream-sources.json` -- delete the package's entry (the recipe with
   no entry is not eligible to build).
-- `.packit.yaml` -- delete the package's block.
 - `packages/<name>/` -- delete the whole directory (recipe, patches, sources).
 - Any generator special-casing in `tools/generated_sources.py`.
-- `docs/architecture.md` -- regenerate with
-  `python3 tools/render_architecture_counts.py --write` (the import
-  workflow calls the same script, so a deletion done by hand is a
-  one-line change rather than six hand-edits). The set sizes the contract
-  step asserts (`tests/test_architecture_counts.py`) follow the inventory;
-  the inventory reads from `packages/`, so deleting the recipe directory is
-  enough to keep the counts in sync.
 
-If the package (or a subpackage its recipe builds) is a factory build backlog
-name, its auditor state changes too: regenerate
-`reports/factory-build-backlog.json` with `python3 tools/factory_build_backlog.py`
-or the `factory-build-backlog` gate fails.
+Then run `just regenerate-inventory` to remove the Packit block, refresh
+`docs/architecture.md` counts, and regenerate the backlog snapshot from the
+remaining inventory. The set sizes asserted by
+`tests/test_architecture_counts.py` follow `packages/`; no test baseline needs
+to be hand-edited. If the package (or a subpackage its recipe builds) is a
+factory build backlog name, its auditor state changes too, so the report must
+be refreshed even when the catalog itself did not change.
 
 The image manifest (`config/bluefin-packages.toml`) and
 `config/hummingbird-provided-sources.json` are intentionally left alone: the
