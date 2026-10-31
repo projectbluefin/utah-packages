@@ -76,6 +76,7 @@ A plugin for rygel to use localsearch to locate media on the local machine.
 
 %find_lang %{name}
 
+%post
 %systemd_user_post %{name}.service
 
 %preun
