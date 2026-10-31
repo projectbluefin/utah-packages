@@ -7,8 +7,8 @@
     },
     "dev-tools": {
       "already_recipe": 5,
-      "pending": 42,
-      "total": 47
+      "pending": 40,
+      "total": 45
     },
     "fonts-i18n": {
       "pending": 14,
@@ -306,11 +306,6 @@
     },
     {
       "area": "dev-tools",
-      "name": "qemu-user-static-aarch64",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
       "name": "rclone",
       "state": "pending"
     },
@@ -322,11 +317,6 @@
     {
       "area": "dev-tools",
       "name": "restic",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "rpm-ostree",
       "state": "pending"
     },
     {
@@ -774,11 +764,11 @@
   "states": {
     "already_recipe": 16,
     "manifest_wants": 1,
-    "pending": 127
+    "pending": 125
   },
   "totals": {
-    "backlog": 144,
+    "backlog": 142,
     "resolved": 370,
-    "wontfix": 37
+    "wontfix": 39
   }
 }
