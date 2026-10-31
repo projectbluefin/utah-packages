@@ -137,6 +137,28 @@ class ValidateScriptTests(unittest.TestCase):
         assert result.returncode == 0, result.stderr
         assert "validated 1 source RPMs" in result.stdout
 
+    def test_x265_check_failure_cannot_be_made_advisory(self) -> None:
+        for tail, expected in (("|| :", 1), ("|| true", 1), ("|| exit $?", 0)):
+            with self.subTest(tail=tail):
+                with tempfile.TemporaryDirectory() as directory:
+                    root = Path(directory)
+                    self.build(root, packages=("x265",))
+                    (root / "packages" / "x265" / "x265.spec").write_text(
+                        "Name: x265\n%check\n"
+                        "for i in 8 10 12; do\n"
+                        "    if [ -d ${i}bit ]; then\n"
+                        "        pushd ${i}bit\n"
+                        f"        test/TestBench {tail}\n"
+                        "        popd\n"
+                        "    fi\n"
+                        "done\n%files\n"
+                    )
+                    result = self.run_validate(root)
+                    self.assertEqual(result.returncode, expected, result.stderr)
+                    if expected:
+                        self.assertIn("test/TestBench", result.stderr)
+                        self.assertNotIn("validated 1 source RPMs", result.stdout)
+
     def test_accepts_an_upstream_import_with_no_dist_git_snapshot(self) -> None:
         result = self.check(provenance=UPSTREAM_PROVENANCE)
         assert result.returncode == 0, result.stderr

@@ -128,7 +128,7 @@ find %{buildroot} -name "*.a" -delete
 for i in 8 10 12; do
     if [ -d ${i}bit ]; then
         pushd ${i}bit
-            test/TestBench || :
+            test/TestBench || exit $?
         popd
     fi
 done
