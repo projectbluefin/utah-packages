@@ -7,12 +7,19 @@ nor the Hummingbird supply. Each entry is a candidate factory build or an
 explicit wontfix; tracking its real state is what this tool exists to do.
 
 The tool takes ``config/factory-build-backlog.toml`` as the source of truth
-(so adding a name is one PR), partitions every entry by where it stands in
-the factory today, and emits ``reports/factory-build-backlog.json`` as a
-deterministic snapshot: the report carries no wall-clock field, so a run
-that changes nothing rewrites the file byte-for-byte. ``--check`` exits 1
-if the snapshot is stale or if the catalog itself is malformed, so the
-snapshot stays trustworthy in CI.
+(so adding a name is one PR) and partitions every entry by where it stands in
+the factory today. The report is derived, not tracked: every recipe import
+moves its totals, so committing it made concurrent imports conflict. It is
+printed as a Markdown summary, written as JSON only with ``--output`` (CI
+uploads it as an artifact), and deterministic: the report carries no
+wall-clock field. ``--check`` exits 1 if the catalog breaks its contract or
+disagrees with the recipe inventory.
+
+``--check`` enforces the backlog contract without a tracked snapshot:
+the catalog must pin ``[meta].audit_names_sha256`` and every audited name
+must be accounted for exactly once (one area, ``[resolved]`` or
+``[wontfix]``) under that digest, and no backlog name may have a recipe
+directory without a source lock.
 
 Partitions:
 
@@ -57,7 +64,6 @@ from tools.packit_workflow import package_names
 
 
 CATALOG_PATH = Path("config/factory-build-backlog.toml")
-REPORT_PATH = Path("reports/factory-build-backlog.json")
 PACKIT_PATH = Path(".packit.yaml")
 UPSTREAM_PATH = Path("config/upstream-sources.json")
 MANIFEST_PATH = Path("config/bluefin-packages.toml")
@@ -482,112 +488,75 @@ def _report(root: Path, catalog_path: Path) -> dict:
     return report
 
 
-def _check(report: dict, path: Path) -> int:
-    """Verify the committed snapshot still matches the live repository state.
+def _check(report: dict) -> int:
+    """Verify the backlog contract against the live repository state.
 
-    ``--check`` is the gate. The report carries no wall-clock field, so the
-    live report and the committed snapshot must be equal byte-for-byte;
-    anything else is drift. The messages below name the drifting section
-    (meta, totals, states, areas, entries, recipe consistency) so a failure
-    says what moved instead of dumping two large dicts.
+    ``_report`` already exits on a catalog that repeats a name, lists it in
+    two of area / ``[resolved]`` / ``[wontfix]``, or whose names do not hash
+    to the pinned audit digest. Here the pin itself is mandatory -- without
+    it the identity check would be skipped silently -- and a recipe the
+    backlog counts as shipped must also be source-locked.
     """
-    if not path.is_file():
-        print(f"missing snapshot at {path}; run without --check to regenerate")
-        return 1
-
-    on_disk = json.loads(path.read_text())
     errors = []
-    # ``[meta]`` (issue, audit_source, the three digest pins, audit_measured_at)
-    # is sourced from the catalog, so a stale snapshot would not catch a
-    # metadata-only edit. Compare the whole ``meta`` block byte-for-byte.
-    if report.get("issue") != on_disk.get("issue"):
-        errors.append(f"issue drift: live {report.get('issue')!r} vs snapshot {on_disk.get('issue')!r}")
-    if report.get("audit_source") != on_disk.get("audit_source"):
+    if not report.get("audit_names_sha256"):
         errors.append(
-            f"audit_source drift: live {report.get('audit_source')!r} vs "
-            f"snapshot {on_disk.get('audit_source')!r}"
+            "catalog [meta] does not pin audit_names_sha256; without it the "
+            "audited names are unchecked"
         )
-    for digest in ("audit_digest_bluefin", "audit_digest_utah", "audit_digest_factory", "audit_names_sha256"):
-        if report.get(digest) != on_disk.get(digest):
-            errors.append(
-                f"{digest} drift: live {report.get(digest)!r} vs snapshot {on_disk.get(digest)!r}"
-            )
-    if report.get("audit_measured_at") != on_disk.get("audit_measured_at"):
+    inconsistent = report.get("inconsistent_recipe_state")
+    if inconsistent:
         errors.append(
-            f"audit_measured_at drift: live {report.get('audit_measured_at')!r} vs "
-            f"snapshot {on_disk.get('audit_measured_at')!r}"
-        )
-    if report["totals"] != on_disk.get("totals"):
-        errors.append(f"totals drift: live {report['totals']} vs snapshot {on_disk.get('totals')}")
-    if report["states"] != on_disk.get("states"):
-        errors.append(f"states drift: live {report['states']} vs snapshot {on_disk.get('states')}")
-    # Totals and states are blind to a name moving between areas or two names
-    # of the same state swapping places, so compare the rollup and the entry
-    # list themselves. ``report["entries"]`` always has exactly
-    # ``totals["backlog"]`` items (``_report``'s per-area classification loop
-    # emits one entry per backlog name) so an entries-vs-backlog count check
-    # is unreachable and is not duplicated here.
-    backlog = report["totals"]["backlog"]
-    if report["areas"] != on_disk.get("areas"):
-        moved = sorted(
-            area
-            for area in set(report["areas"]) | set(on_disk.get("areas", {}))
-            if report["areas"].get(area) != on_disk.get("areas", {}).get(area)
-        )
-        errors.append(f"areas drift: {moved}")
-    if report["entries"] != on_disk.get("entries"):
-        live_entries = {entry["name"]: entry for entry in report["entries"]}
-        disk_entries = {entry["name"]: entry for entry in on_disk.get("entries", [])}
-        changed = sorted(
-            name
-            for name in set(live_entries) | set(disk_entries)
-            if live_entries.get(name) != disk_entries.get(name)
-        )
-        errors.append(f"entries drift: {changed}")
-    if report.get("inconsistent_recipe_state") != on_disk.get("inconsistent_recipe_state"):
-        errors.append(
-            "inconsistent_recipe_state drift: live "
-            f"{report.get('inconsistent_recipe_state')} vs snapshot "
-            f"{on_disk.get('inconsistent_recipe_state')}"
+            f"backlog names with a recipe but no source lock: {inconsistent}"
         )
     if errors:
         for error in errors:
-            print(error)
+            print(error, file=sys.stderr)
         return 1
-    print(f"factory-build-backlog snapshot consistent ({backlog} entries, {report['states'].get('pending', 0)} pending)")
     return 0
+
+
+def _summary(report: dict) -> str:
+    """Markdown rollup: catalog totals, partition counts, per-area pending."""
+    totals = report["totals"]
+    lines = [
+        f"### Factory build backlog ({report['issue']})",
+        "",
+        "| backlog | resolved | wontfix |",
+        "| ---: | ---: | ---: |",
+        f"| {totals['backlog']} | {totals['resolved']} | {totals['wontfix']} |",
+        "",
+        "| state | names |",
+        "| --- | ---: |",
+    ]
+    lines += [f"| {state} | {count} |" for state, count in report["states"].items()]
+    lines += ["", "| area | pending | total |", "| --- | ---: | ---: |"]
+    lines += [
+        f"| {area} | {rollup.get('pending', 0)} | {rollup['total']} |"
+        for area, rollup in report["areas"].items()
+    ]
+    return "\n".join(lines)
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--root", type=Path, default=Path("."))
     parser.add_argument("--catalog", type=Path, default=CATALOG_PATH)
-    parser.add_argument("--output", type=Path, default=REPORT_PATH)
+    parser.add_argument("--output", type=Path,
+                        help="also write the full JSON report here (derived; never committed)")
     parser.add_argument("--check", action="store_true",
-                        help="exit 1 when the committed snapshot is stale")
+                        help="exit 1 when the catalog or the recipe inventory breaks the backlog contract")
     args = parser.parse_args(argv)
 
     root = args.root.resolve()
     catalog_path = (root / args.catalog).resolve() if not args.catalog.is_absolute() else args.catalog
-    output_path = (root / args.output).resolve() if not args.output.is_absolute() else args.output
 
     report = _report(root, catalog_path)
 
-    if args.check:
-        return _check(report, output_path)
-
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n")
-    # Stable stdout summary: per-state counts, then per-area pending counts
-    # so the user can see which area is the biggest gap.
-    summary = {"states": report["states"], "totals": report["totals"]}
-    pending_per_area = {
-        area: rollup.get("pending", 0)
-        for area, rollup in sorted(report["areas"].items())
-    }
-    summary["pending_per_area"] = pending_per_area
-    print(json.dumps(summary, indent=2, sort_keys=True))
-    return 0
+    if args.output is not None:
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n")
+    print(_summary(report))
+    return _check(report) if args.check else 0
 
 
 if __name__ == "__main__":

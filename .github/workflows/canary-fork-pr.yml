@@ -136,8 +136,14 @@ jobs:
             n="${branch#canary/pr-}"
             state=$(gh api "repos/$REPOSITORY/pulls/$n" --jq .state)
             if [ "$state" != open ]; then
-              gh api -X DELETE "repos/$REPOSITORY/git/refs/heads/$branch"
-              echo "deleted $branch ($state)"
+              if gh api -X DELETE "repos/$REPOSITORY/git/refs/heads/$branch" > deletion.json; then
+                echo "deleted $branch ($state)"
+              else
+                # Another PR's dispatch may have deleted the same closed copy.
+                # Only that exact response is idempotent; all other errors fail.
+                jq -e '.message == "Reference does not exist" and (.status | tostring | IN("404", "422"))' deletion.json > /dev/null
+                echo "already deleted $branch ($state)"
+              fi
             fi
           done < copies.txt
 

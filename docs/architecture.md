@@ -78,7 +78,7 @@ a PR or merge check and its output is not published. Its `discover` job emits th
 matrix at 256 jobs and expands a larger one to nothing rather than rejecting
 it, so once the monorepo passed 256 packages the pilot failed on every run with
 a green `discover` above an `srpm` job that never existed. The `discover` guard
-asserts the package list is non-empty, which a list of 701 satisfies while
+asserts the package list is non-empty, which a list of several hundred satisfies while
 still producing no jobs. Each matrix job uses `tools/source_pipeline.py` to fetch
 and verify the configured sources and stage them beside the spec, then runs
 `packit srpm --preserve-spec`. It uploads one SRPM artifact and stops there:
@@ -130,19 +130,19 @@ Two consequences worth stating plainly:
   precondition for Copr builds, not evidence of them. The only thing exercising
   Packit is the pilot workflow.
 
-The root Packit configuration and the source lock both cover all 701 recipes:
-
-| check | result |
-| --- | ---: |
-| `ls -d packages/*/ \| wc -l` | `701` |
-| entries under `.packit.yaml:packages` | `701` |
-| entries under `config/upstream-sources.json:packages` | `701` |
-
-`python3 tools/validate.py` reports:
+The root Packit configuration and the source lock both cover every recipe:
+`tools/validate.py` fails when a recipe under `packages/` has no
+`.packit.yaml:packages` entry or no `config/upstream-sources.json` lock, and
+`tests/test_recipe_set_agreement.py` holds the three name sets equal. For the
+live size and provenance split, run `python3 tools/validate.py`; it ends with
+a line of the form:
 
 ```text
-validated 701 source RPMs (6 master, 690 rawhide, 5 upstream)
+validated N source RPMs (A master, B rawhide, C upstream)
 ```
+
+This document quotes no inventory counts: every recipe import would have to
+edit them, and concurrent imports would conflict on them.
 
 ## Current binary pipeline
 
@@ -160,7 +160,7 @@ validated 701 source RPMs (6 master, 690 rawhide, 5 upstream)
 | `publish` | Seeds from the verified previous image, replaces the RPMs of each source package this run built (and did not lose precedence) by source name, removes the bootstrap RPM, creates and signs repository metadata, validates the Hummingbird-only transaction over the whole candidate, and publishes a GHCR OCI image that is both cosign-signed and provenance-attested. A failed package keeps its previous build. |
 | `report` | Runs whether or not publish did. Names every selected package that did not publish -- from the run's own artifact list -- in the job summary, and on `main` opens, updates or closes the tracking issue *Factory: packages failing on main*. |
 
-96 of 701 packages carry a hand-assigned `stage` in
+A minority of packages carry a hand-assigned `stage` in
 `config/upstream-sources.json`. Since waves are solved from BuildRequires it is
 consulted only between members of one BuildRequires cycle, to decide which
 builds first -- `malcontent-bootstrap` before `flatpak` before `malcontent`.
@@ -269,8 +269,9 @@ because the newer run selects against the published state and so builds the
 union. The daily run moved off `06:41 UTC`, where it collided with
 `bump-upstream-sources.yml`. The daily bump pull request is gated by
 `bump-upstream-gate.yml`, which builds exactly the bumped recipes (publishing
-nothing), merges only when all of them built, and then dispatches the factory
-on `main`, because its GITHUB_TOKEN merge starts no push run; see
+nothing). A trusted default-branch receiver validates the successful gate
+and uses an App token to enqueue or merge only that built head. The actual
+App/queue push to `main` starts factory publication; see
 [`docs/skills/upstream-version-bumps.md`](skills/upstream-version-bumps.md#the-bump-gate).
 Other pull requests run validation and the canary, never the factory.
 The rationale is part of the cache contract in
@@ -298,11 +299,22 @@ salt`), so a change to how packages are compiled compiles for real in
 entries never share a key with production ones: an empty salt leaves the
 production key unchanged, which `tests/test_package_cache_key.py` asserts.
 
-It runs on every pull request. The `Canary` job is the required check and
-passes without building anything when no pipeline path changed
-(`.github/workflows/`, `.github/actions/`, `tools/`, `config/`,
-`Containerfile*`). Do not dispatch a full run to prove a pipeline change
-before the canary is green on it.
+It runs on every pull request and on every merge queue group. The `Canary`
+job is the required check and passes without building anything when no
+pipeline path changed (`.github/workflows/`, `.github/actions/`, `tools/`,
+`config/`, `Containerfile*`). Do not dispatch a full run to prove a pipeline
+change before the canary is green on it.
+
+A merge queue group (`merge_group`) never builds: every build pushes a
+package-cache image and `pass1` publishes and signs a canary tag, and nothing
+may publish from a queue ref. Only `changes` and the `Canary` gate run there,
+both with read-only tokens, and `pass1`/`pass6` refuse the event outright.
+`tools/canary.py merge-group` uses the queue-ref PR number as a candidate
+witness, not a list of members. It always compares that head's pipeline
+against the entire synthetic commit, even when the candidate changed only
+documentation. An unreadable ref, a moved head, or pipeline drift from `main`
+or another member fails the group; the author updates the branch so Canary
+proves the merged pipeline, then queues it again.
 
 It is not a mock build, and this is the most misleading thing about the file:
 `build-stage.yml` installs `mock` and never invokes it, then hand-simulates
@@ -337,25 +349,49 @@ publish anything; publication gates live in the rebuild and compose workflows.
 The gate table describes executed validation, not branch protection.
 `Validate bot pull requests / validate` runs only when dispatched for an
 allowed bot branch; its failure reporter posts a comment. A red check or that
-comment does not itself prevent merging. The current `main — review policy`
-ruleset requires `Canary` from GitHub Actions (app ID 15368). Operators can
-inspect the live requirements with:
+comment does not itself prevent merging. The `main — review policy` ruleset
+requires `Canary`, `Unit tests` and `Runtime contract` from GitHub Actions
+(app ID 15368). Operators can inspect the live requirements with:
 
 ```sh
 gh api repos/projectbluefin/utah-packages/rules/branches/main \
-  --jq '.[] | select(.type == "required_status_checks") | .parameters'
+  --jq '.[] | select(.type == "required_status_checks" or .type == "merge_queue") | .parameters'
 ```
 
+All three required checks also run on `merge_group`, so a merge queue can
+replace the strict "branch must be up to date" policy: instead of every open
+pull request rebasing and re-running after each merge, the queue tests each
+entry on top of `main` and the entries ahead of it. `validate.yml` runs the
+same read-only jobs on the queue commit; `Canary` decides without building, as
+described under the pipeline canary. `tests/test_merge_queue.py` executes the
+queue decision scripts, while `tests/test_canary_relevance.py` exercises
+cross-member pipeline drift against real Git histories.
+
+A required queue changes how merges happen, and these automations merge:
+
+| Automation | How it merges | Under a required merge queue |
+| --- | --- | --- |
+| `bump-upstream-gate.yml` and trusted `bump-upstream-enqueue.yml` receiver | Scoped App token, one-shot SHA-pinned merge without a queue, or `enqueuePullRequest(expectedHeadOid)` with a queue | Queue admission never dispatches publication; only the eventual App/queue push to `main` publishes RPMs |
+| Renovate (`renovate.json`: `upstream-source` and `build-root-image` digests) | `platformAutomerge`: GitHub auto-merge, as `renovate[bot]` (a GitHub App) | Works: auto-merge enqueues, and App events start `merge_group` runs. Needs "Allow auto-merge" on |
+| Pull requests opened by `import-rawhide-package.yml`, `import-bluefin-rawhide.yml`, `refresh-buildroot.yml` | Not merged by automation | A maintainer enqueues them like any other pull request |
+| Hive (`hivecommons-hive` App) | Deployed Hive policy, outside this repository | Its native-queue handoff must be deployed and explicitly enabled for this repository and `main`; installed App access alone does not enable it |
+
+Keep strict freshness until the selected admission path is configured and an
+App-enqueued synthetic-group run has been observed with every required check.
+For Hive, configure `auto_merge.native_merge_queue` in its deployed settings;
+do not infer enablement from source support. If Prow remains a competing
+`GITHUB_TOKEN` enqueuer, resolve that ownership before requiring the queue.
+
 For a bot PR, inspect validation on its current head before merging, in
-addition to the required Canary. To make static validation merge-blocking,
+addition to the required checks. To make bot-only validation merge-blocking,
 first provide one consistently named aggregate check for **every** PR head,
-including explicitly dispatched `GITHUB_TOKEN` bot proposals. Then add that
-exact check context, with the GitHub Actions source, under required status
-checks in the `main — review policy` ruleset. Verify a failing candidate is
-blocked and a passing candidate is mergeable before relying on enforcement.
-Do not simply require the current bot-only `validate` check: ordinary PRs
-cannot satisfy its bot identity guard and would wait forever for that check.
-Do not remove Canary when adding a static requirement.
+including explicitly dispatched `GITHUB_TOKEN` bot proposals, and for every
+merge group. Then add that exact check context, with the GitHub Actions
+source, under required status checks in the `main — review policy` ruleset.
+Verify a failing candidate is blocked and a passing candidate is mergeable
+before relying on enforcement. Do not simply require the current bot-only
+`validate` check: ordinary PRs cannot satisfy its bot identity guard and would
+wait forever for that check. Do not remove Canary when adding a requirement.
 
 ## Agreed direction, not yet built
 
