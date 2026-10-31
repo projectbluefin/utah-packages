@@ -1,6 +1,6 @@
 ---
 name: lane-validation
-description: Validate wave recipes with dispatched Canary lane runs — lane_packages scoping, per-ref inventory, fork limits, and what a green run actually proves.
+description: Validate wave recipes with dispatched Canary lane runs — lane_packages scoping, per-ref inventory, fork limits, what a green run actually proves, and how Canary decides a merge queue group.
 ---
 
 # Validating recipe waves with lane runs
@@ -127,3 +127,21 @@ to start a fresh run on the same commit. A maintainer-run Canary that does not
 pass is reported on the pull request and the check stays red. The press holds a
 runner for as long as that run takes (about half an hour). A push after review
 changes the head, so the old proof no longer applies.
+
+## Canary in the merge queue
+
+`Canary`, `Unit tests` and `Runtime contract` also run on `merge_group`, so a
+merge queue can replace the ruleset's strict "up to date with `main`" policy
+and recipe imports stop re-running and re-conflicting after every merge. A
+queue run never builds and never publishes: it holds read-only tokens and
+`pass1`/`pass6` refuse the event. `Canary` reads the pull request number from
+the queue ref (`gh-readonly-queue/main/pr-<N>-<sha>`; any other shape fails
+closed) and passes when that pull request touches no pipeline path, by the
+same rule as above, or when nothing pipeline-relevant differs between the head
+its own `Canary` proved and the queue commit (`tools/canary.py merge-group`).
+So an import never waits on the queue, and a pipeline change that a
+pipeline change ahead of it (in `main` or the queue) invalidated is removed
+from the queue with "Update the branch so Canary proves the merged pipeline".
+Do that: update the branch, let `Canary` pass on the new head, queue again. A
+fork's proof carries over the same way, since its own `Canary` passed on proof
+before the queue accepted it.
