@@ -287,6 +287,12 @@ the WebDAV virtio channel and a host-shared directory: verify a file transfer
 through that channel, not just service startup or the standalone `chezdav`
 server. Recipe accounting does not establish guest file sharing.
 
+Confirm `avahi-gobject-devel`, `gtk-doc`, and `xmlto` against the repositories
+enabled by `tools/mock_config.py` before asserting build dependency availability.
+Other recipes declaring the same BuildRequires are not availability evidence.
+Record the repository snapshot or release and the published package versions in
+the PR; a metadata match still needs a successful Mock dependency lock and build
+in the pinned environment before claiming solver success.
 
 `spice-vdagent` BuildRequires `spice-protocol` headers. Import the protocol
 source alongside the agent when neither build root nor factory supplies it;
