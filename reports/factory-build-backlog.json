@@ -928,11 +928,11 @@
   "states": {
     "already_recipe": 7,
     "manifest_wants": 1,
-    "pending": 168
+    "pending": 167
   },
   "totals": {
-    "backlog": 176,
-    "resolved": 338,
+    "backlog": 175,
+    "resolved": 339,
     "wontfix": 37
   }
 }
