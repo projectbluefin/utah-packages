@@ -80,13 +80,14 @@ pipeline path: its token has no `packages: write`, so `canary.yml` fails it with
 "a fork pull request cannot publish the canary image". The author cannot fix
 that, and neither can an agent working from a fork; do not ask them to.
 
-`tools/canary.py` treats every `config/` path as a pipeline path. A recipe
-import that registers its source in `config/upstream-sources.json` therefore
-needs this proof even when it changes no workflow or build tool. If
+Changing an existing source-lock entry, including only its primary URL or
+fallback URLs with an unchanged digest, needs this proof even when it changes
+no workflow or build tool. Adding only new non-canary entries does not:
+`pipeline_relevant` applies the inventory exceptions described above. If
 configuration validation passed, the build jobs were skipped, and Canary's
 `Decide` step reports missing maintainer-run proof, classify the failure as a
-review prerequisite, not a failed package build. Keep the source registration
-and the gate intact; removing either does not validate the import.
+review prerequisite, not a failed package build. Keep the intended source
+changes and the gate intact; removing either does not validate the change.
 
 A repair request naming a generic failed check can refer to this prerequisite.
 Read the failed job before changing code. Do not push an empty commit or
