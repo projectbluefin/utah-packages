@@ -166,7 +166,9 @@ keep both lock entries, and regenerate the counts
 (`tools/factory_build_backlog.py`) from the combined inventory. Resolve these
 conflicts by regeneration, not by selecting either branch's stale totals.
 Use `git rebase --signoff` to preserve DCO coverage, then push to the same PR
-branch with `--force-with-lease` after validation.
+branch with `--force-with-lease` after validation. Inspect auto-merged catalog
+records as well as conflicted files: fill in the existing PR number for new
+recipe records, and retain the base branch's publication fields.
 
 The catalog test (`tests/test_factory_build_backlog.py::CatalogConsistencyTests`)
 pins the count and sorted-name SHA-256 against the original audit. The auditor
@@ -934,6 +936,28 @@ zlib-ng output, which neither GNU gzip nor Python's zlib reproduces. So it is
 `git.ffmpeg.org/rtmpdump.git` advertises refs to the all-zero object, which
 makes `git clone` fail with `upload-pack: not our ref 0000…`. Fetch only
 `refs/tags/<tag>` into an empty repository instead.
+
+### Audio-plugin discovery library closure
+
+`lilv-libs` comes from `lilv`; its supporting source recipes are `lv2`,
+`serd`, `zix`, `sord`, and `sratom`. Reuse existing `serd` and `zix` recipes.
+Preserve the pkg-config BuildRequires: the graph solver orders `sord` after
+`serd` and `zix`, `sratom` after `sord` and `lv2`, and `lilv` after `sratom`.
+This chain is acyclic, so do not add source-lock stages.
+
+Drobilla's release signatures are available alongside the release archives at
+`https://download.drobilla.net/`. Its key at
+`https://drobilla.net/drobilla.gpg` is ASCII-armored despite its extension:
+dearmor it before passing it to `gpgv --keyring`. Preserve the imported
+signature pins and the recipe's verification step. Match both archive and
+signature digests against `sources`; a valid signature does not replace the
+factory SHA-512 lock. LV2 release archives use `https://lv2plug.in/spec/`.
+
+A `[resolved]` catalog entry for this family records recipe availability,
+not publication. Record hosted build NEVRAs and the repository digest before
+claiming closure, then resolve `lilv-libs` and its runtime dependencies using
+only Hummingbird plus the factory. Exercise `lv2ls` and load the library;
+local configuration tests do not prove that transaction.
 
 ### GNOME apps batch #484: terminal outputs and publication reconciliation
 

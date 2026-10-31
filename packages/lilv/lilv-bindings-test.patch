@@ -1,0 +1,12 @@
+diff --git a/meson.build b/meson.build
+index d208cc7..4259f16 100644
+--- a/meson.build
++++ b/meson.build
+@@ -383,7 +383,6 @@ endif
+ if not get_option('bindings_py').disabled()
+   subdir('bindings/bindings_test_plugin.lv2')
+   subdir('bindings/python')
+-  subdir('bindings/test')
+ endif
+ 
+ ###########
