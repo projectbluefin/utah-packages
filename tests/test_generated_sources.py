@@ -570,5 +570,58 @@ class PydanticCoreVendorTests(unittest.TestCase):
             generated_sources._pydantic_core_transform(sdist, self.VERSION, crates)
 
 
+class PrefixdevnameVendorTests(unittest.TestCase):
+    VERSION = "9.9.9"
+    TOP = f"prefixdevname-{VERSION}"
+
+    def fixture(self):
+        import hashlib
+
+        crate = _targz({"tinycrate-1.0.0/Cargo.toml": b"[package]", "tinycrate-1.0.0/src/lib.rs": b"//"})
+        checksum = hashlib.sha256(crate).hexdigest()
+        lock = (
+            'version = 4\n\n[[package]]\nname = "prefixdevname"\nversion = "9.9.9"\n\n'
+            '[[package]]\nname = "tinycrate"\nversion = "1.0.0"\n'
+            'source = "registry+https://github.com/rust-lang/crates.io-index"\n'
+            f'checksum = "{checksum}"\n'
+        )
+        archive = _targz({f"{self.TOP}/Cargo.lock": lock.encode(), f"{self.TOP}/Cargo.toml": b"[package]"})
+        return archive, {("tinycrate", "1.0.0"): crate}
+
+    def test_vendor_layout_and_checksum_file(self):
+        import json
+        import lzma
+
+        archive, crates = self.fixture()
+        out = generated_sources._prefixdevname_transform(archive, self.VERSION, crates)
+        with tarfile.open(fileobj=io.BytesIO(lzma.decompress(out))) as result:
+            names = result.getnames()
+            vendored = f"{self.TOP}/vendor/tinycrate-1.0.0"
+            self.assertIn(f"{self.TOP}/Cargo.toml", names)
+            self.assertIn(f"{vendored}/src/lib.rs", names)
+            checksum = json.loads(result.extractfile(f"{vendored}/.cargo-checksum.json").read())
+            self.assertEqual({m.mtime for m in result.getmembers()}, {generated_sources.PREFIXDEVNAME_MTIME})
+        self.assertEqual(set(checksum["files"]), {"Cargo.toml", "src/lib.rs"})
+
+    def test_transform_is_byte_reproducible(self):
+        archive, crates = self.fixture()
+        self.assertEqual(
+            generated_sources._prefixdevname_transform(archive, self.VERSION, crates),
+            generated_sources._prefixdevname_transform(archive, self.VERSION, crates),
+        )
+
+    def test_a_member_outside_the_top_directory_is_refused(self):
+        lock = '[[package]]\nname = "prefixdevname"\nversion = "9.9.9"\n'
+        archive = _targz({f"{self.TOP}/Cargo.lock": lock.encode(), "elsewhere/evil.rs": b"x"})
+        with self.assertRaisesRegex(RuntimeError, "archive member outside prefixdevname-9.9.9: elsewhere/evil.rs"):
+            generated_sources._prefixdevname_transform(archive, self.VERSION, {})
+
+    def test_a_substituted_crate_fails_closed(self):
+        archive, crates = self.fixture()
+        crates[("tinycrate", "1.0.0")] = _targz({"tinycrate-1.0.0/Cargo.toml": b"evil"})
+        with self.assertRaisesRegex(RuntimeError, "expected sha256"):
+            generated_sources._prefixdevname_transform(archive, self.VERSION, crates)
+
+
 if __name__ == "__main__":
     unittest.main()

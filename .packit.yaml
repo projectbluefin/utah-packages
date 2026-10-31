@@ -2980,6 +2980,12 @@ packages:
     downstream_package_name: ppp
     paths:
       - packages/ppp
+  prefixdevname:
+    specfile_path: prefixdevname.spec
+    upstream_package_name: prefixdevname
+    downstream_package_name: prefixdevname
+    paths:
+      - packages/prefixdevname
   printer-driver-brlaser:
     specfile_path: printer-driver-brlaser.spec
     upstream_package_name: printer-driver-brlaser
