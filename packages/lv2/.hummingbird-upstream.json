@@ -1,0 +1,8 @@
+{
+  "package": "lv2",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/lv2.git",
+  "commit": "671afbf29d5c9b88bd97da27daa33b1f6664fe14",
+  "tree": "bf23b84406b24b775a83c3e5a6c1ef2833e2911f",
+  "imported_at": "2026-10-30T19:13:14.057142+00:00"
+}
