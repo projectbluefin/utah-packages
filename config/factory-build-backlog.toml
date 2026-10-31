@@ -159,7 +159,6 @@ packages = [
     "ibus-typing-booster",
     "kasumi-common",
     "kasumi-unicode",
-    "m17n-lib",
 ]
 
 [areas.ujust-deps]
@@ -741,6 +740,8 @@ packages = [
     { name = "unicode-ucd", pr = 731 },
     { name = "libhangul", pr = 731 },
     { name = "m17n-db", pr = 731 },
+    # Recipe only; hosted build, publication, and runtime proof remain on #495.
+    { name = "m17n-lib", pr = 856 },
     # libpinyin.spec builds libpinyin plus its -data, -devel, -tools and
     # libzhuyin subpackages; recipe only (#495). It BuildRequires
     # kyotocabinet-devel, imported by #767 and already in [resolved].
