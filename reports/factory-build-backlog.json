@@ -6,8 +6,9 @@
       "total": 21
     },
     "dev-tools": {
-      "pending": 55,
-      "total": 55
+      "already_recipe": 5,
+      "pending": 43,
+      "total": 48
     },
     "fonts-i18n": {
       "pending": 15,
@@ -210,41 +211,6 @@
     },
     {
       "area": "dev-tools",
-      "name": "libcaca",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "libsss_autofs",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "libsss_certmap",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "libsss_idmap",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "libsss_nss_idmap",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "libsss_sudo",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "lsb_release",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
       "name": "open-vm-tools",
       "state": "pending"
     },
@@ -406,27 +372,27 @@
     {
       "area": "dev-tools",
       "name": "sssd-client",
-      "state": "pending"
+      "state": "already_recipe"
     },
     {
       "area": "dev-tools",
       "name": "sssd-common",
-      "state": "pending"
+      "state": "already_recipe"
     },
     {
       "area": "dev-tools",
       "name": "sssd-kcm",
-      "state": "pending"
+      "state": "already_recipe"
     },
     {
       "area": "dev-tools",
       "name": "sssd-krb5-common",
-      "state": "pending"
+      "state": "already_recipe"
     },
     {
       "area": "dev-tools",
       "name": "sssd-nfs-idmap",
-      "state": "pending"
+      "state": "already_recipe"
     },
     {
       "area": "fonts-i18n",
@@ -886,13 +852,13 @@
   ],
   "issue": "projectbluefin/utah-packages#308",
   "states": {
-    "already_recipe": 7,
+    "already_recipe": 12,
     "manifest_wants": 1,
-    "pending": 161
+    "pending": 149
   },
   "totals": {
-    "backlog": 169,
-    "resolved": 345,
+    "backlog": 162,
+    "resolved": 352,
     "wontfix": 37
   }
 }

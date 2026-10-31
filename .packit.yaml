@@ -1540,6 +1540,12 @@ packages:
     downstream_package_name: libbytesize
     paths:
       - packages/libbytesize
+  libcaca:
+    specfile_path: libcaca.spec
+    upstream_package_name: libcaca
+    downstream_package_name: libcaca
+    paths:
+      - packages/libcaca
   libcamera:
     specfile_path: libcamera.spec
     upstream_package_name: libcamera
@@ -2428,6 +2434,12 @@ packages:
     downstream_package_name: lrzsz
     paths:
       - packages/lrzsz
+  lsb_release:
+    specfile_path: lsb_release.spec
+    upstream_package_name: lsb_release
+    downstream_package_name: lsb_release
+    paths:
+      - packages/lsb_release
   lshw:
     specfile_path: lshw.spec
     upstream_package_name: lshw
@@ -3460,6 +3472,12 @@ packages:
     downstream_package_name: sso-mib
     paths:
       - packages/sso-mib
+  sssd:
+    specfile_path: sssd.spec
+    upstream_package_name: sssd
+    downstream_package_name: sssd
+    paths:
+      - packages/sssd
   startup-notification:
     specfile_path: startup-notification.spec
     upstream_package_name: startup-notification
