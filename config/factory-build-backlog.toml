@@ -223,10 +223,6 @@ packages = [
     "kmod-v4l2loopback",
     "kpartx",
     "kvazaar-libs",
-    "libijs",
-    "liblqr-1",
-    "libnet",
-    "libpfm",
     "libreport-filesystem",
     "lockdev",
     "mcelog",
@@ -281,6 +277,13 @@ packages = [
 # Packages that left the backlog because a recipe was imported.
 # Each entry: package name and the commit that closed the gap.
 packages = [
+    # Long-tail #502: import the libijs, liblqr-1, libnet and libpfm
+    # recipes. Recipe import only; hosted build, publication and runtime
+    # proof remain open on #502.
+    { name = "libijs", pr = 854 },
+    { name = "liblqr-1", pr = 854 },
+    { name = "libnet", pr = 854 },
+    { name = "libpfm", pr = 854 },
     # Recipe coverage only; hosted build, publication and runtime proof remain on #486.
     { name = "hfsplus-tools", pr = 837 },
     # Recipe import only; build, publication and runtime proof remain on #478.

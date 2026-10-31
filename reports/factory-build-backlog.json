@@ -20,8 +20,8 @@
     "long-tail": {
       "already_recipe": 2,
       "manifest_wants": 1,
-      "pending": 62,
-      "total": 65
+      "pending": 58,
+      "total": 61
     },
     "power": {
       "total": 0
@@ -635,26 +635,6 @@
     },
     {
       "area": "long-tail",
-      "name": "libijs",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
-      "name": "liblqr-1",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
-      "name": "libnet",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
-      "name": "libpfm",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
       "name": "libreport-filesystem",
       "state": "pending"
     },
@@ -878,11 +858,11 @@
   "states": {
     "already_recipe": 7,
     "manifest_wants": 1,
-    "pending": 157
+    "pending": 153
   },
   "totals": {
-    "backlog": 165,
-    "resolved": 349,
+    "backlog": 161,
+    "resolved": 353,
     "wontfix": 37
   }
 }
