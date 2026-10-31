@@ -6473,6 +6473,13 @@
         "https://src.fedoraproject.org/repo/pkgs/rpms/sssd/sssd-2.14.0-beta1.tar.gz/sha512/72be9fc8ddfa1c129b3aac2e6911ec75a944d42cffc3cbd5540ae194f213dfcc815a1b8fe6c823df3d03e077a579359e5b961a03b37bc417168e4806e98338ec/sssd-2.14.0-beta1.tar.gz"
       ],
       "stage": 3
+    },
+    {
+      "name": "uvg266",
+      "version": "0.8.1",
+      "url": "https://github.com/ultravideo/uvg266/archive/v0.8.1/uvg266-0.8.1.tar.gz",
+      "filename": "uvg266-0.8.1.tar.gz",
+      "sha512": "892b0732516fe2639f93b250bbed342da8134deeaa6f0ccb429ff8451df727f971c7ee284fef93eaa431c5c54a8b8789ffc853d8b45ae93433ba17007989bbae"
     }
   ]
 }

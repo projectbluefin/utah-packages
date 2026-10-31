@@ -3706,6 +3706,12 @@ packages:
     downstream_package_name: usermode
     paths:
       - packages/usermode
+  uvg266:
+    specfile_path: uvg266.spec
+    upstream_package_name: uvg266
+    downstream_package_name: uvg266
+    paths:
+      - packages/uvg266
   v4l-utils:
     specfile_path: v4l-utils.spec
     upstream_package_name: v4l-utils

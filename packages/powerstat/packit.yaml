@@ -1,20 +1,18 @@
 upstream_project_url: https://github.com/ColinIanKing/powerstat
 upstream_tag_template: V{version}
  
-	
 jobs:
   - job: pull_from_upstream
     trigger: release
     dist_git_branches:
-      - fedora-rawhide	
+      - fedora-rawhide
  
   - job: koji_build
     trigger: commit
     allowed_pr_authors: ["packit", "all_admins"]
     allowed_committers: ["packit", "all_admins"]
-    dist_git_branches:	
+    dist_git_branches:
       - fedora-all
-	
  
   - job: bodhi_update
     trigger: commit

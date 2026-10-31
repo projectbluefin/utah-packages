@@ -1,0 +1,14 @@
+diff -Naur uvg266-0.8.1.old/CMakeLists.txt uvg266-0.8.1/CMakeLists.txt
+--- uvg266-0.8.1.old/CMakeLists.txt	2024-08-19 12:44:35.300929691 +0200
++++ uvg266-0.8.1/CMakeLists.txt	2024-08-19 13:00:07.436685832 +0200
+@@ -128,9 +128,8 @@
+ endif()
+ 
+ if(BUILD_SHARED_LIBS)
+-  list( APPEND CMAKE_INSTALL_RPATH "${UVG266_INSTALL_LIBDIR}" "./" "../lib" )
+-  set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+   add_library(uvg266 SHARED ${LIB_SOURCES})
++  set_target_properties(uvg266 PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION 0)
+ else()
+   add_library(uvg266 STATIC ${LIB_SOURCES})
+   if(MSVC) # Fix a linking problem with visual studio when the library is the same name as the binary
