@@ -1,0 +1,183 @@
+# The canary for contribution (fork) pull requests: the same rebuild workflow
+# canary.yml runs, over the same fixed set, with a token that cannot write
+# anything. A fork's code builds here automatically, on every push, with no
+# maintainer step, because nothing in this workflow can publish: GitHub
+# hands a fork's pull_request run a read-only token whatever the workflow
+# declares, and every build runs with skip_publish, so an image, a cache
+# entry, an attestation or a comment is out of reach whatever the pull
+# request changes. The build jobs still declare the write scopes
+# rebuild-rpms.yml asks for, because a called workflow may not request more
+# than its caller grants; without them the nested call is refused. Never
+# move this to pull_request_target.
+#
+# What it proves: the canary set builds through the default (hermetic) lane
+# and the container lane, and every package was locked and built from its
+# lock. What it cannot prove, because each needs a publish: the signed image
+# (verify-publish), the cache staying stable across passes (pass2, pass3),
+# incremental publish (pass4) and incremental selection against a published
+# image (pass5). Those run on the pull request's merge to main, and on every
+# in-repository branch through canary.yml.
+#
+# For in-repository pull requests, canary.yml provides the full proof.
+# For fork pull requests, this workflow runs automatically with no maintainer
+# step and no publish capability, proving builds succeed locally.
+name: Canary (read-only)
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: canary-read-only-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  # Must match canary.yml.
+  CANARY_SET: '["libical", "vulkan-headers", "vulkan-loader"]'
+
+jobs:
+  changes:
+    runs-on: ubuntu-24.04
+    outputs:
+      run: ${{ steps.paths.outputs.run }}
+      salt: ${{ steps.name.outputs.salt }}
+      set: ${{ steps.name.outputs.set }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Is this a fork pull request that touches the pipeline?
+        id: paths
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          if [ "$HEAD_REPO" = "$REPO" ]; then
+            echo "in-repository pull request: canary.yml provides the proof"
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          elif python3 tools/canary.py pr-relevant --repository "$REPO" --pr "$PR" --set "$CANARY_SET"; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "no pipeline path changed; nothing to prove"
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Name the cache salt
+        id: name
+        run: |
+          set -euo pipefail
+          {
+            echo "salt=$(python3 tools/canary.py salt)"
+            echo "set=$CANARY_SET"
+          } >> "$GITHUB_OUTPUT"
+
+  # Named pass1 and pass6, as in canary.yml: tools/canary.py finds the build
+  # jobs by their caller's pass<N> job id.
+  pass1:
+    needs: changes
+    if: needs.changes.outputs.run == 'true'
+    # The scopes rebuild-rpms.yml declares (see the header); a fork's
+    # pull_request token stays read-only regardless.
+    permissions:
+      contents: read
+      id-token: write
+      packages: write
+      attestations: write
+      actions: read
+      issues: write
+    uses: ./.github/workflows/rebuild-rpms.yml
+    with:
+      full: true
+      packages: ${{ needs.changes.outputs.set }}
+      no_factory: true
+      skip_publish: true
+      consumer: built
+      artifact_prefix: r1-
+      cache_salt: ${{ needs.changes.outputs.salt }}
+
+  verify-hermetic:
+    needs: [changes, pass1]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          pattern: r1-lock-*
+          path: locks
+      - name: Every package was locked, and built from the lock or its cache
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+          SET: ${{ needs.changes.outputs.set }}
+        run: |
+          set -euo pipefail
+          gh api --paginate "repos/$REPOSITORY/actions/runs/$RUN_ID/attempts/$RUN_ATTEMPT/jobs?per_page=100" \
+            --jq '.jobs[]' | jq -s . > jobs.json
+          python3 tools/canary.py verify-hermetic jobs.json --pass pass1 --locks locks --set "$SET" \
+            --stage-dependency vulkan-loader=vulkan-headers >> "$GITHUB_STEP_SUMMARY"
+
+  pass6:
+    needs: changes
+    if: needs.changes.outputs.run == 'true'
+    # The scopes rebuild-rpms.yml declares (see the header); a fork's
+    # pull_request token stays read-only regardless.
+    permissions:
+      contents: read
+      id-token: write
+      packages: write
+      attestations: write
+      actions: read
+      issues: write
+    uses: ./.github/workflows/rebuild-rpms.yml
+    with:
+      full: true
+      packages: ${{ needs.changes.outputs.set }}
+      no_factory: true
+      skip_publish: true
+      backend: container
+      artifact_prefix: r6-
+      cache_salt: ${{ needs.changes.outputs.salt }}
+
+  verify-lane:
+    needs: [changes, pass6]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Every package in the container lane built
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+          SET: ${{ needs.changes.outputs.set }}
+        run: |
+          set -euo pipefail
+          gh api --paginate "repos/$REPOSITORY/actions/runs/$RUN_ID/attempts/$RUN_ATTEMPT/jobs?per_page=100" \
+            --jq '.jobs[]' | jq -s . > jobs.json
+          python3 tools/canary.py verify-built jobs.json --pass pass6 --set "$SET" >> "$GITHUB_STEP_SUMMARY"
+
+  canary:
+    name: Canary (read-only)
+    needs: [changes, pass1, verify-hermetic, pass6, verify-lane]
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Decide
+        env:
+          RUN: ${{ needs.changes.outputs.run }}
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          set -euo pipefail
+          echo "$RESULTS" | jq -r 'to_entries[] | "\(.key): \(.value.result)"'
+          test "$(echo "$RESULTS" | jq -r .changes.result)" = success
+          if [ "$RUN" != true ]; then
+            echo "nothing for the read-only canary to prove"
+            exit 0
+          fi
+          failed=$(echo "$RESULTS" | jq -r '[to_entries[] | select(.value.result != "success")] | length')
+          test "$failed" -eq 0
