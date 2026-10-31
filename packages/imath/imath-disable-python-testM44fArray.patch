@@ -1,0 +1,12 @@
+diff --git a/src/python/PyImathTest/pyImathTest.in b/src/python/PyImathTest/pyImathTest.in
+index 7d9294e..25811e7 100644
+--- a/src/python/PyImathTest/pyImathTest.in
++++ b/src/python/PyImathTest/pyImathTest.in
+@@ -8801,7 +8801,6 @@ def testM4Array(Array, Matrix, Vec, VecArray):
+ def testMatrixArray ():
+     print ("M44fArray")
+     testMxArray (M44fArray, M44f)
+-    testM4Array (M44fArray, M44f, V3f, V3fArray)
+     print ("M44dArray")
+     testMxArray (M44dArray, M44d)
+     testM4Array (M44dArray, M44d, V3d, V3dArray)

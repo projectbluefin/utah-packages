@@ -14,14 +14,14 @@
       "total": 15
     },
     "gnome-apps": {
-      "pending": 3,
-      "total": 3
+      "pending": 1,
+      "total": 1
     },
     "long-tail": {
       "already_recipe": 2,
       "manifest_wants": 1,
-      "pending": 65,
-      "total": 68
+      "pending": 64,
+      "total": 67
     },
     "power": {
       "total": 0
@@ -504,16 +504,6 @@
       "state": "pending"
     },
     {
-      "area": "gnome-apps",
-      "name": "imath",
-      "state": "pending"
-    },
-    {
-      "area": "gnome-apps",
-      "name": "rygel",
-      "state": "pending"
-    },
-    {
       "area": "long-tail",
       "name": "7zip",
       "state": "pending"
@@ -646,11 +636,6 @@
     {
       "area": "long-tail",
       "name": "liblqr-1",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
-      "name": "libmspack",
       "state": "pending"
     },
     {
@@ -898,11 +883,11 @@
   "states": {
     "already_recipe": 7,
     "manifest_wants": 1,
-    "pending": 161
+    "pending": 158
   },
   "totals": {
-    "backlog": 169,
-    "resolved": 345,
+    "backlog": 166,
+    "resolved": 348,
     "wontfix": 37
   }
 }

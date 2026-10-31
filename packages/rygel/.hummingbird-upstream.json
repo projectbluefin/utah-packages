@@ -1,0 +1,8 @@
+{
+  "package": "rygel",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/rygel.git",
+  "commit": "f79fad7efc42d7e767144a0e61c9497fdab2ce20",
+  "tree": "4400ba50162ba9887c21efc067af2a57552f5176",
+  "imported_at": "2026-10-30T05:07:08.958914+00:00"
+}

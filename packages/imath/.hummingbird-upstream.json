@@ -1,0 +1,8 @@
+{
+  "package": "imath",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/imath.git",
+  "commit": "c1465703ad8209513b76cfa6a39a019ff0a19c98",
+  "tree": "0ef7aa5b0344efc92cd878c1794d1ca0f0619efb",
+  "imported_at": "2026-10-30T05:07:04.835491+00:00"
+}
