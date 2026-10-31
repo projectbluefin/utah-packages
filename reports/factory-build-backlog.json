@@ -2,16 +2,17 @@
   "areas": {
     "codecs-media": {
       "already_recipe": 5,
-      "pending": 16,
-      "total": 21
+      "pending": 15,
+      "total": 20
     },
     "dev-tools": {
-      "pending": 55,
-      "total": 55
+      "already_recipe": 5,
+      "pending": 42,
+      "total": 47
     },
     "fonts-i18n": {
-      "pending": 15,
-      "total": 15
+      "pending": 14,
+      "total": 14
     },
     "gnome-apps": {
       "pending": 1,
@@ -20,8 +21,8 @@
     "long-tail": {
       "already_recipe": 2,
       "manifest_wants": 1,
-      "pending": 62,
-      "total": 65
+      "pending": 58,
+      "total": 61
     },
     "power": {
       "total": 0
@@ -37,8 +38,8 @@
       "total": 4
     },
     "vpn": {
-      "pending": 4,
-      "total": 4
+      "pending": 2,
+      "total": 2
     }
   },
   "audit_digest_bluefin": "sha256:1e37db65e78f7f394e16608aa8449bd6be43eb691ae9f98b619044ffba23c64e",
@@ -91,11 +92,6 @@
     {
       "area": "codecs-media",
       "name": "libfdk-aac",
-      "state": "pending"
-    },
-    {
-      "area": "codecs-media",
-      "name": "libiec61883",
       "state": "pending"
     },
     {
@@ -206,41 +202,6 @@
     {
       "area": "dev-tools",
       "name": "kernel-tools-libs",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "libcaca",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "libsss_autofs",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "libsss_certmap",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "libsss_idmap",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "libsss_nss_idmap",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "libsss_sudo",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "lsb_release",
       "state": "pending"
     },
     {
@@ -400,33 +361,28 @@
     },
     {
       "area": "dev-tools",
-      "name": "spice-webdavd",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
       "name": "sssd-client",
-      "state": "pending"
+      "state": "already_recipe"
     },
     {
       "area": "dev-tools",
       "name": "sssd-common",
-      "state": "pending"
+      "state": "already_recipe"
     },
     {
       "area": "dev-tools",
       "name": "sssd-kcm",
-      "state": "pending"
+      "state": "already_recipe"
     },
     {
       "area": "dev-tools",
       "name": "sssd-krb5-common",
-      "state": "pending"
+      "state": "already_recipe"
     },
     {
       "area": "dev-tools",
       "name": "sssd-nfs-idmap",
-      "state": "pending"
+      "state": "already_recipe"
     },
     {
       "area": "fonts-i18n",
@@ -441,11 +397,6 @@
     {
       "area": "fonts-i18n",
       "name": "adobe-mappings-pdf",
-      "state": "pending"
-    },
-    {
-      "area": "fonts-i18n",
-      "name": "anthy-unicode",
       "state": "pending"
     },
     {
@@ -795,26 +746,6 @@
     },
     {
       "area": "long-tail",
-      "name": "tesseract-common",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
-      "name": "tesseract-langpack-eng",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
-      "name": "tesseract-libs",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
-      "name": "tesseract-tessdata-doc",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
       "name": "uavs3d-libs",
       "state": "pending"
     },
@@ -862,27 +793,17 @@
       "area": "vpn",
       "name": "NetworkManager-vpnc-gnome",
       "state": "pending"
-    },
-    {
-      "area": "vpn",
-      "name": "python3-yubikey-manager",
-      "state": "pending"
-    },
-    {
-      "area": "vpn",
-      "name": "yubikey-manager",
-      "state": "pending"
     }
   ],
   "issue": "projectbluefin/utah-packages#308",
   "states": {
-    "already_recipe": 11,
+    "already_recipe": 16,
     "manifest_wants": 1,
-    "pending": 153
+    "pending": 132
   },
   "totals": {
-    "backlog": 165,
-    "resolved": 349,
+    "backlog": 149,
+    "resolved": 365,
     "wontfix": 37
   }
 }

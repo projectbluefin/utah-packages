@@ -1,0 +1,8 @@
+{
+  "package": "tesseract-tessdata",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/tesseract-tessdata.git",
+  "commit": "076f9c04acc0a2f9dd031d2cb295bfd0773037e6",
+  "tree": "01af696aa90864b0df00f7b1b91683bbb08f77b4",
+  "imported_at": "2026-10-30T23:18:45.245150+00:00"
+}
