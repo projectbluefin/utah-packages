@@ -904,6 +904,22 @@ libmspack consumer (for example `cabextract`, itself still outside the
 factory) or the bundled examples; loading `libmspack.so.0` alone checks
 linkage, not decompression.
 
+### Paper-size library imports
+
+`libpaper` is both the source recipe and the audited binary; the same
+recipe builds `libpaper-devel` and the `paper` CLI. Fedora's `Source0` is
+already the upstream GitHub tag archive, whose bytes match the `sources`
+SHA-512, so lock that URL directly with the Fedora lookaside in
+`fallback_urls`. The recipe carries `Epoch: 1` (it replaced Fedora's old
+separate `paper` package), so the published NEVRA reads `libpaper-1:…`;
+record it with the epoch. `%prep` re-bootstraps against the system gnulib:
+`gnulib-devel` and `help2man` are build-time only and resolve from the
+buildroot, not the factory. The library has no runtime `Requires` beyond
+glibc. For runtime acceptance, install `paper` from only Hummingbird plus the
+factory and run `paper --all` (lists the size catalogue from
+`/etc/paperspecs`) and `paper` (prints the default size); loading
+`libpaper.so.2` alone checks linkage, not the catalogue.
+
 ### Kyoto Cabinet library imports
 
 `kyotocabinet-libs` comes from source recipe `kyotocabinet`, which also
@@ -1089,11 +1105,13 @@ factory recipe and is still pending in `[areas.long-tail]`
 (projectbluefin/utah#396), so rygel cannot build until `gupnp-av` is imported.
 It emits a `rygel-localsearch` subpackage that obsoletes `rygel-tracker`, and
 installs a systemd user service; keep the `localsearch` `%files` section. The
-Rawhide spec places `%systemd_user_post` inside `%install` with no `%post`
-header, so the built package has no `%post` scriptlet and the user unit is not
-preset-enabled on install; it is carried unchanged, so the runtime probe must
-not assume the unit is enabled. A catalog record for the recipe does not prove
-the UPnP MediaServer responds or the user service starts.
+Rawhide donor omits the `%post` header before `%systemd_user_post`; preserve
+Utah's added header when re-importing so user-unit preset handling belongs to
+the installed RPM's post-install scriptlet, not the build's `%install` script.
+Use the pinned Packit image's `rpmspec --parse` and binary-header query to
+verify that boundary before building. A correct scriptlet does not establish
+that the UPnP MediaServer responds or the user service starts; those still
+require a published package and a user-session runtime probe.
 
 ### NTFS system compression plugin
 
@@ -1199,3 +1217,24 @@ the source lock in `config/upstream-sources.json` fetches the same archive over
 `https://dist.schmorp.de` and the Fedora lookaside fallback, matching the SHA-512 in `sources`.
 An imported recipe record alone does not establish publication or runtime
 acceptance in Utah; those remain tracked with the #502 batch.
+
+## uvg266 VVC encoder library
+
+Fedora dist-git has no `uvg266`, so `uvg266-libs` comes from the negativo17
+recipe imported with `tools/import_rawhide.py --branch master
+--remote-template 'https://github.com/negativo17/{package}.git' uvg266`; the
+provenance keeps the `master` branch, commit and tree (see the multimedia
+closure skill's codec-tail rules). The same recipe builds `uvg266` (CLI),
+`uvg266-libs` (`libuvg266.so.0`) and `uvg266-devel`; do not add a second
+recipe under the binary name. negativo17 carries no `sources` file, so the
+GitHub release archive is locked only in `config/upstream-sources.json`. The
+recipe has no `%check`: upstream tests need the `greatest` submodule, which
+the release archive omits, so a hosted build proves compilation only. For
+runtime acceptance, install `uvg266` from Hummingbird plus the factory and
+encode a short raw YUV clip (`uvg266 -i in.yuv --input-res 64x64 -o out.266`).
+
+The kernel-module names in the same long-tail batch (`v4l2loopback`,
+`ublue-os-akmods-addons`, `virtualbox-guest-additions`) are out-of-tree
+kernel module packages. The #491 decision covers only `kernel-modules-extra`
+and `usbip`; do not extend it to these names. They stay pending until a
+maintainer records a kernel-module policy decision for them.

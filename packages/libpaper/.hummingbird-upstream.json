@@ -1,0 +1,8 @@
+{
+  "package": "libpaper",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libpaper.git",
+  "commit": "bbb3b3476f5679f348ae99ccb16b0df195cf6a81",
+  "tree": "9a510f845ac0d8bd11750dd80cee46abc42bad6d",
+  "imported_at": "2026-10-31T17:51:15.654494+00:00"
+}
