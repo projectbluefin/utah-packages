@@ -8,6 +8,9 @@ workflow is plumbing; what it concludes lives here, where it is under test:
     canary.py pr-relevant --repository R --pr N --set JSON
                                                  the same, judged on a pull request's
                                                  files and the lock entries they change
+    canary.py merge-group --repository R --head-ref REF --head-sha SHA --set JSON
+                                                 exit 0 when a merge queue group is proven
+                                                 without building (see merge_group_proof)
     canary.py salt                               the cache namespace for pass1
     canary.py verify-image REF@DIGEST --utah-reader PATH --expect JSON
     canary.py verify-cache JOBS.json --set JSON --perturbed NAME
@@ -182,6 +185,90 @@ def pr_relevant(repository: str, pr: int, canary_set: Sequence[str], gh=_gh) -> 
         except (subprocess.CalledProcessError, json.JSONDecodeError):
             base_sources = head_sources = None
     return pipeline_relevant(files, [*canary_set, *PERTURBED], base_sources, head_sources)
+
+
+# A GitHub queue ref supplies a candidate PR number, not proof of all group
+# members. Always compare its full pipeline tree with the synthetic commit;
+# a docs-only candidate must not bless pipeline changes elsewhere in the group.
+QUEUE_REF = re.compile(r"^(?:refs/heads/)?gh-readonly-queue/.+/pr-(?P<pr>[1-9][0-9]*)-[0-9a-f]{40}$")
+FULL_SHA = re.compile(r"^[0-9a-f]{40}$")
+
+
+def queue_pr(head_ref: str) -> int | None:
+    """The pull request a merge queue ref was created for, or None."""
+    match = QUEUE_REF.match(head_ref or "")
+    return int(match["pr"]) if match else None
+
+
+def _git(args: Sequence[str]) -> str:
+    return subprocess.run(["git", *args], capture_output=True, text=True, check=True).stdout
+
+
+def range_files(base: str, head: str, git=_git) -> list[dict]:
+    """What base..head changes, shaped like the pull request files API."""
+    fields = git(["diff", "--name-status", "-z", "-M", base, head]).split("\0")
+    files, index = [], 0
+    while index < len(fields) and fields[index]:
+        status = fields[index]
+        if status[:1] in ("R", "C"):
+            files.append({"filename": fields[index + 2], "previous_filename": fields[index + 1]})
+            index += 3
+        else:
+            files.append({"filename": fields[index + 1]})
+            index += 2
+    return files
+
+
+def range_relevant(base: str, head: str, canary_set: Sequence[str], git=_git) -> bool:
+    """pipeline_relevant for two local commits, judged exactly as pr_relevant judges a pull request."""
+    files = range_files(base, head, git)
+    for entry in files:
+        if entry["filename"] in DATA_FILES and entry["filename"] != SOURCES_LOCK:
+            entry["patch"] = git(["diff", "--text", "--no-color", base, head, "--", entry["filename"]])
+    base_sources = head_sources = None
+    if any(SOURCES_LOCK in (entry.get("filename"), entry.get("previous_filename")) for entry in files):
+        try:
+            base_sources = json.loads(git(["show", f"{base}:{SOURCES_LOCK}"]))
+            head_sources = json.loads(git(["show", f"{head}:{SOURCES_LOCK}"]))
+        except (subprocess.CalledProcessError, json.JSONDecodeError):
+            base_sources = head_sources = None
+    return pipeline_relevant(files, [*canary_set, *PERTURBED], base_sources, head_sources)
+
+
+def merge_group_proof(
+    repository: str, head_ref: str, head_sha: str, canary_set: Sequence[str], gh=_gh, git=_git,
+) -> tuple[bool, str]:
+    """Whether the Canary a queued pull request passed still proves its merge group.
+
+    A merge group run never builds: every build pushes a package-cache image
+    and pass1 publishes and signs a canary tag, and the queue must not publish.
+    The pull request's own Canary must have passed on its head before GitHub
+    admits it. Its pipeline proves this group only when nothing
+    pipeline-relevant differs between that head and the full group commit.
+    Inspect that range even for a docs-only pull request: another queued
+    member or main may have changed the pipeline. Anything unreadable, moved
+    or pipeline-different fails closed.
+    """
+    pr = queue_pr(head_ref)
+    if pr is None:
+        return False, f"cannot name the pull request from merge group ref {head_ref!r}"
+    if not FULL_SHA.match(head_sha or ""):
+        return False, f"not a full merge group commit: {head_sha!r}"
+    pr_head = json.loads(gh(["api", f"repos/{repository}/pulls/{pr}"]))["head"]["sha"]
+    git(["fetch", "--no-tags", "--depth=1", "origin", f"refs/pull/{pr}/head"])
+    fetched = git(["rev-parse", "FETCH_HEAD"]).strip()
+    if fetched != pr_head:
+        return False, f"pull request #{pr} head moved ({pr_head[:12]} in the API, {fetched[:12]} fetched)"
+    if range_relevant(pr_head, head_sha, canary_set, git=git):
+        return False, (
+            f"the pipeline in this merge group differs from pull request #{pr} head "
+            f"{pr_head[:12]}: main or another member changed a pipeline path. "
+            "Update the branch so Canary proves the merged pipeline, then queue it again"
+        )
+    return True, (
+        f"pull request #{pr}'s Canary proved {pr_head[:12]}, and nothing "
+        "pipeline-relevant differs between that commit and this merge group"
+    )
 
 
 def salt(root: Path = ROOT) -> str:
@@ -522,6 +609,11 @@ def main(argv: list[str] | None = None) -> int:
     relevant.add_argument("--repository", required=True)
     relevant.add_argument("--pr", required=True, type=int)
     relevant.add_argument("--set", required=True, help="JSON array of canary package names")
+    group = commands.add_parser("merge-group")
+    group.add_argument("--repository", required=True)
+    group.add_argument("--head-ref", required=True, help="github.event.merge_group.head_ref")
+    group.add_argument("--head-sha", required=True, help="github.event.merge_group.head_sha")
+    group.add_argument("--set", required=True, help="JSON array of canary package names")
     image = commands.add_parser("verify-image")
     image.add_argument("image")
     image.add_argument("--utah-reader", type=Path, required=True)
@@ -561,6 +653,14 @@ def main(argv: list[str] | None = None) -> int:
         return 0 if touches_pipeline(sys.stdin.read().splitlines()) else 1
     if args.command == "pr-relevant":
         return 0 if pr_relevant(args.repository, args.pr, json.loads(args.set)) else 1
+    if args.command == "merge-group":
+        proven, reason = merge_group_proof(args.repository, args.head_ref, args.head_sha,
+                                           json.loads(args.set))
+        if proven:
+            print(reason)
+            return 0
+        print(f"::error title=canary merge group::{reason}", file=sys.stderr)
+        return 1
     if args.command == "salt":
         print(salt())
         return 0

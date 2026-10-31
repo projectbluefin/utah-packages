@@ -299,11 +299,22 @@ salt`), so a change to how packages are compiled compiles for real in
 entries never share a key with production ones: an empty salt leaves the
 production key unchanged, which `tests/test_package_cache_key.py` asserts.
 
-It runs on every pull request. The `Canary` job is the required check and
-passes without building anything when no pipeline path changed
-(`.github/workflows/`, `.github/actions/`, `tools/`, `config/`,
-`Containerfile*`). Do not dispatch a full run to prove a pipeline change
-before the canary is green on it.
+It runs on every pull request and on every merge queue group. The `Canary`
+job is the required check and passes without building anything when no
+pipeline path changed (`.github/workflows/`, `.github/actions/`, `tools/`,
+`config/`, `Containerfile*`). Do not dispatch a full run to prove a pipeline
+change before the canary is green on it.
+
+A merge queue group (`merge_group`) never builds: every build pushes a
+package-cache image and `pass1` publishes and signs a canary tag, and nothing
+may publish from a queue ref. Only `changes` and the `Canary` gate run there,
+both with read-only tokens, and `pass1`/`pass6` refuse the event outright.
+`tools/canary.py merge-group` uses the queue-ref PR number as a candidate
+witness, not a list of members. It always compares that head's pipeline
+against the entire synthetic commit, even when the candidate changed only
+documentation. An unreadable ref, a moved head, or pipeline drift from `main`
+or another member fails the group; the author updates the branch so Canary
+proves the merged pipeline, then queues it again.
 
 It is not a mock build, and this is the most misleading thing about the file:
 `build-stage.yml` installs `mock` and never invokes it, then hand-simulates
@@ -338,25 +349,49 @@ publish anything; publication gates live in the rebuild and compose workflows.
 The gate table describes executed validation, not branch protection.
 `Validate bot pull requests / validate` runs only when dispatched for an
 allowed bot branch; its failure reporter posts a comment. A red check or that
-comment does not itself prevent merging. The current `main — review policy`
-ruleset requires `Canary` from GitHub Actions (app ID 15368). Operators can
-inspect the live requirements with:
+comment does not itself prevent merging. The `main — review policy` ruleset
+requires `Canary`, `Unit tests` and `Runtime contract` from GitHub Actions
+(app ID 15368). Operators can inspect the live requirements with:
 
 ```sh
 gh api repos/projectbluefin/utah-packages/rules/branches/main \
-  --jq '.[] | select(.type == "required_status_checks") | .parameters'
+  --jq '.[] | select(.type == "required_status_checks" or .type == "merge_queue") | .parameters'
 ```
 
+All three required checks also run on `merge_group`, so a merge queue can
+replace the strict "branch must be up to date" policy: instead of every open
+pull request rebasing and re-running after each merge, the queue tests each
+entry on top of `main` and the entries ahead of it. `validate.yml` runs the
+same read-only jobs on the queue commit; `Canary` decides without building, as
+described under the pipeline canary. `tests/test_merge_queue.py` executes the
+queue decision scripts, while `tests/test_canary_relevance.py` exercises
+cross-member pipeline drift against real Git histories.
+
+A required queue changes how merges happen, and these automations merge:
+
+| Automation | How it merges | Under a required merge queue |
+| --- | --- | --- |
+| `bump-upstream-gate.yml` and trusted `bump-upstream-enqueue.yml` receiver | Scoped App token, one-shot SHA-pinned merge without a queue, or `enqueuePullRequest(expectedHeadOid)` with a queue | Queue admission never dispatches publication; only the eventual App/queue push to `main` publishes RPMs |
+| Renovate (`renovate.json`: `upstream-source` and `build-root-image` digests) | `platformAutomerge`: GitHub auto-merge, as `renovate[bot]` (a GitHub App) | Works: auto-merge enqueues, and App events start `merge_group` runs. Needs "Allow auto-merge" on |
+| Pull requests opened by `import-rawhide-package.yml`, `import-bluefin-rawhide.yml`, `refresh-buildroot.yml` | Not merged by automation | A maintainer enqueues them like any other pull request |
+| Hive (`hivecommons-hive` App) | Deployed Hive policy, outside this repository | Its native-queue handoff must be deployed and explicitly enabled for this repository and `main`; installed App access alone does not enable it |
+
+Keep strict freshness until the selected admission path is configured and an
+App-enqueued synthetic-group run has been observed with every required check.
+For Hive, configure `auto_merge.native_merge_queue` in its deployed settings;
+do not infer enablement from source support. If Prow remains a competing
+`GITHUB_TOKEN` enqueuer, resolve that ownership before requiring the queue.
+
 For a bot PR, inspect validation on its current head before merging, in
-addition to the required Canary. To make static validation merge-blocking,
+addition to the required checks. To make bot-only validation merge-blocking,
 first provide one consistently named aggregate check for **every** PR head,
-including explicitly dispatched `GITHUB_TOKEN` bot proposals. Then add that
-exact check context, with the GitHub Actions source, under required status
-checks in the `main — review policy` ruleset. Verify a failing candidate is
-blocked and a passing candidate is mergeable before relying on enforcement.
-Do not simply require the current bot-only `validate` check: ordinary PRs
-cannot satisfy its bot identity guard and would wait forever for that check.
-Do not remove Canary when adding a static requirement.
+including explicitly dispatched `GITHUB_TOKEN` bot proposals, and for every
+merge group. Then add that exact check context, with the GitHub Actions
+source, under required status checks in the `main — review policy` ruleset.
+Verify a failing candidate is blocked and a passing candidate is mergeable
+before relying on enforcement. Do not simply require the current bot-only
+`validate` check: ordinary PRs cannot satisfy its bot identity guard and would
+wait forever for that check. Do not remove Canary when adding a requirement.
 
 ## Agreed direction, not yet built
 

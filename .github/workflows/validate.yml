@@ -1,7 +1,11 @@
 name: Validate factory configuration
 
+# merge_group: `Unit tests` and `Runtime contract` are required checks, and the
+# merge queue waits for them on its own commit. Every job here is read-only
+# (contents: read), so the queue runs them exactly as a pull request does.
 on:
   pull_request:
+  merge_group:
   push:
     branches: [main]
 
