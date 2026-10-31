@@ -20,8 +20,8 @@
     "long-tail": {
       "already_recipe": 2,
       "manifest_wants": 1,
-      "pending": 63,
-      "total": 66
+      "pending": 62,
+      "total": 65
     },
     "power": {
       "total": 0
@@ -650,11 +650,6 @@
     },
     {
       "area": "long-tail",
-      "name": "libpaper",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
       "name": "libpfm",
       "state": "pending"
     },
@@ -883,11 +878,11 @@
   "states": {
     "already_recipe": 7,
     "manifest_wants": 1,
-    "pending": 158
+    "pending": 157
   },
   "totals": {
-    "backlog": 166,
-    "resolved": 348,
+    "backlog": 165,
+    "resolved": 349,
     "wontfix": 37
   }
 }

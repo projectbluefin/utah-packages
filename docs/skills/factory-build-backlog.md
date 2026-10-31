@@ -857,6 +857,22 @@ libmspack consumer (for example `cabextract`, itself still outside the
 factory) or the bundled examples; loading `libmspack.so.0` alone checks
 linkage, not decompression.
 
+### Paper-size library imports
+
+`libpaper` is both the source recipe and the audited binary; the same
+recipe builds `libpaper-devel` and the `paper` CLI. Fedora's `Source0` is
+already the upstream GitHub tag archive, whose bytes match the `sources`
+SHA-512, so lock that URL directly with the Fedora lookaside in
+`fallback_urls`. The recipe carries `Epoch: 1` (it replaced Fedora's old
+separate `paper` package), so the published NEVRA reads `libpaper-1:…`;
+record it with the epoch. `%prep` re-bootstraps against the system gnulib:
+`gnulib-devel` and `help2man` are build-time only and resolve from the
+buildroot, not the factory. The library has no runtime `Requires` beyond
+glibc. For runtime acceptance, install `paper` from only Hummingbird plus the
+factory and run `paper --all` (lists the size catalogue from
+`/etc/paperspecs`) and `paper` (prints the default size); loading
+`libpaper.so.2` alone checks linkage, not the catalogue.
+
 ### Kyoto Cabinet library imports
 
 `kyotocabinet-libs` comes from source recipe `kyotocabinet`, which also

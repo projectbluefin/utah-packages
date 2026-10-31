@@ -6449,6 +6449,16 @@
       "url": "https://github.com/ultravideo/uvg266/archive/v0.8.1/uvg266-0.8.1.tar.gz",
       "filename": "uvg266-0.8.1.tar.gz",
       "sha512": "892b0732516fe2639f93b250bbed342da8134deeaa6f0ccb429ff8451df727f971c7ee284fef93eaa431c5c54a8b8789ffc853d8b45ae93433ba17007989bbae"
+    },
+    {
+      "name": "libpaper",
+      "version": "2.3.0",
+      "url": "https://github.com/rrthomas/libpaper/archive/v2.3.0/libpaper-2.3.0.tar.gz",
+      "filename": "libpaper-2.3.0.tar.gz",
+      "sha512": "856f57a076d72dfcab6ad11c307b4e52af55b8ebb94d33c939df4e7ce0564ad619351716a3e729a765b74c830cf8343e8236de9cabff2969f3bf5dcec3aa8f37",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libpaper/libpaper-2.3.0.tar.gz/sha512/856f57a076d72dfcab6ad11c307b4e52af55b8ebb94d33c939df4e7ce0564ad619351716a3e729a765b74c830cf8343e8236de9cabff2969f3bf5dcec3aa8f37/libpaper-2.3.0.tar.gz"
+      ]
     }
   ]
 }
