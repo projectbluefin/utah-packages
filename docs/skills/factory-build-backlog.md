@@ -245,10 +245,11 @@ BuildRequires. PR #788 imports the `libotf`, `libXaw`, `gd`, and
 provider PRs against the selected base before carrying a historical "waiting"
 note forward. Preserve all four source locks and the anthy checksum when
 integrating current main; union independent catalog records and regenerate
-inventory instead of restoring stale workflow or Packit pins. Build and publish
-the providers first, then import and build `m17n-lib`; configuration checks
-establish neither hosted build success nor input-method runtime acceptance.
-Keep build, publication, and runtime evidence separate.
+inventory instead of restoring stale workflow or Packit pins. The providers
+were built and published first; `m17n-lib` was imported recipe-only in #856 and
+still needs hosted build, publication, and runtime proof (#495). Configuration
+checks establish neither hosted build success nor input-method runtime
+acceptance. Keep build, publication, and runtime evidence separate.
 
 ### Reconcile sibling library outputs
 
