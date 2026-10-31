@@ -11,9 +11,8 @@
       "total": 47
     },
     "fonts-i18n": {
-      "already_recipe": 1,
       "pending": 13,
-      "total": 14
+      "total": 13
     },
     "gnome-apps": {
       "pending": 1,
@@ -426,11 +425,6 @@
       "state": "pending"
     },
     {
-      "area": "fonts-i18n",
-      "name": "m17n-lib",
-      "state": "already_recipe"
-    },
-    {
       "area": "gnome-apps",
       "name": "epiphany-runtime",
       "state": "pending"
@@ -773,13 +767,13 @@
   ],
   "issue": "projectbluefin/utah-packages#308",
   "states": {
-    "already_recipe": 17,
+    "already_recipe": 16,
     "manifest_wants": 1,
     "pending": 126
   },
   "totals": {
-    "backlog": 144,
-    "resolved": 370,
+    "backlog": 143,
+    "resolved": 371,
     "wontfix": 37
   }
 }
