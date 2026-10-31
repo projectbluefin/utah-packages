@@ -38,6 +38,14 @@ does not regenerate files. Never resolve generated conflicts by selecting a
 stale branch's counts or report: both branches' source changes must be
 represented before regeneration, even when generated files auto-merge.
 
+An automatic GitHub merge from `main` can succeed without regenerating these
+files. If architecture-count unit tests and the backlog gate fail together,
+run `just regenerate-inventory` on the existing PR branch and commit the
+result; a conflict-free merge does not establish that derived inventory is current.
+During a rebase, an old inventory-only repair can become redundant after this
+regeneration. Skip it only after checking that its remaining changes are already
+represented; retain recipe fixes and source-lock metadata from intervening merges.
+
 `--check` also runs as a gate in `.github/workflows/validate.yml`.
 
 Not wired yet — follow-up work, do not go looking for it:
@@ -329,6 +337,35 @@ the graph can then place the headers before the agent from the package-name
 BuildRequires. The protocol recipe disables its Windows cross-build by default;
 that does not remove Linux headers. A successful build alone does not prove
 clipboard or display integration: test those in a SPICE guest after publication.
+
+For VMware guests, `open-vm-tools-desktop` is an unconditional subpackage of
+`open-vm-tools`; import the source family once. The CAB library provider
+`libmspack` is already imported on `main` by #846. Preserve that recipe, its
+binary-content CVE patch, provenance and complete source lock (including
+`fallback_urls`); do not retain #812's older duplicate lock or catalog record.
+Its `pkgconfig(libmspack)` BuildRequires gives the build graph the ordering
+edge; no manual stage or second source-family import is needed. Keep
+libmspack's upstream `make check` and `%autosetup -p2 -S git`. Recipe presence
+does not prove the provider has built or published. The guest-tools recipe
+also BuildRequires `pkgconfig(gtkmm-4.0)`, `procps-devel`, and
+`xmlsec1-openssl-devel`, and explicitly Requires `xmlsec1-openssl`; resolve
+those capabilities in the permitted build/runtime repositories before claiming
+closure, rather than importing duplicate providers or dropping features.
+
+The systemd unit's filename contains a literal backslash:
+`run-vmblock\x2dfuse.mount`. Keep the donor's quoted `%{SOURCE3}` and doubled
+backslash in the shell installation destination. Preserve the donor's `%files`
+spelling separately: shell escaping is not RPM file-list syntax. A hosted build
+must confirm that the installed unit path and RPM file ownership agree.
+
+The imported guest-tools recipe has no `%check`: its comment explains that
+`make check` regenerates a documentation font. Record that inherited limitation;
+do not describe configuration tests as guest integration tests. Runtime
+acceptance needs an actual VMware guest: verify `vmtoolsd`, query
+`vmware-toolbox-cmd stat hosttime`, and exercise desktop resizing and clipboard
+transfer. A version command on a generic runner cannot establish host/guest
+integration. Recipe catalog closure does not establish those results or
+publication.
 
 ### Touchscreen library imports
 

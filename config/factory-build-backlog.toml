@@ -104,8 +104,6 @@ packages = [
     "kernel-devel-matched",
     "kernel-tools",
     "kernel-tools-libs",
-    "open-vm-tools",
-    "open-vm-tools-desktop",
     "python3-anyio",
     "python3-boto3",
     "python3-botocore",
@@ -380,6 +378,9 @@ packages = [
     { name = "libev", pr = 844 },
     # Microsoft CAB compression library recipe import (#502); hosted build, publication and runtime proof remain outstanding.
     { name = "libmspack", pr = 846 },
+    # VMware recipe imports only; build and guest validation remain in #488.
+    { name = "open-vm-tools", pr = 812 },
+    { name = "open-vm-tools-desktop", pr = 812 },
     # Paper-size library recipe import (#502); hosted build, publication and runtime proof remain outstanding.
     { name = "libpaper", pr = 853 },
     { name = "gnome-rounded-blur", commit = "f8589ccd95a48a1f26826c8764330c9f7811a09d", pr = 440, published_run = 40151594832, published_nevra = "gnome-rounded-blur-0:1.0.1^20260809gitf3bfcc7-1.hum1.bfin.x86_64" },
