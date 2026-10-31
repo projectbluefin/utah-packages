@@ -573,10 +573,10 @@ reaching for `buildroot_icu77`, check the package's own `libicu-devel`.
   without `--merge` still replaces the catalog, so keep the flag for imports.
 - Regenerate `.packit.yaml` with `python3 tools/render_packit_config.py
   --write`.
-- Refresh the counts in `docs/architecture.md` with
-  `python3 tools/render_architecture_counts.py --write`; the contract step
-  (`tests/test_architecture_counts.py`) reads the inventory directly, so the
-  four `tests/` files that used to carry the count no longer track it.
+- Do not add inventory counts to documentation or tests: every import would
+  have to edit them, and concurrent imports conflicted on them.
+  `tests/test_recipe_set_agreement.py` and `tools/validate.py` read the
+  inventory directly.
 - `just check` green on the import branch, not after merge.
 
 Several imports for one feature (the #447 screen-reader stack: orca,
@@ -596,8 +596,7 @@ imports appears only once both recipes exist. orca BuildRequires brltty's
 `brlapi-devel`, and brltty BuildRequires `libicu-devel`, so
 `tests/test_icu_staging.py` (which still reads hand `stage` values, unlike
 `build_graph.py`) failed until orca got `"stage": 1`, as ptyxis and vte291
-did in #413; the stage count in `docs/architecture.md` then needs another
-`render_architecture_counts.py --write`.
+did in #413.
 
 A Fedora `sources` file that pins by MD5 (`<md5>  file`, libao) fails both
 the bot's lock step and `tools/validate.py` (`check_sources_digests`). Import

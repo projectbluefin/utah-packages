@@ -36,7 +36,7 @@ Both are indexed below. A skill that exists but is not listed here fails
 | Interpret or regenerate the GNOME-vs-gnome-build-meta audit | [`skills/gnome-build-meta-audit.md`](skills/gnome-build-meta-audit.md) |
 | Diff a GNOME source version, patch line, feature flag, or dependency edge against BuildStream intent | [`skills/gnome-build-meta-audit.md`](skills/gnome-build-meta-audit.md) |
 | Change the GitHub Pages package catalog, its data source, or its styling | [`skills/package-catalog.md`](skills/package-catalog.md) |
-| Track the factory build backlog from issue #308 (live total in `reports/factory-build-backlog.json`), or close a backlog gap | [`skills/factory-build-backlog.md`](skills/factory-build-backlog.md) |
+| Track the factory build backlog from issue #308 (live totals from `just factory-build-backlog`; never committed), or close a backlog gap | [`skills/factory-build-backlog.md`](skills/factory-build-backlog.md) |
 | Answer what the factory or Hummingbird currently publishes, with snapshot evidence, or judge installability | [`skills/repo-inspection.md`](skills/repo-inspection.md) |
 | Validate a recipe wave with a dispatched Canary lane run, or read a lane result | [`skills/lane-validation.md`](skills/lane-validation.md) |
 
