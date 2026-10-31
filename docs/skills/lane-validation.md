@@ -90,13 +90,13 @@ which need a publish, so it does not replace the required `Canary` check: that
 still needs the maintainer run below. A failing read-only canary is a real
 build failure the author can fix.
 
-`tools/canary.py` treats every `config/` path as a pipeline path. A recipe
-import that registers its source in `config/upstream-sources.json` therefore
-needs this proof even when it changes no workflow or build tool. If
-configuration validation passed, the build jobs were skipped, and Canary's
-`Decide` step reports missing maintainer-run proof, classify the failure as a
-review prerequisite, not a failed package build. Keep the source registration
-and the gate intact; removing either does not validate the import.
+Inventory-only additions do not automatically require a pipeline Canary;
+use the `pipeline_relevant` classification above rather than treating every
+`config/` edit as a pipeline change. If configuration validation passed, the
+build jobs were skipped, and Canary's `Decide` step reports missing
+maintainer-run proof, classify the failure as a review prerequisite, not a
+failed package build. Keep the source registration and the gate intact;
+removing either does not validate the import.
 
 A repair request naming a generic failed check can refer to this prerequisite.
 Read the failed job before changing code. Do not push an empty commit or
@@ -105,6 +105,14 @@ and any new head invalidates proof for the previous commit. Finish necessary
 changes first, then give the maintainer the final full head SHA for review and
 dispatch. The default Canary set still does not build the imported recipe;
 that recipe needs its own scoped build and runtime acceptance evidence.
+
+The witness tests must not freeze the list of workflows allowed to call the
+reusable builder. Adding a read-only caller does not itself change publication
+authority. Exercise the Canary's verdicts for missing, skipped and failed builds,
+and preserve the separate required publication proof. The read-only caller
+declares the scopes required by the reusable workflow; GitHub reduces a fork
+pull request's effective token to read-only, and `skip_publish` prevents its
+publication path.
 
 A maintainer who has reviewed the diff runs **Canary for a fork pull request**
 (Actions tab, `canary-fork-pr.yml`) with the pull request number and the full
