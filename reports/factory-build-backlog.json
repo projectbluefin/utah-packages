@@ -20,8 +20,8 @@
     "long-tail": {
       "already_recipe": 2,
       "manifest_wants": 1,
-      "pending": 66,
-      "total": 69
+      "pending": 65,
+      "total": 68
     },
     "power": {
       "total": 0
@@ -636,11 +636,6 @@
     {
       "area": "long-tail",
       "name": "kvazaar-libs",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
-      "name": "libev",
       "state": "pending"
     },
     {

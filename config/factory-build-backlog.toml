@@ -224,7 +224,6 @@ packages = [
     "kmod-v4l2loopback",
     "kpartx",
     "kvazaar-libs",
-    "libev",
     "libijs",
     "liblqr-1",
     "libmspack",
@@ -380,6 +379,8 @@ packages = [
     # Recipe/publication accounting only; dependency transactions and runtime proof remain in #502.
     { name = "libpasswdqc", commit = "dfd06b47175b8c94d511c12ac995ecb5e25d7efa", pr = 676, published_run = 40626803772, published_nevra = "libpasswdqc-0:2.0.3-10.hum1.bfin.x86_64" },
     { name = "libdeflate", pr = 695, published_run = 40626803772, published_nevra = "libdeflate-0:1.26-1.hum1.bfin.x86_64" },
+    # High-performance event loop library recipe import (#502); publication and runtime proof remain outstanding.
+    { name = "libev" },
     { name = "gnome-rounded-blur", commit = "f8589ccd95a48a1f26826c8764330c9f7811a09d", pr = 440, published_run = 40151594832, published_nevra = "gnome-rounded-blur-0:1.0.1^20260809gitf3bfcc7-1.hum1.bfin.x86_64" },
     # Disc-reading recipes; publication and runtime proof remain tracked in #475.
     { name = "libudfread", pr = 658 },
@@ -407,7 +408,7 @@ packages = [
     { name = "ifuse", pr = 703, published_run = 41111585693, published_nevra = "ifuse-0:1.2.1-1.hum1.bfin.x86_64" },
     # iwd source import includes its libell runtime library.
     { name = "iwd", pr = 793, published_run = 41111585693, published_nevra = "iwd-0:3.12-1.hum1.bfin.x86_64" },
-    { name = "libell", pr = 793 },
+    { name = "libell", pr = 793, published_run = 41173029071, published_nevra = "libell-0:0.83-1.hum1.bfin.x86_64" },
     # Flex source import; consumer validation remains tracked in #486.
     { name = "flex", pr = 654, published_run = 41111585693, published_nevra = "flex-0:2.6.4-25.hum1.bfin.x86_64" },
     # Existing GPU monitor recipe; publication/runtime proof remains in #488.
