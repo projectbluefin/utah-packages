@@ -43,8 +43,8 @@ tarball. No upstream URL serves those bytes. Do not lock the lookaside copy as
 against Fedora's archive first: for `gpm` they are identical.
 
 The recipe-set agreement gate compares the package names in `packages/`,
-`.packit.yaml`, and `config/upstream-sources.json`. A separate test compares
-the refreshed `docs/architecture.md` counts with the inventory. The import
+`.packit.yaml`, and `config/upstream-sources.json`; no document quotes
+inventory counts, so an import does not edit prose. The import
 pull request also carries `reports/import-source-bootstrap.json` as a
 diagnostic report; the agreement gate does not compare that report. Dispatch
 `.github/workflows/import-rawhide-package.yml` with the package name (the
@@ -52,9 +52,18 @@ workflow runs on `ubuntu-26.04` and opens `import/rawhide-<name>`). Source
 bootstrap runs in the pinned `quay.io/packit/packit` image with an isolated
 `--output` and `--report`, without `--merge`. Its accepted candidate, report,
 and recipe are uploaded as the `import-proposal` artifact. A fresh job uses
-`tools/import_proposal.py` to validate that data and merge the candidate into
-the source lock, then regenerates Packit and the architecture counts and runs
+`tools/import_proposal.py` to validate that data and insert the candidate into
+the source lock at its name-ordered position, then regenerates Packit and runs
 the gates before opening the pull request.
+
+`config/upstream-sources.json` keeps `packages` sorted by `name` in
+case-sensitive code-point order (`ModemManager` before `acl`), so concurrent
+imports insert at different places instead of all conflicting on the file's
+last entry. `tools/validate.py` fails on an unsorted lock. Add a hand-written
+entry at its sorted position; when a rebase conflicts in the lock, keep every
+entry from both sides and run `just sort-source-locks`, which reorders whole
+entries and never edits one. See
+[`supply-chain-provenance.md`](skills/supply-chain-provenance.md#the-source-lock-is-kept-in-name-order).
 
 The lock step fails the workflow, and no pull request opens, when bootstrap
 rejects the recipe — for example a `Source0` hosted on Fedora
@@ -79,9 +88,11 @@ by hand on a workstation without `rpmspec`, lock the source in the pinned
 
 If the imported name (or any `%package` subpackage the recipe builds) is in
 the factory build backlog (`config/factory-build-backlog.toml`), the same
-branch must also move it from its `[areas.<area>]` list to `[resolved]` before
-running `just regenerate-inventory`; the `factory-build-backlog` gate in
-`just check` and CI fails on a stale snapshot. See
+branch must also move it from its `[areas.<area>]` list to `[resolved]`. That
+catalog edit is the whole backlog change: no report or total is committed. The
+`factory-build-backlog` gate in `just check` and CI holds the catalog to the
+pinned audit digest and the recipe inventory, and its printed summary lists a
+name left behind as `already_recipe`. See
 [`factory-build-backlog.md`](skills/factory-build-backlog.md#closing-a-backlog-gap).
 
 For manual imports, removals, and PR recovery, first combine current `main`
@@ -92,13 +103,15 @@ independent records and existing publication evidence. Then run:
 just regenerate-inventory
 ```
 
-This writes `.packit.yaml`, refreshes `docs/architecture.md` counts, and
-regenerates `reports/factory-build-backlog.json`, in that order. Never resolve
-generated conflicts by choosing either branch's stale counts or report:
-regenerate from the combined source inventory even if a generated file merged
-without conflicts. Repeating the command with unchanged inputs produces the
-same files. The individual generator commands remain available; `just check`
-only checks for drift and does not repair it.
+This rewrites `.packit.yaml` from the combined inventory. Never resolve a
+generated conflict by choosing either branch's copy: regenerate from the
+combined source inventory even if the file merged without conflicts.
+Repeating the command with unchanged inputs produces the same file. The
+individual generator commands remain available; `just check` only checks for
+drift and does not repair it. Inventory sizes and backlog totals are derived,
+never committed: `python3 tools/validate.py` and `just factory-build-backlog`
+print them, and CI's *Factory build backlog* job publishes them in its job
+summary and a `factory-build-backlog` artifact.
 
 Build order is solved from the recipe's BuildRequires: a package builds after
 every factory package it BuildRequires, and a merge that changes it rebuilds it
@@ -152,13 +165,11 @@ source inputs and regenerating their derived inventory, or the next
 - `packages/<name>/` -- delete the whole directory (recipe, patches, sources).
 - Any generator special-casing in `tools/generated_sources.py`.
 
-Then run `just regenerate-inventory` to remove the Packit block, refresh
-`docs/architecture.md` counts, and regenerate the backlog snapshot from the
-remaining inventory. The set sizes asserted by
-`tests/test_architecture_counts.py` follow `packages/`; no test baseline needs
-to be hand-edited. If the package (or a subpackage its recipe builds) is a
-factory build backlog name, its auditor state changes too, so the report must
-be refreshed even when the catalog itself did not change.
+Then run `just regenerate-inventory` to remove the Packit block from the
+remaining inventory. No test or document pins the recipe count, so nothing
+else needs hand-editing. If the package (or a subpackage its recipe builds) is
+a factory build backlog name, its auditor state changes too; that is computed
+live by `just factory-build-backlog`, not stored.
 
 The image manifest (`config/bluefin-packages.toml`) and
 `config/hummingbird-provided-sources.json` are intentionally left alone: the

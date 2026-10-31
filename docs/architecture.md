@@ -78,7 +78,7 @@ a PR or merge check and its output is not published. Its `discover` job emits th
 matrix at 256 jobs and expands a larger one to nothing rather than rejecting
 it, so once the monorepo passed 256 packages the pilot failed on every run with
 a green `discover` above an `srpm` job that never existed. The `discover` guard
-asserts the package list is non-empty, which a list of 706 satisfies while
+asserts the package list is non-empty, which a list of several hundred satisfies while
 still producing no jobs. Each matrix job uses `tools/source_pipeline.py` to fetch
 and verify the configured sources and stage them beside the spec, then runs
 `packit srpm --preserve-spec`. It uploads one SRPM artifact and stops there:
@@ -130,19 +130,19 @@ Two consequences worth stating plainly:
   precondition for Copr builds, not evidence of them. The only thing exercising
   Packit is the pilot workflow.
 
-The root Packit configuration and the source lock both cover all 706 recipes:
-
-| check | result |
-| --- | ---: |
-| `ls -d packages/*/ \| wc -l` | `706` |
-| entries under `.packit.yaml:packages` | `706` |
-| entries under `config/upstream-sources.json:packages` | `706` |
-
-`python3 tools/validate.py` reports:
+The root Packit configuration and the source lock both cover every recipe:
+`tools/validate.py` fails when a recipe under `packages/` has no
+`.packit.yaml:packages` entry or no `config/upstream-sources.json` lock, and
+`tests/test_recipe_set_agreement.py` holds the three name sets equal. For the
+live size and provenance split, run `python3 tools/validate.py`; it ends with
+a line of the form:
 
 ```text
-validated 706 source RPMs (6 master, 695 rawhide, 5 upstream)
+validated N source RPMs (A master, B rawhide, C upstream)
 ```
+
+This document quotes no inventory counts: every recipe import would have to
+edit them, and concurrent imports would conflict on them.
 
 ## Current binary pipeline
 
@@ -160,7 +160,7 @@ validated 706 source RPMs (6 master, 695 rawhide, 5 upstream)
 | `publish` | Seeds from the verified previous image, replaces the RPMs of each source package this run built (and did not lose precedence) by source name, removes the bootstrap RPM, creates and signs repository metadata, validates the Hummingbird-only transaction over the whole candidate, and publishes a GHCR OCI image that is both cosign-signed and provenance-attested. A failed package keeps its previous build. |
 | `report` | Runs whether or not publish did. Names every selected package that did not publish -- from the run's own artifact list -- in the job summary, and on `main` opens, updates or closes the tracking issue *Factory: packages failing on main*. |
 
-96 of 706 packages carry a hand-assigned `stage` in
+A minority of packages carry a hand-assigned `stage` in
 `config/upstream-sources.json`. Since waves are solved from BuildRequires it is
 consulted only between members of one BuildRequires cycle, to decide which
 builds first -- `malcontent-bootstrap` before `flatpak` before `malcontent`.
@@ -269,8 +269,9 @@ because the newer run selects against the published state and so builds the
 union. The daily run moved off `06:41 UTC`, where it collided with
 `bump-upstream-sources.yml`. The daily bump pull request is gated by
 `bump-upstream-gate.yml`, which builds exactly the bumped recipes (publishing
-nothing), merges only when all of them built, and then dispatches the factory
-on `main`, because its GITHUB_TOKEN merge starts no push run; see
+nothing). A trusted default-branch receiver validates the successful gate
+and uses an App token to enqueue or merge only that built head. The actual
+App/queue push to `main` starts factory publication; see
 [`docs/skills/upstream-version-bumps.md`](skills/upstream-version-bumps.md#the-bump-gate).
 Other pull requests run validation and the canary, never the factory.
 The rationale is part of the cache contract in

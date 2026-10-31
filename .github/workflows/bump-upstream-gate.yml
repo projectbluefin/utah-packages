@@ -25,10 +25,10 @@ name: Bump gate
 #     canary then judges the pull request's files exactly as its
 #     pull_request run would (a lock-and-recipe change touches no pipeline
 #     path, so it passes in a minute without building).
-#   - after merging, it dispatches rebuild-rpms.yml on main. The merge is a
-#     GITHUB_TOKEN push, so the factory's push trigger does not fire, and the
-#     03:17 schedule is up to a day away; the dispatch is the same
-#     incremental run either would have been, published to latest.
+#   - successful gates are handed to bump-upstream-enqueue.yml, which runs
+#     trusted main code and enqueues the exact built head with a repo-scoped
+#     App token (or merges it once if main has no queue). The eventual push
+#     to main starts rebuild-rpms.yml only after that head actually lands.
 #
 # Partial failure: when the only thing wrong is that some bumped packages
 # failed to build, the gate does not leave the whole bump open. It takes the
@@ -47,8 +47,8 @@ name: Bump gate
 # Concurrency: a newer daily bump force-updates the branch and dispatches a
 # newer gate, which cancels this one. Even uncancelled, nothing stale merges:
 # every job works on github.sha, the commit this run was dispatched at, and
-# the merge names it with --match-head-commit, so GitHub refuses if the pull
-# request moved on.
+# the trusted enqueue workflow names it with --match-head-commit, so GitHub
+# refuses if the pull request moved on.
 
 on:
   workflow_dispatch:
@@ -334,25 +334,24 @@ jobs:
           done
           echo "::error title=bump gate::no completed Canary check on $SHA after an hour" >&2
           exit 1
-      - name: Merge, only at the commit that built
+      # This exact successful step is the trusted enqueue workflow's handoff.
+      # Never mint an App token here: this job executes the bump branch's tools.
+      - name: Ready to land the commit that built
         env:
           GH_TOKEN: ${{ github.token }}
           PR: ${{ inputs.pr }}
           SHA: ${{ github.sha }}
           REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
         run: |
           set -euo pipefail
           head=$(gh pr view "$PR" -R "$REPOSITORY" --json state,headRefOid --jq 'select(.state == "OPEN") | .headRefOid')
           if [ "$head" != "$SHA" ]; then
-            echo "::notice title=bump gate::pull request $PR moved to ${head:-closed} since $SHA built; not merging"
+            echo "::notice title=bump gate::pull request $PR moved to ${head:-closed} since $SHA built; not enqueueing"
             exit 0
           fi
-          gh pr merge "$PR" -R "$REPOSITORY" --squash --match-head-commit "$SHA"
-          echo "merged=true" >> "$GITHUB_ENV"
-      - name: Publish the merged bump to latest
-        if: env.merged == 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          REPOSITORY: ${{ github.repository }}
-        run: |
-          gh workflow run rebuild-rpms.yml -R "$REPOSITORY" --ref main
+          # repository_dispatch is a GITHUB_TOKEN recursion exception and
+          # always loads the receiving workflow from the default branch.
+          jq -n --arg run_id "$RUN_ID" \
+            '{event_type: "bump-gate-built", client_payload: {run_id: $run_id}}' |
+            gh api --method POST "repos/$REPOSITORY/dispatches" --input -

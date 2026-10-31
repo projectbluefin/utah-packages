@@ -87,7 +87,11 @@ change; the recipe-inventory exception does not cover it. Inspect the actual
 pull request's files against its upstream merge base, not a fork's possibly
 stale `main`, to identify the triggering path.
 
-If configuration validation passed, the build jobs were skipped, and Canary's
+Changing an existing source-lock entry, including only its primary URL or
+fallback URLs with an unchanged digest, needs this proof even when it changes
+no workflow or build tool. Adding only new non-canary entries does not:
+`pipeline_relevant` applies the inventory exceptions described above. If
+configuration validation passed, the build jobs were skipped, and Canary's
 `Decide` step reports missing maintainer-run proof, classify the failure as a
 review prerequisite, not a failed package build. Keep the source registration,
 generator support and the gate intact; removing required support or weakening

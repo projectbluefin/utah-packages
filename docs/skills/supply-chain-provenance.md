@@ -2,7 +2,8 @@
 name: supply-chain-provenance
 description: >-
   Buildroot locking, live package NEVRA snapshots, recipe provenance
-  validation, and the factory manifest published beside the OCI digest.
+  validation, source-lock name order, and the factory manifest published
+  beside the OCI digest.
 metadata:
   type: procedure
 ---
@@ -141,6 +142,28 @@ Every recipe in `packages/<name>/` carries `.hummingbird-upstream.json`, and
 
 Do not hand-edit these files. Re-import; editing provenance makes a recipe
 claim an origin it does not have.
+
+## The source lock is kept in name order
+
+`config/upstream-sources.json` lists `packages` sorted by `name` in
+code-point order — Python's `sorted`, `LC_ALL=C sort`, jq's `sort_by(.name)` —
+so it is case-sensitive: `ModemManager` sorts before `acl`, `libICE` before
+`libacl`. When imports appended at the tail, every open import pull request
+edited the same last lines, and each merge to `main` re-conflicted the rest. In
+name order an import edits only the lines between its alphabetical neighbours.
+
+- Every writer keeps the order. `merge_candidates` in
+  `tools/bootstrap_upstream_sources.py` (and so `tools/import_proposal.py`)
+  inserts each candidate at its sorted position; `tools/upstream_bump.py` and
+  `bump_gate.py trim` replace entries in place.
+- `tools/validate.py` (`just check`, CI) fails on an unsorted lock and names
+  the first misordered pair. `just sort-source-locks`
+  (`python3 tools/source_lock_order.py`) repairs it, and
+  `just regenerate-inventory` runs it first. Sorting moves whole entry objects
+  and never edits a field, so it cannot touch a `sha512`, URL or fallback.
+- A hand-written lock entry goes at its sorted position, not the end. If a
+  rebase conflicts in the lock, keep every entry from both sides, then run
+  `just sort-source-locks` rather than ordering them by hand.
 
 ## Moving a lookaside lock to an upstream release
 

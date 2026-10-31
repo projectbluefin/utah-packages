@@ -57,12 +57,12 @@ class ManifestPinsTests(unittest.TestCase):
 
 
 class MergeCandidatesTests(unittest.TestCase):
-    def test_appends_to_existing_packages_without_disturbing_them(self) -> None:
+    def test_inserts_in_name_order_without_disturbing_existing_packages(self) -> None:
         existing = {"schema": 1, "packages": [{"name": "locked", "sha512": "0" * 128}]}
         merged = merge_candidates(existing, [{"name": "fresh", "sha512": "1" * 128}])
         self.assertEqual(
             merged["packages"],
-            [{"name": "locked", "sha512": "0" * 128}, {"name": "fresh", "sha512": "1" * 128}],
+            [{"name": "fresh", "sha512": "1" * 128}, {"name": "locked", "sha512": "0" * 128}],
         )
         self.assertEqual(merged["schema"], 1)
 
@@ -579,7 +579,7 @@ class MainTests(unittest.TestCase):
         _, output, _ = self.run_main()
         self.assertEqual([entry["name"] for entry in output["packages"]], ["new"])
 
-    def test_merge_appends_to_the_existing_lock_and_keeps_its_fields(self) -> None:
+    def test_merge_inserts_into_the_existing_lock_in_name_order_and_keeps_its_fields(self) -> None:
         url = "https://upstream.example/new-1.0.tar.xz"
         self.serve(url, b"new", "new-1.0.tar.xz")
         self.recipe("new", [(0, url)])
@@ -590,8 +590,8 @@ class MainTests(unittest.TestCase):
         code, output, _ = self.run_main("--merge", "--package", "new")
         self.assertEqual(code, 0)
         self.assertEqual(output["note"], "kept")
-        self.assertEqual(output["packages"][0], {"name": "old", "stage": 3})
-        self.assertEqual([entry["name"] for entry in output["packages"]], ["old", "new"])
+        self.assertEqual(output["packages"][1], {"name": "old", "stage": 3})
+        self.assertEqual([entry["name"] for entry in output["packages"]], ["new", "old"])
 
     def test_merge_without_an_existing_lock_starts_a_schema_1_file(self) -> None:
         url = "https://upstream.example/new-1.0.tar.xz"
