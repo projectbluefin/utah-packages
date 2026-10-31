@@ -1013,7 +1013,7 @@ def _prefixdevname_transform(source: bytes, version: str, crates: dict) -> bytes
     with tarfile.open(fileobj=io.BytesIO(source), mode="r:gz") as src, \
             tarfile.open(fileobj=raw, mode="w", format=tarfile.PAX_FORMAT) as result:
         members = sorted(src.getmembers(), key=lambda m: m.name.rstrip("/"))
-        lock_member = next(m for m in members if m.name.endswith("Cargo.lock"))
+        lock_member = src.getmember(f"{top}/Cargo.lock")
         lock_text = src.extractfile(lock_member).read().decode()
         for member in members:
             if not (member.name == top or member.name.startswith(top + "/")):
@@ -1062,7 +1062,7 @@ def _prefixdevname_generate(package_dir: Path, out_dir: Path) -> Path:
     if actual != pin:
         raise RuntimeError(f"input archive mismatch for {url}: expected {pin}, got {actual}")
     with tarfile.open(fileobj=io.BytesIO(archive), mode="r:gz") as source:
-        lock_member = next(m for m in source.getmembers() if m.name.endswith("Cargo.lock"))
+        lock_member = source.getmember(f"prefixdevname-{version}/Cargo.lock")
         lock_text = source.extractfile(lock_member).read().decode()
     crates = {
         (crate["name"], crate["version"]): _fetch(CRATE_URL.format(**crate))

@@ -622,6 +622,31 @@ class PrefixdevnameVendorTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "expected sha256"):
             generated_sources._prefixdevname_transform(archive, self.VERSION, crates)
 
+    def test_nested_lock_does_not_replace_the_release_root_lock(self):
+        import hashlib
+        import tempfile
+
+        archive, crates = self.fixture()
+        with tarfile.open(fileobj=io.BytesIO(archive), mode="r:gz") as source:
+            members = {member.name: source.extractfile(member).read() for member in source.getmembers()}
+        archive = _targz({f"{self.TOP}/A/Cargo.lock": b"not valid TOML", **members})
+        downloads = {
+            generated_sources.PREFIXDEVNAME_UPSTREAM_URL.format(version=self.VERSION): archive,
+            generated_sources.CRATE_URL.format(name="tinycrate", version="1.0.0"):
+                crates[("tinycrate", "1.0.0")],
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            package = Path(directory)
+            (package / "prefixdevname.spec").write_text(f"Version: {self.VERSION}\n")
+            with patch.dict(generated_sources.PREFIXDEVNAME_INPUT_SHA512,
+                            {self.VERSION: hashlib.sha512(archive).hexdigest()}), \
+                    patch.object(generated_sources, "_fetch", side_effect=downloads.__getitem__):
+                output = generated_sources._prefixdevname_generate(package, package)
+            with tarfile.open(output, mode="r:xz") as result:
+                self.assertEqual(result.extractfile(f"{self.TOP}/A/Cargo.lock").read(), b"not valid TOML")
+                self.assertEqual(result.extractfile(
+                    f"{self.TOP}/vendor/tinycrate-1.0.0/src/lib.rs").read(), b"//")
+
 
 if __name__ == "__main__":
     unittest.main()
