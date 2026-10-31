@@ -224,6 +224,24 @@ transport-only migration. Also check candidate hosts against the validator's
 Fedora-host policy before editing: a project's own repository on
 `forge.fedoraproject.org` still counts as Fedora infrastructure.
 
+### Fork Canary approval is not a source-integrity failure
+
+A source-lock migration can require Canary even when its native package set
+is unchanged. If the fork's `Canary / Decide` step reports no maintainer-run
+proof and the build passes are skipped, no package build failed. Do not alter
+the locks, narrow Canary's relevance rules, or push an empty commit to bypass
+this gate.
+
+After reviewing the final head, a maintainer runs
+[`Canary for a fork pull request`](../../.github/workflows/canary-fork-pr.yml)
+on `main`, supplying the PR number and its full 40-character `head_sha`.
+The workflow copies that exact commit to `canary/pr-<N>`, dispatches Canary,
+and refreshes the fork's required check after a successful proof. Every new
+push, including a merge from `main`, invalidates the previous head's proof.
+If the agent lacks upstream write permission or workflow dispatch is blocked,
+report the approval blocker and final head to a maintainer; local validation
+and rerunning the fork check alone cannot supply that proof.
+
 ## Dead upstream hosts: releases.pagure.org
 
 `releases.pagure.org` stopped serving release tarballs around 2026-10-13
