@@ -53,7 +53,6 @@ packages = [
     "libde265",
     "libdovi",
     "libfdk-aac",
-    "libiec61883",
     "libklvanc",
     "libopenjph",
     "libplacebo",
@@ -80,8 +79,6 @@ consumer_issue = "projectbluefin/utah#389"
 packages = [
     "NetworkManager-vpnc",
     "NetworkManager-vpnc-gnome",
-    "python3-yubikey-manager",
-    "yubikey-manager",
 ]
 
 [areas.printing-scanning]
@@ -366,6 +363,7 @@ packages = [
     { name = "libavcodec", pr = 70 },
     { name = "libavdevice", pr = 70 },
     { name = "libdc1394", pr = 794 },
+    { name = "libiec61883", pr = 801 },
     { name = "libraw1394", pr = 681 },
     { name = "pam_yubico", pr = 706 },
     # Smart-card Python binding; hosted build and runtime proof remain in #506.
@@ -728,6 +726,9 @@ packages = [
     { name = "pkcs11-provider", pr = 647 },
     { name = "ykclient", pr = 647 },
     { name = "ykpers", pr = 647 },
+    # Recipe coverage only; Python runtime dependencies and publication remain outstanding.
+    { name = "python3-yubikey-manager" },
+    { name = "yubikey-manager" },
     # bison.spec produces bison plus bison-devel/runtime; recipe closure for #485,
     # not a claim of publication or runtime installation.
     { name = "bison", pr = 615 },

@@ -5765,6 +5765,13 @@
       ]
     },
     {
+      "name": "yubikey-manager",
+      "version": "5.9.2",
+      "url": "https://github.com/Yubico/yubikey-manager/archive/60ab055dd34b6384bdd4ceb85a38d36bc15ce58a/yubikey-manager-60ab055dd34b6384bdd4ceb85a38d36bc15ce58a.tar.gz",
+      "filename": "yubikey-manager-60ab055dd34b6384bdd4ceb85a38d36bc15ce58a.tar.gz",
+      "sha512": "cd838227eb651679fd8c0312386f005640f5e0cb7d76f01bc38d6d1a63904032a1b0b0de2d76e32c30c4688534ba299128df7ea2ee018218abceeb154f4c2a20"
+    },
+    {
       "name": "pkcs11-provider",
       "version": "1.3.0",
       "url": "https://github.com/latchset/pkcs11-provider/releases/download/v1.3.0/pkcs11-provider-1.3.0.tar.xz",
@@ -5878,6 +5885,13 @@
       "url": "https://www.jedsoft.org/releases/slang/slang-2.3.3.tar.bz2",
       "filename": "slang-2.3.3.tar.bz2",
       "sha512": "f882f09e3fcd53427de0f233c9fc3ab15497f2323007be9a084696c8cf810ffe2726cd003149e757df26198b390b9f8c1ff411dc6473513457bd0f94722f8490"
+    },
+    {
+      "name": "libiec61883",
+      "version": "1.2.0",
+      "url": "https://www.kernel.org/pub/linux/libs/ieee1394/libiec61883-1.2.0.tar.gz",
+      "filename": "libiec61883-1.2.0.tar.gz",
+      "sha512": "303391dc5d75298039f51bcb9c53061f5ada92210c81dfe860994c05e8e03d6d9d1a662fad780d5766c17a8aade665d996ab3454fc93bc06981a3832e6de4066"
     },
     {
       "name": "libraw1394",

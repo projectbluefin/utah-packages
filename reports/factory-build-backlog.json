@@ -2,8 +2,8 @@
   "areas": {
     "codecs-media": {
       "already_recipe": 5,
-      "pending": 16,
-      "total": 21
+      "pending": 15,
+      "total": 20
     },
     "dev-tools": {
       "pending": 55,
@@ -37,8 +37,8 @@
       "total": 4
     },
     "vpn": {
-      "pending": 4,
-      "total": 4
+      "pending": 2,
+      "total": 2
     }
   },
   "audit_digest_bluefin": "sha256:1e37db65e78f7f394e16608aa8449bd6be43eb691ae9f98b619044ffba23c64e",
@@ -91,11 +91,6 @@
     {
       "area": "codecs-media",
       "name": "libfdk-aac",
-      "state": "pending"
-    },
-    {
-      "area": "codecs-media",
-      "name": "libiec61883",
       "state": "pending"
     },
     {
@@ -842,27 +837,17 @@
       "area": "vpn",
       "name": "NetworkManager-vpnc-gnome",
       "state": "pending"
-    },
-    {
-      "area": "vpn",
-      "name": "python3-yubikey-manager",
-      "state": "pending"
-    },
-    {
-      "area": "vpn",
-      "name": "yubikey-manager",
-      "state": "pending"
     }
   ],
   "issue": "projectbluefin/utah-packages#308",
   "states": {
     "already_recipe": 7,
     "manifest_wants": 1,
-    "pending": 153
+    "pending": 150
   },
   "totals": {
-    "backlog": 161,
-    "resolved": 353,
+    "backlog": 158,
+    "resolved": 356,
     "wontfix": 37
   }
 }

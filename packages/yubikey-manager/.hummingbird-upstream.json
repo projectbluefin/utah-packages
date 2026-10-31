@@ -1,0 +1,8 @@
+{
+  "package": "yubikey-manager",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/yubikey-manager.git",
+  "commit": "0e3d784d169a69e0cbc2abd3bb80e0ec0936f61d",
+  "tree": "dd2cdebc6a5001b1d692cc796da1375ed84df2c8",
+  "imported_at": "2026-10-31T01:32:25.532105+00:00"
+}
