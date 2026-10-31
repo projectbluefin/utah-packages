@@ -1,0 +1,18 @@
+test: ./runtest.sh
+framework: beakerlib
+require:
+  - gcc
+  - make
+  - gnome-common
+  - autoconf
+  - automake
+  - gettext-devel
+  - ibus
+  - ibus-devel
+  - gtk3-devel
+  - pkgconfig
+  - libtool
+  - m17n-lib-devel
+  - m17n-db
+  - ibus-m17n
+  - rpm-build

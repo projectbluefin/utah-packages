@@ -1,0 +1,6 @@
+summary: Install ibus-anthy specific packages
+description:
+    The listed packages are required by CI of ibus-anthy.
+require:
+    - ibus-anthy-tests
+    - glibc-langpack-ja

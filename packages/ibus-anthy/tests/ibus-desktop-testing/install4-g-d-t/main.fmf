@@ -1,0 +1,6 @@
+summary: Install GNOME installed-tests testing harness
+description:
+    gnome-desktop-testing package is required by IBus CI(ibus-desktop-testing)
+    and it's available in Fedora only at present.
+require:
+    - gnome-desktop-testing

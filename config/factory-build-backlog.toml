@@ -168,12 +168,6 @@ packages = [
     "anthy-unicode",
     "cldr-emoji-annotation",
     "cldr-emoji-annotation-dtd",
-    "ibus-anthy",
-    "ibus-anthy-python",
-    "ibus-hangul",
-    "ibus-libpinyin",
-    "ibus-m17n",
-    "ibus-typing-booster",
     "kasumi-common",
     "kasumi-unicode",
     "m17n-lib",
@@ -331,6 +325,13 @@ packages = [
     # Chewing input-method engine + library recipe for #494; hosted build, publication and runtime proof remain open.
     { name = "ibus-chewing" },
     { name = "libchewing" },
+    # Anthy, hangul, libpinyin, m17n and typing-booster input-method engines for #494; hosted build, publication and runtime proof remain open.
+    { name = "ibus-anthy", pr = 804 },
+    { name = "ibus-anthy-python", pr = 804 },
+    { name = "ibus-hangul", pr = 804 },
+    { name = "ibus-libpinyin", pr = 804 },
+    { name = "ibus-m17n", pr = 804 },
+    { name = "ibus-typing-booster", pr = 804 },
     # Recipe import only; build, publication and runtime proof remain on #508.
     { name = "uchardet", pr = 729 },
     # Published boot-screen outputs; recipe #312, source lock #320; runtime proof stays on #505.

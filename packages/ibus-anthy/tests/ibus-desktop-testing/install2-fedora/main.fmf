@@ -1,0 +1,40 @@
+summary: Install Fedora specific GNOME desktop components
+description:
+    The listed packages are available in Fedora only.
+enabled: false
+adjust:
+    when: distro == fedora
+    enabled: true
+require:
+    - adobe-source-code-pro-fonts
+    - gnome-screenshot
+    - gnome-boxes
+    - yelp
+    - cheese
+    - eog
+    - evince
+    - evince-djvu
+    - gnome-backgrounds
+    - gnome-calendar
+    - gnome-contacts
+    - gnome-epub-thumbnailer
+    - gnome-logs
+    - gnome-maps
+    - gnome-photos
+    - gnome-user-share
+    - gnome-weather
+    - gvfs-afc
+    - gvfs-afp
+    - gvfs-archive
+    - gvfs-fuse
+    - gvfs-gphoto2
+    - gvfs-smb
+    - NetworkManager-openconnect-gnome
+    - NetworkManager-openvpn-gnome
+    - NetworkManager-pptp-gnome
+    - NetworkManager-ssh-gnome
+    - NetworkManager-vpnc-gnome
+    - rygel
+    - simple-scan
+    - sushi
+    - totem

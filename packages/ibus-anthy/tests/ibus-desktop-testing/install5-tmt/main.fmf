@@ -1,0 +1,5 @@
+summary: Install TMT packages
+description:
+    The test script is calling the beakerlib script.
+require:
+    - beakerlib

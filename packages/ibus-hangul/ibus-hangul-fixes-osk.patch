@@ -1,0 +1,23 @@
+From eaaf6aa222926835fa155d587b05c199107cb449 Mon Sep 17 00:00:00 2001
+From: Peng Wu <alexepico@gmail.com>
+Date: Tue, 10 Dec 2024 10:38:44 +0800
+Subject: [PATCH] Support the key event from on screen keyboard
+
+---
+ src/engine.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/src/engine.c b/src/engine.c
+index faa3fb1..d23bd24 100644
+--- a/src/engine.c
++++ b/src/engine.c
+@@ -1505,7 +1505,8 @@ ibus_hangul_engine_process_key_event (IBusEngine     *engine,
+ 	bool is_transliteration_mode =
+ 		 hangul_ic_is_transliteration(hangul->context);
+ 	if (!is_transliteration_mode) {
+-	    if (keymap != NULL)
++	    // on screen keyboard will send key event without keycode.
++	    if (keymap != NULL && keycode != 0)
+ 		keyval = ibus_keymap_lookup_keysym(keymap, keycode, modifiers);
+ 	}
+ 

@@ -6386,6 +6386,57 @@
       ]
     },
     {
+      "name": "ibus-anthy",
+      "version": "1.5.18",
+      "url": "https://github.com/ibus/ibus-anthy/releases/download/1.5.18/ibus-anthy-1.5.18.tar.gz",
+      "filename": "ibus-anthy-1.5.18.tar.gz",
+      "sha512": "4496f0e73bd3e86906679d92f93882424e130737be81b69c55595f4de089842cc53653b47e09a91464a75ac601a9ea8a67225b0055530d2955e4fa0faa30b2e6",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/ibus-anthy/ibus-anthy-1.5.18.tar.gz/sha512/4496f0e73bd3e86906679d92f93882424e130737be81b69c55595f4de089842cc53653b47e09a91464a75ac601a9ea8a67225b0055530d2955e4fa0faa30b2e6/ibus-anthy-1.5.18.tar.gz"
+      ]
+    },
+    {
+      "name": "ibus-hangul",
+      "version": "1.5.5",
+      "url": "https://github.com/libhangul/ibus-hangul/releases/download/1.5.5/ibus-hangul-1.5.5.tar.xz",
+      "filename": "ibus-hangul-1.5.5.tar.xz",
+      "sha512": "c95900b8f47fc69dda04b6a41a1965a6d3a293727749b72bd234d6e899558dffce669df29a4e8c9dcc53d9f7b6cb18e84c4b0c55ef143731a894e0b5693c0722",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/ibus-hangul/ibus-hangul-1.5.5.tar.xz/sha512/c95900b8f47fc69dda04b6a41a1965a6d3a293727749b72bd234d6e899558dffce669df29a4e8c9dcc53d9f7b6cb18e84c4b0c55ef143731a894e0b5693c0722/ibus-hangul-1.5.5.tar.xz"
+      ]
+    },
+    {
+      "name": "ibus-libpinyin",
+      "version": "1.16.6",
+      "url": "https://downloads.sourceforge.net/libpinyin/ibus-libpinyin/ibus-libpinyin-1.16.6.tar.gz",
+      "filename": "ibus-libpinyin-1.16.6.tar.gz",
+      "sha512": "442b6294cca16e0c1ff4ace523bca235d051dbd2df62562343c37e59ba170dc522d305bdbb2e8cd0cbd7c12fb21e6a65e881876a5aac9afb0cf820df1294a955",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/ibus-libpinyin/ibus-libpinyin-1.16.6.tar.gz/sha512/442b6294cca16e0c1ff4ace523bca235d051dbd2df62562343c37e59ba170dc522d305bdbb2e8cd0cbd7c12fb21e6a65e881876a5aac9afb0cf820df1294a955/ibus-libpinyin-1.16.6.tar.gz"
+      ]
+    },
+    {
+      "name": "ibus-m17n",
+      "version": "1.4.41",
+      "url": "https://github.com/ibus/ibus-m17n/releases/download/1.4.41/ibus-m17n-1.4.41.tar.gz",
+      "filename": "ibus-m17n-1.4.41.tar.gz",
+      "sha512": "353685a6a0a466ebc5ce72fd1080c7f683b9318dc385339c45600b04accdcffd4d5fbe855704ce1beb23283588ef7c22ed42d8de5766fff46957b66d24f9ad24",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/ibus-m17n/ibus-m17n-1.4.41.tar.gz/sha512/353685a6a0a466ebc5ce72fd1080c7f683b9318dc385339c45600b04accdcffd4d5fbe855704ce1beb23283588ef7c22ed42d8de5766fff46957b66d24f9ad24/ibus-m17n-1.4.41.tar.gz"
+      ]
+    },
+    {
+      "name": "ibus-typing-booster",
+      "version": "2.31.1",
+      "url": "https://github.com/mike-fabian/ibus-typing-booster/releases/download/2.31.1/ibus-typing-booster-2.31.1.tar.gz",
+      "filename": "ibus-typing-booster-2.31.1.tar.gz",
+      "sha512": "3c97e5a0dc925feffed004fc620596b8dc970e1b9ecf65b30fe1deb6aed4233abd090d3386505670a62dd4aff55b29b6136c326c5cc223c9577bce2dcf88e51e",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/ibus-typing-booster/ibus-typing-booster-2.31.1.tar.gz/sha512/3c97e5a0dc925feffed004fc620596b8dc970e1b9ecf65b30fe1deb6aed4233abd090d3386505670a62dd4aff55b29b6136c326c5cc223c9577bce2dcf88e51e/ibus-typing-booster-2.31.1.tar.gz"
+      ],
+      "stage": 1
+    },
+    {
       "name": "hfsplus-tools",
       "version": "540.1.linux3",
       "url": "https://cavan.codon.org.uk/~mjg59/diskdev_cmds/diskdev_cmds-540.1.linux3.tar.gz",

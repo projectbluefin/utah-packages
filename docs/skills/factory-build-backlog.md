@@ -223,7 +223,29 @@ only validates configuration, and the post-merge rebuild orders packages by
 BuildRequires, so the dependent recipe can be reviewed in parallel. Name the
 providing PR in the PR body and the `[resolved]` comment, and merge it first:
 merged alone, the dependent recipe fails its first hosted build on a missing
-BuildRequires. `m17n-lib` likewise waits on its providers in #788.
+BuildRequires.
+
+For the IBus imports in [#804](https://github.com/projectbluefin/utah-packages/pull/804),
+`libpinyin` and `libpinyin-data` are already recipe-resolved by merged
+[#796](https://github.com/projectbluefin/utah-packages/pull/796); do not list
+them as pending imports. That merge does not prove publication or runtime
+availability. `ibus-anthy` still needs `anthy-unicode-devel` to build and
+`anthy-unicode` at runtime; its provider recipe is in still-open
+[#788](https://github.com/projectbluefin/utah-packages/pull/788).
+`ibus-m17n` BuildRequires `m17n-lib-devel`, and both it and
+`ibus-typing-booster` require `m17n-lib` at runtime (typing-booster also uses
+it for build-time tests). `m17n-lib` itself is not imported by #788: that PR
+supplies its `libotf`, `libXaw` and `gd` prerequisites, so the provider merge,
+the `m17n-lib` import and their hosted builds remain separate blockers.
+
+`ibus-anthy` also requires `kasumi-unicode` with its Fedora-default bcond.
+Keep `kasumi-common` and `kasumi-unicode` pending until their source and
+SHA-512 lock are resolved or a specific maintainer decision is linked; the
+font-parity waiver does not cover them. Availability in a Fedora build root
+would not establish dependency closure under the permitted runtime
+repositories (factory plus Hummingbird). Keep #494 open until the remaining
+outputs and hosted build, publication, permitted-repository solver and
+representative input-method runtime evidence are accounted for.
 
 ### Reconcile sibling library outputs
 

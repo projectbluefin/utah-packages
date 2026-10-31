@@ -1138,12 +1138,42 @@ packages:
     downstream_package_name: ibus
     paths:
       - packages/ibus
+  ibus-anthy:
+    specfile_path: ibus-anthy.spec
+    upstream_package_name: ibus-anthy
+    downstream_package_name: ibus-anthy
+    paths:
+      - packages/ibus-anthy
   ibus-chewing:
     specfile_path: ibus-chewing.spec
     upstream_package_name: ibus-chewing
     downstream_package_name: ibus-chewing
     paths:
       - packages/ibus-chewing
+  ibus-hangul:
+    specfile_path: ibus-hangul.spec
+    upstream_package_name: ibus-hangul
+    downstream_package_name: ibus-hangul
+    paths:
+      - packages/ibus-hangul
+  ibus-libpinyin:
+    specfile_path: ibus-libpinyin.spec
+    upstream_package_name: ibus-libpinyin
+    downstream_package_name: ibus-libpinyin
+    paths:
+      - packages/ibus-libpinyin
+  ibus-m17n:
+    specfile_path: ibus-m17n.spec
+    upstream_package_name: ibus-m17n
+    downstream_package_name: ibus-m17n
+    paths:
+      - packages/ibus-m17n
+  ibus-typing-booster:
+    specfile_path: ibus-typing-booster.spec
+    upstream_package_name: ibus-typing-booster
+    downstream_package_name: ibus-typing-booster
+    paths:
+      - packages/ibus-typing-booster
   ibus-unikey:
     specfile_path: ibus-unikey.spec
     upstream_package_name: ibus-unikey

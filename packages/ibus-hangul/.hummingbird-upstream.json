@@ -1,0 +1,8 @@
+{
+  "package": "ibus-hangul",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/ibus-hangul.git",
+  "commit": "c08571fb291c486a270f5a18037f5f0f09654ec1",
+  "tree": "c6a65f7208693a1c5998ffdb320514560ac551a3",
+  "imported_at": "2026-10-29T01:57:54.227683+00:00"
+}

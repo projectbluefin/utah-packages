@@ -1,0 +1,8 @@
+{
+  "package": "ibus-libpinyin",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/ibus-libpinyin.git",
+  "commit": "1e8e4047818ac3d76e3eebd501fc17220f1f3d06",
+  "tree": "83fe569fec62f5177042bc5e965e5f478577ce8b",
+  "imported_at": "2026-10-29T01:57:55.139777+00:00"
+}

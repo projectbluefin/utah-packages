@@ -1,0 +1,8 @@
+{
+  "package": "ibus-m17n",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/ibus-m17n.git",
+  "commit": "77e3337c4d70b251343eb46906ede82cedc52d96",
+  "tree": "5f0f30f48d5ad09261511e8d2642197ecdeb7008",
+  "imported_at": "2026-10-29T01:57:56.217496+00:00"
+}

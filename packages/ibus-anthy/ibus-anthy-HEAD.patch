@@ -1,0 +1,173 @@
+From 4d19bf9918be970b76fefc1fb24dfd8cb433e189 Mon Sep 17 00:00:00 2001
+From: fujiwarat <takao.fujiwara1@gmail.com>
+Date: Thu, 7 May 2026 21:31:20 +0900
+Subject: [PATCH] data/Makefile: Use PYTHON for era.py
+
+Some distros do not have python3 but python3.11 for example.
+
+Closes: #48
+---
+ data/Makefile.am | 24 +++++++++++++++---------
+ 1 file changed, 15 insertions(+), 9 deletions(-)
+
+diff --git a/data/Makefile.am b/data/Makefile.am
+index c13d273..ecfe804 100644
+--- a/data/Makefile.am
++++ b/data/Makefile.am
+@@ -85,23 +85,29 @@ endif
+ era.t: era.stamp
+ 
+ era.stamp:
++	make_era_t=0; \
+ 	if test -f $(srcdir)/era.t ; then \
+-	    if ! $(srcdir)/era.py --check $(srcdir)/era.t ; then \
++	    if ! $(PYTHON) $(srcdir)/era.py --check $(srcdir)/era.t ; then \
+ 	        rm $(srcdir)/era.t; \
+-	        $(srcdir)/era.py $(srcdir)/era.t.in \
+-                    --output $(builddir)/era.t; \
+-	        echo "Generate era.t"; \
++	        make_era_t=1; \
+ 	    fi; \
++	else \
++	    make_era_t=1; \
++	fi; \
++	if test $$make_era_t -eq 1 ; then \
++	    if ! $(PYTHON) $(srcdir)/era.py $(srcdir)/era.t.in \
++	        --output $(builddir)/era.t ; then \
++	        exit 1; \
++	    fi; \
++	    echo "Generate era.t"; \
+ 	fi; \
+ 	touch era.stampT; \
+ 	mv era.stampT era.stamp;
+ 
+ check:
+-	if test -f $(srcdir)/era.t ; then \
+-	    $(srcdir)/era.py --check $(srcdir)/era.t; \
+-	else \
+-	    $(srcdir)/era.py --check $(builddir)/era.t; \
+-	fi
++	file=$(builddir)/era.t; \
++	test -f "$$file" || file=$(srcdir)/era.t; \
++	$(PYTHON) $(srcdir)/era.py --check "$$file";
+ 
+ install-data-hook:
+ 	if test -z "$(DESTDIR)"; then \
+-- 
+2.54.0
+
+From 40bcefbd5569953b3bcc71b962f971d71b5003f7 Mon Sep 17 00:00:00 2001
+From: fujiwarat <takao.fujiwara1@gmail.com>
+Date: Mon, 17 Aug 2026 14:36:07 +0900
+Subject: [PATCH 1/2] engine: return False for thumb-shift release keys
+
+Part-of: #45
+---
+ engine/python3/engine.py | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/engine/python3/engine.py b/engine/python3/engine.py
+index f76f919..8bb985d 100644
+--- a/engine/python3/engine.py
++++ b/engine/python3/engine.py
+@@ -1895,6 +1895,7 @@ class Engine(IBus.EngineSimple):
+                 self._RSS = 0
+             elif keyval == self._RMM:
+                 self._RMM = 0
++            return False
+         else:
+             if keyval in [LS(), RS()] and state == 0:
+                 if self._SS:
+-- 
+2.55.0
+
+From 7b481f53bfb43da90867d3bedb856dcd0b9d4d4e Mon Sep 17 00:00:00 2001
+From: Ken TY Chiu <ken.tychiu@proton.me>
+Date: Thu, 27 Aug 2026 23:06:53 +0900
+Subject: [PATCH 2/2] engine: Add super key support for thumb shift mode
+
+Part-of: #46
+---
+ engine/python3/engine.py | 33 +++++++++++++++++++--------------
+ 1 file changed, 19 insertions(+), 14 deletions(-)
+
+diff --git a/engine/python3/engine.py b/engine/python3/engine.py
+index 8bb985d..499269f 100644
+--- a/engine/python3/engine.py
++++ b/engine/python3/engine.py
+@@ -67,6 +67,17 @@ printerr = AnthyPrefs.printerr
+ ANTHY_CONFIG_PATH = get_userhome() + '/.anthy' if config.ANTHY_PC == 'anthy' \
+     else GLib.get_user_config_dir() + '/anthy';
+ 
++# Shift, Alt and Super keys
++ANTHY_NO_OUTPUT_MODIFIERS = (
++    IBus.ModifierType.CONTROL_MASK |
++    IBus.ModifierType.MOD1_MASK |
++    IBus.ModifierType.MOD4_MASK
++)
++ANTHY_SHORTCUT_MODIFIERS = (
++    ANTHY_NO_OUTPUT_MODIFIERS |
++    IBus.ModifierType.SHIFT_MASK
++)
++
+ INPUT_MODE_HIRAGANA, \
+ INPUT_MODE_KATAKANA, \
+ INPUT_MODE_HALF_WIDTH_KATAKANA, \
+@@ -1873,16 +1884,14 @@ class Engine(IBus.EngineSimple):
+         def T2():
+             return self.__thumb.get_t2()
+ 
+-        state = state & (IBus.ModifierType.SHIFT_MASK |
+-                         IBus.ModifierType.CONTROL_MASK |
+-                         IBus.ModifierType.MOD1_MASK |
+-                         IBus.ModifierType.RELEASE_MASK)
++        is_press = (state & IBus.ModifierType.RELEASE_MASK) == 0
++        state &= ANTHY_SHORTCUT_MODIFIERS
+ 
+         if keyval in KP_Table and self.__prefs.get_value('common',
+                                                          'ten-key-mode'):
+             keyval = KP_Table[keyval]
+ 
+-        if state & IBus.ModifierType.RELEASE_MASK:
++        if not is_press:
+             if keyval == self._MM:
+                 if stop():
+                     insert(self.__thumb.get_char(self._MM)[self._SS])
+@@ -1944,8 +1953,9 @@ class Engine(IBus.EngineSimple):
+                     cmd_exec([0, RS(), LS()][self._SS])
+                 if cmd_exec(keyval, state):
+                     return True
+-                elif 0x21 <= keyval <= 0x7e and state & \
+-                        (IBus.ModifierType.CONTROL_MASK | IBus.ModifierType.MOD1_MASK) == 0:
++                if state & ANTHY_NO_OUTPUT_MODIFIERS:
++                    return False
++                if 0x21 <= keyval <= 0x7e:
+                     if state & IBus.ModifierType.SHIFT_MASK:
+                         insert(self.__thumb.get_shift_char(keyval, chr(keyval)))
+                     elif self._SS == 0:
+@@ -1967,10 +1977,7 @@ class Engine(IBus.EngineSimple):
+ 
+         is_press = (state & IBus.ModifierType.RELEASE_MASK) == 0
+ 
+-        state = state & (IBus.ModifierType.SHIFT_MASK |
+-                         IBus.ModifierType.CONTROL_MASK |
+-                         IBus.ModifierType.MOD1_MASK |
+-                         IBus.ModifierType.MOD4_MASK)
++        state &= ANTHY_SHORTCUT_MODIFIERS
+ 
+         # ignore key release events
+         if not is_press:
+@@ -1998,9 +2005,7 @@ class Engine(IBus.EngineSimple):
+            state & hex_mod_mask == hex_mod_mask:
+             return True
+ 
+-        if state & (IBus.ModifierType.CONTROL_MASK | \
+-                    IBus.ModifierType.MOD1_MASK | \
+-                    IBus.ModifierType.MOD4_MASK):
++        if state & ANTHY_NO_OUTPUT_MODIFIERS:
+             return False
+ 
+         if (IBus.KEY_exclam <= keyval <= IBus.KEY_asciitilde or
+-- 
+2.55.0
+
