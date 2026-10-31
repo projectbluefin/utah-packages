@@ -4,13 +4,13 @@ diff -up m17n-lib-1.8.0/m17n-config.in.multi m17n-lib-1.8.0RC/m17n-config.in
 @@ -64,17 +64,15 @@ else
    LIBNAME="$LIBNAME$LIBSHELL$LIBFLT$LIBGUI"
  fi
-
+ 
 +platform=`uname -m`
 +
  case $1 in
  --version)
    echo "@PACKAGE_VERSION@";;
-
+ 
  --libs)
 -  if test "@libdir@" != "/usr/lib"; then
 -    echo "-L@libdir@ ${LIBNAME}"
@@ -19,7 +19,7 @@ diff -up m17n-lib-1.8.0/m17n-config.in.multi m17n-lib-1.8.0RC/m17n-config.in
 -  fi;;
 -
 +  echo "${LIBNAME}";;
-+
+ 
  --cflags)
    if test "@includedir@" != "/usr/include"; then
      echo "-I@includedir@"
