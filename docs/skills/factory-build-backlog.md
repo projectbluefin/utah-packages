@@ -839,6 +839,24 @@ name-only snapshot; rerun it anyway and expect no report diff when no names
 or recipe classifications changed. Publication still does not prove password
 policy integration, audio-device operation, or a permitted-repository install.
 
+### Microsoft CAB library imports
+
+`libmspack` is both the source recipe and the audited binary; the same
+recipe builds `libmspack-devel`. Fedora's `Source0` still points at
+`http://www.cabextract.org.uk/`; the `https://` URL serves the same
+`<version>alpha` archive bytes as the `sources` SHA-512, so lock that in
+`config/upstream-sources.json` and keep the Fedora lookaside in
+`fallback_urls`. As with `libev`, leave the imported spec's `Source0`
+verbatim: the lock, not the recipe, carries the HTTPS URL, and a later
+re-import then reproduces the recipe unchanged. The recipe applies its CVE backport
+with `%autosetup -S git` because the patch carries binary test fixtures:
+keep `BuildRequires: git` and the upstream `make check`. The library has no
+runtime `Requires` beyond glibc. For runtime acceptance, install from only
+Hummingbird plus the factory and extract a known `.cab` file through a
+libmspack consumer (for example `cabextract`, itself still outside the
+factory) or the bundled examples; loading `libmspack.so.0` alone checks
+linkage, not decompression.
+
 ### Kyoto Cabinet library imports
 
 `kyotocabinet-libs` comes from source recipe `kyotocabinet`, which also
@@ -1095,3 +1113,15 @@ Do not exercise `mkfs.hfsplus` or repair with `fsck.hfsplus` on a host disk.
 After a hosted build, test them against a disposable filesystem image in the
 permitted runtime environment, and record the binary identity and results.
 Recipe coverage alone does not establish filesystem safety or installation.
+
+## Libev event loop library
+
+The `libev` source package provides the audited `libev` shared library, `libev-devel`,
+`libev-source`, and the compatibility header package `libev-libevent-devel`.
+Note that `libev-libevent-devel` declares an explicit `Conflicts: libevent-devel`
+to protect the shared `event.h` header; `libev-devel` alone does not conflict.
+Its `Source0` URL in the imported spec is plain `http://` (kept verbatim from Fedora);
+the source lock in `config/upstream-sources.json` fetches the same archive over
+`https://dist.schmorp.de` and the Fedora lookaside fallback, matching the SHA-512 in `sources`.
+An imported recipe record alone does not establish publication or runtime
+acceptance in Utah; those remain tracked with the #502 batch.

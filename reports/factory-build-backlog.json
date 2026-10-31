@@ -20,8 +20,8 @@
     "long-tail": {
       "already_recipe": 2,
       "manifest_wants": 1,
-      "pending": 66,
-      "total": 69
+      "pending": 64,
+      "total": 67
     },
     "power": {
       "total": 0
@@ -620,22 +620,12 @@
     },
     {
       "area": "long-tail",
-      "name": "libev",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
       "name": "libijs",
       "state": "pending"
     },
     {
       "area": "long-tail",
       "name": "liblqr-1",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
-      "name": "libmspack",
       "state": "pending"
     },
     {
@@ -883,11 +873,11 @@
   "states": {
     "already_recipe": 7,
     "manifest_wants": 1,
-    "pending": 158
+    "pending": 156
   },
   "totals": {
-    "backlog": 166,
-    "resolved": 348,
+    "backlog": 164,
+    "resolved": 350,
     "wontfix": 37
   }
 }

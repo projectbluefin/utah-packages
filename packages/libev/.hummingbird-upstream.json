@@ -1,0 +1,8 @@
+{
+  "package": "libev",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libev.git",
+  "commit": "377e68a1dd5137f90a9c3520995ecd8643cf81df",
+  "tree": "70a31e3aff5a3a78fc2980b03a3dea9040e484c5",
+  "imported_at": "2026-10-31T05:52:45.112591+00:00"
+}
