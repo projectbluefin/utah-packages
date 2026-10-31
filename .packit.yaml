@@ -1822,6 +1822,12 @@ packages:
     downstream_package_name: libical
     paths:
       - packages/libical
+  libiec61883:
+    specfile_path: libiec61883.spec
+    upstream_package_name: libiec61883
+    downstream_package_name: libiec61883
+    paths:
+      - packages/libiec61883
   libieee1284:
     specfile_path: libieee1284.spec
     upstream_package_name: libieee1284
@@ -3562,6 +3568,18 @@ packages:
     downstream_package_name: tecla
     paths:
       - packages/tecla
+  tesseract:
+    specfile_path: tesseract.spec
+    upstream_package_name: tesseract
+    downstream_package_name: tesseract
+    paths:
+      - packages/tesseract
+  tesseract-tessdata:
+    specfile_path: tesseract-tessdata.spec
+    upstream_package_name: tesseract-tessdata
+    downstream_package_name: tesseract-tessdata
+    paths:
+      - packages/tesseract-tessdata
   thermald:
     specfile_path: thermald.spec
     upstream_package_name: thermald
@@ -4060,6 +4078,12 @@ packages:
     downstream_package_name: ykpers
     paths:
       - packages/ykpers
+  yubikey-manager:
+    specfile_path: yubikey-manager.spec
+    upstream_package_name: yubikey-manager
+    downstream_package_name: yubikey-manager
+    paths:
+      - packages/yubikey-manager
   yyjson:
     specfile_path: yyjson.spec
     upstream_package_name: yyjson

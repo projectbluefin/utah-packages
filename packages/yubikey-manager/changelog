@@ -1,0 +1,165 @@
+* Thu Jan 19 2023 Gerald Cox <gbcox@fedoraproject.org> - 5.0.1-2
+- Update for SPDX rhbz#2161986
+
+* Wed Jan 18 2023 Gerald Cox <gbcox@fedoraproject.org> - 5.0.1-1
+- Upstream release rhbz#2161986
+
+* Thu Oct 20 2022 Gerald Cox <gbcox@fedoraproject.org> - 5.0.0-1
+- Upstream release rhbz#2136583
+
+* Sat Jul 23 2022 Fedora Release Engineering <releng@fedoraproject.org> - 4.0.9-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_37_Mass_Rebuild
+
+* Fri Jun 17 2022 Python Maint <python-maint@redhat.com> - 4.0.9-2
+- Rebuilt for Python 3.11
+
+* Fri Jun 17 2022 Gerald Cox <gbcox@member.fsf.org> - 4.0.9-1
+- Upstream release rhbz#2098220
+
+* Thu Jun 16 2022 Python Maint <python-maint@redhat.com> - 4.0.8-4
+- Rebuilt for Python 3.11
+
+* Fri Jun 10 2022 Gerald Cox <gbcox@member.fsf.org> - 4.0.8-3
+- rhbz#2095489 - Patch to allow new python-fido2 version 1.0
+
+* Thu Jun 09 2022 Gerald Cox <gbcox@member.fsf.org> - 4.0.8-2
+- rhbz#2095489
+
+* Mon Jan 31 2022 Gerald Cox <gbcox@member.fsf.org> - 4.0.8-1
+- rhbz#2026634
+
+* Sat Jan 22 2022 Fedora Release Engineering <releng@fedoraproject.org> - 4.0.7-6
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_36_Mass_Rebuild
+
+* Wed Oct 06 2021 Gerald Cox <gbcox@member.fsf.org> - 4.0.7-5
+- Change to upstream patch - rhbz#2009934
+- Removed site-packages patch, incorporated into upstream
+
+* Mon Oct 04 2021 Gerald Cox <gbcox@member.fsf.org> - 4.0.7-4
+- rhbz#2009934
+
+* Mon Oct 04 2021 Miro Hrončok <mhroncok@redhat.com> - 4.0.7-3
+- Require the exact same version-release of python3-yubikey-manager
+- Do not install docs to site-packages
+- Remove superfluous runtime dependency on python3-setuptools
+
+* Mon Oct 04 2021 Gerald Cox <gbcox@member.fsf.org> - 4.0.7-2
+- Patch until upstream corrects for rhbz#2009934
+
+* Wed Sep 08 2021 Gerald Cox <gbcox@member.fsf.org> - 4.0.7-1
+- Upstream release rhbz#2002419
+
+* Fri Jul 23 2021 Fedora Release Engineering <releng@fedoraproject.org> - 4.0.5-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_35_Mass_Rebuild
+
+* Fri Jul 16 2021 Gerald Cox <gbcox@member.fsf.org> - 4.0.5-1
+- Upstream release rhbz#1983123
+
+* Fri Jun 04 2021 Python Maint <python-maint@redhat.com> - 4.0.3-2
+- Rebuilt for Python 3.10
+
+* Tue May 18 2021 Gerald Cox <gbcox@member.fsf.org> - 4.0.3
+- Upstream release rhbz#1961839
+
+* Mon Apr 12 2021 Gerald Cox <gbcox@member.fsf.org> - 4.0.2
+- Upstream release rhbz#1948671
+
+* Mon Mar 29 2021 Gerald Cox <gbcox@fedoraproject.org> - 4.0.1
+- Upstream release rhbz#1944387
+
+* Tue Mar 02 2021 Gerald Cox <gbcox@fedoraproject.org> - 4.0.0p1
+- Upstream release rhbz#1921519
+
+* Tue Mar 02 2021 Gerald Cox <gbcox@fedoraproject.org> - 4.0.0
+- Upstream release rhbz#1921519
+
+* Thu Feb 18 2021 Gerald Cox <gbcox@fedoraproject.org> - 4.0.0a3
+- Upstream release rhbz#1921519
+
+* Wed Feb 10 2021 Gerald Cox <gbcox@fedoraproject.org> - 4.0.0a1
+- Upstream release rhbz#1921519
+
+* Wed Feb 03 2021 Gerald Cox <gbcox@fedoraproject.org> - 4.0.0a1
+- Upstream release rhbz#1921519
+
+* Thu Jan 28 2021 Fedora Release Engineering <releng@fedoraproject.org> - 3.1.2-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_34_Mass_Rebuild
+
+* Thu Jan 21 2021 Gerald Cox <gbcox@fedoraproject.org> - 3.1.2.1
+- Upstream release rhbz#1919027
+
+* Mon Oct 05 2020 Gerald Cox <gbcox@fedoraproject.org> - 3.1.1.4.git87dd1d8
+- BuildRequire python3-setuptools explicitly
+
+* Wed Jul 29 2020 Fedora Release Engineering <releng@fedoraproject.org> - 3.1.1-3.git87dd1d8
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_33_Mass_Rebuild
+
+* Tue May 26 2020 Miro Hrončok <mhroncok@redhat.com> - 3.1.1-2.git87dd1d8
+- Rebuilt for Python 3.9
+
+* Fri Jan 31 2020 Gerald Cox <gbcox@fedoraproject.org> - 3.1.1-1.git87dd1d8
+- Upstream release rhbz#1796504
+
+* Fri Jan 31 2020 Fedora Release Engineering <releng@fedoraproject.org> - 3.0.0-8.git1f22620
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_32_Mass_Rebuild
+
+* Mon Nov 11 2019 Gerald Cox <gbcox@fedoraproject.org - 3.0.0-7.git1f22620
+- PCSC Exceptions - rhbz#1684945
+
+* Thu Oct 24 2019 Gerald Cox <gbcox@fedoraproject.org - 3.0.0-6.gitcfa1907
+- PCSC Exceptions - rhbz#1684945 rhbz#1737264
+
+* Mon Oct 21 2019 Miro Hrončok <mhroncok@redhat.com> - 3.0.0-5.gitcfa1907
+- Require python3-setuptools explicitly
+
+* Thu Oct 03 2019 Miro Hrončok <mhroncok@redhat.com> - 3.0.0-4.gitcfa1907
+- Rebuilt for Python 3.8.0rc1 (#1748018)
+
+* Mon Aug 19 2019 Miro Hrončok <mhroncok@redhat.com> - 3.0.0-3.gitcfa1907
+- Rebuilt for Python 3.8
+
+* Mon Aug 12 2019 Gerald Cox <gbcox@fedoraproject.org> - 3.0.0-2.gitcfa1907
+- Upstream release - rhbz#1737243
+
+* Sun Aug 04 2019 Gerald Cox <gbcox@fedoraproject.org> - 3.0.0-1.gitcfa1907
+- Upstream release - rhbz#1737243
+
+* Sat Jul 27 2019 Fedora Release Engineering <releng@fedoraproject.org> - 2.1.0-3.gitb44d719
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_31_Mass_Rebuild
+
+* Sun Apr 28 2019 Gerald Cox <gbcox@fedoraproject.org> - 2.1.0-2.gitb44d719
+- Upstream release - rhbz#1703827
+
+* Sun Apr 28 2019 Gerald Cox <gbcox@fedoraproject.org> - 2.1.0-1.gitb44d719
+- Upstream release - rhbz#1703827
+
+* Sun Feb 03 2019 Fedora Release Engineering <releng@fedoraproject.org> - 2.0.0-4.gite17b3de
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_30_Mass_Rebuild
+
+* Wed Jan 09 2019 Gerald Cox <gbcox@fedoraproject.org> - 2.0.0-3.gite17b3de
+- Upstream release - rhbz#1655888
+
+* Tue Jan 01 2019 Igor Gnatenko <ignatenkobrain@fedoraproject.org> - 2.0.0-2.git1c707b2
+- Enable python dependency generator
+
+* Mon Dec 31 2018 Gerald Cox <gbcox@fedoraproject.org> - 2.0.0-1.git1c707b2
+- Upstream release - rhbz#1655888
+
+* Sat Jul 14 2018 Fedora Release Engineering <releng@fedoraproject.org> - 0.6.0-4
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_29_Mass_Rebuild
+
+* Tue Jun 19 2018 Miro Hrončok <mhroncok@redhat.com> - 0.6.0-3
+- Rebuilt for Python 3.7
+
+* Mon May 7 2018 Seth Jennings <sethdjennings@gmail.com> - 0.6.0-2
+- add u2f-host as dependency
+
+* Wed May 2 2018 Seth Jennings <sethdjennings@gmail.com> - 0.6.0-1
+- Upstream release
+
+* Fri Feb 09 2018 Fedora Release Engineering <releng@fedoraproject.org> - 0.4.0-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_28_Mass_Rebuild
+
+* Wed Aug 9 2017 Seth Jennings <sethdjennings@gmail.com> - 0.4.0-1
+- New package
+- Upstream release

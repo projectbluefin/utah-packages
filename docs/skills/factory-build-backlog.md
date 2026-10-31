@@ -136,6 +136,11 @@ its entry in `already_recipe` pending hosted build and runtime verification —
 must link the tracking issue with `Refs #<n>`, never `Closes #<n>`, so merging
 does not auto-close the batch while other outputs remain open.
 
+If the base branch imports the same recipe while a PR is open, reconcile the
+merge instead of appending another record: keep one source-lock entry and one
+catalog entry, retain the base's source fallback and publication metadata, and
+regenerate the report from the merged catalog.
+
 For font and language batches, follow
 [Reconcile consumer decisions before importing](font-package-recipes.md#reconcile-consumer-decisions-before-importing).
 A partial waiver PR should reference the batch issue and name the remaining
@@ -157,6 +162,14 @@ in the PR. Record the upstream recipe commit and source digest separately
 from the hosted build run, binary NEVRA, factory image digest, and runtime
 exercise. Missing build or runtime evidence must remain explicit rather than
 being inferred from a green inventory check.
+
+For the partial Tesseract source family in PR #836, use `Refs #507` and
+preserve both `tesseract` and `tesseract-tessdata` source locks, recipe
+provenance and patches when integrating inventory changes. Recipe-import
+accounting does not close #507: hosted OCR builds and publication, dependency
+resolution, and a runtime OCR exercise using the English tessdata remain
+explicit acceptance gaps until evidence is recorded. Regenerating inventory
+does not establish any of that build or tessdata runtime evidence.
 
 Use the consumer issue named by the batch assignment when the area's
 `consumer_issue` is stale. Check the consumer's triage for each binary:
@@ -508,7 +521,16 @@ recorded.
 
 ### Security key sign-in (Yubico)
 
-Yubico C releases (`libyubikey`, `ykclient`, `ykpers`) still declare `http://opensource.yubico.com/...` `Source0` URLs in Fedora Rawhide, and `libyubikey` and `ykclient` still carry legacy MD5 `sources` lines: repin `sources` to `SHA512 (<file>) = <hex>`, lock `https://opensource.yubico.com/...` as the primary `url`, and pair `https://developers.yubico.com/<project>/Releases/<file>` with Fedora's `/md5/<md5>/` lookaside path in `fallback_urls`. `ykpers` builds and links against `libyubikey` (`libyubikey.so.0`), so import `libyubikey` in the same PR. When a recipe carries a committed OpenPGP keyring whose filename does not match `*key*.asc`, `*keyring*.asc`, or `[0-9A-F]*.asc` (`packages/pkcs11-provider/simo_redhat.asc`, `packages/bc/kevin_pizzini.asc`), unignore it explicitly in the root `.gitignore` (`!packages/<pkg>/<name>.asc`) so `git add` tracks `SourceN` for `%{openpgpverify}`. By contrast, `yubikey-manager` (`python3-yubikey-manager`) is a `pyproject` package whose `[project].dependencies` generate runtime `python3dist(...)` `Requires` across multiple backlog areas (`python3-click`, `python3-fido2`, `python3-keyring` plus `secretstorage`/`jeepney`/`jaraco` in `dev-tools`, and `python3-pyscard`, `python3-pskc` in `long-tail`); keep `yubikey-manager` and `python3-yubikey-manager` pending until those Python runtime providers land in the factory.
+Yubico C releases (`libyubikey`, `ykclient`, `ykpers`) still declare `http://opensource.yubico.com/...` `Source0` URLs in Fedora Rawhide, and `libyubikey` and `ykclient` still carry legacy MD5 `sources` lines: repin `sources` to `SHA512 (<file>) = <hex>`, lock `https://opensource.yubico.com/...` as the primary `url`, and pair `https://developers.yubico.com/<project>/Releases/<file>` with Fedora's `/md5/<md5>/` lookaside path in `fallback_urls`. `ykpers` builds and links against `libyubikey` (`libyubikey.so.0`), so import `libyubikey` in the same PR. When a recipe carries a committed OpenPGP keyring whose filename does not match `*key*.asc`, `*keyring*.asc`, or `[0-9A-F]*.asc` (`packages/pkcs11-provider/simo_redhat.asc`, `packages/bc/kevin_pizzini.asc`), unignore it explicitly in the root `.gitignore` (`!packages/<pkg>/<name>.asc`) so `git add` tracks `SourceN` for `%{openpgpverify}`.
+
+By contrast, `yubikey-manager` (`python3-yubikey-manager`) is a `pyproject`
+package whose `[project].dependencies` generate runtime `python3dist(...)`
+`Requires` across multiple backlog areas. `python3-click`, `python3-pyscard`,
+`python3-pskc` and the `jaraco` libraries already have recipes in `[resolved]`;
+`python3-fido2` and `python3-keyring` (with `secretstorage`/`jeepney`) are still
+pending in `dev-tools`. Its recipe landed in #839 as recipe coverage only (both
+names moved to `[resolved]`); hosted build, publication and runtime proof stay
+blocked on those remaining Python providers and are tracked on #479.
 
 The `pam-u2f` source recipe also produces `pamu2fcfg`; its detached
 signature is a separate SHA-512-locked source and its bundled keyring is

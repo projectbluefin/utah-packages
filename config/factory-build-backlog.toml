@@ -53,7 +53,6 @@ packages = [
     "libde265",
     "libdovi",
     "libfdk-aac",
-    "libiec61883",
     "libklvanc",
     "libopenjph",
     "libplacebo",
@@ -80,8 +79,6 @@ consumer_issue = "projectbluefin/utah#389"
 packages = [
     "NetworkManager-vpnc",
     "NetworkManager-vpnc-gnome",
-    "python3-yubikey-manager",
-    "yubikey-manager",
 ]
 
 [areas.printing-scanning]
@@ -249,10 +246,6 @@ packages = [
     "slang",
     "solaar-udev",
     "sos",
-    "tesseract-common",
-    "tesseract-langpack-eng",
-    "tesseract-libs",
-    "tesseract-tessdata-doc",
     "uavs3d-libs",
     "ublue-os-akmods-addons",
     "v4l2loopback",
@@ -315,6 +308,12 @@ packages = [
     { name = "adcli", pr = 774 },
     { name = "adcli-selinux", pr = 774 },
     { name = "serd", pr = 773 },
+    # Long-tail tesseract family (recipe import only); build, publication and
+    # runtime proof remain on #507.
+    { name = "tesseract-libs", pr = 836 },
+    { name = "tesseract-common", pr = 836 },
+    { name = "tesseract-tessdata-doc", pr = 836 },
+    { name = "tesseract-langpack-eng", pr = 836 },
     # Recipe coverage only; slirp4netns uses the existing libslirp recipe.
     # Hosted build, publication, runtime solver and namespace tests remain on #507.
     { name = "slirp4netns", pr = 830 },
@@ -357,6 +356,7 @@ packages = [
     { name = "libavcodec", pr = 70 },
     { name = "libavdevice", pr = 70 },
     { name = "libdc1394", pr = 794 },
+    { name = "libiec61883", pr = 801 },
     { name = "libraw1394", pr = 681 },
     { name = "pam_yubico", pr = 706 },
     # Smart-card Python binding; hosted build and runtime proof remain in #506.
@@ -719,6 +719,9 @@ packages = [
     { name = "pkcs11-provider", pr = 647 },
     { name = "ykclient", pr = 647 },
     { name = "ykpers", pr = 647 },
+    # Recipe coverage only; Python runtime dependencies and publication remain outstanding.
+    { name = "python3-yubikey-manager" },
+    { name = "yubikey-manager" },
     # bison.spec produces bison plus bison-devel/runtime; recipe closure for #485,
     # not a claim of publication or runtime installation.
     { name = "bison", pr = 615 },

@@ -2,8 +2,8 @@
   "areas": {
     "codecs-media": {
       "already_recipe": 5,
-      "pending": 16,
-      "total": 21
+      "pending": 15,
+      "total": 20
     },
     "dev-tools": {
       "already_recipe": 5,
@@ -21,8 +21,8 @@
     "long-tail": {
       "already_recipe": 2,
       "manifest_wants": 1,
-      "pending": 62,
-      "total": 65
+      "pending": 58,
+      "total": 61
     },
     "power": {
       "total": 0
@@ -38,8 +38,8 @@
       "total": 4
     },
     "vpn": {
-      "pending": 4,
-      "total": 4
+      "pending": 2,
+      "total": 2
     }
   },
   "audit_digest_bluefin": "sha256:1e37db65e78f7f394e16608aa8449bd6be43eb691ae9f98b619044ffba23c64e",
@@ -92,11 +92,6 @@
     {
       "area": "codecs-media",
       "name": "libfdk-aac",
-      "state": "pending"
-    },
-    {
-      "area": "codecs-media",
-      "name": "libiec61883",
       "state": "pending"
     },
     {
@@ -761,26 +756,6 @@
     },
     {
       "area": "long-tail",
-      "name": "tesseract-common",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
-      "name": "tesseract-langpack-eng",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
-      "name": "tesseract-libs",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
-      "name": "tesseract-tessdata-doc",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
       "name": "uavs3d-libs",
       "state": "pending"
     },
@@ -828,27 +803,17 @@
       "area": "vpn",
       "name": "NetworkManager-vpnc-gnome",
       "state": "pending"
-    },
-    {
-      "area": "vpn",
-      "name": "python3-yubikey-manager",
-      "state": "pending"
-    },
-    {
-      "area": "vpn",
-      "name": "yubikey-manager",
-      "state": "pending"
     }
   ],
   "issue": "projectbluefin/utah-packages#308",
   "states": {
     "already_recipe": 12,
     "manifest_wants": 1,
-    "pending": 145
+    "pending": 138
   },
   "totals": {
-    "backlog": 158,
-    "resolved": 356,
+    "backlog": 151,
+    "resolved": 363,
     "wontfix": 37
   }
 }

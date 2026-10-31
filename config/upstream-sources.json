@@ -5765,6 +5765,13 @@
       ]
     },
     {
+      "name": "yubikey-manager",
+      "version": "5.9.2",
+      "url": "https://github.com/Yubico/yubikey-manager/archive/60ab055dd34b6384bdd4ceb85a38d36bc15ce58a/yubikey-manager-60ab055dd34b6384bdd4ceb85a38d36bc15ce58a.tar.gz",
+      "filename": "yubikey-manager-60ab055dd34b6384bdd4ceb85a38d36bc15ce58a.tar.gz",
+      "sha512": "cd838227eb651679fd8c0312386f005640f5e0cb7d76f01bc38d6d1a63904032a1b0b0de2d76e32c30c4688534ba299128df7ea2ee018218abceeb154f4c2a20"
+    },
+    {
       "name": "pkcs11-provider",
       "version": "1.3.0",
       "url": "https://github.com/latchset/pkcs11-provider/releases/download/v1.3.0/pkcs11-provider-1.3.0.tar.xz",
@@ -5878,6 +5885,13 @@
       "url": "https://www.jedsoft.org/releases/slang/slang-2.3.3.tar.bz2",
       "filename": "slang-2.3.3.tar.bz2",
       "sha512": "f882f09e3fcd53427de0f233c9fc3ab15497f2323007be9a084696c8cf810ffe2726cd003149e757df26198b390b9f8c1ff411dc6473513457bd0f94722f8490"
+    },
+    {
+      "name": "libiec61883",
+      "version": "1.2.0",
+      "url": "https://www.kernel.org/pub/linux/libs/ieee1394/libiec61883-1.2.0.tar.gz",
+      "filename": "libiec61883-1.2.0.tar.gz",
+      "sha512": "303391dc5d75298039f51bcb9c53061f5ada92210c81dfe860994c05e8e03d6d9d1a662fad780d5766c17a8aade665d996ab3454fc93bc06981a3832e6de4066"
     },
     {
       "name": "libraw1394",
@@ -6444,6 +6458,37 @@
       ]
     },
     {
+      "name": "tesseract",
+      "version": "5.5.4",
+      "url": "https://github.com/tesseract-ocr/tesseract/archive/5.5.4/tesseract-5.5.4.tar.gz",
+      "filename": "tesseract-5.5.4.tar.gz",
+      "sha512": "c1dd838f8c9cbba585d969c1c5edba52d1aa77dac2057775271f5bb8e22c0550f723d1de362e15263e2c540ae1175b08bff36c5a545dd5f84906c468036b4556"
+    },
+    {
+      "name": "tesseract-tessdata",
+      "version": "4.1.0",
+      "url": "https://github.com/tesseract-ocr/tessdata_fast/archive/4.1.0/tessdata_fast-4.1.0.tar.gz",
+      "filename": "tessdata_fast-4.1.0.tar.gz",
+      "sha512": "d5e3461d262e300ebf21abc39d19471a6aabed442eab8fdee772368a02c4fe0d2e5738701e31b2d0777989778c9db0169a57ea89537266bc66d2228fb96ea63e"
+    },
+    {
+      "name": "uvg266",
+      "version": "0.8.1",
+      "url": "https://github.com/ultravideo/uvg266/archive/v0.8.1/uvg266-0.8.1.tar.gz",
+      "filename": "uvg266-0.8.1.tar.gz",
+      "sha512": "892b0732516fe2639f93b250bbed342da8134deeaa6f0ccb429ff8451df727f971c7ee284fef93eaa431c5c54a8b8789ffc853d8b45ae93433ba17007989bbae"
+    },
+    {
+      "name": "libpaper",
+      "version": "2.3.0",
+      "url": "https://github.com/rrthomas/libpaper/archive/v2.3.0/libpaper-2.3.0.tar.gz",
+      "filename": "libpaper-2.3.0.tar.gz",
+      "sha512": "856f57a076d72dfcab6ad11c307b4e52af55b8ebb94d33c939df4e7ce0564ad619351716a3e729a765b74c830cf8343e8236de9cabff2969f3bf5dcec3aa8f37",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libpaper/libpaper-2.3.0.tar.gz/sha512/856f57a076d72dfcab6ad11c307b4e52af55b8ebb94d33c939df4e7ce0564ad619351716a3e729a765b74c830cf8343e8236de9cabff2969f3bf5dcec3aa8f37/libpaper-2.3.0.tar.gz"
+      ]
+    },
+    {
       "name": "libcaca",
       "version": "0.99",
       "url": "https://github.com/cacalabs/libcaca/releases/download/v0.99.beta20/libcaca-0.99.beta20.tar.bz2",
@@ -6473,23 +6518,6 @@
         "https://src.fedoraproject.org/repo/pkgs/rpms/sssd/sssd-2.14.0-beta1.tar.gz/sha512/72be9fc8ddfa1c129b3aac2e6911ec75a944d42cffc3cbd5540ae194f213dfcc815a1b8fe6c823df3d03e077a579359e5b961a03b37bc417168e4806e98338ec/sssd-2.14.0-beta1.tar.gz"
       ],
       "stage": 3
-    },
-    {
-      "name": "uvg266",
-      "version": "0.8.1",
-      "url": "https://github.com/ultravideo/uvg266/archive/v0.8.1/uvg266-0.8.1.tar.gz",
-      "filename": "uvg266-0.8.1.tar.gz",
-      "sha512": "892b0732516fe2639f93b250bbed342da8134deeaa6f0ccb429ff8451df727f971c7ee284fef93eaa431c5c54a8b8789ffc853d8b45ae93433ba17007989bbae"
-    },
-    {
-      "name": "libpaper",
-      "version": "2.3.0",
-      "url": "https://github.com/rrthomas/libpaper/archive/v2.3.0/libpaper-2.3.0.tar.gz",
-      "filename": "libpaper-2.3.0.tar.gz",
-      "sha512": "856f57a076d72dfcab6ad11c307b4e52af55b8ebb94d33c939df4e7ce0564ad619351716a3e729a765b74c830cf8343e8236de9cabff2969f3bf5dcec3aa8f37",
-      "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/libpaper/libpaper-2.3.0.tar.gz/sha512/856f57a076d72dfcab6ad11c307b4e52af55b8ebb94d33c939df4e7ce0564ad619351716a3e729a765b74c830cf8343e8236de9cabff2969f3bf5dcec3aa8f37/libpaper-2.3.0.tar.gz"
-      ]
     }
   ]
 }
