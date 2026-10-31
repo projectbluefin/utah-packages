@@ -2362,6 +2362,12 @@ packages:
     downstream_package_name: libzen
     paths:
       - packages/libzen
+  lilv:
+    specfile_path: lilv.spec
+    upstream_package_name: lilv
+    downstream_package_name: lilv
+    paths:
+      - packages/lilv
   linux-atm:
     specfile_path: linux-atm.spec
     upstream_package_name: linux-atm
@@ -2422,6 +2428,12 @@ packages:
     downstream_package_name: lttng-ust
     paths:
       - packages/lttng-ust
+  lv2:
+    specfile_path: lv2.spec
+    upstream_package_name: lv2
+    downstream_package_name: lv2
+    paths:
+      - packages/lv2
   m17n-db:
     specfile_path: m17n-db.spec
     upstream_package_name: m17n-db
@@ -3328,6 +3340,12 @@ packages:
     downstream_package_name: sonic
     paths:
       - packages/sonic
+  sord:
+    specfile_path: sord.spec
+    upstream_package_name: sord
+    downstream_package_name: sord
+    paths:
+      - packages/sord
   sound-theme-freedesktop:
     specfile_path: sound-theme-freedesktop.spec
     upstream_package_name: sound-theme-freedesktop
@@ -3400,6 +3418,12 @@ packages:
     downstream_package_name: squashfs-tools
     paths:
       - packages/squashfs-tools
+  sratom:
+    specfile_path: sratom.spec
+    upstream_package_name: sratom
+    downstream_package_name: sratom
+    paths:
+      - packages/sratom
   srt:
     specfile_path: srt.spec
     upstream_package_name: srt

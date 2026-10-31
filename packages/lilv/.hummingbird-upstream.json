@@ -1,0 +1,8 @@
+{
+  "package": "lilv",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/lilv.git",
+  "commit": "1fe06afae139572627bab1bbe12b914406b9a923",
+  "tree": "7daa69538392a97787c95072b47c2bae592b82e4",
+  "imported_at": "2026-10-30T19:12:59.400628+00:00"
+}

@@ -20,8 +20,8 @@
     "long-tail": {
       "already_recipe": 2,
       "manifest_wants": 1,
-      "pending": 69,
-      "total": 72
+      "pending": 66,
+      "total": 69
     },
     "power": {
       "total": 0
@@ -680,11 +680,6 @@
     },
     {
       "area": "long-tail",
-      "name": "lilv-libs",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
       "name": "lockdev",
       "state": "pending"
     },
@@ -815,17 +810,7 @@
     },
     {
       "area": "long-tail",
-      "name": "sord",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
       "name": "sos",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
-      "name": "sratom",
       "state": "pending"
     },
     {
@@ -918,11 +903,11 @@
   "states": {
     "already_recipe": 7,
     "manifest_wants": 1,
-    "pending": 165
+    "pending": 162
   },
   "totals": {
-    "backlog": 173,
-    "resolved": 341,
+    "backlog": 170,
+    "resolved": 344,
     "wontfix": 37
   }
 }
