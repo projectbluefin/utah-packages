@@ -236,7 +236,6 @@ only validates configuration, and the post-merge rebuild orders packages by
 BuildRequires, so the dependent recipe can be reviewed in parallel. Name the
 providing PR in the PR body and the `[resolved]` comment, and merge it first:
 merged alone, the dependent recipe fails its first hosted build on a missing
-<<<<<<< HEAD
 BuildRequires. PR #788 imports the `libotf`, `libXaw`, `gd`, and
 `anthy-unicode` prerequisites, not `m17n-lib` itself. Re-check referenced
 provider PRs against the selected base before carrying a historical "waiting"
