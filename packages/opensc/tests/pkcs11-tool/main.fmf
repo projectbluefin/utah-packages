@@ -1,0 +1,16 @@
+summary: This is a sanity test for pkcs11-tool
+enabled: true
+test: ./runtest.sh
+framework: beakerlib
+recommend:
+  - opensc
+  - openssl
+  - gnutls-utils
+  - opencryptoki-libs
+  - opencryptoki
+  - opencryptoki-swtok
+  - softhsm
+  - nss-tools
+  - policycoreutils
+  - yum-plugin-copr
+duration: 30m

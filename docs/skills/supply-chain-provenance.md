@@ -160,6 +160,19 @@ verified GNOME release URL into a blanket promotion of all feeds: forge tag
 archives can differ from Fedora's pinned bytes. A digest mismatch must fail
 closed; Fedora fallbacks cover transport failures, not integrity failures.
 
+The generator guidance above applies when upstream source can be transformed
+into the locked bytes. For Fedora-maintained metadata and build macros with no
+first-party upstream source, use the separate dist-git exception below.
+
+For these exceptions, use Fedora dist-git's raw
+file URL pinned to the full commit
+(`https://src.fedoraproject.org/rpms/<package>/raw/<commit>/f/<path>`), and
+verify that the fetched bytes match the existing SHA-512. Keep the package on
+`config/fedora-primary-sources.txt`: a digest proves the bytes, not that they
+came from an independent upstream. State the Fedora-only reason for each
+exception in the pull request; remove it from the ratchet only when a real
+upstream release can serve those same locked bytes.
+
 For a bulk migration, use direct archive feeds and the recipe's `Source0`
 as candidate locators, not as proof. A release-monitoring project page is
 metadata, not a source archive. Expand recipe macros explicitly and strip

@@ -1,0 +1,8 @@
+{
+  "package": "adcli",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/adcli.git",
+  "commit": "fec8446534cb9ef5f2cab60ef12dedc93d7503e0",
+  "tree": "ebd52eed957cb4aee9b48d8ec3d61460d2cd8281",
+  "imported_at": "2026-10-28T10:50:35.178984+00:00"
+}

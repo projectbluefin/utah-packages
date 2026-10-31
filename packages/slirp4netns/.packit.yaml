@@ -1,0 +1,21 @@
+# See the documentation for more information:
+# https://packit.dev/docs/configuration/
+ 
+upstream_project_url: https://github.com/opencontainers/slirp4netns
+upstream_tag_template: v{version}
+ 
+jobs:
+- job: pull_from_upstream
+  trigger: release
+  dist_git_branches:
+    - fedora-all
+  
+- job: koji_build
+  trigger: commit
+  dist_git_branches:
+    - fedora-all
+ 
+- job: bodhi_update
+  trigger: commit
+  dist_git_branches:
+    - fedora-branched

@@ -1,0 +1,8 @@
+{
+  "package": "python-pskc",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/python-pskc.git",
+  "commit": "58167ecf684e7aa5484aad588649b91fb86026a9",
+  "tree": "b5d0ae4d6e9b9af4eee646bcced83696ce2e998a",
+  "imported_at": "2026-10-28T10:55:19.503988+00:00"
+}

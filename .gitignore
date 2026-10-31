@@ -29,6 +29,7 @@ packages/*/*.asc
 !packages/*/*keyring*.asc
 !packages/bc/kevin_pizzini.asc
 !packages/pkcs11-provider/simo_redhat.asc
+!packages/python-pskc/*.asc
 packages/*/*.sha256sum
 packages/*/*.upstream
 

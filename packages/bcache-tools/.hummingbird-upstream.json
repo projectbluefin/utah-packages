@@ -1,0 +1,8 @@
+{
+  "package": "bcache-tools",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/bcache-tools.git",
+  "commit": "7cd6b5ebf86254a2cf90506bd3bc5e1c493831f4",
+  "tree": "b45b556046b0e393f9dc16f3541cd82719202f31",
+  "imported_at": "2026-10-30T19:22:57.795631+00:00"
+}

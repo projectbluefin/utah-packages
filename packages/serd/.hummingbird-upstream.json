@@ -1,0 +1,8 @@
+{
+  "package": "serd",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/serd.git",
+  "commit": "b30071b8d4e08d9177f27b73ccc4ea8f64de6d87",
+  "tree": "5fb0d594edb239268281bed7e66277b0cdb57203",
+  "imported_at": "2026-10-28T10:45:33.922943+00:00"
+}

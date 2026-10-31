@@ -1,0 +1,8 @@
+{
+  "package": "libslirp",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libslirp.git",
+  "commit": "f92164ccdd9bfb1d26b66ce71861fa1c501f725c",
+  "tree": "82ba25861efadcace7da88e783594c83ad9338da",
+  "imported_at": "2026-10-28T14:43:13.740021+00:00"
+}

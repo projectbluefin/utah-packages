@@ -1,0 +1,8 @@
+{
+  "package": "b43-fwcutter",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/b43-fwcutter.git",
+  "commit": "17e03463680aaf1736ec5771869178ba3250b0be",
+  "tree": "98b8e6f13ec65e938ca298d1c3f67b18d9c9fb3c",
+  "imported_at": "2026-10-29T15:03:00.577723+00:00"
+}

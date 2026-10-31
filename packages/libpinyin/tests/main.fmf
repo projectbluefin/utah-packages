@@ -1,0 +1,15 @@
+test: ./runtest.sh
+duration: 50m
+framework: beakerlib
+require:
+  - make
+  - gcc-c++
+  - autoconf
+  - automake
+  - libtool
+  - gettext-devel
+  - glib2-devel
+  - kyotocabinet-devel
+  - libpinyin
+  - gnome-common
+  - rpm-build

@@ -1,7 +1,8 @@
-# Packages whose source lock still takes its payload from Fedora's lookaside
+# Packages whose source lock still takes its payload from Fedora
 # instead of the project's own release (utah-packages#42). tools/validate.py
 # reads this as a ratchet: a package outside this list may not use a Fedora
-# primary `url`, and a package re-pinned upstream must be deleted from here.
+# primary `url`, and a package moved to its own release must be deleted from
+# here.
 # The list only shrinks.
 a52dec
 aribb24

@@ -1,0 +1,8 @@
+{
+  "package": "sratom",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/sratom.git",
+  "commit": "8017f9361be83cece153c07d14348560a900d1db",
+  "tree": "7db6cc0a5fdccafb27d6b19654a3a2939298b036",
+  "imported_at": "2026-10-30T19:13:15.584020+00:00"
+}

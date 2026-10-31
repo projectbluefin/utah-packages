@@ -1,0 +1,8 @@
+{
+  "package": "libpinyin",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libpinyin.git",
+  "commit": "f5e33b36fdf0b2a50220a9898511b85ac5468d52",
+  "tree": "18ccc2f27766a242c0d302d394b92fa36d483997",
+  "imported_at": "2026-10-28T16:27:10.798077+00:00"
+}

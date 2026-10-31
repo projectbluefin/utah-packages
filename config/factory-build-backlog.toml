@@ -75,11 +75,6 @@ consumer_issue = "projectbluefin/utah#389"
 packages = [
     "NetworkManager-vpnc",
     "NetworkManager-vpnc-gnome",
-    "openpace",
-    "opensc",
-    "opensc-libs",
-    "pam-u2f",
-    "pamu2fcfg",
     "python3-yubikey-manager",
     "yubikey-manager",
 ]
@@ -100,12 +95,9 @@ packages = [
 ]
 
 [areas.dev-tools]
-# projectbluefin/utah#392 - 150 names
+# projectbluefin/utah#392 - 147 names
 consumer_issue = "projectbluefin/utah#392"
 packages = [
-    "adcli",
-    "adcli-selinux",
-    "bcache-tools",
     "cryfs",
     "distribution-gpg-keys",
     "fedora-release-common",
@@ -114,8 +106,6 @@ packages = [
     "fedora-release-silverblue",
     "fuse-encfs",
     "generic-logos",
-    "hfsplus-tools",
-    "iwd",
     "kernel-devel-matched",
     "kernel-tools",
     "kernel-tools-libs",
@@ -138,9 +128,6 @@ packages = [
     "python3-html2text",
     "python3-httpcore",
     "python3-httpx",
-    "python3-jaraco-classes",
-    "python3-jaraco-context",
-    "python3-jaraco-functools",
     "python3-jeepney",
     "python3-keyring",
     "python3-keyring+completion",
@@ -186,8 +173,6 @@ packages = [
     "ibus-typing-booster",
     "kasumi-common",
     "kasumi-unicode",
-    "libpinyin",
-    "libpinyin-data",
     "m17n-lib",
 ]
 
@@ -214,7 +199,6 @@ packages = [
     "OpenCL-ICD-Loader",
     "PackageKit-glib",
     "appstream-data",
-    "b43-fwcutter",
     "b43-openfwwf",
     "braille-printer-app",
     "compsize",
@@ -236,7 +220,6 @@ packages = [
     "kmod-v4l2loopback",
     "kpartx",
     "kvazaar-libs",
-    "libell",
     "libev",
     "libijs",
     "liblqr-1",
@@ -245,9 +228,6 @@ packages = [
     "libpaper",
     "libpfm",
     "libreport-filesystem",
-    "librtmp",
-    "libslirp",
-    "lilv-libs",
     "lockdev",
     "mcelog",
     "memstrack",
@@ -264,7 +244,6 @@ packages = [
     "paps",
     "prefixdevname",
     "python3-perf",
-    "python3-pskc",
     "qadwaitadecorations-qt5",
     "qrencode-libs",
     "qt5-qtdeclarative",
@@ -273,14 +252,10 @@ packages = [
     "qt5-qtwayland",
     "qt5-qtx11extras",
     "qt5-qtxmlpatterns",
-    "serd",
     "shim-ia32",
     "slang",
-    "slirp4netns",
     "solaar-udev",
-    "sord",
     "sos",
-    "sratom",
     "tesseract-common",
     "tesseract-langpack-eng",
     "tesseract-libs",
@@ -313,6 +288,25 @@ packages = [
     { name = "vvdec-libs", pr = 633 },
     { name = "vvenc-libs", pr = 633 },
     { name = "xavs2-libs", pr = 633 },
+    # Recipe coverage only; hosted build, publication and runtime proof remain on #486.
+    { name = "hfsplus-tools", pr = 837 },
+    # Recipe import only; build, publication and runtime proof remain on #478.
+    { name = "pam-u2f", pr = 776 },
+    { name = "pamu2fcfg", pr = 776 },
+    # VPN parity #478: import openpace and opensc. opensc-libs is the opensc
+    # "%package libs" subpackage, so importing opensc resolves it too. Recipe
+    # import only; hosted build, publication and runtime proof remain open on
+    # #478. NetworkManager-vpnc and NetworkManager-vpnc-gnome are deliberately
+    # left pending: Fedora retired the vpnc plugin (privilege-escalation
+    # vulnerabilities) and current NetworkManager Obsoletes/Conflicts them.
+    { name = "openpace", pr = 825 },
+    { name = "opensc", pr = 825 },
+    { name = "opensc-libs", pr = 825 },
+    # jaraco-family parity for #489 (partial source-family PR); hosted build,
+    # publication and runtime proof remain open until #489 closes.
+    { name = "python3-jaraco-context", pr = 808 },
+    { name = "python3-jaraco-classes", pr = 808 },
+    { name = "python3-jaraco-functools", pr = 808 },
     # Recipe import only; build, publication and runtime proof remain on #484.
     { name = "libgee" },
     # Recipe import only (Orca recommends it); build, publication and runtime proof remain on #484.
@@ -321,6 +315,15 @@ packages = [
     { name = "libmediaart", pr = 816 },
     # NTFS-3G read-only plugin recipe for #488; hosted build, publication and runtime proof remain open.
     { name = "ntfs-3g-system-compression", pr = 771 },
+    # Recipe import only; hosted build, publication and device validation remain on #485.
+    { name = "bcache-tools", pr = 833 },
+    # Recipe import only; build, publication and runtime proof remain on #485.
+    { name = "adcli", pr = 774 },
+    { name = "adcli-selinux", pr = 774 },
+    { name = "serd", pr = 773 },
+    # Recipe coverage only; slirp4netns uses the existing libslirp recipe.
+    # Hosted build, publication, runtime solver and namespace tests remain on #507.
+    { name = "slirp4netns", pr = 830 },
     # Language data recipe; build/publication and consumer proof remain tracked in #494.
     { name = "langtable", pr = 700 },
     { name = "python3-langtable", pr = 700 },
@@ -392,10 +395,21 @@ packages = [
     { name = "bash-color-prompt", commit = "e53a1bf5c5d30730b49132eab460e60699d5ddfc", pr = 728 },
     # Shader compiler recipe; hosted build and runtime proof remain tracked in #475.
     { name = "libshaderc" },
-    # ifuse source import; publication and consumer validation remain tracked in #486.
-    { name = "ifuse", pr = 703 },
-    # Flex source import; publication and consumer validation remain tracked in #486.
-    { name = "flex", pr = 654 },
+    # #486 publication evidence for ifuse, iwd, flex, freerdp-libs, gamemode,
+    # gssproxy, hdparm and htop: ghcr.io/projectbluefin/utah-packages
+    # @sha256:b46eb6b07b07b3371b4166d18b970e6dc1e9de5655f094cf519ab63583375617
+    # Revision ba694e547ea02535f3361e251af9a1ce8f7465f3 (on main).
+    # Primary metadata SHA-256:
+    # e2a050dd437b7231f56bdcde6fe6bb015031b333544b922c4e029181b70b47b6
+    # published_run identifies the image publisher, not each RPM's build run.
+    # Runtime transactions and device/service probes remain tracked in #486;
+    # publication alone does not establish consumer acceptance (utah#392).
+    { name = "ifuse", pr = 703, published_run = 41111585693, published_nevra = "ifuse-0:1.2.1-1.hum1.bfin.x86_64" },
+    # iwd source import includes its libell runtime library.
+    { name = "iwd", pr = 793, published_run = 41111585693, published_nevra = "iwd-0:3.12-1.hum1.bfin.x86_64" },
+    { name = "libell", pr = 793 },
+    # Flex source import; consumer validation remains tracked in #486.
+    { name = "flex", pr = 654, published_run = 41111585693, published_nevra = "flex-0:2.6.4-25.hum1.bfin.x86_64" },
     # Existing GPU monitor recipe; publication/runtime proof remains in #488.
     { name = "nvtop", commit = "e19a229", pr = 410 },
     # Long-tail batch (projectbluefin/utah-packages#607, part of #500).
@@ -461,6 +475,9 @@ packages = [
     { name = "libpskc", pr = 585, published_run = 40626803772, published_nevra = "libpskc-0:2.6.15-1.hum1.bfin.x86_64" },
     { name = "libuser", pr = 585 },
     { name = "usermode", pr = 585 },
+    # PSKC library for yubikey-manager (projectbluefin/utah-packages#479); long-tail #506.
+    # Recipe import only; publication and runtime proof remain outstanding.
+    { name = "python3-pskc", pr = 775 },
     # Screen-reader stack (projectbluefin/utah-packages#447).
     { name = "brlapi", pr = 466 },
     { name = "brltty", pr = 466 },
@@ -484,7 +501,7 @@ packages = [
     # nano.spec's %bcond default_editor; the auditor does not resolve that
     # conditional, so they are closed here explicitly.
     { name = "default-editor", pr = 514 },
-    { name = "htop", pr = 514 },
+    { name = "htop", pr = 514, published_run = 41111585693, published_nevra = "htop-0:3.5.3-1.hum1.bfin.x86_64" },
     { name = "nano", pr = 514 },
     { name = "nano-default-editor", pr = 514 },
     { name = "rsync", pr = 514 },
@@ -561,7 +578,7 @@ packages = [
     { name = "gnome-backgrounds", pr = 546, published_run = 40151594832, published_nevra = "gnome-backgrounds-0:51.0.1-1.hum1.bfin.noarch" },
     { name = "glibmm2.68", pr = 543 },
     # freerdp-libs and libwinpr are %package subpackages of freerdp.spec (PR #559).
-    { name = "freerdp-libs", pr = 559 },
+    { name = "freerdp-libs", pr = 559, published_run = 41111585693, published_nevra = "freerdp-libs-2:3.32.2-1.hum1.bfin.x86_64" },
     { name = "libwinpr", pr = 559 },
     # libsigc++30 is built by its own source package (PR #560).
     { name = "libsigc++30", pr = 560 },
@@ -622,6 +639,7 @@ packages = [
     { name = "liblouisutdml", pr = 616 },
     { name = "liblouisutdml-utils", pr = 616 },
     { name = "antiword", pr = 616 },
+    { name = "b43-fwcutter", pr = 813 },
     { name = "sane-airscan", pr = 586 },
     { name = "sane-backends", pr = 586 },
     { name = "sane-backends-drivers-cameras", pr = 586 },
@@ -638,8 +656,8 @@ packages = [
     { name = "ethtool", pr = 587 },
     { name = "exfatprogs", pr = 587 },
     { name = "f2fs-tools", pr = 587 },
-    { name = "gamemode", pr = 587 },
-    { name = "hdparm", pr = 587 },
+    { name = "gamemode", pr = 587, published_run = 41111585693, published_nevra = "gamemode-0:1.8.2-5.hum1.bfin.x86_64" },
+    { name = "hdparm", pr = 587, published_run = 41111585693, published_nevra = "hdparm-0:9.65-11.hum1.bfin.x86_64" },
     { name = "lshw", pr = 587, published_run = 40511180133, published_nevra = "lshw-0:B.02.20-13.hum1.bfin.x86_64" },
     { name = "lsof", pr = 587 },
     { name = "man-pages", pr = 587 },
@@ -667,7 +685,7 @@ packages = [
     # Publication of libhandy verified in run 40569848351.
     { name = "libutempter", pr = 597 },
     { name = "libhandy", pr = 597, published_run = 40569848351, published_nevra = "libhandy-0:1.8.3-1.hum1.bfin.x86_64" },
-    { name = "gssproxy", pr = 597 },
+    { name = "gssproxy", pr = 597, published_run = 41111585693, published_nevra = "gssproxy-0:0.9.2-1.hum1.bfin.x86_64" },
     { name = "quota", pr = 597, published_run = 40626803772, published_nevra = "quota-1:4.11-4.hum1.bfin.x86_64" },
     { name = "quota-nls", pr = 597, published_run = 40626803772, published_nevra = "quota-nls-1:4.11-4.hum1.bfin.noarch" },
     { name = "libcollection", pr = 597 },
@@ -718,6 +736,12 @@ packages = [
     { name = "unicode-ucd", pr = 731 },
     { name = "libhangul", pr = 731 },
     { name = "m17n-db", pr = 731 },
+    # libpinyin.spec builds libpinyin plus its -data, -devel, -tools and
+    # libzhuyin subpackages; recipe only (#495). It BuildRequires
+    # kyotocabinet-devel, imported by #767 and already in [resolved].
+    # Publication and runtime proof remain on #495.
+    { name = "libpinyin", pr = 796 },
+    { name = "libpinyin-data", pr = 796 },
     # Dev-tools recipes imported from PR #655; remaining USB/IP work stays open in #491.
     { name = "tpm2-tools", commit = "a09ec58", pr = 364 },
     { name = "symlinks", pr = 655 },
@@ -737,6 +761,15 @@ packages = [
     # librabbitmq (source librabbitmq) and libwmf-lite (source libwmf) recipe imports (#503).
     { name = "librabbitmq", pr = 756 },
     { name = "libwmf-lite", pr = 756 },
+    # libslirp and librtmp (source rtmpdump) recipe imports (#503): Source0 is
+    # `git archive` of the upstream tag, regenerated by tools/generated_sources.py.
+    # Audio-plugin discovery dependency family (#503): recipe imports only;
+    # hosted builds, publication, and runtime acceptance remain unproven.
+    { name = "lilv-libs", pr = 831 },
+    { name = "sord", pr = 831 },
+    { name = "sratom", pr = 831 },
+    { name = "libslirp", pr = 789 },
+    { name = "librtmp", pr = 789 },
     { name = "qpdf-libs", pr = 640, published_run = 40626803772, published_nevra = "qpdf-libs-0:12.4.2-1.hum1.bfin.x86_64" },
     # Handwriting recognition (zinnia also builds zinnia-tomoe-ja) and zix (#509).
     { name = "zinnia", pr = 630 },

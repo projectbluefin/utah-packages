@@ -2,11 +2,25 @@
   "schema": 1,
   "packages": [
     {
+      "name": "bcache-tools",
+      "version": "1.1",
+      "url": "https://git.kernel.org/pub/scm/linux/kernel/git/colyli/bcache-tools.git/snapshot/bcache-tools-1.1.tar.gz",
+      "filename": "bcache-tools-1.1.tar.gz",
+      "sha512": "4ccbef47255bf3644a50242a79951b1f3720e71a55eb1e07dc6b8486df0245da99a77bba751b50197d489b4c5d738e5284aabc014c2f7f44816ddf6a1bb807ca"
+    },
+    {
       "name": "jbig2dec",
       "version": "0.20",
       "url": "https://github.com/ArtifexSoftware/jbig2dec/releases/download/0.20/jbig2dec-0.20.tar.gz",
       "filename": "jbig2dec-0.20.tar.gz",
       "sha512": "74d40b4d5b21dcb2b6ed15de84e9ef292774783547d0a36c7185740f3fe34341665b4aa756369d27d158404f15f36f3edd2fd1a8187a196d08c9b06ab3d04101"
+    },
+    {
+      "name": "b43-fwcutter",
+      "version": "021",
+      "url": "https://bues.ch/b43/fwcutter/b43-fwcutter-021.tar.xz",
+      "filename": "b43-fwcutter-021.tar.xz",
+      "sha512": "2ae2a00a7cdfc5c74cc0cc8d7a4042eae9a0f78b83d8ead77fb2cb55f99095f463b6b2bb0aed3238eeb256e404f1427043f6bca5262b38cd19f0c3237d96a11b"
     },
     {
       "name": "ipset",
@@ -1554,7 +1568,7 @@
     {
       "name": "kde-filesystem",
       "version": "5",
-      "url": "https://src.fedoraproject.org/rpms/kde-filesystem/raw/rawhide/f/teamnames",
+      "url": "https://src.fedoraproject.org/rpms/kde-filesystem/raw/4f395f604e7ed4011226d72aa27bff0bb7b2aee2/f/teamnames",
       "filename": "teamnames",
       "sha512": "6f75ae54d326bc23c3f011aaefe6deb3754579b922f6af94ba13af6f16b794f1b12c6e3ecc74eeb1ff905fdac6fc04b96e4e5e538096622ab3b6e33b38c6b624"
     },
@@ -1568,7 +1582,7 @@
     {
       "name": "kf5",
       "version": "5.116.0",
-      "url": "https://src.fedoraproject.org/rpms/kf5/raw/rawhide/f/macros.kf5",
+      "url": "https://src.fedoraproject.org/rpms/kf5/raw/249e170c4968b43afee96b0768c4a335b81dfcbd/f/macros.kf5",
       "filename": "macros.kf5",
       "sha512": "252d27ab79bac05ecb322fdfa80b827d1e6676fdb4af6af77b50dd9b6f60b006cdf11199a64668334f36531d90994e7d20748bc79cdb987e89bf317f7afe69af"
     },
@@ -6269,6 +6283,167 @@
       "url": "https://github.com/DanBloomberg/leptonica/archive/1.87.0/leptonica-1.87.0.tar.gz",
       "filename": "leptonica-1.87.0.tar.gz",
       "sha512": "2a1953dd0c962a05dac9bb30eac311896f414c658d976008b0c2d1b3b85ec25c5fd811be3f98a37f2131ded134799ea609a667fb1eaacf42d1aca9cc5cf1bd92"
+    },
+    {
+      "name": "python-jaraco-context",
+      "version": "6.1.0",
+      "url": "https://files.pythonhosted.org/packages/source/j/jaraco_context/jaraco_context-6.1.0.tar.gz",
+      "filename": "jaraco_context-6.1.0.tar.gz",
+      "sha512": "19f9fe4e00cc94f46177604e2a6e44af3c21be22b2059f8f7d0c586a77007196a163df68e545808b5f73d10c4e429903ff33274f110a15601481f4eff8cf9f8f"
+    },
+    {
+      "name": "python-jaraco-classes",
+      "version": "3.4.0",
+      "url": "https://files.pythonhosted.org/packages/source/j/jaraco.classes/jaraco.classes-3.4.0.tar.gz",
+      "filename": "jaraco.classes-3.4.0.tar.gz",
+      "sha512": "94e5163120117c51f129d43e85f92ee19efcf8b10683142679511f8b33f4a1fd6c51516b7551aeab9d68c1936791bafc47328b5560ee3fe28e553fe463ea968f"
+    },
+    {
+      "name": "python-jaraco-functools",
+      "version": "4.6.0",
+      "url": "https://files.pythonhosted.org/packages/source/j/jaraco_functools/jaraco_functools-4.6.0.tar.gz",
+      "filename": "jaraco_functools-4.6.0.tar.gz",
+      "sha512": "c35d786c3432177b403bba06b4b70a9f9c1f0432d155dd52bbba69dc79ed26b48ebc98cce95a4bbf004bd5e0e584c98b6c689ab4dc54f00d2187acf8e72dc0ea"
+    },
+    {
+      "name": "pam-u2f",
+      "version": "1.4.0",
+      "url": "https://developers.yubico.com/pam-u2f/Releases/pam_u2f-1.4.0.tar.gz",
+      "filename": "pam_u2f-1.4.0.tar.gz",
+      "sha512": "6ee4c5538a3b290748fae3b8c285b20a784fe2c0fdeff3a0bf250ec9b03659c6ddda4ea2d668c93d606f810e4f68cf3fc4130584a8532db9c9833a684d78f51f"
+    },
+    {
+      "name": "libpinyin",
+      "version": "2.11.92",
+      "url": "https://downloads.sourceforge.net/libpinyin/libpinyin/libpinyin-2.11.92.tar.gz",
+      "filename": "libpinyin-2.11.92.tar.gz",
+      "sha512": "b0b355469f6aeb85c72bed7df38ea033459032ab1a3d8686dd7cb4ed60f1091a5d962c6e5055e420e739f3ddd5bfc17de0e8b66ac541233107ddcfe46412ecf5"
+    },
+    {
+      "name": "python-pskc",
+      "version": "1.4",
+      "url": "https://arthurdejong.org/python-pskc/python_pskc-1.4.tar.gz",
+      "filename": "python_pskc-1.4.tar.gz",
+      "sha512": "e2e1999dc108936b91d19b015a446387db11d8d166a2e25a151da0080bd68f91bf701bab1ff02e04862da95991a8d399fbe0389483788451f1d7fcd588df2c06"
+    },
+    {
+      "name": "adcli",
+      "version": "0.9.3.1",
+      "url": "https://gitlab.freedesktop.org/-/project/1196/uploads/5a1c55410c0965835b81fbd28d820d46/adcli-0.9.3.1.tar.gz",
+      "filename": "adcli-0.9.3.1.tar.gz",
+      "sha512": "3f501173b5344b38f33a3f65faec9e894da81b44b37bb161da103d8a29459d8807dfe566a5dd0a8c7eec466567b6cca4331c81dd70158b5478a61b03be37355d",
+      "stage": 3
+    },
+    {
+      "name": "serd",
+      "version": "0.32.10",
+      "url": "https://download.drobilla.net/serd-0.32.10.tar.xz",
+      "filename": "serd-0.32.10.tar.xz",
+      "sha512": "1ceb7caaa97195e829bec0436930c090698a6be8ba1b7ee0ef3f013c817dd7ae472bb9bcc271e55e8b6e12d110b2d1d3d8fe20c36672d6e63c53f151173cd897",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/serd/serd-0.32.10.tar.xz/sha512/1ceb7caaa97195e829bec0436930c090698a6be8ba1b7ee0ef3f013c817dd7ae472bb9bcc271e55e8b6e12d110b2d1d3d8fe20c36672d6e63c53f151173cd897/serd-0.32.10.tar.xz"
+      ]
+    },
+    {
+      "name": "openpace",
+      "version": "1.1.4",
+      "url": "https://github.com/frankmorgner/openpace/releases/download/1.1.4/openpace-1.1.4.tar.gz",
+      "filename": "openpace-1.1.4.tar.gz",
+      "sha512": "962495803b351965ad0d2cda67563ca3f60f36360a1b1523b68715b79b7c6acb413b5bdf483d01a5d11ee936262ff5b45645363bf2857c3e7704a196dc2447a7"
+    },
+    {
+      "name": "opensc",
+      "version": "0.27.1",
+      "url": "https://github.com/OpenSC/OpenSC/releases/download/0.27.1/opensc-0.27.1.tar.gz",
+      "filename": "opensc-0.27.1.tar.gz",
+      "sha512": "1d435938d5db45ffc60e2ac2512c42bc7ee893991d213b19033a60cabca19a7ddd5bf1f71bb172dcb77220bfa87abe92564b3edc878f22a87dfd4e7bcacf662f"
+    },
+    {
+      "name": "slirp4netns",
+      "version": "1.3.1",
+      "url": "https://github.com/rootless-containers/slirp4netns/archive/v1.3.1.tar.gz",
+      "filename": "v1.3.1.tar.gz",
+      "sha512": "a4fe17116127df71033f48c969e6aecdaeef8b9927c899884451cafb4f166582d437978d4d956f13b3ae5f38b29e949a18d2ea43c70b3dcbe475d00a48f2a060"
+    },
+    {
+      "name": "libslirp",
+      "version": "4.9.6",
+      "filename": "libslirp-4.9.6.tar.xz",
+      "sha512": "66cf1461af281d6616fa75a338bc0fa439cbfdc38ffe4694cad93bd58b5affd36db52325535c200d01248c4e3f3a6d2e520baf35f1be97c2069ff10f2c00be49",
+      "generate": {
+        "script": "tools/generated_sources.py",
+        "input": "https://gitlab.freedesktop.org/slirp/libslirp.git tag v4.9.6 (commit 392af90207fc51dd9f9044ee9b1f963f3c851c2c)",
+        "method": "git archive --format=tar --prefix=libslirp-4.9.6/ of the pinned commit, compressed deterministically as libslirp-4.9.6.tar.xz"
+      }
+    },
+    {
+      "name": "rtmpdump",
+      "version": "2.6",
+      "filename": "rtmpdump-2.6.tar.gz",
+      "sha512": "423d7c94a02822a073840de1962c676d9eaf419347fc565086dbe995520c7bed8ff565a9d8283f80c4895bbb8dbba8e56bdd779a4b4ad58991e5e162ff7b9913",
+      "generate": {
+        "script": "tools/generated_sources.py",
+        "input": "https://git.ffmpeg.org/rtmpdump.git tag v2.6 (commit 138fdb258d9fc26f1843fd1b891180416c9dc575)",
+        "method": "git archive --format=tar --prefix=rtmpdump-2.6/ of the pinned commit, compressed deterministically as rtmpdump-2.6.tar.gz"
+      }
+    },
+    {
+      "name": "libell",
+      "version": "0.83",
+      "url": "https://www.kernel.org/pub/linux/libs/ell/ell-0.83.tar.xz",
+      "filename": "ell-0.83.tar.xz",
+      "sha512": "4cf7f65fb0595158c2719d0b53b6059877f53e701fb708f4e5315f81af0d70a6083799bf1d11f33fede24edbccb78694ea5b598b286dcc60d9fb695261339879",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libell/ell-0.83.tar.xz/sha512/4cf7f65fb0595158c2719d0b53b6059877f53e701fb708f4e5315f81af0d70a6083799bf1d11f33fede24edbccb78694ea5b598b286dcc60d9fb695261339879/ell-0.83.tar.xz"
+      ]
+    },
+    {
+      "name": "iwd",
+      "version": "3.12",
+      "url": "https://www.kernel.org/pub/linux/network/wireless/iwd-3.12.tar.xz",
+      "filename": "iwd-3.12.tar.xz",
+      "sha512": "47ac85452d28ab238474b1f724383aca362bac41caa5ade6b34f5b53d43a7c4eacf3d6a2a6d4c7f39080bd041cc823f9b1de343c855249c45b342d37f1f084a7",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/iwd/iwd-3.12.tar.xz/sha512/47ac85452d28ab238474b1f724383aca362bac41caa5ade6b34f5b53d43a7c4eacf3d6a2a6d4c7f39080bd041cc823f9b1de343c855249c45b342d37f1f084a7/iwd-3.12.tar.xz"
+      ]
+    },
+    {
+      "name": "hfsplus-tools",
+      "version": "540.1.linux3",
+      "url": "https://cavan.codon.org.uk/~mjg59/diskdev_cmds/diskdev_cmds-540.1.linux3.tar.gz",
+      "filename": "diskdev_cmds-540.1.linux3.tar.gz",
+      "sha512": "3d88fcdec4bfd32a75b6dc75899748d8585371b641be86cfdfe54ade738a0612662dd008c1506c7e216325303217d0b5f188a9c4fdccfb48b2ce50333f212d9e",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/hfsplus-tools/diskdev_cmds-540.1.linux3.tar.gz/0435afc389b919027b69616ad1b05709/diskdev_cmds-540.1.linux3.tar.gz"
+      ]
+    },
+    {
+      "name": "lv2",
+      "version": "1.18.10",
+      "url": "https://lv2plug.in/spec/lv2-1.18.10.tar.xz",
+      "filename": "lv2-1.18.10.tar.xz",
+      "sha512": "ab4bcf593f633b1ed16c0eb6aa4525458a00655ef9c87619bf85eaa966f8fd094a8e871b825f679e0d97923f8bbbf11841ff467022390ca2f1a5b5f66ccd5d1b"
+    },
+    {
+      "name": "sord",
+      "version": "0.16.22",
+      "url": "https://download.drobilla.net/sord-0.16.22.tar.xz",
+      "filename": "sord-0.16.22.tar.xz",
+      "sha512": "3821500f810e3b1cdbd763db419445c931d8b61de571f475646f11a5740c521c93c47ecab2e81a580a0d94bf432faa0de78fe3be1138c87bf9baca8fe23bb0cd"
+    },
+    {
+      "name": "sratom",
+      "version": "0.6.22",
+      "url": "https://download.drobilla.net/sratom-0.6.22.tar.xz",
+      "filename": "sratom-0.6.22.tar.xz",
+      "sha512": "bb3a46e88faf1596d2f10ac9d22f063e52f7c068a0712b0234168346727f179ea236280dae89e4136e97c243d0815444af1dcc6b86d70b99f5f88008481288b0"
+    },
+    {
+      "name": "lilv",
+      "version": "0.28.0",
+      "url": "https://download.drobilla.net/lilv-0.28.0.tar.xz",
+      "filename": "lilv-0.28.0.tar.xz",
+      "sha512": "754c9996670235766b84e416bbcb5352a7376e86f7fa373f9428125552294a5d6b032a363ea51fbbf81b88c8f2e47b3566a07bf0992e6e6ebd1bbf31651d9024"
     }
   ]
 }

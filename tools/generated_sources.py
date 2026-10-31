@@ -28,6 +28,10 @@ that no upstream publishes verbatim:
   release, and its archive carries every wallpaper (well over 100 MB) for
   three small files, so each file is fetched at the commit, SHA-512-checked,
   and packed into one archive
+- libslirp, rtmpdump: `git archive` of an upstream tag at a pinned commit.
+  Neither project publishes a release file; Fedora's tarballs are a GitLab
+  tag archive and a hand-run `git archive`, whose tar streams this
+  reproduces byte for byte (GIT_ARCHIVE_SOURCES)
 
 For these, the source lock names this script and records the SHA-512 of the
 bytes the transformation produces. Verification re-runs the transformation
@@ -43,6 +47,7 @@ without installing anything at runtime.
 from __future__ import annotations
 
 import fnmatch
+import functools
 import gzip
 import hashlib
 import io
@@ -973,7 +978,91 @@ def _bluefin_artwork_generate(package_dir: Path, out_dir: Path) -> Path:
     return target
 
 
+# --- git-archive tag sources -----------------------------------------------------
+
+# Recipes whose Source0 is `git archive` of an upstream tag: the project
+# publishes no release file, and the forge's on-the-fly tag archive is not
+# stable bytes. The tag is mutable; the commit it resolves to is not, so pin
+# that. `compression` is how the Fedora packager compressed the archive:
+# libslirp's tar.xz is GitLab's archive, and xz preset 6 over the `git archive`
+# tar reproduces Fedora's pinned bytes exactly. rtmpdump's tar is identical to
+# Fedora's, but the packager's gzip (zlib-ng) is not reproducible here, so it
+# is `gzip -n -9` and the recipe's `sources` pins that digest.
+GIT_ARCHIVE_SOURCES = {
+    "libslirp": {
+        "remote": "https://gitlab.freedesktop.org/slirp/libslirp.git",
+        "tag": "v{version}",
+        "compression": "xz",
+        "commits": {"4.9.6": "392af90207fc51dd9f9044ee9b1f963f3c851c2c"},
+    },
+    "rtmpdump": {
+        "remote": "https://git.ffmpeg.org/rtmpdump.git",
+        "tag": "v{version}",
+        "compression": "gz",
+        "commits": {"2.6": "138fdb258d9fc26f1843fd1b891180416c9dc575"},
+    },
+}
+
+
+def _git_archive_compress(raw: bytes, compression: str) -> bytes:
+    if compression == "xz":
+        return lzma.compress(raw, format=lzma.FORMAT_XZ, check=lzma.CHECK_CRC64, preset=6)
+    if compression == "gz":
+        proc = subprocess.run(["gzip", "-n", "-9"], input=raw, capture_output=True)
+        if proc.returncode != 0:
+            raise RuntimeError("gzip failed")
+        return proc.stdout
+    raise ValueError(f"unknown compression {compression!r}")
+
+
+def _git_archive_metadata(name: str, package_dir: Path) -> dict:
+    source = GIT_ARCHIVE_SOURCES[name]
+    version = spec_version(package_dir, f"{name}.spec")
+    commit = source["commits"].get(version, "<unpinned>")
+    tag = source["tag"].format(version=version)
+    filename = f"{name}-{version}.tar.{source['compression']}"
+    return {
+        "name": name,
+        "version": version,
+        "filename": filename,
+        "generate": {
+            "script": SCRIPT_PATH,
+            "input": f"{source['remote']} tag {tag} (commit {commit})",
+            "method": f"git archive --format=tar --prefix={name}-{version}/ of the pinned commit, compressed deterministically as {filename}",
+        },
+    }
+
+
+def _git_archive_generate(name: str, package_dir: Path, out_dir: Path) -> Path:
+    source = GIT_ARCHIVE_SOURCES[name]
+    version = spec_version(package_dir, f"{name}.spec")
+    commit = source["commits"].get(version)
+    if commit is None:
+        raise RuntimeError(f"no pinned commit for {name} {version}")
+    tag = source["tag"].format(version=version)
+    with tempfile.TemporaryDirectory(prefix=f"{name}-git-", dir=out_dir) as tmp:
+        subprocess.run(["git", "init", "-q", tmp], check=True)
+        # Fetch only the tag: rtmpdump's repository advertises refs to the
+        # all-zero object, which a full clone refuses.
+        subprocess.run(
+            ["git", "-C", tmp, "fetch", "-q", "--depth", "1", source["remote"], f"refs/tags/{tag}"],
+            check=True,
+        )
+        head = subprocess.check_output(
+            ["git", "-C", tmp, "rev-parse", "FETCH_HEAD^{commit}"], text=True
+        ).strip()
+        if head != commit:
+            raise RuntimeError(f"tag {tag} moved: expected {commit}, got {head}")
+        raw = subprocess.check_output(
+            ["git", "-C", tmp, "archive", "--format=tar", f"--prefix={name}-{version}/", commit]
+        )
+    target = out_dir / f"{name}-{version}.tar.{source['compression']}"
+    target.write_bytes(_git_archive_compress(raw, source["compression"]))
+    return target
+
+
 METADATA = {
+    **{name: functools.partial(_git_archive_metadata, name) for name in GIT_ARCHIVE_SOURCES},
     "intel-media-driver-free": _imd_metadata,
     "tailscale": _tailscale_metadata,
     "python-pydantic-core": _pydantic_core_metadata,
@@ -986,6 +1075,7 @@ METADATA = {
 }
 
 GENERATORS = {
+    **{name: functools.partial(_git_archive_generate, name) for name in GIT_ARCHIVE_SOURCES},
     "intel-media-driver-free": _imd_generate,
     "tailscale": _tailscale_generate,
     "python-pydantic-core": _pydantic_core_generate,

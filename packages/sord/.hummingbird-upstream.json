@@ -1,0 +1,8 @@
+{
+  "package": "sord",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/sord.git",
+  "commit": "0f082e929d3771870124b429be1a43a255968919",
+  "tree": "7c4871f9de6b5028b716558c93f3c245b647f7cb",
+  "imported_at": "2026-10-30T19:13:14.821396+00:00"
+}

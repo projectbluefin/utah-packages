@@ -1,0 +1,8 @@
+{
+  "package": "pam-u2f",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/pam-u2f.git",
+  "commit": "5b713d39c3a349036b81234c96c7a83cfcd1bdbc",
+  "tree": "db1ea8c6f8e3999e2c1d55616faac9f32cd7bd4e",
+  "imported_at": "2026-10-28T11:07:31.150805+00:00"
+}

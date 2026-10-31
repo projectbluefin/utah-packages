@@ -166,7 +166,9 @@ keep both lock entries, and regenerate the counts
 (`tools/factory_build_backlog.py`) from the combined inventory. Resolve these
 conflicts by regeneration, not by selecting either branch's stale totals.
 Use `git rebase --signoff` to preserve DCO coverage, then push to the same PR
-branch with `--force-with-lease` after validation.
+branch with `--force-with-lease` after validation. Inspect auto-merged catalog
+records as well as conflicted files: fill in the existing PR number for new
+recipe records, and retain the base branch's publication fields.
 
 The catalog test (`tests/test_factory_build_backlog.py::CatalogConsistencyTests`)
 pins the count and sorted-name SHA-256 against the original audit. The auditor
@@ -203,6 +205,18 @@ and publication evidence exist.
 A mixed batch can therefore be reconciled in a partial PR: name every remaining
 output and keep the tracking issue open. Use `Refs #<issue>` in the PR
 description and remove any automatic closing keywords for that batch issue.
+
+### Build dependencies imported by another PR
+
+An input-method library can BuildRequire a library that a different batch
+imports. `libpinyin` (#495) BuildRequires `kyotocabinet-devel`, whose recipe
+arrived in the long-tail PR #767 (`kyotocabinet-libs`, #501). Pull-request CI
+only validates configuration, and the post-merge rebuild orders packages by
+BuildRequires, so the dependent recipe can be reviewed in parallel. Name the
+providing PR in the PR body and the `[resolved]` comment, and merge it first:
+merged alone, the dependent recipe fails its first hosted build on a missing
+BuildRequires. `m17n-lib` likewise waits on its providers in #788.
+
 ### Reconcile sibling library outputs
 
 Check every binary from an imported source family when reconciling a batch.
@@ -453,7 +467,15 @@ only tests the unsupported-filesystem error. A recipe or successful build
 alone must not be presented as a working compression measurement; keep the
 batch open until publication, dependency solving and that payload probe are
 recorded.
+
+### Security key sign-in (Yubico)
+
 Yubico C releases (`libyubikey`, `ykclient`, `ykpers`) still declare `http://opensource.yubico.com/...` `Source0` URLs in Fedora Rawhide, and `libyubikey` and `ykclient` still carry legacy MD5 `sources` lines: repin `sources` to `SHA512 (<file>) = <hex>`, lock `https://opensource.yubico.com/...` as the primary `url`, and pair `https://developers.yubico.com/<project>/Releases/<file>` with Fedora's `/md5/<md5>/` lookaside path in `fallback_urls`. `ykpers` builds and links against `libyubikey` (`libyubikey.so.0`), so import `libyubikey` in the same PR. When a recipe carries a committed OpenPGP keyring whose filename does not match `*key*.asc`, `*keyring*.asc`, or `[0-9A-F]*.asc` (`packages/pkcs11-provider/simo_redhat.asc`, `packages/bc/kevin_pizzini.asc`), unignore it explicitly in the root `.gitignore` (`!packages/<pkg>/<name>.asc`) so `git add` tracks `SourceN` for `%{openpgpverify}`. By contrast, `yubikey-manager` (`python3-yubikey-manager`) is a `pyproject` package whose `[project].dependencies` generate runtime `python3dist(...)` `Requires` across multiple backlog areas (`python3-click`, `python3-fido2`, `python3-keyring` plus `secretstorage`/`jeepney`/`jaraco` in `dev-tools`, and `python3-pyscard`, `python3-pskc` in `long-tail`); keep `yubikey-manager` and `python3-yubikey-manager` pending until those Python runtime providers land in the factory.
+
+The `pam-u2f` source recipe also produces `pamu2fcfg`; its detached
+signature is a separate SHA-512-locked source and its bundled keyring is
+used during `%prep`. Recipe coverage does not prove that authentication works.
+
 ### Python recipe names and dependency evidence
 
 For `python3-six` and `python3-dateutil`, import the source recipes
@@ -504,12 +526,52 @@ Both recipes carry detached signatures in `sources` and a checked-in signing
 key. Preserve their `%{gpgverify}` checks and SHA-512 signature pins when
 locking the release tarballs from `libbsd.freedesktop.org`.
 
+For `python-pskc`, Fedora carries the detached signature and signing key in
+dist-git rather than its lookaside manifest. Keep both beside the spec: the
+recipe verifies them in `%prep`, while the upstream archive remains SHA-512
+locked. Neither `arthur.asc` nor `python_pskc-<version>.tar.gz.asc` matches the
+root `.gitignore` keyring exceptions, so keep `!packages/python-pskc/*.asc`
+there; without it a renamed signature on a version bump is silently skipped by
+`git add`. Verify the signing key independently before treating it as trusted.
+
 ### ifuse dependencies and device test
 
 The `ifuse` recipe builds against the existing `libimobiledevice`,
 `libimobiledevice-glue`, and `libplist` recipes and needs `usbmuxd` at
 runtime. An imported recipe alone does not prove a device can be mounted;
 verify the published package and its runtime dependencies on a real device.
+
+### iwd and the Embedded Linux Library
+
+Fedora builds `iwd` with `--enable-external-ell`, so it links `libell.so` at
+runtime and Hummingbird does not ship it. Import the `libell` source package
+alongside it. Fedora's `ell` dist-git is an unrelated header-only C++ grammar
+library; do not import it for `pkgconfig(ell)`. The `libell-devel` `%files`
+list `ell.pc`, so the build graph orders `libell` before `iwd` without a
+`stage`. Fedora's `iwd` `.gitignore` ignores `iwd.spec` and `sources`: stage
+them with `git add -f`, or the import commits an empty recipe.
+
+Two other names in the same batch have no straightforward import. Fedora
+retired `fuse-encfs` in Rawhide (`dead.package`), and the `hfsplus-tools`
+`Source0` host returns 404 while dist-git still pins an MD5 `sources` entry.
+Each needs its own source decision rather than a Rawhide import.
+### Block-cache tools and safe validation
+
+`bcache-tools` is one source family, including the `bcache-status` Python
+helper. Fedora's `Source0` is a bare filename, but the upstream kernel.org
+`colyli/bcache-tools.git/snapshot/bcache-tools-1.1.tar.gz` archive matches
+its SHA-512 manifest exactly; use that direct upstream URL rather than a
+Fedora-primary lock. The supplementary `bcache-status-20140220.tar.gz` is a
+packager-created gist snapshot staged by `source_pipeline.bundled_sources`;
+retain its separate manifest pin and the imported Python 3 patches.
+
+The explicit runtime `libblkid >= 2.24` and generated library/Python
+requirements need checking against Hummingbird plus the factory after a hosted
+build. A catalog import is not a working disk cache. Do not run `make-bcache`
+on host disks: payload validation must use disposable virtual disks and record
+their identities. Kernel support and a successful cache exercise remain consumer
+acceptance requirements; importing these userspace tools changes no kernel policy.
+
 ### WebDAV filesystem runtime closure
 
 `davfs2` uses the `neon` HTTP/WebDAV library; its default build in turn links
@@ -622,9 +684,16 @@ extensions; link that decision in its `[wontfix]` record.
 
 `published_run` / `published_nevra` are optional and also informational (the
 tool reads only `name`); set them from the publication run's repodata when
-reconciling a published batch. Record any known newer failed rebuilds by package
-name and run in the catalog comments so publication evidence does not hide
-current build health.
+reconciling a published batch. The image's run label identifies its publisher,
+not necessarily the run that built each retained RPM. A registry digest can
+already be readable while that run is still in progress; report the observed
+publication without calling the workflow successful. For example, the #486
+reconciliation observes eight binaries in one image, but that does not prove
+eight fresh builds or successful device/service tests. Preserve the original
+recipe-import `pr` fields when adding this evidence, and leave the auditor
+snapshot unchanged when regeneration produces no diff. Record any known newer
+failed rebuilds by package name and run in the catalog comments so publication
+evidence does not hide current build health.
 
 Read both from one image: `python3 tools/package_index.py --image
 projectbluefin/utah-packages:latest --output <file>` writes the manifest
@@ -670,6 +739,24 @@ modes and link targets; archive metadata differs. The factory locks the upstream
 asset's SHA-512 in both `sources` and the source lock, with no Fedora fallback
 because Fedora's archive has different bytes. Do not generalize this comparison
 to later releases: investigate any future mismatch before changing a pin.
+
+### Broadcom firmware extraction tool
+
+`b43-fwcutter` is the standalone source and binary for extracting firmware;
+`b43-openfwwf` is a separate firmware source, not its subpackage or a required
+runtime dependency. Importing the extraction tool does not supply firmware or
+establish that a wireless adapter works. Keep those acceptance claims separate.
+
+The recipe verifies the release archive with a detached signature and the
+checked-in `757FAB7CED1814AE15B4836E5FB027474203454C.gpg` key. Despite its
+`.gpg` suffix, that file is ASCII-armored. Preserve both `sources` SHA-512
+entries and `%{gpgverify}`; the source pipeline stages the signature from the
+manifest alongside the archive. When verifying manually with `gpgv`, dearmor
+the key into a temporary keyring first. For runtime acceptance, install from
+only Hummingbird plus the factory, run `b43-fwcutter -l`, and extract a supported
+user-supplied firmware image into a disposable directory. Record the input
+identity, extraction result and output files; a version check alone is not
+firmware extraction proof. Do not bundle a proprietary input into the recipe.
 
 ### Shell prompt test dependencies
 
@@ -770,6 +857,25 @@ storage rather than only loading the library: use `kchashmgr create test.kch`,
 `kyotocabinet` binary and link the library subpackage. Record the transaction,
 NEVRAs and command results separately from the recipe closing record.
 
+### slirp4netns recipe review
+
+Rawhide's slirp4netns 1.3.1 recipe at
+`efddb3c622619b516a5b2850dae14d1e52035688` retains Go-template macros
+(`golang_arches_future`, `built_tag_strip`, `import_path`) and an empty
+`devel` subpackage, but upstream's `configure.ac` and `Makefile.am` describe
+one C executable, not a Go library. Use the archive's
+`slirp4netns-<version>` directory, remove the irrelevant template restrictions,
+and build the default target before installation; `generate-man` alone does
+not compile the program. Keep the generated provenance record unchanged and
+explain these local recipe repairs in the spec.
+
+Reuse the existing `libslirp` recipe for `libslirp-devel`; the build graph
+orders this ordinary BuildRequires edge without a hand-assigned stage.
+Upstream's integration suite needs network namespaces and external connectivity.
+Version/help smoke checks in `%check` establish executable startup only, not
+container networking. Hosted namespace tests, a Hummingbird-plus-factory runtime
+transaction, and publication evidence remain separate acceptance requirements.
+
 ### S-Lang library imports
 
 The `slang` source produces the audited `slang` library and a separate
@@ -813,12 +919,45 @@ the fallback. `liburing` locks only `Source0`; like `dnsmasq`, its `.asc`
 signature is fetched from Fedora's lookaside by its `sources` SHA-512.
 
 `librabbitmq` and `libwmf-lite` (a subpackage of `libwmf`) lock their GitHub
-tag archives directly: those bytes equal the dist-git SHA-512 pins. Two
-outputs need more than a lock. `libslirp`'s GitLab tag archive differs from
-Fedora's `.tar.xz` pin, so it needs a `generate` entry or a matching upstream
-release asset. `librtmp` comes from `rtmpdump`, whose `Source0` is a local
-`git archive` of tag `v2.6` with no download URL. Check the archive bytes
-against the pin before you lock a source.
+tag archives directly: those bytes equal the dist-git SHA-512 pins. Check the
+archive bytes against the pin before you lock a source.
+
+`libslirp` and `librtmp` (source `rtmpdump`) have no release file, so their
+locks are `generate` entries in `GIT_ARCHIVE_SOURCES`
+(`tools/generated_sources.py`): fetch the tag, check that it still resolves
+to the pinned commit, and `git archive --format=tar --prefix=<name>-<version>/`.
+To find out how Fedora made such a tarball, decompress its lookaside copy and
+compare the raw tar with `git archive`. Then try each compressor setting.
+`libslirp`'s tar is GitLab's archive, and Python's `lzma` preset 6 (CRC64)
+reproduces Fedora's `.tar.xz` pin exactly, so `sources` is unchanged. For
+`rtmpdump`, the tar is byte-identical but Fedora's gzip stream is not: it is
+zlib-ng output, which neither GNU gzip nor Python's zlib reproduces. So it is
+`gzip -n -9`, and `sources` is repinned to the generated digest.
+`git.ffmpeg.org/rtmpdump.git` advertises refs to the all-zero object, which
+makes `git clone` fail with `upload-pack: not our ref 0000…`. Fetch only
+`refs/tags/<tag>` into an empty repository instead.
+
+### Audio-plugin discovery library closure
+
+`lilv-libs` comes from `lilv`; its supporting source recipes are `lv2`,
+`serd`, `zix`, `sord`, and `sratom`. Reuse existing `serd` and `zix` recipes.
+Preserve the pkg-config BuildRequires: the graph solver orders `sord` after
+`serd` and `zix`, `sratom` after `sord` and `lv2`, and `lilv` after `sratom`.
+This chain is acyclic, so do not add source-lock stages.
+
+Drobilla's release signatures are available alongside the release archives at
+`https://download.drobilla.net/`. Its key at
+`https://drobilla.net/drobilla.gpg` is ASCII-armored despite its extension:
+dearmor it before passing it to `gpgv --keyring`. Preserve the imported
+signature pins and the recipe's verification step. Match both archive and
+signature digests against `sources`; a valid signature does not replace the
+factory SHA-512 lock. LV2 release archives use `https://lv2plug.in/spec/`.
+
+A `[resolved]` catalog entry for this family records recipe availability,
+not publication. Record hosted build NEVRAs and the repository digest before
+claiming closure, then resolve `lilv-libs` and its runtime dependencies using
+only Hummingbird plus the factory. Exercise `lv2ls` and load the library;
+local configuration tests do not prove that transaction.
 
 ### GNOME apps batch #484: terminal outputs and publication reconciliation
 
@@ -844,6 +983,7 @@ Its optional gnuplot and MinGW build requirements depend on target macros;
 check the pinned buildroot and resulting binaries rather than assuming they
 are enabled. Recipe accounting does not establish publication or image-processing
 behavior; verify both with the hosted build and a representative image.
+
 `libwnck3` is the X11 window-list library (GTK 3); Orca `Recommends` it and
 Utah triages it as `planned`. Fedora's source package is `libwnck3` but the
 upstream tarball is `libwnck`: lock
@@ -917,3 +1057,41 @@ then destroy the set. A version or help command does not exercise that path.
 ## JBIG2 decoder library
 
 `jbig2dec-libs` is an output of the `jbig2dec` source recipe, not a separate source. Ghostscript currently builds its bundled copy, so that does not establish availability of the separate library. The upstream recipe warns that consumers of its shared library must be rebuilt together on version changes; verify the hosted build, dependency transaction, and representative decoding before claiming runtime closure.
+
+## Windows domain enrollment (adcli)
+
+A spec using `%global with_selinux 1` can emit a SELinux subpackage even when the backlog auditor cannot evaluate its `%{with selinux}` guard. Check the default RPM expansion and retain build and publication verification as separate evidence; a recipe classification alone does not prove an installable binary.
+
+The adcli recipe BuildRequires `libnetapi-devel` from the factory samba recipe. Keep its recorded stage later than samba for the ICU staging guard, and verify the generated build graph still orders the dependency before adcli.
+
+## Serd source verification
+
+The `serd` recipe checks a detached upstream signature using the signing key
+carried in the recipe directory. Preserve the signature entry in `sources`
+and compare its SHA-512 independently from the release archive; a source lock
+for the archive alone does not establish that the signature is available.
+
+## HFS+ filesystem tools
+
+`hfsplus-tools` is the source recipe and binary name; its payload is
+`diskdev_cmds-540.1.linux3.tar.gz`, Matthew Garrett's Linux port, rather than
+an unmodified Apple release. The imported Fedora recipe also carries the
+APSL license text as `apsl-2.0.txt`; keep that tracked file for `Source100`
+instead of downloading the license again during the build.
+
+The author's `cavan.codon.org.uk` archive URL can return HTTP 404. The source
+pipeline already tries `fallback_urls` on transport failure, then checks the
+same SHA-512; an unavailable primary does not require promoting Fedora to
+`url` or expanding the Fedora-primary ratchet. The historical Fedora mirror
+is addressed by the original MD5 directory, but the lock and `sources` must
+still use SHA-512. Check the downloaded bytes against both the imported
+manifest and an independent strong digest, such as
+[Alpine's recorded SHA-512](https://git-old.alpinelinux.org/aports/commit/testing/hfsprogs?id=2adeba433d4de964a51ba73fad56b32397569462).
+A mirror supplies availability, not an upstream signature; record the failed
+primary and successful fallback explicitly in review evidence. A wrong digest
+must still fail without trying another mirror.
+
+Do not exercise `mkfs.hfsplus` or repair with `fsck.hfsplus` on a host disk.
+After a hosted build, test them against a disposable filesystem image in the
+permitted runtime environment, and record the binary identity and results.
+Recipe coverage alone does not establish filesystem safety or installation.

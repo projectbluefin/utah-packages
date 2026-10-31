@@ -1,0 +1,8 @@
+{
+  "package": "openpace",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/openpace.git",
+  "commit": "2336a625a04fc34f2e85be3bb9733b54db6969f4",
+  "tree": "f5277c9d65d6f97deaf0ea0ac59d7aafb170272d",
+  "imported_at": "2026-10-30T13:13:02.045731+00:00"
+}

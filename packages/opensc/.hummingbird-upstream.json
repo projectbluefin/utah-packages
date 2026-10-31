@@ -1,0 +1,8 @@
+{
+  "package": "opensc",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/opensc.git",
+  "commit": "be2ec2144f123530f19c3991b431bfbc25da1228",
+  "tree": "ca4e2f1c3276e6f16f9683588faf8ae5a66fb3a6",
+  "imported_at": "2026-10-30T13:13:01.398001+00:00"
+}

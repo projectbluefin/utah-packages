@@ -1,0 +1,8 @@
+{
+  "package": "slirp4netns",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/slirp4netns.git",
+  "commit": "efddb3c622619b516a5b2850dae14d1e52035688",
+  "tree": "3fc0fe2da101c8b190998c9781da8a7d253de9b9",
+  "imported_at": "2026-10-30T19:07:29.073211+00:00"
+}

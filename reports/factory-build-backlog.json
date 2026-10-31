@@ -6,12 +6,12 @@
       "total": 16
     },
     "dev-tools": {
-      "pending": 63,
-      "total": 63
+      "pending": 55,
+      "total": 55
     },
     "fonts-i18n": {
-      "pending": 17,
-      "total": 17
+      "pending": 15,
+      "total": 15
     },
     "gnome-apps": {
       "pending": 3,
@@ -20,8 +20,8 @@
     "long-tail": {
       "already_recipe": 2,
       "manifest_wants": 1,
-      "pending": 76,
-      "total": 79
+      "pending": 66,
+      "total": 69
     },
     "power": {
       "total": 0
@@ -37,8 +37,8 @@
       "total": 4
     },
     "vpn": {
-      "pending": 9,
-      "total": 9
+      "pending": 4,
+      "total": 4
     }
   },
   "audit_digest_bluefin": "sha256:1e37db65e78f7f394e16608aa8449bd6be43eb691ae9f98b619044ffba23c64e",
@@ -130,21 +130,6 @@
     },
     {
       "area": "dev-tools",
-      "name": "adcli",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "adcli-selinux",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "bcache-tools",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
       "name": "cryfs",
       "state": "pending"
     },
@@ -181,16 +166,6 @@
     {
       "area": "dev-tools",
       "name": "generic-logos",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "hfsplus-tools",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "iwd",
       "state": "pending"
     },
     {
@@ -301,21 +276,6 @@
     {
       "area": "dev-tools",
       "name": "python3-httpx",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "python3-jaraco-classes",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "python3-jaraco-context",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "python3-jaraco-functools",
       "state": "pending"
     },
     {
@@ -515,16 +475,6 @@
     },
     {
       "area": "fonts-i18n",
-      "name": "libpinyin",
-      "state": "pending"
-    },
-    {
-      "area": "fonts-i18n",
-      "name": "libpinyin-data",
-      "state": "pending"
-    },
-    {
-      "area": "fonts-i18n",
       "name": "m17n-lib",
       "state": "pending"
     },
@@ -561,11 +511,6 @@
     {
       "area": "long-tail",
       "name": "appstream-data",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
-      "name": "b43-fwcutter",
       "state": "pending"
     },
     {
@@ -675,11 +620,6 @@
     },
     {
       "area": "long-tail",
-      "name": "libell",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
       "name": "libev",
       "state": "pending"
     },
@@ -716,21 +656,6 @@
     {
       "area": "long-tail",
       "name": "libreport-filesystem",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
-      "name": "librtmp",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
-      "name": "libslirp",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
-      "name": "lilv-libs",
       "state": "pending"
     },
     {
@@ -810,11 +735,6 @@
     },
     {
       "area": "long-tail",
-      "name": "python3-pskc",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
       "name": "qadwaitadecorations-qt5",
       "state": "pending"
     },
@@ -855,11 +775,6 @@
     },
     {
       "area": "long-tail",
-      "name": "serd",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
       "name": "shim-ia32",
       "state": "pending"
     },
@@ -870,27 +785,12 @@
     },
     {
       "area": "long-tail",
-      "name": "slirp4netns",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
       "name": "solaar-udev",
       "state": "pending"
     },
     {
       "area": "long-tail",
-      "name": "sord",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
       "name": "sos",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
-      "name": "sratom",
       "state": "pending"
     },
     {
@@ -970,31 +870,6 @@
     },
     {
       "area": "vpn",
-      "name": "openpace",
-      "state": "pending"
-    },
-    {
-      "area": "vpn",
-      "name": "opensc",
-      "state": "pending"
-    },
-    {
-      "area": "vpn",
-      "name": "opensc-libs",
-      "state": "pending"
-    },
-    {
-      "area": "vpn",
-      "name": "pam-u2f",
-      "state": "pending"
-    },
-    {
-      "area": "vpn",
-      "name": "pamu2fcfg",
-      "state": "pending"
-    },
-    {
-      "area": "vpn",
       "name": "python3-yubikey-manager",
       "state": "pending"
     },
@@ -1008,11 +883,11 @@
   "states": {
     "already_recipe": 7,
     "manifest_wants": 1,
-    "pending": 183
+    "pending": 158
   },
   "totals": {
-    "backlog": 191,
-    "resolved": 323,
+    "backlog": 166,
+    "resolved": 348,
     "wontfix": 37
   }
 }

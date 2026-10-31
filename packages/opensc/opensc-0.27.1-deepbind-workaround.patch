@@ -1,0 +1,50 @@
+From 57445cda20cdb6e3d6473663b80685543949072a Mon Sep 17 00:00:00 2001
+From: Jakub Jelen <jjelen@redhat.com>
+Date: Mon, 27 Apr 2026 15:11:35 +0200
+Subject: [PATCH] common: Add a way to exclude the RTLD_DEEPBIND from dlopen
+ flags
+
+The address sanitizer does not work with DEEPBIND so we provide
+(undocumented?) way to exclude this flag from the OpenSC operations
+based on environment variable.
+---
+ src/common/libscdl.c | 16 +++++++++++++---
+ 1 file changed, 13 insertions(+), 3 deletions(-)
+
+diff --git a/src/common/libscdl.c b/src/common/libscdl.c
+index 97526fb747..ea711bba2e 100644
+--- a/src/common/libscdl.c
++++ b/src/common/libscdl.c
+@@ -72,6 +72,7 @@ int sc_dlclose(void *handle)
+ #else
+ 
+ #include <dlfcn.h>
++#include <stdlib.h>
+ 
+ void *sc_dlopen(const char *filename)
+ {
+@@ -81,11 +82,20 @@ void *sc_dlopen(const char *filename)
+ void *
+ sc_dlopen_deep(const char *filename)
+ {
+-	return dlopen(filename, RTLD_LAZY | RTLD_LOCAL
++	int flags = RTLD_LAZY | RTLD_LOCAL;
++
+ #ifdef RTLD_DEEPBIND
+-			| RTLD_DEEPBIND
++	/* By default, the pkcs11 modules are opened using with RTLD_DEEPBIND (if available).
++	 * But this causes issues for dynamic analysis tools such as ASAN
++	 * Whenso the OPENSC_DEEPBIND is set to "0", do not include this flag.
++	 * This should be used only for testing!
++	 */
++	char *deep = getenv("OPENSC_DEEPBIND");
++	if (deep == NULL || deep[0] != '0') {
++		flags |= RTLD_DEEPBIND;
++	}
+ #endif
+-			);
++	return dlopen(filename, flags);
+ }
+ 
+ void *sc_dlsym(void *handle, const char *symbol)
+

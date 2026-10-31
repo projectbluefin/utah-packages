@@ -1,0 +1,31 @@
+--- diskdev_cmds-332.14.orig/include/missing.h	2011-11-18 18:20:56.617779427 -0500
++++ diskdev_cmds-332.14/include/missing.h	2011-11-18 18:20:07.619736510 -0500
+@@ -70,7 +70,7 @@
+ #define NAME_MAX	255
+ 
+ /* Byteswap stuff */
+-#define NXSwapHostLongToBig(x)		cpu_to_be64(x)
++#define NXSwapHostLongToBig(x)		cpu_to_be32(x)
+ #define NXSwapBigShortToHost(x) 	be16_to_cpu(x)
+ #define OSSwapBigToHostInt16(x)		be16_to_cpu(x)
+ #define NXSwapBigLongToHost(x)		be32_to_cpu(x)
+@@ -86,6 +86,9 @@
+ #ifndef be32_to_cpu
+ #define be32_to_cpu(x) bswap_32(x)
+ #endif
++#ifndef cpu_to_be32
++#define cpu_to_be32(x) bswap_32(x)
++#endif
+ #ifndef be64_to_cpu
+ #define be64_to_cpu(x) bswap_64(x)
+ #endif
+@@ -100,6 +103,9 @@
+ #ifndef be32_to_cpu
+ #define be32_to_cpu(x)	(x)
+ #endif
++#ifndef cpu_to_be32
++#define cpu_to_be32(x)	(x)
++#endif
+ #ifndef be64_to_cpu
+ #define be64_to_cpu(x)	(x)
+ #endif

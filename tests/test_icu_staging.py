@@ -46,7 +46,8 @@ ICU_77_REBUILDS = {
     # localsearch and nautilus reach them transitively; gvfs BuildRequires
     # libsmbclient-devel outright, and its stage-1 root installed
     # libicu-77.1-2.1.hum1 in run 35413902261 for exactly that reason.
-    "samba": ("gvfs", "localsearch", "nautilus"),
+    # adcli BuildRequires libnetapi-devel, which only samba produces.
+    "samba": ("adcli", "gvfs", "localsearch", "nautilus"),
     # Fedora's libical-3.0.20-7.fc44 requires libicuuc.so.77 directly. bluez
     # BuildRequires libical-devel and sat in the same stage as libical, so its
     # root took Fedora's copy -- confirmed in run 35413902261, which installed
@@ -94,6 +95,8 @@ class IcuStagingTests(unittest.TestCase):
             # gvfs moved from stage 1 to 3 to land after samba; everything else
             # it is built from is stage 0, so nothing else constrains it.
             "gvfs": ("samba", "libnfs", "libsoup3", "libsecret", "udisks2"),
+            # adcli BuildRequires libnetapi-devel from the factory samba.
+            "adcli": ("samba",),
         }
         for pkg, deps in required_before.items():
             for dep in deps:

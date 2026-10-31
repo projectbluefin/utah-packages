@@ -1,0 +1,8 @@
+{
+  "package": "hfsplus-tools",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/hfsplus-tools.git",
+  "commit": "da59f33e35a222375e7621f18d0b2303855e8493",
+  "tree": "6ac82696b1b3d01cd756b2b98ba8d8174d3b3b31",
+  "imported_at": "2026-10-31T00:55:51.790562+00:00"
+}

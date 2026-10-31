@@ -1,0 +1,8 @@
+{
+  "package": "python-jaraco-functools",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/python-jaraco-functools.git",
+  "commit": "f68d86c9d5fa8307d58f714d07dbd0131e7d89f7",
+  "tree": "42f190ff0872e50a1f39a66801450f79520ddeed",
+  "imported_at": "2026-10-29T05:46:37.843076+00:00"
+}
