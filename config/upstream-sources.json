@@ -6410,6 +6410,16 @@
       "sha512": "754c9996670235766b84e416bbcb5352a7376e86f7fa373f9428125552294a5d6b032a363ea51fbbf81b88c8f2e47b3566a07bf0992e6e6ebd1bbf31651d9024"
     },
     {
+      "name": "libev",
+      "version": "4.33",
+      "url": "https://dist.schmorp.de/libev/Attic/libev-4.33.tar.gz",
+      "filename": "libev-4.33.tar.gz",
+      "sha512": "c662a65360115e0b2598e3e8824cf7b33360c43a96ac9233f6b6ea2873a10102551773cad0e89e738541e75af9fd4f3e3c11cd2f251c5703aa24f193128b896b",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libev/libev-4.33.tar.gz/sha512/c662a65360115e0b2598e3e8824cf7b33360c43a96ac9233f6b6ea2873a10102551773cad0e89e738541e75af9fd4f3e3c11cd2f251c5703aa24f193128b896b/libev-4.33.tar.gz"
+      ]
+    },
+    {
       "name": "qt6-qtdeclarative",
       "version": "6.11.2",
       "url": "https://download.qt.io/official_releases/qt/6.11/6.11.2/submodules/qtdeclarative-everywhere-src-6.11.2.tar.xz",

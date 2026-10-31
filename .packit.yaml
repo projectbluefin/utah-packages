@@ -1666,6 +1666,12 @@ packages:
     downstream_package_name: libepoxy
     paths:
       - packages/libepoxy
+  libev:
+    specfile_path: libev.spec
+    upstream_package_name: libev
+    downstream_package_name: libev
+    paths:
+      - packages/libev
   libevdev:
     specfile_path: libevdev.spec
     upstream_package_name: libevdev

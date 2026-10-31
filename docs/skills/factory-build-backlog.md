@@ -1129,3 +1129,15 @@ Do not exercise `mkfs.hfsplus` or repair with `fsck.hfsplus` on a host disk.
 After a hosted build, test them against a disposable filesystem image in the
 permitted runtime environment, and record the binary identity and results.
 Recipe coverage alone does not establish filesystem safety or installation.
+
+## Libev event loop library
+
+The `libev` source package provides the audited `libev` shared library, `libev-devel`,
+`libev-source`, and the compatibility header package `libev-libevent-devel`.
+Note that `libev-libevent-devel` declares an explicit `Conflicts: libevent-devel`
+to protect the shared `event.h` header; `libev-devel` alone does not conflict.
+Its `Source0` URL in the imported spec is plain `http://` (kept verbatim from Fedora);
+the source lock in `config/upstream-sources.json` fetches the same archive over
+`https://dist.schmorp.de` and the Fedora lookaside fallback, matching the SHA-512 in `sources`.
+An imported recipe record alone does not establish publication or runtime
+acceptance in Utah; those remain tracked with the #502 batch.
