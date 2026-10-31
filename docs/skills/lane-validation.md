@@ -128,3 +128,10 @@ to start a fresh run on the same commit. A maintainer-run Canary that does not
 pass is reported on the pull request and the check stays red. The press holds a
 runner for as long as that run takes (about half an hour). A push after review
 changes the head, so the old proof no longer applies.
+
+Fork dispatches may run concurrently for different PRs. Each cleans copies
+of closed PRs, so two dispatches can list the same copy before either deletes
+it. GitHub then returns `404` or `422 Reference does not exist` to the second
+delete; that exact response means cleanup is already complete, not that dispatch
+failed. Other API errors still fail the job. Keeping deletion idempotent
+prevents successful Canaries from losing their automatic `refresh` job.
