@@ -6,7 +6,7 @@ Summary:        A WebDAV server using libsoup3
 License:        LicenseRef-Callaway-LGPLv2+
 URL:            https://wiki.gnome.org/phodav
 
-Source0:        http://download.gnome.org/sources/%{name}/%{version}/%{name}-%{version}.tar.xz
+Source0:        https://download.gnome.org/sources/%{name}/%{version}/%{name}-%{version}.tar.xz
 
 BuildRequires:  gtk-doc
 BuildRequires:  gettext-devel
