@@ -6471,7 +6471,8 @@
       "sha512": "72be9fc8ddfa1c129b3aac2e6911ec75a944d42cffc3cbd5540ae194f213dfcc815a1b8fe6c823df3d03e077a579359e5b961a03b37bc417168e4806e98338ec",
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/sssd/sssd-2.14.0-beta1.tar.gz/sha512/72be9fc8ddfa1c129b3aac2e6911ec75a944d42cffc3cbd5540ae194f213dfcc815a1b8fe6c823df3d03e077a579359e5b961a03b37bc417168e4806e98338ec/sssd-2.14.0-beta1.tar.gz"
-      ]
+      ],
+      "stage": 3
     }
   ]
 }

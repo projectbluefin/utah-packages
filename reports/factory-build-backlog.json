@@ -854,11 +854,11 @@
   "states": {
     "already_recipe": 12,
     "manifest_wants": 1,
-    "pending": 149
+    "pending": 147
   },
   "totals": {
-    "backlog": 162,
-    "resolved": 352,
+    "backlog": 160,
+    "resolved": 354,
     "wontfix": 37
   }
 }
