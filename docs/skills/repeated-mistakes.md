@@ -582,14 +582,14 @@ reaching for `buildroot_icu77`, check the package's own `libicu-devel`.
 Several imports for one feature (the #447 screen-reader stack: orca,
 speech-dispatcher, espeak-ng, brltty, liblouis and their libraries) land as
 one branch that merges each `import/rawhide-<name>` in turn. Every bot branch
-appends to the same end of `config/upstream-sources.json`, so each merge
-conflicts there: resolve it as the union of both sides' `packages` (an entry
-present on both sides must be identical), keeping `json.dumps(..., indent=2)`
-formatting. Do not hand-resolve `.packit.yaml` or the counts in
-`docs/architecture.md`; after the last merge rerun
-`render_packit_config.py --write` and `render_architecture_counts.py --write`,
-because each bot branch counted only itself (+1) and git can merge those
-identical edits silently into a stale count. Then move every imported name
+inserts at its name's sorted position in `config/upstream-sources.json`, so
+merges conflict there only when two names are neighbours: resolve it as the
+union of both sides' `packages` (an entry present on both sides must be
+identical), then run `just sort-source-locks`, keeping `json.dumps(..., indent=2)`
+formatting. Do not hand-resolve `.packit.yaml` or other generated files;
+after the last merge rerun `just regenerate-inventory`, because each bot
+branch generated them from itself alone and git can merge those edits
+silently into stale output. Then move every imported name
 and subpackage from the backlog in the same branch. Run the full test suite
 on the combined branch, not only per import: an edge between two of the
 imports appears only once both recipes exist. orca BuildRequires brltty's
