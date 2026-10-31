@@ -802,13 +802,13 @@ packages = [
     { name = "oddjob-mkhomedir", pr = 784 },
     # Dev-tools batch (#487) recipe imports; hosted build, publication and runtime proof remain.
     # libsss_* are unconditional %package subpackages of sssd.spec.
-    { name = "libcaca" },
-    { name = "libsss_autofs" },
-    { name = "libsss_certmap" },
-    { name = "libsss_idmap" },
-    { name = "libsss_nss_idmap" },
-    { name = "libsss_sudo" },
-    { name = "lsb_release" },
+    { name = "libcaca", pr = 848 },
+    { name = "libsss_autofs", pr = 848 },
+    { name = "libsss_certmap", pr = 848 },
+    { name = "libsss_idmap", pr = 848 },
+    { name = "libsss_nss_idmap", pr = 848 },
+    { name = "libsss_sudo", pr = 848 },
+    { name = "lsb_release", pr = 848 },
 ]
 
 [wontfix]
