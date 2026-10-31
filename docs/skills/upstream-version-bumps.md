@@ -214,14 +214,25 @@ by `tests/test_bump_gate.py`; the workflow only acts on them.
 
 Constraints that shaped it, so they are not rediscovered:
 
-- Everything here runs on `GITHUB_TOKEN`. A pull request it opens starts no
-  `pull_request` workflow, and a merge it makes starts no `push` workflow;
-  a `workflow_dispatch` it sends does start one. So the bump job dispatches
-  the gate, the gate dispatches `canary.yml` with `pr=<number>` (the required
-  `Canary` check is matched by name on the head commit, and a dispatch is the
-  only way it lands there), and after merging it dispatches
-  `rebuild-rpms.yml` on `main` to publish `latest`. Waiting for the 03:17
-  schedule instead would leave a merged bump unpublished for up to a day.
+- Branch-side planning, builds and Canary dispatches use `GITHUB_TOKEN`.
+  A successful gate sends `repository_dispatch: bump-gate-built` with only
+  its run ID. This event runs `.github/workflows/bump-upstream-enqueue.yml`
+  from the default branch even when sent by `GITHUB_TOKEN`.
+- The trusted receiver verifies that exact gate attempt completed successfully,
+  the readiness step passed on the same SHA, and the unique open daily PR
+  still names that head. It reruns main's diff allowlist and review-only
+  checks without checking out or executing candidate code.
+- Only a separate fresh-runner job mints a repository-scoped mergeraptor App
+  token with contents and pull-request write access. It enqueues the exact
+  built head when a queue exists; otherwise it waits for required checks and
+  requests a one-shot, SHA-pinned merge. Discovery failures do not fall back
+  to direct merging. No persistent auto-merge request may authorize a later,
+  unbuilt daily head.
+- App/queue merges trigger `rebuild-rpms.yml` through its normal `main` push
+  filters (`packages/**`, `config/**`). Do not dispatch publication when a
+  candidate is merely enqueued: publication belongs after the actual merge.
+  Org secrets `MERGERAPTOR_APP_ID` and `MERGERAPTOR_PRIVATE_KEY` and an App
+  installation with the requested permissions are prerequisites.
 - The build is `rebuild-rpms.yml` called as a job (`workflow_call`), not a
   dispatched run to find and poll: its `build_list` and `failed` outputs
   are job outputs, and no single job has to outlive a factory run.
@@ -255,19 +266,10 @@ Constraints that shaped it, so they are not rediscovered:
   is required for every newer release, and remove it only with transaction
   evidence for the matching consumer.
 - Staleness: the gate works on `github.sha`, the branch head when it was
-  dispatched, checks the pull request still points there, and merges with
-  `gh pr merge --match-head-commit`. A newer bump's gate cancels an older
-  one through the concurrency group.
-- The merge is a direct `gh pr merge --squash` on `GITHUB_TOKEN`, which
-  works only while `main` does not require a merge queue. Under a required
-  queue GitHub refuses the direct merge, and a `GITHUB_TOKEN` enqueue
-  starts no `merge_group` workflows, so the entry times out waiting for its
-  required checks and the "Publish the merged bump" dispatch runs before
-  anything merged. Before the queue is turned on, the merge step needs a
-  decision: a GitHub App token that enqueues (and a post-merge trigger that
-  waits for the queue), or a maintainer who enqueues the bump by hand.
-  [`docs/architecture.md`](../architecture.md#checks-versus-merge-requirements)
-  lists every merging automation.
+  dispatched. The trusted receiver rechecks that head, then uses
+  `expectedHeadOid` for queue entry or the merge API's `sha` for direct
+  landing. A newer bump's gate cancels an older one through the concurrency
+  group; a later branch push cannot reuse a successful build verdict.
 - Partial failure holds instead of blocking. When the only problem is that
   some bumped packages failed (the build reached a verdict, both outputs
   are present, every bumped package was selected, every failure is a

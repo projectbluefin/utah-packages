@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import io
 import json
+import os
 import subprocess
 import tempfile
 import unittest
@@ -519,21 +520,6 @@ class GateWorkflowTests(unittest.TestCase):
         self.assertNotIn("publish_tag", build["with"])
         self.assertEqual(build["with"]["packages"], "${{ needs.plan.outputs.packages }}")
 
-    def test_the_merge_names_the_commit_that_built(self) -> None:
-        steps = self.jobs["merge"]["steps"]
-        merge = next(s for s in steps if "gh pr merge" in s.get("run", ""))
-        self.assertIn('--match-head-commit "$SHA"', merge["run"])
-        self.assertEqual(merge["env"]["SHA"], "${{ github.sha }}")
-        names = [s.get("name", "") for s in steps]
-        # Judge, then wait for Canary, then merge, then publish -- in that order.
-        verdict_at = names.index("Every bumped package built")
-        canary_at = names.index("Wait for the Canary check on this commit")
-        merge_at = names.index("Merge, only at the commit that built")
-        publish_at = names.index("Publish the merged bump to latest")
-        self.assertLess(verdict_at, canary_at)
-        self.assertLess(canary_at, merge_at)
-        self.assertLess(merge_at, publish_at)
-
     def test_a_failed_verdict_never_reaches_the_merge(self) -> None:
         steps = self.jobs["merge"]["steps"]
         report = next(s for s in steps if s.get("name") == "Say why on the pull request")
@@ -569,19 +555,321 @@ class GateWorkflowTests(unittest.TestCase):
                             if s.get("name") == "Every bumped package built")
         self.assertIn("--holds-only", verdict_step["run"])
 
-    def test_latest_is_published_by_dispatching_the_factory_on_main_after_a_merge(self) -> None:
-        publish = next(s for s in self.jobs["merge"]["steps"]
-                       if s.get("name") == "Publish the merged bump to latest")
-        self.assertEqual(publish["if"], "env.merged == 'true'")
-        self.assertIn("gh workflow run rebuild-rpms.yml", publish["run"])
-        self.assertIn("--ref main", publish["run"])
-
     def test_the_required_canary_is_dispatched_for_the_pull_request(self) -> None:
         run = "\n".join(s.get("run", "") for s in self.jobs["plan"]["steps"])
         self.assertIn('gh workflow run canary.yml', run)
         self.assertIn('-f pr="$PR"', run)
         canary = yaml.safe_load((WORKFLOWS / "canary.yml").read_text())
         self.assertIn("pr", on(canary)["workflow_dispatch"]["inputs"])
+
+
+class EnqueueBehaviorTests(unittest.TestCase):
+    """Run the actual trusted shell and plan tool against real Git history.
+
+    Only GitHub's remote API/CLI responses are fixtures. Candidate tools are
+    deliberately never checked out or executed by the credentialed handoff.
+    """
+
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = Path(self.tmp.name)
+        self.origin = self.root / "origin"
+        self.origin.mkdir()
+        self.git(self.origin, "init", "-q", "-b", "main")
+        self.git(self.origin, "config", "user.email", "gate@example.invalid")
+        self.git(self.origin, "config", "user.name", "gate")
+        for path, text in {
+            "tools/bump_gate.py": (ROOT / "tools/bump_gate.py").read_text(),
+            LOCK: json.dumps({"packages": [{"name": "glib2", "version": "1"},
+                                           {"name": "guarded", "version": "1"}]}),
+            REVIEW_ONLY: "guarded\n",
+            HOLDS: '{"holds": {}}\n',
+            "packages/glib2/glib2.spec": "Version: 1\n",
+        }.items():
+            self.put(path, text)
+        self.git(self.origin, "add", ".")
+        self.git(self.origin, "commit", "-qm", "trusted main")
+        self.git(self.origin, "checkout", "-qb", "bump/upstream-sources")
+        self.put("packages/glib2/glib2.spec", "Version: 2\n")
+        self.commit_candidate()
+        self.workspace = self.root / "workspace"
+        subprocess.run(["git", "clone", "-q", "--branch", "main",
+                        str(self.origin), str(self.workspace)], check=True)
+        self.bin = self.root / "bin"
+        self.bin.mkdir()
+        gh = self.bin / "gh"
+        gh.write_text(
+            "#!/usr/bin/env python3\n"
+            "import json, os, pathlib, sys\n"
+            "root = pathlib.Path(os.environ['FIXTURES'])\n"
+            "args = sys.argv[1:]\n"
+            "with (root / 'calls.jsonl').open('a') as f:\n"
+            "    f.write(json.dumps({'args': args, 'token': os.environ.get('GH_TOKEN')}) + '\\n')\n"
+            "if args[:2] == ['pr', 'checks']:\n"
+            "    sys.exit(int(os.environ.get('CHECKS_EXIT', '0')))\n"
+            "if args[:2] == ['pr', 'view']:\n"
+            "    print(os.environ['CURRENT_HEAD'])\n"
+            "    sys.exit(0)\n"
+            "if any(arg.endswith('/dispatches') for arg in args):\n"
+            "    (root / 'dispatch.json').write_text(sys.stdin.read())\n"
+            "    sys.exit(0)\n"
+            "if args[:2] == ['pr', 'list']:\n"
+            "    name = 'prs.json'\n"
+            "elif any('/jobs?' in arg for arg in args):\n"
+            "    name = 'jobs.json'\n"
+            "elif args[:2] == ['api', 'graphql']:\n"
+            "    if any('enqueuePullRequest' in arg for arg in args):\n"
+            "        if os.environ.get('ENQUEUE_EXIT'):\n"
+            "            sys.exit(int(os.environ['ENQUEUE_EXIT']))\n"
+            "        name = 'enqueue.json'\n"
+            "    else:\n"
+            "        if os.environ.get('DISCOVERY_EXIT'):\n"
+            "            sys.exit(int(os.environ['DISCOVERY_EXIT']))\n"
+            "        name = 'landing.json'\n"
+            "elif any(arg.endswith('/merge') for arg in args):\n"
+            "    name = 'merged.json'\n"
+            "elif args[0] == 'api':\n"
+            "    name = 'gate.json'\n"
+            "else:\n"
+            "    sys.exit('unexpected gh command: ' + repr(args))\n"
+            "print((root / name).read_text())\n")
+        gh.chmod(0o755)
+        workflow = yaml.safe_load((WORKFLOWS / "bump-upstream-enqueue.yml").read_text())
+        self.validate = workflow["jobs"]["validate"]["steps"][1]["run"]
+        self.merge = workflow["jobs"]["enqueue"]["steps"][1]["run"]
+        gate_workflow = yaml.safe_load((WORKFLOWS / "bump-upstream-gate.yml").read_text())
+        self.handoff = gate_workflow["jobs"]["merge"]["steps"][-1]["run"]
+        self.gate = {
+            "event": "workflow_dispatch", "status": "completed", "conclusion": "success",
+            "path": ".github/workflows/bump-upstream-gate.yml",
+            "head_repository": {"full_name": "projectbluefin/utah-packages"},
+            "head_branch": "bump/upstream-sources", "head_sha": self.sha, "run_attempt": 2,
+        }
+        self.jobs = [{"jobs": []}, {"jobs": [{
+            "name": "merge", "head_sha": self.sha, "conclusion": "success",
+            "steps": [{"name": "Ready to land the commit that built",
+                       "conclusion": "success"}],
+        }]}]
+        self.prs = [{"number": 42, "state": "OPEN", "baseRefName": "main",
+                     "headRefName": "bump/upstream-sources", "headRefOid": self.sha,
+                     "isCrossRepository": False}]
+        self.landing = {"data": {"repository": {
+            "mergeQueue": {"id": "MQ_main"},
+            "pullRequest": {"id": "PR_42", "state": "OPEN", "baseRefName": "main",
+                            "headRefOid": self.sha, "isCrossRepository": False},
+        }}}
+        self.env = {**os.environ, "PATH": f"{self.bin}:{os.environ['PATH']}",
+                    "GH_TOKEN": "read-only-github-token", "REPOSITORY": "projectbluefin/utah-packages",
+                    "RUN_ID": "123", "GITHUB_OUTPUT": str(self.root / "outputs"),
+                    "FIXTURES": str(self.root)}
+
+    @staticmethod
+    def git(root: Path, *args: str) -> str:
+        return subprocess.run(["git", *args], cwd=root, check=True, capture_output=True,
+                              text=True).stdout.strip()
+
+    def put(self, path: str, text: str) -> None:
+        dest = self.origin / path
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_text(text)
+
+    def commit_candidate(self) -> None:
+        self.git(self.origin, "add", ".")
+        self.git(self.origin, "commit", "-qm", "candidate")
+        self.sha = self.git(self.origin, "rev-parse", "HEAD")
+
+    def refresh_head(self) -> None:
+        self.commit_candidate()
+        self.gate["head_sha"] = self.sha
+        self.jobs[1]["jobs"][0]["head_sha"] = self.sha
+        self.prs[0]["headRefOid"] = self.sha
+
+    def run_validation(self) -> subprocess.CompletedProcess:
+        for name, data in (("gate.json", self.gate), ("jobs.json", self.jobs), ("prs.json", self.prs)):
+            (self.root / name).write_text(json.dumps(data))
+        return subprocess.run(["bash", "-c", self.validate], cwd=self.workspace, env=self.env,
+                              capture_output=True, text=True)
+
+    def run_landing(self) -> subprocess.CompletedProcess:
+        for name, data in (
+            ("landing.json", self.landing),
+            ("enqueue.json", {"data": {"enqueuePullRequest": {"mergeQueueEntry": {"id": "MQE_42"}}}}),
+            ("merged.json", {"merged": True}),
+        ):
+            (self.root / name).write_text(json.dumps(data))
+        return subprocess.run(["bash", "-c", self.merge], cwd=self.workspace,
+                              env={**self.env, "PR": "42", "SHA": self.sha,
+                                   "GH_TOKEN": "repo-scoped-app-token"},
+                              capture_output=True, text=True)
+
+    def calls(self) -> list[dict]:
+        return [json.loads(line) for line in (self.root / "calls.jsonl").read_text().splitlines()]
+
+    def assert_rejected(self) -> None:
+        result = self.run_validation()
+        self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertFalse((self.root / "outputs").exists())
+
+    def test_successful_gate_dispatches_only_its_run_id(self) -> None:
+        result = subprocess.run(["bash", "-c", self.handoff], cwd=self.workspace,
+                                env={**self.env, "SHA": self.sha, "PR": "42",
+                                     "CURRENT_HEAD": self.sha},
+                                capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads((self.root / "dispatch.json").read_text()),
+                         {"event_type": "bump-gate-built", "client_payload": {"run_id": "123"}})
+
+    def test_stale_gate_does_not_dispatch(self) -> None:
+        result = subprocess.run(["bash", "-c", self.handoff], cwd=self.workspace,
+                                env={**self.env, "SHA": self.sha, "PR": "42",
+                                     "CURRENT_HEAD": "f" * 40},
+                                capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse((self.root / "dispatch.json").exists())
+
+    def test_invalid_run_id_is_rejected_before_api_access(self) -> None:
+        self.env["RUN_ID"] = "../other"
+        self.assert_rejected()
+        self.assertFalse((self.root / "calls.jsonl").exists())
+
+    def test_success_hands_exact_head_to_queue_without_persistent_auto_merge(self) -> None:
+        result = self.run_validation()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual((self.root / "outputs").read_text(), f"pr=42\nsha={self.sha}\n")
+        result = self.run_landing()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        calls = self.calls()
+        self.assertTrue(all(call["token"] == "read-only-github-token" for call in calls[:-2]))
+        self.assertTrue(all(call["token"] == "repo-scoped-app-token" for call in calls[-2:]))
+        enqueue_args = calls[-1]["args"]
+        self.assertEqual(enqueue_args[:2], ["api", "graphql"])
+        self.assertIn("pr=PR_42", enqueue_args)
+        self.assertIn(f"sha={self.sha}", enqueue_args)
+        self.assertIn("expectedHeadOid: $sha", " ".join(enqueue_args))
+        self.assertFalse(any("pulls/42/merge" in arg for call in calls for arg in call["args"]))
+        self.assertFalse(any("--auto" in call["args"] for call in calls))
+        jobs_call = next(call for call in calls if any("/jobs?" in arg for arg in call["args"]))
+        self.assertIn("--paginate", jobs_call["args"])
+        self.assertIn("--slurp", jobs_call["args"])
+        self.assertIn("/attempts/2/jobs?", " ".join(jobs_call["args"]))
+
+    def test_confirmed_no_queue_waits_checks_then_merges_once_at_built_sha(self) -> None:
+        self.landing["data"]["repository"]["mergeQueue"] = None
+        result = self.run_landing()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        calls = self.calls()
+        self.assertEqual(calls[-2]["args"],
+                         ["pr", "checks", "42", "-R", "projectbluefin/utah-packages",
+                          "--required", "--watch"])
+        self.assertEqual(calls[-1]["args"],
+                         ["api", "--method", "PUT", "repos/projectbluefin/utah-packages/pulls/42/merge",
+                          "-f", f"sha={self.sha}", "-f", "merge_method=squash"])
+        self.assertFalse(any("--auto" in call["args"] for call in calls))
+
+    def test_queue_discovery_error_never_falls_back_to_direct_merge(self) -> None:
+        self.env["DISCOVERY_EXIT"] = "1"
+        result = self.run_landing()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(len(self.calls()), 1)
+
+    def test_malformed_or_graphql_error_discovery_never_merges(self) -> None:
+        for response in ({"errors": [{"message": "forbidden"}]},
+                         {"data": {"repository": None}},
+                         {"data": {"repository": {"pullRequest": {}}}},
+                         {"data": {"repository": {"mergeQueue": {}, "pullRequest": {}}}}):
+            with self.subTest(response=response):
+                self.landing = response
+                result = self.run_landing()
+                self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertTrue(all(call["args"][:2] == ["api", "graphql"] for call in self.calls()))
+
+    def test_later_branch_head_cannot_reuse_built_verdict(self) -> None:
+        self.landing["data"]["repository"]["pullRequest"]["headRefOid"] = "f" * 40
+        result = self.run_landing()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(len(self.calls()), 1)
+
+    def test_failed_required_checks_prevent_non_queue_merge(self) -> None:
+        self.landing["data"]["repository"]["mergeQueue"] = None
+        self.env["CHECKS_EXIT"] = "1"
+        result = self.run_landing()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(self.calls()[-1]["args"][:2], ["pr", "checks"])
+
+    def test_queue_head_race_failure_never_falls_back_to_merge(self) -> None:
+        self.env["ENQUEUE_EXIT"] = "1"
+        result = self.run_landing()
+        self.assertNotEqual(result.returncode, 0)
+        calls = self.calls()
+        self.assertEqual(len(calls), 2)
+        self.assertTrue(all(call["args"][:2] == ["api", "graphql"] for call in calls))
+        self.assertIn(f"sha={self.sha}", calls[-1]["args"])
+
+    def test_both_daily_branches_are_supported(self) -> None:
+        self.gate["head_branch"] = self.prs[0]["headRefName"] = "bump/rawhide-imports"
+        result = self.run_validation()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_moved_pr_is_not_armed(self) -> None:
+        self.prs[0]["headRefOid"] = "f" * 40
+        self.assert_rejected()
+
+    def test_duplicate_or_foreign_pr_is_not_armed(self) -> None:
+        self.prs.append(dict(self.prs[0]))
+        self.assert_rejected()
+        self.prs = self.prs[:1]
+        self.prs[0]["isCrossRepository"] = True
+        self.assert_rejected()
+
+    def test_failed_cancelled_or_wrong_source_gate_is_not_armed(self) -> None:
+        for key, value in (("conclusion", "failure"), ("conclusion", "cancelled"),
+                           ("event", "pull_request"), ("path", ".github/workflows/other.yml"),
+                           ("head_branch", "target-cycle"), ("head_sha", "not-a-sha")):
+            with self.subTest(key=key, value=value):
+                original = self.gate[key]
+                self.gate[key] = value
+                self.assert_rejected()
+                self.gate[key] = original
+        self.gate["head_repository"]["full_name"] = "someone/fork"
+        self.assert_rejected()
+
+    def test_missing_skipped_failed_or_wrong_head_handoff_is_not_armed(self) -> None:
+        job = self.jobs[1]["jobs"][0]
+        for key, value in (("conclusion", "skipped"), ("conclusion", "failure"),
+                           ("head_sha", "f" * 40), ("steps", []),
+                           ("steps", [{"name": "Ready to land the commit that built",
+                                       "conclusion": "skipped"}])):
+            with self.subTest(key=key, value=value):
+                original = job[key]
+                job[key] = value
+                self.assert_rejected()
+                job[key] = original
+
+    def test_changed_branch_tools_are_rejected_without_execution(self) -> None:
+        self.put("tools/bump_gate.py", "raise SystemExit('UNTRUSTED TOOL EXECUTED')\n")
+        self.refresh_head()
+        self.assert_rejected()
+        self.assertEqual(self.git(self.workspace, "branch", "--show-current"), "main")
+        self.assertNotIn("UNTRUSTED TOOL", (self.workspace / "tools/bump_gate.py").read_text())
+
+    def test_changed_workflow_is_rejected(self) -> None:
+        self.put(".github/workflows/bump-upstream-gate.yml", "untrusted workflow\n")
+        self.refresh_head()
+        self.assert_rejected()
+
+    def test_review_only_lock_change_is_rejected(self) -> None:
+        self.put(LOCK, json.dumps({"packages": [{"name": "glib2", "version": "1"},
+                                              {"name": "guarded", "version": "2"}]}))
+        self.refresh_head()
+        self.assert_rejected()
+
+    def test_holds_only_still_enqueues_without_a_build(self) -> None:
+        self.git(self.origin, "checkout", "main", "--", "packages/glib2/glib2.spec")
+        self.put(HOLDS, '{"holds": {"glib2": {"version": "2", "run": "gate-url"}}}\n')
+        self.refresh_head()
+        result = self.run_validation()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
 
 class BumpWorkflowTests(unittest.TestCase):

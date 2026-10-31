@@ -269,8 +269,9 @@ because the newer run selects against the published state and so builds the
 union. The daily run moved off `06:41 UTC`, where it collided with
 `bump-upstream-sources.yml`. The daily bump pull request is gated by
 `bump-upstream-gate.yml`, which builds exactly the bumped recipes (publishing
-nothing), merges only when all of them built, and then dispatches the factory
-on `main`, because its GITHUB_TOKEN merge starts no push run; see
+nothing). A trusted default-branch receiver validates the successful gate
+and uses an App token to enqueue or merge only that built head. The actual
+App/queue push to `main` starts factory publication; see
 [`docs/skills/upstream-version-bumps.md`](skills/upstream-version-bumps.md#the-bump-gate).
 Other pull requests run validation and the canary, never the factory.
 The rationale is part of the cache contract in

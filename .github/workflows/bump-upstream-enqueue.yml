@@ -1,0 +1,149 @@
+name: Enqueue built daily bump
+
+# repository_dispatch always executes the default-branch workflow, never the
+# branch that just built, including when GITHUB_TOKEN sends the event. No
+# artifacts or executable branch files cross this boundary; validate the
+# candidate as Git data before minting an App token.
+on:
+  repository_dispatch:
+    types: [bump-gate-built]
+
+permissions: {}
+
+concurrency:
+  group: bump-upstream-enqueue-${{ github.event.client_payload.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: read
+    outputs:
+      pr: ${{ steps.candidate.outputs.pr }}
+      sha: ${{ steps.candidate.outputs.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Validate the successful gate and its exact candidate using main code
+        id: candidate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.event.client_payload.run_id }}
+        run: |
+          set -euo pipefail
+          [[ "$RUN_ID" =~ ^[0-9]+$ ]]
+          # The sender is the gate's final step. Wait for that exact run to
+          # finish before trusting its conclusion or its successful handoff.
+          for _ in $(seq 1 30); do
+            gh api "repos/$REPOSITORY/actions/runs/$RUN_ID" > gate.json
+            if [ "$(jq -r .status gate.json)" = completed ]; then break; fi
+            sleep 2
+          done
+          jq -e --arg repo "$REPOSITORY" '
+            .event == "workflow_dispatch" and .status == "completed" and .conclusion == "success"
+            and .path == ".github/workflows/bump-upstream-gate.yml"
+            and .head_repository.full_name == $repo
+            and (.head_branch == "bump/upstream-sources" or .head_branch == "bump/rawhide-imports")
+            and (.head_sha | test("^[0-9a-f]{40}$"))' gate.json > /dev/null
+          sha=$(jq -r .head_sha gate.json)
+          branch=$(jq -r .head_branch gate.json)
+          attempt=$(jq -r .run_attempt gate.json)
+          # A success with every job skipped is not a build verdict. Read the
+          # exact attempt, including all pages of the reusable build's jobs.
+          gh api --paginate --slurp "repos/$REPOSITORY/actions/runs/$RUN_ID/attempts/$attempt/jobs?per_page=100" > jobs.json
+          jq -e --arg sha "$sha" '
+            any(.[].jobs[]; .name == "merge" and .head_sha == $sha and .conclusion == "success"
+              and any(.steps[]; .name == "Ready to land the commit that built"
+                and .conclusion == "success"))' jobs.json > /dev/null
+          gh pr list -R "$REPOSITORY" --state open --base main --head "$branch" \
+            --json number,state,baseRefName,headRefName,headRefOid,isCrossRepository > prs.json
+          # The gate dispatch input is untrusted; discover the unique same-repo
+          # daily PR instead, pinned to the run's immutable built head.
+          jq -e --arg sha "$sha" --arg branch "$branch" '
+            length == 1 and (.[0] | .state == "OPEN" and .baseRefName == "main"
+              and .headRefName == $branch and .headRefOid == $sha and (.isCrossRepository | not))' prs.json > /dev/null
+          git fetch --quiet origin main "$sha"
+          base=$(git merge-base origin/main "$sha")
+          # Never check out the candidate. This trusted tool also rejects a
+          # changed workflow/tool, review-only lock update, or unknown recipe.
+          python3 tools/bump_gate.py plan --base "$base" --head "$sha" > plan.json
+          jq -e '.holds_only == true or (.packages | length > 0)' plan.json > /dev/null
+          echo "pr=$(jq -r '.[0].number' prs.json)" >> "$GITHUB_OUTPUT"
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+
+  enqueue:
+    needs: validate
+    runs-on: ubuntu-24.04
+    permissions: {}
+    steps:
+      # A fresh runner, no checkout and no branch tools or downloaded artifacts.
+      - name: Mint a token only for this repository
+        id: app-token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3
+        with:
+          client-id: ${{ secrets.MERGERAPTOR_APP_ID }}
+          private-key: ${{ secrets.MERGERAPTOR_PRIVATE_KEY }}
+          repositories: ${{ github.event.repository.name }}
+          permission-contents: write
+          permission-pull-requests: write
+      - name: Enqueue the built head or merge it once when no queue exists
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          REPOSITORY: ${{ github.repository }}
+          PR: ${{ needs.validate.outputs.pr }}
+          SHA: ${{ needs.validate.outputs.sha }}
+        run: |
+          set -euo pipefail
+          # Query the queue itself, not a guessed ruleset setting. Errors or
+          # incomplete responses must never select the non-queue merge path.
+          query=$(cat <<'GRAPHQL'
+          query($owner: String!, $name: String!, $pr: Int!) {
+            repository(owner: $owner, name: $name) {
+              mergeQueue(branch: "main") { id }
+              pullRequest(number: $pr) {
+                id state baseRefName headRefOid isCrossRepository
+              }
+            }
+          }
+          GRAPHQL
+          )
+          gh api graphql -f owner="${REPOSITORY%/*}" -f name="${REPOSITORY#*/}" -F pr="$PR" \
+            -f query="$query" > landing.json
+          jq -e --arg sha "$SHA" '
+            ((.errors // []) | length == 0) and
+            (.data.repository | type == "object" and has("mergeQueue") and
+              (.mergeQueue == null or (.mergeQueue.id | type == "string" and length > 0)) and
+              (.pullRequest | .state == "OPEN" and .baseRefName == "main"
+                and .headRefOid == $sha and (.isCrossRepository | not)
+                and (.id | type == "string" and length > 0)))' landing.json > /dev/null
+          if jq -e '.data.repository.mergeQueue != null' landing.json > /dev/null; then
+            node=$(jq -r .data.repository.pullRequest.id landing.json)
+            mutation=$(cat <<'GRAPHQL'
+          mutation($pr: ID!, $sha: GitObjectID!) {
+            enqueuePullRequest(input: {pullRequestId: $pr, expectedHeadOid: $sha}) {
+              mergeQueueEntry { id }
+            }
+          }
+          GRAPHQL
+            )
+            gh api graphql -f pr="$node" -f sha="$SHA" \
+              -f query="$mutation" > enqueued.json
+            jq -e '((.errors // []) | length == 0) and
+              (.data.enqueuePullRequest.mergeQueueEntry.id | type == "string" and length > 0)' enqueued.json > /dev/null
+          else
+            gh pr checks "$PR" -R "$REPOSITORY" --required --watch
+            # A single SHA-pinned merge, never durable auto-merge: tomorrow's
+            # daily branch head must earn its own named-package build verdict.
+            gh api --method PUT "repos/$REPOSITORY/pulls/$PR/merge" \
+              -f sha="$SHA" -f merge_method=squash > merged.json
+            jq -e '.merged == true' merged.json > /dev/null
+          fi
+          # Publication follows only the actual App/queue push to main.
