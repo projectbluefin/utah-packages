@@ -179,6 +179,9 @@ metadata, not a source archive. Expand recipe macros explicitly and strip
 RPM's `#/local-filename` suffix from the download URL while preserving the
 lock's `filename`. Project names can differ from recipe names, as with
 `gstreamer1-plugins-base` and the upstream `gst-plugins-base` archive.
+For PyPI packages, resolve the version's source distribution from
+`https://pypi.org/pypi/<project>/<version>/json` and verify the returned
+`files.pythonhosted.org` URL against the locked SHA-512 before promoting it.
 
 Stream each candidate primary directly through SHA-512 without using the
 pipeline's fallback path. Promote only exact matches to the existing lock;
