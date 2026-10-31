@@ -1,0 +1,8 @@
+{
+  "package": "qt6-qtwayland",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/qt6-qtwayland.git",
+  "commit": "da5f5463a99ad19d21c232ab358e4438c7c4c873",
+  "tree": "4e03e901fc66343c0c5bc7f2ecfd7e81cd4f0427",
+  "imported_at": "2026-10-26T05:45:55.262527+00:00"
+}
