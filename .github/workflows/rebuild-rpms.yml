@@ -426,11 +426,9 @@ jobs:
           echo "factory repository: ${resolved:-<none>}"
           echo "publish seed:       ${seed:-<none>}"
           echo "factory signer ref: ${signer_ref:-<none>}"
-          {
-            echo "image=${resolved}"
-            echo "signer_ref=${signer_ref}"
-            echo "seed=${seed}"
-          } >> "$GITHUB_OUTPUT"
+          echo "image=${resolved}" >> "$GITHUB_OUTPUT"
+          echo "signer_ref=${signer_ref}" >> "$GITHUB_OUTPUT"
+          echo "seed=${seed}" >> "$GITHUB_OUTPUT"
           # The state label (tools/factory_state.py) is what prepare selects
           # against: the inputs every published build was made from.
           mkdir -p work
