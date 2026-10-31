@@ -23,6 +23,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from tools import generated_sources
+from tools.source_lock_order import in_lock_order
 
 
 FEDORA_HOSTS = ("fedoraproject.org", "src.fedoraproject.org", "kojipkgs.fedoraproject.org")
@@ -88,11 +89,14 @@ def prove_generated(candidate: dict, package_dir: Path) -> str:
 
 
 def merge_candidates(existing: dict, candidates: list[dict]) -> dict:
-    """Append candidates for unlocked packages, never disturbing a lock.
+    """Insert candidates for unlocked packages in name order, never editing a lock.
 
-    Existing entries keep their parsed form exactly, so a merge round-trips
-    byte-for-byte once JSON-normalized. A candidate naming an already-locked
-    package is a conflict, not an update.
+    Existing entries keep their parsed form exactly -- only their position can
+    move, and only if the existing lock was not already in name order -- so a
+    merge round-trips byte-for-byte once JSON-normalized and sorted. Name order
+    (tools/source_lock_order.py) keeps concurrent imports from all editing the
+    file's tail. A candidate naming an already-locked package is a conflict,
+    not an update.
     """
     merged = dict(existing)
     packages = list(existing.get("packages", []))
@@ -106,7 +110,7 @@ def merge_candidates(existing: dict, candidates: list[dict]) -> dict:
             raise ValueError(f"duplicate candidate: {name}")
         seen.add(name)
         packages.append(candidate)
-    merged["packages"] = packages
+    merged["packages"] = in_lock_order(packages)
     return merged
 
 
@@ -240,7 +244,7 @@ def main() -> int:
             existing = json.loads(output.read_text()) if output.exists() else {"schema": 1, "packages": []}
             payload = merge_candidates(existing, candidates)
         else:
-            payload = {"schema": 1, "packages": candidates}
+            payload = {"schema": 1, "packages": in_lock_order(candidates)}
         output.write_text(json.dumps(payload, indent=2) + "\n")
     report.parent.mkdir(parents=True, exist_ok=True)
     report.write_text(json.dumps({"accepted": len(candidates), "already_supplied_by_hummingbird": already_supplied,
