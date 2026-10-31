@@ -47,10 +47,19 @@
 #
 # The job named "Canary" is the required check. It always runs, and passes
 # without building anything when a pull request touches no pipeline path.
+#
+# The merge queue (merge_group) runs the same check on the queue's commit and
+# never builds: every build pushes a package-cache image and pass1 publishes
+# and signs a canary tag, and nothing may publish from a queue ref. Only
+# `changes` and `canary` run there, both with read-only tokens. The group is
+# proven when the queued pull request touches no pipeline path, or when
+# nothing pipeline-relevant differs between the head its own Canary proved and
+# the group commit (tools/canary.py merge-group); otherwise it fails closed.
 name: Canary
 
 on:
   pull_request:
+  merge_group:
   workflow_dispatch:
     inputs:
       compile:
@@ -104,9 +113,15 @@ env:
 jobs:
   changes:
     runs-on: ubuntu-24.04
+    # Read-only on every event: this is the one job besides the gate that a
+    # merge group runs, and it must hold nothing that can publish.
+    permissions:
+      contents: read
+      pull-requests: read
     outputs:
       run: ${{ steps.paths.outputs.run }}
       fork: ${{ steps.paths.outputs.fork }}
+      queue: ${{ steps.paths.outputs.queue }}
       tag: ${{ steps.name.outputs.tag }}
       salt: ${{ steps.name.outputs.salt }}
       set: ${{ steps.name.outputs.set }}
@@ -123,8 +138,24 @@ jobs:
           HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
           REPO: ${{ github.repository }}
           SHA: ${{ github.sha }}
+          QUEUE_REF: ${{ github.event.merge_group.head_ref }}
+          QUEUE_SHA: ${{ github.event.merge_group.head_sha }}
         run: |
           set -euo pipefail
+          # A merge group never builds or publishes (see the header). Its
+          # verdict is the proof, and anything short of one -- including a
+          # crash or an unreadable queue ref -- is "unproven".
+          if [ "$EVENT" = merge_group ]; then
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "fork=false" >> "$GITHUB_OUTPUT"
+            if python3 tools/canary.py merge-group --repository "$REPO" \
+                --head-ref "$QUEUE_REF" --head-sha "$QUEUE_SHA" --set "$CANARY_SET"; then
+              echo "queue=proven" >> "$GITHUB_OUTPUT"
+            else
+              echo "queue=unproven" >> "$GITHUB_OUTPUT"
+            fi
+            exit 0
+          fi
           if [ "$EVENT" != pull_request ] && [ -z "$PR" ]; then
             echo "run=true" >> "$GITHUB_OUTPUT"
             echo "fork=false" >> "$GITHUB_OUTPUT"
@@ -181,7 +212,10 @@ jobs:
 
   pass1:
     needs: changes
-    if: needs.changes.outputs.run == 'true' && needs.changes.outputs.fork != 'true'
+    # The event guard repeats what changes already decides (run=false on a
+    # merge group) so no later edit to that script can make the queue publish.
+    # Every other build or publish job hangs off pass1 or pass6.
+    if: github.event_name != 'merge_group' && needs.changes.outputs.run == 'true' && needs.changes.outputs.fork != 'true'
     uses: ./.github/workflows/rebuild-rpms.yml
     with:
       full: true
@@ -408,7 +442,7 @@ jobs:
   # lane before relying on it.
   pass6:
     needs: changes
-    if: needs.changes.outputs.run == 'true' && needs.changes.outputs.fork != 'true'
+    if: github.event_name != 'merge_group' && needs.changes.outputs.run == 'true' && needs.changes.outputs.fork != 'true'
     uses: ./.github/workflows/rebuild-rpms.yml
     with:
       full: true
@@ -469,6 +503,9 @@ jobs:
     needs: [changes, pass1, verify-publish, pass2, pass3, verify-cache, pass4, verify-failure, pass5, verify-incremental, verify-hermetic, pass6, verify-lane]
     if: always()
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: read
     steps:
       # A fork pull request cannot publish, so it passes only on proof: a
       # maintainer-run Canary (canary-fork-pr.yml) that passed on exactly this
@@ -480,6 +517,8 @@ jobs:
         if: needs.changes.outputs.fork == 'true'
       - name: Decide
         env:
+          EVENT: ${{ github.event_name }}
+          QUEUE: ${{ needs.changes.outputs.queue }}
           RUN: ${{ needs.changes.outputs.run }}
           FORK: ${{ needs.changes.outputs.fork }}
           RESULTS: ${{ toJSON(needs) }}
@@ -489,6 +528,16 @@ jobs:
           HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           set -euo pipefail
+          # A merge group passes only on the proof changes recorded; a missing
+          # output (changes failed or was cancelled) is not a proof.
+          if [ "$EVENT" = merge_group ]; then
+            if [ "$QUEUE" = proven ]; then
+              echo "merge group proven without building; see the changes job"
+              exit 0
+            fi
+            echo "::error::this merge group is not proven by the queued pull request's Canary (the changes job says why). A pull request that changes the pipeline must be up to date with every pipeline change ahead of it: update its branch so its Canary runs again, then queue it again" >&2
+            exit 1
+          fi
           if [ "$RUN" != true ]; then
             echo "no pipeline path changed; nothing to prove"
             exit 0

@@ -258,6 +258,16 @@ Constraints that shaped it, so they are not rediscovered:
   dispatched, checks the pull request still points there, and merges with
   `gh pr merge --match-head-commit`. A newer bump's gate cancels an older
   one through the concurrency group.
+- The merge is a direct `gh pr merge --squash` on `GITHUB_TOKEN`, which
+  works only while `main` does not require a merge queue. Under a required
+  queue GitHub refuses the direct merge, and a `GITHUB_TOKEN` enqueue
+  starts no `merge_group` workflows, so the entry times out waiting for its
+  required checks and the "Publish the merged bump" dispatch runs before
+  anything merged. Before the queue is turned on, the merge step needs a
+  decision: a GitHub App token that enqueues (and a post-merge trigger that
+  waits for the queue), or a maintainer who enqueues the bump by hand.
+  [`docs/architecture.md`](../architecture.md#checks-versus-merge-requirements)
+  lists every merging automation.
 - Partial failure holds instead of blocking. When the only problem is that
   some bumped packages failed (the build reached a verdict, both outputs
   are present, every bumped package was selected, every failure is a
