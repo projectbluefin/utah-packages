@@ -39,7 +39,7 @@ class MergeCandidatesTests(unittest.TestCase):
         merged = merge_candidates(self.existing, [])
         self.assertEqual(normalized(merged), normalized(self.existing))
 
-    def test_merge_appends_new_entries_after_existing_ones(self):
+    def test_merge_inserts_a_new_entry_in_name_order(self):
         candidate = {
             "name": "brand-new-package",
             "version": "1.0",
@@ -48,8 +48,9 @@ class MergeCandidatesTests(unittest.TestCase):
             "sha512": "ab" * 64,
         }
         merged = merge_candidates(self.existing, [candidate])
-        self.assertEqual(merged["packages"][:-1], self.existing["packages"])
-        self.assertEqual(merged["packages"][-1], candidate)
+        names = [entry["name"] for entry in merged["packages"]]
+        self.assertEqual(names, sorted(names))
+        self.assertEqual([entry for entry in merged["packages"] if entry is not candidate], self.existing["packages"])
 
     def test_merge_refuses_to_replace_an_existing_lock(self):
         existing_entry = dict(self.existing["packages"][0])
