@@ -2020,6 +2020,12 @@ packages:
     downstream_package_name: libosinfo
     paths:
       - packages/libosinfo
+  libpaper:
+    specfile_path: libpaper.spec
+    upstream_package_name: libpaper
+    downstream_package_name: libpaper
+    paths:
+      - packages/libpaper
   libpcap:
     specfile_path: libpcap.spec
     upstream_package_name: libpcap
