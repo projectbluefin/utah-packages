@@ -1078,7 +1078,8 @@ The `libev` source package provides the audited `libev` shared library, `libev-d
 `libev-source`, and the compatibility header package `libev-libevent-devel`.
 Note that `libev-libevent-devel` declares an explicit `Conflicts: libevent-devel`
 to protect the shared `event.h` header; `libev-devel` alone does not conflict.
-Its `Source0` URL is served over `https://` by upstream (`dist.schmorp.de`),
-matching the SHA-512 in `sources` and the Fedora lookaside fallback URL.
+Its `Source0` URL in the imported spec is plain `http://` (kept verbatim from Fedora);
+the source lock in `config/upstream-sources.json` fetches the same archive over
+`https://dist.schmorp.de` and the Fedora lookaside fallback, matching the SHA-512 in `sources`.
 An imported recipe record alone does not establish publication or runtime
 acceptance in Utah; those remain tracked with the #502 batch.
