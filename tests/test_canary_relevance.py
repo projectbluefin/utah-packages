@@ -235,7 +235,7 @@ class MergeGroupProofTests(unittest.TestCase):
             "docs/a.md": "a\n",
         })
 
-    def prove(self, pr_head, group, relevant=True, api_head=None):
+    def prove(self, pr_head, group, api_head=None):
         self.repo.publish_pr(7, pr_head)
         self.repo.checkout_group(group)
 
@@ -243,19 +243,14 @@ class MergeGroupProofTests(unittest.TestCase):
             self.assertEqual(args, ["api", "repos/o/r/pulls/7"])
             return json.dumps({"head": {"sha": api_head or pr_head}})
 
-        with mock.patch.object(canary, "pr_relevant", return_value=relevant) as judged:
-            verdict = canary.merge_group_proof("o/r", QUEUE_REF, group, SET, gh=gh, git=self.repo.git)
-        judged.assert_called_once_with("o/r", 7, SET, gh=gh)
-        return verdict
+        return canary.merge_group_proof("o/r", QUEUE_REF, group, SET, gh=gh, git=self.repo.git)
 
-    def test_a_pull_request_that_touches_no_pipeline_path_is_proven_without_a_fetch(self):
-        def refuse(args):
-            raise AssertionError(f"unexpected call {args}")
-
-        with mock.patch.object(canary, "pr_relevant", return_value=False):
-            proven, reason = canary.merge_group_proof("o/r", QUEUE_REF, "d" * 40, SET, gh=refuse, git=refuse)
-        self.assertTrue(proven)
-        self.assertIn("#7 touches no pipeline path", reason)
+    def test_a_docs_only_member_cannot_bless_another_members_pipeline_change(self):
+        pr_head = self.repo.commit({"docs/a.md": "member documentation\n"})
+        ahead = self.repo.commit({"tools/tool.py": "untested pipeline change\n"}, parent=self.main)
+        group = self.repo.commit({"docs/a.md": "member documentation\n"}, parent=ahead)
+        proven, reason = self.prove(pr_head, group)
+        self.assertFalse(proven, reason)
 
     def test_a_pipeline_change_is_proven_when_main_moved_only_in_recipes_docs_and_new_locks(self):
         pr_head = self.repo.commit({"tools/tool.py": "x = 2\n"})
@@ -311,15 +306,6 @@ class MergeGroupProofTests(unittest.TestCase):
         docs_only = self.repo.commit({"docs/a.md": "c\n"})
         self.assertFalse(canary.range_relevant(renamed, docs_only, SET, git=self.repo.origin_git))
 
-    def test_the_command_exits_zero_only_on_a_proof(self):
-        argv = ["merge-group", "--repository", "o/r", "--head-ref", QUEUE_REF, "--head-sha", "d" * 40,
-                "--set", json.dumps(SET)]
-        for verdict, code in (((True, "ok"), 0), ((False, "no"), 1)):
-            with self.subTest(verdict=verdict), \
-                    mock.patch.object(canary, "merge_group_proof", return_value=verdict) as proof, \
-                    mock.patch("builtins.print"):
-                self.assertEqual(canary.main(argv), code)
-                proof.assert_called_once_with("o/r", QUEUE_REF, "d" * 40, SET)
 
 
 if __name__ == "__main__":

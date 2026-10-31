@@ -43,10 +43,8 @@ on:
       - 'config/**'
   schedule:
     # Daily: whatever changed, plus a retry of every package whose last
-    # attempt failed. It used to run at 06:41, the same minute as
-    # bump-upstream-sources.yml. A bump merged by bump-upstream-gate.yml is a
-    # GITHUB_TOKEN push, which starts no push run, so the gate dispatches this
-    # workflow on main itself; a bump merged by a person builds through push.
+    # attempt failed. Keep this separate from bump-upstream-sources.yml.
+    # App/queue merges from the bump gate publish through the push trigger.
     - cron: '17 3 * * *'
     # Weekly safety net: every package, whatever the state label says.
     - cron: '23 1 * * 0'
@@ -426,9 +424,11 @@ jobs:
           echo "factory repository: ${resolved:-<none>}"
           echo "publish seed:       ${seed:-<none>}"
           echo "factory signer ref: ${signer_ref:-<none>}"
-          echo "image=${resolved}" >> "$GITHUB_OUTPUT"
-          echo "signer_ref=${signer_ref}" >> "$GITHUB_OUTPUT"
-          echo "seed=${seed}" >> "$GITHUB_OUTPUT"
+          {
+            echo "image=${resolved}"
+            echo "signer_ref=${signer_ref}"
+            echo "seed=${seed}"
+          } >> "$GITHUB_OUTPUT"
           # The state label (tools/factory_state.py) is what prepare selects
           # against: the inputs every published build was made from.
           mkdir -p work

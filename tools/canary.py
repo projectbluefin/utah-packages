@@ -187,9 +187,9 @@ def pr_relevant(repository: str, pr: int, canary_set: Sequence[str], gh=_gh) -> 
     return pipeline_relevant(files, [*canary_set, *PERTURBED], base_sources, head_sources)
 
 
-# The merge queue tests gh-readonly-queue/<base>/pr-<N>-<parent sha>. The
-# merge_group payload names no pull request, so its number comes from the ref;
-# a ref that does not have this shape is refused, never guessed at.
+# A GitHub queue ref supplies a candidate PR number, not proof of all group
+# members. Always compare its full pipeline tree with the synthetic commit;
+# a docs-only candidate must not bless pipeline changes elsewhere in the group.
 QUEUE_REF = re.compile(r"^(?:refs/heads/)?gh-readonly-queue/.+/pr-(?P<pr>[1-9][0-9]*)-[0-9a-f]{40}$")
 FULL_SHA = re.compile(r"^[0-9a-f]{40}$")
 
@@ -242,21 +242,18 @@ def merge_group_proof(
 
     A merge group run never builds: every build pushes a package-cache image
     and pass1 publishes and signs a canary tag, and the queue must not publish.
-    The pull request's own Canary already passed on its head before GitHub
-    let it into the queue, so the group is proven when either the pull
-    request touches no pipeline path (the rule its own run applied), or
-    nothing pipeline-relevant differs between the head that Canary proved and
-    the merge group commit. Anything else -- an unreadable ref, a moved head,
-    pipeline drift from main or from a pull request ahead in the queue -- is
-    unproven, and the gate fails closed.
+    The pull request's own Canary must have passed on its head before GitHub
+    admits it. Its pipeline proves this group only when nothing
+    pipeline-relevant differs between that head and the full group commit.
+    Inspect that range even for a docs-only pull request: another queued
+    member or main may have changed the pipeline. Anything unreadable, moved
+    or pipeline-different fails closed.
     """
     pr = queue_pr(head_ref)
     if pr is None:
         return False, f"cannot name the pull request from merge group ref {head_ref!r}"
     if not FULL_SHA.match(head_sha or ""):
         return False, f"not a full merge group commit: {head_sha!r}"
-    if not pr_relevant(repository, pr, canary_set, gh=gh):
-        return True, f"pull request #{pr} touches no pipeline path; nothing to prove"
     pr_head = json.loads(gh(["api", f"repos/{repository}/pulls/{pr}"]))["head"]["sha"]
     git(["fetch", "--no-tags", "--depth=1", "origin", f"refs/pull/{pr}/head"])
     fetched = git(["rev-parse", "FETCH_HEAD"]).strip()
@@ -264,13 +261,12 @@ def merge_group_proof(
         return False, f"pull request #{pr} head moved ({pr_head[:12]} in the API, {fetched[:12]} fetched)"
     if range_relevant(pr_head, head_sha, canary_set, git=git):
         return False, (
-            f"pull request #{pr} changes the pipeline, and the pipeline in this merge group differs "
-            f"from {pr_head[:12]}, the head its Canary proved: main or a pull request ahead of it in "
-            "the queue changed a pipeline path since. Update the branch so Canary proves the merged "
-            "pipeline, then queue it again"
+            f"the pipeline in this merge group differs from pull request #{pr} head "
+            f"{pr_head[:12]}: main or another member changed a pipeline path. "
+            "Update the branch so Canary proves the merged pipeline, then queue it again"
         )
     return True, (
-        f"pull request #{pr} changes the pipeline; its Canary proved {pr_head[:12]}, and nothing "
+        f"pull request #{pr}'s Canary proved {pr_head[:12]}, and nothing "
         "pipeline-relevant differs between that commit and this merge group"
     )
 

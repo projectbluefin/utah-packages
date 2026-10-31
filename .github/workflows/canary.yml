@@ -52,9 +52,9 @@
 # never builds: every build pushes a package-cache image and pass1 publishes
 # and signs a canary tag, and nothing may publish from a queue ref. Only
 # `changes` and `canary` run there, both with read-only tokens. The group is
-# proven when the queued pull request touches no pipeline path, or when
-# nothing pipeline-relevant differs between the head its own Canary proved and
-# the group commit (tools/canary.py merge-group); otherwise it fails closed.
+# proven only when nothing pipeline-relevant differs between the candidate
+# head its own Canary proved and the entire group commit, including changes
+# from other members. Otherwise it fails closed.
 name: Canary
 
 on:

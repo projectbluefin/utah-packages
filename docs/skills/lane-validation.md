@@ -80,13 +80,14 @@ pipeline path: its token has no `packages: write`, so `canary.yml` fails it with
 "a fork pull request cannot publish the canary image". The author cannot fix
 that, and neither can an agent working from a fork; do not ask them to.
 
-`tools/canary.py` treats every `config/` path as a pipeline path. A recipe
-import that registers its source in `config/upstream-sources.json` therefore
-needs this proof even when it changes no workflow or build tool. If
+Changing an existing source-lock entry, including only its primary URL or
+fallback URLs with an unchanged digest, needs this proof even when it changes
+no workflow or build tool. Adding only new non-canary entries does not:
+`pipeline_relevant` applies the inventory exceptions described above. If
 configuration validation passed, the build jobs were skipped, and Canary's
 `Decide` step reports missing maintainer-run proof, classify the failure as a
-review prerequisite, not a failed package build. Keep the source registration
-and the gate intact; removing either does not validate the import.
+review prerequisite, not a failed package build. Keep the intended source
+changes and the gate intact; removing either does not validate the change.
 
 A repair request naming a generic failed check can refer to this prerequisite.
 Read the failed job before changing code. Do not push an empty commit or
@@ -134,14 +135,13 @@ changes the head, so the old proof no longer applies.
 merge queue can replace the ruleset's strict "up to date with `main`" policy
 and recipe imports stop re-running and re-conflicting after every merge. A
 queue run never builds and never publishes: it holds read-only tokens and
-`pass1`/`pass6` refuse the event. `Canary` reads the pull request number from
-the queue ref (`gh-readonly-queue/main/pr-<N>-<sha>`; any other shape fails
-closed) and passes when that pull request touches no pipeline path, by the
-same rule as above, or when nothing pipeline-relevant differs between the head
-its own `Canary` proved and the queue commit (`tools/canary.py merge-group`).
-So an import never waits on the queue, and a pipeline change that a
-pipeline change ahead of it (in `main` or the queue) invalidated is removed
-from the queue with "Update the branch so Canary proves the merged pipeline".
+`pass1`/`pass6` refuse the event. `Canary` uses the PR number in the queue ref
+(`gh-readonly-queue/main/pr-<N>-<sha>`) only as a candidate witness, not as a
+membership list. It always compares that head's pipeline with the entire
+synthetic commit (`tools/canary.py merge-group`), including changes from other
+members. A docs-only member cannot exempt the group from this comparison.
+Pipeline drift from `main` or another member fails closed and requires
+"Update the branch so Canary proves the merged pipeline".
 Do that: update the branch, let `Canary` pass on the new head, queue again. A
 fork's proof carries over the same way, since its own `Canary` passed on proof
 before the queue accepted it.

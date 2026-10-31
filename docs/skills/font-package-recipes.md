@@ -21,7 +21,7 @@ dependencies and importing font recipes into `utah-packages`.
 rejects bulk font parity with Bluefin classic. A font's presence in the
 original audit is not approval to import it: record the rejected parity
 request in `[wontfix]` with that decision link, preserving the audit name,
-and regenerate `reports/factory-build-backlog.json`. A deliberate individual
+and verify with `just factory-build-backlog`. A deliberate individual
 font addition needs its own proposal. This does not remove existing recipes
 or claim their binaries are published.
 
@@ -110,6 +110,5 @@ transaction (see `repo-inspection`) and does not prove font rendering.
 ## Refreshing the inventory
 
 After importing a font source, regenerate `.packit.yaml` with
-`python3 tools/render_packit_config.py --write` and architecture counts with
-`python3 tools/render_architecture_counts.py --write`. Inventory tests now
-read the recipe set; do not restore old hardcoded package counts.
+`just regenerate-inventory`. Inventory tests read the recipe set; do not add
+hardcoded package counts to tests or documentation.

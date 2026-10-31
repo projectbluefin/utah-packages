@@ -1,0 +1,8 @@
+{
+  "package": "anthy-unicode",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/anthy-unicode.git",
+  "commit": "fd9c868ebd831eaa2f301333f63064c4059b8db8",
+  "tree": "57db19addf20a6fc52fa9eb231e9fd6b5b5a2b9a",
+  "imported_at": "2026-10-28T14:40:29.572001+00:00"
+}

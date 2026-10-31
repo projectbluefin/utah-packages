@@ -5,7 +5,8 @@ The gate exists because one `%global tests_nonfatal 1` would have closed
 issue #132 by shipping a PipeWire with a hanging test in it. These tests fix
 both halves of that: a new definition fails, and the one inherited exception
 cannot outlive the recipe that earned it -- nor grow past the number of
-definitions that recipe was imported with.
+definitions that recipe was imported with. Direct test-command fallbacks use
+the same ratchet without treating diagnostic commands as test invocations.
 """
 
 from pathlib import Path
@@ -14,7 +15,13 @@ import unittest
 from unittest import mock
 
 from tools import check_suppressed_tests
-from tools.check_suppressed_tests import INHERITED, drifted, main, offenders
+from tools.check_suppressed_tests import (
+    INHERITED,
+    INHERITED_FALLBACKS,
+    drifted,
+    main,
+    offenders,
+)
 
 
 # The shape every Fedora audio %check uses. The guard reads tests_nonfatal;
@@ -71,6 +78,135 @@ class SuppressedTestsTests(unittest.TestCase):
             )
             self.assertEqual([p for p, _, _ in offenders(root)], ["pipewire"])
 
+    def test_direct_test_success_fallbacks_fail(self) -> None:
+        commands = (
+            "%meson_test",
+            "%{meson_test}",
+            "%ctest --output-on-failure",
+            "%pytest -v -k 'not optional'",
+            "make check",
+            "make -j4 test",
+            "%make_build check",
+            "ctest -VV",
+            "pytest tests",
+            "test/TestBench",
+            "./test/TestBench",
+            "LD_LIBRARY_PATH=%{buildroot}%{_libdir} tests/tests",
+            "%{python3} tests/runner.py -v",
+            "%{__python3} jit-test/jit_test.py basic",
+        )
+        for command in commands:
+            for fallback in ("|| :", "|| true", "||:", "|| true; # advisory"):
+                with self.subTest(command=command, fallback=fallback):
+                    with tempfile.TemporaryDirectory() as directory:
+                        root = Path(directory)
+                        self.recipe(root, "demo", f"%check\n  {command} {fallback}\n")
+                        found = offenders(root)
+                        self.assertEqual(
+                            [(package, number) for package, number, _ in found],
+                            [("demo", 2)],
+                        )
+                        self.assertEqual(main(root), 1)
+
+    def test_backslash_continuation_reports_test_command_start(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.recipe(root, "demo", "%check\n%ctest \\\n  || true\n")
+            self.assertEqual(
+                [(package, number) for package, number, _ in offenders(root)],
+                [("demo", 2)],
+            )
+
+    def test_probes_diagnostics_and_propagated_failures_pass(self) -> None:
+        body = (
+            "%check\n"
+            "test -f optional.log || :\n"
+            "grep -q feature config.h || true\n"
+            "cat tests/debug.log || true\n"
+            "%ctest --version || true\n"
+            "test/TestBench --help || :\n"
+            "# %pytest || true\n"
+            "%pytest # example: || true\n"
+            "%pytest -k 'literal || true'\n"
+            "echo 'test/TestBench || :'\n"
+            "%ctest || exit $?\n"
+            "test/TestBench\n"
+        ) + GUARDED_CHECK
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.recipe(root, "demo", body)
+            self.assertEqual(offenders(root), [])
+            self.assertEqual(main(root), 0)
+
+    def test_fallbacks_outside_check_are_not_test_suppressions(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.recipe(
+                root, "demo",
+                "%build\nmake check || true\n"
+                "%check\n%ctest\n"
+                "%install\nmake check || true\n"
+                "%post\n%pytest || :\n"
+                "%check\n%pytest\n"
+                "%files\n%ctest || true\n",
+            )
+            self.assertEqual(offenders(root), [])
+
+    def test_compound_shell_commands_remain_outside_the_tripwire(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.recipe(
+                root, "demo",
+                "%check\n"
+                "%ctest; cat tests/debug.log || true\n"
+                "%pytest && grep -q feature config.h || :\n",
+            )
+            self.assertEqual(offenders(root), [])
+
+    def test_inherited_fallback_count_is_not_a_package_exemption(self) -> None:
+        for count, status in ((1, 0), (2, 1), (0, 1)):
+            with self.subTest(count=count):
+                with tempfile.TemporaryDirectory() as directory:
+                    root = Path(directory)
+                    self.recipe(root, "appstream", "%check\n" + "%meson_test || :\n" * count)
+                    self.assertEqual(offenders(root), [])
+                    reports = drifted(root)
+                    self.assertEqual(bool(reports), bool(status))
+                    if reports:
+                        self.assertIn("appstream", reports[0])
+                        self.assertIn("masks test failures", reports[0])
+                    self.assertEqual(main(root), status)
+
+    def test_shrinking_multiple_inherited_fallbacks_requires_lower_count(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.recipe(root, "python-pillow", "%check\n%pytest || :\n")
+            (report,) = drifted(root)
+            self.assertIn("allowlist records 2; lower the count", report)
+            self.assertEqual(main(root), 1)
+
+    def test_macro_exception_does_not_exempt_a_new_fallback(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.recipe(
+                root, "pulseaudio",
+                "%global tests_nonfatal 1\n" * 2 + "%check\n%meson_test || true\n",
+            )
+            self.assertEqual(drifted(root), [])
+            self.assertEqual([package for package, _, _ in offenders(root)], ["pulseaudio"])
+            self.assertEqual(main(root), 1)
+
+    def test_fallback_exception_does_not_exempt_a_new_macro(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.recipe(
+                root, "appstream",
+                "%global tests_nonfatal 1\n%check\n%meson_test || :\n",
+            )
+            self.assertEqual(drifted(root), [])
+            self.assertEqual([package for package, _, _ in offenders(root)], ["appstream"])
+            self.assertEqual(main(root), 1)
+
     def test_inherited_package_is_exempt_up_to_its_recorded_count(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -121,7 +257,7 @@ class SuppressedTestsTests(unittest.TestCase):
 
     def test_every_inherited_entry_still_exists(self) -> None:
         root = Path(__file__).resolve().parent.parent
-        for package in INHERITED:
+        for package in INHERITED.keys() | INHERITED_FALLBACKS.keys():
             with self.subTest(package=package):
                 self.assertTrue(
                     sorted((root / "packages" / package).glob("*.spec")),
@@ -133,19 +269,23 @@ class SuppressedTestsTests(unittest.TestCase):
         # names the recipe in the failure, so a bumped import says which
         # allowlist entry to revisit.
         root = Path(__file__).resolve().parent.parent
-        for package, (expected, _reason) in INHERITED.items():
-            with self.subTest(package=package):
-                found = [
-                    number
-                    for spec in sorted((root / "packages" / package).glob("*.spec"))
-                    for number, _line in check_suppressed_tests.definitions(spec)
-                ]
-                self.assertEqual(
-                    len(found),
-                    expected,
-                    f"{package} defines tests_nonfatal at lines {found}; "
-                    f"INHERITED records {expected}",
-                )
+        for entries, scan in (
+            (INHERITED, check_suppressed_tests.definitions),
+            (INHERITED_FALLBACKS, check_suppressed_tests.masked_tests),
+        ):
+            for package, (expected, _reason) in entries.items():
+                with self.subTest(package=package):
+                    found = [
+                        number
+                        for spec in sorted((root / "packages" / package).glob("*.spec"))
+                        for number, _line in scan(spec)
+                    ]
+                    self.assertEqual(
+                        len(found),
+                        expected,
+                        f"{package} has suppression sites at lines {found}; "
+                        f"allowlist records {expected}",
+                    )
 
     def test_main_fails_on_a_new_suppression(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

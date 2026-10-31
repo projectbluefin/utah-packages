@@ -1,15 +1,15 @@
 ---
 name: factory-build-backlog
-description: Track the factory build backlog from projectbluefin/utah-packages#308 — the catalog, the auditor, and the per-area rollup.  Live totals live in the report; do not hard-code them.
+description: Track the factory build backlog from projectbluefin/utah-packages#308 — the catalog, the auditor, and the per-area rollup.  Live totals are computed, never committed; do not hard-code them.
 ---
 
 # Factory build backlog
 
 The Bluefin-vs-Utah bare-metal audit on 2026-09-30 found a set of names
 in neither the pinned factory repo nor the Hummingbird supply (the
-audit's original total — 551 — is the starting point; live totals
-live in `reports/factory-build-backlog.json` and shift every time a
-gap closes or a recipe lands). Each name is a candidate factory build
+audit's original total — 551 — is the starting point; live totals are
+computed by the auditor and shift every time a gap closes or a recipe
+lands). Each name is a candidate factory build
 or an explicit wontfix. The backlog catalog
 (`config/factory-build-backlog.toml`) is the source of truth: every name
 lives in exactly one of the ten issue-aligned areas, and leaving the
@@ -19,26 +19,32 @@ backlog requires a matching `[resolved]` or `[wontfix]` entry.
 
 | Surface | Purpose |
 | --- | --- |
-| `config/factory-build-backlog.toml` | The catalog: names grouped by area (see the report for the live count) |
-| `tools/factory_build_backlog.py` | Auditor: classifies each name against the live repo state |
-| `reports/factory-build-backlog.json` | Committed snapshot; live totals (backlog / pending / already_recipe / manifest_wants / resolved / wontfix) — regenerate with `just regenerate-inventory` |
-| `Justfile` `regenerate-inventory` recipe | Writes Packit configuration, architecture counts, then the backlog snapshot from the combined inventory |
-| `Justfile` `factory-build-backlog` recipe | Runs `--check` against the working tree (wired into read-only `check` so every PR that drifts the report fails before merge) |
+| `config/factory-build-backlog.toml` | The catalog: names grouped by area (the auditor prints the live count) |
+| `tools/factory_build_backlog.py` | Auditor: classifies each name against the live repo state and prints a Markdown summary; `--output <path>` writes the full JSON report |
+| `Justfile` `factory-build-backlog` recipe | Runs `--check` against the working tree (wired into read-only `check`) |
+| `.github/workflows/validate.yml` *Factory build backlog* job | Runs the same `--check`, then publishes the summary to the job summary and the JSON report as the `factory-build-backlog` artifact |
 
-The snapshot is deterministic: the report carries no wall-clock field, so a
-run that changes nothing rewrites the file byte-for-byte and leaves the tree
-clean.
+The report is derived and **not committed**. It used to be
+(`reports/factory-build-backlog.json`, compared byte-for-byte by `--check`),
+and since every recipe import moves its totals, each merge to `main`
+re-conflicted most open import PRs. Do not reintroduce a tracked report,
+rollup, or count: read totals from `just factory-build-backlog` locally or
+from the CI job summary or artifact. The report carries no wall-clock field,
+so two runs over the same tree produce identical JSON.
 
-After combining current `main` and PR source changes, run
-`just regenerate-inventory`. It runs `python3 tools/render_packit_config.py
---write`, `python3 tools/render_architecture_counts.py --write`, and
-`python3 tools/factory_build_backlog.py`, in that order. The individual
-commands and `just factory-build-backlog` remain available; `just check`
-does not regenerate files. Never resolve generated conflicts by selecting a
-stale branch's counts or report: both branches' source changes must be
-represented before regeneration, even when generated files auto-merge.
+`--check` exits 1 when:
 
-`--check` also runs as a gate in `.github/workflows/validate.yml`.
+- a name repeats inside an area, appears in two areas, or sits in two of
+  area / `[resolved]` / `[wontfix]`;
+- `[meta].audit_names_sha256` is missing, or the sorted names across areas,
+  `[resolved]` and `[wontfix]` do not hash to it (every audited name is
+  accounted for exactly once);
+- a backlog name has its own recipe directory but no source lock
+  (`inconsistent_recipe_state`: a half-imported name).
+
+Closing a gap is therefore a catalog edit only; there is nothing to
+regenerate for the backlog. `just regenerate-inventory` refreshes the
+generated Packit configuration after combining `main` and PR source changes.
 
 Not wired yet — follow-up work, do not go looking for it:
 `.github/workflows/recalculate-factory-build-backlog.yml` (periodic recalc).
@@ -91,7 +97,7 @@ Two edits — never one, never none:
     invalidate it. The `pr` field links the entry to its closing PR for
     cross-referencing.
     Once the import PR has a number, populate `pr` before requesting review;
-    `--check` validates names and report drift, not this provenance field.
+    `--check` validates names and inventory consistency, not this provenance field.
     For a recipe-only record, use `{ name = "<n>", pr = <n> }` and omit
     `commit` until a stable commit is known; do not retain an empty `commit`
     or `pr = 0` placeholder after opening the PR.
@@ -138,8 +144,7 @@ does not auto-close the batch while other outputs remain open.
 
 If the base branch imports the same recipe while a PR is open, reconcile the
 merge instead of appending another record: keep one source-lock entry and one
-catalog entry, retain the base's source fallback and publication metadata, and
-regenerate the report from the merged catalog.
+catalog entry, and retain the base's source fallback and publication metadata.
 
 For font and language batches, follow
 [Reconcile consumer decisions before importing](font-package-recipes.md#reconcile-consumer-decisions-before-importing).
@@ -163,6 +168,14 @@ from the hosted build run, binary NEVRA, factory image digest, and runtime
 exercise. Missing build or runtime evidence must remain explicit rather than
 being inferred from a green inventory check.
 
+For the partial Tesseract source family in PR #836, use `Refs #507` and
+preserve both `tesseract` and `tesseract-tessdata` source locks, recipe
+provenance and patches when integrating inventory changes. Recipe-import
+accounting does not close #507: hosted OCR builds and publication, dependency
+resolution, and a runtime OCR exercise using the English tessdata remain
+explicit acceptance gaps until evidence is recorded. Regenerating inventory
+does not establish any of that build or tessdata runtime evidence.
+
 Use the consumer issue named by the batch assignment when the area's
 `consumer_issue` is stale. Check the consumer's triage for each binary:
 `planned` records intent, while `untriaged` is not a waiver. For existing
@@ -170,14 +183,13 @@ outputs, inspect current published repodata by binary name and its source
 RPM before importing a second recipe.
 
 The `Import Rawhide package` workflow does **not** make this move: its pull
-request carries the recipe, lock, `.packit.yaml` and counts, but leaves the
-name in its area. Before merging one, add the `[resolved]` entry (with that
-PR's number) and run `just regenerate-inventory`, or `--check` reports
-`entries drift` on `main`. Two such PRs open at once also conflict on the
-lock's last entry and the `docs/architecture.md` counts: rebase the existing
-PR branch onto current `main`, keep both lock entries, and run
+request carries the recipe, lock and `.packit.yaml`, but leaves the name in
+its area. Before merging one, add the `[resolved]` entry (with that PR's
+number); `just factory-build-backlog` lists a name left behind as
+`already_recipe`. When two such PRs conflict, rebase the existing PR branch
+onto current `main`, keep both sides' lock and catalog entries, and run
 `just regenerate-inventory` from the combined inventory. Resolve generated
-conflicts by regeneration, not by selecting either branch's stale totals.
+conflicts by regeneration, not by selecting either branch's copy.
 Use `git rebase --signoff` to preserve DCO coverage, then push to the same PR
 branch with `--force-with-lease` after validation. Inspect auto-merged catalog
 records as well as conflicted files: fill in the existing PR number for new
@@ -188,8 +200,8 @@ pins the count and sorted-name SHA-256 against the original audit. The auditor
 checks that same digest across area, resolved and wontfix entries. A one-for-one
 substitution fails even when all counts remain unchanged; moving an existing
 name to a closing record preserves the digest. The baseline was verified
-against the pinned gist's `nowhere-551.txt`; changing it requires a new audit. The auditor
-itself fails when the catalog totals do not reconcile with the report.
+against the pinned gist's `nowhere-551.txt`; changing it requires a new audit.
+`--check` also fails when the catalog drops the `audit_names_sha256` pin.
 
 ### Smart-card Python bindings
 
@@ -228,7 +240,13 @@ only validates configuration, and the post-merge rebuild orders packages by
 BuildRequires, so the dependent recipe can be reviewed in parallel. Name the
 providing PR in the PR body and the `[resolved]` comment, and merge it first:
 merged alone, the dependent recipe fails its first hosted build on a missing
-BuildRequires. `m17n-lib` likewise waits on its providers in #788.
+BuildRequires. PR #788 imports the `libotf`, `libXaw`, `gd`, and
+`anthy-unicode` prerequisites, not `m17n-lib` itself. Preserve all four source
+locks and the anthy checksum when integrating it with current main; union
+independent catalog records and regenerate inventory instead of restoring
+stale workflow or Packit pins. Build and publish the providers first, then
+import and build `m17n-lib`; configuration checks establish neither hosted
+build success nor input-method runtime acceptance.
 
 ### Reconcile sibling library outputs
 
@@ -290,6 +308,24 @@ long-tail names; each needs its own disposition. Keep the batch issue open
 when other outputs or their build/runtime evidence remain outstanding.
 
 ### Virtual machine guest integration
+
+`spice-webdavd` is a binary subpackage of **phodav**, alongside
+`libphodav`, `libphodav-devel`, and `chezdav`; there is no separate
+`spice-webdavd` dist-git recipe. Import `phodav` once and lock its GNOME
+release archive. Keep its Meson virtual-directory tests enabled in `%check`
+and let configuration failures stop the build. Its explicit runtime
+requirement is `avahi`; inspect the built RPM's generated library requirements
+before claiming dependency closure. A runtime test needs a SPICE guest with
+the WebDAV virtio channel and a host-shared directory: verify a file transfer
+through that channel, not just service startup or the standalone `chezdav`
+server. Recipe accounting does not establish guest file sharing.
+
+Confirm `avahi-gobject-devel`, `gtk-doc`, and `xmlto` against the repositories
+enabled by `tools/mock_config.py` before asserting build dependency availability.
+Other recipes declaring the same BuildRequires are not availability evidence.
+Record the repository snapshot or release and the published package versions in
+the PR; a metadata match still needs a successful Mock dependency lock and build
+in the pinned environment before claiming solver success.
 
 `spice-vdagent` BuildRequires `spice-protocol` headers. Import the protocol
 source alongside the agent when neither build root nor factory supplies it;
@@ -443,6 +479,36 @@ Reconcile both catalog names against that explicit decision, not an assumed
 waiver for every kernel-related package. Consumer triage belongs in the Utah
 repository; a factory catalog change does not update that separate ledger or
 prove runtime acceptance of the other outputs in the batch.
+
+The remaining kernel outputs of that batch (`kernel-devel-matched`,
+`kernel-tools`, `kernel-tools-libs`) are binaries of Fedora's `kernel` source
+package; Hummingbird ships only `kernel-headers` and the RPM macros. Importing
+the full kernel recipe, or splitting the tools out of it, is a kernel-policy
+decision that the usbip decision does not cover: keep them pending until a
+maintainer records one, even though Utah triages `kernel-tools` as `planned`.
+
+### SSSD client libraries, terminal graphics and LSB query
+
+The `libsss_*` outputs (`libsss_autofs`, `libsss_certmap`, `libsss_idmap`,
+`libsss_nss_idmap`, `libsss_sudo`) are unconditional `%package -n`
+subpackages of `sssd.spec`; import the `sssd` source once. Its Rawhide recipe
+verifies `Source2` (the release `.asc`) against the committed `pubkey.asc`,
+which the root `.gitignore` already tracks through `!packages/*/*key*.asc`.
+`libcaca` disables Ruby bindings on Fedora 40 and later, so `ruby` is not a
+build dependency; its library links factory `libglvnd`, `freeglut`, `mesa-libGLU` and
+`slang`. The `caca-utils` subpackage additionally requires `libImlib2.so.1` and
+`toilet`, which neither Hummingbird nor the factory carries: the audited
+`libcaca` output does not depend on it, but do not claim `caca-utils` is
+installable. `lsb_release` (from `thkukuk/lsb-release_os-release`) needs only
+`getopt`, `sed` and `tr` at runtime, all in Hummingbird.
+
+This is partial recipe coverage for `Refs #487`, not completion of the
+system-core batch: the kernel outputs above still require their own policy
+decision, and hosted builds, publication and runtime proof remain outstanding.
+The same SSSD source also makes `sssd-client`, `sssd-common`, `sssd-kcm`,
+`sssd-krb5-common` and `sssd-nfs-idmap` visible as `already_recipe` for #490;
+keep those sibling observations distinct from a resolved catalog record or
+evidence that the security-auth batch is complete.
 
 ### Optional changelog viewer
 
@@ -627,22 +693,57 @@ source lock and validate model loading as well as the Python binding import.
 recognizer or generated model. Do not add a runtime recipe just because a
 BuildRequires is absent from Hummingbird (the build root also uses Fedora).
 
+Qt 6 submodule specs (`qt6-qtdeclarative`, `qt6-qttranslations`,
+`qt6-qtwayland`) define `%global majmin %(echo %{version} | cut -d. -f1-2)` and
+expand `%{majmin}` inside `Source0`,
+which `bootstrap_upstream_sources.py` reports as `needs explicit mapping`
+without `rpmspec`; write the resolved `https://download.qt.io/official_releases/qt/...`
+entry and Fedora lookaside `fallback_urls` directly in
+`config/upstream-sources.json`. Pass `--ref <commit>` to
+`tools/import_rawhide.py` for the `rawhide` ancestor matching the intended
+Qt family. The imported recipes use 6.11.2; do not infer the buildroot's
+selected version from that source pin or an old Hummingbird snapshot.
+
+Qt private libraries use `Qt_6.<minor>_PRIVATE_API` symbol versions. Hummingbird
+can retain several QtBase versions with incompatible private symbols. The
+factory's downstream specs therefore require `qt6-qtbase-devel`, its private
+and static companions where used, the Qt RPM macros, and the other Qt build
+tools/modules at `= %{version}`. Keep those constraints together when updating
+the family. The generated buildroot in `tools/mock_config.py` excludes Fedora's
+`qt6-qtbase` and prefers Hummingbird; a digest-pinned bootstrap image does not
+freeze the remote RPM repositories used to solve BuildRequires. An unavailable
+matching dependency must fail resolution rather than silently select a newer
+Qt minor. The declarative and Wayland runtime requirements derived from
+`%{_qt6_version}` must correspond to that selected QtBase.
+
+Before claiming compatibility, inspect each package's hermetic
+`buildroot_lock.json` for the resolved Qt NEVRAs, then verify the emitted RPMs
+in a Hummingbird-plus-factory install transaction, including
+`qt6-qtwayland-adwaita-decoration`. Record the factory digest and current
+Hummingbird metadata checksums per [repo inspection](repo-inspection.md).
+A green inventory check or Canary with skipped builds supplies neither proof;
+keep all four `[areas.unblockers]` names and its assigned `consumer_issue`
+until the review's build and runtime acceptance requirements are met.
+`qt6-qtwayland.spec` ships the decoration via `%package adwaita-decoration`
+(not the standalone `qadwaitadecorations` package).
+
 ## Diagnosing drift
 
-- `--check` compares the whole live report with the committed snapshot —
-  totals, states, the per-area rollup and every entry — so a name moving
-  between areas fails the gate even though the counts are unchanged.
-- When a rebase conflicts in `reports/factory-build-backlog.json`, resolve the
-  catalog and recipe changes against current `main` first, then run
-  `just regenerate-inventory` from the combined inventory. Do not choose one
-  side's generated totals: that can discard resolutions or recipe imports
-  from the other branch. Stage the regenerated files before continuing the rebase.
+- There is no committed snapshot to drift from. `--check` fails only on a
+  broken catalog contract (a repeat, an overlap, names that do not hash to
+  the audit digest) or a backlog recipe without a source lock; totals moving
+  with an import is expected and never a failure.
+- When a rebase conflicts in `config/factory-build-backlog.toml`, resolve the
+  catalog and recipe changes against current `main`, then verify with
+  `just factory-build-backlog`. Do not choose one side's catalog wholesale:
+  that can discard resolutions or recipe imports from the other branch.
   If the catalog conflict is two independent additions to `[resolved]`, keep
   both sets of records; neither supersedes the other. Preserve unrelated skill
   sections added on `main` when the reconciliation guidance conflicts too.
 - A `pending` count that grows means a name was added to the catalog
-  without a recipe; run `just regenerate-inventory` and inspect
-  `reports/factory-build-backlog.json`.
+  without a recipe; run `just factory-build-backlog` for the per-area
+  summary, or add `--output <path>` to `python3 tools/factory_build_backlog.py`
+  for every entry.
 - A `pending` count that shrinks without a commit means someone dropped a
   name from the catalog without recording the decision; `git log -p
   config/factory-build-backlog.toml` is the fastest trace.
@@ -672,13 +773,11 @@ BuildRequires is absent from Hummingbird (the build root also uses Fedora).
   undecidable too and its subpackage must be closed explicitly in `[resolved]`
   by the batch that owns it.
 
-After a recipe PR lands, run `just regenerate-inventory`; the inventory-driven
-gate deliberately rejects a snapshot made before that import. When preparing
-concurrent PRs, combine current `main` and PR catalog, recipe, and source-lock
-changes first, then regenerate all derived files before `just check`. A
-conflict resolution can leave valid package entries but stale architecture
-counts; regenerate even if the document itself had no conflict. Choosing
-either branch's generated report wholesale can discard the other's updates.
+After a recipe PR lands, nothing backlog-related needs regenerating: the
+auditor recomputes every state from the tree. When preparing concurrent PRs,
+combine current `main` and PR catalog, recipe, and source-lock changes first,
+then run `just regenerate-inventory` before `just check`, even if
+`.packit.yaml` itself had no conflict.
 
 For Python recipes, check both the upstream project metadata and explicit RPM
 requirements when assessing runtime closure. For example, Click's upstream
@@ -693,9 +792,7 @@ Import the leaves first (`python-jmespath`, then `python-botocore`) so each
 recipe's runtime requirements already have a factory recipe when it lands.
 
 When concurrent disposition PRs conflict during rebase, retain each distinct
-`[resolved]` and `[wontfix]` record in the catalog, then run
-`just regenerate-inventory`. Do not choose one side of the generated JSON:
-it must reflect both sets of catalog changes. Verify the result with
+`[resolved]` and `[wontfix]` record in the catalog, then verify with
 `just factory-build-backlog` before continuing the rebase.
 
 ### Reconciling published batches
@@ -716,8 +813,8 @@ already be readable while that run is still in progress; report the observed
 publication without calling the workflow successful. For example, the #486
 reconciliation observes eight binaries in one image, but that does not prove
 eight fresh builds or successful device/service tests. Preserve the original
-recipe-import `pr` fields when adding this evidence, and leave the auditor
-snapshot unchanged when regeneration produces no diff. Record any known newer
+recipe-import `pr` fields when adding this evidence; publication fields do
+not change any auditor state. Record any known newer
 failed rebuilds by package name and run in the catalog comments so publication
 evidence does not hide current build health.
 
@@ -749,8 +846,7 @@ records the recipe import only; it does not claim the batch issue's build and
 runtime acceptance, which stays tracked on the issue.
 When rebasing a recipe PR, resolve catalog and recipe inputs against current
 `main`, run `just regenerate-inventory`, then verify with
-`just factory-build-backlog`; choosing either generated report can discard
-another import's state.
+`just factory-build-backlog`.
 
 ### Langtable source archives and schema checks
 
@@ -830,8 +926,8 @@ link the tracking issue with `Refs #<issue>`, not a closing keyword.
 When rebasing an import over other backlog changes, retain the base branch's
 publication evidence and add only the new recipe's closing record. Run
 `just regenerate-inventory` after combining the catalog and recipe inputs
-with current `main`; neither side's old report or architecture counts describe
-the combined inventory.
+with current `main`; neither side's old `.packit.yaml` describes the combined
+inventory.
 
 Use `parse_primary(primary_from_layer(blob))` from `tools/package_index.py`
 when recording each binary's NEVRA. The rendered site's `packages` entries
@@ -862,8 +958,8 @@ through #676 (adopting #644), and `portaudio` through #752 (adopting #748).
 The `passwdqc` source emits `pam_passwdqc`, `passwdqc`, and `passwdqc-utils`;
 check all three binary versions in primary metadata before filling publication
 fields. Updating optional publication fields does not change the auditor's
-name-only snapshot; rerun it anyway and expect no report diff when no names
-or recipe classifications changed. Publication still does not prove password
+name-only classification; rerun `just factory-build-backlog` anyway and expect
+unchanged totals when no names or recipe classifications changed. Publication still does not prove password
 policy integration, audio-device operation, or a permitted-repository install.
 
 ### Microsoft CAB library imports

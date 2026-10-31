@@ -78,7 +78,7 @@ a PR or merge check and its output is not published. Its `discover` job emits th
 matrix at 256 jobs and expands a larger one to nothing rather than rejecting
 it, so once the monorepo passed 256 packages the pilot failed on every run with
 a green `discover` above an `srpm` job that never existed. The `discover` guard
-asserts the package list is non-empty, which a list of 683 satisfies while
+asserts the package list is non-empty, which a list of several hundred satisfies while
 still producing no jobs. Each matrix job uses `tools/source_pipeline.py` to fetch
 and verify the configured sources and stage them beside the spec, then runs
 `packit srpm --preserve-spec`. It uploads one SRPM artifact and stops there:
@@ -130,19 +130,19 @@ Two consequences worth stating plainly:
   precondition for Copr builds, not evidence of them. The only thing exercising
   Packit is the pilot workflow.
 
-The root Packit configuration and the source lock both cover all 683 recipes:
-
-| check | result |
-| --- | ---: |
-| `ls -d packages/*/ \| wc -l` | `683` |
-| entries under `.packit.yaml:packages` | `683` |
-| entries under `config/upstream-sources.json:packages` | `683` |
-
-`python3 tools/validate.py` reports:
+The root Packit configuration and the source lock both cover every recipe:
+`tools/validate.py` fails when a recipe under `packages/` has no
+`.packit.yaml:packages` entry or no `config/upstream-sources.json` lock, and
+`tests/test_recipe_set_agreement.py` holds the three name sets equal. For the
+live size and provenance split, run `python3 tools/validate.py`; it ends with
+a line of the form:
 
 ```text
-validated 683 source RPMs (1 master, 677 rawhide, 5 upstream)
+validated N source RPMs (A master, B rawhide, C upstream)
 ```
+
+This document quotes no inventory counts: every recipe import would have to
+edit them, and concurrent imports would conflict on them.
 
 ## Current binary pipeline
 
@@ -160,7 +160,7 @@ validated 683 source RPMs (1 master, 677 rawhide, 5 upstream)
 | `publish` | Seeds from the verified previous image, replaces the RPMs of each source package this run built (and did not lose precedence) by source name, removes the bootstrap RPM, creates and signs repository metadata, validates the Hummingbird-only transaction over the whole candidate, and publishes a GHCR OCI image that is both cosign-signed and provenance-attested. A failed package keeps its previous build. |
 | `report` | Runs whether or not publish did. Names every selected package that did not publish -- from the run's own artifact list -- in the job summary, and on `main` opens, updates or closes the tracking issue *Factory: packages failing on main*. |
 
-95 of 683 packages carry a hand-assigned `stage` in
+A minority of packages carry a hand-assigned `stage` in
 `config/upstream-sources.json`. Since waves are solved from BuildRequires it is
 consulted only between members of one BuildRequires cycle, to decide which
 builds first -- `malcontent-bootstrap` before `flatpak` before `malcontent`.
@@ -308,13 +308,12 @@ A merge queue group (`merge_group`) never builds: every build pushes a
 package-cache image and `pass1` publishes and signs a canary tag, and nothing
 may publish from a queue ref. Only `changes` and the `Canary` gate run there,
 both with read-only tokens, and `pass1`/`pass6` refuse the event outright.
-`tools/canary.py merge-group` names the queued pull request from the queue
-ref (`gh-readonly-queue/main/pr-<N>-<sha>`) and proves the group when that
-pull request touches no pipeline path, or when nothing pipeline-relevant
-differs between the head its own Canary proved and the group commit. An
-unreadable ref, a moved head, or pipeline drift from `main` or from a pull
-request ahead in the queue fails the group; the author updates the branch so
-Canary proves the merged pipeline, then queues it again.
+`tools/canary.py merge-group` uses the queue-ref PR number as a candidate
+witness, not a list of members. It always compares that head's pipeline
+against the entire synthetic commit, even when the candidate changed only
+documentation. An unreadable ref, a moved head, or pipeline drift from `main`
+or another member fails the group; the author updates the branch so Canary
+proves the merged pipeline, then queues it again.
 
 It is not a mock build, and this is the most misleading thing about the file:
 `build-stage.yml` installs `mock` and never invokes it, then hand-simulates
@@ -363,17 +362,24 @@ replace the strict "branch must be up to date" policy: instead of every open
 pull request rebasing and re-running after each merge, the queue tests each
 entry on top of `main` and the entries ahead of it. `validate.yml` runs the
 same read-only jobs on the queue commit; `Canary` decides without building, as
-described under the pipeline canary. `tests/test_merge_queue.py` holds both
-properties: every required check reports on `merge_group`, and nothing a
-`merge_group` run can reach holds a write token or calls the rebuild workflow.
+described under the pipeline canary. `tests/test_merge_queue.py` executes the
+queue decision scripts, while `tests/test_canary_relevance.py` exercises
+cross-member pipeline drift against real Git histories.
 
 A required queue changes how merges happen, and these automations merge:
 
 | Automation | How it merges | Under a required merge queue |
 | --- | --- | --- |
-| `bump-upstream-gate.yml` (daily `bump/upstream-sources` and `bump/rawhide-imports`) | `gh pr merge --squash --match-head-commit` on `GITHUB_TOKEN`, then dispatches `rebuild-rpms.yml` on `main` | Breaks. The direct merge is refused, and a `GITHUB_TOKEN` enqueue starts no `merge_group` workflows, so the entry times out; the follow-up rebuild would run before anything merged. Needs an App-token enqueue plus a post-merge trigger, or a maintainer who enqueues the bump |
+| `bump-upstream-gate.yml` and trusted `bump-upstream-enqueue.yml` receiver | Scoped App token, one-shot SHA-pinned merge without a queue, or `enqueuePullRequest(expectedHeadOid)` with a queue | Queue admission never dispatches publication; only the eventual App/queue push to `main` publishes RPMs |
 | Renovate (`renovate.json`: `upstream-source` and `build-root-image` digests) | `platformAutomerge`: GitHub auto-merge, as `renovate[bot]` (a GitHub App) | Works: auto-merge enqueues, and App events start `merge_group` runs. Needs "Allow auto-merge" on |
 | Pull requests opened by `import-rawhide-package.yml`, `import-bluefin-rawhide.yml`, `refresh-buildroot.yml` | Not merged by automation | A maintainer enqueues them like any other pull request |
+| Hive (`hivecommons-hive` App) | Deployed Hive policy, outside this repository | Its native-queue handoff must be deployed and explicitly enabled for this repository and `main`; installed App access alone does not enable it |
+
+Keep strict freshness until the selected admission path is configured and an
+App-enqueued synthetic-group run has been observed with every required check.
+For Hive, configure `auto_merge.native_merge_queue` in its deployed settings;
+do not infer enablement from source support. If Prow remains a competing
+`GITHUB_TOKEN` enqueuer, resolve that ownership before requiring the queue.
 
 For a bot PR, inspect validation on its current head before merging, in
 addition to the required checks. To make bot-only validation merge-blocking,

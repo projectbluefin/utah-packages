@@ -31,8 +31,12 @@ from unittest import mock
 from tools import factory_build_backlog as backlog
 
 
-def _toml(catalog_root: Path, areas: dict[str, list[str]], resolved: list[str] | None = None, wontfix: list[str] | None = None) -> Path:
-    """Write a minimal ``config/factory-build-backlog.toml`` and return its path."""
+def _toml(catalog_root: Path, areas: dict[str, list[str]], resolved: list[str] | None = None, wontfix: list[str] | None = None, *, pin: bool = False) -> Path:
+    """Write a minimal ``config/factory-build-backlog.toml`` and return its path.
+
+    ``pin`` records ``audit_names_sha256`` for the names written, as the real
+    catalog does; ``--check`` requires it.
+    """
     resolved = resolved or []
     wontfix = wontfix or []
     config_dir = catalog_root / "config"
@@ -46,8 +50,13 @@ def _toml(catalog_root: Path, areas: dict[str, list[str]], resolved: list[str] |
         'audit_digest_utah = "sha256:00"',
         'audit_digest_factory = "sha256:00"',
         'audit_measured_at = "2026-09-30T22:08:14Z"',
-        "",
     ]
+    if pin:
+        names = {name for listed in areas.values() for name in listed}
+        names |= {entry["name"] if isinstance(entry, dict) else entry for entry in resolved + wontfix}
+        digest = hashlib.sha256(("\n".join(sorted(names)) + "\n").encode()).hexdigest()
+        lines.append(f'audit_names_sha256 = "{digest}"')
+    lines.append("")
     for area, names in areas.items():
         lines.append(f"[areas.{area}]")
         lines.append('consumer_issue = "projectbluefin/utah#1"')
@@ -646,69 +655,59 @@ class CatalogOverlapTests(unittest.TestCase):
 
 
 class CheckGateTests(unittest.TestCase):
-    def test_check_passes_on_a_fresh_snapshot(self) -> None:
+    def test_check_passes_on_a_consistent_catalog(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             catalog_path = _toml(
                 root,
                 areas={"power": ["tuned"], "codecs-media": ["ffmpeg"]},
+                pin=True,
             )
+            _populate(root, recipes=["ffmpeg"], locked=["ffmpeg"], packit=[], manifest=[])
+            self.assertEqual(backlog._check(backlog._report(root, catalog_path)), 0)
+
+    def test_check_fails_without_the_audit_pin(self) -> None:
+        """Dropping the pin must not silently disable the identity check."""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            catalog_path = _toml(root, areas={"power": ["tuned"]})
+            _populate(root, recipes=[], locked=[], packit=[], manifest=[])
+            self.assertEqual(backlog._check(backlog._report(root, catalog_path)), 1)
+
+    def test_check_fails_on_a_backlog_recipe_without_a_source_lock(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            catalog_path = _toml(root, areas={"codecs-media": ["ffmpeg"]}, pin=True)
             _populate(root, recipes=["ffmpeg"], locked=[], packit=[], manifest=[])
             report = backlog._report(root, catalog_path)
-            # Write the snapshot first so --check has a target.
-            snapshot = root / "reports" / "factory-build-backlog.json"
-            snapshot.parent.mkdir(parents=True, exist_ok=True)
-            # Re-run the report generation and persist a comparable snapshot.
-            snapshot.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n")
-            self.assertEqual(backlog._check(report, snapshot), 0)
+            self.assertEqual(report["inconsistent_recipe_state"], ["ffmpeg"])
+            self.assertEqual(backlog._check(report), 1)
 
-    def test_check_fails_on_stale_totals(self) -> None:
+    def test_check_ignores_aggregate_totals(self) -> None:
+        """Importing a backlog name changes totals, not the verdict.
+
+        Nothing tracked carries the totals any more, so a recipe import that
+        closes a gap edits only its own catalog lines.
+        """
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            catalog_path = _toml(root, areas={"power": ["tuned"]})
             _populate(root, recipes=[], locked=[], packit=[], manifest=[])
-            report = backlog._report(root, catalog_path)
-            snapshot = root / "reports" / "factory-build-backlog.json"
-            snapshot.parent.mkdir(parents=True, exist_ok=True)
-            # Write a snapshot whose ``totals`` differ from ``report`` so the
-            # check must surface the drift.
-            stale = json.loads(json.dumps(report))
-            stale["totals"]["backlog"] = 999
-            snapshot.write_text(json.dumps(stale, indent=2, sort_keys=True) + "\n")
-            self.assertEqual(backlog._check(report, snapshot), 1)
+            _toml(root, areas={"power": ["tuned", "thermald"]}, pin=True)
+            self.assertEqual(backlog.main(["--root", str(root), "--check"]), 0)
+            shutil.rmtree(root / "packages")
+            _populate(root, recipes=["tuned"], locked=["tuned"], packit=["tuned"], manifest=[])
+            _toml(root, areas={"power": ["thermald"]}, resolved=["tuned"], pin=True)
+            self.assertEqual(backlog.main(["--root", str(root), "--check"]), 0)
+            self.assertFalse((root / "reports").exists())
 
-    def test_check_fails_on_missing_snapshot(self) -> None:
+    def test_output_writes_the_full_report(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            catalog_path = _toml(root, areas={"power": ["tuned"]})
+            catalog_path = _toml(root, areas={"power": ["tuned"]}, pin=True)
             _populate(root, recipes=[], locked=[], packit=[], manifest=[])
-            report = backlog._report(root, catalog_path)
-            snapshot = root / "reports" / "factory-build-backlog.json"
-            self.assertEqual(backlog._check(report, snapshot), 1)
-
-    def test_check_fails_when_a_name_moved_between_areas(self) -> None:
-        """Totals and states are blind to a move; areas and entries are not."""
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            catalog_path = _toml(
-                root,
-                areas={"power": ["tuned"], "codecs-media": ["ffmpeg"]},
-            )
-            _populate(root, recipes=[], locked=[], packit=[], manifest=[])
-            report = backlog._report(root, catalog_path)
-            stale = json.loads(json.dumps(report))
-            for entry in stale["entries"]:
-                entry["area"] = "power" if entry["area"] == "codecs-media" else "codecs-media"
-            stale["areas"] = {
-                "power": report["areas"]["codecs-media"],
-                "codecs-media": report["areas"]["power"],
-            }
-            self.assertEqual(stale["totals"], report["totals"])
-            self.assertEqual(stale["states"], report["states"])
-            snapshot = root / "reports" / "factory-build-backlog.json"
-            snapshot.parent.mkdir(parents=True, exist_ok=True)
-            snapshot.write_text(json.dumps(stale, indent=2, sort_keys=True) + "\n")
-            self.assertEqual(backlog._check(report, snapshot), 1)
+            output = root / "out" / "backlog.json"
+            self.assertEqual(backlog.main(["--root", str(root), "--output", str(output)]), 0)
+            self.assertEqual(json.loads(output.read_text()), backlog._report(root, catalog_path))
 
     def test_report_has_no_wall_clock_field(self) -> None:
         """Two runs of the same tree must produce identical bytes."""
@@ -728,7 +727,7 @@ class CheckGateTests(unittest.TestCase):
         """``--root <tree> --check`` must work from any working directory."""
         with tempfile.TemporaryDirectory() as directory, tempfile.TemporaryDirectory() as elsewhere:
             root = Path(directory)
-            _toml(root, areas={"power": ["tuned"]})
+            _toml(root, areas={"power": ["tuned"]}, pin=True)
             _populate(root, recipes=[], locked=[], packit=[], manifest=[])
             self.assertEqual(backlog.main(["--root", str(root)]), 0)
             cwd = os.getcwd()

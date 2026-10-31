@@ -118,6 +118,12 @@ packages:
     downstream_package_name: alsa-utils
     paths:
       - packages/alsa-utils
+  anthy-unicode:
+    specfile_path: anthy-unicode.spec
+    upstream_package_name: anthy-unicode
+    downstream_package_name: anthy-unicode
+    paths:
+      - packages/anthy-unicode
   antiword:
     specfile_path: antiword.spec
     upstream_package_name: antiword
@@ -622,6 +628,12 @@ packages:
     downstream_package_name: gcr3
     paths:
       - packages/gcr3
+  gd:
+    specfile_path: gd.spec
+    upstream_package_name: gd
+    downstream_package_name: gd
+    paths:
+      - packages/gd
   gdk-pixbuf2:
     specfile_path: gdk-pixbuf2.spec
     upstream_package_name: gdk-pixbuf2
@@ -1366,6 +1378,12 @@ packages:
     downstream_package_name: libXScrnSaver
     paths:
       - packages/libXScrnSaver
+  libXaw:
+    specfile_path: libXaw.spec
+    upstream_package_name: libXaw
+    downstream_package_name: libXaw
+    paths:
+      - packages/libXaw
   libXcursor:
     specfile_path: libXcursor.spec
     upstream_package_name: libXcursor
@@ -1540,6 +1558,12 @@ packages:
     downstream_package_name: libbytesize
     paths:
       - packages/libbytesize
+  libcaca:
+    specfile_path: libcaca.spec
+    upstream_package_name: libcaca
+    downstream_package_name: libcaca
+    paths:
+      - packages/libcaca
   libcamera:
     specfile_path: libcamera.spec
     upstream_package_name: libcamera
@@ -2026,6 +2050,12 @@ packages:
     downstream_package_name: libosinfo
     paths:
       - packages/libosinfo
+  libotf:
+    specfile_path: libotf.spec
+    upstream_package_name: libotf
+    downstream_package_name: libotf
+    paths:
+      - packages/libotf
   libpaper:
     specfile_path: libpaper.spec
     upstream_package_name: libpaper
@@ -2440,6 +2470,12 @@ packages:
     downstream_package_name: lrzsz
     paths:
       - packages/lrzsz
+  lsb_release:
+    specfile_path: lsb_release.spec
+    upstream_package_name: lsb_release
+    downstream_package_name: lsb_release
+    paths:
+      - packages/lsb_release
   lshw:
     specfile_path: lshw.spec
     upstream_package_name: lshw
@@ -2860,6 +2896,12 @@ packages:
     downstream_package_name: perl-Unicode-Normalize
     paths:
       - packages/perl-Unicode-Normalize
+  phodav:
+    specfile_path: phodav.spec
+    upstream_package_name: phodav
+    downstream_package_name: phodav
+    paths:
+      - packages/phodav
   pinentry:
     specfile_path: pinentry.spec
     upstream_package_name: pinentry
@@ -3190,6 +3232,24 @@ packages:
     downstream_package_name: qpdf
     paths:
       - packages/qpdf
+  qt6-qtdeclarative:
+    specfile_path: qt6-qtdeclarative.spec
+    upstream_package_name: qt6-qtdeclarative
+    downstream_package_name: qt6-qtdeclarative
+    paths:
+      - packages/qt6-qtdeclarative
+  qt6-qttranslations:
+    specfile_path: qt6-qttranslations.spec
+    upstream_package_name: qt6-qttranslations
+    downstream_package_name: qt6-qttranslations
+    paths:
+      - packages/qt6-qttranslations
+  qt6-qtwayland:
+    specfile_path: qt6-qtwayland.spec
+    upstream_package_name: qt6-qtwayland
+    downstream_package_name: qt6-qtwayland
+    paths:
+      - packages/qt6-qtwayland
   quota:
     specfile_path: quota.spec
     upstream_package_name: quota
@@ -3472,6 +3532,12 @@ packages:
     downstream_package_name: sso-mib
     paths:
       - packages/sso-mib
+  sssd:
+    specfile_path: sssd.spec
+    upstream_package_name: sssd
+    downstream_package_name: sssd
+    paths:
+      - packages/sssd
   startup-notification:
     specfile_path: startup-notification.spec
     upstream_package_name: startup-notification
@@ -3550,6 +3616,18 @@ packages:
     downstream_package_name: tecla
     paths:
       - packages/tecla
+  tesseract:
+    specfile_path: tesseract.spec
+    upstream_package_name: tesseract
+    downstream_package_name: tesseract
+    paths:
+      - packages/tesseract
+  tesseract-tessdata:
+    specfile_path: tesseract-tessdata.spec
+    upstream_package_name: tesseract-tessdata
+    downstream_package_name: tesseract-tessdata
+    paths:
+      - packages/tesseract-tessdata
   thermald:
     specfile_path: thermald.spec
     upstream_package_name: thermald
@@ -3766,6 +3844,18 @@ packages:
     downstream_package_name: vulkan-loader
     paths:
       - packages/vulkan-loader
+  vvdec:
+    specfile_path: vvdec.spec
+    upstream_package_name: vvdec
+    downstream_package_name: vvdec
+    paths:
+      - packages/vvdec
+  vvenc:
+    specfile_path: vvenc.spec
+    upstream_package_name: vvenc
+    downstream_package_name: vvenc
+    paths:
+      - packages/vvenc
   wavpack:
     specfile_path: wavpack.spec
     upstream_package_name: wavpack
@@ -3856,6 +3946,24 @@ packages:
     downstream_package_name: wsdd
     paths:
       - packages/wsdd
+  x264:
+    specfile_path: x264.spec
+    upstream_package_name: x264
+    downstream_package_name: x264
+    paths:
+      - packages/x264
+  x265:
+    specfile_path: x265.spec
+    upstream_package_name: x265
+    downstream_package_name: x265
+    paths:
+      - packages/x265
+  xavs2:
+    specfile_path: xavs2.spec
+    upstream_package_name: xavs2
+    downstream_package_name: xavs2
+    paths:
+      - packages/xavs2
   xcb-util:
     specfile_path: xcb-util.spec
     upstream_package_name: xcb-util
