@@ -32,8 +32,6 @@ mpage
 noopenh264
 protobuf3
 ptouch-driver
-python-argcomplete
-python-dasbus
 python-typing-inspection
 redhat-menus
 samba

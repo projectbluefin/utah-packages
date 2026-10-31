@@ -4866,10 +4866,13 @@
     {
       "name": "python-argcomplete",
       "version": "3.6.3",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/python-argcomplete/argcomplete-3.6.3.tar.gz/sha512/d07756a8439fd8f30ea2823bbbe35b102c6822af907eed5d43649a378a703d8c20394127a842c9d6ce0af50d333518450d15c29fc3471e178c681ad95fa43a0a/argcomplete-3.6.3.tar.gz",
+      "url": "https://files.pythonhosted.org/packages/38/61/0b9ae6399dd4a58d8c1b1dc5a27d6f2808023d0b5dd3104bb99f45a33ff6/argcomplete-3.6.3.tar.gz",
       "filename": "argcomplete-3.6.3.tar.gz",
       "feed": "https://release-monitoring.org/project/3773",
-      "sha512": "d07756a8439fd8f30ea2823bbbe35b102c6822af907eed5d43649a378a703d8c20394127a842c9d6ce0af50d333518450d15c29fc3471e178c681ad95fa43a0a"
+      "sha512": "d07756a8439fd8f30ea2823bbbe35b102c6822af907eed5d43649a378a703d8c20394127a842c9d6ce0af50d333518450d15c29fc3471e178c681ad95fa43a0a",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/python-argcomplete/argcomplete-3.6.3.tar.gz/sha512/d07756a8439fd8f30ea2823bbbe35b102c6822af907eed5d43649a378a703d8c20394127a842c9d6ce0af50d333518450d15c29fc3471e178c681ad95fa43a0a/argcomplete-3.6.3.tar.gz"
+      ]
     },
     {
       "name": "python-click",
@@ -4888,10 +4891,13 @@
     {
       "name": "python-dasbus",
       "version": "1.7",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/python-dasbus/dasbus-1.7.tar.gz/sha512/ccf575d28d91ad96de78b8122eaf247182d22cee701859b1da83b2de2793362f164fe609187e8a9586083c55d985d95b6980b9ec291cb10d41d74dec03d8a873/dasbus-1.7.tar.gz",
+      "url": "https://files.pythonhosted.org/packages/37/79/9c5984d723ffbe2e839ee649690f3e1fa6544ab6a17a5150e5ac14a47072/dasbus-1.7.tar.gz",
       "filename": "dasbus-1.7.tar.gz",
       "feed": "https://release-monitoring.org/project/35433",
-      "sha512": "ccf575d28d91ad96de78b8122eaf247182d22cee701859b1da83b2de2793362f164fe609187e8a9586083c55d985d95b6980b9ec291cb10d41d74dec03d8a873"
+      "sha512": "ccf575d28d91ad96de78b8122eaf247182d22cee701859b1da83b2de2793362f164fe609187e8a9586083c55d985d95b6980b9ec291cb10d41d74dec03d8a873",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/python-dasbus/dasbus-1.7.tar.gz/sha512/ccf575d28d91ad96de78b8122eaf247182d22cee701859b1da83b2de2793362f164fe609187e8a9586083c55d985d95b6980b9ec291cb10d41d74dec03d8a873/dasbus-1.7.tar.gz"
+      ]
     },
     {
       "name": "python-dateutil",
