@@ -90,8 +90,6 @@ packages = [
 consumer_issue = "projectbluefin/utah#391"
 packages = [
     "epiphany-runtime",
-    "imath",
-    "rygel",
 ]
 
 [areas.dev-tools]
@@ -311,6 +309,14 @@ packages = [
     { name = "libwnck3", pr = 786 },
     # Recipe import only; hosted build, publication and runtime proof remain on #484.
     { name = "libmediaart", pr = 816 },
+    # imath is the C++ vector/matrix library OpenEXR builds on; recipe
+    # import only, hosted build, publication and runtime proof remain on #484.
+    { name = "imath", pr = 823 },
+    # rygel is a UPnP/DLNA home media server; recipe import only, hosted build,
+    # publication and runtime proof remain on #484. Build blocker: rygel
+    # BuildRequires pkgconfig(gupnp-av-1.0), but gupnp-av has no factory recipe
+    # yet (pending in [areas.long-tail], projectbluefin/utah#396).
+    { name = "rygel", pr = 823 },
     # NTFS-3G read-only plugin recipe for #488; hosted build, publication and runtime proof remain open.
     { name = "ntfs-3g-system-compression", pr = 771 },
     # Recipe import only; hosted build, publication and device validation remain on #485.

@@ -9,6 +9,13 @@
       "sha512": "4ccbef47255bf3644a50242a79951b1f3720e71a55eb1e07dc6b8486df0245da99a77bba751b50197d489b4c5d738e5284aabc014c2f7f44816ddf6a1bb807ca"
     },
     {
+      "name": "imath",
+      "version": "3.1.12",
+      "url": "https://github.com/AcademySoftwareFoundation/Imath/archive/v3.1.12/Imath-3.1.12.tar.gz",
+      "filename": "Imath-3.1.12.tar.gz",
+      "sha512": "32628dfcacb610310b81ffe017a66215cf5fb84c2e0a6ac8c94a68c048be3d2b97eb57965dd253770184d5824cce1e5440b8eefb2834666b273b3193ff108343"
+    },
+    {
       "name": "jbig2dec",
       "version": "0.20",
       "url": "https://github.com/ArtifexSoftware/jbig2dec/releases/download/0.20/jbig2dec-0.20.tar.gz",
@@ -42,6 +49,13 @@
       "url": "https://github.com/acoustid/chromaprint/releases/download/v1.6.2/chromaprint-1.6.2.tar.gz",
       "filename": "chromaprint-1.6.2.tar.gz",
       "sha512": "73d9612abe689f290b333e89506449bfc3c9b1f2c2c5a9302bef01b87d14ac37f612c9979f07e7c409b3e9fd7a89f384caaf5892c0b27b700fee015de7a704a4"
+    },
+    {
+      "name": "rygel",
+      "version": "46.1",
+      "url": "https://download.gnome.org/sources/rygel/46/rygel-46.1.tar.xz",
+      "filename": "rygel-46.1.tar.xz",
+      "sha512": "186db4a17dfbeb5ba67300265c7d33e9afb9f6d5658969c6fa611da6e23c34fd6a3f0d7600ba468f63649a05ca462883018f43478d181d9008d58821e2e726a7"
     },
     {
       "name": "spice-protocol",
