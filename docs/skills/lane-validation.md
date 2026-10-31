@@ -1,6 +1,6 @@
 ---
 name: lane-validation
-description: Validate wave recipes with dispatched Canary lane runs — lane_packages scoping, per-ref inventory, fork limits, and what a green run actually proves.
+description: Validate wave recipes with dispatched Canary lane runs — lane_packages scoping, per-ref inventory, fork limits, what a green run actually proves, and how Canary decides a merge queue group.
 ---
 
 # Validating recipe waves with lane runs
@@ -112,6 +112,13 @@ The canary run builds the fork's code with `packages: write`, so the review is
 the security boundary, exactly as it was when a maintainer pushed the branch by
 hand.
 
+Fork dispatches may run concurrently for different PRs. Each cleans copies
+of closed PRs, so two dispatches can list the same copy before either deletes
+it. GitHub then returns `404` or `422 Reference does not exist` to the second
+delete; that exact response means cleanup is already complete, not that dispatch
+failed. Other API errors still fail the job. Keeping deletion idempotent
+prevents successful Canaries from losing their automatic `refresh` job.
+
 The pull request does not count the dispatched run's own `Canary` check: it
 lives in the check suite of `canary/pr-<N>`, and the pull request rolls up only
 its own branch's suite (observed on #622: the dispatched run passed on the head
@@ -128,3 +135,20 @@ to start a fresh run on the same commit. A maintainer-run Canary that does not
 pass is reported on the pull request and the check stays red. The press holds a
 runner for as long as that run takes (about half an hour). A push after review
 changes the head, so the old proof no longer applies.
+
+## Canary in the merge queue
+
+`Canary`, `Unit tests` and `Runtime contract` also run on `merge_group`, so a
+merge queue can replace the ruleset's strict "up to date with `main`" policy
+and recipe imports stop re-running and re-conflicting after every merge. A
+queue run never builds and never publishes: it holds read-only tokens and
+`pass1`/`pass6` refuse the event. `Canary` uses the PR number in the queue ref
+(`gh-readonly-queue/main/pr-<N>-<sha>`) only as a candidate witness, not as a
+membership list. It always compares that head's pipeline with the entire
+synthetic commit (`tools/canary.py merge-group`), including changes from other
+members. A docs-only member cannot exempt the group from this comparison.
+Pipeline drift from `main` or another member fails closed and requires
+"Update the branch so Canary proves the merged pipeline".
+Do that: update the branch, let `Canary` pass on the new head, queue again. A
+fork's proof carries over the same way, since its own `Canary` passed on proof
+before the queue accepted it.
