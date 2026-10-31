@@ -1,0 +1,8 @@
+{
+  "package": "x264",
+  "branch": "master",
+  "remote": "https://github.com/rpmfusion/x264.git",
+  "commit": "be812888a0f985cabaacd7d75d0f4fed0db5b58d",
+  "tree": "7a90bf498db1018f15bc1d4bbccb51fc41421eb3",
+  "imported_at": "2026-10-25T19:40:30.883337+00:00"
+}

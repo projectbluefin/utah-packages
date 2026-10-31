@@ -1,0 +1,8 @@
+{
+  "package": "lsb_release",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/lsb_release.git",
+  "commit": "1491f333a96f85df8bb756af5117a2b29c63f095",
+  "tree": "d1b9576e87f35f746bad33654a1821e7c765e459",
+  "imported_at": "2026-10-31T15:07:34.481607+00:00"
+}

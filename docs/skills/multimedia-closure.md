@@ -258,6 +258,30 @@ lookaside template only for auxiliary files; the primary archive still comes
 from upstream, and each auxiliary file must match its SHA-512 `sources` pin.
 The test archive is required by `%check`; do not disable tests to avoid it.
 
+### Test failure propagation is not build evidence
+
+Read imported `%check` bodies before trusting their green builds. Every test
+that runs must propagate failure: an unconditional `|| :` or `|| true` after
+a test runner makes the result advisory, not successful. In x265, run
+`test/TestBench` without a success fallback in every built 8-, 10- and 12-bit
+directory; a failure in an earlier directory must not be hidden by a later
+`popd` or a passing variant. Keep tests for architectures that build only the
+8-bit library rather than requiring absent high-depth directories.
+
+`tools/check_suppressed_tests.py`, called by `tools/validate.py`, ratchets
+known direct test-command success fallbacks as well as `tests_nonfatal`
+definitions. Its exact inherited counts preserve already-carried main
+exceptions, not permission to add more. Probe commands (`test -f`, `grep`),
+failure-log reads and help/version queries are not test execution. The
+tripwire does not interpret arbitrary shell or RPM control flow; review
+wrappers, compound commands and conditional fallbacks separately.
+
+A clean guard or unit-test run proves this failure-propagation boundary, not
+that x265 or any other named codec builds. Require a hosted package build
+against the pinned environment for each named recipe before claiming build
+success, and separate publication, installability and representative codec
+execution evidence from both the guard result and the recipe build.
+
 ## Shader compiler dependency order
 
 The audited `libshaderc` binary comes from the `shaderc` source recipe,
@@ -295,3 +319,13 @@ the BuildRequires graph orders the builds. Its upstream SourceForge archive
 matches the Fedora SHA-512 source manifest. A recipe and source lock do not
 prove that the package builds, publishes, or controls a camera: verify the
 hosted build and exercise a compatible device after installation.
+
+## FireWire streaming library
+
+`libiec61883` BuildRequires `libraw1394-devel`, so the existing
+`libraw1394` recipe must build first. The upstream 1.2.0 gzip archive
+and Fedora lookaside archive have different compressed hashes but unpack
+to identical file trees; lock the upstream bytes and update the source
+manifest to match. Fedora's channel-allocation patch preserves its fallback
+when the IRM cannot be reached, allowing capture to proceed. A recipe does not
+prove streaming or hardware support; verify the behavior with a device.
