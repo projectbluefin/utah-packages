@@ -873,6 +873,24 @@ name-only snapshot; rerun it anyway and expect no report diff when no names
 or recipe classifications changed. Publication still does not prove password
 policy integration, audio-device operation, or a permitted-repository install.
 
+### Microsoft CAB library imports
+
+`libmspack` is both the source recipe and the audited binary; the same
+recipe builds `libmspack-devel`. Fedora's `Source0` still points at
+`http://www.cabextract.org.uk/`; the `https://` URL serves the same
+`<version>alpha` archive bytes as the `sources` SHA-512, so lock that in
+`config/upstream-sources.json` and keep the Fedora lookaside in
+`fallback_urls`. As with `libev`, leave the imported spec's `Source0`
+verbatim: the lock, not the recipe, carries the HTTPS URL, and a later
+re-import then reproduces the recipe unchanged. The recipe applies its CVE backport
+with `%autosetup -S git` because the patch carries binary test fixtures:
+keep `BuildRequires: git` and the upstream `make check`. The library has no
+runtime `Requires` beyond glibc. For runtime acceptance, install from only
+Hummingbird plus the factory and extract a known `.cab` file through a
+libmspack consumer (for example `cabextract`, itself still outside the
+factory) or the bundled examples; loading `libmspack.so.0` alone checks
+linkage, not decompression.
+
 ### Kyoto Cabinet library imports
 
 `kyotocabinet-libs` comes from source recipe `kyotocabinet`, which also
@@ -1005,9 +1023,11 @@ in `ghcr.io/projectbluefin/utah-packages:latest` and move them from
 
 Previously resolved GNOME outputs (`gtkmm4.0`, `pangomm2.48`, `gtksourceview5`,
 `libhandy`, `libspelling`) also populate their observed `published_run` and
-`published_nevra` fields. Remaining outputs without recipes or source locks
-(`imath`, `rygel`) stay pending in `[areas.gnome-apps]`, and
-the batch issue remains open with `Refs #484`.
+`published_nevra` fields. `imath` and `rygel` were imported as source recipes
+with upstream SHA-512 locks (`Imath-3.1.12.tar.gz`, `rygel-46.1.tar.xz`); their
+hosted build, publication and runtime proof remain on #484, recorded in
+`[resolved]` as recipe-import-only. Until a hosted run publishes them, the
+batch issue stays open with `Refs #484`.
 
 
 ### Image-processing library
@@ -1036,6 +1056,31 @@ The existing `glycin` recipe provides the development files and the runtime
 Runtime acceptance must exercise JPEG extraction/cache creation with the
 published Glycin loaders, not just load `libmediaart-2.0.so.0`. A recipe-only
 closing record does not prove sandboxed image decoding or publication.
+
+`imath` is the C++ vector/matrix library OpenEXR builds on; `openexr-libs`
+itself has no factory recipe yet and is still pending in `[areas.long-tail]`.
+The Rawhide recipe ships two patches that disable failing Python bindings tests
+(`imath-disable-python-testPlane.patch`,
+`imath-disable-python-testM44fArray.patch`); keep them unchanged. Its build
+requires `boost-devel` and `python3-devel`, which have no factory recipes and
+come from the Fedora 44 buildroot, and it ships the `imath` and `python3-imath` binaries from one source. A catalog record
+for the recipe does not prove the shared library or the Python module was built
+or importable.
+
+`rygel` is a UPnP/DLNA home media server that pulls the largest dependency set
+in this batch. `gupnp-1.6`, `gupnp-dlna-2.0`, `gst-editing-services-1.0`,
+`gee-0.8`, `libmediaart-2.0`, `libsoup-3.0` and `gtk4` have factory recipes;
+`sqlite3` and `tinysparql-3.0` have none and come from the Hummingbird base. Its
+`pkgconfig(gupnp-av-1.0)` BuildRequires is a concrete blocker: `gupnp-av` has no
+factory recipe and is still pending in `[areas.long-tail]`
+(projectbluefin/utah#396), so rygel cannot build until `gupnp-av` is imported.
+It emits a `rygel-localsearch` subpackage that obsoletes `rygel-tracker`, and
+installs a systemd user service; keep the `localsearch` `%files` section. The
+Rawhide spec places `%systemd_user_post` inside `%install` with no `%post`
+header, so the built package has no `%post` scriptlet and the user unit is not
+preset-enabled on install; it is carried unchanged, so the runtime probe must
+not assume the unit is enabled. A catalog record for the recipe does not prove
+the UPnP MediaServer responds or the user service starts.
 
 ### NTFS system compression plugin
 

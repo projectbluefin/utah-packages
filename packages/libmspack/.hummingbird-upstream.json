@@ -1,0 +1,8 @@
+{
+  "package": "libmspack",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libmspack.git",
+  "commit": "c5b36307c3eeaae0bc8718d5e7f354502a5ab8cb",
+  "tree": "2cd6ac3a5b880d07c1a533949c205949e83b106e",
+  "imported_at": "2026-10-31T12:54:31.576431+00:00"
+}

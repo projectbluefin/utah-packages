@@ -95,8 +95,6 @@ packages = [
 consumer_issue = "projectbluefin/utah#391"
 packages = [
     "epiphany-runtime",
-    "imath",
-    "rygel",
 ]
 
 [areas.dev-tools]
@@ -227,7 +225,6 @@ packages = [
     "kvazaar-libs",
     "libijs",
     "liblqr-1",
-    "libmspack",
     "libnet",
     "libpaper",
     "libpfm",
@@ -311,6 +308,14 @@ packages = [
     { name = "libwnck3", pr = 786 },
     # Recipe import only; hosted build, publication and runtime proof remain on #484.
     { name = "libmediaart", pr = 816 },
+    # imath is the C++ vector/matrix library OpenEXR builds on; recipe
+    # import only, hosted build, publication and runtime proof remain on #484.
+    { name = "imath", pr = 823 },
+    # rygel is a UPnP/DLNA home media server; recipe import only, hosted build,
+    # publication and runtime proof remain on #484. Build blocker: rygel
+    # BuildRequires pkgconfig(gupnp-av-1.0), but gupnp-av has no factory recipe
+    # yet (pending in [areas.long-tail], projectbluefin/utah#396).
+    { name = "rygel", pr = 823 },
     # NTFS-3G read-only plugin recipe for #488; hosted build, publication and runtime proof remain open.
     { name = "ntfs-3g-system-compression", pr = 771 },
     # Recipe import only; hosted build, publication and device validation remain on #485.
@@ -379,7 +384,9 @@ packages = [
     { name = "libpasswdqc", commit = "dfd06b47175b8c94d511c12ac995ecb5e25d7efa", pr = 676, published_run = 40626803772, published_nevra = "libpasswdqc-0:2.0.3-10.hum1.bfin.x86_64" },
     { name = "libdeflate", pr = 695, published_run = 40626803772, published_nevra = "libdeflate-0:1.26-1.hum1.bfin.x86_64" },
     # High-performance event loop library recipe import (#502); publication and runtime proof remain outstanding.
-    { name = "libev" },
+    { name = "libev", pr = 844 },
+    # Microsoft CAB compression library recipe import (#502); hosted build, publication and runtime proof remain outstanding.
+    { name = "libmspack", pr = 846 },
     { name = "gnome-rounded-blur", commit = "f8589ccd95a48a1f26826c8764330c9f7811a09d", pr = 440, published_run = 40151594832, published_nevra = "gnome-rounded-blur-0:1.0.1^20260809gitf3bfcc7-1.hum1.bfin.x86_64" },
     # Disc-reading recipes; publication and runtime proof remain tracked in #475.
     { name = "libudfread", pr = 658 },
