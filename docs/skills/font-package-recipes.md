@@ -33,6 +33,13 @@ variable-font recipe is not proof that an older, differently named binary
 is provided. Check its actual provides and published metadata rather than
 closing a name based on a similar recipe directory.
 
+`m17n-lib` is an input-method library, not a font. Its recipe BuildRequires
+`gd-devel`, `libXaw-devel` and `libotf-devel`; Fedora builds enable Anthy
+unless disabled and also require `anthy-unicode-devel`. Fedora-backed mock can
+satisfy BuildRequires even when runtime libraries are absent from the factory
+and Hummingbird, so keep runtime closure evidence separate from recipe and
+build evidence.
+
 ## Source package names vs. provided binary subpackages
 
 When satisfying a runtime or metapackage font requirement (e.g., from
