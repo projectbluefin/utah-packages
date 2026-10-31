@@ -126,6 +126,11 @@ Do not extend a client-tool waiver to an X11 library such as `xcb-util-cursor`:
 Wayland sessions still run applications through Xwayland. Check each exact
 binary name, not a shared prefix.
 
+A waiver applies only to the exact binary in Utah's triage record; do not
+extend it to sibling outputs from the same source package. For example,
+Utah's `rpm-ostree` waiver does not waive `rpm-ostree-libs`, which stays
+pending without its own decision.
+
 `[resolved]` is the only closing record. A recipe import PR makes this
 two-edit move in the same PR; `already_recipe` is the auditor's observation
 of an area name whose move is still owed (for example a recipe that landed

@@ -129,11 +129,10 @@ packages = [
     "python3-secretstorage",
     "python3-shtab",
     "qemu-guest-agent",
-    "qemu-user-static-aarch64",
     "rclone",
     "realmd",
     "restic",
-    "rpm-ostree",
+    # Utah waives rpm-ostree only; rpm-ostree-libs has no separate waiver.
     "rpm-ostree-libs",
     "sssd-client",
     "sssd-common",
@@ -260,6 +259,12 @@ packages = [
 # Packages that left the backlog because a recipe was imported.
 # Each entry: package name and the commit that closed the gap.
 packages = [
+    # Factory image snapshot 2026-10-31: digest
+    # sha256:d3dadc279e529a0646d3558bfc150066f21f0f5cca3d1a5a733798c60253e984,
+    # source revision c9f1be7f33fa269928cf3056695d51150200e74b (on main),
+    # run 41233305890, repomd SHA-256 5752786befbfbe662b7e387818240872aff632390bd336f7a1ad2a09731a6079,
+    # primary SHA-256 10161bb9fb4942907844f1110c882da1b4bc09e6de15fb35250ff84147fd3cf4.
+    # Published NEVRAs below establish metadata presence, not runtime resolution.
     # Codec recipe imports for #476; publication and runtime proof remain separate.
     { name = "x264-libs", pr = 633 },
     { name = "x265-libs", pr = 633 },
@@ -446,8 +451,8 @@ packages = [
     # Recipe import only; build/publication and Utah consumption remain separate proof.
     { name = "libbsd", pr = 614 },
     { name = "libmd", pr = 614, published_run = 40626803772, published_nevra = "libmd-0:1.3.0-1.hum1.bfin.x86_64" },
-    { name = "spice-vdagent", pr = 679 }, # Recipe import; publication/installability tracked in #490.
-    { name = "sshpass", pr = 611 }, # Recipe import; publication/installability tracked in #490.
+    { name = "spice-vdagent", pr = 679, published_run = 41233305890, published_nevra = "spice-vdagent-0:0.23.0-3.hum1.bfin.x86_64" },
+    { name = "sshpass", pr = 611, published_run = 41233305890, published_nevra = "sshpass-0:1.09-13.hum1.bfin.x86_64" },
     # Password-quality source family: #676 merged the recipes from #644; publication is not runtime acceptance (#505).
     { name = "pam_passwdqc", commit = "dfd06b47175b8c94d511c12ac995ecb5e25d7efa", pr = 676, published_run = 40626803772, published_nevra = "pam_passwdqc-0:2.0.3-10.hum1.bfin.x86_64" },
     { name = "passwdqc", commit = "dfd06b47175b8c94d511c12ac995ecb5e25d7efa", pr = 676, published_run = 40626803772, published_nevra = "passwdqc-0:2.0.3-10.hum1.bfin.x86_64" },
@@ -506,7 +511,7 @@ packages = [
     { name = "htop", pr = 514, published_run = 41111585693, published_nevra = "htop-0:3.5.3-1.hum1.bfin.x86_64" },
     { name = "nano", pr = 514 },
     { name = "nano-default-editor", pr = 514 },
-    { name = "rsync", pr = 514 },
+    { name = "rsync", pr = 514, published_run = 41233305890, published_nevra = "rsync-0:3.5.1-1.hum1.bfin.x86_64" },
     { name = "tmux", pr = 514 },
     { name = "xdg-utils", pr = 514 },
     # Laptop-power and VPN wave (landing PR #522). tuned-ppd and
@@ -669,8 +674,8 @@ packages = [
     { name = "perl-Unicode-Normalize", pr = 783 },
     { name = "python3-llfuse", pr = 587 },
     { name = "python3-msgpack", pr = 587 },
-    { name = "smartmontools", pr = 587 },
-    { name = "smartmontools-selinux", pr = 587 },
+    { name = "smartmontools", pr = 587, published_run = 41233305890, published_nevra = "smartmontools-1:7.5-11.hum1.bfin.x86_64" },
+    { name = "smartmontools-selinux", pr = 587, published_run = 41233305890, published_nevra = "smartmontools-selinux-1:7.5-11.hum1.bfin.noarch" },
     { name = "tcpdump", pr = 587 },
     { name = "traceroute", pr = 587 },
     { name = "tree", pr = 587 },
@@ -860,8 +865,10 @@ packages = [
     { name = "open-sans-fonts", reason = "Bulk desktop font parity rejected by Utah: https://github.com/projectbluefin/utah/issues/393#issuecomment-5920428811; no individual addition accepted." },
     { name = "opendyslexic-fonts", reason = "Bulk desktop font parity rejected by Utah: https://github.com/projectbluefin/utah/issues/393#issuecomment-5920428811; no individual addition accepted." },
     { name = "paktype-naskh-basic-fonts", reason = "Bulk desktop font parity rejected by Utah: https://github.com/projectbluefin/utah/issues/393#issuecomment-5920428811; no individual addition accepted." },
+    { name = "qemu-user-static-aarch64", reason = "Utah's pinned triage waives cross-architecture emulation for container builds, which is not a desktop default (projectbluefin/utah#263; https://github.com/projectbluefin/utah/blob/4eee67d0495406aba69a8e10926a3f30a7cf8437/baselines/triage.toml#L388-L390)." },
     { name = "rit-meera-new-fonts", reason = "Bulk desktop font parity rejected by Utah: https://github.com/projectbluefin/utah/issues/393#issuecomment-5920428811; no individual addition accepted." },
     { name = "rit-rachana-fonts", reason = "Bulk desktop font parity rejected by Utah: https://github.com/projectbluefin/utah/issues/393#issuecomment-5920428811; no individual addition accepted." },
+    { name = "rpm-ostree", reason = "Utah's pinned triage waives rpm-ostree because the image uses bootc for updates (projectbluefin/utah#263; https://github.com/projectbluefin/utah/blob/4eee67d0495406aba69a8e10926a3f30a7cf8437/baselines/triage.toml#L392-L394)." },
     { name = "sil-padauk-fonts", reason = "Bulk desktop font parity rejected by Utah: https://github.com/projectbluefin/utah/issues/393#issuecomment-5920428811; no individual addition accepted." },
     { name = "vazirmatn-vf-fonts", reason = "Bulk desktop font parity rejected by Utah: https://github.com/projectbluefin/utah/issues/393#issuecomment-5920428811; no individual addition accepted." },
 ]
