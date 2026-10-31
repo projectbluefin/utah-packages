@@ -41,9 +41,15 @@ factory-build-backlog:
 # Refresh derived inventory after combining current main and PR source changes.
 # Keep this mutating recovery command separate from the read-only `check`.
 regenerate-inventory:
+    python3 tools/source_lock_order.py
     python3 tools/render_packit_config.py --write
     python3 tools/render_architecture_counts.py --write
     python3 tools/factory_build_backlog.py
 
 test:
     python3 -m pytest tests -q
+
+# Put config/upstream-sources.json entries back in name order, moving whole
+# entries only. Idempotent; `just validate` fails until the lock is sorted.
+sort-source-locks:
+    python3 tools/source_lock_order.py

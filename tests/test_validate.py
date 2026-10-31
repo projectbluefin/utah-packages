@@ -74,6 +74,7 @@ class ValidateScriptTests(unittest.TestCase):
         fedora_baseline=None,
         review_only=None,
         sources_files=None,
+        lock_in_order=True,
     ) -> None:
         """Write a factory tree validate.py accepts unless a case breaks one rule."""
         locked = packages if locked is None else locked
@@ -89,7 +90,7 @@ class ValidateScriptTests(unittest.TestCase):
             if sources_files and name in sources_files:
                 (directory / "sources").write_text(sources_files[name])
         (root / "config").mkdir()
-        locks = [{"name": name} for name in locked]
+        locks = [{"name": name} for name in (sorted(locked) if lock_in_order else locked)]
         for entry in locks:
             if entry["name"] in (source_urls or {}):
                 entry["url"] = source_urls[entry["name"]]
@@ -468,6 +469,14 @@ class ValidateScriptTests(unittest.TestCase):
         assert result.returncode != 0
         assert "bump-review-only.txt names packages the source lock does not carry: gdm-typo" \
             in result.stderr
+
+    def test_rejects_a_source_lock_out_of_name_order(self) -> None:
+        # Tail-appended imports conflicted on every merge; name order keeps
+        # concurrent imports apart, and the failure names its fix.
+        result = self.check(packages=("one", "two", "three"), lock_in_order=False)
+        assert result.returncode != 0
+        assert "'two' is listed before 'three'" in result.stderr
+        assert "just sort-source-locks" in result.stderr
 
     def test_accepts_a_sources_file_pinned_by_sha512(self) -> None:
         # The bundled-pin format every carried recipe must use.
