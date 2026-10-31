@@ -1,0 +1,8 @@
+{
+  "package": "libiec61883",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libiec61883.git",
+  "commit": "dcc50e88fb38e1facb8c78acf3c6eb502e078d2a",
+  "tree": "51fdc8bd739ce99b5ba1b1e3fa9cedb258193b3c",
+  "imported_at": "2026-10-28T20:18:59.887254+00:00"
+}

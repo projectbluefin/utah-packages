@@ -295,3 +295,13 @@ the BuildRequires graph orders the builds. Its upstream SourceForge archive
 matches the Fedora SHA-512 source manifest. A recipe and source lock do not
 prove that the package builds, publishes, or controls a camera: verify the
 hosted build and exercise a compatible device after installation.
+
+## FireWire streaming library
+
+`libiec61883` BuildRequires `libraw1394-devel`, so the existing
+`libraw1394` recipe must build first. The upstream 1.2.0 gzip archive
+and Fedora lookaside archive have different compressed hashes but unpack
+to identical file trees; lock the upstream bytes and update the source
+manifest to match. Fedora's channel-allocation patch preserves its fallback
+when the IRM cannot be reached, allowing capture to proceed. A recipe does not
+prove streaming or hardware support; verify the behavior with a device.

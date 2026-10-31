@@ -1,0 +1,8 @@
+{
+  "package": "sssd",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/sssd.git",
+  "commit": "38c8cffbab14665252670ef5f51e2233cd3e04e0",
+  "tree": "200aa6376f906d10d6f0c0d9982df3ea6c4c8cdc",
+  "imported_at": "2026-10-31T15:08:38.488945+00:00"
+}

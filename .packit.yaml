@@ -1540,6 +1540,12 @@ packages:
     downstream_package_name: libbytesize
     paths:
       - packages/libbytesize
+  libcaca:
+    specfile_path: libcaca.spec
+    upstream_package_name: libcaca
+    downstream_package_name: libcaca
+    paths:
+      - packages/libcaca
   libcamera:
     specfile_path: libcamera.spec
     upstream_package_name: libcamera
@@ -1816,6 +1822,12 @@ packages:
     downstream_package_name: libical
     paths:
       - packages/libical
+  libiec61883:
+    specfile_path: libiec61883.spec
+    upstream_package_name: libiec61883
+    downstream_package_name: libiec61883
+    paths:
+      - packages/libiec61883
   libieee1284:
     specfile_path: libieee1284.spec
     upstream_package_name: libieee1284
@@ -2434,6 +2446,12 @@ packages:
     downstream_package_name: lrzsz
     paths:
       - packages/lrzsz
+  lsb_release:
+    specfile_path: lsb_release.spec
+    upstream_package_name: lsb_release
+    downstream_package_name: lsb_release
+    paths:
+      - packages/lsb_release
   lshw:
     specfile_path: lshw.spec
     upstream_package_name: lshw
@@ -3472,6 +3490,12 @@ packages:
     downstream_package_name: sso-mib
     paths:
       - packages/sso-mib
+  sssd:
+    specfile_path: sssd.spec
+    upstream_package_name: sssd
+    downstream_package_name: sssd
+    paths:
+      - packages/sssd
   startup-notification:
     specfile_path: startup-notification.spec
     upstream_package_name: startup-notification
@@ -3550,6 +3574,18 @@ packages:
     downstream_package_name: tecla
     paths:
       - packages/tecla
+  tesseract:
+    specfile_path: tesseract.spec
+    upstream_package_name: tesseract
+    downstream_package_name: tesseract
+    paths:
+      - packages/tesseract
+  tesseract-tessdata:
+    specfile_path: tesseract-tessdata.spec
+    upstream_package_name: tesseract-tessdata
+    downstream_package_name: tesseract-tessdata
+    paths:
+      - packages/tesseract-tessdata
   thermald:
     specfile_path: thermald.spec
     upstream_package_name: thermald
@@ -4048,6 +4084,12 @@ packages:
     downstream_package_name: ykpers
     paths:
       - packages/ykpers
+  yubikey-manager:
+    specfile_path: yubikey-manager.spec
+    upstream_package_name: yubikey-manager
+    downstream_package_name: yubikey-manager
+    paths:
+      - packages/yubikey-manager
   yyjson:
     specfile_path: yyjson.spec
     upstream_package_name: yyjson
