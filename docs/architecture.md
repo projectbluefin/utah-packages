@@ -78,7 +78,7 @@ a PR or merge check and its output is not published. Its `discover` job emits th
 matrix at 256 jobs and expands a larger one to nothing rather than rejecting
 it, so once the monorepo passed 256 packages the pilot failed on every run with
 a green `discover` above an `srpm` job that never existed. The `discover` guard
-asserts the package list is non-empty, which a list of 676 satisfies while
+asserts the package list is non-empty, which a list of 677 satisfies while
 still producing no jobs. Each matrix job uses `tools/source_pipeline.py` to fetch
 and verify the configured sources and stage them beside the spec, then runs
 `packit srpm --preserve-spec`. It uploads one SRPM artifact and stops there:
@@ -130,18 +130,18 @@ Two consequences worth stating plainly:
   precondition for Copr builds, not evidence of them. The only thing exercising
   Packit is the pilot workflow.
 
-The root Packit configuration and the source lock both cover all 676 recipes:
+The root Packit configuration and the source lock both cover all 677 recipes:
 
 | check | result |
 | --- | ---: |
-| `ls -d packages/*/ \| wc -l` | `676` |
-| entries under `.packit.yaml:packages` | `676` |
-| entries under `config/upstream-sources.json:packages` | `676` |
+| `ls -d packages/*/ \| wc -l` | `677` |
+| entries under `.packit.yaml:packages` | `677` |
+| entries under `config/upstream-sources.json:packages` | `677` |
 
 `python3 tools/validate.py` reports:
 
 ```text
-validated 676 source RPMs (671 rawhide, 5 upstream)
+validated 677 source RPMs (672 rawhide, 5 upstream)
 ```
 
 ## Current binary pipeline
@@ -160,7 +160,7 @@ validated 676 source RPMs (671 rawhide, 5 upstream)
 | `publish` | Seeds from the verified previous image, replaces the RPMs of each source package this run built (and did not lose precedence) by source name, removes the bootstrap RPM, creates and signs repository metadata, validates the Hummingbird-only transaction over the whole candidate, and publishes a GHCR OCI image that is both cosign-signed and provenance-attested. A failed package keeps its previous build. |
 | `report` | Runs whether or not publish did. Names every selected package that did not publish -- from the run's own artifact list -- in the job summary, and on `main` opens, updates or closes the tracking issue *Factory: packages failing on main*. |
 
-95 of 676 packages carry a hand-assigned `stage` in
+95 of 677 packages carry a hand-assigned `stage` in
 `config/upstream-sources.json`. Since waves are solved from BuildRequires it is
 consulted only between members of one BuildRequires cycle, to decide which
 builds first -- `malcontent-bootstrap` before `flatpak` before `malcontent`.
