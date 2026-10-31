@@ -218,7 +218,7 @@ A missing or malformed indexed file must fail the report rather than select
 a stale primary file left in the directory. Use an XML parser so namespace
 formatting and single-quoted attributes do not change which file is read.
 
-When another recipe lands during review, refresh Packit inventory and architecture counts after merging main; keep both the multimedia and backlog gates in the combined Justfile.
+When another recipe lands during review, run `just regenerate-inventory` after merging main to refresh the Packit inventory; keep both the multimedia and backlog gates in the combined Justfile.
 
 `reports/multimedia-closure.json` records locked upstream versions for codec recipes. Any automated workflow that bumps upstream version locks (`.github/workflows/bump-upstream-sources.yml`) must regenerate `reports/multimedia-closure.json` and include it in `add-paths` so validation tests pass and the refreshed report is committed alongside the lock bump.
 

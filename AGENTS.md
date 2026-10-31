@@ -133,7 +133,7 @@ must appear in the router.
 | `repeated-mistakes` | Changing a stage, a container pin, a bcond, the rebuild workflow, or dropping a recipe: the history already reverted several of these once |
 | `multimedia-closure` | Adding a codec recipe, syncing Bluefin's package manifest, or answering whether the factory covers Bluefin's multimedia |
 | `package-catalog` | Changing the GitHub Pages package catalog: its data from the published image's repodata layer, the site, or its deploy |
-| `factory-build-backlog` | Tracking the backlog from projectbluefin/utah-packages#308 (live total in `reports/factory-build-backlog.json`), or closing a backlog gap |
+| `factory-build-backlog` | Tracking the backlog from projectbluefin/utah-packages#308 (live totals from `just factory-build-backlog`; never committed), or closing a backlog gap |
 
 The `hummingbird` skill is vendored from
 <https://gitlab.com/redhat/hummingbird/skills> (Apache-2.0, Red Hat). It
@@ -223,7 +223,7 @@ against the `projectbluefin/common` commit recorded in
 | Adding a package | [`docs/contributing.md`](docs/contributing.md) |
 | Writing learning back | [`docs/skills/skill-improvement.md`](docs/skills/skill-improvement.md) |
 | Fixes the history already made and unmade | [`docs/skills/repeated-mistakes.md`](docs/skills/repeated-mistakes.md) |
-| The factory build backlog from issue #308 (live totals in the report) | [`docs/skills/factory-build-backlog.md`](docs/skills/factory-build-backlog.md) |
+| The factory build backlog from issue #308 (live totals computed by `just factory-build-backlog`) | [`docs/skills/factory-build-backlog.md`](docs/skills/factory-build-backlog.md) |
 
 | Factory-wide topic | `projectbluefin/common` contract |
 | --- | --- |

@@ -269,8 +269,6 @@ def validated_summary(records) -> str:
 
     The split is the point of the count: a direct-upstream recipe carries a
     different provenance form from a dist-git import, and both are mandatory.
-    tools/render_architecture_counts.py quotes this same line in
-    docs/architecture.md.
     """
     forms: dict[str, int] = {}
     for record in records:
