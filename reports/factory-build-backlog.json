@@ -883,11 +883,11 @@
   "states": {
     "already_recipe": 7,
     "manifest_wants": 1,
-    "pending": 160
+    "pending": 158
   },
   "totals": {
-    "backlog": 168,
-    "resolved": 346,
+    "backlog": 166,
+    "resolved": 348,
     "wontfix": 37
   }
 }
