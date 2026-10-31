@@ -1152,3 +1152,24 @@ the source lock in `config/upstream-sources.json` fetches the same archive over
 `https://dist.schmorp.de` and the Fedora lookaside fallback, matching the SHA-512 in `sources`.
 An imported recipe record alone does not establish publication or runtime
 acceptance in Utah; those remain tracked with the #502 batch.
+
+## uvg266 VVC encoder library
+
+Fedora dist-git has no `uvg266`, so `uvg266-libs` comes from the negativo17
+recipe imported with `tools/import_rawhide.py --branch master
+--remote-template 'https://github.com/negativo17/{package}.git' uvg266`; the
+provenance keeps the `master` branch, commit and tree (see the multimedia
+closure skill's codec-tail rules). The same recipe builds `uvg266` (CLI),
+`uvg266-libs` (`libuvg266.so.0`) and `uvg266-devel`; do not add a second
+recipe under the binary name. negativo17 carries no `sources` file, so the
+GitHub release archive is locked only in `config/upstream-sources.json`. The
+recipe has no `%check`: upstream tests need the `greatest` submodule, which
+the release archive omits, so a hosted build proves compilation only. For
+runtime acceptance, install `uvg266` from Hummingbird plus the factory and
+encode a short raw YUV clip (`uvg266 -i in.yuv --input-res 64x64 -o out.266`).
+
+The kernel-module names in the same long-tail batch (`v4l2loopback`,
+`ublue-os-akmods-addons`, `virtualbox-guest-additions`) are out-of-tree
+kernel module packages. The #491 decision covers only `kernel-modules-extra`
+and `usbip`; do not extend it to these names. They stay pending until a
+maintainer records a kernel-module policy decision for them.

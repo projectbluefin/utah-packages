@@ -20,8 +20,8 @@
     "long-tail": {
       "already_recipe": 2,
       "manifest_wants": 1,
-      "pending": 64,
-      "total": 67
+      "pending": 63,
+      "total": 66
     },
     "power": {
       "total": 0
@@ -830,11 +830,6 @@
     },
     {
       "area": "long-tail",
-      "name": "uvg266-libs",
-      "state": "pending"
-    },
-    {
-      "area": "long-tail",
       "name": "v4l2loopback",
       "state": "pending"
     },
@@ -888,11 +883,11 @@
   "states": {
     "already_recipe": 7,
     "manifest_wants": 1,
-    "pending": 161
+    "pending": 160
   },
   "totals": {
-    "backlog": 169,
-    "resolved": 345,
+    "backlog": 168,
+    "resolved": 346,
     "wontfix": 37
   }
 }

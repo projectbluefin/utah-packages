@@ -263,7 +263,6 @@ packages = [
     "tesseract-tessdata-doc",
     "uavs3d-libs",
     "ublue-os-akmods-addons",
-    "uvg266-libs",
     "v4l2loopback",
     "virtualbox-guest-additions",
 ]
@@ -796,6 +795,8 @@ packages = [
     { name = "udftools", pr = 782 },
     { name = "uresourced", pr = 782 },
     { name = "xfsprogs", pr = 782 },
+    # VVC encoder library from the negativo17 uvg266 recipe (#508); hosted build, publication and runtime proof remain outstanding.
+    { name = "uvg266-libs" },
     # Terminal and VTE emulator outputs (PR #413); publication verified in run 40569848351.
     # vte-profile and vte291-gtk4 are subpackages of vte291.spec.
     # Recipe and publication closure for projectbluefin/utah-packages#484.
