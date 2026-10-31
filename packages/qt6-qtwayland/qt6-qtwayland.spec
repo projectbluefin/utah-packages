@@ -11,7 +11,7 @@
 Summary: Qt6 - Wayland platform support and QtCompositor module
 Name:    qt6-%{qt_module}
 Version: 6.11.2
-Release: 1%{?dist}
+Release: 2%{?dist}
 
 License: LGPL-3.0-only OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 Url:     http://www.qt.io
@@ -35,13 +35,16 @@ Source0: https://download.qt.io/official_releases/qt/%{majmin}/%{version}/submod
 BuildRequires: gcc-c++
 BuildRequires: cmake
 BuildRequires: ninja-build
-BuildRequires: qt6-qtbase-devel >= %{version}
-BuildRequires: qt6-qtbase-static
-BuildRequires: qt6-qtbase-private-devel
+# Keep the private Qt ABI coherent when Hummingbird also offers newer minors.
+# Fedora is the recipe donor; this factory builds the pinned 6.11.2 family.
+BuildRequires: qt6-rpm-macros = %{version}
+BuildRequires: qt6-qtbase-devel = %{version}
+BuildRequires: qt6-qtbase-static = %{version}
+BuildRequires: qt6-qtbase-private-devel = %{version}
 %{?_qt6:Requires: %{_qt6}%{?_isa} = %{_qt6_version}}
-BuildRequires: qt6-qtdeclarative-devel
+BuildRequires: qt6-qtdeclarative-devel = %{version}
 # For Adwaita decorations
-BuildRequires: qt6-qtsvg-devel
+BuildRequires: qt6-qtsvg-devel = %{version}
 
 BuildRequires: pkgconfig(xkbcommon)
 BuildRequires: pkgconfig(wayland-scanner)

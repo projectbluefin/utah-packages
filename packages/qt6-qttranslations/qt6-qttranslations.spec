@@ -8,7 +8,7 @@
 Summary: Qt6 - QtTranslations module
 Name:    qt6-%{qt_module}
 Version: 6.11.2
-Release: 1%{?dist}
+Release: 2%{?dist}
 
 License: GPL-3.0-only WITH Qt-GPL-exception-1.0
 Url:     http://www.qt.io
@@ -25,11 +25,13 @@ BuildArch: noarch
 
 BuildRequires: cmake
 BuildRequires: ninja-build
-## versioning recently dropped, but could do >= %%majmin if needed --rex
-BuildRequires: qt6-qtbase-devel
+# Keep the private Qt ABI coherent when Hummingbird also offers newer minors.
+# Fedora is the recipe donor; this factory builds the pinned 6.11.2 family.
+BuildRequires: qt6-rpm-macros = %{version}
+BuildRequires: qt6-qtbase-devel = %{version}
 # for lrelease
-BuildRequires: qt6-linguist
-BuildRequires: qt6-qttools-devel
+BuildRequires: qt6-linguist = %{version}
+BuildRequires: qt6-qttools-devel = %{version}
 
 # help system-config-language and dnf/yum langpacks pull these in
 %if 0%{?_qt6:1}

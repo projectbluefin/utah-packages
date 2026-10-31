@@ -16,7 +16,7 @@
 Summary: Qt6 - QtDeclarative component
 Name:    qt6-%{qt_module}
 Version: 6.11.2
-Release: 2%{?dist}
+Release: 3%{?dist}
 
 License: LGPL-3.0-only OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 Url:     http://www.qt.io
@@ -44,13 +44,15 @@ Patch0:  qtdeclarative-qml-engine-correctly-compare-composites-with-multi-engine
 BuildRequires: cmake
 BuildRequires: gcc-c++
 BuildRequires: ninja-build
-BuildRequires: qt6-rpm-macros
-BuildRequires: qt6-qtbase-devel >= %{version}
-BuildRequires: qt6-qtbase-private-devel
-BuildRequires: qt6-qtbase-static
-BuildRequires: qt6-qtlanguageserver-devel >= %{version}
-BuildRequires: qt6-qtshadertools-devel >= %{version}
-BuildRequires: qt6-qtsvg-devel >= %{version}
+# Keep the private Qt ABI coherent when Hummingbird also offers newer minors.
+# Fedora is the recipe donor; this factory builds the pinned 6.11.2 family.
+BuildRequires: qt6-rpm-macros = %{version}
+BuildRequires: qt6-qtbase-devel = %{version}
+BuildRequires: qt6-qtbase-private-devel = %{version}
+BuildRequires: qt6-qtbase-static = %{version}
+BuildRequires: qt6-qtlanguageserver-devel = %{version}
+BuildRequires: qt6-qtshadertools-devel = %{version}
+BuildRequires: qt6-qtsvg-devel = %{version}
 %{?_qt6:Requires: %{_qt6}%{?_isa} = %{_qt6_version}}
 BuildRequires: python%{python3_pkgversion}
 BuildRequires: pkgconfig(xkbcommon) >= 0.4.1
