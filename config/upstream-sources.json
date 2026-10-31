@@ -6452,6 +6452,13 @@
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/phodav/phodav-3.0.tar.xz/sha512/a4720083fd581023ea78cc09e6df4b5d2f90894f916004cf28c7fa557da61d8c7a5539fa6b50647efcd9f771afd088889fdc40579a8e860c8ea20540b25eb26a/phodav-3.0.tar.xz"
       ]
+    },
+    {
+      "name": "uvg266",
+      "version": "0.8.1",
+      "url": "https://github.com/ultravideo/uvg266/archive/v0.8.1/uvg266-0.8.1.tar.gz",
+      "filename": "uvg266-0.8.1.tar.gz",
+      "sha512": "892b0732516fe2639f93b250bbed342da8134deeaa6f0ccb429ff8451df727f971c7ee284fef93eaa431c5c54a8b8789ffc853d8b45ae93433ba17007989bbae"
     }
   ]
 }
