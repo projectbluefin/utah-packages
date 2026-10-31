@@ -60,11 +60,6 @@ packages = [
     "libswresample",
     "libswscale",
     "libxavs",
-    "vvdec-libs",
-    "vvenc-libs",
-    "x264-libs",
-    "x265-libs",
-    "xavs2-libs",
 ]
 
 [areas.power]
@@ -109,13 +104,6 @@ packages = [
     "kernel-devel-matched",
     "kernel-tools",
     "kernel-tools-libs",
-    "libcaca",
-    "libsss_autofs",
-    "libsss_certmap",
-    "libsss_idmap",
-    "libsss_nss_idmap",
-    "libsss_sudo",
-    "lsb_release",
     "open-vm-tools",
     "open-vm-tools-desktop",
     "python3-anyio",
@@ -147,7 +135,6 @@ packages = [
     "restic",
     "rpm-ostree",
     "rpm-ostree-libs",
-    "spice-webdavd",
     "sssd-client",
     "sssd-common",
     "sssd-kcm",
@@ -162,7 +149,6 @@ packages = [
     "adobe-mappings-cmap",
     "adobe-mappings-cmap-deprecated",
     "adobe-mappings-pdf",
-    "anthy-unicode",
     "cldr-emoji-annotation",
     "cldr-emoji-annotation-dtd",
     "ibus-anthy",
@@ -253,10 +239,6 @@ packages = [
     "slang",
     "solaar-udev",
     "sos",
-    "tesseract-common",
-    "tesseract-langpack-eng",
-    "tesseract-libs",
-    "tesseract-tessdata-doc",
     "uavs3d-libs",
     "ublue-os-akmods-addons",
     "v4l2loopback",
@@ -278,6 +260,14 @@ packages = [
 # Packages that left the backlog because a recipe was imported.
 # Each entry: package name and the commit that closed the gap.
 packages = [
+    # Codec recipe imports for #476; publication and runtime proof remain separate.
+    { name = "x264-libs", pr = 633 },
+    { name = "x265-libs", pr = 633 },
+    { name = "vvdec-libs", pr = 633 },
+    { name = "vvenc-libs", pr = 633 },
+    { name = "xavs2-libs", pr = 633 },
+    # Recipe import only; build, publication, dependency closure and guest file-transfer proof remain on #490.
+    { name = "spice-webdavd", pr = 761 },
     # Recipe coverage only; hosted build, publication and runtime proof remain on #486.
     { name = "hfsplus-tools", pr = 837 },
     # Recipe import only; build, publication and runtime proof remain on #478.
@@ -319,6 +309,12 @@ packages = [
     { name = "adcli", pr = 774 },
     { name = "adcli-selinux", pr = 774 },
     { name = "serd", pr = 773 },
+    # Long-tail tesseract family (recipe import only); build, publication and
+    # runtime proof remain on #507.
+    { name = "tesseract-libs", pr = 836 },
+    { name = "tesseract-common", pr = 836 },
+    { name = "tesseract-tessdata-doc", pr = 836 },
+    { name = "tesseract-langpack-eng", pr = 836 },
     # Recipe coverage only; slirp4netns uses the existing libslirp recipe.
     # Hosted build, publication, runtime solver and namespace tests remain on #507.
     { name = "slirp4netns", pr = 830 },
@@ -342,6 +338,7 @@ packages = [
     { name = "davfs2", pr = 696 },
     { name = "neon", pr = 696 },
     { name = "libntlm", pr = 696, published_run = 40626803772, published_nevra = "libntlm-0:1.8-1.hum1.bfin.x86_64" },
+    { name = "anthy-unicode", pr = 788 },
     # FireWire recipe coverage; hosted builds and runtime proof remain outstanding.
     { name = "libavc1394", pr = 681 },
     # FFmpeg family recipe coverage. The recipe exists under packages/ffmpeg and
@@ -810,6 +807,15 @@ packages = [
     # is an unconditional subpackage of oddjob.spec; build and runtime evidence pending.
     { name = "oddjob", pr = 784 },
     { name = "oddjob-mkhomedir", pr = 784 },
+    # Dev-tools batch (#487) recipe imports; hosted build, publication and runtime proof remain.
+    # libsss_* are unconditional %package subpackages of sssd.spec.
+    { name = "libcaca", pr = 848 },
+    { name = "libsss_autofs", pr = 848 },
+    { name = "libsss_certmap", pr = 848 },
+    { name = "libsss_idmap", pr = 848 },
+    { name = "libsss_nss_idmap", pr = 848 },
+    { name = "libsss_sudo", pr = 848 },
+    { name = "lsb_release", pr = 848 },
 ]
 
 [wontfix]

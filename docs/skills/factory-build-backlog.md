@@ -168,6 +168,14 @@ from the hosted build run, binary NEVRA, factory image digest, and runtime
 exercise. Missing build or runtime evidence must remain explicit rather than
 being inferred from a green inventory check.
 
+For the partial Tesseract source family in PR #836, use `Refs #507` and
+preserve both `tesseract` and `tesseract-tessdata` source locks, recipe
+provenance and patches when integrating inventory changes. Recipe-import
+accounting does not close #507: hosted OCR builds and publication, dependency
+resolution, and a runtime OCR exercise using the English tessdata remain
+explicit acceptance gaps until evidence is recorded. Regenerating inventory
+does not establish any of that build or tessdata runtime evidence.
+
 Use the consumer issue named by the batch assignment when the area's
 `consumer_issue` is stale. Check the consumer's triage for each binary:
 `planned` records intent, while `untriaged` is not a waiver. For existing
@@ -232,7 +240,13 @@ only validates configuration, and the post-merge rebuild orders packages by
 BuildRequires, so the dependent recipe can be reviewed in parallel. Name the
 providing PR in the PR body and the `[resolved]` comment, and merge it first:
 merged alone, the dependent recipe fails its first hosted build on a missing
-BuildRequires. `m17n-lib` likewise waits on its providers in #788.
+BuildRequires. PR #788 imports the `libotf`, `libXaw`, `gd`, and
+`anthy-unicode` prerequisites, not `m17n-lib` itself. Preserve all four source
+locks and the anthy checksum when integrating it with current main; union
+independent catalog records and regenerate inventory instead of restoring
+stale workflow or Packit pins. Build and publish the providers first, then
+import and build `m17n-lib`; configuration checks establish neither hosted
+build success nor input-method runtime acceptance.
 
 ### Reconcile sibling library outputs
 
@@ -294,6 +308,24 @@ long-tail names; each needs its own disposition. Keep the batch issue open
 when other outputs or their build/runtime evidence remain outstanding.
 
 ### Virtual machine guest integration
+
+`spice-webdavd` is a binary subpackage of **phodav**, alongside
+`libphodav`, `libphodav-devel`, and `chezdav`; there is no separate
+`spice-webdavd` dist-git recipe. Import `phodav` once and lock its GNOME
+release archive. Keep its Meson virtual-directory tests enabled in `%check`
+and let configuration failures stop the build. Its explicit runtime
+requirement is `avahi`; inspect the built RPM's generated library requirements
+before claiming dependency closure. A runtime test needs a SPICE guest with
+the WebDAV virtio channel and a host-shared directory: verify a file transfer
+through that channel, not just service startup or the standalone `chezdav`
+server. Recipe accounting does not establish guest file sharing.
+
+Confirm `avahi-gobject-devel`, `gtk-doc`, and `xmlto` against the repositories
+enabled by `tools/mock_config.py` before asserting build dependency availability.
+Other recipes declaring the same BuildRequires are not availability evidence.
+Record the repository snapshot or release and the published package versions in
+the PR; a metadata match still needs a successful Mock dependency lock and build
+in the pinned environment before claiming solver success.
 
 `spice-vdagent` BuildRequires `spice-protocol` headers. Import the protocol
 source alongside the agent when neither build root nor factory supplies it;
@@ -447,6 +479,36 @@ Reconcile both catalog names against that explicit decision, not an assumed
 waiver for every kernel-related package. Consumer triage belongs in the Utah
 repository; a factory catalog change does not update that separate ledger or
 prove runtime acceptance of the other outputs in the batch.
+
+The remaining kernel outputs of that batch (`kernel-devel-matched`,
+`kernel-tools`, `kernel-tools-libs`) are binaries of Fedora's `kernel` source
+package; Hummingbird ships only `kernel-headers` and the RPM macros. Importing
+the full kernel recipe, or splitting the tools out of it, is a kernel-policy
+decision that the usbip decision does not cover: keep them pending until a
+maintainer records one, even though Utah triages `kernel-tools` as `planned`.
+
+### SSSD client libraries, terminal graphics and LSB query
+
+The `libsss_*` outputs (`libsss_autofs`, `libsss_certmap`, `libsss_idmap`,
+`libsss_nss_idmap`, `libsss_sudo`) are unconditional `%package -n`
+subpackages of `sssd.spec`; import the `sssd` source once. Its Rawhide recipe
+verifies `Source2` (the release `.asc`) against the committed `pubkey.asc`,
+which the root `.gitignore` already tracks through `!packages/*/*key*.asc`.
+`libcaca` disables Ruby bindings on Fedora 40 and later, so `ruby` is not a
+build dependency; its library links factory `libglvnd`, `freeglut`, `mesa-libGLU` and
+`slang`. The `caca-utils` subpackage additionally requires `libImlib2.so.1` and
+`toilet`, which neither Hummingbird nor the factory carries: the audited
+`libcaca` output does not depend on it, but do not claim `caca-utils` is
+installable. `lsb_release` (from `thkukuk/lsb-release_os-release`) needs only
+`getopt`, `sed` and `tr` at runtime, all in Hummingbird.
+
+This is partial recipe coverage for `Refs #487`, not completion of the
+system-core batch: the kernel outputs above still require their own policy
+decision, and hosted builds, publication and runtime proof remain outstanding.
+The same SSSD source also makes `sssd-client`, `sssd-common`, `sssd-kcm`,
+`sssd-krb5-common` and `sssd-nfs-idmap` visible as `already_recipe` for #490;
+keep those sibling observations distinct from a resolved catalog record or
+evidence that the security-auth batch is complete.
 
 ### Optional changelog viewer
 
@@ -630,6 +692,40 @@ source lock and validate model loading as well as the Python binding import.
 `tomoe` is a build-time input here; it is not a runtime requirement of the
 recognizer or generated model. Do not add a runtime recipe just because a
 BuildRequires is absent from Hummingbird (the build root also uses Fedora).
+
+Qt 6 submodule specs (`qt6-qtdeclarative`, `qt6-qttranslations`,
+`qt6-qtwayland`) define `%global majmin %(echo %{version} | cut -d. -f1-2)` and
+expand `%{majmin}` inside `Source0`,
+which `bootstrap_upstream_sources.py` reports as `needs explicit mapping`
+without `rpmspec`; write the resolved `https://download.qt.io/official_releases/qt/...`
+entry and Fedora lookaside `fallback_urls` directly in
+`config/upstream-sources.json`. Pass `--ref <commit>` to
+`tools/import_rawhide.py` for the `rawhide` ancestor matching the intended
+Qt family. The imported recipes use 6.11.2; do not infer the buildroot's
+selected version from that source pin or an old Hummingbird snapshot.
+
+Qt private libraries use `Qt_6.<minor>_PRIVATE_API` symbol versions. Hummingbird
+can retain several QtBase versions with incompatible private symbols. The
+factory's downstream specs therefore require `qt6-qtbase-devel`, its private
+and static companions where used, the Qt RPM macros, and the other Qt build
+tools/modules at `= %{version}`. Keep those constraints together when updating
+the family. The generated buildroot in `tools/mock_config.py` excludes Fedora's
+`qt6-qtbase` and prefers Hummingbird; a digest-pinned bootstrap image does not
+freeze the remote RPM repositories used to solve BuildRequires. An unavailable
+matching dependency must fail resolution rather than silently select a newer
+Qt minor. The declarative and Wayland runtime requirements derived from
+`%{_qt6_version}` must correspond to that selected QtBase.
+
+Before claiming compatibility, inspect each package's hermetic
+`buildroot_lock.json` for the resolved Qt NEVRAs, then verify the emitted RPMs
+in a Hummingbird-plus-factory install transaction, including
+`qt6-qtwayland-adwaita-decoration`. Record the factory digest and current
+Hummingbird metadata checksums per [repo inspection](repo-inspection.md).
+A green inventory check or Canary with skipped builds supplies neither proof;
+keep all four `[areas.unblockers]` names and its assigned `consumer_issue`
+until the review's build and runtime acceptance requirements are met.
+`qt6-qtwayland.spec` ships the decoration via `%package adwaita-decoration`
+(not the standalone `qadwaitadecorations` package).
 
 ## Diagnosing drift
 

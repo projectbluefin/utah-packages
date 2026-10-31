@@ -52,9 +52,18 @@ workflow runs on `ubuntu-26.04` and opens `import/rawhide-<name>`). Source
 bootstrap runs in the pinned `quay.io/packit/packit` image with an isolated
 `--output` and `--report`, without `--merge`. Its accepted candidate, report,
 and recipe are uploaded as the `import-proposal` artifact. A fresh job uses
-`tools/import_proposal.py` to validate that data and merge the candidate into
-the source lock, then regenerates Packit and runs the gates before opening the
-pull request.
+`tools/import_proposal.py` to validate that data and insert the candidate into
+the source lock at its name-ordered position, then regenerates Packit and runs
+the gates before opening the pull request.
+
+`config/upstream-sources.json` keeps `packages` sorted by `name` in
+case-sensitive code-point order (`ModemManager` before `acl`), so concurrent
+imports insert at different places instead of all conflicting on the file's
+last entry. `tools/validate.py` fails on an unsorted lock. Add a hand-written
+entry at its sorted position; when a rebase conflicts in the lock, keep every
+entry from both sides and run `just sort-source-locks`, which reorders whole
+entries and never edits one. See
+[`supply-chain-provenance.md`](skills/supply-chain-provenance.md#the-source-lock-is-kept-in-name-order).
 
 The lock step fails the workflow, and no pull request opens, when bootstrap
 rejects the recipe — for example a `Source0` hosted on Fedora
