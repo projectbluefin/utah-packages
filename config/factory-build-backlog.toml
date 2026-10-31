@@ -111,7 +111,6 @@ packages = [
     "fedora-release-silverblue",
     "fuse-encfs",
     "generic-logos",
-    "hfsplus-tools",
     "kernel-devel-matched",
     "kernel-tools",
     "kernel-tools-libs",
@@ -291,6 +290,8 @@ packages = [
 # Packages that left the backlog because a recipe was imported.
 # Each entry: package name and the commit that closed the gap.
 packages = [
+    # Recipe coverage only; hosted build, publication and runtime proof remain on #486.
+    { name = "hfsplus-tools", pr = 837 },
     # Recipe import only; build, publication and runtime proof remain on #478.
     { name = "pam-u2f", pr = 776 },
     { name = "pamu2fcfg", pr = 776 },

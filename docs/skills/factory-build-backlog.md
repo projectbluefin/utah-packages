@@ -1046,3 +1046,28 @@ The `serd` recipe checks a detached upstream signature using the signing key
 carried in the recipe directory. Preserve the signature entry in `sources`
 and compare its SHA-512 independently from the release archive; a source lock
 for the archive alone does not establish that the signature is available.
+
+## HFS+ filesystem tools
+
+`hfsplus-tools` is the source recipe and binary name; its payload is
+`diskdev_cmds-540.1.linux3.tar.gz`, Matthew Garrett's Linux port, rather than
+an unmodified Apple release. The imported Fedora recipe also carries the
+APSL license text as `apsl-2.0.txt`; keep that tracked file for `Source100`
+instead of downloading the license again during the build.
+
+The author's `cavan.codon.org.uk` archive URL can return HTTP 404. The source
+pipeline already tries `fallback_urls` on transport failure, then checks the
+same SHA-512; an unavailable primary does not require promoting Fedora to
+`url` or expanding the Fedora-primary ratchet. The historical Fedora mirror
+is addressed by the original MD5 directory, but the lock and `sources` must
+still use SHA-512. Check the downloaded bytes against both the imported
+manifest and an independent strong digest, such as
+[Alpine's recorded SHA-512](https://git-old.alpinelinux.org/aports/commit/testing/hfsprogs?id=2adeba433d4de964a51ba73fad56b32397569462).
+A mirror supplies availability, not an upstream signature; record the failed
+primary and successful fallback explicitly in review evidence. A wrong digest
+must still fail without trying another mirror.
+
+Do not exercise `mkfs.hfsplus` or repair with `fsck.hfsplus` on a host disk.
+After a hosted build, test them against a disposable filesystem image in the
+permitted runtime environment, and record the binary identity and results.
+Recipe coverage alone does not establish filesystem safety or installation.

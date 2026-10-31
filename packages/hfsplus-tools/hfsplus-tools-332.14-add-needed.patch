@@ -1,0 +1,12 @@
+diff -up diskdev_cmds-332.14/newfs_hfs.tproj/Makefile.lnx.jx diskdev_cmds-332.14/newfs_hfs.tproj/Makefile.lnx
+--- diskdev_cmds-332.14/newfs_hfs.tproj/Makefile.lnx.jx	2010-02-16 17:46:38.000000000 -0500
++++ diskdev_cmds-332.14/newfs_hfs.tproj/Makefile.lnx	2010-02-16 17:47:15.000000000 -0500
+@@ -4,7 +4,7 @@ OFILES = $(CFILES:.c=.o)
+ all: newfs_hfs
+ 
+ newfs_hfs: $(OFILES)
+-	${CC} ${CFLAGS} -o newfs_hfs ${OFILES} -lssl
++	${CC} ${CFLAGS} -o newfs_hfs ${OFILES} -lssl -lcrypto
+ 
+ clean:
+ 	$(RM) newfs_hfs $(OFILES)

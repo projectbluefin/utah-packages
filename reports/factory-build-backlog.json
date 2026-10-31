@@ -6,8 +6,8 @@
       "total": 21
     },
     "dev-tools": {
-      "pending": 56,
-      "total": 56
+      "pending": 55,
+      "total": 55
     },
     "fonts-i18n": {
       "pending": 15,
@@ -191,11 +191,6 @@
     {
       "area": "dev-tools",
       "name": "generic-logos",
-      "state": "pending"
-    },
-    {
-      "area": "dev-tools",
-      "name": "hfsplus-tools",
       "state": "pending"
     },
     {
@@ -928,11 +923,11 @@
   "states": {
     "already_recipe": 7,
     "manifest_wants": 1,
-    "pending": 167
+    "pending": 166
   },
   "totals": {
-    "backlog": 175,
-    "resolved": 339,
+    "backlog": 174,
+    "resolved": 340,
     "wontfix": 37
   }
 }

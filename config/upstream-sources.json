@@ -6370,6 +6370,16 @@
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/iwd/iwd-3.12.tar.xz/sha512/47ac85452d28ab238474b1f724383aca362bac41caa5ade6b34f5b53d43a7c4eacf3d6a2a6d4c7f39080bd041cc823f9b1de343c855249c45b342d37f1f084a7/iwd-3.12.tar.xz"
       ]
+    },
+    {
+      "name": "hfsplus-tools",
+      "version": "540.1.linux3",
+      "url": "https://cavan.codon.org.uk/~mjg59/diskdev_cmds/diskdev_cmds-540.1.linux3.tar.gz",
+      "filename": "diskdev_cmds-540.1.linux3.tar.gz",
+      "sha512": "3d88fcdec4bfd32a75b6dc75899748d8585371b641be86cfdfe54ade738a0612662dd008c1506c7e216325303217d0b5f188a9c4fdccfb48b2ce50333f212d9e",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/hfsplus-tools/diskdev_cmds-540.1.linux3.tar.gz/0435afc389b919027b69616ad1b05709/diskdev_cmds-540.1.linux3.tar.gz"
+      ]
     }
   ]
 }

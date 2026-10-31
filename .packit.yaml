@@ -1054,6 +1054,12 @@ packages:
     downstream_package_name: hdparm
     paths:
       - packages/hdparm
+  hfsplus-tools:
+    specfile_path: hfsplus-tools.spec
+    upstream_package_name: hfsplus-tools
+    downstream_package_name: hfsplus-tools
+    paths:
+      - packages/hfsplus-tools
   hicolor-icon-theme:
     specfile_path: hicolor-icon-theme.spec
     upstream_package_name: hicolor-icon-theme
