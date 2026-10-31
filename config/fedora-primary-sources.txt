@@ -12,13 +12,11 @@ fdk-aac-free
 foo2zjs
 foomatic-db
 fuse
-fwupd
 graphene
 hyperv-daemons
 kde-filesystem
 kde-settings
 kf5
-lcms2
 libcue
 libdbusmenu
 libical
@@ -41,7 +39,6 @@ redhat-menus
 samba
 spandsp
 srt
-taglib
 usermode
 volume_key
 vulkan-headers

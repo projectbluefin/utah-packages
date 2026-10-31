@@ -730,10 +730,13 @@
     {
       "name": "fwupd",
       "version": "2.1.7",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/fwupd/fwupd-2.1.7.tar.xz/sha512/52954e08f0066c8a0f3331b631e451230708cf5f4afed5ed8369f4558baae7dee6c1f929deb83e5201f55d48885d8591f1c96dbc5e28fdf3d67e6ec5dad6004f/fwupd-2.1.7.tar.xz",
+      "url": "https://github.com/fwupd/fwupd/releases/download/2.1.7/fwupd-2.1.7.tar.xz",
       "filename": "fwupd-2.1.7.tar.xz",
       "feed": "https://release-monitoring.org/project/5833",
-      "sha512": "52954e08f0066c8a0f3331b631e451230708cf5f4afed5ed8369f4558baae7dee6c1f929deb83e5201f55d48885d8591f1c96dbc5e28fdf3d67e6ec5dad6004f"
+      "sha512": "52954e08f0066c8a0f3331b631e451230708cf5f4afed5ed8369f4558baae7dee6c1f929deb83e5201f55d48885d8591f1c96dbc5e28fdf3d67e6ec5dad6004f",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/fwupd/fwupd-2.1.7.tar.xz/sha512/52954e08f0066c8a0f3331b631e451230708cf5f4afed5ed8369f4558baae7dee6c1f929deb83e5201f55d48885d8591f1c96dbc5e28fdf3d67e6ec5dad6004f/fwupd-2.1.7.tar.xz"
+      ]
     },
     {
       "name": "fxload",
@@ -1621,10 +1624,13 @@
     {
       "name": "lcms2",
       "version": "2.16",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/lcms2/lcms2-2.16.tar.gz/sha512/638dd6ad6787456c8145510d18b2d0727bd0a446a13ac2934aabc9531d1156eca2a2c0fd780a453823fbd35a1895f9d8de5dc4b3cab505459dd3f0535b4e837d/lcms2-2.16.tar.gz",
+      "url": "https://downloads.sourceforge.net/project/lcms/lcms/2.16/lcms2-2.16.tar.gz",
       "filename": "lcms2-2.16.tar.gz",
       "feed": "https://release-monitoring.org/project/9815",
-      "sha512": "638dd6ad6787456c8145510d18b2d0727bd0a446a13ac2934aabc9531d1156eca2a2c0fd780a453823fbd35a1895f9d8de5dc4b3cab505459dd3f0535b4e837d"
+      "sha512": "638dd6ad6787456c8145510d18b2d0727bd0a446a13ac2934aabc9531d1156eca2a2c0fd780a453823fbd35a1895f9d8de5dc4b3cab505459dd3f0535b4e837d",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/lcms2/lcms2-2.16.tar.gz/sha512/638dd6ad6787456c8145510d18b2d0727bd0a446a13ac2934aabc9531d1156eca2a2c0fd780a453823fbd35a1895f9d8de5dc4b3cab505459dd3f0535b4e837d/lcms2-2.16.tar.gz"
+      ]
     },
     {
       "name": "libICE",
@@ -3516,10 +3522,13 @@
     {
       "name": "taglib",
       "version": "2.3",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/taglib/taglib-2.3.tar.gz/sha512/5bf3e2b73d9c6eb2e9262f5f64a2adb4d350b6fa19656372c962319eb24122fbb9f6bb13ec3763c6cea4b9e92de39c822870fbf7e426f4bf70114e16333c3e1b/taglib-2.3.tar.gz",
+      "url": "https://taglib.github.io/releases/taglib-2.3.tar.gz",
       "filename": "taglib-2.3.tar.gz",
       "feed": "https://release-monitoring.org/project/1982",
-      "sha512": "5bf3e2b73d9c6eb2e9262f5f64a2adb4d350b6fa19656372c962319eb24122fbb9f6bb13ec3763c6cea4b9e92de39c822870fbf7e426f4bf70114e16333c3e1b"
+      "sha512": "5bf3e2b73d9c6eb2e9262f5f64a2adb4d350b6fa19656372c962319eb24122fbb9f6bb13ec3763c6cea4b9e92de39c822870fbf7e426f4bf70114e16333c3e1b",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/taglib/taglib-2.3.tar.gz/sha512/5bf3e2b73d9c6eb2e9262f5f64a2adb4d350b6fa19656372c962319eb24122fbb9f6bb13ec3763c6cea4b9e92de39c822870fbf7e426f4bf70114e16333c3e1b/taglib-2.3.tar.gz"
+      ]
     },
     {
       "name": "tailscale",
