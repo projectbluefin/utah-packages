@@ -1,0 +1,19 @@
+--- configure.ac	2015-06-20 13:03:45.000000000 +0200
++++ configure.ac.new	2015-10-17 11:44:33.481244447 +0200
+@@ -1,7 +1,5 @@
+ AC_INIT
+ 
+-orig_CFLAGS="$CFLAGS"
+-
+ AC_CONFIG_SRCDIR([ev_epoll.c])
+ 
+ dnl also update ev.h!
+@@ -9,6 +7,8 @@
+ AC_CONFIG_HEADERS([config.h])
+ AM_MAINTAINER_MODE
+ 
++orig_CFLAGS="$CFLAGS"
++
+ AC_PROG_CC
+ 
+ dnl Supply default CFLAGS, if not specified
