@@ -282,6 +282,11 @@ commit from the spec's `%global commit`, so moving the pin is one spec edit
 plus a new digest table entry, and include the upstream `LICENSE` so the
 package can ship it.
 
+Rust vendor generators must read the release root's exact lock path, not
+the first archive member ending in `Cargo.lock`. For `prefixdevname`, both
+dependency downloads and repacking use `prefixdevname-<version>/Cargo.lock`;
+an example or nested workspace lock must not select a different crate set.
+
 ## A hand-repacked zstd source: generate xz, rename the Source
 
 When Fedora's repack script writes `.tar.zst` (7zip's
@@ -294,11 +299,6 @@ This is the one case where the `Source:` line moves: the build stages the
 lock's `filename`, so the two must agree. Before pinning, unpack Fedora's
 lookaside archive and `diff -r` it against the generated tree; for 7zip 26.04
 they are identical.
-
-Rust vendor generators must read the release root's exact lock path, not
-the first archive member ending in `Cargo.lock`. For `prefixdevname`, both
-dependency downloads and repacking use `prefixdevname-<version>/Cargo.lock`;
-an example or nested workspace lock must not select a different crate set.
 
 ## Source verification reporting
 
