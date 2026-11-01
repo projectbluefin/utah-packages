@@ -513,10 +513,14 @@ installable. `lsb_release` (from `thkukuk/lsb-release_os-release`) needs only
 This is partial recipe coverage for `Refs #487`, not completion of the
 system-core batch: the kernel outputs above still require their own policy
 decision, and hosted builds, publication and runtime proof remain outstanding.
-The same SSSD source also makes `sssd-client`, `sssd-common`, `sssd-kcm`,
-`sssd-krb5-common` and `sssd-nfs-idmap` visible as `already_recipe` for #490;
-keep those sibling observations distinct from a resolved catalog record or
-evidence that the security-auth batch is complete.
+The same SSSD source also builds `sssd-client`, `sssd-common`, `sssd-kcm`,
+`sssd-krb5-common` and `sssd-nfs-idmap` for #490. Those names were swept from
+`already_recipe` into `[resolved]` with the recipe PR (`pr = 848`), not by a
+second import. That record is recipe accounting only and does not complete
+#490: hosted build, publication and runtime proof are still owed. Runtime
+resolution is unproven: `sssd-common` requires `libldb` and `sssd-krb5-common`
+requires `cyrus-sasl-gssapi`, and neither is checked against Hummingbird plus
+the factory yet.
 
 ### Optional changelog viewer
 

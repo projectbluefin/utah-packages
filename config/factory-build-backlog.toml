@@ -132,11 +132,6 @@ packages = [
     "restic",
     # Utah waives rpm-ostree only; rpm-ostree-libs has no separate waiver.
     "rpm-ostree-libs",
-    "sssd-client",
-    "sssd-common",
-    "sssd-kcm",
-    "sssd-krb5-common",
-    "sssd-nfs-idmap",
 ]
 
 [areas.fonts-i18n]
@@ -836,6 +831,14 @@ packages = [
     { name = "libsss_nss_idmap", pr = 848 },
     { name = "libsss_sudo", pr = 848 },
     { name = "lsb_release", pr = 848 },
+    # sssd-* are unconditional %package subpackages of the same sssd.spec (#848),
+    # reconciled from already_recipe for the dev-tools batch (#490). Hosted build,
+    # publication, and runtime proof remain on #490.
+    { name = "sssd-client", pr = 848 },
+    { name = "sssd-common", pr = 848 },
+    { name = "sssd-kcm", pr = 848 },
+    { name = "sssd-krb5-common", pr = 848 },
+    { name = "sssd-nfs-idmap", pr = 848 },
 ]
 
 [wontfix]
