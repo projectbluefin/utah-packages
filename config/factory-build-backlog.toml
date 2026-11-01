@@ -259,15 +259,15 @@ packages = [
 # Primary metadata SHA-256: 7a6a21aa7b19da2cf12843de2d189058158d9d66470bb349dd07bf5d9b4e5d4b
 # Run: https://github.com/projectbluefin/utah-packages/actions/runs/41232660647 (success).
 # Snapshot fetched 2026-10-31T19:22:14Z. Publication evidence only; not a runtime transaction or device test.
+# Factory image snapshot 2026-10-31: digest
+# sha256:d3dadc279e529a0646d3558bfc150066f21f0f5cca3d1a5a733798c60253e984,
+# source revision c9f1be7f33fa269928cf3056695d51150200e74b (on main),
+# run 41233305890, repomd SHA-256 5752786befbfbe662b7e387818240872aff632390bd336f7a1ad2a09731a6079,
+# primary SHA-256 10161bb9fb4942907844f1110c882da1b4bc09e6de15fb35250ff84147fd3cf4.
+# Published NEVRAs below establish metadata presence, not runtime resolution.
 # Packages that left the backlog because a recipe was imported.
 # Each entry: package name and the commit that closed the gap.
 packages = [
-    # Factory image snapshot 2026-10-31: digest
-    # sha256:d3dadc279e529a0646d3558bfc150066f21f0f5cca3d1a5a733798c60253e984,
-    # source revision c9f1be7f33fa269928cf3056695d51150200e74b (on main),
-    # run 41233305890, repomd SHA-256 5752786befbfbe662b7e387818240872aff632390bd336f7a1ad2a09731a6079,
-    # primary SHA-256 10161bb9fb4942907844f1110c882da1b4bc09e6de15fb35250ff84147fd3cf4.
-    # Published NEVRAs below establish metadata presence, not runtime resolution.
     # Codec recipe imports for #476; publication and runtime proof remain separate.
     { name = "x264-libs", pr = 633 },
     { name = "x265-libs", pr = 633 },
