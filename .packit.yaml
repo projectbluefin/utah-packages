@@ -40,6 +40,12 @@ packages:
     downstream_package_name: NetworkManager-ssh
     paths:
       - packages/NetworkManager-ssh
+  OpenCL-ICD-Loader:
+    specfile_path: OpenCL-ICD-Loader.spec
+    upstream_package_name: OpenCL-ICD-Loader
+    downstream_package_name: OpenCL-ICD-Loader
+    paths:
+      - packages/OpenCL-ICD-Loader
   SDL3:
     specfile_path: SDL3.spec
     upstream_package_name: SDL3
