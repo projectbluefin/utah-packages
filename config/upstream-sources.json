@@ -3008,6 +3008,13 @@
       "sha512": "06cc3049ce15613d34e39dc71bc572843c61ab64077c29ef9a6257edb0849c98565ff612a4cf787bc9642a39f1c89b7c47a20fb27f2318105be82aad8d472bb9"
     },
     {
+      "name": "libijs",
+      "version": "0.35",
+      "url": "https://github.com/ArtifexSoftware/ijs/archive/0.35.tar.gz",
+      "filename": "ijs-0.35.tar.gz",
+      "sha512": "81d92cbbd96460e8a9d1c81041e27d7a662610e27ac082d31510c005130ada85791312a6b4cff17fe36a9bd76f08bb3d645b7cda6b1312a3e486426a9be80aa8"
+    },
+    {
       "name": "libimobiledevice",
       "version": "1.4.0",
       "url": "https://github.com/libimobiledevice/libimobiledevice/releases/download/1.4.0/libimobiledevice-1.4.0.tar.bz2",
@@ -3134,6 +3141,13 @@
       "buildroot_icu77": true
     },
     {
+      "name": "liblqr-1",
+      "version": "0.4.2",
+      "url": "https://liblqr.wikidot.com/local--files/en:download-page/liblqr-1-0.4.2.tar.bz2",
+      "filename": "liblqr-1-0.4.2.tar.bz2",
+      "sha512": "57d9ed67d5a11c970262263a34b6797576088e14f2ccb01b393eff55bfd22c8bb2b2189e3ed5ff6c187f709c556225fc1fb1038bd0d7e0c03d8839ef0ce998a3"
+    },
+    {
       "name": "libmanette",
       "version": "0.2.13",
       "url": "https://download.gnome.org/sources/libmanette/0.2/libmanette-0.2.13.tar.xz",
@@ -3221,6 +3235,13 @@
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/libmysofa/libmysofa-1.3.5.tar.gz/sha512/83f9b592b92984108ae1c43257d569320bf1b2c7b919563be2b92b0ec5396a4b2b9ad8dca579a2ad224c560c055fba8e77ca65d222e1944618a2819a0a8aa63c/libmysofa-1.3.5.tar.gz"
       ]
+    },
+    {
+      "name": "libnet",
+      "version": "1.3",
+      "url": "https://github.com/libnet/libnet/releases/download/v1.3/libnet-1.3.tar.gz",
+      "filename": "libnet-1.3.tar.gz",
+      "sha512": "c434327108b61e73b61acc5f2b346d049ab5d58e494db21971368eac733a9a0a3e9d95e0b4523c20629b02ed0feef086c50c582719635f21e980c440d55dd462"
     },
     {
       "name": "libnfs",
@@ -3364,6 +3385,13 @@
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/libpciaccess/libpciaccess-0.19.tar.xz/sha512/a20ea0ef3d650e2cdc18423ea4770780ce273c35115eece85dbbb59e5f2e24bdbaf88e53b1648f2c5d4fa34b015a3fe8318721bf5655a86a835db323e6ecd4f7/libpciaccess-0.19.tar.xz"
       ]
+    },
+    {
+      "name": "libpfm",
+      "version": "4.14.1",
+      "url": "https://sourceforge.net/projects/perfmon2/files/libpfm4/libpfm-4.14.1.tar.gz",
+      "filename": "libpfm-4.14.1.tar.gz",
+      "sha512": "f12478fbf54f4e19020433788470b89cb0bd13cd358a1a32e6f67a81a2d8d55f29c0d74ab4a099de22d8557656674dd0556817b6aa5418c47008ee759459eb3b"
     },
     {
       "name": "libphonenumber",

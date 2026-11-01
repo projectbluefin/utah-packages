@@ -1876,6 +1876,12 @@ packages:
     downstream_package_name: libieee1284
     paths:
       - packages/libieee1284
+  libijs:
+    specfile_path: libijs.spec
+    upstream_package_name: libijs
+    downstream_package_name: libijs
+    paths:
+      - packages/libijs
   libimobiledevice:
     specfile_path: libimobiledevice.spec
     upstream_package_name: libimobiledevice
@@ -1954,6 +1960,12 @@ packages:
     downstream_package_name: liblouisutdml
     paths:
       - packages/liblouisutdml
+  liblqr-1:
+    specfile_path: liblqr-1.spec
+    upstream_package_name: liblqr-1
+    downstream_package_name: liblqr-1
+    paths:
+      - packages/liblqr-1
   libmanette:
     specfile_path: libmanette.spec
     upstream_package_name: libmanette
@@ -2014,6 +2026,12 @@ packages:
     downstream_package_name: libmysofa
     paths:
       - packages/libmysofa
+  libnet:
+    specfile_path: libnet.spec
+    upstream_package_name: libnet
+    downstream_package_name: libnet
+    paths:
+      - packages/libnet
   libnfs:
     specfile_path: libnfs.spec
     upstream_package_name: libnfs
@@ -2098,6 +2116,12 @@ packages:
     downstream_package_name: libpciaccess
     paths:
       - packages/libpciaccess
+  libpfm:
+    specfile_path: libpfm.spec
+    upstream_package_name: libpfm
+    downstream_package_name: libpfm
+    paths:
+      - packages/libpfm
   libphonenumber:
     specfile_path: libphonenumber.spec
     upstream_package_name: libphonenumber
