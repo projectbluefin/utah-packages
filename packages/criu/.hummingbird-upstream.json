@@ -1,0 +1,8 @@
+{
+  "package": "criu",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/criu.git",
+  "commit": "36e1c67a6282f6fda4677a174bf8577ed22d8664",
+  "tree": "7106e6f5b8af35fdf6d025488b21521cb4d311f3",
+  "imported_at": "2026-11-01T12:22:25.864169+00:00"
+}

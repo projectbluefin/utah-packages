@@ -463,6 +463,16 @@
       ]
     },
     {
+      "name": "criu",
+      "version": "4.3",
+      "url": "https://github.com/checkpoint-restore/criu/archive/v4.3/criu-4.3.tar.gz",
+      "filename": "criu-4.3.tar.gz",
+      "sha512": "bd5e2722313e6c5bb67a33f57f1c39ee37615f12bb5004ac6892f9ba30b0ce07b46fdef78583a78e410bf7bfb9a12310ceb778443a08aec05de9f52043058896",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/criu/criu-4.3.tar.gz/sha512/bd5e2722313e6c5bb67a33f57f1c39ee37615f12bb5004ac6892f9ba30b0ce07b46fdef78583a78e410bf7bfb9a12310ceb778443a08aec05de9f52043058896/criu-4.3.tar.gz"
+      ]
+    },
+    {
       "name": "cryfs",
       "version": "0.11.3",
       "url": "https://github.com/cryfs/cryfs/archive/0.11.3/cryfs-0.11.3.tar.gz",

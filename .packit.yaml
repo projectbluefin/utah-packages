@@ -310,6 +310,12 @@ packages:
     downstream_package_name: containerd
     paths:
       - packages/containerd
+  criu:
+    specfile_path: criu.spec
+    upstream_package_name: criu
+    downstream_package_name: criu
+    paths:
+      - packages/criu
   cryfs:
     specfile_path: cryfs.spec
     upstream_package_name: cryfs

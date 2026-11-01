@@ -1,0 +1,21 @@
+summary: Run all tests
+discover:
+  how: fmf
+prepare:
+  - name: Install the main package
+    how: install
+    package:
+      - criu
+execute:
+  how: tmt
+
+/zdtm:
+  # Use the srpm sources
+  discover+:
+    dist-git-source: true
+    dist-git-merge: true
+    test: /tests/zdtm
+
+/podman:
+  discover+:
+    test: /tests/podman

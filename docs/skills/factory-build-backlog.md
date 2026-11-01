@@ -123,6 +123,13 @@ recipe builds an unrelated, header-only EBNF library and does not provide
 `libell`. Check the binary's `sourcerpm` before inferring a source name from a
 shared prefix.
 
+Before importing, confirm the recipe's `Source0` host serves HTTPS: the source
+lock rejects plain `http://` in `url` and `fallback_urls`. `b43-openfwwf`'s only
+upstream (`netweb.ing.unibs.it`) serves the release over HTTP alone, so its
+import needs a `tools/generated_sources.py` entry that verifies the bytes
+another way rather than a plain lock entry; leave such a name in its area until
+that generator exists.
+
 Before importing an audit name, read Utah's current `baselines/triage.toml` and
 pin the decision's commit when reconciling an existing `waived` entry into
 `[wontfix]`. The audit can include deliberately absent X11 client utilities

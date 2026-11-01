@@ -182,9 +182,6 @@ packages = [
     "appstream-data",
     "b43-openfwwf",
     "braille-printer-app",
-    "compsize",
-    "criu",
-    "criu-libs",
     "desktop-backgrounds-gnome",
     "evolution-ews-core",
     "evolution-ews-langpacks",
@@ -836,6 +833,12 @@ packages = [
     { name = "libsss_nss_idmap", pr = 848 },
     { name = "libsss_sudo", pr = 848 },
     { name = "lsb_release", pr = 848 },
+    # Long-tail batch #499. compsize was imported by #686 but left in the area;
+    # criu-libs is an unconditional %package subpackage of criu.spec. Recipe
+    # accounting only: hosted build, publication and runtime proof remain on #499.
+    { name = "compsize", pr = 686 },
+    { name = "criu" },
+    { name = "criu-libs" },
 ]
 
 [wontfix]
