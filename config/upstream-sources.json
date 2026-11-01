@@ -2,6 +2,17 @@
   "schema": 1,
   "packages": [
     {
+      "name": "7zip",
+      "version": "26.04",
+      "filename": "7zip-26.04.tar.xz",
+      "sha512": "c57447f64b8b6a837f4c4dc35ef0dd450fd5edb8935fd5ec6c2586d8a4e4b830f0313c56a4fe8d6432af4c3cea8e11019626a463ac634b072b55222afda6b828",
+      "generate": {
+        "script": "tools/generated_sources.py",
+        "input": "https://github.com/ip7z/7zip/archive/26.04/7zip-26.04.tar.gz (sha512-pinned)",
+        "method": "remove the RAR handler, codecs, crypto and unRarLicense.txt (unRAR license restriction, per strip-rar-support.sh) from the upstream release and repack deterministically as 7zip-26.04.tar.xz"
+      }
+    },
+    {
       "name": "ImageMagick",
       "version": "7.1.2.34",
       "url": "https://download.imagemagick.org/archive/ImageMagick-7.1.2-34.tar.xz",

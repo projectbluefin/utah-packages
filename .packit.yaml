@@ -4,6 +4,12 @@ actions:
   create-archive:
     - bash -c 'python3 "$(git rev-parse --show-toplevel)/tools/packit_source0.py"'
 packages:
+  7zip:
+    specfile_path: 7zip.spec
+    upstream_package_name: 7zip
+    downstream_package_name: 7zip
+    paths:
+      - packages/7zip
   ImageMagick:
     specfile_path: ImageMagick.spec
     upstream_package_name: ImageMagick
