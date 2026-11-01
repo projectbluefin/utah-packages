@@ -32,6 +32,10 @@ that no upstream publishes verbatim:
   Neither project publishes a release file; Fedora's tarballs are a GitLab
   tag archive and a hand-run `git archive`, whose tar streams this
   reproduces byte for byte (GIT_ARCHIVE_SOURCES)
+- prefixdevname: the upstream GitHub tag archive (SHA-512-pinned) with a
+  `vendor/` tree of every crates.io crate its Cargo.lock pins, laid out as
+  `cargo vendor --versioned-dirs` does. Upstream publishes no release asset,
+  and the recipe builds offline from vendored crates
 
 For these, the source lock names this script and records the SHA-512 of the
 bytes the transformation produces. Verification re-runs the transformation
@@ -978,6 +982,97 @@ def _bluefin_artwork_generate(package_dir: Path, out_dir: Path) -> Path:
     return target
 
 
+# --- prefixdevname -----------------------------------------------------------
+
+# Upstream publishes no release asset (the maintainer's spec still points at a
+# downloads.githubusercontent.com/releases/download path that 404s today); the
+# only stable upstream bytes are the GitHub tag archive, whose sha512 is pinned
+# below so the resolver can prove it fetched the intended tree.
+PREFIXDEVNAME_UPSTREAM_URL = (
+    "https://github.com/msekletar/prefixdevname/archive/refs/tags/v{version}.tar.gz"
+)
+PREFIXDEVNAME_INPUT_SHA512 = {
+    "0.2.0": "ad2133baace6ac660ad8ee81ad98e5ad6042a20a513465eddb25c0761d84586c109938fdd2fe3682505e7b618f57246395286b7f5230f596374feda4f7c6d168",
+}
+# Fixed mtime stamped on every output member so the bundle is byte-reproducible
+# regardless of the source archive's own mtimes.
+PREFIXDEVNAME_MTIME = 0
+
+
+def _prefixdevname_transform(source: bytes, version: str, crates: dict) -> bytes:
+    """Add a vendor/ tree to the release tarball, deterministically.
+
+    The archive already lays out the source under prefixdevname-<version>/.
+    vendor/<crate>-<version>/ is appended for each Cargo.lock crate with its
+    .cargo-checksum.json, exactly as `cargo vendor --versioned-dirs` lays it
+    out. Every member is stamped with a fixed mtime and zero ownership, so the
+    same inputs always produce the same bytes.
+    """
+    top = f"prefixdevname-{version}"
+    raw = io.BytesIO()
+    with tarfile.open(fileobj=io.BytesIO(source), mode="r:gz") as src, \
+            tarfile.open(fileobj=raw, mode="w", format=tarfile.PAX_FORMAT) as result:
+        members = sorted(src.getmembers(), key=lambda m: m.name.rstrip("/"))
+        lock_member = src.getmember(f"{top}/Cargo.lock")
+        lock_text = src.extractfile(lock_member).read().decode()
+        for member in members:
+            if not (member.name == top or member.name.startswith(top + "/")):
+                raise RuntimeError(f"archive member outside {top}: {member.name}")
+            member.uid = member.gid = 0
+            member.uname = member.gname = ""
+            member.pax_headers = {}
+            member.mtime = PREFIXDEVNAME_MTIME
+            result.addfile(member, src.extractfile(member) if member.isreg() else None)
+        vendor = tarfile.TarInfo(f"{top}/vendor")
+        vendor.type = tarfile.DIRTYPE
+        vendor.mode = 0o755
+        vendor.mtime = PREFIXDEVNAME_MTIME
+        result.addfile(vendor)
+        for crate in cargo_lock_packages(lock_text):
+            payload = crates[(crate["name"], crate["version"])]
+            for info, data in _vendored_crate_members(crate, payload, f"{top}/vendor", PREFIXDEVNAME_MTIME):
+                result.addfile(info, io.BytesIO(data) if data is not None else None)
+    out = io.BytesIO()
+    _xz_compress_stream(iter([raw.getvalue()]), out)
+    return out.getvalue()
+
+
+def _prefixdevname_metadata(package_dir: Path) -> dict:
+    version = spec_version(package_dir, "prefixdevname.spec")
+    return {
+        "name": "prefixdevname",
+        "version": version,
+        "filename": f"prefixdevname-{version}-vendored.tar.xz",
+        "generate": {
+            "script": SCRIPT_PATH,
+            "input": f"{PREFIXDEVNAME_UPSTREAM_URL.format(version=version)} (sha512-pinned) and every crates.io crate its Cargo.lock pins (sha256-pinned by Cargo.lock)",
+            "method": f"add vendor/<crate>-<version> for each Cargo.lock crate with .cargo-checksum.json, as cargo vendor --versioned-dirs lays it out, and repack deterministically as prefixdevname-{version}-vendored.tar.xz",
+        },
+    }
+
+
+def _prefixdevname_generate(package_dir: Path, out_dir: Path) -> Path:
+    version = spec_version(package_dir, "prefixdevname.spec")
+    pin = PREFIXDEVNAME_INPUT_SHA512.get(version)
+    if pin is None:
+        raise RuntimeError(f"no pinned input SHA-512 for prefixdevname {version}")
+    url = PREFIXDEVNAME_UPSTREAM_URL.format(version=version)
+    archive = _fetch(url)
+    actual = hashlib.sha512(archive).hexdigest()
+    if actual != pin:
+        raise RuntimeError(f"input archive mismatch for {url}: expected {pin}, got {actual}")
+    with tarfile.open(fileobj=io.BytesIO(archive), mode="r:gz") as source:
+        lock_member = source.getmember(f"prefixdevname-{version}/Cargo.lock")
+        lock_text = source.extractfile(lock_member).read().decode()
+    crates = {
+        (crate["name"], crate["version"]): _fetch(CRATE_URL.format(**crate))
+        for crate in cargo_lock_packages(lock_text)
+    }
+    target = out_dir / f"prefixdevname-{version}-vendored.tar.xz"
+    target.write_bytes(_prefixdevname_transform(archive, version, crates))
+    return target
+
+
 # --- git-archive tag sources -----------------------------------------------------
 
 # Recipes whose Source0 is `git archive` of an upstream tag: the project
@@ -1075,6 +1170,7 @@ METADATA = {
     "gpm": _gpm_metadata,
     "hplip": _hplip_metadata,
     "openal-soft": _openal_soft_metadata,
+    "prefixdevname": _prefixdevname_metadata,
     "freerdp": _freerdp_metadata,
     "fpaste": _fpaste_metadata,
     "bluefin-artwork-logos": _bluefin_artwork_metadata,
@@ -1088,6 +1184,7 @@ GENERATORS = {
     "hplip": _hplip_generate,
     "gpm": _gpm_generate,
     "openal-soft": _openal_soft_generate,
+    "prefixdevname": _prefixdevname_generate,
     "freerdp": _freerdp_generate,
     "fpaste": _fpaste_generate,
     "bluefin-artwork-logos": _bluefin_artwork_generate,
