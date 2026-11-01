@@ -1,0 +1,7 @@
+--- a/src/cpp-utils/thread/LeftRight.h
++++ b/src/cpp-utils/thread/LeftRight.h
+@@ -4,3 +4,4 @@
+ #include <thread>
+ #include <cpp-utils/macros.h>
++#include <stdexcept>
+ #include <array>

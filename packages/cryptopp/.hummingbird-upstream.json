@@ -1,0 +1,8 @@
+{
+  "package": "cryptopp",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/cryptopp.git",
+  "commit": "c6fb4ebf327a7605a1b0c07eded7cc0af6f08fc9",
+  "tree": "637caa9890ba149ebe342329f98bef2a6865cd35",
+  "imported_at": "2026-10-31T01:05:13.532208+00:00"
+}
