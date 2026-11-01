@@ -304,6 +304,18 @@ packages:
     downstream_package_name: containerd
     paths:
       - packages/containerd
+  cryfs:
+    specfile_path: cryfs.spec
+    upstream_package_name: cryfs
+    downstream_package_name: cryfs
+    paths:
+      - packages/cryfs
+  cryptopp:
+    specfile_path: cryptopp.spec
+    upstream_package_name: cryptopp
+    downstream_package_name: cryptopp
+    paths:
+      - packages/cryptopp
   cups-browsed:
     specfile_path: cups-browsed.spec
     upstream_package_name: cups-browsed
@@ -358,6 +370,12 @@ packages:
     downstream_package_name: ding-libs
     paths:
       - packages/ding-libs
+  distribution-gpg-keys:
+    specfile_path: distribution-gpg-keys.spec
+    upstream_package_name: distribution-gpg-keys
+    downstream_package_name: distribution-gpg-keys
+    paths:
+      - packages/distribution-gpg-keys
   distrobox:
     specfile_path: distrobox.spec
     upstream_package_name: distrobox
@@ -3232,6 +3250,12 @@ packages:
     downstream_package_name: python-typing-inspection
     paths:
       - packages/python-typing-inspection
+  python-versioneer:
+    specfile_path: python-versioneer.spec
+    upstream_package_name: python-versioneer
+    downstream_package_name: python-versioneer
+    paths:
+      - packages/python-versioneer
   qpdf:
     specfile_path: qpdf.spec
     upstream_package_name: qpdf
@@ -3262,6 +3286,12 @@ packages:
     downstream_package_name: quota
     paths:
       - packages/quota
+  range-v3:
+    specfile_path: range-v3.spec
+    upstream_package_name: range-v3
+    downstream_package_name: range-v3
+    paths:
+      - packages/range-v3
   re2:
     specfile_path: re2.spec
     upstream_package_name: re2
