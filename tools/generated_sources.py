@@ -19,6 +19,9 @@ that no upstream publishes verbatim:
   documented by the comment above the spec's Source0 line)
 - openal-soft: the upstream release with the bundled fmt tree and the
   non-free utils HRTF datasets removed (packages/openal-soft/make_tarball.sh)
+- 7zip: the upstream release without the RAR handler, codecs and crypto
+  and the unRAR license, which carry the "unRAR license restriction"
+  (packages/7zip/strip-rar-support.sh)
 - fpaste: the upstream Codeberg tag archive under the `fpaste-<version>/`
   prefix the recipe's `%autosetup` expects. The recipe's Source0 host
   (pagure.io) was sunset in 2026 and the project publishes no release
@@ -97,6 +100,10 @@ PYDANTIC_CORE_INPUT_SHA512 = {
 
 FPASTE_INPUT_SHA512 = {
     "0.5.0.0": "0337bca5141d8ec99d2b7ea4710c6852f7abd1c8d6481c5051d572e7fdfe7a99f5741ea69fa802a2d514fa0c23eb215357ef6599a27226880e4e272ed0b8b46f",
+}
+
+SEVENZIP_INPUT_SHA512 = {
+    "26.04": "3037cdebf29b1a44e123aee3daec168e8b8ec97b58446c1ba1a54aa1b306d48c2f9fb16bb5ad48ec1cd415e6cd035461cb900de7d848a6bc19a21dd077175935",
 }
 
 HPLIP_INPUT_SHA512 = {
@@ -473,6 +480,93 @@ def _openal_soft_generate(package_dir: Path, out_dir: Path) -> Path:
         raise RuntimeError(f"input archive mismatch for {url}: expected {pin}, got {actual}")
     target = out_dir / f"openal-soft-{version}-clean.tar.xz"
     target.write_bytes(_openal_soft_transform(payload, version))
+    return target
+
+
+# --- 7zip ---------------------------------------------------------------------
+
+SEVENZIP_UPSTREAM_URL = "https://github.com/ip7z/7zip/archive/{version}/7zip-{version}.tar.gz"
+
+
+def _sevenzip_dropped(name: str, version: str) -> bool:
+    """The exact removal set of packages/7zip/strip-rar-support.sh.
+
+    The script runs `rm -rf CPP/7zip/Archive/Rar/`, `rm -f
+    CPP/7zip/Compress/Rar*.*`, `rm -f CPP/7zip/Crypto/Rar*.*` and `rm -f
+    DOC/unRarLicense.txt`. Both `Rar*.*` globs are non-recursive and need a dot.
+    """
+    top = f"7zip-{version}"
+    rel = name.rstrip("/")
+    if not rel.startswith(top + "/"):
+        return False
+    rest = rel[len(top) + 1:]
+    rar = "CPP/7zip/Archive/Rar"
+    if rest == rar or rest.startswith(rar + "/"):
+        return True
+    if rest == "DOC/unRarLicense.txt":
+        return True
+    for directory in ("CPP/7zip/Compress/", "CPP/7zip/Crypto/"):
+        if rest.startswith(directory):
+            leaf = rest[len(directory):]
+            return "/" not in leaf and fnmatch.fnmatchcase(leaf, "Rar*.*")
+    return False
+
+
+def _sevenzip_transform(archive: bytes, version: str) -> bytes:
+    """Repack the upstream .tar.gz without RAR support, as Fedora's recipe does.
+
+    Same tree strip-rar-support.sh produces by hand, made deterministically:
+    members keep the archive's own modes and mtimes, are sorted by name with
+    ownership zeroed, and are compressed as a single xz stream. The script
+    writes zstd, which the standard library cannot produce, so the recipe's
+    Source names the .tar.xz instead; rpmbuild unpacks either the same way.
+    GitHub's pax_global_header (the commit id) carries no member and is not
+    kept.
+    """
+    raw = io.BytesIO()
+    with tarfile.open(fileobj=io.BytesIO(archive), mode="r:gz") as source:
+        members = sorted(source.getmembers(), key=lambda m: m.name.rstrip("/"))
+        with tarfile.open(fileobj=raw, mode="w", format=tarfile.PAX_FORMAT) as result:
+            for member in members:
+                if _sevenzip_dropped(member.name, version):
+                    continue
+                member.uid = member.gid = 0
+                member.uname = member.gname = ""
+                member.pax_headers = {}
+                result.addfile(member, source.extractfile(member) if member.isreg() else None)
+    out = io.BytesIO()
+    _xz_compress_stream(iter([raw.getvalue()]), out)
+    return out.getvalue()
+
+
+def _sevenzip_metadata(package_dir: Path) -> dict:
+    version = spec_version(package_dir, "7zip.spec")
+    return {
+        "name": "7zip",
+        "version": version,
+        "filename": f"7zip-{version}.tar.xz",
+        "generate": {
+            "script": SCRIPT_PATH,
+            "input": f"{SEVENZIP_UPSTREAM_URL.format(version=version)} (sha512-pinned)",
+            "method": f"remove the RAR handler, codecs, crypto and unRarLicense.txt (unRAR license restriction, per strip-rar-support.sh) from the upstream release and repack deterministically as 7zip-{version}.tar.xz",
+        },
+    }
+
+
+def _sevenzip_generate(package_dir: Path, out_dir: Path) -> Path:
+    version = spec_version(package_dir, "7zip.spec")
+    pin = SEVENZIP_INPUT_SHA512.get(version)
+    if pin is None:
+        raise RuntimeError(f"no pinned input SHA-512 for 7zip {version}")
+    url = SEVENZIP_UPSTREAM_URL.format(version=version)
+    request = urllib.request.Request(url, headers={"User-Agent": "utah-packages-generated-source/1"})
+    with urllib.request.urlopen(request, timeout=300) as response:
+        payload = response.read()
+    actual = hashlib.sha512(payload).hexdigest()
+    if actual != pin:
+        raise RuntimeError(f"input archive mismatch for {url}: expected {pin}, got {actual}")
+    target = out_dir / f"7zip-{version}.tar.xz"
+    target.write_bytes(_sevenzip_transform(payload, version))
     return target
 
 
@@ -1173,6 +1267,7 @@ METADATA = {
     "prefixdevname": _prefixdevname_metadata,
     "freerdp": _freerdp_metadata,
     "fpaste": _fpaste_metadata,
+    "7zip": _sevenzip_metadata,
     "bluefin-artwork-logos": _bluefin_artwork_metadata,
 }
 
@@ -1187,6 +1282,7 @@ GENERATORS = {
     "prefixdevname": _prefixdevname_generate,
     "freerdp": _freerdp_generate,
     "fpaste": _fpaste_generate,
+    "7zip": _sevenzip_generate,
     "bluefin-artwork-logos": _bluefin_artwork_generate,
 }
 

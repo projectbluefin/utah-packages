@@ -232,6 +232,86 @@ class OpenALSoftTransformTests(unittest.TestCase):
         self.assertIn("1.24.2", generated_sources.OPENAL_SOFT_INPUT_SHA512)
 
 
+def build_sevenzip_archive(version: str) -> bytes:
+    """A synthetic upstream 7zip .tar.gz carrying the strip-rar-support.sh targets."""
+    top = f"7zip-{version}"
+    members = {
+        f"{top}/CPP/7zip/Archive/Rar/RarHandler.cpp": b"unrar",
+        f"{top}/CPP/7zip/Archive/Rar/Rar5Handler.h": b"unrar",
+        f"{top}/CPP/7zip/Archive/RarLike.cpp": b"kept: not under Archive/Rar/",
+        f"{top}/CPP/7zip/Compress/Rar3Decoder.cpp": b"unrar",
+        f"{top}/CPP/7zip/Compress/RarCodecsRegister.cpp": b"unrar",
+        f"{top}/CPP/7zip/Compress/Rar": b"kept: Rar*.* needs a dot",
+        f"{top}/CPP/7zip/Compress/nested/Rar1.cpp": b"kept: the glob is not recursive",
+        f"{top}/CPP/7zip/Compress/LzmaDecoder.cpp": b"kept",
+        f"{top}/CPP/7zip/Crypto/RarAes.cpp": b"unrar",
+        f"{top}/CPP/7zip/Crypto/7zAes.cpp": b"kept",
+        f"{top}/DOC/unRarLicense.txt": b"unrar license",
+        f"{top}/DOC/License.txt": b"kept",
+    }
+    directories = {top}
+    for name in members:
+        parent = name.rsplit("/", 1)[0]
+        while parent != top:
+            directories.add(parent)
+            parent = parent.rsplit("/", 1)[0]
+    raw = io.BytesIO()
+    with tarfile.open(fileobj=raw, mode="w:gz", format=tarfile.PAX_FORMAT,
+                      pax_headers={"comment": "0123456789abcdef"}) as tar:
+        for name in sorted(directories, reverse=True):
+            info = tarfile.TarInfo(name)
+            info.type = tarfile.DIRTYPE
+            info.mtime, info.uid, info.gid, info.uname, info.gname = 1776000000, 1000, 1000, "ip7z", "ip7z"
+            tar.addfile(info)
+        for name in sorted(members, reverse=True):
+            info = tarfile.TarInfo(name)
+            info.size = len(members[name])
+            info.mtime, info.uid, info.gid, info.uname, info.gname = 1776000000, 1000, 1000, "ip7z", "ip7z"
+            tar.addfile(info, io.BytesIO(members[name]))
+    return raw.getvalue()
+
+
+class SevenZipTransformTests(unittest.TestCase):
+    VERSION = "26.04"
+
+    def members(self, payload: bytes) -> list[tarfile.TarInfo]:
+        with tarfile.open(fileobj=io.BytesIO(payload), mode="r:xz") as tar:
+            return tar.getmembers()
+
+    def test_removes_exactly_the_strip_rar_support_set(self):
+        result = generated_sources._sevenzip_transform(build_sevenzip_archive(self.VERSION), self.VERSION)
+        names = {member.name for member in self.members(result)}
+        top = "7zip-26.04"
+        for dropped in ("CPP/7zip/Archive/Rar", "CPP/7zip/Archive/Rar/RarHandler.cpp",
+                        "CPP/7zip/Archive/Rar/Rar5Handler.h", "CPP/7zip/Compress/Rar3Decoder.cpp",
+                        "CPP/7zip/Compress/RarCodecsRegister.cpp", "CPP/7zip/Crypto/RarAes.cpp",
+                        "DOC/unRarLicense.txt"):
+            self.assertNotIn(f"{top}/{dropped}", names)
+        for kept in ("CPP/7zip/Archive/RarLike.cpp", "CPP/7zip/Compress/Rar",
+                     "CPP/7zip/Compress/nested/Rar1.cpp", "CPP/7zip/Compress/LzmaDecoder.cpp",
+                     "CPP/7zip/Crypto/7zAes.cpp", "DOC/License.txt"):
+            self.assertIn(f"{top}/{kept}", names)
+
+    def test_transform_is_byte_reproducible_sorted_and_ownerless(self):
+        archive = build_sevenzip_archive(self.VERSION)
+        first = generated_sources._sevenzip_transform(archive, self.VERSION)
+        self.assertEqual(first, generated_sources._sevenzip_transform(archive, self.VERSION))
+        members = self.members(first)
+        self.assertEqual([m.name for m in members], sorted(m.name for m in members))
+        for member in members:
+            self.assertEqual((member.uid, member.gid, member.uname, member.gname), (0, 0, "", ""))
+            self.assertEqual(member.mtime, 1776000000)
+            self.assertNotIn("comment", member.pax_headers)
+
+    def test_metadata_names_the_recipe_source_and_pinned_input(self):
+        metadata = generated_sources.metadata_for("7zip", ROOT / "packages" / "7zip")
+        self.assertEqual(metadata["filename"], "7zip-26.04.tar.xz")
+        self.assertIn("ip7z/7zip/archive/26.04/7zip-26.04.tar.gz", metadata["generate"]["input"])
+        self.assertIn("26.04", generated_sources.SEVENZIP_INPUT_SHA512)
+        spec = (ROOT / "packages" / "7zip" / "7zip.spec").read_text()
+        self.assertIn("Source:         %{name}-%{version}.tar.xz", spec)
+
+
 def build_hplip_archive(version: str) -> bytes:
     """A synthetic upstream hplip .tar.gz carrying `locatedriver`."""
     top = f"hplip-{version}"
