@@ -303,6 +303,11 @@ commit from the spec's `%global commit`, so moving the pin is one spec edit
 plus a new digest table entry, and include the upstream `LICENSE` so the
 package can ship it.
 
+Rust vendor generators must read the release root's exact lock path, not
+the first archive member ending in `Cargo.lock`. For `prefixdevname`, both
+dependency downloads and repacking use `prefixdevname-<version>/Cargo.lock`;
+an example or nested workspace lock must not select a different crate set.
+
 ## Source verification reporting
 
 `tools/source_pipeline.py` records how each accepted source was verified:

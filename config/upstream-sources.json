@@ -4791,6 +4791,18 @@
       ]
     },
     {
+      "name": "prefixdevname",
+      "version": "0.2.0",
+      "filename": "prefixdevname-0.2.0-vendored.tar.xz",
+      "sha512": "223679b0b249e16af475b3a53fe0189df037f9dd11c233a2dbe8b72bbeae5aab1dd1c5cb65b2262f91bdb7b53962ccb6e8107e4fedae76cd626f5886d00c13f1",
+      "generate": {
+        "script": "tools/generated_sources.py",
+        "input": "https://github.com/msekletar/prefixdevname/archive/refs/tags/v0.2.0.tar.gz (sha512-pinned) and every crates.io crate its Cargo.lock pins (sha256-pinned by Cargo.lock)",
+        "method": "add vendor/<crate>-<version> for each Cargo.lock crate with .cargo-checksum.json, as cargo vendor --versioned-dirs lays it out, and repack deterministically as prefixdevname-0.2.0-vendored.tar.xz"
+      },
+      "stage": 0
+    },
+    {
       "name": "printer-driver-brlaser",
       "version": "6.2.8",
       "url": "https://github.com/Owl-Maintain/brlaser/archive/refs/tags/v6.2.8.tar.gz",
