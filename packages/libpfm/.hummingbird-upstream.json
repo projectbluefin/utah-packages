@@ -2,7 +2,7 @@
   "package": "libpfm",
   "branch": "rawhide",
   "remote": "https://src.fedoraproject.org/rpms/libpfm.git",
-  "commit": "97832256675efb900b6de3d57695ec29d6f737b5",
+  "commit": "2049e49fa791f22fa3fcb7b03c5a52208297c5a8",
   "tree": "97832256675efb900b6de3d57695ec29d6f737b5",
   "imported_at": "2026-10-31T18:52:57Z"
 }
