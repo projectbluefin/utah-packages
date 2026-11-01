@@ -54,6 +54,13 @@
       "sha512": "5c75f2cfa714e3a5b87a8755c39bd279bb1e7556f4743affca90c0c655dce7e7852f2cfc1233ff8c48a0da1f500b59873794269ab088818df24ee58d527b861f"
     },
     {
+      "name": "OpenCL-ICD-Loader",
+      "version": "3.1",
+      "url": "https://github.com/KhronosGroup/OpenCL-ICD-Loader/archive/b7bd2803acc779c03d96588e9ca9e9568a18698a/OpenCL-ICD-Loader-b7bd280.tar.gz",
+      "filename": "OpenCL-ICD-Loader-b7bd280.tar.gz",
+      "sha512": "d3032df7e8c345911144107bbc22224f63001a8ab8997e4566e2ca9c48a2686ca319e5820c74df190fea7aa1c66672063fe716921a138fefd5abad407056670b"
+    },
+    {
       "name": "SDL3",
       "version": "3.4.16",
       "url": "https://www.libsdl.org/release/SDL3-3.4.16.tar.gz",
