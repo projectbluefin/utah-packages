@@ -514,6 +514,57 @@ class PydanticCoreGenerateTests(PackageDirMixin, unittest.TestCase):
             generated_sources._pydantic_core_transform(sdist, self.VERSION, {})
 
 
+class PrefixdevnameGenerateTests(PackageDirMixin, unittest.TestCase):
+    VERSION = "0.2.0"
+    TOP = f"prefixdevname-{VERSION}"
+    ARCHIVE_URL = f"https://github.com/msekletar/prefixdevname/archive/refs/tags/v{VERSION}.tar.gz"
+
+    def setUp(self):
+        super().setUp()
+        self.write_spec("prefixdevname.spec", self.VERSION)
+        self.crate = targz({"tinycrate-1.0.0/src/lib.rs": b"//"})
+        lock = (
+            f'[[package]]\nname = "prefixdevname"\nversion = "{self.VERSION}"\n\n'
+            f'[[package]]\nname = "tinycrate"\nversion = "1.0.0"\nsource = "{CRATES_IO}"\n'
+            f'checksum = "{hashlib.sha256(self.crate).hexdigest()}"\n'
+        )
+        self.archive = targz({f"{self.TOP}/Cargo.lock": lock.encode(), f"{self.TOP}/Cargo.toml": b"[x]"})
+        self.crate_url = "https://static.crates.io/crates/tinycrate/tinycrate-1.0.0.crate"
+
+    def test_an_unpinned_version_fails_before_any_download(self):
+        self.write_spec("prefixdevname.spec", "0.0.1")
+        with patch.object(generated_sources, "_fetch") as fetch:
+            with self.assertRaisesRegex(RuntimeError, "no pinned input SHA-512 for prefixdevname 0.0.1"):
+                generated_sources.generate("prefixdevname", self.package_dir, self.out_dir)
+        fetch.assert_not_called()
+
+    def test_a_rerolled_archive_fails_closed_before_any_crate_download(self):
+        fetch = UrlopenRecorder({self.ARCHIVE_URL: self.archive})
+        with patch.object(generated_sources.urllib.request, "urlopen", fetch):
+            with self.assertRaisesRegex(RuntimeError, f"input archive mismatch for {self.ARCHIVE_URL}"):
+                generated_sources.generate("prefixdevname", self.package_dir, self.out_dir)
+        self.assertEqual([url for url, _, _ in fetch.requests], [self.ARCHIVE_URL])
+        self.assertEqual(list(self.out_dir.iterdir()), [])
+
+    def test_the_pinned_archive_and_its_locked_crates_are_vendored(self):
+        fetch = UrlopenRecorder({self.ARCHIVE_URL: self.archive, self.crate_url: self.crate})
+        with patch.object(generated_sources.urllib.request, "urlopen", fetch), \
+                patch.dict(generated_sources.PREFIXDEVNAME_INPUT_SHA512, {self.VERSION: sha512(self.archive)}):
+            target = generated_sources.generate("prefixdevname", self.package_dir, self.out_dir)
+        self.assertEqual(target.name, f"{self.TOP}-vendored.tar.xz")
+        self.assertEqual([url for url, _, _ in fetch.requests], [self.ARCHIVE_URL, self.crate_url])
+        with tarfile.open(fileobj=io.BytesIO(lzma.decompress(target.read_bytes()))) as archive:
+            self.assertIn(f"{self.TOP}/vendor/tinycrate-1.0.0/src/lib.rs", archive.getnames())
+
+    def test_a_substituted_crate_download_fails_closed(self):
+        fetch = UrlopenRecorder({self.ARCHIVE_URL: self.archive, self.crate_url: targz({"tinycrate-1.0.0/x": b"evil"})})
+        with patch.object(generated_sources.urllib.request, "urlopen", fetch), \
+                patch.dict(generated_sources.PREFIXDEVNAME_INPUT_SHA512, {self.VERSION: sha512(self.archive)}):
+            with self.assertRaisesRegex(RuntimeError, "crate tinycrate 1.0.0: expected sha256"):
+                generated_sources.generate("prefixdevname", self.package_dir, self.out_dir)
+        self.assertEqual(list(self.out_dir.iterdir()), [])
+
+
 class CliTests(unittest.TestCase):
     def run_main(self, argv):
         stdout, stderr = io.StringIO(), io.StringIO()
