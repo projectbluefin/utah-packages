@@ -179,7 +179,6 @@ packages = [
 consumer_issue = "projectbluefin/utah#396"
 packages = [
     "7zip",
-    "OpenCL-ICD-Loader",
     "PackageKit-glib",
     "appstream-data",
     "b43-openfwwf",
@@ -325,6 +324,9 @@ packages = [
     # Recipe coverage only; slirp4netns uses the existing libslirp recipe.
     # Hosted build, publication, runtime solver and namespace tests remain on #507.
     { name = "slirp4netns", pr = 830 },
+    # Khronos OpenCL ICD loader recipe import only; hosted build, publication and
+    # runtime proof remain on #499.
+    { name = "OpenCL-ICD-Loader", pr = 834 },
     # Language data recipe; build/publication and consumer proof remain tracked in #494.
     { name = "langtable", pr = 700 },
     { name = "python3-langtable", pr = 700 },
