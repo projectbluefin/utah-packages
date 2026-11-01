@@ -399,7 +399,7 @@ packages = [
     # 7zip recipe import (#499): Source0 is generated from the pinned upstream
     # release without RAR support; hosted build, publication and runtime proof
     # remain outstanding.
-    { name = "7zip" },
+    { name = "7zip", pr = 869 },
     # compsize recipe was already imported in #686 (commit 1fbe19e1); record
     # that existing PR and commit instead of re-importing it.
     { name = "compsize", commit = "1fbe19e19d64204747a4fbaa69573573dd9a0d11", pr = 686 },
