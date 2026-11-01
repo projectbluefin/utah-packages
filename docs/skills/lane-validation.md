@@ -80,14 +80,23 @@ pipeline path: its token has no `packages: write`, so `canary.yml` fails it with
 "a fork pull request cannot publish the canary image". The author cannot fix
 that, and neither can an agent working from a fork; do not ask them to.
 
+Recipe imports can still need this proof when they add source-generation
+support under `tools/`, even if the change only registers a new package in
+`GIT_ARCHIVE_SOURCES` in `tools/generated_sources.py`. That is a pipeline
+change; the recipe-inventory exception does not cover it. Inspect the actual
+pull request's files against its upstream merge base, not a fork's possibly
+stale `main`, to identify the triggering path.
+
 Changing an existing source-lock entry, including only its primary URL or
 fallback URLs with an unchanged digest, needs this proof even when it changes
 no workflow or build tool. Adding only new non-canary entries does not:
 `pipeline_relevant` applies the inventory exceptions described above. If
 configuration validation passed, the build jobs were skipped, and Canary's
 `Decide` step reports missing maintainer-run proof, classify the failure as a
-review prerequisite, not a failed package build. Keep the intended source
-changes and the gate intact; removing either does not validate the change.
+review prerequisite, not a failed package build. Keep the source registration,
+generator support and the gate intact; removing required support or weakening
+the gate does not validate the import. Do not dispatch the privileged workflow
+as a substitute for maintainer review.
 
 A repair request naming a generic failed check can refer to this prerequisite.
 Read the failed job before changing code. Do not push an empty commit or

@@ -1,0 +1,15 @@
+--- a/src/cpp-utils/process/subprocess.cpp
++++ b/src/cpp-utils/process/subprocess.cpp
+@@ -3,5 +3,5 @@
+ #include <stdexcept>
+ #include <cerrno>
+ #include <array>
+-#include <boost/process.hpp>
++#include <boost/process/v1.hpp>
+ #include <boost/asio.hpp>
+@@ -12,4 +12,4 @@
+-namespace bp = boost::process;
++namespace bp = boost::process::v1;
+ namespace bf = boost::filesystem;
+ namespace ba = boost::asio;
+ namespace bs = boost::system;

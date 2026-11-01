@@ -1,0 +1,6 @@
+cryptopp*.zip
+cryptopp*.zip.sig
+cryptopp-modern-*.tar.gz
+cryptopp-modern-*.tar.gz.sig
+# gpgkey-CoraleSoft-844DCFC44A5DE9C14C3A2F62497A4CFBB700543E.gpg is tracked
+# for the source pipeline's signature verification.
