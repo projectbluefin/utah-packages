@@ -1,0 +1,8 @@
+{
+  "package": "libijs",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libijs.git",
+  "commit": "3c6bf347426a8388dea667a2fac09b1eb3fe48f1",
+  "tree": "dcef300f7b99e7b76638b25bdc39345c10dfeaae",
+  "imported_at": "2026-10-31T18:52:57Z"
+}
