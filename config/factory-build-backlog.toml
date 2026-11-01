@@ -253,6 +253,13 @@ packages = [
 # Run: https://github.com/projectbluefin/utah-packages/actions/runs/40151594832
 # Published binaries can survive newer failed rebuilds; this is not a runtime validation claim.
 # Latest rebuilds of gnome-tour, gnome-browser-connector and gnome-remote-desktop failed in run 40151594832; their earlier RPMs remain published.
+# VPN/YubiKey batch #479: all nine audited binaries are present in this image.
+# Image: ghcr.io/projectbluefin/utah-packages@sha256:8ec1178b09ac81b7db630976a66c859f34ec2f79113af6fb13b08f151f08e5b2
+# Source revision: 713729aa0d0ae3207a91d6fc07162980389e1340 (on main).
+# repomd.xml SHA-256: f5da4a9a03cb53f5d0a32ccd3f7ac41fc1e9fb8e9d3f6473bd363e3b05f5a3e4
+# Primary metadata SHA-256: 7a6a21aa7b19da2cf12843de2d189058158d9d66470bb349dd07bf5d9b4e5d4b
+# Run: https://github.com/projectbluefin/utah-packages/actions/runs/41232660647 (success).
+# Snapshot fetched 2026-10-31T19:22:14Z. Publication evidence only; not a runtime transaction or device test.
 # Packages that left the backlog because a recipe was imported.
 # Each entry: package name and the commit that closed the gap.
 packages = [
@@ -470,10 +477,10 @@ packages = [
     { name = "NetworkManager-openconnect", pr = 585 },
     { name = "NetworkManager-openconnect-gnome", pr = 585 },
     { name = "openconnect", pr = 585 },
-    { name = "vpnc", pr = 585 },
-    { name = "vpnc-script", pr = 585 },
-    { name = "stoken-libs", pr = 585 },
-    { name = "pkcs11-helper", pr = 585 },
+    { name = "vpnc", pr = 585, published_run = 41232660647, published_nevra = "vpnc-0:0.5.3^20241114.git11e15a1-5.hum1.bfin.x86_64" },
+    { name = "vpnc-script", pr = 585, published_run = 41232660647, published_nevra = "vpnc-script-0:20230907-1.git5b9e7e4c.hum1.bfin.noarch" },
+    { name = "stoken-libs", pr = 585, published_run = 41232660647, published_nevra = "stoken-libs-0:0.93-1.hum1.bfin.x86_64" },
+    { name = "pkcs11-helper", pr = 585, published_run = 41232660647, published_nevra = "pkcs11-helper-0:1.30.0-8.hum1.bfin.x86_64" },
     { name = "libpskc", pr = 585, published_run = 40626803772, published_nevra = "libpskc-0:2.6.15-1.hum1.bfin.x86_64" },
     { name = "libuser", pr = 585 },
     { name = "usermode", pr = 585 },
@@ -718,13 +725,13 @@ packages = [
     { name = "libXres", pr = 646 },
     # VPN / smart-card PKCS#11 provider and Yubico C/personalization stack (projectbluefin/utah-packages#479, utah#389).
     # libyubikey is ykpers's build and runtime dependency (libyubikey.so.0).
-    { name = "libyubikey", pr = 647 },
-    { name = "pkcs11-provider", pr = 647 },
-    { name = "ykclient", pr = 647 },
-    { name = "ykpers", pr = 647 },
-    # Recipe coverage only; Python runtime dependencies and publication remain outstanding.
-    { name = "python3-yubikey-manager" },
-    { name = "yubikey-manager" },
+    { name = "libyubikey", pr = 685, published_run = 41232660647, published_nevra = "libyubikey-0:1.13-28.hum1.bfin.x86_64" },
+    { name = "pkcs11-provider", pr = 685, published_run = 41232660647, published_nevra = "pkcs11-provider-0:1.3.0-1.hum1.bfin.x86_64" },
+    { name = "ykclient", pr = 685, published_run = 41232660647, published_nevra = "ykclient-0:2.15-24.hum1.bfin.x86_64" },
+    { name = "ykpers", pr = 685, published_run = 41232660647, published_nevra = "ykpers-0:1.20.0-19.hum1.bfin.x86_64" },
+    # Published in run 41232660647; Python runtime dependency and device validation remain open on #479.
+    { name = "python3-yubikey-manager", pr = 839, published_run = 41232660647, published_nevra = "python3-yubikey-manager-0:5.9.2-1.hum1.bfin.noarch" },
+    { name = "yubikey-manager", pr = 839, published_run = 41232660647, published_nevra = "yubikey-manager-0:5.9.2-1.hum1.bfin.noarch" },
     # bison.spec produces bison plus bison-devel/runtime; recipe closure for #485,
     # not a claim of publication or runtime installation.
     { name = "bison", pr = 615 },

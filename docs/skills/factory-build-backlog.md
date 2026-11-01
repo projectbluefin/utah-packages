@@ -560,8 +560,17 @@ package whose `[project].dependencies` generate runtime `python3dist(...)`
 `python3-pskc` and the `jaraco` libraries already have recipes in `[resolved]`;
 `python3-fido2` and `python3-keyring` (with `secretstorage`/`jeepney`) are still
 pending in `dev-tools`. Its recipe landed in #839 as recipe coverage only (both
-names moved to `[resolved]`); hosted build, publication and runtime proof stay
-blocked on those remaining Python providers and are tracked on #479.
+names moved to `[resolved]`). A later successful hosted build and publication
+covered both outputs; runtime dependency resolution and device validation
+remain separate on #479. Record the observed run and binary identities in the
+catalog, and recheck the current image before making publication claims:
+merging a recipe and publishing its next factory run are separate events.
+
+For the VPN/YubiKey outputs in #479, `stoken-libs` is the `libs` subpackage
+from the `stoken` source recipe, while `yubikey-manager` produces both the
+command-line tool and `python3-yubikey-manager`. Verify each binary by name in
+published primary metadata; do not infer publication from the source recipe
+or count a subpackage as a separate source import.
 
 The `pam-u2f` source recipe also produces `pamu2fcfg`; its detached
 signature is a separate SHA-512-locked source and its bundled keyring is
