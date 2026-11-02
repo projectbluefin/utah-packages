@@ -1,13 +1,16 @@
---- a/src/cpp-utils/process/subprocess.cpp
-+++ b/src/cpp-utils/process/subprocess.cpp
-@@ -3,5 +3,5 @@
+--- cryfs-0.11.3/src/cpp-utils/process/subprocess.cpp~	2026-01-14 10:07:01.851555414 +0000
++++ cryfs-0.11.3/src/cpp-utils/process/subprocess.cpp	2026-01-14 10:07:13.170914177 +0000
+@@ -3,13 +3,13 @@
  #include <stdexcept>
  #include <cerrno>
  #include <array>
 -#include <boost/process.hpp>
 +#include <boost/process/v1.hpp>
  #include <boost/asio.hpp>
-@@ -12,4 +12,4 @@
+ 
+ using std::string;
+ using std::vector;
+ 
 -namespace bp = boost::process;
 +namespace bp = boost::process::v1;
  namespace bf = boost::filesystem;

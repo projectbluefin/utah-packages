@@ -1,5 +1,10 @@
 %{!?_pkgdocdir: %global _pkgdocdir %{_docdir}/%{name}-%{version}}
 %global maj 0
+# Doxygen 1.18 in the build root writes function-pointer typedefs in a form
+# sphinxygen 1.0.12 cannot read (AssertionError in read_typedef), so the
+# Sphinx API reference fails to build. Off until sphinxygen handles it.
+# The tool man pages do not depend on it and still ship.
+%bcond docs 0
 
 Name:       lilv
 Version:    0.28.0
@@ -17,8 +22,13 @@ Patch0:     %{name}-bindings-test.patch
 
 BuildRequires:  gnupg2
 BuildRequires:  meson
+%if %{with docs}
 BuildRequires:  doxygen
 BuildRequires:  graphviz
+BuildRequires:  python3-sphinx
+BuildRequires:  python3-sphinx_lv2_theme
+BuildRequires:  python3-sphinxygen
+%endif
 BuildRequires:  pkgconfig(sord-0) >= 0.16.16
 BuildRequires:  pkgconfig(sratom-0) >= 0.6.10
 BuildRequires:  pkgconfig(lv2) >= 1.18.2
@@ -28,9 +38,6 @@ BuildRequires:  gcc
 BuildRequires:  gcc-c++
 BuildRequires:  pkgconfig(sndfile) >= 1.0.0
 BuildRequires:  pkgconfig(zix-0) >= 0.6.0
-BuildRequires:  python3-sphinx
-BuildRequires:  python3-sphinx_lv2_theme
-BuildRequires:  python3-sphinxygen
 
 Requires:       lv2 >= 1.18.2
 
@@ -79,21 +86,25 @@ This package contains the python libraries for %{name}.
 %autosetup -p1
 
 %build
-%meson
+%meson -Ddocs=%{?with_docs:enabled}%{!?with_docs:disabled}
 %meson_build
 
 %install
 %meson_install
 
+%if %{with docs}
 # Move devel docs to the right directory
 install -d %{buildroot}%{_docdir}/%{name}
 mv %{buildroot}%{_docdir}/%{name}-%{maj} %{buildroot}%{_docdir}/%{name}
+%endif
 
 %check
 %meson_test
 
 %files
+%if %{with docs}
 %exclude %{_pkgdocdir}/%{name}-%{maj}/
+%endif
 %{_bindir}/lv2info
 %{_bindir}/lv2ls
 %{_bindir}/lv2bench
@@ -110,7 +121,9 @@ mv %{buildroot}%{_docdir}/%{name}-%{maj} %{buildroot}%{_docdir}/%{name}
 %{_libdir}/lib%{name}-%{maj}.so
 %{_libdir}/pkgconfig/%{name}-%{maj}.pc
 %{_includedir}/%{name}-%{maj}/
+%if %{with docs}
 %{_pkgdocdir}/%{name}-%{maj}/
+%endif
 
 %files -n python3-%{name}
 %{python3_sitelib}/%{name}.*
