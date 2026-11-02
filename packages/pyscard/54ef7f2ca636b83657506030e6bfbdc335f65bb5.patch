@@ -20,7 +20,7 @@ diff --git a/src/smartcard/scard/PcscTypemaps.i b/src/smartcard/scard/PcscTypema
 index c8d783e4..c90f1f47 100644
 --- a/src/smartcard/scard/PcscTypemaps.i
 +++ b/src/smartcard/scard/PcscTypemaps.i
-@@ -23,6 +23,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+@@ -23,7 +23,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  %exception
  {
      Py_BEGIN_ALLOW_THREADS;
@@ -28,3 +28,4 @@ index c8d783e4..c90f1f47 100644
 +    $action
      Py_END_ALLOW_THREADS;
  }
+ 
