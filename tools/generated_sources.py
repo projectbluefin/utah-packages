@@ -50,6 +50,7 @@ without installing anything at runtime.
 
 from __future__ import annotations
 
+import errno
 import fnmatch
 import functools
 import gzip
@@ -61,14 +62,121 @@ import os
 from pathlib import Path
 import re
 import shutil
+import socket
+import ssl
 import subprocess
 import sys
 import tarfile
 import tempfile
+import urllib.error
 import urllib.request
 
 
 SCRIPT_PATH = "tools/generated_sources.py"
+
+
+# --- upstream reachability ------------------------------------------------------
+#
+# tools/source_pipeline.py runs this script as a subprocess and must tell "the
+# upstream host never answered" apart from everything else. Any uncaught
+# exception exits 1, and that includes the integrity alarms below (a moved tag,
+# a pinned input whose digest changed), which must keep failing the run. So the
+# outage case gets its own exception, raised only where the failure is provably
+# transport-level, and its own exit code. Nothing else is ever mapped to it: an
+# unknown git or generator failure stays an ordinary, fatal exit.
+EXIT_UPSTREAM_UNREACHABLE = 75  # EX_TEMPFAIL
+# Bound a git fetch/clone so a host that accepts the connection and then stalls
+# (git.ffmpeg.org) is reported as unreachable instead of wedging the job.
+GIT_NETWORK_TIMEOUT_SECONDS = 300
+
+_UNREACHABLE_ERRNOS = {errno.ENETUNREACH, errno.EHOSTUNREACH, errno.ENETDOWN, errno.EHOSTDOWN}
+
+# git/curl diagnostics that only appear when the transport itself failed.
+# "repository not found", "couldn't find remote ref", auth prompts and HTTP 4xx
+# are deliberately absent: those are permanent and need a human.
+_GIT_TRANSPORT_FAILURE = re.compile(
+    r"Could not resolve host"
+    r"|Failed to connect to"
+    r"|Connection timed out"
+    r"|Connection refused"
+    r"|Connection reset by peer"
+    r"|Operation timed out"
+    r"|Network is unreachable"
+    r"|No route to host"
+    r"|The remote end hung up unexpectedly"
+    r"|early EOF"
+    r"|gnutls_handshake\(\) failed"
+    r"|RPC failed; curl (?:18|28|52|55|56|92)\b"
+    r"|RPC failed; HTTP (?:408|429|5\d\d)\b"
+    r"|returned error: (?:408|429|5\d\d)\b"
+)
+_GIT_PERMANENT_FAILURE = re.compile(
+    r"(?:HTTP|returned error:) 4(?!08|29)\d\d\b"
+    r"|couldn't find remote ref"
+    r"|[Rr]epository not found"
+    r"|Authentication failed"
+    r"|certificate"
+)
+
+
+class UpstreamUnreachable(RuntimeError):
+    """The upstream host could not be reached; nothing was served to verify."""
+
+
+def transient_http_status(code: int) -> bool:
+    """A status worth retrying later: timeouts, throttling and server errors."""
+    return code in (408, 429) or 500 <= code < 600
+
+
+def is_transport_failure(error: BaseException) -> bool:
+    """True only when ``error`` means the host never served a usable answer.
+
+    A 404/410 is the server answering that the file is gone, a certificate
+    failure is not an outage, and a URLError with a string reason is a local
+    misconfiguration (unknown scheme, missing host): all of those are permanent.
+    """
+    if isinstance(error, urllib.error.HTTPError):
+        return transient_http_status(error.code)
+    if isinstance(error, urllib.error.URLError):
+        error = error.reason
+    if isinstance(error, ssl.CertificateError):
+        return False
+    if isinstance(error, (socket.gaierror, TimeoutError, ConnectionError, ssl.SSLEOFError)):
+        return True
+    return isinstance(error, OSError) and error.errno in _UNREACHABLE_ERRNOS
+
+
+def _fetch(url: str) -> bytes:
+    request = urllib.request.Request(url, headers={"User-Agent": "utah-packages-generated-source/1"})
+    try:
+        with urllib.request.urlopen(request, timeout=300) as response:
+            return response.read()
+    except (urllib.error.URLError, TimeoutError, ConnectionError) as error:
+        if is_transport_failure(error):
+            raise UpstreamUnreachable(f"could not reach {url}: {error}") from error
+        raise
+
+
+def git_transport_failure(stderr: str) -> bool:
+    return bool(_GIT_TRANSPORT_FAILURE.search(stderr)) and not _GIT_PERMANENT_FAILURE.search(stderr)
+
+
+def _git_network(command: list[str], remote: str) -> None:
+    """Run a git command that talks to ``remote``, classifying only outages."""
+    try:
+        subprocess.run(command, check=True, capture_output=True, text=True,
+                       timeout=GIT_NETWORK_TIMEOUT_SECONDS)
+    except subprocess.TimeoutExpired as error:
+        raise UpstreamUnreachable(
+            f"git could not reach {remote}: no answer within {GIT_NETWORK_TIMEOUT_SECONDS}s"
+        ) from error
+    except subprocess.CalledProcessError as error:
+        stderr = error.stderr or ""
+        sys.stderr.write(stderr)
+        if git_transport_failure(stderr):
+            detail = next(line.strip() for line in stderr.splitlines() if _GIT_TRANSPORT_FAILURE.search(line))
+            raise UpstreamUnreachable(f"git could not reach {remote}: {detail}") from error
+        raise
 
 
 # SHA-512 of the first-party input archives, pinned so a re-rolled upstream
@@ -235,9 +343,7 @@ def _imd_generate(package_dir: Path, out_dir: Path) -> Path:
     if pin is None:
         raise RuntimeError(f"no pinned input SHA-512 for intel-media {version}")
     url = f"https://github.com/intel/media-driver/archive/intel-media-{version}.tar.gz"
-    request = urllib.request.Request(url, headers={"User-Agent": "utah-packages-generated-source/1"})
-    with urllib.request.urlopen(request, timeout=300) as response:
-        payload = response.read()
+    payload = _fetch(url)
     actual = hashlib.sha512(payload).hexdigest()
     if actual != pin:
         raise RuntimeError(f"input archive mismatch for {url}: expected {pin}, got {actual}")
@@ -276,10 +382,10 @@ def _tailscale_generate(package_dir: Path, out_dir: Path) -> Path:
         )
     with tempfile.TemporaryDirectory(prefix="tailscale-vendor-", dir=out_dir) as tmp:
         tree = Path(tmp) / f"tailscale-{version}"
-        subprocess.run(
-            ["git", "clone", "-q", "--branch", f"v{version}", "--depth", "1",
-             "https://github.com/tailscale/tailscale.git", str(tree)],
-            check=True,
+        remote = "https://github.com/tailscale/tailscale.git"
+        _git_network(
+            ["git", "clone", "-q", "--branch", f"v{version}", "--depth", "1", remote, str(tree)],
+            remote,
         )
         head = subprocess.check_output(["git", "-C", str(tree), "rev-parse", "HEAD"], text=True).strip()
         if head != commit:
@@ -389,9 +495,7 @@ def _gpm_generate(package_dir: Path, out_dir: Path) -> Path:
     if pin is None:
         raise RuntimeError(f"no pinned input SHA-512 for gpm {version}")
     url = f"https://www.nico.schottelius.org/software/gpm/archives/gpm-{version}.tar.lzma"
-    request = urllib.request.Request(url, headers={"User-Agent": "utah-packages-generated-source/1"})
-    with urllib.request.urlopen(request, timeout=300) as response:
-        payload = response.read()
+    payload = _fetch(url)
     actual = hashlib.sha512(payload).hexdigest()
     if actual != pin:
         raise RuntimeError(f"input archive mismatch for {url}: expected {pin}, got {actual}")
@@ -465,9 +569,7 @@ def _openal_soft_generate(package_dir: Path, out_dir: Path) -> Path:
     if pin is None:
         raise RuntimeError(f"no pinned input SHA-512 for openal-soft {version}")
     url = f"https://openal-soft.org/openal-releases/openal-soft-{version}.tar.bz2"
-    request = urllib.request.Request(url, headers={"User-Agent": "utah-packages-generated-source/1"})
-    with urllib.request.urlopen(request, timeout=300) as response:
-        payload = response.read()
+    payload = _fetch(url)
     actual = hashlib.sha512(payload).hexdigest()
     if actual != pin:
         raise RuntimeError(f"input archive mismatch for {url}: expected {pin}, got {actual}")
@@ -537,9 +639,7 @@ def _hplip_generate(package_dir: Path, out_dir: Path) -> Path:
     if pin is None:
         raise RuntimeError(f"no pinned input SHA-512 for hplip {version}")
     url = HPLIP_UPSTREAM_URL.format(version=version)
-    request = urllib.request.Request(url, headers={"User-Agent": "utah-packages-generated-source/1"})
-    with urllib.request.urlopen(request, timeout=300) as response:
-        payload = response.read()
+    payload = _fetch(url)
     actual = hashlib.sha512(payload).hexdigest()
     if actual != pin:
         raise RuntimeError(f"input archive mismatch for {url}: expected {pin}, got {actual}")
@@ -662,9 +762,7 @@ def _freerdp_generate(package_dir: Path, out_dir: Path) -> Path:
     if pin is None:
         raise RuntimeError(f"no pinned input SHA-512 for freerdp {version}")
     url = FREERDP_UPSTREAM_URL.format(version=version)
-    request = urllib.request.Request(url, headers={"User-Agent": "utah-packages-generated-source/1"})
-    with urllib.request.urlopen(request, timeout=300) as response:
-        payload = response.read()
+    payload = _fetch(url)
     actual = hashlib.sha512(payload).hexdigest()
     if actual != pin:
         raise RuntimeError(f"input archive mismatch for {url}: expected {pin}, got {actual}")
@@ -679,10 +777,6 @@ CRATES_IO_INDEX = "registry+https://github.com/rust-lang/crates.io-index"
 CRATE_URL = "https://static.crates.io/crates/{name}/{name}-{version}.crate"
 
 
-def _fetch(url: str) -> bytes:
-    request = urllib.request.Request(url, headers={"User-Agent": "utah-packages-generated-source/1"})
-    with urllib.request.urlopen(request, timeout=300) as response:
-        return response.read()
 
 
 def cargo_lock_packages(lock_text: str) -> list[dict]:
@@ -891,9 +985,7 @@ def _fpaste_generate(package_dir: Path, out_dir: Path) -> Path:
     if pin is None:
         raise RuntimeError(f"no pinned input SHA-512 for fpaste {version}")
     url = FPASTE_UPSTREAM_URL.format(version=version)
-    request = urllib.request.Request(url, headers={"User-Agent": "utah-packages-generated-source/1"})
-    with urllib.request.urlopen(request, timeout=300) as response:
-        payload = response.read()
+    payload = _fetch(url)
     actual = hashlib.sha512(payload).hexdigest()
     if actual != pin:
         raise RuntimeError(f"input archive mismatch for {url}: expected {pin}, got {actual}")
@@ -970,9 +1062,7 @@ def _bluefin_artwork_generate(package_dir: Path, out_dir: Path) -> Path:
     files = {}
     for path, pin in sorted(pins.items()):
         url = BLUEFIN_ARTWORK_RAW_URL.format(commit=commit, path=path)
-        request = urllib.request.Request(url, headers={"User-Agent": "utah-packages-generated-source/1"})
-        with urllib.request.urlopen(request, timeout=300) as response:
-            payload = response.read()
+        payload = _fetch(url)
         actual = hashlib.sha512(payload).hexdigest()
         if actual != pin:
             raise RuntimeError(f"input file mismatch for {url}: expected {pin}, got {actual}")
@@ -1096,6 +1186,14 @@ GIT_ARCHIVE_SOURCES = {
         "compression": "xz",
         "commits": {"4.9.6": "392af90207fc51dd9f9044ee9b1f963f3c851c2c"},
     },
+    # utah-packages#875: git.ffmpeg.org drops or stalls connections, which
+    # aborted the daily source check. The locked input was reproduced from this
+    # host for utah-packages#877: tag v2.6 resolves to the pinned commit below,
+    # and `gzip -n -9` of its `git archive` gives the SHA-512 (423d7c94...)
+    # committed in config/upstream-sources.json and packages/rtmpdump/sources.
+    # This remote is the approved source and has no mirror; when it is down the
+    # generator exits EXIT_UPSTREAM_UNREACHABLE and the pipeline reports
+    # rtmpdump `unavailable` rather than accepting anything else.
     "rtmpdump": {
         "remote": "https://git.ffmpeg.org/rtmpdump.git",
         "tag": "v{version}",
@@ -1145,9 +1243,9 @@ def _git_archive_generate(name: str, package_dir: Path, out_dir: Path) -> Path:
         subprocess.run(["git", "init", "-q", tmp], check=True)
         # Fetch only the tag: rtmpdump's repository advertises refs to the
         # all-zero object, which a full clone refuses.
-        subprocess.run(
+        _git_network(
             ["git", "-C", tmp, "fetch", "-q", "--depth", "1", source["remote"], f"refs/tags/{tag}"],
-            check=True,
+            source["remote"],
         )
         head = subprocess.check_output(
             ["git", "-C", tmp, "rev-parse", "FETCH_HEAD^{commit}"], text=True
@@ -1212,7 +1310,13 @@ def main() -> int:
         print(f"usage: {sys.argv[0]} PACKAGE PACKAGE_DIR OUTPUT_DIR", file=sys.stderr)
         return 2
     package, package_dir, out_dir = sys.argv[1], Path(sys.argv[2]), Path(sys.argv[3])
-    artifact = generate(package, package_dir, out_dir)
+    try:
+        artifact = generate(package, package_dir, out_dir)
+    except UpstreamUnreachable as error:
+        # Only a proven outage takes this exit; a moved tag, an input digest
+        # mismatch or any other failure propagates and exits 1.
+        print(f"{package}: upstream unavailable: {error}", file=sys.stderr)
+        return EXIT_UPSTREAM_UNREACHABLE
     print(json.dumps({
         "package": package,
         "filename": artifact.name,
