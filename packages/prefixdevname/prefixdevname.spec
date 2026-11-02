@@ -35,7 +35,9 @@ configuration file for udev's net_setup_link built-in
 %cargo_vendor_manifest
 
 %install
-install -D -m 0755 target/release/prefixdevname %{buildroot}%{_udevdir}/prefixdevname
+# systemd-rpm-macros defines %%{_udevrulesdir} but no %%{_udevdir}, and the
+# upstream rule runs PROGRAM="/usr/lib/udev/prefixdevname".
+install -D -m 0755 target/release/prefixdevname %{buildroot}%{_prefix}/lib/udev/prefixdevname
 install -D -m 0644 rules/71-prefixdevname.rules %{buildroot}%{_udevrulesdir}/71-prefixdevname.rules
 install -D -m 0755 dracut/71prefixdevname/module-setup.sh %{buildroot}%{_prefix}/lib/dracut/modules.d/71%{name}/module-setup.sh
 install -D -m 0755 dracut/71prefixdevname-tools/module-setup.sh %{buildroot}%{_prefix}/lib/dracut/modules.d/71%{name}-tools/module-setup.sh
@@ -45,7 +47,7 @@ install -D -m 0755 dracut/71prefixdevname-tools/module-setup.sh %{buildroot}%{_p
 %license LICENSE.dependencies
 %license cargo-vendor.txt
 %doc README.md
-%{_udevdir}/prefixdevname
+%{_prefix}/lib/udev/prefixdevname
 %{_udevrulesdir}/71-prefixdevname.rules
 %dir %{_prefix}/lib/dracut/modules.d/71%{name}
 %{_prefix}/lib/dracut/modules.d/71%{name}/module-setup.sh

@@ -1,4 +1,9 @@
 %global maj 0
+# Doxygen 1.18 in the build root writes function-pointer typedefs in a form
+# sphinxygen 1.0.12 cannot read (AssertionError in read_typedef), so the
+# Sphinx API reference fails to build. Off until sphinxygen handles it.
+# The serdi man page does not depend on it and still ships.
+%bcond docs 0
 
 Name:           serd
 Version:        0.32.10
@@ -12,14 +17,16 @@ Source1:        https://download.drobilla.net/%{name}-%{version}.tar.xz.sig
 Source2:        https://drobilla.net/drobilla.gpg
 
 BuildRequires:  meson
-BuildRequires:  doxygen
-BuildRequires:  graphviz
 BuildRequires:  python3
 BuildRequires:  gcc
 BuildRequires:  gnupg2
+%if %{with docs}
+BuildRequires:  doxygen
+BuildRequires:  graphviz
 BuildRequires:  python3-sphinx
 BuildRequires:  python3-sphinx_lv2_theme
 BuildRequires:  python-sphinxygen
+%endif
 
 %description
 %{name} is a lightweight C library for RDF syntax which supports reading and 
@@ -44,14 +51,16 @@ This package contains the headers and development libraries for %{name}.
 %autosetup -p1
 
 %build
-%meson -Dman_html=disabled
+%meson -Dman_html=disabled -Ddocs=%{?with_docs:enabled}%{!?with_docs:disabled}
 %meson_build
 
 %install
 %meson_install
+%if %{with docs}
 # Move devel docs to the right directory
 install -d %{buildroot}%{_docdir}/%{name}
 mv %{buildroot}%{_docdir}/%{name}-%{maj} %{buildroot}%{_docdir}/%{name}
+%endif
 
 %check
 %meson_test
@@ -64,7 +73,9 @@ mv %{buildroot}%{_docdir}/%{name}-%{maj} %{buildroot}%{_docdir}/%{name}
 %{_bindir}/serdi
 
 %files devel
+%if %{with docs}
 %doc %{_docdir}/%{name}/%{name}-%{maj}/
+%endif
 %{_libdir}/lib%{name}-%{maj}*.so
 %{_libdir}/pkgconfig/%{name}*.pc
 %{_includedir}/%{name}-%{maj}/
