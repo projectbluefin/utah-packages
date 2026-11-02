@@ -242,6 +242,13 @@ build() {
     chmod -R a+rX /work/reports/check || true
     exit "$status"
   fi
+  # Only this package's binaries may leave the job: %build runs as the mock
+  # user and mock copies out anything in RPMS/, and publish replaces by
+  # %{SOURCERPM}. The lock SRPM is what mock was given, so its name is the
+  # one every binary must claim. tools/check_rpm_source.sh, as in the
+  # container lane.
+  bash /tools/check_rpm_source.sh \
+    "$(rpm -qp --nosignature --qf "%{NAME}" "$srpm")" /work/result
   # mock leaves the SRPM beside the binaries; the repository ships binaries.
   rm -f /work/result/*.src.rpm
   find /work/result -name "*.rpm" -type f -print0 | \
