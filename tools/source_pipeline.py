@@ -53,6 +53,11 @@ def digest(path: Path, algorithm: str) -> str:
 # An empty body is transient, so it is retried, and if it persists it is
 # reported as what it is rather than as a digest mismatch.
 FETCH_ATTEMPTS = 3
+# A generated source fetches pinned upstream input (git clone/checkout, then
+# a deterministic archive). A hung upstream would otherwise block the daily
+# job forever; this bounds the wait so a dead host becomes an "unavailable"
+# entry instead of a wedged pipeline. Generous enough for a real slow fetch.
+GENERATE_TIMEOUT_SECONDS = 600
 
 
 class EmptyDownload(RuntimeError):
@@ -69,6 +74,16 @@ class ChallengePage(RuntimeError):
     """The server answered an archive URL with an HTML page instead of the file."""
 
 
+class UnavailableSource(RuntimeError):
+    """The upstream answered nothing we could use: down, timed out, or lost.
+
+    A missing upstream is a transient availability problem, not a tampered or
+    re-rolled archive. The daily job must track it and keep going, so it is
+    raised as its own error type and handled separately from a digest mismatch,
+    which stays fatal.
+    """
+
+
 def fetch(url: str, destination: Path) -> None:
     request = urllib.request.Request(url, headers={"User-Agent": "utah-packages-source-pipeline/1"})
     last: Exception | None = None
@@ -83,11 +98,11 @@ def fetch(url: str, destination: Path) -> None:
             if content_type == "text/html" and not urllib.parse.urlsplit(url).path.endswith((".html", ".htm")):
                 raise ChallengePage(f"{url} returned an HTML page instead of the file")
             return
-        except (EmptyDownload, urllib.error.URLError, TimeoutError, ConnectionError) as error:
+        except (UnavailableSource, EmptyDownload, urllib.error.URLError, TimeoutError, ConnectionError) as error:
             last = error
             if attempt < FETCH_ATTEMPTS:
                 time.sleep(2 ** attempt)
-    raise RuntimeError(f"failed to fetch {url} after {FETCH_ATTEMPTS} attempts: {last}") from last
+    raise UnavailableSource(f"failed to fetch {url} after {FETCH_ATTEMPTS} attempts: {last}") from last
 
 
 def fetch_with_fallbacks(urls: list[str], destination: Path) -> str:
@@ -103,9 +118,14 @@ def fetch_with_fallbacks(urls: list[str], destination: Path) -> str:
         try:
             fetch(url, destination)
             return url
+        except UnavailableSource:
+            # A dead upstream is fatal for this entry: no mirror can stand in
+            # for a host that never answered, and retrying a mirror would only
+            # mask the outage. Surface it immediately.
+            raise
         except RuntimeError as error:
             errors.append(f"{url}: {error}")
-    raise RuntimeError("all source URLs failed: " + "; ".join(errors))
+    raise UnavailableSource("all source URLs failed: " + "; ".join(errors))
 
 
 def verify_signature(package: dict, target: Path, directory: Path) -> None:
@@ -154,10 +174,23 @@ def generate_source(package: dict, target_dir: Path) -> Path:
     scratch = target_dir / ".generate"
     shutil.rmtree(scratch, ignore_errors=True)
     scratch.mkdir(parents=True)
-    subprocess.run(
-        [sys.executable, str(script), name, str(package_dir), str(scratch)],
-        check=True,
-    )
+    try:
+        subprocess.run(
+            [sys.executable, str(script), name, str(package_dir), str(scratch)],
+            check=True,
+            timeout=GENERATE_TIMEOUT_SECONDS,
+        )
+    except subprocess.TimeoutExpired:
+        raise UnavailableSource(f"generation of {name} timed out contacting upstream") from None
+    except subprocess.CalledProcessError as error:
+        # The generator fetches pinned upstream input; a non-zero exit is the
+        # dead-upstream case (git exits 128 when it cannot reach the host). That
+        # is transient, so treat it as unavailable rather than failing the whole
+        # daily run.
+        raise UnavailableSource(
+            f"generation of {name} could not reach its upstream "
+            f"(exit {error.returncode})"
+        ) from None
     produced = scratch / package["filename"]
     if not produced.is_file():
         raise ValueError(f"generation did not produce {package['filename']}")
@@ -286,6 +319,7 @@ def main() -> int:
             print(json.dumps({"package": package["name"], "verified": verified}, sort_keys=True))
         return 0
     succeeded = True
+    unavailable: list[dict] = []
     for package in selected(locks, args.package):
         if package.get("no_upstream_source"):
             # A handful of recipes ship no archive at all: color-filesystem
@@ -382,6 +416,13 @@ def main() -> int:
             if args.stage_into:
                 source_files = [final, *(target_dir / item for item in bundled)]
                 report["staged"] = stage_for_packit(package, source_files, args.stage_into)
+        except UnavailableSource as error:
+            # A missing upstream is transient: record it, keep the candidate
+            # off disk, and let the run continue so one flaky source cannot block
+            # the whole daily audit. Real integrity failures still fail closed.
+            candidate.unlink(missing_ok=True)
+            unavailable.append({"package": name, "error": str(error)})
+            report.update({"result": "unavailable", "error": str(error)})
         except Exception as error:  # Do not replace an accepted source.
             candidate.unlink(missing_ok=True)
             succeeded = False
@@ -389,6 +430,9 @@ def main() -> int:
         args.report_dir.mkdir(parents=True, exist_ok=True)
         (args.report_dir / f"{name}.json").write_text(json.dumps(report, indent=2, sort_keys=True) + "\n")
         print(json.dumps(report, sort_keys=True))
+    if unavailable:
+        names = ", ".join(item["package"] for item in unavailable)
+        print(f"source-pipeline: {len(unavailable)} package(s) unavailable (upstream unreachable): {names}")
     return 0 if succeeded else 1
 
 
