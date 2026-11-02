@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -25,6 +26,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from tools.generated_sources import EXIT_UPSTREAM_UNREACHABLE, is_transport_failure
 from tools.package_inventory import load_source_locks
 
 # One `SHA512 (file) = <128 hex>` manifest line; tools/validate.py gates on it too.
@@ -53,11 +55,12 @@ def digest(path: Path, algorithm: str) -> str:
 # An empty body is transient, so it is retried, and if it persists it is
 # reported as what it is rather than as a digest mismatch.
 FETCH_ATTEMPTS = 3
-# A generated source fetches pinned upstream input (git clone/checkout, then
-# a deterministic archive). A hung upstream would otherwise block the daily
-# job forever; this bounds the wait so a dead host becomes an "unavailable"
-# entry instead of a wedged pipeline. Generous enough for a real slow fetch.
-GENERATE_TIMEOUT_SECONDS = 600
+# A generated source fetches pinned upstream input and then builds an archive
+# (tailscale also vendors Go modules). The generator bounds its own network
+# calls and reports an unreachable host with EXIT_UPSTREAM_UNREACHABLE; this
+# outer bound only stops a wedged generator from hanging the job, and because
+# nothing proves such a hang is an outage, it fails the package.
+GENERATE_TIMEOUT_SECONDS = 1800
 
 
 class EmptyDownload(RuntimeError):
@@ -75,12 +78,13 @@ class ChallengePage(RuntimeError):
 
 
 class UnavailableSource(RuntimeError):
-    """The upstream answered nothing we could use: down, timed out, or lost.
+    """The upstream never served an answer: down, timed out, or throttled.
 
-    A missing upstream is a transient availability problem, not a tampered or
-    re-rolled archive. The daily job must track it and keep going, so it is
-    raised as its own error type and handled separately from a digest mismatch,
-    which stays fatal.
+    Only a transport-level outage of the primary source is raised as this type
+    (see ``is_transport_failure`` and the generator's EXIT_UPSTREAM_UNREACHABLE).
+    A digest mismatch, a moved tag, a permanent 4xx, a certificate failure, an
+    unknown generator error or a missing verification input is never
+    "unavailable": those stay fatal.
     """
 
 
@@ -98,34 +102,56 @@ def fetch(url: str, destination: Path) -> None:
             if content_type == "text/html" and not urllib.parse.urlsplit(url).path.endswith((".html", ".htm")):
                 raise ChallengePage(f"{url} returned an HTML page instead of the file")
             return
-        except (UnavailableSource, EmptyDownload, urllib.error.URLError, TimeoutError, ConnectionError) as error:
+        except (urllib.error.URLError, TimeoutError, ConnectionError) as error:
+            if not is_transport_failure(error):
+                # The server answered (404/410) or the request itself is wrong
+                # (bad certificate, unknown scheme): retrying cannot help, and
+                # it is not an outage.
+                raise RuntimeError(f"failed to fetch {url}: {error}") from error
             last = error
-            if attempt < FETCH_ATTEMPTS:
-                time.sleep(2 ** attempt)
+        except EmptyDownload as error:
+            last = error
+        if attempt < FETCH_ATTEMPTS:
+            time.sleep(2 ** attempt)
     raise UnavailableSource(f"failed to fetch {url} after {FETCH_ATTEMPTS} attempts: {last}") from last
 
 
+def fetch_required(url: str, destination: Path, what: str) -> None:
+    """Fetch an input that verification depends on; an outage here is fatal.
+
+    A signature, checksum manifest or bundled source that cannot be fetched
+    means the package cannot be verified, so it is rejected, never reported as
+    merely unavailable.
+    """
+    try:
+        fetch(url, destination)
+    except UnavailableSource as error:
+        raise RuntimeError(f"{what} could not be fetched: {error}") from error
+
+
 def fetch_with_fallbacks(urls: list[str], destination: Path) -> str:
-    """Fetch the upstream source first, falling back only on transport failure.
+    """Fetch the upstream source first, falling back on any fetch failure.
 
     A fallback is an availability mirror, never a replacement for integrity:
     the caller still validates the configured SHA-512 (and, where present, the
     upstream signature/checksum manifest).  A fetched file whose digest is
     wrong must fail closed rather than quietly trying another source.
+
+    Every URL is tried. The entry is only "unavailable" when every URL failed
+    with an outage; if any of them failed permanently (a 404 on the primary,
+    say), the failure is fatal and actionable.
     """
     errors: list[str] = []
+    all_unavailable = True
     for url in urls:
         try:
             fetch(url, destination)
             return url
-        except UnavailableSource:
-            # A dead upstream is fatal for this entry: no mirror can stand in
-            # for a host that never answered, and retrying a mirror would only
-            # mask the outage. Surface it immediately.
-            raise
         except RuntimeError as error:
+            all_unavailable = all_unavailable and isinstance(error, UnavailableSource)
             errors.append(f"{url}: {error}")
-    raise UnavailableSource("all source URLs failed: " + "; ".join(errors))
+    message = "all source URLs failed: " + "; ".join(errors)
+    raise UnavailableSource(message) if all_unavailable else RuntimeError(message)
 
 
 def verify_signature(package: dict, target: Path, directory: Path) -> None:
@@ -135,7 +161,7 @@ def verify_signature(package: dict, target: Path, directory: Path) -> None:
     if not key:
         return
     signature = directory / f"{target.name}.asc"
-    fetch(signature_url, signature)
+    fetch_required(signature_url, signature, "signature")
     key_path = Path(key)
     if not key_path.is_file():
         raise ValueError(f"configured GPG key does not exist: {key_path}")
@@ -181,16 +207,14 @@ def generate_source(package: dict, target_dir: Path) -> Path:
             timeout=GENERATE_TIMEOUT_SECONDS,
         )
     except subprocess.TimeoutExpired:
-        raise UnavailableSource(f"generation of {name} timed out contacting upstream") from None
+        raise RuntimeError(f"generation of {name} did not finish within {GENERATE_TIMEOUT_SECONDS}s") from None
     except subprocess.CalledProcessError as error:
-        # The generator fetches pinned upstream input; a non-zero exit is the
-        # dead-upstream case (git exits 128 when it cannot reach the host). That
-        # is transient, so treat it as unavailable rather than failing the whole
-        # daily run.
-        raise UnavailableSource(
-            f"generation of {name} could not reach its upstream "
-            f"(exit {error.returncode})"
-        ) from None
+        # Only the generator's dedicated exit means "upstream unreachable". Any
+        # other non-zero exit -- a moved tag, an input archive mismatch, a git
+        # or tool failure -- is fatal.
+        if error.returncode == EXIT_UPSTREAM_UNREACHABLE:
+            raise UnavailableSource(f"generation of {name} could not reach its upstream") from None
+        raise RuntimeError(f"generation of {name} failed (exit {error.returncode})") from None
     produced = scratch / package["filename"]
     if not produced.is_file():
         raise ValueError(f"generation did not produce {package['filename']}")
@@ -232,7 +256,7 @@ def bundled_sources(package: dict, target_dir: Path, already: str) -> list[str]:
         url = template.format(pkg=package.get("dist_git_name", package["name"]),
                               name=filename, hash=expected)
         candidate = target_dir / f"{filename}.candidate"
-        fetch(url, candidate)
+        fetch_required(url, candidate, f"bundled source {filename}")
         actual = digest(candidate, "sha512")
         if actual != expected:
             candidate.unlink(missing_ok=True)
@@ -319,6 +343,10 @@ def main() -> int:
             print(json.dumps({"package": package["name"], "verified": verified}, sort_keys=True))
         return 0
     succeeded = True
+    # Tolerating an outage only makes sense for the whole-inventory audit:
+    # a named package is being fetched for a build, which cannot proceed
+    # without its source.
+    full_inventory = args.package is None
     unavailable: list[dict] = []
     for package in selected(locks, args.package):
         if package.get("no_upstream_source"):
@@ -389,13 +417,16 @@ def main() -> int:
             verify_signature(package, candidate, target_dir)
             if checksum_url := package.get("sha256_url"):
                 checksum_file = target_dir / "upstream.sha256"
-                fetch(checksum_url, checksum_file)
+                fetch_required(checksum_url, checksum_file, "SHA-256 manifest")
                 expected_sha256 = digest(candidate, "sha256")
                 if expected_sha256 not in checksum_file.read_text(errors="replace"):
                     raise ValueError("download is absent from the upstream SHA-256 manifest")
+            # Bundled sources are verification inputs too: fetch them before
+            # Source0 is promoted, so a failure never leaves a fresh final
+            # artifact behind a rejected report.
+            bundled = bundled_sources(package, target_dir, filename)
             final = target_dir / filename
             candidate.replace(final)
-            bundled = bundled_sources(package, target_dir, filename)
             verification = (
                 "signature"
                 if package.get("signature_url")
@@ -417,12 +448,14 @@ def main() -> int:
                 source_files = [final, *(target_dir / item for item in bundled)]
                 report["staged"] = stage_for_packit(package, source_files, args.stage_into)
         except UnavailableSource as error:
-            # A missing upstream is transient: record it, keep the candidate
-            # off disk, and let the run continue so one flaky source cannot block
-            # the whole daily audit. Real integrity failures still fail closed.
+            # The primary source's host never answered. In the full audit this
+            # is recorded and the run continues, so one outage cannot block the
+            # rest of the inventory; integrity failures still fail closed.
             candidate.unlink(missing_ok=True)
-            unavailable.append({"package": name, "error": str(error)})
+            unavailable.append({"package": name, "error": str(error), **({"url": url} if url else {})})
             report.update({"result": "unavailable", "error": str(error)})
+            if not full_inventory:
+                succeeded = False
         except Exception as error:  # Do not replace an accepted source.
             candidate.unlink(missing_ok=True)
             succeeded = False
@@ -430,10 +463,32 @@ def main() -> int:
         args.report_dir.mkdir(parents=True, exist_ok=True)
         (args.report_dir / f"{name}.json").write_text(json.dumps(report, indent=2, sort_keys=True) + "\n")
         print(json.dumps(report, sort_keys=True))
-    if unavailable:
-        names = ", ".join(item["package"] for item in unavailable)
-        print(f"source-pipeline: {len(unavailable)} package(s) unavailable (upstream unreachable): {names}")
+    if full_inventory:
+        report_unavailable(unavailable, args.report_dir)
     return 0 if succeeded else 1
+
+
+def report_unavailable(unavailable: list[dict], report_dir: Path) -> None:
+    """Make an incomplete audit visible beyond the job log.
+
+    ``unavailable.json`` is always written for a full-inventory run, so an
+    empty list positively records that every source was checked. The job
+    summary names each package that was not, so a green run still shows it.
+    """
+    report_dir.mkdir(parents=True, exist_ok=True)
+    (report_dir / "unavailable.json").write_text(json.dumps(unavailable, indent=2, sort_keys=True) + "\n")
+    if not unavailable:
+        return
+    names = ", ".join(item["package"] for item in unavailable)
+    print(f"source-pipeline: audit incomplete, {len(unavailable)} package(s) unavailable (upstream unreachable): {names}")
+    if summary := os.environ.get("GITHUB_STEP_SUMMARY"):
+        with open(summary, "a") as handle:
+            handle.write(
+                f"### Source audit incomplete: {len(unavailable)} upstream(s) unreachable\n\n"
+                "These sources were not verified this run. Re-run once the host is back, "
+                "or add a verified `fallback_urls` mirror.\n\n"
+                + "".join(f"- `{item['package']}`: {item['error']}\n" for item in unavailable)
+            )
 
 
 if __name__ == "__main__":

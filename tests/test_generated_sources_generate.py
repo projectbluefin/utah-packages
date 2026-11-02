@@ -22,6 +22,7 @@ import sys
 import tarfile
 import tempfile
 import unittest
+import urllib.error
 from unittest.mock import patch
 
 from tools import generated_sources
@@ -611,6 +612,110 @@ class CliTests(unittest.TestCase):
         self.assertNotEqual(unknown.returncode, 0)
         self.assertIn("no generated source resolver for zsh", unknown.stderr)
         self.assertEqual(unknown.stdout, "")
+
+
+
+class UpstreamReachabilityTests(PackageDirMixin, unittest.TestCase):
+    """Only a proven transport outage becomes EXIT_UPSTREAM_UNREACHABLE.
+
+    source_pipeline maps that exit, and nothing else, to "unavailable"; a moved
+    tag, an input mismatch or an unknown git failure must stay an ordinary,
+    fatal exit (utah-packages#875).
+    """
+
+    FFMPEG_DOWN = (
+        "fatal: unable to access 'https://git.ffmpeg.org/rtmpdump.git/': "
+        "Failed to connect to git.ffmpeg.org port 443 after 130000 ms: Connection timed out\n"
+    )
+
+    def run_main(self, generate_side_effect):
+        stdout, stderr = io.StringIO(), io.StringIO()
+        argv = ["generated_sources.py", "rtmpdump", str(self.package_dir), str(self.out_dir)]
+        with patch.object(sys, "argv", argv), patch.object(generated_sources, "generate", side_effect=generate_side_effect), \
+                contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+            code = generated_sources.main()
+        return code, stderr.getvalue()
+
+    def test_git_transport_failures_are_classified_as_unreachable(self):
+        for stderr in (
+            self.FFMPEG_DOWN,
+            "fatal: unable to access 'https://x/': Could not resolve host: x\n",
+            "error: RPC failed; curl 56 GnuTLS recv error (-54)\nfatal: early EOF\n",
+            "fatal: unable to access 'https://x/': The requested URL returned error: 503\n",
+        ):
+            with self.subTest(stderr=stderr):
+                self.assertTrue(generated_sources.git_transport_failure(stderr))
+
+    def test_permanent_git_failures_are_not_unreachable(self):
+        for stderr in (
+            "fatal: couldn't find remote ref refs/tags/v2.6\n",
+            "remote: Repository not found.\nfatal: repository 'https://x/' not found\n",
+            "fatal: unable to access 'https://x/': The requested URL returned error: 404\n",
+            "fatal: unable to access 'https://x/': server certificate verification failed\n",
+            "fatal: Authentication failed for 'https://x/'\n",
+            "fatal: '/nowhere' does not appear to be a git repository\n",
+        ):
+            with self.subTest(stderr=stderr):
+                self.assertFalse(generated_sources.git_transport_failure(stderr))
+
+    def test_an_unreachable_git_host_raises_upstream_unreachable(self):
+        self.write_spec("rtmpdump.spec", "2.6")
+        self.out_dir.mkdir(parents=True)
+
+        def run(command, **kwargs):
+            if "fetch" in command:
+                raise subprocess.CalledProcessError(128, command, output="", stderr=self.FFMPEG_DOWN)
+
+        with patch.object(generated_sources.subprocess, "run", side_effect=run):
+            with self.assertRaisesRegex(generated_sources.UpstreamUnreachable, "git.ffmpeg.org"):
+                generated_sources.generate("rtmpdump", self.package_dir, self.out_dir)
+
+    def test_a_stalled_git_host_raises_upstream_unreachable(self):
+        self.write_spec("rtmpdump.spec", "2.6")
+        self.out_dir.mkdir(parents=True)
+
+        def run(command, **kwargs):
+            if "fetch" in command:
+                raise subprocess.TimeoutExpired(command, kwargs["timeout"])
+
+        with patch.object(generated_sources.subprocess, "run", side_effect=run):
+            with self.assertRaises(generated_sources.UpstreamUnreachable):
+                generated_sources.generate("rtmpdump", self.package_dir, self.out_dir)
+
+    def test_an_unknown_git_failure_stays_a_plain_error(self):
+        self.write_spec("rtmpdump.spec", "2.6")
+        missing = self.tmp / "no-such-repository"
+        entry = {"remote": str(missing), "tag": "v{version}", "compression": "gz",
+                 "commits": {"2.6": "f" * 40}}
+        with patch.dict(generated_sources.GIT_ARCHIVE_SOURCES, {"rtmpdump": entry}):
+            with self.assertRaises(subprocess.CalledProcessError):
+                generated_sources.generate("rtmpdump", self.package_dir, self.out_dir)
+
+    def test_http_fetch_outage_is_unreachable_but_a_404_is_not(self):
+        outage = urllib.error.URLError(ConnectionRefusedError("connection refused"))
+        with patch.object(generated_sources.urllib.request, "urlopen", side_effect=outage):
+            with self.assertRaises(generated_sources.UpstreamUnreachable):
+                generated_sources._fetch("https://down.example/x")
+        gone = urllib.error.HTTPError("https://gone.example/x", 404, "Not Found", {}, None)
+        with patch.object(generated_sources.urllib.request, "urlopen", side_effect=gone):
+            with self.assertRaises(urllib.error.HTTPError):
+                generated_sources._fetch("https://gone.example/x")
+
+    def test_main_exits_75_only_for_an_unreachable_upstream(self):
+        code, stderr = self.run_main(generated_sources.UpstreamUnreachable("git could not reach x"))
+        self.assertEqual(code, generated_sources.EXIT_UPSTREAM_UNREACHABLE)
+        self.assertEqual(code, 75)
+        self.assertIn("upstream unavailable", stderr)
+
+    def test_main_propagates_integrity_failures(self):
+        for error in (
+            RuntimeError("tag v2.6 moved: expected aaaa, got bbbb"),
+            RuntimeError("input archive mismatch for https://x: expected aa, got bb"),
+            subprocess.CalledProcessError(128, ["git", "fetch"]),
+        ):
+            with self.subTest(error=str(error)):
+                with self.assertRaises(type(error)):
+                    self.run_main(error)
 
 
 if __name__ == "__main__":
