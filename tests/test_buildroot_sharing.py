@@ -209,6 +209,35 @@ class BuildRootPinTests(unittest.TestCase):
         self.assertIn("ghcr.io/projectbluefin/utah-buildroot", refresh)
         self.assertIn("schedule:", refresh)
 
+    def test_the_refresh_workflow_hands_off_to_real_pr_checks(self) -> None:
+        # The PR is opened with the mergeraptor App token so pull_request
+        # workflows (Canary, Unit tests, Runtime contract) run on its exact
+        # source head (#874). The workflow token itself must not be able to
+        # open PRs, and the old bot-pr-validate dispatch is gone.
+        refresh = (WORKFLOWS / "refresh-buildroot.yml").read_text()
+        self.assertIn("actions/create-github-app-token@", refresh)
+        self.assertIn("token: ${{ steps.app-token.outputs.token }}", refresh)
+        self.assertIn("persist-credentials: false", refresh)
+        self.assertNotIn("pull-requests: write\n", refresh.split("jobs:")[0])
+        self.assertNotIn("bot-pr-validate.yml", refresh)
+
+    def test_the_rawhide_importer_still_dispatches_the_listener(self) -> None:
+        # bot-pr-validate.yml stays for import-rawhide-package.yml; keep its
+        # trust shape pinned (#377/#378): workflow_dispatch + pr input, no
+        # workflow_run trigger, resolves the head via `gh pr view`.
+        listener = (WORKFLOWS / "bot-pr-validate.yml").read_text()
+        self.assertIn("workflow_dispatch:", listener)
+        self.assertIn("pr:", listener)
+        self.assertIn("python3 tools/validate.py", listener)
+        importer = (WORKFLOWS / "import-rawhide-package.yml").read_text()
+        self.assertIn("bot-pr-validate.yml", importer)
+        body = "\n".join(
+            line for line in listener.splitlines() if not line.lstrip().startswith("#")
+        )
+        self.assertNotIn("workflow_run:", body)
+        self.assertIn("inputs.pr", body)
+        self.assertIn("gh pr view", body)
+
 
 if __name__ == "__main__":
     unittest.main()
