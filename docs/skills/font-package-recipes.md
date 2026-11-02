@@ -40,6 +40,10 @@ satisfy BuildRequires even when runtime libraries are absent from the factory
 and Hummingbird, so keep runtime closure evidence separate from recipe and
 build evidence.
 
+The recipe was imported by #856; a later documentation or tracking correction
+must retain that import PR in the backlog's `pr` field. #735 continues to own
+the remaining hosted-build and runtime-closure evidence.
+
 ## Source package names vs. provided binary subpackages
 
 When satisfying a runtime or metapackage font requirement (e.g., from
