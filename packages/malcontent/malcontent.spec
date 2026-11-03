@@ -10,6 +10,9 @@ Source1:        https://gitlab.gnome.org/pwithnall/libgsystemservice/-/archive/0
 Source2:        gvdb.tar.xz
 Source3:        http://www.corpit.ru/mjt/tinycdb/tinycdb-0.81.tar.gz
 
+# https://gitlab.freedesktop.org/pwithnall/malcontent/-/merge_requests/322
+Patch:          0001-Fix-system-call-filters-for-signal-handling.patch
+
 %gnome_check_version
 
 BuildRequires:  gettext

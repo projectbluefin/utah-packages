@@ -1,0 +1,84 @@
+From af8226a7d3c3e4b31eb2a114b9c7a666d2b8795b Mon Sep 17 00:00:00 2001
+Date: Sat, 27 Jun 2026 00:53:33 +0200
+Subject: [PATCH] Fix system call filters for signal handling
+
+Due to some slow shutdowns, I noticed that `malcontent-timerd` doesn't
+immediately stop when asked to using, e.g., `systemctl stop
+malcontent-timerd`, but will instead wait for its inactivity timeout to
+be reached. It also completely ignores any signals sent to it via
+`kill`.
+
+Something similar has already been reported here:
+https://github.com/ublue-os/bluefin/issues/4612
+
+After a lot of debugging, I found out that GLib wasn't able to install
+its Unix signal handlers, which caused `malcontent-timerd` to never
+receive `SIGTERM`. This can be checked using `/proc/$PID/status`, which
+will show `SigCgt: 0000000000000000`. Moreover, removing
+`SystemCallErrorNumber=EPERM` causes `malcontent-timerd` to crash in
+`__libc_sigaction`.
+
+This is due to the fact that the relevant signal syscalls are actually
+contained in `@signal`, which is currently missing.
+---
+ .../malcontent-timer-extension-agent.service.in                 | 2 +-
+ malcontent-timerd/malcontent-timerd.service.in                  | 2 +-
+ malcontent-webd-update/malcontent-webd-update.service.in        | 2 +-
+ malcontent-webd/malcontent-webd.service.in                      | 2 +-
+ 4 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/malcontent-timer-extension-agent/malcontent-timer-extension-agent.service.in b/malcontent-timer-extension-agent/malcontent-timer-extension-agent.service.in
+index 4752df2..1c2286c 100644
+--- a/malcontent-timer-extension-agent/malcontent-timer-extension-agent.service.in
++++ b/malcontent-timer-extension-agent/malcontent-timer-extension-agent.service.in
+@@ -47,7 +47,7 @@ RestrictNamespaces=yes
+ RestrictRealtime=yes
+ RestrictSUIDSGID=yes
+ SystemCallErrorNumber=EPERM
+-SystemCallFilter=@basic-io @file-system @io-event @ipc @network-io @process @sync
++SystemCallFilter=@basic-io @file-system @io-event @ipc @network-io @process @signal @sync
+ SystemCallArchitectures=native
+ UMask=0077
+ 
+diff --git a/malcontent-timerd/malcontent-timerd.service.in b/malcontent-timerd/malcontent-timerd.service.in
+index 8aa7d07..85df850 100644
+--- a/malcontent-timerd/malcontent-timerd.service.in
++++ b/malcontent-timerd/malcontent-timerd.service.in
+@@ -48,7 +48,7 @@ RestrictNamespaces=yes
+ RestrictRealtime=yes
+ RestrictSUIDSGID=yes
+ SystemCallErrorNumber=EPERM
+-SystemCallFilter=@basic-io @file-system @io-event @ipc @network-io @process @sync
++SystemCallFilter=@basic-io @file-system @io-event @ipc @network-io @process @signal @sync
+ # FIXME: Needed to keep nss-myhostname happy (see https://github.com/systemd/systemd/issues/38582):
+ SystemCallFilter=sigprocmask rt_sigprocmask uname
+ SystemCallArchitectures=native
+diff --git a/malcontent-webd-update/malcontent-webd-update.service.in b/malcontent-webd-update/malcontent-webd-update.service.in
+index c84d5fc..39a3fde 100644
+--- a/malcontent-webd-update/malcontent-webd-update.service.in
++++ b/malcontent-webd-update/malcontent-webd-update.service.in
+@@ -48,7 +48,7 @@ RestrictNamespaces=yes
+ RestrictRealtime=yes
+ RestrictSUIDSGID=yes
+ SystemCallErrorNumber=EPERM
+-SystemCallFilter=@basic-io @file-system @io-event @ipc @network-io @process @sync
++SystemCallFilter=@basic-io @file-system @io-event @ipc @network-io @process @signal @sync
+ SystemCallArchitectures=native
+ UMask=0022
+ 
+diff --git a/malcontent-webd/malcontent-webd.service.in b/malcontent-webd/malcontent-webd.service.in
+index dca403f..d54c0c8 100644
+--- a/malcontent-webd/malcontent-webd.service.in
++++ b/malcontent-webd/malcontent-webd.service.in
+@@ -46,7 +46,7 @@ RestrictNamespaces=yes
+ RestrictRealtime=yes
+ RestrictSUIDSGID=yes
+ SystemCallErrorNumber=EPERM
+-SystemCallFilter=@basic-io @file-system @io-event @ipc @network-io @process @sync flock
++SystemCallFilter=@basic-io @file-system @io-event @ipc @network-io @process @signal @sync flock
+ # FIXME: Needed to keep nss-myhostname happy (see https://github.com/systemd/systemd/issues/38582):
+ SystemCallFilter=sigprocmask rt_sigprocmask uname
+ SystemCallArchitectures=native
+-- 
+GitLab
+

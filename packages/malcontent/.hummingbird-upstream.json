@@ -2,7 +2,7 @@
   "package": "malcontent",
   "branch": "rawhide",
   "remote": "https://src.fedoraproject.org/rpms/malcontent.git",
-  "commit": "45ea497bf52b5ce5583f25431f65034c40a98f51",
-  "tree": "d7e0b861c156edcd24261ae0e3de896bdaadf88c",
-  "imported_at": "2026-08-29T11:43:54.311325+00:00"
+  "commit": "3454f313d409a5ecb9ddcbe44f11e6242a0ea5bb",
+  "tree": "b4e973d2b3d698cb40268274d7d216aa7edaf1b0",
+  "imported_at": "2026-11-03T05:20:52.559702+00:00"
 }
