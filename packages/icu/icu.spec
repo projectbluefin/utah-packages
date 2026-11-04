@@ -39,6 +39,7 @@ Tools and utilities for developing with icu.
 
 %package -n lib%{name}
 Summary: International Components for Unicode - libraries
+Recommends: icu-tzdata
 
 %description -n lib%{name}
 The International Components for Unicode (ICU) libraries provide
@@ -86,8 +87,11 @@ CFLAGS='%optflags -fno-strict-aliasing'
 CXXFLAGS='%optflags -fno-strict-aliasing'
 # Endian: BE=0 LE=1
 %if ! 0%{?endian}
-CPPFLAGS='-DU_IS_BIG_ENDIAN=1'
+CPPFLAGS='-DU_TIMEZONE_FILES_DIR=%{_datadir}/%{name}/tzdata/be -DU_IS_BIG_ENDIAN=1'
+%else
+CPPFLAGS='-DU_TIMEZONE_FILES_DIR=%{_datadir}/%{name}/tzdata/le'
 %endif
+export CPPFLAGS
 
 #rhbz856594 do not use --disable-renaming or cope with the mess
 OPTIONS='--with-data-packaging=library --disable-samples'
@@ -172,6 +176,7 @@ LD_LIBRARY_PATH=lib:stubdata:tools/ctestfw:$LD_LIBRARY_PATH bin/uconv -l
 %license LICENSE
 %doc icu4c/readme.html
 %{_libdir}/*.so.*
+%dir %{_datadir}/%{name}
 
 %files -n lib%{name}-devel
 %license LICENSE
@@ -184,7 +189,6 @@ LD_LIBRARY_PATH=lib:stubdata:tools/ctestfw:$LD_LIBRARY_PATH bin/uconv -l
 %{_libdir}/*.so
 %{_libdir}/pkgconfig/*.pc
 %{_libdir}/%{name}
-%dir %{_datadir}/%{name}
 %dir %{_datadir}/%{name}/%{version}
 %{_datadir}/%{name}/%{version}/install-sh
 %{_datadir}/%{name}/%{version}/mkinstalldirs
