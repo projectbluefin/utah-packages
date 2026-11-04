@@ -220,6 +220,9 @@ class BuildRootPinTests(unittest.TestCase):
         self.assertIn("persist-credentials: false", refresh)
         self.assertNotIn("pull-requests: write\n", refresh.split("jobs:")[0])
         self.assertNotIn("bot-pr-validate.yml", refresh)
+        # The schedule payload has no repository object, so this would skip
+        # every weekly run.
+        self.assertNotIn("github.event.repository.default_branch", refresh)
 
     def test_the_rawhide_importer_still_dispatches_the_listener(self) -> None:
         # bot-pr-validate.yml stays for import-rawhide-package.yml; keep its
