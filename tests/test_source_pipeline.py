@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import contextlib
+import email.message
 import hashlib
 import io
 import json
@@ -16,6 +17,7 @@ from unittest.mock import patch
 from tools.source_pipeline import (
     FETCH_ATTEMPTS,
     LOOKASIDE,
+    ChallengePage,
     bundled_sources,
     digest,
     fetch,
@@ -361,6 +363,49 @@ class FetchRetryTests(unittest.TestCase):
                 with self.assertRaisesRegex(RuntimeError, "failed to fetch"):
                     fetch("https://upstream.example/source", destination)
             self.assertEqual(urlopen.call_count, FETCH_ATTEMPTS)
+
+    @staticmethod
+    def typed_response(payload: bytes, content_type: str):
+        response = io.BytesIO(payload)
+        response.headers = email.message.Message()
+        response.headers["Content-Type"] = content_type
+        return response
+
+    def test_html_challenge_page_is_not_hashed_as_the_archive(self) -> None:
+        """linuxtv.org and salsa.debian.org answer archive URLs with an anti-bot page."""
+        with tempfile.TemporaryDirectory() as directory:
+            destination = Path(directory) / "source"
+            page = self.typed_response(b"<html>Making sure you're not a bot!</html>", "text/html; charset=utf-8")
+            with patch("tools.source_pipeline.urllib.request.urlopen", side_effect=[page]) as urlopen, \
+                    patch("tools.source_pipeline.time.sleep"):
+                with self.assertRaises(ChallengePage) as raised:
+                    fetch("https://upstream.example/demo-1.0.tar.xz", destination)
+            self.assertIn("returned an HTML page", str(raised.exception))
+            self.assertEqual(urlopen.call_count, 1)
+
+    def test_html_challenge_page_falls_back_to_the_mirror(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            destination = Path(directory) / "source"
+            responses = [
+                self.typed_response(b"<html>challenge</html>", "text/html"),
+                self.typed_response(b"archive bytes", "application/x-xz"),
+            ]
+            with patch("tools.source_pipeline.urllib.request.urlopen", side_effect=responses), \
+                    patch("tools.source_pipeline.time.sleep"):
+                chosen = fetch_with_fallbacks(
+                    ["https://upstream.example/demo-1.0.tar.xz", "https://mirror.example/demo-1.0.tar.xz"],
+                    destination,
+                )
+            self.assertEqual(chosen, "https://mirror.example/demo-1.0.tar.xz")
+            self.assertEqual(destination.read_bytes(), b"archive bytes")
+
+    def test_html_is_accepted_when_the_url_names_an_html_file(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            destination = Path(directory) / "notes.html"
+            page = self.typed_response(b"<html>notes</html>", "text/html")
+            with patch("tools.source_pipeline.urllib.request.urlopen", side_effect=[page]):
+                fetch("https://upstream.example/notes.html", destination)
+            self.assertEqual(destination.read_bytes(), b"<html>notes</html>")
 
     def test_a_digest_mismatch_never_falls_back_to_another_url(self) -> None:
         """A fallback is availability, never a second chance at integrity."""
