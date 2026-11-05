@@ -59,15 +59,29 @@ class EmptyDownload(RuntimeError):
     """The server answered but sent no bytes."""
 
 
+# linuxtv.org and salsa.debian.org front downloads with an anti-bot (Anubis)
+# page: a 200 with a few KB of HTML instead of the archive. Hashing that page
+# reports a SHA-512 mismatch that looks like a re-rolled tarball. Like an
+# empty body, it means the file was not served, so the next configured URL is
+# tried; whatever arrives there is still checked against the pinned digest.
+# A challenge does not clear on retry, so it is not retried against the same URL.
+class ChallengePage(RuntimeError):
+    """The server answered an archive URL with an HTML page instead of the file."""
+
+
 def fetch(url: str, destination: Path) -> None:
     request = urllib.request.Request(url, headers={"User-Agent": "utah-packages-source-pipeline/1"})
     last: Exception | None = None
     for attempt in range(1, FETCH_ATTEMPTS + 1):
         try:
             with urllib.request.urlopen(request, timeout=60) as response, destination.open("wb") as output:
+                headers = getattr(response, "headers", None)
+                content_type = headers.get_content_type() if headers is not None else ""
                 shutil.copyfileobj(response, output)
             if destination.stat().st_size == 0:
                 raise EmptyDownload(f"{url} returned an empty body")
+            if content_type == "text/html" and not urllib.parse.urlsplit(url).path.endswith((".html", ".htm")):
+                raise ChallengePage(f"{url} returned an HTML page instead of the file")
             return
         except (EmptyDownload, urllib.error.URLError, TimeoutError, ConnectionError) as error:
             last = error
