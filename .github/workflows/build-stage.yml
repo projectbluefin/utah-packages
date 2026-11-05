@@ -531,7 +531,7 @@ jobs:
                 fi
               fi
               test "$status" -eq 0
-              # Only this package's binaries may leave the job: %build runs as
+              # Only binaries of this package may leave the job: %build runs as
               # the mock user and mock copies out anything in RPMS/, and publish
               # replaces by %{SOURCERPM}. tools/check_rpm_source.sh, as in the
               # other two lanes.
