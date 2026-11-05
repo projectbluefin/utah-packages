@@ -531,6 +531,12 @@ jobs:
                 fi
               fi
               test "$status" -eq 0
+              # Only this package's binaries may leave the job: %build runs as
+              # the mock user and mock copies out anything in RPMS/, and publish
+              # replaces by %{SOURCERPM}. tools/check_rpm_source.sh, as in the
+              # other two lanes.
+              bash /tools/check_rpm_source.sh \
+                "$(rpm -qp --nosignature --qf "%{NAME}" /work/srpm/*.src.rpm)" /work/result
               find /work/result -name "*.rpm" -type f -print0 | \
                 xargs -0 -r rpm -qp --qf "%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n"
               # Same guard as the container path: an upload that finds no RPM
