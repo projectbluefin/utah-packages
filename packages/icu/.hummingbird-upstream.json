@@ -2,7 +2,7 @@
   "package": "icu",
   "branch": "rawhide",
   "remote": "https://src.fedoraproject.org/rpms/icu.git",
-  "commit": "14ef321a37c61ab81f21f5beaf70dcdd03405283",
-  "tree": "9b7b6dd0ef9a36c5e59768ca1cb56da8428ac5ba",
-  "imported_at": "2026-08-30T17:34:46+00:00"
+  "commit": "d42d5c572d45e775d69edfa761f094011b4472f8",
+  "tree": "859cb99bf62081b7eb266b6611eedd85c9fd4e78",
+  "imported_at": "2026-11-04T05:20:49.764327+00:00"
 }
