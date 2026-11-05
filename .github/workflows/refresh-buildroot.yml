@@ -33,9 +33,9 @@ concurrency:
 jobs:
   mirror:
     # App credentials and mirror publication are restricted to trusted default main.
-    # A schedule payload carries no repository object, so a
-    # github.event.repository.default_branch check would skip every weekly run;
-    # schedules always run on the default branch, so github.ref covers it.
+    # A schedule payload carries no repository object, so checking the event's
+    # default branch would skip every weekly run; schedules always run on the
+    # default branch, so github.ref covers it.
     if: github.repository_owner == 'projectbluefin' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     env:
