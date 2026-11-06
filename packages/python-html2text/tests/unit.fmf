@@ -1,0 +1,3 @@
+summary: Run the upstream test suite
+test: cd ../html2text-*/ && python3 -m pytest
+require: python3-pytest
