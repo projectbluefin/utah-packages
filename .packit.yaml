@@ -1402,6 +1402,12 @@ packages:
     downstream_package_name: kf5
     paths:
       - packages/kf5
+  kf6-karchive:
+    specfile_path: kf6-karchive.spec
+    upstream_package_name: kf6-karchive
+    downstream_package_name: kf6-karchive
+    paths:
+      - packages/kf6-karchive
   kyotocabinet:
     specfile_path: kyotocabinet.spec
     upstream_package_name: kyotocabinet
