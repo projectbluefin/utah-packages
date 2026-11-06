@@ -1,0 +1,5 @@
+summary: Basic test
+require:
+    - paps
+test: ./test.sh
+framework: beakerlib

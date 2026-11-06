@@ -1,0 +1,53 @@
+diff -pruN paps-0.6.8.orig/src/libpaps.c paps-0.6.8/src/libpaps.c
+--- paps-0.6.8.orig/src/libpaps.c	2026-10-05 11:43:21.092682000 +0900
++++ paps-0.6.8/src/libpaps.c	2026-10-05 11:44:33.312485774 +0900
+@@ -240,8 +240,7 @@ gchar *paps_layout_to_postscript_strdup(
+       pos_y -= logical_rect.height * scale;
+     }
+ 
+-  ret_str = layout_str->str;
+-  g_string_free(layout_str, FALSE);
++  ret_str = g_string_free(layout_str, FALSE);
+ 
+   return ret_str;
+ }
+@@ -566,7 +565,7 @@ void draw_bezier_outline(paps_private_t
+                               g_strdup(glyph_hash_string),
+                               id);
+           
+-          g_string_free(glyph_def_string, TRUE);
++          (void) g_string_free(glyph_def_string, TRUE);
+           FT_Done_Glyph (glyph);
+         }
+     }
+diff -pruN paps-0.6.8.orig/src/paps.c paps-0.6.8/src/paps.c
+--- paps-0.6.8.orig/src/paps.c	2026-10-05 11:43:21.096701393 +0900
++++ paps-0.6.8/src/paps.c	2026-10-05 11:44:00.883947727 +0900
+@@ -677,7 +677,7 @@ int main(int argc, char *argv[])
+   print_postscript_trailer(OUT, num_pages);
+ 
+   // Cleanup
+-  g_string_free(ps_pages_string, TRUE);
++  (void) g_string_free(ps_pages_string, TRUE);
+   g_option_context_free(ctxt);
+ 
+   return 0;
+@@ -703,7 +703,7 @@ read_file (FILE   *file,
+       if (ferror (file))
+         {
+           fprintf(stderr, "%s: Error reading file.\n", g_get_prgname ());
+-          g_string_free (inbuf, TRUE);
++          (void) g_string_free (inbuf, TRUE);
+           exit(1);
+         }
+       else if (bp == NULL)
+@@ -731,8 +731,7 @@ read_file (FILE   *file,
+   if (inbuf->str[inbuf->len-1] != '\n')
+     g_string_append(inbuf, "\n");
+ 
+-  text = inbuf->str;
+-  g_string_free (inbuf, FALSE);
++  text = g_string_free (inbuf, FALSE);
+ 
+   return text;
+ }
