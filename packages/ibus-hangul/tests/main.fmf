@@ -1,0 +1,39 @@
+test: ./runtest.sh
+duration: 50m
+framework: beakerlib
+require:
+# This stuff is only needed if gnome-desktop-testing
+# cannot be required as a package and needs to be cloned
+# from the git repo and build from source:
+#  - git
+#  - make
+#  - gcc
+#  - diffutils
+#  - autoconf
+#  - automake
+#  - libtool
+#  - glib2-devel
+#  - systemd-devel
+  - gnome-session
+  - gnome-shell
+  - gnome-shell-extension-no-overview
+  - ibus
+  - ibus-devel
+  - ibus-desktop-testing
+  - gnome-desktop-testing
+  - ibus-hangul
+  - ibus-hangul-tests
+  - rsync
+  - xorg-x11-server-Xwayland
+  - xwayland-run
+  - appstream
+  - libappstream-glib
+  - desktop-file-utils
+  - python3-gobject
+  - python3-gobject-base
+  - glib2
+  - gtk3
+  - dconf
+  - dbus-x11
+  - python3-devel
+  - python3-pyxdg

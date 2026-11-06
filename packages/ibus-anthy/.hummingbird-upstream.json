@@ -1,0 +1,8 @@
+{
+  "package": "ibus-anthy",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/ibus-anthy.git",
+  "commit": "9d8e245e6824c56334c30769ae4b7fa14052a187",
+  "tree": "09cca42f387a906411cbc50305adf32a0553ee50",
+  "imported_at": "2026-10-29T01:56:32.243188+00:00"
+}
