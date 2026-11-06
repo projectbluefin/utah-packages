@@ -34,16 +34,23 @@ name: Bump upstream source locks
 # lives in three files here and only one of them is JSON, and the tarball's
 # SHA-512 has to be computed from the bytes.
 #
-# GNOME cycle policy: the scheduled run stays inside each lock's own
-# release cycle -- it takes GNOME 51 point releases but never jumps to 52.
-# A newer GNOME cycle is reported for a human and never applied, and a cycle
-# whose final has not shipped yet proposes nothing, so no run can land on an
-# alpha, beta or rc. GNOME-next work happens on a next branch: cut it, then
-# dispatch this workflow there with target-cycle set (e.g. 52). The override
-# only widens the in-cycle window; prereleases stay unproposable.
+# GNOME policy: Utah is a rolling release, so a GNOME lock follows GNOME's
+# newest stable release, never an old or development series; Fedora supplies
+# recipes and the build root only. The tool reads GNOME's release definition,
+# gnome-build-meta, at its highest plain <major>.<minor> tag (one git
+# ls-remote plus a depth-1 clone into $RUNNER_TEMP, shared by both steps
+# below): a lock behind the series that release ships moves to the series'
+# newest final, a lock on it takes point releases, a lock ahead of it takes
+# only its own point releases. App-scheme modules (major >= 40)
+# gnome-build-meta does not map move to their newest final.
+# Library-scheme modules it does not map, a new
+# library major, and forge majors are still reported for a human and never
+# applied. No run can land on an alpha, beta or rc. target-cycle (e.g. 52 on
+# a GNOME-next branch) is the manual override: it ignores gnome-build-meta
+# and moves within the named cycle; prereleases stay unproposable.
 #
 # This workflow proposes; bump-upstream-gate.yml decides. Once the daily
-# in-cycle pull request is opened or updated, the gate is dispatched: it
+# pull request is opened or updated, the gate is dispatched: it
 # builds exactly the bumped recipes through rebuild-rpms.yml, publishing
 # nothing, and merges only when every one of them built, then dispatches the
 # factory on main to publish latest. When only some bumped packages fail, the
@@ -51,9 +58,9 @@ name: Bump upstream source locks
 # them from the pull request and gates the rest again; this workflow then
 # skips a held version until upstream ships a newer one or a human deletes
 # the hold. Applying a newer release retires its hold, which is why the
-# holds file is committed with the bump. Cross-cycle and major candidates
-# are still only reported above, never applied, so they never reach the
-# gate. A target-cycle run is never gated: GNOME-next merges stay human.
+# holds file is committed with the bump. Candidates the tool only reports
+# are never applied, so they never reach the gate. A target-cycle run is
+# never gated: GNOME-next merges stay human.
 #
 # Three branch rules, in priority order:
 #   - target-cycle  -> bump/upstream-sources-cycle-<N>
@@ -99,16 +106,25 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
+      # tools/upstream_bump.py reads gnome-build-meta's BuildStream elements
+      # through tools/audit_gnome_build_meta.py, which parses YAML. Same pin
+      # as the audit and validate workflows.
+      - name: Install PyYAML
+        run: pip install --disable-pip-version-check pyyaml==6.0.3
+
       # Report first, unconditionally, so the run's log says what was
-      # considered even when nothing is written -- including the cross-cycle
-      # candidates the tool refuses to apply on its own.
+      # considered even when nothing is written -- including the candidates
+      # the tool refuses to apply on its own.
       # GITHUB_TOKEN is not optional for the forge feeds. Anonymous GitHub
       # allows 60 requests an hour and this factory locks 36 sources there, so
       # an unauthenticated run rate-limits part way down the list and reports
       # the remainder as unreachable -- which reads as "nothing to bump".
+      # The report clones GNOME's newest stable gnome-build-meta tag (git and
+      # network are the runner's own) into $RUNNER_TEMP; the apply step reuses
+      # that tree, so both steps follow the same GNOME release.
       - name: Report what upstream has released
         run: |
-          python3 tools/upstream_bump.py ${PACKAGE:+--package "$PACKAGE"} ${CYCLE:+--cycle "$CYCLE"}
+          python3 tools/upstream_bump.py --gbm-dir "$RUNNER_TEMP/gnome-build-meta" ${PACKAGE:+--package "$PACKAGE"} ${CYCLE:+--cycle "$CYCLE"}
         env:
           PACKAGE: ${{ inputs.package }}
           CYCLE: ${{ inputs.target-cycle }}
@@ -117,7 +133,7 @@ jobs:
       - name: Rewrite the locks, specs and source manifests
         id: bump
         run: |
-          python3 tools/upstream_bump.py --apply ${PACKAGE:+--package "$PACKAGE"} ${CYCLE:+--cycle "$CYCLE"}
+          python3 tools/upstream_bump.py --apply --gbm-dir "$RUNNER_TEMP/gnome-build-meta" ${PACKAGE:+--package "$PACKAGE"} ${CYCLE:+--cycle "$CYCLE"}
         env:
           PACKAGE: ${{ inputs.package }}
           CYCLE: ${{ inputs.target-cycle }}
@@ -181,12 +197,14 @@ jobs:
             Each package below had its `Version:`, its `sources` manifest and
             its `config/upstream-sources.json` entry rewritten together, with
             the SHA-512 computed from the upstream bytes actually served. The
-            run log lists what moved, and any candidate that crosses a release
-            cycle or a major version is reported for a human and never applied,
-            because version arithmetic alone cannot make that compatibility
-            decision. A dispatched `target-cycle` run widens the window to the
-            named cycle (GNOME-next branches); prereleases are never proposed
-            with or without it.
+            run log lists what moved. GNOME packages follow GNOME's newest
+            stable release as gnome-build-meta's highest stable tag defines
+            it, so a lock behind the series that release ships moves onto it;
+            a library series or major gnome-build-meta does not vouch for, and
+            a forge major, is reported for a human and never applied. A
+            dispatched `target-cycle` run is the manual override and moves
+            within the named cycle (GNOME-next branches); prereleases are
+            never proposed with or without it.
 
             Verified in the run before this PR was opened: the unit tests,
             `tools/validate.py`, the workflow quoting check, and
