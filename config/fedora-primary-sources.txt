@@ -21,7 +21,6 @@ libdbusmenu
 libical
 libmpeg2
 libuser
-linux-firmware
 livesys-scripts
 lm_sensors
 lsof

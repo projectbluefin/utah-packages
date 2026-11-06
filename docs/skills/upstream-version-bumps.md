@@ -539,7 +539,9 @@ the version; the daily run moves the lock from then on.
 Done on 2026-11-06 with matching bytes: device-mapper-persistent-data (GitHub
 archive), mozjs140 (ftp.mozilla.org), webkitgtk (webkitgtk.org), xmlrpc-c
 (SourceForge), and python-argcomplete (the PyPI `source` form). All five then
-proposed their next release.
+proposed their next release. linux-firmware followed the same procedure
+(www.kernel.org/pub/linux/kernel/firmware/, the spec's `Source0`), so its
+calendar rule moves it from 20260810 to 20261019.
 
 Left stuck, with the reason:
 
