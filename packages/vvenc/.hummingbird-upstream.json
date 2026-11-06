@@ -1,0 +1,8 @@
+{
+  "package": "vvenc",
+  "branch": "master",
+  "remote": "https://github.com/rpmfusion/vvenc.git",
+  "commit": "b8ac58c4f3801c30280e1f3189514036018d8d46",
+  "tree": "1625e52b90d71d6eb68c6270a771cadf9599a696",
+  "imported_at": "2026-10-25T19:40:30.857304+00:00"
+}

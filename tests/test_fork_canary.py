@@ -176,12 +176,72 @@ class WorkflowTests(unittest.TestCase):
             step = next(s for s in self.steps if s.get("name") == name)
             self.assertEqual(step["if"], "steps.check.outputs.action == 'copy'")
 
-    def test_copies_of_closed_pull_requests_are_cleaned_up_without_hiding_errors(self):
-        cleanup = next(s for s in self.steps if str(s.get("name", "")).startswith("Delete copies"))
-        # A bare `|| true` would also swallow a failed API call.
-        self.assertNotRegex(cleanup["run"], r"\|\|\s*true")
-        self.assertRegex(cleanup["run"], r"grep -E .*\|\| test \$\? -eq 1")
-        self.assertTrue(re.search(r'"\$state" != open', cleanup["run"]))
+
+class CleanupTests(unittest.TestCase):
+    def cleanup(self, delete_error=None, fail_on=""):
+        import os
+        import subprocess
+
+        workflow = yaml.safe_load(WORKFLOW.read_text())
+        script = next(step["run"] for step in workflow["jobs"]["dispatch"]["steps"]
+                      if str(step.get("name", "")).startswith("Delete copies"))
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            gh = root / "gh"
+            gh.write_text("""#!/usr/bin/env python3
+import os
+import sys
+path = next(arg for arg in sys.argv if arg.startswith("repos/"))
+if "/branches?" in path:
+    if os.environ["FAIL_ON"] == "listing":
+        sys.exit(1)
+    print("main\\ncanary/pr-1\\ncanary/pr-2")
+elif "/pulls/" in path:
+    if os.environ["FAIL_ON"] == "pull":
+        sys.exit(1)
+    print("open" if path.endswith("/2") else "closed")
+elif "/git/refs/heads/" in path:
+    if path.endswith("/2"):
+        raise AssertionError("An open pull request copy must not be deleted")
+    error = os.environ["DELETE_ERROR"]
+    if error:
+        print(error)
+        sys.exit(1)
+else:
+    raise AssertionError(sys.argv)
+""")
+            gh.chmod(0o755)
+            error = json.dumps(delete_error) if isinstance(delete_error, dict) else delete_error or ""
+            return subprocess.run(
+                ["bash", "-euo", "pipefail", "-c", script], cwd=root, capture_output=True, text=True,
+                env={**os.environ, "PATH": f"{root}:{os.environ['PATH']}", "REPOSITORY": REPO,
+                     "DELETE_ERROR": error, "FAIL_ON": fail_on},
+            )
+
+    def test_closed_copy_is_deleted_and_open_copy_is_retained(self):
+        result = self.cleanup()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("deleted canary/pr-1", result.stdout)
+
+    def test_concurrent_deletion_does_not_block_proof_refresh(self):
+        for status in ("404", "422"):
+            with self.subTest(status=status):
+                result = self.cleanup({"message": "Reference does not exist", "status": status})
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertIn("already deleted canary/pr-1", result.stdout)
+
+    def test_other_delete_failures_still_fail_the_dispatch(self):
+        for error in ({"message": "Resource not accessible", "status": "403"},
+                      {"message": "Protected branch", "status": "422"},
+                      {"message": "Reference does not exist", "status": "500"},
+                      "connection interrupted"):
+            with self.subTest(error=error):
+                self.assertNotEqual(self.cleanup(error).returncode, 0)
+
+    def test_listing_and_pull_read_errors_are_not_empty_successes(self):
+        for stage in ("listing", "pull"):
+            with self.subTest(stage=stage):
+                self.assertNotEqual(self.cleanup(fail_on=stage).returncode, 0)
 
 def dispatch_run(**over):
     run = {"event": "workflow_dispatch", "head_branch": "canary/pr-622", "head_sha": REVIEWED,

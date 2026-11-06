@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 
+import json
 from pathlib import Path
 import re
+import subprocess
+import sys
+import tempfile
 import unittest
 
 from tools.mock_config import (
@@ -114,6 +118,96 @@ class BestTests(unittest.TestCase):
         rendered = render()
         self.assertIn("\nbest=0\n", rendered)
         self.assertNotIn("\nbest=1\n", rendered)
+
+
+class CommandLineTests(unittest.TestCase):
+    """The command line hermetic_build.sh and build-stage.yml shell out to.
+
+    Both callers always pass every list flag, often as an empty string, so the
+    script must turn "" into no names at all rather than into an empty
+    excludepkgs entry, and must write exactly what render() would.
+    """
+
+    SCRIPT = ROOT / "tools" / "mock_config.py"
+
+    def run_cli(self, *args: str) -> tuple[Path, dict]:
+        workdir = tempfile.TemporaryDirectory()
+        self.addCleanup(workdir.cleanup)
+        tmp = Path(workdir.name)
+        # A parent that does not exist yet: the callers never create it.
+        output = tmp / "nested" / "mock.cfg"
+        result = subprocess.run(
+            [sys.executable, str(self.SCRIPT), "--output", str(output), *args],
+            capture_output=True,
+            text=True,
+            cwd=tmp,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        return output, json.loads(result.stdout)
+
+    def test_the_hermetic_invocation_with_empty_lists_renders_the_default_root(self) -> None:
+        output, summary = self.run_cli(
+            "--factory-repo", "",
+            "--stages-dir", "",
+            "--prior-built", "",
+            "--bootstrap-image", "quay.example/buildroot@sha256:abc",
+            "--hummingbird-exclude", "",
+        )
+        config = output.read_text()
+        self.assertEqual(
+            config, render(bootstrap_image="quay.example/buildroot@sha256:abc")
+        )
+        for line in config.splitlines():
+            if line.startswith("excludepkgs="):
+                self.assertNotIn(",,", line)
+                self.assertFalse(line.endswith(","), line)
+        self.assertEqual(
+            summary,
+            {
+                "config": str(output),
+                "factory_repo": False,
+                "prior_built": 0,
+                "root": "utah-hummingbird-x86_64",
+                "stages": False,
+            },
+        )
+
+    def test_comma_lists_reach_the_config_without_empty_names(self) -> None:
+        output, summary = self.run_cli(
+            "--factory-repo", "https://example.invalid/repo/",
+            "--stages-dir", "/work/prior",
+            "--prior-built", "accountsservice,,accountsservice-libs,",
+            "--hummingbird-exclude", "libicu-77.*-*hum1,libicu-devel-77.*-*hum1",
+            "--root-name", "utah-test",
+        )
+        self.assertEqual(
+            output.read_text(),
+            render(
+                root_name="utah-test",
+                factory_repo="https://example.invalid/repo/",
+                stages_dir="/work/prior",
+                prior_built=("accountsservice", "accountsservice-libs"),
+                hummingbird_extra_excludes=(
+                    "libicu-77.*-*hum1",
+                    "libicu-devel-77.*-*hum1",
+                ),
+            ),
+        )
+        self.assertEqual(summary["prior_built"], 2)
+        self.assertTrue(summary["factory_repo"])
+        self.assertTrue(summary["stages"])
+        self.assertEqual(summary["root"], "utah-test")
+
+    def test_the_output_flag_is_required(self) -> None:
+        result = subprocess.run(
+            [sys.executable, str(self.SCRIPT)],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("--output", result.stderr)
 
 
 if __name__ == "__main__":

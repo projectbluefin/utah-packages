@@ -1,0 +1,8 @@
+{
+  "package": "python-versioneer",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/python-versioneer.git",
+  "commit": "cbabfa79b42d7aca509e3f6d7ffbf4e51eb9cefe",
+  "tree": "7abc1dcb80321fd70bac9b97d026a78e78273220",
+  "imported_at": "2026-10-31T01:05:13.533565+00:00"
+}

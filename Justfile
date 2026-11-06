@@ -30,20 +30,23 @@ workflow-quoting:
 runtime-contract:
     python3 tools/runtime_contract.py config/bluefin-packages.toml config/runtime-contract.toml --check
 
-# Run the factory build backlog audit. Wired into `check` because every
-# recipe import changes the report, and nothing fails when it goes stale
-# otherwise (#309 review, hanthor).  ``tools/factory_build_backlog.py
-# --check`` regenerates the live report and compares it byte-for-byte to
-# ``reports/factory-build-backlog.json``.
+# Audit the factory build backlog catalog against the recipe inventory: every
+# audited name accounted for once under the pinned digest, and no backlog
+# recipe without a source lock. Prints the live totals; nothing is written, so
+# a recipe import never edits a tracked report (#309, merge-queue conflicts).
 factory-build-backlog:
     python3 tools/factory_build_backlog.py --check
 
 # Refresh derived inventory after combining current main and PR source changes.
 # Keep this mutating recovery command separate from the read-only `check`.
 regenerate-inventory:
+    python3 tools/source_lock_order.py
     python3 tools/render_packit_config.py --write
-    python3 tools/render_architecture_counts.py --write
-    python3 tools/factory_build_backlog.py
 
 test:
     python3 -m pytest tests -q
+
+# Put config/upstream-sources.json entries back in name order, moving whole
+# entries only. Idempotent; `just validate` fails until the lock is sorted.
+sort-source-locks:
+    python3 tools/source_lock_order.py

@@ -1,0 +1,8 @@
+{
+  "package": "range-v3",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/range-v3.git",
+  "commit": "dc70f0eb0abe1597395d04a18906ef63f42f8f16",
+  "tree": "d42be352dccc383569b351c0da37f18f8146cabe",
+  "imported_at": "2026-10-31T01:05:13.547232+00:00"
+}

@@ -28,7 +28,9 @@ class ImportProposalTests(unittest.TestCase):
 
     def test_accepts_one_new_recipe_without_changing_existing_locks(self):
         restore(self.root, self.incoming, "demo")
-        self.assertEqual(json.loads(self.lock.read_text())["packages"][0], self.existing["packages"][0])
+        packages = json.loads(self.lock.read_text())["packages"]
+        # "demo" sorts before "existing": inserted in name order, not appended.
+        self.assertEqual(packages, [{"name": "demo", "version": "1"}, self.existing["packages"][0]])
         self.assertTrue((self.root / "packages/demo/demo.spec").is_file())
 
     def test_rejects_host_script_in_artifact(self):

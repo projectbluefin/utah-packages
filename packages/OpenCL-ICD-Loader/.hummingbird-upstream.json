@@ -1,0 +1,8 @@
+{
+  "package": "OpenCL-ICD-Loader",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/OpenCL-ICD-Loader.git",
+  "commit": "99f44bc08bdc0b1e2c89b75224e5f58be06f8976",
+  "tree": "00c41a7f8d50374d29f340f483bd874c38937fa2",
+  "imported_at": "2026-11-01T05:00:03.256015+00:00"
+}

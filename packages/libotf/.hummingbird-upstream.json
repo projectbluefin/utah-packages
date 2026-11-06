@@ -1,0 +1,8 @@
+{
+  "package": "libotf",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libotf.git",
+  "commit": "9642194003c907db7b763fa74490119622cdf504",
+  "tree": "e6ef6e94e9f2ed3b9ec255f411a04e033f6cfc4e",
+  "imported_at": "2026-10-28T14:40:12.299022+00:00"
+}

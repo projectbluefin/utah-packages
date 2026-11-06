@@ -27,6 +27,7 @@ from tools.check_suppressed_tests import main as check_suppressed_tests
 from tools.bootstrap_upstream_sources import FEDORA_HOSTS
 from tools.bump_gate import REVIEW_ONLY, load_review_only
 from tools.package_inventory import inventory
+from tools.source_lock_order import LOCK, order_error
 from tools.source_pipeline import SHA512_SOURCES_LINE
 
 
@@ -264,13 +265,31 @@ def check_bump_review_only(root: Path) -> None:
         )
 
 
+def check_source_lock_order(root: Path) -> None:
+    """Lock entries stay sorted by name, so concurrent imports insert apart.
+
+    Appending every import at the tail made each open import pull request
+    conflict with every merge to main; tools/source_lock_order.py explains
+    the order and rewrites the file into it.
+    """
+    lock = root / LOCK
+    if not lock.is_file():
+        return
+    try:
+        error = order_error(lock)
+    except (OSError, json.JSONDecodeError):
+        raise SystemExit(f"invalid source lock: {lock}")
+    except ValueError as invalid:
+        raise SystemExit(f"invalid source lock: {lock}: {invalid}")
+    if error:
+        raise SystemExit(error)
+
+
 def validated_summary(records) -> str:
     """Return the success line validate prints, e.g. ``validated N source RPMs (A rawhide, B upstream)``.
 
     The split is the point of the count: a direct-upstream recipe carries a
     different provenance form from a dist-git import, and both are mandatory.
-    tools/render_architecture_counts.py quotes this same line in
-    docs/architecture.md.
     """
     forms: dict[str, int] = {}
     for record in records:
@@ -344,6 +363,7 @@ def main(root: Path = Path(".")) -> int:
     check_plaintext_source_urls(root)
     check_sources_digests(root)
     check_bump_review_only(root)
+    check_source_lock_order(root)
     records = inventory(root)
     missing_locks = sorted(record.name for record in records if not record.source_locked)
     missing_packit = sorted(record.name for record in records if not record.packit_configured)

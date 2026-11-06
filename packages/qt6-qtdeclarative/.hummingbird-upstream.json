@@ -1,0 +1,8 @@
+{
+  "package": "qt6-qtdeclarative",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/qt6-qtdeclarative.git",
+  "commit": "05d82bbddd43586d414b848733f91e2577344b97",
+  "tree": "58744e244058dab0a0d90db801276a0aff729004",
+  "imported_at": "2026-10-26T05:45:53.763897+00:00"
+}

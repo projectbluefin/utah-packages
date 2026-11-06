@@ -40,6 +40,12 @@ packages:
     downstream_package_name: NetworkManager-ssh
     paths:
       - packages/NetworkManager-ssh
+  OpenCL-ICD-Loader:
+    specfile_path: OpenCL-ICD-Loader.spec
+    upstream_package_name: OpenCL-ICD-Loader
+    downstream_package_name: OpenCL-ICD-Loader
+    paths:
+      - packages/OpenCL-ICD-Loader
   SDL3:
     specfile_path: SDL3.spec
     upstream_package_name: SDL3
@@ -118,6 +124,12 @@ packages:
     downstream_package_name: alsa-utils
     paths:
       - packages/alsa-utils
+  anthy-unicode:
+    specfile_path: anthy-unicode.spec
+    upstream_package_name: anthy-unicode
+    downstream_package_name: anthy-unicode
+    paths:
+      - packages/anthy-unicode
   antiword:
     specfile_path: antiword.spec
     upstream_package_name: antiword
@@ -298,6 +310,18 @@ packages:
     downstream_package_name: containerd
     paths:
       - packages/containerd
+  cryfs:
+    specfile_path: cryfs.spec
+    upstream_package_name: cryfs
+    downstream_package_name: cryfs
+    paths:
+      - packages/cryfs
+  cryptopp:
+    specfile_path: cryptopp.spec
+    upstream_package_name: cryptopp
+    downstream_package_name: cryptopp
+    paths:
+      - packages/cryptopp
   cups-browsed:
     specfile_path: cups-browsed.spec
     upstream_package_name: cups-browsed
@@ -352,6 +376,12 @@ packages:
     downstream_package_name: ding-libs
     paths:
       - packages/ding-libs
+  distribution-gpg-keys:
+    specfile_path: distribution-gpg-keys.spec
+    upstream_package_name: distribution-gpg-keys
+    downstream_package_name: distribution-gpg-keys
+    paths:
+      - packages/distribution-gpg-keys
   distrobox:
     specfile_path: distrobox.spec
     upstream_package_name: distrobox
@@ -622,6 +652,12 @@ packages:
     downstream_package_name: gcr3
     paths:
       - packages/gcr3
+  gd:
+    specfile_path: gd.spec
+    upstream_package_name: gd
+    downstream_package_name: gd
+    paths:
+      - packages/gd
   gdk-pixbuf2:
     specfile_path: gdk-pixbuf2.spec
     upstream_package_name: gdk-pixbuf2
@@ -1366,6 +1402,12 @@ packages:
     downstream_package_name: libXScrnSaver
     paths:
       - packages/libXScrnSaver
+  libXaw:
+    specfile_path: libXaw.spec
+    upstream_package_name: libXaw
+    downstream_package_name: libXaw
+    paths:
+      - packages/libXaw
   libXcursor:
     specfile_path: libXcursor.spec
     upstream_package_name: libXcursor
@@ -1540,6 +1582,12 @@ packages:
     downstream_package_name: libbytesize
     paths:
       - packages/libbytesize
+  libcaca:
+    specfile_path: libcaca.spec
+    upstream_package_name: libcaca
+    downstream_package_name: libcaca
+    paths:
+      - packages/libcaca
   libcamera:
     specfile_path: libcamera.spec
     upstream_package_name: libcamera
@@ -1816,12 +1864,24 @@ packages:
     downstream_package_name: libical
     paths:
       - packages/libical
+  libiec61883:
+    specfile_path: libiec61883.spec
+    upstream_package_name: libiec61883
+    downstream_package_name: libiec61883
+    paths:
+      - packages/libiec61883
   libieee1284:
     specfile_path: libieee1284.spec
     upstream_package_name: libieee1284
     downstream_package_name: libieee1284
     paths:
       - packages/libieee1284
+  libijs:
+    specfile_path: libijs.spec
+    upstream_package_name: libijs
+    downstream_package_name: libijs
+    paths:
+      - packages/libijs
   libimobiledevice:
     specfile_path: libimobiledevice.spec
     upstream_package_name: libimobiledevice
@@ -1900,6 +1960,12 @@ packages:
     downstream_package_name: liblouisutdml
     paths:
       - packages/liblouisutdml
+  liblqr-1:
+    specfile_path: liblqr-1.spec
+    upstream_package_name: liblqr-1
+    downstream_package_name: liblqr-1
+    paths:
+      - packages/liblqr-1
   libmanette:
     specfile_path: libmanette.spec
     upstream_package_name: libmanette
@@ -1960,6 +2026,12 @@ packages:
     downstream_package_name: libmysofa
     paths:
       - packages/libmysofa
+  libnet:
+    specfile_path: libnet.spec
+    upstream_package_name: libnet
+    downstream_package_name: libnet
+    paths:
+      - packages/libnet
   libnfs:
     specfile_path: libnfs.spec
     upstream_package_name: libnfs
@@ -2020,6 +2092,12 @@ packages:
     downstream_package_name: libosinfo
     paths:
       - packages/libosinfo
+  libotf:
+    specfile_path: libotf.spec
+    upstream_package_name: libotf
+    downstream_package_name: libotf
+    paths:
+      - packages/libotf
   libpaper:
     specfile_path: libpaper.spec
     upstream_package_name: libpaper
@@ -2038,6 +2116,12 @@ packages:
     downstream_package_name: libpciaccess
     paths:
       - packages/libpciaccess
+  libpfm:
+    specfile_path: libpfm.spec
+    upstream_package_name: libpfm
+    downstream_package_name: libpfm
+    paths:
+      - packages/libpfm
   libphonenumber:
     specfile_path: libphonenumber.spec
     upstream_package_name: libphonenumber
@@ -2434,6 +2518,12 @@ packages:
     downstream_package_name: lrzsz
     paths:
       - packages/lrzsz
+  lsb_release:
+    specfile_path: lsb_release.spec
+    upstream_package_name: lsb_release
+    downstream_package_name: lsb_release
+    paths:
+      - packages/lsb_release
   lshw:
     specfile_path: lshw.spec
     upstream_package_name: lshw
@@ -2464,6 +2554,12 @@ packages:
     downstream_package_name: m17n-db
     paths:
       - packages/m17n-db
+  m17n-lib:
+    specfile_path: m17n-lib.spec
+    upstream_package_name: m17n-lib
+    downstream_package_name: m17n-lib
+    paths:
+      - packages/m17n-lib
   malcontent:
     specfile_path: malcontent.spec
     upstream_package_name: malcontent
@@ -2854,6 +2950,12 @@ packages:
     downstream_package_name: perl-Unicode-Normalize
     paths:
       - packages/perl-Unicode-Normalize
+  phodav:
+    specfile_path: phodav.spec
+    upstream_package_name: phodav
+    downstream_package_name: phodav
+    paths:
+      - packages/phodav
   pinentry:
     specfile_path: pinentry.spec
     upstream_package_name: pinentry
@@ -2932,6 +3034,12 @@ packages:
     downstream_package_name: ppp
     paths:
       - packages/ppp
+  prefixdevname:
+    specfile_path: prefixdevname.spec
+    upstream_package_name: prefixdevname
+    downstream_package_name: prefixdevname
+    paths:
+      - packages/prefixdevname
   printer-driver-brlaser:
     specfile_path: printer-driver-brlaser.spec
     upstream_package_name: printer-driver-brlaser
@@ -3178,18 +3286,48 @@ packages:
     downstream_package_name: python-typing-inspection
     paths:
       - packages/python-typing-inspection
+  python-versioneer:
+    specfile_path: python-versioneer.spec
+    upstream_package_name: python-versioneer
+    downstream_package_name: python-versioneer
+    paths:
+      - packages/python-versioneer
   qpdf:
     specfile_path: qpdf.spec
     upstream_package_name: qpdf
     downstream_package_name: qpdf
     paths:
       - packages/qpdf
+  qt6-qtdeclarative:
+    specfile_path: qt6-qtdeclarative.spec
+    upstream_package_name: qt6-qtdeclarative
+    downstream_package_name: qt6-qtdeclarative
+    paths:
+      - packages/qt6-qtdeclarative
+  qt6-qttranslations:
+    specfile_path: qt6-qttranslations.spec
+    upstream_package_name: qt6-qttranslations
+    downstream_package_name: qt6-qttranslations
+    paths:
+      - packages/qt6-qttranslations
+  qt6-qtwayland:
+    specfile_path: qt6-qtwayland.spec
+    upstream_package_name: qt6-qtwayland
+    downstream_package_name: qt6-qtwayland
+    paths:
+      - packages/qt6-qtwayland
   quota:
     specfile_path: quota.spec
     upstream_package_name: quota
     downstream_package_name: quota
     paths:
       - packages/quota
+  range-v3:
+    specfile_path: range-v3.spec
+    upstream_package_name: range-v3
+    downstream_package_name: range-v3
+    paths:
+      - packages/range-v3
   re2:
     specfile_path: re2.spec
     upstream_package_name: re2
@@ -3466,6 +3604,12 @@ packages:
     downstream_package_name: sso-mib
     paths:
       - packages/sso-mib
+  sssd:
+    specfile_path: sssd.spec
+    upstream_package_name: sssd
+    downstream_package_name: sssd
+    paths:
+      - packages/sssd
   startup-notification:
     specfile_path: startup-notification.spec
     upstream_package_name: startup-notification
@@ -3544,6 +3688,18 @@ packages:
     downstream_package_name: tecla
     paths:
       - packages/tecla
+  tesseract:
+    specfile_path: tesseract.spec
+    upstream_package_name: tesseract
+    downstream_package_name: tesseract
+    paths:
+      - packages/tesseract
+  tesseract-tessdata:
+    specfile_path: tesseract-tessdata.spec
+    upstream_package_name: tesseract-tessdata
+    downstream_package_name: tesseract-tessdata
+    paths:
+      - packages/tesseract-tessdata
   thermald:
     specfile_path: thermald.spec
     upstream_package_name: thermald
@@ -3760,6 +3916,18 @@ packages:
     downstream_package_name: vulkan-loader
     paths:
       - packages/vulkan-loader
+  vvdec:
+    specfile_path: vvdec.spec
+    upstream_package_name: vvdec
+    downstream_package_name: vvdec
+    paths:
+      - packages/vvdec
+  vvenc:
+    specfile_path: vvenc.spec
+    upstream_package_name: vvenc
+    downstream_package_name: vvenc
+    paths:
+      - packages/vvenc
   wavpack:
     specfile_path: wavpack.spec
     upstream_package_name: wavpack
@@ -3850,6 +4018,24 @@ packages:
     downstream_package_name: wsdd
     paths:
       - packages/wsdd
+  x264:
+    specfile_path: x264.spec
+    upstream_package_name: x264
+    downstream_package_name: x264
+    paths:
+      - packages/x264
+  x265:
+    specfile_path: x265.spec
+    upstream_package_name: x265
+    downstream_package_name: x265
+    paths:
+      - packages/x265
+  xavs2:
+    specfile_path: xavs2.spec
+    upstream_package_name: xavs2
+    downstream_package_name: xavs2
+    paths:
+      - packages/xavs2
   xcb-util:
     specfile_path: xcb-util.spec
     upstream_package_name: xcb-util
@@ -4042,6 +4228,12 @@ packages:
     downstream_package_name: ykpers
     paths:
       - packages/ykpers
+  yubikey-manager:
+    specfile_path: yubikey-manager.spec
+    upstream_package_name: yubikey-manager
+    downstream_package_name: yubikey-manager
+    paths:
+      - packages/yubikey-manager
   yyjson:
     specfile_path: yyjson.spec
     upstream_package_name: yyjson

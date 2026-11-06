@@ -153,5 +153,160 @@ class PullRequestFetchTests(unittest.TestCase):
                 pr.assert_called_once_with("o/r", 7, SET)
 
 
+QUEUE_REF = "refs/heads/gh-readonly-queue/main/pr-7-" + "c" * 40
+
+
+class QueueRefTests(unittest.TestCase):
+    def test_the_pull_request_number_comes_from_the_queue_ref(self):
+        self.assertEqual(canary.queue_pr(QUEUE_REF), 7)
+        self.assertEqual(canary.queue_pr("gh-readonly-queue/main/pr-801-" + "a" * 40), 801)
+        self.assertEqual(canary.queue_pr("gh-readonly-queue/release/1.x/pr-3-" + "a" * 40), 3)
+
+    def test_anything_else_names_no_pull_request(self):
+        for ref in ("", "refs/heads/main", "refs/pull/7/merge", "gh-readonly-queue/main/pr-7",
+                    "gh-readonly-queue/main/pr-7-abc", "gh-readonly-queue/main/pr-0-" + "a" * 40,
+                    "refs/heads/feature/gh-readonly-queue/main/pr-7-" + "a" * 40):
+            with self.subTest(ref=ref):
+                self.assertIsNone(canary.queue_pr(ref))
+
+
+class GitRepo:
+    """A real repository with refs/pull/<n>/head, and a merge group checkout of it."""
+
+    def __init__(self, root):
+        self.origin, self.clone = root / "origin", root / "clone"
+        self.origin.mkdir()
+        self.run(self.origin, "init", "-q", "-b", "main")
+        self.run(self.origin, "config", "user.email", "t@example.org")
+        self.run(self.origin, "config", "user.name", "t")
+
+    @staticmethod
+    def run(where, *args):
+        return subprocess.run(["git", "-C", str(where), *args], capture_output=True, text=True,
+                              check=True).stdout
+
+    def commit(self, files, parent=None):
+        if parent:
+            self.run(self.origin, "checkout", "-q", "--detach", parent)
+        for name, text in files.items():
+            path = self.origin / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(text)
+        self.run(self.origin, "add", "-A")
+        self.run(self.origin, "commit", "-q", "--allow-empty", "-m", "c")
+        return self.run(self.origin, "rev-parse", "HEAD").strip()
+
+    def publish_pr(self, number, sha):
+        self.run(self.origin, "update-ref", f"refs/pull/{number}/head", sha)
+
+    def checkout_group(self, sha):
+        """What actions/checkout leaves on a merge group run: one shallow commit."""
+        self.run(self.origin, "update-ref", "refs/heads/gh-readonly-queue/main/pr-7", sha)
+        self.clone.mkdir()
+        self.run(self.clone, "init", "-q")
+        self.run(self.clone, "remote", "add", "origin", self.origin.as_uri())
+        self.run(self.clone, "fetch", "-q", "--depth=1", "origin", "refs/heads/gh-readonly-queue/main/pr-7")
+        self.run(self.clone, "checkout", "-q", "--detach", sha)
+
+    def git(self, args):
+        return self.run(self.clone, *args)
+
+    def origin_git(self, args):
+        return self.run(self.origin, *args)
+
+
+def sources(*names):
+    return json.dumps(lock(*names), indent=2) + "\n"
+
+
+class MergeGroupProofTests(unittest.TestCase):
+    """The verdict a merge group gets without building anything."""
+
+    def setUp(self):
+        import tempfile
+        from pathlib import Path
+
+        directory = tempfile.TemporaryDirectory(prefix="canary-queue-")
+        self.addCleanup(directory.cleanup)
+        self.repo = GitRepo(Path(directory.name))
+        self.main = self.repo.commit({
+            "config/upstream-sources.json": sources("libical", "foo"),
+            "tools/tool.py": "x = 1\n",
+            "docs/a.md": "a\n",
+        })
+
+    def prove(self, pr_head, group, api_head=None):
+        self.repo.publish_pr(7, pr_head)
+        self.repo.checkout_group(group)
+
+        def gh(args):
+            self.assertEqual(args, ["api", "repos/o/r/pulls/7"])
+            return json.dumps({"head": {"sha": api_head or pr_head}})
+
+        return canary.merge_group_proof("o/r", QUEUE_REF, group, SET, gh=gh, git=self.repo.git)
+
+    def test_a_docs_only_member_cannot_bless_another_members_pipeline_change(self):
+        pr_head = self.repo.commit({"docs/a.md": "member documentation\n"})
+        ahead = self.repo.commit({"tools/tool.py": "untested pipeline change\n"}, parent=self.main)
+        group = self.repo.commit({"docs/a.md": "member documentation\n"}, parent=ahead)
+        proven, reason = self.prove(pr_head, group)
+        self.assertFalse(proven, reason)
+
+    def test_a_pipeline_change_is_proven_when_main_moved_only_in_recipes_docs_and_new_locks(self):
+        pr_head = self.repo.commit({"tools/tool.py": "x = 2\n"})
+        main = self.repo.commit({
+            "packages/bar/bar.spec": "Name: bar\n",
+            "docs/a.md": "b\n",
+            "config/upstream-sources.json": sources("libical", "foo", "bar"),
+        }, parent=self.main)
+        group = self.repo.commit({"tools/tool.py": "x = 2\n"}, parent=main)
+        proven, reason = self.prove(pr_head, group)
+        self.assertTrue(proven, reason)
+
+    def test_a_pipeline_change_is_unproven_when_the_pipeline_moved_under_it(self):
+        pr_head = self.repo.commit({"tools/tool.py": "x = 2\n"})
+        ahead = self.repo.commit({"tools/other.py": "y = 1\n"}, parent=self.main)
+        group = self.repo.commit({"tools/tool.py": "x = 2\n"}, parent=ahead)
+        proven, reason = self.prove(pr_head, group)
+        self.assertFalse(proven)
+        self.assertIn("Update the branch", reason)
+
+    def test_an_existing_lock_entry_changed_under_it_is_pipeline_drift(self):
+        pr_head = self.repo.commit({"tools/tool.py": "x = 2\n"})
+        bumped = lock("libical", "foo")
+        bumped["packages"][1]["version"] = "2"
+        main = self.repo.commit({"config/upstream-sources.json": json.dumps(bumped)}, parent=self.main)
+        group = self.repo.commit({"tools/tool.py": "x = 2\n"}, parent=main)
+        self.assertFalse(self.prove(pr_head, group)[0])
+
+    def test_a_head_that_moved_since_the_api_answered_is_unproven(self):
+        api_head = self.repo.commit({"tools/tool.py": "x = 2\n"})
+        moved = self.repo.commit({"tools/tool.py": "x = 3\n"})
+        group = self.repo.commit({"tools/tool.py": "x = 2\n"}, parent=self.main)
+        proven, reason = self.prove(moved, group, api_head=api_head)
+        self.assertFalse(proven)
+        self.assertIn("head moved", reason)
+
+    def test_an_unreadable_queue_ref_or_sha_fails_closed_before_any_call(self):
+        def refuse(*_args, **_kwargs):
+            raise AssertionError("must not be called")
+
+        with mock.patch.object(canary, "pr_relevant", side_effect=refuse):
+            self.assertFalse(canary.merge_group_proof("o/r", "refs/heads/main", "d" * 40, SET,
+                                                      gh=refuse, git=refuse)[0])
+            self.assertFalse(canary.merge_group_proof("o/r", QUEUE_REF, "abc", SET, gh=refuse, git=refuse)[0])
+
+    def test_a_range_is_judged_like_pull_request_files_renames_included(self):
+        (self.repo.origin / "docs").mkdir(exist_ok=True)
+        (self.repo.origin / "tools" / "tool.py").rename(self.repo.origin / "docs" / "moved.py")
+        renamed = self.repo.commit({})
+        files = canary.range_files(self.main, renamed, git=self.repo.origin_git)
+        self.assertEqual(files, [{"filename": "docs/moved.py", "previous_filename": "tools/tool.py"}])
+        self.assertTrue(canary.range_relevant(self.main, renamed, SET, git=self.repo.origin_git))
+        docs_only = self.repo.commit({"docs/a.md": "c\n"})
+        self.assertFalse(canary.range_relevant(renamed, docs_only, SET, git=self.repo.origin_git))
+
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -21,7 +21,7 @@ dependencies and importing font recipes into `utah-packages`.
 rejects bulk font parity with Bluefin classic. A font's presence in the
 original audit is not approval to import it: record the rejected parity
 request in `[wontfix]` with that decision link, preserving the audit name,
-and regenerate `reports/factory-build-backlog.json`. A deliberate individual
+and verify with `just factory-build-backlog`. A deliberate individual
 font addition needs its own proposal. This does not remove existing recipes
 or claim their binaries are published.
 
@@ -32,6 +32,17 @@ explicitly distinguishes input methods from fonts. Likewise, an existing
 variable-font recipe is not proof that an older, differently named binary
 is provided. Check its actual provides and published metadata rather than
 closing a name based on a similar recipe directory.
+
+`m17n-lib` is an input-method library, not a font. Its recipe BuildRequires
+`gd-devel`, `libXaw-devel` and `libotf-devel`; Fedora builds enable Anthy
+unless disabled and also require `anthy-unicode-devel`. Fedora-backed mock can
+satisfy BuildRequires even when runtime libraries are absent from the factory
+and Hummingbird, so keep runtime closure evidence separate from recipe and
+build evidence.
+
+The recipe was imported by #856; a later documentation or tracking correction
+must retain that import PR in the backlog's `pr` field. #735 continues to own
+the remaining hosted-build and runtime-closure evidence.
 
 ## Source package names vs. provided binary subpackages
 
@@ -110,6 +121,5 @@ transaction (see `repo-inspection`) and does not prove font rendering.
 ## Refreshing the inventory
 
 After importing a font source, regenerate `.packit.yaml` with
-`python3 tools/render_packit_config.py --write` and architecture counts with
-`python3 tools/render_architecture_counts.py --write`. Inventory tests now
-read the recipe set; do not restore old hardcoded package counts.
+`just regenerate-inventory`. Inventory tests read the recipe set; do not add
+hardcoded package counts to tests or documentation.

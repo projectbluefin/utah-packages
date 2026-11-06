@@ -1,0 +1,8 @@
+{
+  "package": "liblqr-1",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/liblqr-1.git",
+  "commit": "e2d046aa14fe52f8742884ff0d902031a8f6a0cc",
+  "tree": "7c93ad77059e0aeb1caf7845f6c54ba66273cb0d",
+  "imported_at": "2026-10-31T18:52:57Z"
+}

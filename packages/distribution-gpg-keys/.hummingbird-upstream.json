@@ -1,0 +1,8 @@
+{
+  "package": "distribution-gpg-keys",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/distribution-gpg-keys.git",
+  "commit": "6fba86b180185dbc9dab96f555096b642916916f",
+  "tree": "53c4564ceeba1e9aaa949122bd2cccf998788747",
+  "imported_at": "2026-10-31T01:00:11.318579+00:00"
+}

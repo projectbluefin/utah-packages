@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fail when a recipe silences its own ``%check`` with ``tests_nonfatal``.
+"""Fail when a recipe introduces a known ``%check`` failure suppression.
 
 Fedora's audio specs share a ``%check`` shaped like this::
 
@@ -37,28 +37,22 @@ code said otherwise. Pinning the count makes both directions fail: a definition
 appearing beyond the recorded number, and the recorded number outliving the
 import that earned it.
 
-What this gate does **not** catch
----------------------------------
+Direct test commands followed by ``|| :`` or ``|| true`` are another narrow
+tripwire. The check recognizes test macros, make check/test, ctest/pytest,
+and executables or Python scripts under test directories. Only literal
+fallbacks at the end of a command in ``%check`` are matched; probes such as
+``test -f``, ``grep`` and diagnostic log reads are not test commands.
+Existing imported fallbacks have the same exact-count ratchet as macro
+definitions. Removing an exception requires shrinking its recorded count;
+an inherited recipe is never exempt from adding a different suppression.
 
-It matches one evasion: a ``%global``/``%define tests_nonfatal`` line in a
-``packages/<name>/<name>.spec``. That is the one that was about to be written
-for #132, and it is the one a rushed author reaches for -- it is not the only
-way to land a green build on a failing suite. A recipe can still:
-
-* delete the ``%{!?tests_nonfatal:exit $TESTS_ERROR}`` guard, leaving a
-  ``%check`` that prints ``test failed`` and exits 0 -- no macro required;
-* append ``|| :`` (or ``|| true``) to ``%meson_test`` / ``%ctest`` / the test
-  command, which never reaches ``TESTS_ERROR`` at all;
-* define the macro somewhere the ``packages/*/*.spec`` glob does not read.
-  Not hypothetical: ``packages/grub2/grub2.spec:1136`` already does
-  ``%include %{SOURCE11}``, so a definition can live in a source file.
-
-Closing those mechanically means parsing ``%check`` bodies rather than grepping
-for one line, which is a different and much larger tool. Until that exists,
-treat this as a tripwire on the most likely route, not as proof that no recipe
-silences its tests -- the standing rule is the prose one in ``AGENTS.md`` and
-``.agents/skills/build-failure-triage/SKILL.md``: never skip or defang a test
-to make a build green. A reviewer still has to read the ``%check`` diff.
+This is not a shell or RPM parser. Backslash continuations are joined, but
+compound shell commands, RPM conditionals, shell wrappers and embedded
+scripts are not interpreted. In particular, uchardet's fallback is
+split across ``%ifarch`` directives and is outside this tripwire. Deleting
+an exit guard or defining a macro in an included source also remains outside
+it. A reviewer still has to read the ``%check`` diff: passing this gate is not
+proof that every failing test propagates.
 """
 from __future__ import annotations
 
@@ -70,6 +64,26 @@ from pathlib import Path
 # definition matters: ``%{!?tests_nonfatal:exit $TESTS_ERROR}`` is the guard
 # itself and appears in every recipe that carries this %check shape.
 DEFINITION = re.compile(r"^\s*%(?:global|define)\s+tests_nonfatal\b")
+
+# Deliberately limited to direct, recognizable test invocations. Do not flag
+# every fallback in %check: grep probes and failure-log collection are valid.
+SECTION = re.compile(
+    r"^%(?:prep|generate_buildrequires|build|install|check|clean|files|"
+    r"changelog|package|description|pre|preun|pretrans|post|postun|posttrans|"
+    r"trigger\w*|filetrigger\w*|transfiletrigger\w*|verifyscript)\b"
+)
+SUCCESS_FALLBACK = re.compile(r"\s*\|\|\s*(?::|true)\s*;?\s*(?:#.*)?$")
+TEST_COMMAND = re.compile(
+    r"^(?:[A-Za-z_]\w*=\S+\s+)*(?:"
+    r"%(?:\{(?:meson_test|ctest|pytest|make_check)\}|"
+    r"(?:meson_test|ctest|pytest|make_check)\b)|"
+    r"(?:make|%make_build|%\{make_build\})(?:\s+\S+)*\s+(?:check|test)(?=\s|$)|"
+    r"(?:ctest|pytest|pytest-[\d.]+)(?=\s|$)|"
+    r"(?:\./)?(?:[^\s/]+/)*(?:test|tests|jit-test)/\S+|"
+    r"(?:python[23]?(?:\.\d+)?|%\{_{0,2}python3?\})\s+"
+    r"(?:\./)?(?:test|tests|jit-test)/\S+"
+    r")"
+)
 
 # package -> (how many definitions were inherited, why they are there).
 # Inherited from Fedora, never ours. The count is the exemption: anything
@@ -83,6 +97,18 @@ INHERITED = {
     "pulseaudio": (2, "inherited from Fedora dist-git, arch and release gated"),
 }
 
+# Literal fallbacks already carried by main before the codec-tail import.
+# Counts include inactive RPM branches; these are recorded debt, not approval
+# of advisory tests and not permission for an import to add another fallback.
+INHERITED_FALLBACKS = {
+    "appstream": (1, "inherited Fedora meson_test fallback"),
+    "glycin": (1, "inherited Fedora fallback for published-tarball tests"),
+    "mozjs140": (2, "inherited Fedora require_tests-disabled branches"),
+    "python-pillow": (2, "inherited Fedora pytest fallbacks in both arch branches"),
+    "vid.stab": (1, "inherited Fedora tests/tests fallback"),
+    "xhost": (1, "inherited Fedora make check fallback"),
+}
+
 
 def definitions(spec: Path) -> list[tuple[int, str]]:
     """Return (line number, line) for every ``tests_nonfatal`` definition."""
@@ -93,71 +119,100 @@ def definitions(spec: Path) -> list[tuple[int, str]]:
     ]
 
 
-def offenders(root: Path) -> list[tuple[str, int, str]]:
-    """Return (package, line number, line) for every new ``tests_nonfatal``.
+def masked_tests(spec: Path) -> list[tuple[int, str]]:
+    """Find direct test commands with a literal unconditional-success tail."""
+    found = []
+    in_check = False
+    pending = ""
+    start = 0
+    for number, line in enumerate(spec.read_text().splitlines(), start=1):
+        stripped = line.strip()
+        if SECTION.match(stripped):
+            in_check = bool(re.match(r"^%check\b", stripped))
+            pending = ""
+            continue
+        if not in_check or stripped.startswith("#"):
+            continue
+        if not pending:
+            start = number
+        pending += stripped
+        if pending.endswith("\\"):
+            pending = pending[:-1] + " "
+            continue
+        fallback = SUCCESS_FALLBACK.search(pending)
+        if fallback:
+            command = pending[:fallback.start()].rstrip()
+            if (
+                TEST_COMMAND.match(command)
+                and not any(part in command for part in ("#", ";", "|", "&&"))
+                and not re.search(r"\s(?:--help|--version)\s*$", command)
+            ):
+                found.append((start, pending))
+        pending = ""
+    return found
 
-    Allowlisted recipes are counted by :func:`drifted` instead, which is what
-    makes the exemption a number rather than a blanket pass for the package.
+
+def offenders(root: Path) -> list[tuple[str, int, str]]:
+    """Return (package, line number, line) for new known suppressions.
+
+    Each inherited suppression kind is counted separately by :func:`drifted`;
+    an exception for one kind never exempts the other kind.
     """
     found = []
     for spec in sorted((root / "packages").glob("*/*.spec")):
         package = spec.parent.name
-        if package in INHERITED:
-            continue
-        found.extend(
-            (package, number, line) for number, line in definitions(spec)
-        )
+        for inherited, scan in (
+            (INHERITED, definitions),
+            (INHERITED_FALLBACKS, masked_tests),
+        ):
+            if package not in inherited:
+                found.extend(
+                    (package, number, line) for number, line in scan(spec)
+                )
     return found
 
 
 def drifted(root: Path) -> list[str]:
-    """Return allowlisted recipes whose definition count no longer matches.
+    """Return present recipes whose inherited suppression counts have drifted.
 
-    Both directions are failures. Too few -- down to none -- and the entry is
-    claiming a recipe is compromised long after the import that made it so is
-    gone; an exception nobody can see is worse than no exception. Too many and
-    a definition has been added since the import, which is exactly the thing
-    the gate exists to refuse, so it must not hide behind the entry that
-    documents Fedora's two.
-
-    A package that is absent entirely is **not** drift. ``tools/validate.py``
-    runs against synthetic trees in its own tests and against whatever root it
-    is handed; complaining that a recipe the caller never had is missing would
-    make the gate depend on the tree it is pointed at. A dropped recipe is
-    caught by ``tests/test_check_suppressed_tests.py`` instead, which asserts
-    the entries still exist in this repository.
+    Both increases and decreases fail. Absent recipes are ignored so this
+    guard also works on synthetic or partial trees.
     """
     reports = []
-    for package, (expected, _reason) in sorted(INHERITED.items()):
-        specs = sorted((root / "packages" / package).glob("*.spec"))
-        if not specs:
-            continue
-        found = [
-            (spec, number)
-            for spec in specs
-            for number, _line in definitions(spec)
-        ]
-        if len(found) == expected:
-            continue
-        if not found:
-            reports.append(
-                f"{package}: no longer defines tests_nonfatal; drop the entry"
-            )
-        elif len(found) < expected:
-            reports.append(
-                f"{package}: defines tests_nonfatal {len(found)} time(s), "
-                f"allowlist records {expected}; lower the count to match the "
-                f"import"
-            )
-        else:
-            sites = ", ".join(
-                f"{spec.relative_to(root)}:{number}" for spec, number in found
-            )
-            reports.append(
-                f"{package}: defines tests_nonfatal {len(found)} time(s), "
-                f"allowlist records {expected}; a definition was added after "
-                f"the import ({sites})"
-            )
+    for inherited, scan, description, noun in (
+        (INHERITED, definitions, "defines tests_nonfatal", "definition"),
+        (INHERITED_FALLBACKS, masked_tests, "masks test failures", "fallback"),
+    ):
+        for package, (expected, _reason) in sorted(inherited.items()):
+            specs = sorted((root / "packages" / package).glob("*.spec"))
+            if not specs:
+                continue
+            found = [
+                (spec, number)
+                for spec in specs
+                for number, _line in scan(spec)
+            ]
+            if len(found) == expected:
+                continue
+            if not found:
+                reports.append(
+                    f"{package}: no longer {description}; drop the entry"
+                )
+            elif len(found) < expected:
+                reports.append(
+                    f"{package}: {description} {len(found)} time(s), "
+                    f"allowlist records {expected}; lower the count to match the "
+                    f"import"
+                )
+            else:
+                sites = ", ".join(
+                    f"{spec.relative_to(root)}:{number}" for spec, number in found
+                )
+                reports.append(
+                    f"{package}: {description} {len(found)} time(s), "
+                    f"allowlist records {expected}; a {noun} was added after "
+                    f"the import ({sites})"
+                )
     return reports
 
 
@@ -168,8 +223,8 @@ def main(root: Path | None = None) -> int:
 
     if problems:
         print(
-            "A recipe may not define tests_nonfatal. It turns a failing %check "
-            "into a green build and ships the failure:",
+            "A recipe may not introduce tests_nonfatal or mask a test command "
+            "with || : / || true. It turns a failing %check into a green build:",
             file=sys.stderr,
         )
         for package, number, line in problems:
@@ -181,9 +236,9 @@ def main(root: Path | None = None) -> int:
         )
     if rotted:
         print(
-            "\ntools/check_suppressed_tests.py INHERITED no longer matches the "
-            "tree. An entry exempts a recorded number of inherited "
-            "definitions, not the whole recipe:",
+            "\ntools/check_suppressed_tests.py inherited counts no longer match "
+            "the tree. An entry exempts a recorded number of inherited "
+            "suppressions, not the whole recipe:",
             file=sys.stderr,
         )
         for entry in rotted:
@@ -194,11 +249,14 @@ def main(root: Path | None = None) -> int:
 
     count = len(list((root / "packages").glob("*/*.spec")))
     inherited = ", ".join(
-        f"{package} ({expected})"
-        for package, (expected, _reason) in sorted(INHERITED.items())
+        f"{package} ({expected} {kind})"
+        for kind, entries in (
+            ("definitions", INHERITED), ("fallbacks", INHERITED_FALLBACKS)
+        )
+        for package, (expected, _reason) in sorted(entries.items())
     )
     print(
-        f"checked {count} recipes: no new tests_nonfatal "
+        f"checked {count} recipes: no new known test suppressions "
         f"(inherited: {inherited})"
     )
     return 0

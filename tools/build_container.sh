@@ -452,6 +452,14 @@ if [ "$status" -ne 0 ]; then
     | head -20 >&2
   exit "$status"
 fi
+# Only this package's binaries may leave the job: rpmbuild runs as mockbuild,
+# which owns _rpmdir, so %build can write straight into the upload directory,
+# and publish replaces by %{SOURCERPM}. The recipe's own Name is what every
+# binary must claim; rpmspec reads it from the spec without running any of
+# it. tools/check_rpm_source.sh, as in the hermetic lane.
+expected_source=$(rpmspec -q --srpm --qf "%{NAME}\n" \
+  --define "_sourcedir $staged" --define "dist $DISTTAG" "$spec" | head -n1)
+bash /tools/check_rpm_source.sh "$expected_source" /work/result
 find /work/result -name "*.rpm" -type f -print0 | \
   xargs -0 -r rpm -qp --qf "%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n"
 # A build that produced no RPM must fail here. if-no-files-found on

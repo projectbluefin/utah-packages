@@ -53,7 +53,6 @@ packages = [
     "libde265",
     "libdovi",
     "libfdk-aac",
-    "libiec61883",
     "libklvanc",
     "libopenjph",
     "libplacebo",
@@ -61,11 +60,6 @@ packages = [
     "libswresample",
     "libswscale",
     "libxavs",
-    "vvdec-libs",
-    "vvenc-libs",
-    "x264-libs",
-    "x265-libs",
-    "xavs2-libs",
 ]
 
 [areas.power]
@@ -80,8 +74,6 @@ consumer_issue = "projectbluefin/utah#389"
 packages = [
     "NetworkManager-vpnc",
     "NetworkManager-vpnc-gnome",
-    "python3-yubikey-manager",
-    "yubikey-manager",
 ]
 
 [areas.printing-scanning]
@@ -101,8 +93,6 @@ packages = [
 # projectbluefin/utah#392 - 147 names
 consumer_issue = "projectbluefin/utah#392"
 packages = [
-    "cryfs",
-    "distribution-gpg-keys",
     "fedora-release-common",
     "fedora-release-identity-silverblue",
     "fedora-release-ostree-desktop",
@@ -112,13 +102,6 @@ packages = [
     "kernel-devel-matched",
     "kernel-tools",
     "kernel-tools-libs",
-    "libcaca",
-    "libsss_autofs",
-    "libsss_certmap",
-    "libsss_idmap",
-    "libsss_nss_idmap",
-    "libsss_sudo",
-    "lsb_release",
     "open-vm-tools",
     "open-vm-tools-desktop",
     "python3-anyio",
@@ -144,18 +127,11 @@ packages = [
     "python3-secretstorage",
     "python3-shtab",
     "qemu-guest-agent",
-    "qemu-user-static-aarch64",
     "rclone",
     "realmd",
     "restic",
-    "rpm-ostree",
+    # Utah waives rpm-ostree only; rpm-ostree-libs has no separate waiver.
     "rpm-ostree-libs",
-    "spice-webdavd",
-    "sssd-client",
-    "sssd-common",
-    "sssd-kcm",
-    "sssd-krb5-common",
-    "sssd-nfs-idmap",
 ]
 
 [areas.fonts-i18n]
@@ -165,7 +141,6 @@ packages = [
     "adobe-mappings-cmap",
     "adobe-mappings-cmap-deprecated",
     "adobe-mappings-pdf",
-    "anthy-unicode",
     "cldr-emoji-annotation",
     "cldr-emoji-annotation-dtd",
     "ibus-anthy",
@@ -176,7 +151,6 @@ packages = [
     "ibus-typing-booster",
     "kasumi-common",
     "kasumi-unicode",
-    "m17n-lib",
 ]
 
 [areas.ujust-deps]
@@ -199,7 +173,6 @@ packages = [
 consumer_issue = "projectbluefin/utah#396"
 packages = [
     "7zip",
-    "OpenCL-ICD-Loader",
     "PackageKit-glib",
     "appstream-data",
     "b43-openfwwf",
@@ -223,10 +196,6 @@ packages = [
     "kmod-v4l2loopback",
     "kpartx",
     "kvazaar-libs",
-    "libijs",
-    "liblqr-1",
-    "libnet",
-    "libpfm",
     "libreport-filesystem",
     "lockdev",
     "mcelog",
@@ -242,7 +211,6 @@ packages = [
     "oversteer-udev",
     "pam_afs_session",
     "paps",
-    "prefixdevname",
     "python3-perf",
     "qadwaitadecorations-qt5",
     "qrencode-libs",
@@ -256,10 +224,6 @@ packages = [
     "slang",
     "solaar-udev",
     "sos",
-    "tesseract-common",
-    "tesseract-langpack-eng",
-    "tesseract-libs",
-    "tesseract-tessdata-doc",
     "uavs3d-libs",
     "ublue-os-akmods-addons",
     "v4l2loopback",
@@ -278,9 +242,37 @@ packages = [
 # Run: https://github.com/projectbluefin/utah-packages/actions/runs/40151594832
 # Published binaries can survive newer failed rebuilds; this is not a runtime validation claim.
 # Latest rebuilds of gnome-tour, gnome-browser-connector and gnome-remote-desktop failed in run 40151594832; their earlier RPMs remain published.
+# VPN/YubiKey batch #479: all nine audited binaries are present in this image.
+# Image: ghcr.io/projectbluefin/utah-packages@sha256:8ec1178b09ac81b7db630976a66c859f34ec2f79113af6fb13b08f151f08e5b2
+# Source revision: 713729aa0d0ae3207a91d6fc07162980389e1340 (on main).
+# repomd.xml SHA-256: f5da4a9a03cb53f5d0a32ccd3f7ac41fc1e9fb8e9d3f6473bd363e3b05f5a3e4
+# Primary metadata SHA-256: 7a6a21aa7b19da2cf12843de2d189058158d9d66470bb349dd07bf5d9b4e5d4b
+# Run: https://github.com/projectbluefin/utah-packages/actions/runs/41232660647 (success).
+# Snapshot fetched 2026-10-31T19:22:14Z. Publication evidence only; not a runtime transaction or device test.
+# Factory image snapshot 2026-10-31: digest
+# sha256:d3dadc279e529a0646d3558bfc150066f21f0f5cca3d1a5a733798c60253e984,
+# source revision c9f1be7f33fa269928cf3056695d51150200e74b (on main),
+# run 41233305890, repomd SHA-256 5752786befbfbe662b7e387818240872aff632390bd336f7a1ad2a09731a6079,
+# primary SHA-256 10161bb9fb4942907844f1110c882da1b4bc09e6de15fb35250ff84147fd3cf4.
+# Published NEVRAs below establish metadata presence, not runtime resolution.
 # Packages that left the backlog because a recipe was imported.
 # Each entry: package name and the commit that closed the gap.
 packages = [
+    # Codec recipe imports for #476; publication and runtime proof remain separate.
+    { name = "x264-libs", pr = 633 },
+    { name = "x265-libs", pr = 633 },
+    { name = "vvdec-libs", pr = 633 },
+    { name = "vvenc-libs", pr = 633 },
+    { name = "xavs2-libs", pr = 633 },
+    # Recipe import only; build, publication, dependency closure and guest file-transfer proof remain on #490.
+    { name = "spice-webdavd", pr = 761 },
+    # Long-tail #502: import the libijs, liblqr-1, libnet and libpfm
+    # recipes. Recipe import only; hosted build, publication and runtime
+    # proof remain open on #502.
+    { name = "libijs", pr = 854 },
+    { name = "liblqr-1", pr = 854 },
+    { name = "libnet", pr = 854 },
+    { name = "libpfm", pr = 854 },
     # Recipe coverage only; hosted build, publication and runtime proof remain on #486.
     { name = "hfsplus-tools", pr = 837 },
     # Recipe import only; build, publication and runtime proof remain on #478.
@@ -321,10 +313,23 @@ packages = [
     # Recipe import only; build, publication and runtime proof remain on #485.
     { name = "adcli", pr = 774 },
     { name = "adcli-selinux", pr = 774 },
+    # CryFS and distribution signing-key recipe imports for #485; hosted build,
+    # publication, dependency solving and runtime proof remain open.
+    { name = "cryfs", pr = 838 },
+    { name = "distribution-gpg-keys", pr = 838 },
     { name = "serd", pr = 773 },
+    # Long-tail tesseract family (recipe import only); build, publication and
+    # runtime proof remain on #507.
+    { name = "tesseract-libs", pr = 836 },
+    { name = "tesseract-common", pr = 836 },
+    { name = "tesseract-tessdata-doc", pr = 836 },
+    { name = "tesseract-langpack-eng", pr = 836 },
     # Recipe coverage only; slirp4netns uses the existing libslirp recipe.
     # Hosted build, publication, runtime solver and namespace tests remain on #507.
     { name = "slirp4netns", pr = 830 },
+    # Khronos OpenCL ICD loader recipe import only; hosted build, publication and
+    # runtime proof remain on #499.
+    { name = "OpenCL-ICD-Loader", pr = 834 },
     # Language data recipe; build/publication and consumer proof remain tracked in #494.
     { name = "langtable", pr = 700 },
     { name = "python3-langtable", pr = 700 },
@@ -345,6 +350,7 @@ packages = [
     { name = "davfs2", pr = 696 },
     { name = "neon", pr = 696 },
     { name = "libntlm", pr = 696, published_run = 40626803772, published_nevra = "libntlm-0:1.8-1.hum1.bfin.x86_64" },
+    { name = "anthy-unicode", pr = 788 },
     # FireWire recipe coverage; hosted builds and runtime proof remain outstanding.
     { name = "libavc1394", pr = 681 },
     # FFmpeg family recipe coverage. The recipe exists under packages/ffmpeg and
@@ -364,6 +370,7 @@ packages = [
     { name = "libavcodec", pr = 70 },
     { name = "libavdevice", pr = 70 },
     { name = "libdc1394", pr = 794 },
+    { name = "libiec61883", pr = 801 },
     { name = "libraw1394", pr = 681 },
     { name = "pam_yubico", pr = 706 },
     # Smart-card Python binding; hosted build and runtime proof remain in #506.
@@ -451,8 +458,8 @@ packages = [
     # Recipe import only; build/publication and Utah consumption remain separate proof.
     { name = "libbsd", pr = 614 },
     { name = "libmd", pr = 614, published_run = 40626803772, published_nevra = "libmd-0:1.3.0-1.hum1.bfin.x86_64" },
-    { name = "spice-vdagent", pr = 679 }, # Recipe import; publication/installability tracked in #490.
-    { name = "sshpass", pr = 611 }, # Recipe import; publication/installability tracked in #490.
+    { name = "spice-vdagent", pr = 679, published_run = 41233305890, published_nevra = "spice-vdagent-0:0.23.0-3.hum1.bfin.x86_64" },
+    { name = "sshpass", pr = 611, published_run = 41233305890, published_nevra = "sshpass-0:1.09-13.hum1.bfin.x86_64" },
     # Password-quality source family: #676 merged the recipes from #644; publication is not runtime acceptance (#505).
     { name = "pam_passwdqc", commit = "dfd06b47175b8c94d511c12ac995ecb5e25d7efa", pr = 676, published_run = 40626803772, published_nevra = "pam_passwdqc-0:2.0.3-10.hum1.bfin.x86_64" },
     { name = "passwdqc", commit = "dfd06b47175b8c94d511c12ac995ecb5e25d7efa", pr = 676, published_run = 40626803772, published_nevra = "passwdqc-0:2.0.3-10.hum1.bfin.x86_64" },
@@ -475,10 +482,10 @@ packages = [
     { name = "NetworkManager-openconnect", pr = 585 },
     { name = "NetworkManager-openconnect-gnome", pr = 585 },
     { name = "openconnect", pr = 585 },
-    { name = "vpnc", pr = 585 },
-    { name = "vpnc-script", pr = 585 },
-    { name = "stoken-libs", pr = 585 },
-    { name = "pkcs11-helper", pr = 585 },
+    { name = "vpnc", pr = 585, published_run = 41232660647, published_nevra = "vpnc-0:0.5.3^20241114.git11e15a1-5.hum1.bfin.x86_64" },
+    { name = "vpnc-script", pr = 585, published_run = 41232660647, published_nevra = "vpnc-script-0:20230907-1.git5b9e7e4c.hum1.bfin.noarch" },
+    { name = "stoken-libs", pr = 585, published_run = 41232660647, published_nevra = "stoken-libs-0:0.93-1.hum1.bfin.x86_64" },
+    { name = "pkcs11-helper", pr = 585, published_run = 41232660647, published_nevra = "pkcs11-helper-0:1.30.0-8.hum1.bfin.x86_64" },
     { name = "libpskc", pr = 585, published_run = 40626803772, published_nevra = "libpskc-0:2.6.15-1.hum1.bfin.x86_64" },
     { name = "libuser", pr = 585 },
     { name = "usermode", pr = 585 },
@@ -511,7 +518,7 @@ packages = [
     { name = "htop", pr = 514, published_run = 41111585693, published_nevra = "htop-0:3.5.3-1.hum1.bfin.x86_64" },
     { name = "nano", pr = 514 },
     { name = "nano-default-editor", pr = 514 },
-    { name = "rsync", pr = 514 },
+    { name = "rsync", pr = 514, published_run = 41233305890, published_nevra = "rsync-0:3.5.1-1.hum1.bfin.x86_64" },
     { name = "tmux", pr = 514 },
     { name = "xdg-utils", pr = 514 },
     # Laptop-power and VPN wave (landing PR #522). tuned-ppd and
@@ -672,10 +679,11 @@ packages = [
     { name = "nvme-cli", pr = 587 },
     { name = "pinfo", commit = "c2c7cd8c3f440a81b9aafe204bc9d22b0532fe0e", pr = 587, published_run = 40626803772, published_nevra = "pinfo-0:0.6.13-11.hum1.bfin.x86_64" },
     { name = "perl-Unicode-Normalize", pr = 783 },
+    { name = "prefixdevname", pr = 819 },
     { name = "python3-llfuse", pr = 587 },
     { name = "python3-msgpack", pr = 587 },
-    { name = "smartmontools", pr = 587 },
-    { name = "smartmontools-selinux", pr = 587 },
+    { name = "smartmontools", pr = 587, published_run = 41233305890, published_nevra = "smartmontools-1:7.5-11.hum1.bfin.x86_64" },
+    { name = "smartmontools-selinux", pr = 587, published_run = 41233305890, published_nevra = "smartmontools-selinux-1:7.5-11.hum1.bfin.noarch" },
     { name = "tcpdump", pr = 587 },
     { name = "traceroute", pr = 587 },
     { name = "tree", pr = 587 },
@@ -722,10 +730,13 @@ packages = [
     { name = "libXres", pr = 646 },
     # VPN / smart-card PKCS#11 provider and Yubico C/personalization stack (projectbluefin/utah-packages#479, utah#389).
     # libyubikey is ykpers's build and runtime dependency (libyubikey.so.0).
-    { name = "libyubikey", pr = 647 },
-    { name = "pkcs11-provider", pr = 647 },
-    { name = "ykclient", pr = 647 },
-    { name = "ykpers", pr = 647 },
+    { name = "libyubikey", pr = 685, published_run = 41232660647, published_nevra = "libyubikey-0:1.13-28.hum1.bfin.x86_64" },
+    { name = "pkcs11-provider", pr = 685, published_run = 41232660647, published_nevra = "pkcs11-provider-0:1.3.0-1.hum1.bfin.x86_64" },
+    { name = "ykclient", pr = 685, published_run = 41232660647, published_nevra = "ykclient-0:2.15-24.hum1.bfin.x86_64" },
+    { name = "ykpers", pr = 685, published_run = 41232660647, published_nevra = "ykpers-0:1.20.0-19.hum1.bfin.x86_64" },
+    # Published in run 41232660647; Python runtime dependency and device validation remain open on #479.
+    { name = "python3-yubikey-manager", pr = 839, published_run = 41232660647, published_nevra = "python3-yubikey-manager-0:5.9.2-1.hum1.bfin.noarch" },
+    { name = "yubikey-manager", pr = 839, published_run = 41232660647, published_nevra = "yubikey-manager-0:5.9.2-1.hum1.bfin.noarch" },
     # bison.spec produces bison plus bison-devel/runtime; recipe closure for #485,
     # not a claim of publication or runtime installation.
     { name = "bison", pr = 615 },
@@ -743,6 +754,8 @@ packages = [
     { name = "unicode-ucd", pr = 731 },
     { name = "libhangul", pr = 731 },
     { name = "m17n-db", pr = 731 },
+    # Input-method library recipe; hosted build and runtime closure proof remain on #735.
+    { name = "m17n-lib", pr = 856 },
     # libpinyin.spec builds libpinyin plus its -data, -devel, -tools and
     # libzhuyin subpackages; recipe only (#495). It BuildRequires
     # kyotocabinet-devel, imported by #767 and already in [resolved].
@@ -809,6 +822,23 @@ packages = [
     # is an unconditional subpackage of oddjob.spec; build and runtime evidence pending.
     { name = "oddjob", pr = 784 },
     { name = "oddjob-mkhomedir", pr = 784 },
+    # Dev-tools batch (#487) recipe imports; hosted build, publication and runtime proof remain.
+    # libsss_* are unconditional %package subpackages of sssd.spec.
+    { name = "libcaca", pr = 848 },
+    { name = "libsss_autofs", pr = 848 },
+    { name = "libsss_certmap", pr = 848 },
+    { name = "libsss_idmap", pr = 848 },
+    { name = "libsss_nss_idmap", pr = 848 },
+    { name = "libsss_sudo", pr = 848 },
+    { name = "lsb_release", pr = 848 },
+    # sssd-* are unconditional %package subpackages of the same sssd.spec (#848),
+    # reconciled from already_recipe for the dev-tools batch (#490). Hosted build,
+    # publication, and runtime proof remain on #490.
+    { name = "sssd-client", pr = 848 },
+    { name = "sssd-common", pr = 848 },
+    { name = "sssd-kcm", pr = 848 },
+    { name = "sssd-krb5-common", pr = 848 },
+    { name = "sssd-nfs-idmap", pr = 848 },
 ]
 
 [wontfix]
@@ -853,8 +883,10 @@ packages = [
     { name = "open-sans-fonts", reason = "Bulk desktop font parity rejected by Utah: https://github.com/projectbluefin/utah/issues/393#issuecomment-5920428811; no individual addition accepted." },
     { name = "opendyslexic-fonts", reason = "Bulk desktop font parity rejected by Utah: https://github.com/projectbluefin/utah/issues/393#issuecomment-5920428811; no individual addition accepted." },
     { name = "paktype-naskh-basic-fonts", reason = "Bulk desktop font parity rejected by Utah: https://github.com/projectbluefin/utah/issues/393#issuecomment-5920428811; no individual addition accepted." },
+    { name = "qemu-user-static-aarch64", reason = "Utah's pinned triage waives cross-architecture emulation for container builds, which is not a desktop default (projectbluefin/utah#263; https://github.com/projectbluefin/utah/blob/4eee67d0495406aba69a8e10926a3f30a7cf8437/baselines/triage.toml#L388-L390)." },
     { name = "rit-meera-new-fonts", reason = "Bulk desktop font parity rejected by Utah: https://github.com/projectbluefin/utah/issues/393#issuecomment-5920428811; no individual addition accepted." },
     { name = "rit-rachana-fonts", reason = "Bulk desktop font parity rejected by Utah: https://github.com/projectbluefin/utah/issues/393#issuecomment-5920428811; no individual addition accepted." },
+    { name = "rpm-ostree", reason = "Utah's pinned triage waives rpm-ostree because the image uses bootc for updates (projectbluefin/utah#263; https://github.com/projectbluefin/utah/blob/4eee67d0495406aba69a8e10926a3f30a7cf8437/baselines/triage.toml#L392-L394)." },
     { name = "sil-padauk-fonts", reason = "Bulk desktop font parity rejected by Utah: https://github.com/projectbluefin/utah/issues/393#issuecomment-5920428811; no individual addition accepted." },
     { name = "vazirmatn-vf-fonts", reason = "Bulk desktop font parity rejected by Utah: https://github.com/projectbluefin/utah/issues/393#issuecomment-5920428811; no individual addition accepted." },
 ]

@@ -1,0 +1,8 @@
+{
+  "package": "libnet",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libnet.git",
+  "commit": "e7a6f167df602718d359b6db9b3501c1e82ffb70",
+  "tree": "0e1d2759b17b330b282fa053b18d3e8aea7c03d7",
+  "imported_at": "2026-10-31T18:52:57Z"
+}

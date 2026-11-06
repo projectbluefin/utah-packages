@@ -573,31 +573,30 @@ reaching for `buildroot_icu77`, check the package's own `libicu-devel`.
   without `--merge` still replaces the catalog, so keep the flag for imports.
 - Regenerate `.packit.yaml` with `python3 tools/render_packit_config.py
   --write`.
-- Refresh the counts in `docs/architecture.md` with
-  `python3 tools/render_architecture_counts.py --write`; the contract step
-  (`tests/test_architecture_counts.py`) reads the inventory directly, so the
-  four `tests/` files that used to carry the count no longer track it.
+- Do not add inventory counts to documentation or tests: every import would
+  have to edit them, and concurrent imports conflicted on them.
+  `tests/test_recipe_set_agreement.py` and `tools/validate.py` read the
+  inventory directly.
 - `just check` green on the import branch, not after merge.
 
 Several imports for one feature (the #447 screen-reader stack: orca,
 speech-dispatcher, espeak-ng, brltty, liblouis and their libraries) land as
 one branch that merges each `import/rawhide-<name>` in turn. Every bot branch
-appends to the same end of `config/upstream-sources.json`, so each merge
-conflicts there: resolve it as the union of both sides' `packages` (an entry
-present on both sides must be identical), keeping `json.dumps(..., indent=2)`
-formatting. Do not hand-resolve `.packit.yaml` or the counts in
-`docs/architecture.md`; after the last merge rerun
-`render_packit_config.py --write` and `render_architecture_counts.py --write`,
-because each bot branch counted only itself (+1) and git can merge those
-identical edits silently into a stale count. Then move every imported name
+inserts at its name's sorted position in `config/upstream-sources.json`, so
+merges conflict there only when two names are neighbours: resolve it as the
+union of both sides' `packages` (an entry present on both sides must be
+identical), then run `just sort-source-locks`, keeping `json.dumps(..., indent=2)`
+formatting. Do not hand-resolve `.packit.yaml` or other generated files;
+after the last merge rerun `just regenerate-inventory`, because each bot
+branch generated them from itself alone and git can merge those edits
+silently into stale output. Then move every imported name
 and subpackage from the backlog in the same branch. Run the full test suite
 on the combined branch, not only per import: an edge between two of the
 imports appears only once both recipes exist. orca BuildRequires brltty's
 `brlapi-devel`, and brltty BuildRequires `libicu-devel`, so
 `tests/test_icu_staging.py` (which still reads hand `stage` values, unlike
 `build_graph.py`) failed until orca got `"stage": 1`, as ptyxis and vte291
-did in #413; the stage count in `docs/architecture.md` then needs another
-`render_architecture_counts.py --write`.
+did in #413.
 
 A Fedora `sources` file that pins by MD5 (`<md5>  file`, libao) fails both
 the bot's lock step and `tools/validate.py` (`check_sources_digests`). Import

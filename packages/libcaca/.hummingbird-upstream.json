@@ -1,0 +1,8 @@
+{
+  "package": "libcaca",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libcaca.git",
+  "commit": "acf96ad16c299a1a2bd95cbe0c0bf106d8b68134",
+  "tree": "bff9f5f0dd70a4db1da6a964974fb824af55f448",
+  "imported_at": "2026-10-31T15:07:33.397487+00:00"
+}

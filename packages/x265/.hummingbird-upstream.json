@@ -1,0 +1,8 @@
+{
+  "package": "x265",
+  "branch": "master",
+  "remote": "https://github.com/rpmfusion/x265.git",
+  "commit": "867c0b6c9c569da39891b921b1b387404a337f58",
+  "tree": "f8fd083acf70d778c8e6d98fdf1d1bfb0d3e510a",
+  "imported_at": "2026-10-25T19:40:30.879384+00:00"
+}
