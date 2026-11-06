@@ -513,18 +513,46 @@ Left stuck, with the reason:
     recipe change.
 - **No upstream equivalent:** xevd and xeve lock Fedora-generated `-free`
   tarballs (`*_gen_free_tarball.sh`).
-- **The next release cannot be derived from the current URL**, though the
-  current primary is already upstream:
-  - hyphen: 2.8.8 is only on SourceForge; 2.8.9 and later are GitHub
-    release assets.
-  - libao: 1.2.2 is only a git tag.
-  - linux-atm: 2.5.2 is `.tar.gz` under `linux-atm/2.5.2/`.
-  - python-pam: from 2.1.0 the sdist is `python_pam-<v>.tar.gz`.
-  - Each needs one hand version move with the new URL.
-- **A version-bound bundled file:** webkitgtk's `sources` pins
-  `webkitgtk-<version>.tar.xz.asc`, so `check_bumpable()` refuses every
-  move (`--package webkitgtk --apply` reports "its successor has to be
-  produced by hand"). Its 2.53.91 -> 2.54.2 move stays a hand bump.
+- **libao 1.2.2 exists only as a git tag.** The tag archive has no
+  `configure`, only `autogen.sh` and `configure.ac`. The recipe edits
+  `configure` in `%prep` and runs `%configure` directly, so moving it needs
+  autoreconf and its BuildRequires. Of the carried patches, the pulse
+  latency fix is already in 1.2.2, while the CVE-2017-11548 diff and the
+  nanosleep patch still apply. That is a recipe change for a reviewer, not
+  a hand bump.
+
+### Hand version moves (2026-11-06)
+
+Each move is a separate commit with an upstream primary, a SHA-512 lock, the
+lookaside fallback in `planned_entry`'s form, and the spec's `Version:` and
+`sources` changed together.
+
+- **When Rawhide already builds the target version**, re-import its recipe
+  at the Koji-built commit (`tools/import_rawhide.py <pkg> --ref <commit>
+  --replace`), delete the inert files, and lock the URL Rawhide's `Source0`
+  names. Check that its SHA-512 equals Rawhide's `sources` line.
+  - webkitgtk 2.53.91 -> 2.54.2: its `.asc` stays a bundled `sources`
+    entry. The lock now carries `signature_url` and `gpg_key`
+    (`packages/webkitgtk/webkitgtk-keys.gpg`), so `source_pipeline.py`
+    verifies the signature too. gpg reports a good signature, notes that
+    the key has expired, and exits 0.
+  - hyphen 2.8.8 -> 2.8.10: the GitHub release asset.
+  - python-pam 2.0.2 -> 2.1.1: Rawhide moved `Source0` to the GitHub tag
+    archive, not the renamed `python_pam` sdist, and the lock follows the
+    recipe.
+- **Rawhide can mask a test that the factory may not.** Rawhide's hyphen
+  2.8.10 appends `||:` to `make check` for a ppc64le failure, and
+  `tools/validate.py` refuses that. Keep the suite fatal, with a comment, on
+  top of the import. This factory builds no ppc64le.
+- **When Fedora has retired the package** (linux-atm, `dead.package`), keep
+  the factory recipe. Move `Version:` and `Source0` by hand with
+  `upstream_bump.rewrite_spec()`/`rewrite_sources()`. Check that every
+  patch applies with fuzz 0, and that the library `-version-info` (the
+  soname) did not move. Retire `dist_bump` and its `rebuild_reason`.
+- `webkitgtk`'s version-bound `.asc` still makes `check_bumpable()` refuse
+  its next release, so each webkitgtk move stays a hand move like this one.
+
+### Locks left without a feed
 
 Left without a feed on purpose (2026-10-03): git snapshots (aribb24),
 sources with no upstream release (color-filesystem, kde-filesystem,
