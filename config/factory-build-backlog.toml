@@ -38,8 +38,8 @@ audit_measured_at = "2026-09-30T22:08:14Z"
 # projectbluefin/utah#383 - 49 names
 consumer_issue = "projectbluefin/utah#383"
 packages = [
-    # LCEVCdec, davs2-libs, and gstreamer1-plugins-good-qt6 remain open
-    # in batch #474 pending build and publication evidence.
+    # LCEVCdec and davs2-libs lack recipes; the Qt 6 sink is disabled until
+    # matching Qt prerequisites and a --with qt6 build are verified (#474).
     # #474's ffmpeg outputs moved to [resolved] as recipe coverage; the
     # remaining libav*/libsw* outputs of packages/ffmpeg listed here belong to
     # a later batch. Build/publication proof stays in projectbluefin/utah#383.

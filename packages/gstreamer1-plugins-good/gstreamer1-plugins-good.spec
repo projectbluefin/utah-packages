@@ -23,8 +23,9 @@
 %bcond_without qt5
 %endif
 
-# Build the Qt 6 QML sink requested by the multimedia parity backlog.
-%bcond_without qt6
+# Keep the Qt 6 sink off until matching Qt dependencies are published and
+# a build with --with qt6 has been verified.
+%bcond_with qt6
 
 #global gitrel     140
 #global gitcommit  9865730cfa5b3a8b2560d082e7e56b350042d3d2
@@ -32,7 +33,7 @@
 
 Name:           gstreamer1-plugins-good
 Version:        1.28.6
-Release:        2%{?dist}
+Release:        1%{?dist}
 Summary:        GStreamer plugins with good code and licensing
 
 License:        CC0-1.0 AND GPL-2.0-only AND LGPL-2.0-only AND LGPL-2.0-or-later AND LGPL-2.1-only AND LGPL-2.1-or-later AND xlock AND MIT AND BSD-3-Clause AND CC-BY-3.0 
@@ -372,9 +373,6 @@ find $RPM_BUILD_ROOT -name '*.la' -exec rm -fv {} ';'
 
 
 %changelog
-* Fri Nov 06 2026 Karibhou <Karibhou@users.noreply.github.com> - 1.28.6-2
-- Enable the Qt 6 qml6sink plugin.
-
 * Wed Aug 05 2026 Gwyn Ciesla <gwync@protonmail.com> - 1.28.6-1
 - 1.28.6
 

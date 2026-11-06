@@ -214,7 +214,7 @@ class SubpackageNameParserTests(unittest.TestCase):
       spec's ``Name:``. Fedora-style specs use this for split-out build
       outputs that share the parent's provenance
       (``%package qt6`` in ``gstreamer1-plugins-good.spec`` names
-      ``gstreamer1-plugins-good-qt6``).
+      ``gstreamer1-plugins-good-qt6``, but is disabled by default).
 
     Guards matter as much as shapes: a ``%package`` only counts when every
     enclosing ``%if`` is known to be taken for the default build.

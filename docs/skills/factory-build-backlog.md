@@ -777,9 +777,12 @@ until the review's build and runtime acceptance requirements are met.
   never builds under that name here — stays `pending` until the operator
   closes it in `[resolved]` or `[wontfix]`.
 - A `%package` behind a disabled or undecidable `%if` does not count.
-  `gstreamer1-plugins-good-qt6` is enabled by default, but must remain in the
-  backlog until its Qt dependencies, hosted build, and runtime payload are
-  verified; `already_recipe` does not prove publication. `packages/ffmpeg/`
+  `gstreamer1-plugins-good-qt6` is `pending`: its `%package qt6` is guarded
+  by `%if %{with qt6}` and the default is `%bcond_with qt6`. Keep it disabled
+  until matching Qt declarative and Wayland prerequisites are published and a
+  hosted `--with qt6` build verifies the dependency closure. Enabling it
+  prematurely can prevent the entire parent package from building.
+  `packages/ffmpeg/`
   declares its `libav*` subpackages under `%if ! %{with freeworld_lavc}`,
   which is true by default, so those are `already_recipe`. Conditions the
   auditor cannot decide without a build target (`%ifarch`, `0%{?fedora}`)
@@ -1250,8 +1253,10 @@ the audited name is the main package, and runtime acceptance is
 was checked against the upstream tarball before locking it. Its BuildRequires
 (libheif, libjxl, libuhdr, jasper and others) are separate graph dependencies;
 a catalog record does not prove the build succeeds. `LCEVCdec`, `davs2-libs`
-and `gstreamer1-plugins-good-qt6` stay in `[areas.codecs-media]` until their
-build and publication evidence is available, so `#474` stays open.
+and the default-disabled `gstreamer1-plugins-good-qt6` stay pending in
+`[areas.codecs-media]`, so `#474` stays open. For the Qt sink, inspect the
+hosted buildroot's Qt NEVRAs and the resulting RPMs before enabling the
+default; verify publication and `qml6sink` at runtime separately.
 
 ## Hand-locking an import without `rpmspec`
 
