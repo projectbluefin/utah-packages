@@ -151,7 +151,6 @@ packages = [
 # projectbluefin/utah#396 - 184 names
 consumer_issue = "projectbluefin/utah#396"
 packages = [
-    "PackageKit-glib",
     "appstream-data",
     "b43-openfwwf",
     "desktop-backgrounds-gnome",
@@ -360,6 +359,8 @@ packages = [
     # Recipe imported; hosted build, publication and runtime proof remain in #501.
     { name = "jbig2dec-libs", pr = 817 },
     { name = "kpartx" },
+    # PackageKit GLib library; hosted build and runtime proof remain in #499.
+    { name = "PackageKit-glib", pr = 923 },
     { name = "criu" },
     { name = "criu-libs" },
     { name = "kf6-karchive" },
