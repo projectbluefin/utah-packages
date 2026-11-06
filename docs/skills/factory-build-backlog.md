@@ -111,6 +111,11 @@ batch issue's build, publication, dependency-resolution, or runtime acceptance.
 For a partial source-family PR, keep the batch issue open and list the remaining
 outputs and missing evidence explicitly.
 
+The `python-pysocks` Rawhide recipe disables its upstream tests because the
+`test_server` module is not packaged (see its `%check`). A successful RPM
+build does not exercise SOCKS connections: validate the installed
+`python3-pysocks` payload against a test proxy as separate runtime evidence.
+
 A 404 on a guessed dist-git name is not evidence that a source was removed
 from Fedora. Resolve the binary's actual source package first (the
 `sourcerpm` of the binary in Fedora's repodata): `python3-pyaudio` comes from
@@ -122,6 +127,13 @@ For the audited `libell` binary, Fedora Rawhide's source package is named
 recipe builds an unrelated, header-only EBNF library and does not provide
 `libell`. Check the binary's `sourcerpm` before inferring a source name from a
 shared prefix.
+
+`kpartx` is a binary subpackage of `device-mapper-multipath`, not a
+separate source recipe. The imported multipath recipe uses a primary upstream
+release archive and a second, SHA-512-pinned Fedora configuration file
+(`multipath.conf`) from lookaside. Both must be staged before building. Recipe
+coverage does not establish that the build, publication, dependency
+transaction, or partition mapping command succeeds; verify those separately.
 
 Before importing an audit name, read Utah's current `baselines/triage.toml` and
 pin the decision's commit when reconciling an existing `waived` entry into
@@ -436,6 +448,13 @@ release tree plus only `LICENSE` and `README.md` (compare with the original
 archive). Lock that archive by SHA-512, update `sources`, and set `%setup -n`
 to its commit-based directory; do not reuse the original archive's digest.
 This source-tree comparison is not a package build or runtime closure test.
+
+`braille-printer-app` is a separate source from `liblouisutdml`: its current
+recipe installs classic CUPS filters and drivers, not a standalone printer
+application. Its required utilities include `liblouisutdml-utils`, CUPS
+filters, ImageMagick, poppler-utils and unzip. Check the complete runtime
+transaction and an actual Braille print path before claiming functionality;
+the imported recipe and source pin alone do not establish either.
 
 The `liblouisutdml` recipe builds a PDF manual with `texinfo-tex`, whose
 Fedora TeX Live dependency chain needs ICU 77 in the build root. Like
@@ -777,10 +796,12 @@ until the review's build and runtime acceptance requirements are met.
   never builds under that name here — stays `pending` until the operator
   closes it in `[resolved]` or `[wontfix]`.
 - A `%package` behind a disabled or undecidable `%if` does not count.
-  `packages/gstreamer1-plugins-good/` declares `%package qt6` under `%if
-  %{with qt6}` while the spec sets `%bcond_with qt6` and nothing in the
-  factory passes `--with qt6`, so `gstreamer1-plugins-good-qt6` is
-  `pending`: the factory build does not produce it. `packages/ffmpeg/`
+  `gstreamer1-plugins-good-qt6` is `pending`: its `%package qt6` is guarded
+  by `%if %{with qt6}` and the default is `%bcond_with qt6`. Keep it disabled
+  until matching Qt declarative and Wayland prerequisites are published and a
+  hosted `--with qt6` build verifies the dependency closure. Enabling it
+  prematurely can prevent the entire parent package from building.
+  `packages/ffmpeg/`
   declares its `libav*` subpackages under `%if ! %{with freeworld_lavc}`,
   which is true by default, so those are `already_recipe`. Conditions the
   auditor cannot decide without a build target (`%ifarch`, `0%{?fedora}`)
@@ -841,9 +862,11 @@ evidence does not hide current build health.
 
 Read both from one image: `python3 tools/package_index.py --image
 projectbluefin/utah-packages:latest --output <file>` writes the manifest
-digest, the publishing `run` and the source `revision` under `image`, and every
-binary with its source package and epoch/version/release under `packages`.
-Check that `revision` is on the target branch before citing it. The primary
+digest, publishing `run` and source `revision` under `image`. Its `packages`
+are grouped by source, with binary names and architectures in each entry's
+`rpms` list. For an exact binary NEVRA, read the binary's own primary metadata
+entry instead of assuming the source entry's version or epoch applies to every
+subpackage. Check that `revision` is on the target branch before citing it. The primary
 metadata checksum is in `repository/repodata/repomd.xml` inside the image's
 first layer (`fetch_image` in the same tool returns it). An import PR that
 left its name `already_recipe` pending evidence (`tslib`, #643) moves to
@@ -1062,6 +1085,10 @@ on the target's `%{?fedora}` macro; check the actual pinned buildroot and
 resulting RPM dependencies rather than assuming the conditional is on or off.
 The upstream test suite covers terminal capabilities, syntax parsing, and
 UTF-8 support; run it on every recipe bump.
+When reconciling `slang`, check the library binary itself in published
+primary metadata: the separately packaged interpreter is not proof that the
+audited library was published. Publication does not prove that the library
+resolves against the permitted repositories or can be loaded at runtime.
 
 ### NILFS utilities signature sources
 
@@ -1095,6 +1122,14 @@ Fedora pins it by MD5, so confirm the `https://www.ohse.de/` bytes match that
 pin, repin `sources` to SHA-512, and use the `/md5/<md5>/` lookaside path as
 the fallback. `liburing` locks only `Source0`; like `dnsmasq`, its `.asc`
 signature is fetched from Fedora's lookaside by its `sources` SHA-512.
+
+`libreport-filesystem` is the directory-only subpackage of `libreport`, not
+a separate source recipe. The full source build needs `satyr-devel`; import
+`satyr` as well and let BuildRequires order the builds. A recipe registration
+does not prove either package was built or published: verify the filesystem
+RPM and its directory ownership in the hosted build and an installation using
+the permitted repositories. `mdadm` deliberately disables its optional ABRT
+hook; importing the directories does not re-enable that hook.
 
 `librabbitmq` and `libwmf-lite` (a subpackage of `libwmf`) lock their GitHub
 tag archives directly: those bytes equal the dist-git SHA-512 pins. Check the
@@ -1238,9 +1273,11 @@ the audited name is the main package, and runtime acceptance is
 `rpmspec` or a container: the `Source0` SHA-512 in `packages/ImageMagick/sources`
 was checked against the upstream tarball before locking it. Its BuildRequires
 (libheif, libjxl, libuhdr, jasper and others) are separate graph dependencies;
-a catalog record does not prove the build succeeds. The ffmpeg family,
-`LCEVCdec`, `davs2-libs` and `gstreamer1-plugins-good-qt6` stay pending in
-`[areas.codecs-media]`, so `#474` stays open.
+a catalog record does not prove the build succeeds. `LCEVCdec`, `davs2-libs`
+and the default-disabled `gstreamer1-plugins-good-qt6` stay pending in
+`[areas.codecs-media]`, so `#474` stays open. For the Qt sink, inspect the
+hosted buildroot's Qt NEVRAs and the resulting RPMs before enabling the
+default; verify publication and `qml6sink` at runtime separately.
 
 ## Hand-locking an import without `rpmspec`
 

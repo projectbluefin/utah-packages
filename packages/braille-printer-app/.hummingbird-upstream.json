@@ -1,0 +1,8 @@
+{
+  "package": "braille-printer-app",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/braille-printer-app.git",
+  "commit": "e4fae94b347fbd974a6efc3bcd851419f370142c",
+  "tree": "9d7bfe24e5a7cbc229b87ac5a80d2cfc506fc814",
+  "imported_at": "2026-11-06T03:01:53.014761+00:00"
+}

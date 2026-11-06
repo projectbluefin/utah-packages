@@ -1,0 +1,14 @@
+the oom_adj is -17 and oom_score_adj is -1000 after installing device-mapper-multipath-0.4.9-53.el6.x86_64 and starting multipathd.
+This means multipathd will never be selected to be killed by oom according to the kernel doc.
+
+
+Here are the steps to reproduce this issue.
+1. create a multipathed disk /dev/mapper/mpathb via scsi_debug using all the free memory. this will consume most of the free mem.
+2. io stress on the multipath disk, this step is option.
+#dd if=/dev/zero of=/dev/mapper/mpathb & 
+3. consuming the free mem
+#for i in `seq 10000`; do array[$i]=$(</var/log/messages); done &
+4. trigger the oom_killer manually 
+#while true; do echo f > /proc/sysrq-trigger ; done
+5. check the console or /var/log/message if multipathd is killed
+

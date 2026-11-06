@@ -1,0 +1,31 @@
+---
+downstream_package_name: restic
+upstream_project_url: https://github.com/restic/restic
+upstream_tag_template: "v{version}"
+
+jobs:
+  - job: pull_from_upstream
+    trigger: release
+    dist_git_branches:
+      rawhide: {}
+
+  - job: koji_build
+    trigger: commit
+    dist_git_branches:
+      - rawhide
+actions:
+  post-modifications:
+    - |
+      sh -xeuc "
+        cd $PACKIT_DOWNSTREAM_REPO
+        export GOTOOLCHAIN=local+auto
+        spec="$PACKIT_DOWNSTREAM_PACKAGE_NAME.spec"
+        go_vendor_archive create --config go-vendor-tools.toml "$spec"
+        go_vendor_license \
+          --config go-vendor-tools.toml \
+          --path "$spec" \
+          report \
+          --verify-spec \
+          --autofill=auto
+      "
+create_sync_note: false

@@ -38,9 +38,8 @@ audit_measured_at = "2026-09-30T22:08:14Z"
 # projectbluefin/utah#383 - 49 names
 consumer_issue = "projectbluefin/utah#383"
 packages = [
-    # LCEVCdec (BSD-3-Clause-Clear, removed from Fedora rawhide), davs2-libs
-    # (absent from Fedora dist-git) and gstreamer1-plugins-good-qt6
-    # (--with qt6 build config) stay open in batch #474 (see #815).
+    # LCEVCdec and davs2-libs lack recipes; the Qt 6 sink is disabled until
+    # matching Qt prerequisites and a --with qt6 build are verified (#474).
     # #474's ffmpeg outputs moved to [resolved] as recipe coverage; the
     # remaining libav*/libsw* outputs of packages/ffmpeg listed here belong to
     # a later batch. Build/publication proof stays in projectbluefin/utah#383.
@@ -50,7 +49,6 @@ packages = [
     "libavfilter",
     "libavformat",
     "libavutil",
-    "libde265",
     "libdovi",
     "libfdk-aac",
     "libklvanc",
@@ -119,19 +117,12 @@ packages = [
     "python3-keyring+completion",
     "python3-more-itertools",
     "python3-pygit2",
-    "python3-pysocks",
     "python3-pyxdg",
     "python3-rapidfuzz",
     "python3-regex",
     "python3-s3transfer",
     "python3-secretstorage",
     "python3-shtab",
-    "qemu-guest-agent",
-    "rclone",
-    "realmd",
-    "restic",
-    # Utah waives rpm-ostree only; rpm-ostree-libs has no separate waiver.
-    "rpm-ostree-libs",
 ]
 
 [areas.fonts-i18n]
@@ -143,12 +134,6 @@ packages = [
     "adobe-mappings-pdf",
     "cldr-emoji-annotation",
     "cldr-emoji-annotation-dtd",
-    "ibus-anthy",
-    "ibus-anthy-python",
-    "ibus-hangul",
-    "ibus-libpinyin",
-    "ibus-m17n",
-    "ibus-typing-booster",
     "kasumi-common",
     "kasumi-unicode",
 ]
@@ -172,12 +157,9 @@ packages = [
 # projectbluefin/utah#396 - 184 names
 consumer_issue = "projectbluefin/utah#396"
 packages = [
-    "7zip",
     "PackageKit-glib",
     "appstream-data",
     "b43-openfwwf",
-    "braille-printer-app",
-    "compsize",
     "criu",
     "criu-libs",
     "desktop-backgrounds-gnome",
@@ -194,9 +176,7 @@ packages = [
     "kf6-karchive",
     "kf6-kimageformats",
     "kmod-v4l2loopback",
-    "kpartx",
     "kvazaar-libs",
-    "libreport-filesystem",
     "lockdev",
     "mcelog",
     "memstrack",
@@ -210,7 +190,6 @@ packages = [
     "openexr-libs",
     "oversteer-udev",
     "pam_afs_session",
-    "paps",
     "python3-perf",
     "qadwaitadecorations-qt5",
     "qrencode-libs",
@@ -221,7 +200,6 @@ packages = [
     "qt5-qtx11extras",
     "qt5-qtxmlpatterns",
     "shim-ia32",
-    "slang",
     "solaar-udev",
     "sos",
     "uavs3d-libs",
@@ -258,6 +236,8 @@ packages = [
 # Packages that left the backlog because a recipe was imported.
 # Each entry: package name and the commit that closed the gap.
 packages = [
+    # S-Lang recipe from #719 is published; runtime resolution and payload proof remain on #507.
+    { name = "slang", pr = 719, commit = "f22db6b5b26d3d05f84865cc57653ba8aa9edea6", published_run = 41780828846, published_nevra = "slang-0:2.3.3-10.hum1.bfin.x86_64" },
     # Codec recipe imports for #476; publication and runtime proof remain separate.
     { name = "x264-libs", pr = 633 },
     { name = "x265-libs", pr = 633 },
@@ -308,6 +288,8 @@ packages = [
     { name = "rygel", pr = 823 },
     # NTFS-3G read-only plugin recipe for #488; hosted build, publication and runtime proof remain open.
     { name = "ntfs-3g-system-compression", pr = 771 },
+    # libde265 recipe import only; build and runtime proof remain on #475.
+    { name = "libde265", pr = 901 },
     # Recipe import only; hosted build, publication and device validation remain on #485.
     { name = "bcache-tools", pr = 833 },
     # Recipe import only; build, publication and runtime proof remain on #485.
@@ -327,15 +309,21 @@ packages = [
     # Recipe coverage only; slirp4netns uses the existing libslirp recipe.
     # Hosted build, publication, runtime solver and namespace tests remain on #507.
     { name = "slirp4netns", pr = 830 },
-    # Khronos OpenCL ICD loader recipe import only; hosted build, publication and
-    # runtime proof remain on #499.
-    { name = "OpenCL-ICD-Loader", pr = 834 },
+    # OpenCL ICD loader publication observed; runtime proof remains on #499.
+    { name = "OpenCL-ICD-Loader", pr = 834, published_run = 42171198494, published_nevra = "OpenCL-ICD-Loader-0:3.1-1.20260519gitb7bd280.hum1.bfin.x86_64" },
     # Language data recipe; build/publication and consumer proof remain tracked in #494.
     { name = "langtable", pr = 700 },
     { name = "python3-langtable", pr = 700 },
     # Chewing input-method engine + library recipe for #494; hosted build, publication and runtime proof remain open.
     { name = "ibus-chewing" },
     { name = "libchewing" },
+    # Anthy, hangul, libpinyin, m17n and typing-booster input-method engines for #494; hosted build, publication and runtime proof remain open.
+    { name = "ibus-anthy" },
+    { name = "ibus-anthy-python" },
+    { name = "ibus-hangul" },
+    { name = "ibus-libpinyin" },
+    { name = "ibus-m17n" },
+    { name = "ibus-typing-booster" },
     # Recipe import only; build, publication and runtime proof remain on #508.
     { name = "uchardet", pr = 729 },
     # Published boot-screen outputs; recipe #312, source lock #320; runtime proof stays on #505.
@@ -379,6 +367,7 @@ packages = [
     { name = "nilfs-utils", pr = 702 },
     # Recipe imported; hosted build, publication and runtime proof remain in #501.
     { name = "jbig2dec-libs", pr = 817 },
+    { name = "kpartx" },
     { name = "ipset" },
     { name = "ipset-libs" },
     { name = "iptstate", pr = 697 },
@@ -398,15 +387,18 @@ packages = [
     # Disc-reading recipes; publication and runtime proof remain tracked in #475.
     { name = "libudfread", pr = 658 },
     { name = "libbluray", pr = 658 },
-    # NetworkManager-ssh VPN plugin (main + gnome + selinux subpackages); recipe
-    # import only, hosted build, publication and runtime proof remain outstanding.
-    { name = "NetworkManager-ssh", pr = 770 },
-    { name = "NetworkManager-ssh-gnome", pr = 770 },
-    { name = "NetworkManager-ssh-selinux", pr = 770 },
+    # 7zip's source is generated without RAR support; runtime proof remains on #499.
+    { name = "7zip", pr = 869, published_run = 42171198494, published_nevra = "7zip-0:26.04-1.hum1.bfin.x86_64" },
+    # compsize recipe was already imported in #686 (commit 1fbe19e1).
+    { name = "compsize", commit = "1fbe19e19d64204747a4fbaa69573573dd9a0d11", pr = 686, published_run = 42171198494, published_nevra = "compsize-0:1.5^git20250123.d79eacf-16.hum1.bfin.x86_64" },
+    # NetworkManager-ssh VPN plugin and subpackages; runtime proof remains on #499.
+    { name = "NetworkManager-ssh", pr = 770, published_run = 42171198494, published_nevra = "NetworkManager-ssh-0:1.4.5-3.hum1.bfin.x86_64" },
+    { name = "NetworkManager-ssh-gnome", pr = 770, published_run = 42171198494, published_nevra = "NetworkManager-ssh-gnome-0:1.4.5-3.hum1.bfin.x86_64" },
+    { name = "NetworkManager-ssh-selinux", pr = 770, published_run = 42171198494, published_nevra = "NetworkManager-ssh-selinux-0:1.4.5-3.hum1.bfin.x86_64" },
     # bash-color-prompt recipe was already imported in #728 (commit e53a1bf5);
     # record that existing PR and commit to close the catalog gap instead of
     # re-importing the same source under this PR.
-    { name = "bash-color-prompt", commit = "e53a1bf5c5d30730b49132eab460e60699d5ddfc", pr = 728 },
+    { name = "bash-color-prompt", commit = "e53a1bf5c5d30730b49132eab460e60699d5ddfc", pr = 728, published_run = 42171198494, published_nevra = "bash-color-prompt-0:0.96.2-1.hum1.bfin.noarch" },
     # Shader compiler recipe; hosted build and runtime proof remain tracked in #475.
     { name = "libshaderc" },
     # #486 publication evidence for ifuse, iwd, flex, freerdp-libs, gamemode,
@@ -451,6 +443,7 @@ packages = [
     { name = "python3-h11" },
     { name = "python3-click" },
     { name = "python3-jmespath", pr = 798 },
+    { name = "python3-pysocks" }, # Recipe coverage only; build/publication/runtime proof remains in #489.
     # Chromaprint recipe coverage only; publication and runtime proof remain in #487.
     { name = "libchromaprint", pr = 692 },
     { name = "leptonica", pr = 772 }, # Recipe import; publication and runtime proof remain.
@@ -629,8 +622,8 @@ packages = [
     { name = "sso-mib-libs", pr = 574 },
     # foo2zjs and its runtime dependencies (argyllcms, lcms 1.x, libXScrnSaver).
     # Subpackages share their source recipe's PR.
-    { name = "argyllcms", pr = 588 },
-    { name = "argyllcms-data", pr = 588 },
+    { name = "argyllcms", pr = 588, published_run = 42171198494, published_nevra = "argyllcms-0:3.5.0-3.hum1.bfin.x86_64" },
+    { name = "argyllcms-data", pr = 588, published_run = 42171198494, published_nevra = "argyllcms-data-0:3.5.0-3.hum1.bfin.noarch" },
     { name = "foo2zjs", pr = 588 },
     { name = "lcms", pr = 588 },
     { name = "lcms-libs", pr = 588 },
@@ -652,8 +645,10 @@ packages = [
     # Braille source family and its Word conversion runtime dependency (#480).
     { name = "liblouisutdml", pr = 616 },
     { name = "liblouisutdml-utils", pr = 616 },
-    { name = "antiword", pr = 616 },
-    { name = "b43-fwcutter", pr = 813 },
+    { name = "antiword", pr = 616, published_run = 42171198494, published_nevra = "antiword-0:0.37-45.hum1.bfin.x86_64" },
+    # Published; runtime dependency and Braille print-path proof remain on #499.
+    { name = "braille-printer-app", pr = 899, published_run = 42171198494, published_nevra = "braille-printer-app-1:2.0~b0^386eea385f-12.hum1.bfin.x86_64" },
+    { name = "b43-fwcutter", pr = 813, published_run = 42171198494, published_nevra = "b43-fwcutter-0:021-1.hum1.bfin.x86_64" },
     { name = "sane-airscan", pr = 586 },
     { name = "sane-backends", pr = 586 },
     { name = "sane-backends-drivers-cameras", pr = 586 },
@@ -680,6 +675,8 @@ packages = [
     { name = "pinfo", commit = "c2c7cd8c3f440a81b9aafe204bc9d22b0532fe0e", pr = 587, published_run = 40626803772, published_nevra = "pinfo-0:0.6.13-11.hum1.bfin.x86_64" },
     { name = "perl-Unicode-Normalize", pr = 783 },
     { name = "prefixdevname", pr = 819 },
+    # Long-tail batch #505: recipe fix (broken Source0 URL) + source lock #897.
+    { name = "paps", pr = 897 },
     { name = "python3-llfuse", pr = 587 },
     { name = "python3-msgpack", pr = 587 },
     { name = "smartmontools", pr = 587, published_run = 41233305890, published_nevra = "smartmontools-1:7.5-11.hum1.bfin.x86_64" },
@@ -778,6 +775,8 @@ packages = [
     { name = "libvarlink", commit = "26ebd2a8ecc9fdd617061452449c71a9fdcdf34d", pr = 519, published_nevra = "libvarlink-0:24.0.1-1.hum1.bfin.x86_64" },
     { name = "liburing", pr = 742 },
     { name = "lrzsz", pr = 742 },
+    # Recipe import only; hosted build, publication and runtime proof remain owed.
+    { name = "libreport-filesystem" },
     # librabbitmq (source librabbitmq) and libwmf-lite (source libwmf) recipe imports (#503).
     { name = "librabbitmq", pr = 756 },
     { name = "libwmf-lite", pr = 756 },
@@ -839,6 +838,16 @@ packages = [
     { name = "sssd-kcm", pr = 848 },
     { name = "sssd-krb5-common", pr = 848 },
     { name = "sssd-nfs-idmap", pr = 848 },
+    # Dev-tools batch #490: recipe imports for qemu-guest-agent, rclone, realmd,
+    # restic and rpm-ostree-libs. qemu-guest-agent ships under packages/qemu
+    # (the qemu source package); rpm-ostree-libs under packages/rpm-ostree.
+    # rpm-ostree itself stays [wontfix] per projectbluefin/utah#263.
+    # Hosted build, publication and runtime proof remain on #490.
+    { name = "qemu-guest-agent", pr = 903 },
+    { name = "rclone", pr = 903 },
+    { name = "realmd", pr = 903 },
+    { name = "restic", pr = 903 },
+    { name = "rpm-ostree-libs", pr = 903 },
 ]
 
 [wontfix]

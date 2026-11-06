@@ -1,0 +1,30 @@
+test: ./runtest.sh
+duration: 50m
+framework: beakerlib
+require:
+  - make
+  - libappstream-glib
+  - desktop-file-utils
+  - python3-gobject
+  - python3-gobject-base
+  - glib2
+  - gtk3
+  - dconf
+  - dbus-x11
+  - ibus
+  - ibus-devel
+  - gcc-c++
+  - gettext-devel
+  - gcc
+  - intltool
+  - libtool
+  - pkgconfig
+  - sqlite-devel
+  - libuuid-devel
+  - lua-devel
+  - python3-devel
+  - libpinyin-devel
+  - libnotify-devel
+  - ibus-libpinyin
+  - gnome-common
+  - rpm-build

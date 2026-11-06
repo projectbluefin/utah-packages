@@ -1,0 +1,5 @@
+/.build*.log
+/x86_64/
+/*.src.rpm
+/qemu-*.tar.xz
+/qemu-*.tar.xz.sig

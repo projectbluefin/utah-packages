@@ -1,0 +1,8 @@
+{
+  "package": "libreport",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libreport.git",
+  "commit": "aa00d1c849b08cdcfdaee4fb84a28970e75bce40",
+  "tree": "1bc92abd6d0b5ca57b5aecfda7330a3862794ba7",
+  "imported_at": "2026-11-06T02:23:32.617970+00:00"
+}

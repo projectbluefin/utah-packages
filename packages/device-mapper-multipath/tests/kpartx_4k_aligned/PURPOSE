@@ -1,0 +1,7 @@
+steps:
+1. create a scsi_debug device with 4k physical sector
+2. make sure multipathd didn't create device mapper device for it
+3. partition it with gpt format
+4. use gdisk -l and kpart -l to check this disk
+5. make sure the begin sectors and end sectors are identity in both report
+

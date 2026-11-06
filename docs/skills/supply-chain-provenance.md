@@ -287,6 +287,19 @@ the first archive member ending in `Cargo.lock`. For `prefixdevname`, both
 dependency downloads and repacking use `prefixdevname-<version>/Cargo.lock`;
 an example or nested workspace lock must not select a different crate set.
 
+## A hand-repacked zstd source: generate xz, rename the Source
+
+When Fedora's repack script writes `.tar.zst` (7zip's
+`strip-rar-support.sh` removes the unRAR-restricted files), the generator
+cannot reproduce it: `tools/generated_sources.py` uses only the standard
+library, which writes no zstd before Python 3.14. Generate the same tree as a
+deterministic `.tar.xz`, change only the extension on the recipe's `Source:`
+line with a `# Utah:` comment, and pin the xz digest in `sources` and the lock.
+This is the one case where the `Source:` line moves: the build stages the
+lock's `filename`, so the two must agree. Before pinning, unpack Fedora's
+lookaside archive and `diff -r` it against the generated tree; for 7zip 26.04
+they are identical.
+
 ## Source verification reporting
 
 `tools/source_pipeline.py` records how each accepted source was verified:

@@ -2,6 +2,17 @@
   "schema": 1,
   "packages": [
     {
+      "name": "7zip",
+      "version": "26.04",
+      "filename": "7zip-26.04.tar.xz",
+      "sha512": "c57447f64b8b6a837f4c4dc35ef0dd450fd5edb8935fd5ec6c2586d8a4e4b830f0313c56a4fe8d6432af4c3cea8e11019626a463ac634b072b55222afda6b828",
+      "generate": {
+        "script": "tools/generated_sources.py",
+        "input": "https://github.com/ip7z/7zip/archive/26.04/7zip-26.04.tar.gz (sha512-pinned)",
+        "method": "remove the RAR handler, codecs, crypto and unRarLicense.txt (unRAR license restriction, per strip-rar-support.sh) from the upstream release and repack deterministically as 7zip-26.04.tar.xz"
+      }
+    },
+    {
       "name": "ImageMagick",
       "version": "7.1.2.34",
       "url": "https://download.imagemagick.org/archive/ImageMagick-7.1.2-34.tar.xz",
@@ -330,6 +341,13 @@
       "sha512": "1303e334b32dd62847918920777ca47eec072974859f612d054fc516fdab56eea588d34ae2f71e9c0757486769dd5ba057d5c6bb05294f40ff52a8b41f7e5801"
     },
     {
+      "name": "braille-printer-app",
+      "version": "2.0~b0^386eea385f",
+      "url": "https://github.com/OpenPrinting/braille-printer-app/archive/386eea385f4d672dded45abd602282a94e06e22c/braille-printer-app-386eea385f4d672dded45abd602282a94e06e22c.tar.gz",
+      "filename": "braille-printer-app-386eea385f4d672dded45abd602282a94e06e22c.tar.gz",
+      "sha512": "335348d5dc154a8114b803b97407ab6877302bef714277ebeec2590480b3159f21c4aec0a8b8f823bef3baf75615acd4eeed73fa457a63825a8073ce12767c01"
+    },
+    {
       "name": "brltty",
       "version": "6.9.1",
       "url": "https://brltty.app/archive/brltty-6.9.1.tar.xz",
@@ -545,6 +563,13 @@
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/desktop-file-utils/desktop-file-utils-0.28.tar.xz/sha512/1024172fcd37ace0660fd58195c0562b47f1ef8ed37f662b88048c295a388d1458d01f86799b34ec9e8b27a7ea441f98665f0d641c29cb5ecc3abd7da41230f0/desktop-file-utils-0.28.tar.xz"
       ]
+    },
+    {
+      "name": "device-mapper-multipath",
+      "version": "0.15.1",
+      "url": "https://github.com/opensvc/multipath-tools/archive/0.15.1.tar.gz",
+      "filename": "multipath-tools-0.15.1.tgz",
+      "sha512": "14227c5268a765aad145e9a5cb8abff539bb5391ac158f4b20a7a16c667c01852ab07c3e68391d9604f320a13cae3ea5d1ff3b118f56616346ec129da0bae8a7"
     },
     {
       "name": "device-mapper-persistent-data",
@@ -1868,6 +1893,16 @@
       ]
     },
     {
+      "name": "ibus-anthy",
+      "version": "1.5.18",
+      "url": "https://github.com/ibus/ibus-anthy/releases/download/1.5.18/ibus-anthy-1.5.18.tar.gz",
+      "filename": "ibus-anthy-1.5.18.tar.gz",
+      "sha512": "4496f0e73bd3e86906679d92f93882424e130737be81b69c55595f4de089842cc53653b47e09a91464a75ac601a9ea8a67225b0055530d2955e4fa0faa30b2e6",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/ibus-anthy/ibus-anthy-1.5.18.tar.gz/sha512/4496f0e73bd3e86906679d92f93882424e130737be81b69c55595f4de089842cc53653b47e09a91464a75ac601a9ea8a67225b0055530d2955e4fa0faa30b2e6/ibus-anthy-1.5.18.tar.gz"
+      ]
+    },
+    {
       "name": "ibus-chewing",
       "version": "2.2.0",
       "url": "https://codeberg.org/chewing/ibus-chewing/releases/download/v2.2.0/ibus-chewing-2.2.0.tar.xz",
@@ -1876,6 +1911,47 @@
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/ibus-chewing/ibus-chewing-2.2.0.tar.xz/sha512/7b0e9b9e7830f70b1e47ab08cb5bb02a6e5af63da640f534b48f6027041d907eb10dc5d474ef2dc7905c17a9d62cc1ffec9cac6ea266de00b10329f32aa3d61a/ibus-chewing-2.2.0.tar.xz"
       ]
+    },
+    {
+      "name": "ibus-hangul",
+      "version": "1.5.5",
+      "url": "https://github.com/libhangul/ibus-hangul/releases/download/1.5.5/ibus-hangul-1.5.5.tar.xz",
+      "filename": "ibus-hangul-1.5.5.tar.xz",
+      "sha512": "c95900b8f47fc69dda04b6a41a1965a6d3a293727749b72bd234d6e899558dffce669df29a4e8c9dcc53d9f7b6cb18e84c4b0c55ef143731a894e0b5693c0722",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/ibus-hangul/ibus-hangul-1.5.5.tar.xz/sha512/c95900b8f47fc69dda04b6a41a1965a6d3a293727749b72bd234d6e899558dffce669df29a4e8c9dcc53d9f7b6cb18e84c4b0c55ef143731a894e0b5693c0722/ibus-hangul-1.5.5.tar.xz"
+      ]
+    },
+    {
+      "name": "ibus-libpinyin",
+      "version": "1.16.6",
+      "url": "https://downloads.sourceforge.net/libpinyin/ibus-libpinyin/ibus-libpinyin-1.16.6.tar.gz",
+      "filename": "ibus-libpinyin-1.16.6.tar.gz",
+      "sha512": "442b6294cca16e0c1ff4ace523bca235d051dbd2df62562343c37e59ba170dc522d305bdbb2e8cd0cbd7c12fb21e6a65e881876a5aac9afb0cf820df1294a955",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/ibus-libpinyin/ibus-libpinyin-1.16.6.tar.gz/sha512/442b6294cca16e0c1ff4ace523bca235d051dbd2df62562343c37e59ba170dc522d305bdbb2e8cd0cbd7c12fb21e6a65e881876a5aac9afb0cf820df1294a955/ibus-libpinyin-1.16.6.tar.gz"
+      ]
+    },
+    {
+      "name": "ibus-m17n",
+      "version": "1.4.41",
+      "url": "https://github.com/ibus/ibus-m17n/releases/download/1.4.41/ibus-m17n-1.4.41.tar.gz",
+      "filename": "ibus-m17n-1.4.41.tar.gz",
+      "sha512": "353685a6a0a466ebc5ce72fd1080c7f683b9318dc385339c45600b04accdcffd4d5fbe855704ce1beb23283588ef7c22ed42d8de5766fff46957b66d24f9ad24",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/ibus-m17n/ibus-m17n-1.4.41.tar.gz/sha512/353685a6a0a466ebc5ce72fd1080c7f683b9318dc385339c45600b04accdcffd4d5fbe855704ce1beb23283588ef7c22ed42d8de5766fff46957b66d24f9ad24/ibus-m17n-1.4.41.tar.gz"
+      ]
+    },
+    {
+      "name": "ibus-typing-booster",
+      "version": "2.31.1",
+      "url": "https://github.com/mike-fabian/ibus-typing-booster/releases/download/2.31.1/ibus-typing-booster-2.31.1.tar.gz",
+      "filename": "ibus-typing-booster-2.31.1.tar.gz",
+      "sha512": "3c97e5a0dc925feffed004fc620596b8dc970e1b9ecf65b30fe1deb6aed4233abd090d3386505670a62dd4aff55b29b6136c326c5cc223c9577bce2dcf88e51e",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/ibus-typing-booster/ibus-typing-booster-2.31.1.tar.gz/sha512/3c97e5a0dc925feffed004fc620596b8dc970e1b9ecf65b30fe1deb6aed4233abd090d3386505670a62dd4aff55b29b6136c326c5cc223c9577bce2dcf88e51e/ibus-typing-booster-2.31.1.tar.gz"
+      ],
+      "stage": 1
     },
     {
       "name": "ibus-unikey",
@@ -2665,6 +2741,13 @@
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/libdc1394/libdc1394-2.2.7.tar.gz/sha512/0d0b1861612f7c69753af7109ef226ea4e550353222e02663dfaac3fa8f456b94c2dd2579cac840047a42bac97692da436f10be3def1fa29109de05c1e871257/libdc1394-2.2.7.tar.gz"
       ]
+    },
+    {
+      "name": "libde265",
+      "version": "1.1.3",
+      "url": "https://github.com/strukturag/libde265/releases/download/v1.1.3/libde265-1.1.3.tar.gz",
+      "filename": "libde265-1.1.3.tar.gz",
+      "sha512": "2068396658d43f0b1a52f96d6ffc6836271cc39e0fad89ce21980445be04da2792e2191bfc49130b2c6f640c7592010594dce1d5928c9eaa7e3290cc3e4f81d8"
     },
     {
       "name": "libdecor",
@@ -3503,6 +3586,16 @@
       "sha512": "1ef38961b747c4ebb18d823a4c38d5bf019f8bd0ac55547838d153b1899b91ae0ff56f5b6732e309d6975b55725d1ce989917ffcf605cf64f7d33624f54f0567",
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/libraw1394/libraw1394-2.1.2.tar.xz/md5/118060584c04f1aa5e29c4d22c1c235a/libraw1394-2.1.2.tar.xz"
+      ]
+    },
+    {
+      "name": "libreport",
+      "version": "2.17.15",
+      "url": "https://github.com/abrt/libreport/archive/refs/tags/2.17.15/libreport-2.17.15.tar.gz",
+      "filename": "libreport-2.17.15.tar.gz",
+      "sha512": "a4707f5272f037f91b4f4b562d3f0eb165ae7790699714accdd1af40216f37bd40d430a06925b1b7b8ac2d2cf97fd0cc4efded51dc22d21d9ef2abedf796e5fe",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libreport/libreport-2.17.15.tar.gz/sha512/a4707f5272f037f91b4f4b562d3f0eb165ae7790699714accdd1af40216f37bd40d430a06925b1b7b8ac2d2cf97fd0cc4efded51dc22d21d9ef2abedf796e5fe/libreport-2.17.15.tar.gz"
       ]
     },
     {
@@ -4617,6 +4710,16 @@
       ]
     },
     {
+      "name": "paps",
+      "version": "0.8.1",
+      "url": "https://github.com/dov/paps/releases/download/v0.8.1/paps-0.8.1.tar.xz",
+      "filename": "paps-0.8.1.tar.xz",
+      "sha512": "2fc4253d8ab95aeb8512e2009a7e7c44c810f219470bfae4ae628ed4295fd9ed35f6ed902377d1c539e265b4d94f681d362a0a9b87067c8ed3625ebd7d7e1b6b",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/paps/paps-0.8.1.tar.xz/sha512/2fc4253d8ab95aeb8512e2009a7e7c44c810f219470bfae4ae628ed4295fd9ed35f6ed902377d1c539e265b4d94f681d362a0a9b87067c8ed3625ebd7d7e1b6b/paps-0.8.1.tar.xz"
+      ]
+    },
+    {
       "name": "parallel",
       "version": "20260922",
       "url": "https://ftp.gnu.org/gnu/parallel/parallel-20260922.tar.bz2",
@@ -5171,6 +5274,13 @@
       ]
     },
     {
+      "name": "python-pysocks",
+      "version": "1.7.1",
+      "url": "https://files.pythonhosted.org/packages/source/P/PySocks/PySocks-1.7.1.tar.gz",
+      "filename": "PySocks-1.7.1.tar.gz",
+      "sha512": "cef4a5ce8c67fb485644696a23bf68a721db47f3211212de2d4431eaf9ebd26077dd5a06f6dfa7fde2dcb9d7c1ed551facd014e999929cb4d7b504972c464016"
+    },
+    {
       "name": "python-pyudev",
       "version": "0.24.5",
       "url": "https://pypi.io/packages/source/p/pyudev/pyudev-0.24.5.tar.gz",
@@ -5200,6 +5310,17 @@
       "sha512": "7fcab2e196f7f5872f64482a5de4fecf65b5d8c4b84174cccaac0e951b8eb5f20a4253fa61b89b5d7ea2857205b8a72d925efa92574119741b0f331bf8da8877",
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/python-versioneer/versioneer-0.29.tar.gz/sha512/7fcab2e196f7f5872f64482a5de4fecf65b5d8c4b84174cccaac0e951b8eb5f20a4253fa61b89b5d7ea2857205b8a72d925efa92574119741b0f331bf8da8877/versioneer-0.29.tar.gz"
+      ]
+    },
+    {
+      "name": "qemu",
+      "version": "11.1.3",
+      "stage": 6,
+      "url": "https://download.qemu.org/qemu-11.1.3.tar.xz",
+      "filename": "qemu-11.1.3.tar.xz",
+      "sha512": "6bcade0af849e6a7f124e2b07d07e8a6e1fd160dcdc7f3c9c968cbdbc8922b2ddfa68493105ac14516f8eea83db6ef4dba07cc6776a61aa023508b31e53b9ef7",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/qemu/qemu-11.1.3.tar.xz/sha512/6bcade0af849e6a7f124e2b07d07e8a6e1fd160dcdc7f3c9c968cbdbc8922b2ddfa68493105ac14516f8eea83db6ef4dba07cc6776a61aa023508b31e53b9ef7/qemu-11.1.3.tar.xz"
       ]
     },
     {
@@ -5257,6 +5378,16 @@
       ]
     },
     {
+      "name": "rclone",
+      "version": "1.75.2",
+      "url": "https://github.com/rclone/rclone/archive/refs/tags/v1.75.2/rclone-1.75.2.tar.gz",
+      "filename": "rclone-1.75.2.tar.gz",
+      "sha512": "0b05b09176d7a90dc47494b0cf827b35d9dc3ffa7f9d27d48efd563ae18ca7e7f6610426f23a53962246c8beee4b26482e982ce9200f62262859126ab1436907",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/rclone/rclone-1.75.2.tar.gz/sha512/0b05b09176d7a90dc47494b0cf827b35d9dc3ffa7f9d27d48efd563ae18ca7e7f6610426f23a53962246c8beee4b26482e982ce9200f62262859126ab1436907/rclone-1.75.2.tar.gz"
+      ]
+    },
+    {
       "name": "re2",
       "version": "20251105",
       "url": "https://github.com/google/re2/archive/2025-11-05/re2-2025-11-05.tar.gz",
@@ -5265,6 +5396,17 @@
       "stage": 4,
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/re2/re2-2025-11-05.tar.gz/sha512/d47f2507500ca7e004db49e30318f8713164cc3b8f28b0bdf5cdd6028985e7da4c9d0133c19fcd8f800bc666b86feb80a5c56e11fa962db72d561fb627272670/re2-2025-11-05.tar.gz"
+      ]
+    },
+    {
+      "name": "realmd",
+      "version": "0.17.1",
+      "stage": 3,
+      "url": "https://gitlab.freedesktop.org/realmd/realmd/uploads/204d05bd487908ece2ce2705a01d2b26/realmd-0.17.1.tar.gz",
+      "filename": "realmd-0.17.1.tar.gz",
+      "sha512": "24f6b1fd149f2cd9e8019be1cb1638d8bc25845238ced224512a212d9de47305cf2b0c613c203a92fff0987a94cc9e08f9b45b93eedd54593b0c34f3875d1480",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/realmd/realmd-0.17.1.tar.gz/sha512/24f6b1fd149f2cd9e8019be1cb1638d8bc25845238ced224512a212d9de47305cf2b0c613c203a92fff0987a94cc9e08f9b45b93eedd54593b0c34f3875d1480/realmd-0.17.1.tar.gz"
       ]
     },
     {
@@ -5287,11 +5429,31 @@
       ]
     },
     {
+      "name": "restic",
+      "version": "0.19.1",
+      "url": "https://github.com/restic/restic/releases/download/v0.19.1/restic-0.19.1.tar.gz",
+      "filename": "restic-0.19.1.tar.gz",
+      "sha512": "f707e085f35026a9c901c851c10190b18804d7c7f161f37933341a89fcc240f199084c8e93b35ce92237c67772d9673da9d78d8ccd0087714b765f9e8b384155",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/restic/restic-0.19.1.tar.gz/sha512/f707e085f35026a9c901c851c10190b18804d7c7f161f37933341a89fcc240f199084c8e93b35ce92237c67772d9673da9d78d8ccd0087714b765f9e8b384155/restic-0.19.1.tar.gz"
+      ]
+    },
+    {
       "name": "rpcbind",
       "version": "1.3.1",
       "url": "https://downloads.sourceforge.net/rpcbind/rpcbind-1.3.1.tar.bz2",
       "filename": "rpcbind-1.3.1.tar.bz2",
       "sha512": "364e841749cd00cf526b2d4a145be9c11fa9531637c8450cbb06f26502434ee890ccd5926ad3adad7b13fa9552a3a821801d24470b95108b9cafcfa023f562c8"
+    },
+    {
+      "name": "rpm-ostree",
+      "version": "2026.3",
+      "url": "https://github.com/coreos/rpm-ostree/releases/download/v2026.3/rpm-ostree-2026.3.tar.xz",
+      "filename": "rpm-ostree-2026.3.tar.xz",
+      "sha512": "34586a3e1ff9acc88ca62e5650ca30fcfe5825b6609ef36d9c601d558ca9468a295224abc3520135fb3805fcb860edb25b8a9689f56caf49d1df9559425318e5",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/rpm-ostree/rpm-ostree-2026.3.tar.xz/sha512/34586a3e1ff9acc88ca62e5650ca30fcfe5825b6609ef36d9c601d558ca9468a295224abc3520135fb3805fcb860edb25b8a9689f56caf49d1df9559425318e5/rpm-ostree-2026.3.tar.xz"
+      ]
     },
     {
       "name": "rsync",
@@ -5405,6 +5567,16 @@
       "sha512": "fff3995ce8608bdaed5f4f1352ae4f1f882de58663b932c598d6168df421e4dbf907ec0f8caebb1e56490a71ca11105726f291b475816dd53e705bc53121969f",
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/sassc/sassc-3.6.2.tar.gz/sha512/fff3995ce8608bdaed5f4f1352ae4f1f882de58663b932c598d6168df421e4dbf907ec0f8caebb1e56490a71ca11105726f291b475816dd53e705bc53121969f/sassc-3.6.2.tar.gz"
+      ]
+    },
+    {
+      "name": "satyr",
+      "version": "0.43",
+      "url": "https://github.com/abrt/satyr/releases/download/0.43/satyr-0.43.tar.gz",
+      "filename": "satyr-0.43.tar.gz",
+      "sha512": "ad10c240bdf5314e77043735cd94830efea5dc577a45fceb27f61fef6360746ea1121b9839b4e3ef07ccaa893c9995110de8d1eb28f7c28cdc8f58206e0b3a45",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/satyr/satyr-0.43.tar.gz/sha512/ad10c240bdf5314e77043735cd94830efea5dc577a45fceb27f61fef6360746ea1121b9839b4e3ef07ccaa893c9995110de8d1eb28f7c28cdc8f58206e0b3a45/satyr-0.43.tar.gz"
       ]
     },
     {

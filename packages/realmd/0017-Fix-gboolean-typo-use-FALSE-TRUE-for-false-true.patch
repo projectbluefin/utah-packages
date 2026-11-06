@@ -1,0 +1,53 @@
+From 1f91a9cf3af41a2dfe98bca6abe3e190d7f3c2d5 Mon Sep 17 00:00:00 2001
+From: Shridhar Gadekar <shridhar.always@gmail.com>
+Date: Wed, 29 Apr 2026 22:39:20 +0530
+Subject: [PATCH 17/20] Fix gboolean typo: use FALSE/TRUE for false/true
+
+The variables fully_qualified_names and has_fqn are of type gboolean
+from GLib, which uses FALSE and TRUE constants. Using C99's false and
+true is incorrect for this type.
+
+Fixed:
+- Line 346: *fully_qualified_names = FALSE;
+- Line 366: *fully_qualified_names = TRUE;
+- Line 392: gboolean has_fqn = FALSE;
+
+Signed-off-by: Shridhar Gadekar <shridhar.always@gmail.com>
+---
+ tools/realm-join.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/tools/realm-join.c b/tools/realm-join.c
+index cb290cc..6f6a0b3 100644
+--- a/tools/realm-join.c
++++ b/tools/realm-join.c
+@@ -343,7 +343,7 @@ realm_client_domain_has_fully_qualified_names (RealmClient *client,
+ 	provider = realm_client_get_provider (client);
+ 	realms = realm_dbus_provider_get_realms (provider);
+ 
+-	*fully_qualified_names = false;
++	*fully_qualified_names = FALSE;
+ 	for (c = 0; realms && realms[c] != NULL; c++) {
+ 		g_clear_object (&realm);
+ 		realm = realm_client_get_realm (client, realms[c]);
+@@ -363,7 +363,7 @@ realm_client_domain_has_fully_qualified_names (RealmClient *client,
+ 		if (formats != NULL && formats[0] != NULL
+ 		                    && *formats[0] != '\0'
+ 		                    && strcmp (formats[0], "%U") != 0) {
+-			*fully_qualified_names = true;
++			*fully_qualified_names = TRUE;
+ 		}
+ 
+ 		break;
+@@ -389,7 +389,7 @@ realm_join (RealmClient *client,
+ 	RealmJoinArgs args;
+ 	GOptionGroup *group;
+ 	gint ret = 0;
+-	gboolean has_fqn = false;
++	gboolean has_fqn = FALSE;
+ 
+ 	GOptionEntry option_entries[] = {
+ 		{ "automatic-id-mapping", 0, G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_CALLBACK,
+-- 
+2.54.0
+
