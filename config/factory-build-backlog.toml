@@ -177,7 +177,6 @@ packages = [
     "kf6-karchive",
     "kf6-kimageformats",
     "kmod-v4l2loopback",
-    "kpartx",
     "kvazaar-libs",
     "lockdev",
     "mcelog",
@@ -368,6 +367,7 @@ packages = [
     { name = "nilfs-utils", pr = 702 },
     # Recipe imported; hosted build, publication and runtime proof remain in #501.
     { name = "jbig2dec-libs", pr = 817 },
+    { name = "kpartx" },
     { name = "ipset" },
     { name = "ipset-libs" },
     { name = "iptstate", pr = 697 },

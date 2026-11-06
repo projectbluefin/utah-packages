@@ -1,0 +1,175 @@
+============================================================
+
+Below is the test design and scenario:
+a)
+multipaths {
+  multipath{
+        wwid "35333333000002710"
+        alias "path2               <-missing closing quote on alias
+  }
+}
+# multipath -r
+May 26 14:20:17 | missing closing quotes on line 56 of config file
+May 26 14:20:17 | 35333333000002710: rename path1 to path2
+rename: path2 (35333333000002710) undef Linux,scsi_debug
+size=8.0M features='0' hwhandler='0' wp=undef
+`-+- policy='round-robin 0' prio=1 status=undef
+  `- 4:0:0:0 sdb 8:16 active ready running
+# multipath -ll
+May 26 14:20:28 | missing closing quotes on line 56 of config file
+path2 (35333333000002710) dm-3 Linux,scsi_debug
+size=8.0M features='0' hwhandler='0' wp=rw
+`-+- policy='round-robin 0' prio=1 status=active
+  `- 4:0:0:0 sdb 8:16 active ready running
+
+b)
+multipaths {
+  multipath{
+        wwid "35333333000002710"
+        alias                      <- no value for alias
+  }
+}
+# multipath -r
+May 26 14:28:10 | missing value for option 'alias' on line 56 of config file
+May 26 14:28:10 | 35333333000002710: rename path3 to mpathb
+rename: mpathb (35333333000002710) undef Linux,scsi_debug
+size=8.0M features='0' hwhandler='0' wp=undef
+`-+- policy='round-robin 0' prio=1 status=undef
+  `- 4:0:0:0 sdb 8:16 active ready running
+
+c) 
+multipaths {
+  multipath{
+        wwid "35333333000002710"
+        alias path5"            <-missing starting quote on alias
+  }
+}
+# multipath -r
+May 26 15:19:46 | ignoring extra data starting with '"' on line 56 of config file
+May 26 15:19:46 | 35333333000002710: rename path4' to path5
+rename: path5 (35333333000002710) undef Linux,scsi_debug
+size=8.0M features='0' hwhandler='0' wp=undef
+`-+- policy='round-robin 0' prio=1 status=undef
+  `- 4:0:0:0 sdb 8:16 active ready running
+
+d) 
+multipaths {
+  multipath{
+        wwid "35333333000002710"
+        alias 'path5"             <- unmatched quote on alias
+  }
+}
+# multipath -r
+May 26 15:22:30 | ignoring extra data starting with '"' on line 56 of config file
+May 26 15:22:30 | 35333333000002710: rename path5 to 'path5
+rename: 'path5 (35333333000002710) undef Linux,scsi_debug
+size=8.0M features='0' hwhandler='0' wp=undef
+`-+- policy='round-robin 0' prio=1 status=undef
+
+e)
+multipaths {
+  multipath{
+        wwid "35333333000002710"
+        alias 'path5              <-missing and wrong quote on alias
+  }
+}
+# multipath -r
+reload: 'path5 (35333333000002710) undef Linux,scsi_debug
+size=8.0M features='0' hwhandler='0' wp=undef
+`-+- policy='round-robin 0' prio=1 status=undef
+  `- 4:0:0:0 sdb 8:16 active ready running
+# multipath -ll
+'path5 (35333333000002710) dm-3 Linux,scsi_debug
+size=8.0M features='0' hwhandler='0' wp=rw
+`-+- policy='round-robin 0' prio=1 status=active
+  `- 4:0:0:0 sdb 8:16 active ready running
+note: rename to unexpected 'path5 -> it's correct for current design
+
+f) 
+multipaths {
+  multipath{
+        wwid "35333333000002710"
+        alias <path5>            <- wrong quote on alias
+  }
+}
+# multipath -r
+May 26 15:27:42 | 35333333000002710: rename path5' to <path5>
+rename: <path5> (35333333000002710) undef Linux,scsi_debug
+size=8.0M features='0' hwhandler='0' wp=undef
+`-+- policy='round-robin 0' prio=1 status=undef
+  `- 4:0:0:0 sdb 8:16 active ready running
+note: rename to unexpected <path5> -> it's correct for current design
+
+g)
+multipaths {
+  multipath{
+        wwid "35333333000002710"
+        alias path test       <- have a space
+  }
+}
+# multipath -r
+May 26 15:29:52 | ignoring extra data starting with 'test' on line 56 of config file
+May 26 15:29:52 | 35333333000002710: rename path_test to path
+rename: path (35333333000002710) undef Linux,scsi_debug
+size=8.0M features='0' hwhandler='0' wp=undef
+`-+- policy='round-robin 0' prio=1 status=undef
+  `- 4:0:0:0 sdb 8:16 active ready running
+
+h)
+multipaths {
+  multipath{
+        wwid "35333333000002710"
+        alia "path"               <- wrong alias keyword
+  }
+}
+# multipath -r
+May 26 15:33:54 | multipath.conf line 56, invalid keyword: alia
+reload: mpathb (35333333000002710) undef Linux,scsi_debug
+size=8.0M features='0' hwhandler='0' wp=undef
+`-+- policy='round-robin 0' prio=1 status=undef
+  `- 4:0:0:0 sdb 8:16 active ready running
+
+i) 
+multipaths{                       <- no space between the section name and the open bracket that followed it, the original is "multipaths {"
+  multipath{
+        wwid "35333333000002710"
+        alias "mypath"
+  }
+}
+# multipath -r
+May 29 10:13:01 | 35333333000002710: rename mpathb to mypath
+rename: mypath (35333333000002710) undef Linux,scsi_debug
+size=8.0M features='0' hwhandler='0' wp=undef
+`-+- policy='round-robin 0' prio=1 status=undef
+  `- 4:0:0:0 sdb 8:16 active ready running
+note:  fix issue about if a section doesn't have a space between the section name and the open bracket, that section isn't read in.
+
+j)
+ultipaths{                         <- wrong section keyword
+  multipath{
+        wwid "35333333000002710"
+        alias "mypath"
+  }
+}
+# multipath -r
+May 29 10:49:33 | multipath.conf line 53, invalid keyword: ultipaths
+May 29 10:49:33 | multipath.conf line 54, invalid keyword: multipath
+May 29 10:49:33 | multipath.conf line 55, invalid keyword: wwid
+May 29 10:49:33 | multipath.conf line 56, invalid keyword: alias
+May 29 10:49:33 | unmatched '}' at line 57 of config file
+May 29 10:49:33 | multipath.conf line 57, invalid keyword: }
+May 29 10:49:33 | unmatched '}' at line 58 of config file
+May 29 10:49:33 | multipath.conf line 58, invalid keyword: }
+May 29 10:49:33 | 35333333000002710: rename mypath to mpathb
+rename: mpathb (35333333000002710) undef Linux,scsi_debug
+size=8.0M features='0' hwhandler='0' wp=undef
+`-+- policy='round-robin 0' prio=1 status=undef
+  `- 4:0:0:0 sdb 8:16 active ready running
+
+tested with incorrect keywords in the following sections:
+    default
+    blacklist
+    blacklist_exceptions
+    devices
+    multipaths
+
