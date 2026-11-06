@@ -502,10 +502,6 @@ Left stuck, with the reason:
   upstream PyPI `source` URL matches its bytes, but it is Canary's perturbed
   package. `tests/test_canary.py` requires every Canary source to stay on
   the lookaside, so a flaky upstream host cannot fail Canary.
-- **The upstream bytes differ.**
-  - samba: Fedora recompresses upstream's `.tar.gz` as `.tar.xz`
-    (`#/samba-....tar.xz` in `Source0`). The tar inside is identical.
-    It needs a decision to re-lock new bytes and a recipe change.
 - **No upstream equivalent:** xevd and xeve lock Fedora-generated `-free`
   tarballs (`*_gen_free_tarball.sh`).
 - **libao 1.2.2 exists only as a git tag.** The tag archive has no
@@ -541,6 +537,25 @@ content-addressed URL that can never resolve is not a mirror.
   `%doc` follows. The soname stays at 8. Codeberg generates archives on
   demand; if a later fetch stops matching the lock, re-lock from a
   fresh download instead of reaching for the lookaside.
+- samba 4.25.0rc1 -> 4.25.1: Fedora's `Source0` renamed upstream's `.tar.gz`
+  to a `.tar.xz` it recompressed (`#/samba-....tar.xz`). Rawhide built
+  4.25.1, so its recipe was re-imported at the Koji commit
+  (`import_rawhide.py samba --ref <commit> --replace`), the inert files were
+  deleted, and the two factory deviations were put back (Ceph VFS modules
+  off, `libicu-devel >= 78`). `Source0`/`Source1` then name
+  `download.samba.org/pub/samba/stable/` directly, and `%prep` checks the
+  signature with `zcat` instead of `xzcat`. Fedora's `.tar.xz` holds other
+  bytes, so there is no fallback; the `.asc` is identical and stays a
+  bundled `sources` entry. The forced-rebuild `rebuild_reason` went with
+  the version that needed it.
+- Samba signs the **uncompressed** tar (`samba-X.tar.asc` beside
+  `samba-X.tar.gz`). `gpg --verify` against the `.tar.gz` reports a BAD
+  signature, so the lock sets `"signature_covers": "tar"` next to
+  `signature_url` and `gpg_key`. `source_pipeline.py` then decompresses
+  the download (gzip, xz or bzip2) before verifying. The default is
+  `"file"`, the published file itself, as for webkitgtk and cryptopp.
+  Like webkitgtk's, the version-bound `.asc` in `sources` makes
+  `check_bumpable()` refuse the next release, so samba moves by hand.
 
 ### Hand version moves (2026-11-06)
 

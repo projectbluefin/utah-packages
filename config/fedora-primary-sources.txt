@@ -30,7 +30,6 @@ protobuf3
 ptouch-driver
 python-typing-inspection
 redhat-menus
-samba
 spandsp
 srt
 usermode
