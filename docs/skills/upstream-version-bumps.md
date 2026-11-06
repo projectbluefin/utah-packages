@@ -502,8 +502,7 @@ Left stuck, with the reason:
   upstream PyPI `source` URL matches its bytes, but it is Canary's perturbed
   package. `tests/test_canary.py` requires every Canary source to stay on
   the lookaside, so a flaky upstream host cannot fail Canary.
-- **No upstream equivalent:** xevd and xeve lock Fedora-generated `-free`
-  tarballs (`*_gen_free_tarball.sh`).
+- **The deliberate exception:** xevd and xeve. See below.
 
 ### Re-locking new upstream bytes (owner decisions, 2026-11-06)
 
@@ -562,6 +561,29 @@ content-addressed URL that can never resolve is not a mirror.
   the CVE-2017-11548 diff and the nanosleep patch apply with fuzz 0. The
   soname stays at `libao.so.4` (`LIB_CURRENT` 5, `LIB_AGE` 1). No Fedora
   copy of the tag archive exists, so there is no fallback.
+
+### xevd and xeve: the deliberate exception to upstream-first
+
+xevd and xeve (the MPEG-5 EVC decoder and encoder ffmpeg links) stay on
+Fedora's generated `-free` tarballs, on the lookaside, by owner decision.
+That is legally required, not a backlog item. Upstream
+(`github.com/mpeg5/xevd`, `github.com/mpeg5/xeve`) publishes only the full
+tree, including `src_main`, the EVC Main profile, whose added tools are
+patent-encumbered. Fedora's `*_gen_free_tarball.sh` (carried as `Source1`)
+deletes `src_main` and repacks the Baseline profile as
+`<name>-free-<version>.tar.gz`, and only that stripped tarball may ship.
+No upstream serves those bytes, so:
+
+- The primary stays the lookaside URL of Fedora's upload, and both names
+  stay on `config/fedora-primary-sources.txt`. Do not re-lock them to the
+  GitHub archive: that would ship `src_main`.
+- `upstream_bump.py --package xevd` (or `xeve`) keeps answering `needs
+  review ... the primary is Fedora's lookaside`. That is the expected
+  answer for these two; there is no upstream primary to hand it.
+- A version move follows Fedora's upload, never the upstream tag: re-import
+  Rawhide's recipe at the Koji-built commit and lock the lookaside URL of
+  the new `-free` tarball. On 2026-11-06 Rawhide had xevd 0.8.0 and xeve
+  0.7.1; the owner kept both at 0.7.0.
 
 ### Hand version moves (2026-11-06)
 

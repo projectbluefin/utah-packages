@@ -37,6 +37,8 @@ volume_key
 vulkan-headers
 vulkan-loader
 words
+# xevd and xeve stay for good: only Fedora's patent-stripped -free tarball
+# may ship, and no upstream serves it (docs/skills/upstream-version-bumps.md).
 xevd
 xeve
 xvidcore
