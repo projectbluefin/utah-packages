@@ -3250,6 +3250,12 @@ packages:
     downstream_package_name: python-distro
     paths:
       - packages/python-distro
+  python-dns:
+    specfile_path: python-dns.spec
+    upstream_package_name: python-dns
+    downstream_package_name: python-dns
+    paths:
+      - packages/python-dns
   python-evdev:
     specfile_path: python-evdev.spec
     upstream_package_name: python-evdev
@@ -3286,6 +3292,12 @@ packages:
     downstream_package_name: python-jaraco-functools
     paths:
       - packages/python-jaraco-functools
+  python-jeepney:
+    specfile_path: python-jeepney.spec
+    upstream_package_name: python-jeepney
+    downstream_package_name: python-jeepney
+    paths:
+      - packages/python-jeepney
   python-jmespath:
     specfile_path: python-jmespath.spec
     upstream_package_name: python-jmespath
@@ -3388,6 +3400,18 @@ packages:
     downstream_package_name: python-pyudev
     paths:
       - packages/python-pyudev
+  python-rapidfuzz:
+    specfile_path: python-rapidfuzz.spec
+    upstream_package_name: python-rapidfuzz
+    downstream_package_name: python-rapidfuzz
+    paths:
+      - packages/python-rapidfuzz
+  python-regex:
+    specfile_path: python-regex.spec
+    upstream_package_name: python-regex
+    downstream_package_name: python-regex
+    paths:
+      - packages/python-regex
   python-shtab:
     specfile_path: python-shtab.spec
     upstream_package_name: python-shtab
@@ -3412,6 +3436,12 @@ packages:
     downstream_package_name: python-versioneer
     paths:
       - packages/python-versioneer
+  pyxdg:
+    specfile_path: pyxdg.spec
+    upstream_package_name: pyxdg
+    downstream_package_name: pyxdg
+    paths:
+      - packages/pyxdg
   qemu:
     specfile_path: qemu.spec
     upstream_package_name: qemu

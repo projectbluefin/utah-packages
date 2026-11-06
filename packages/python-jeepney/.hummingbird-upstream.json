@@ -1,0 +1,8 @@
+{
+  "package": "python-jeepney",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/python-jeepney.git",
+  "commit": "eb3eda89103dce04152d4300627c6f148c54b22c",
+  "tree": "108e8ba62b4ccf0f4ac1e9c8da414f3eab111788",
+  "imported_at": "2026-11-06T21:37:16.644643+00:00"
+}
