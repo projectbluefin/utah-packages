@@ -1,0 +1,8 @@
+{
+  "package": "python-pysocks",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/python-pysocks.git",
+  "commit": "a21b0408b391bcde126955b1ed87a5be3676eb32",
+  "tree": "1a8fc9cd581473c4098f38c59055efbd7555f259",
+  "imported_at": "2026-11-06T03:16:11.894282+00:00"
+}
