@@ -3575,6 +3575,16 @@
       ]
     },
     {
+      "name": "libreport",
+      "version": "2.17.15",
+      "url": "https://github.com/abrt/libreport/archive/refs/tags/2.17.15/libreport-2.17.15.tar.gz",
+      "filename": "libreport-2.17.15.tar.gz",
+      "sha512": "a4707f5272f037f91b4f4b562d3f0eb165ae7790699714accdd1af40216f37bd40d430a06925b1b7b8ac2d2cf97fd0cc4efded51dc22d21d9ef2abedf796e5fe",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libreport/libreport-2.17.15.tar.gz/sha512/a4707f5272f037f91b4f4b562d3f0eb165ae7790699714accdd1af40216f37bd40d430a06925b1b7b8ac2d2cf97fd0cc4efded51dc22d21d9ef2abedf796e5fe/libreport-2.17.15.tar.gz"
+      ]
+    },
+    {
       "name": "librist",
       "version": "0.2.11",
       "url": "https://code.videolan.org/rist/librist/-/archive/v0.2.11/librist-v0.2.11.tar.gz",
@@ -5474,6 +5484,16 @@
       "sha512": "fff3995ce8608bdaed5f4f1352ae4f1f882de58663b932c598d6168df421e4dbf907ec0f8caebb1e56490a71ca11105726f291b475816dd53e705bc53121969f",
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/sassc/sassc-3.6.2.tar.gz/sha512/fff3995ce8608bdaed5f4f1352ae4f1f882de58663b932c598d6168df421e4dbf907ec0f8caebb1e56490a71ca11105726f291b475816dd53e705bc53121969f/sassc-3.6.2.tar.gz"
+      ]
+    },
+    {
+      "name": "satyr",
+      "version": "0.43",
+      "url": "https://github.com/abrt/satyr/releases/download/0.43/satyr-0.43.tar.gz",
+      "filename": "satyr-0.43.tar.gz",
+      "sha512": "ad10c240bdf5314e77043735cd94830efea5dc577a45fceb27f61fef6360746ea1121b9839b4e3ef07ccaa893c9995110de8d1eb28f7c28cdc8f58206e0b3a45",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/satyr/satyr-0.43.tar.gz/sha512/ad10c240bdf5314e77043735cd94830efea5dc577a45fceb27f61fef6360746ea1121b9839b4e3ef07ccaa893c9995110de8d1eb28f7c28cdc8f58206e0b3a45/satyr-0.43.tar.gz"
       ]
     },
     {

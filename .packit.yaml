@@ -2236,6 +2236,12 @@ packages:
     downstream_package_name: libraw1394
     paths:
       - packages/libraw1394
+  libreport:
+    specfile_path: libreport.spec
+    upstream_package_name: libreport
+    downstream_package_name: libreport
+    paths:
+      - packages/libreport
   librist:
     specfile_path: librist.spec
     upstream_package_name: librist
@@ -3466,6 +3472,12 @@ packages:
     downstream_package_name: sassc
     paths:
       - packages/sassc
+  satyr:
+    specfile_path: satyr.spec
+    upstream_package_name: satyr
+    downstream_package_name: satyr
+    paths:
+      - packages/satyr
   sbc:
     specfile_path: sbc.spec
     upstream_package_name: sbc
