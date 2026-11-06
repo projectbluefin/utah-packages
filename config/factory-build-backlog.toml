@@ -137,12 +137,6 @@ packages = [
     "adobe-mappings-pdf",
     "cldr-emoji-annotation",
     "cldr-emoji-annotation-dtd",
-    "ibus-anthy",
-    "ibus-anthy-python",
-    "ibus-hangul",
-    "ibus-libpinyin",
-    "ibus-m17n",
-    "ibus-typing-booster",
     "kasumi-common",
     "kasumi-unicode",
 ]
@@ -166,12 +160,10 @@ packages = [
 # projectbluefin/utah#396 - 184 names
 consumer_issue = "projectbluefin/utah#396"
 packages = [
-    "7zip",
     "PackageKit-glib",
     "appstream-data",
     "b43-openfwwf",
     "braille-printer-app",
-    "compsize",
     "criu",
     "criu-libs",
     "desktop-backgrounds-gnome",
@@ -215,7 +207,6 @@ packages = [
     "qt5-qtx11extras",
     "qt5-qtxmlpatterns",
     "shim-ia32",
-    "slang",
     "solaar-udev",
     "sos",
     "uavs3d-libs",
@@ -252,6 +243,8 @@ packages = [
 # Packages that left the backlog because a recipe was imported.
 # Each entry: package name and the commit that closed the gap.
 packages = [
+    # S-Lang recipe from #719 is published; runtime resolution and payload proof remain on #507.
+    { name = "slang", pr = 719, commit = "f22db6b5b26d3d05f84865cc57653ba8aa9edea6", published_run = 41780828846, published_nevra = "slang-0:2.3.3-10.hum1.bfin.x86_64" },
     # Codec recipe imports for #476; publication and runtime proof remain separate.
     { name = "x264-libs", pr = 633 },
     { name = "x265-libs", pr = 633 },
@@ -330,6 +323,13 @@ packages = [
     # Chewing input-method engine + library recipe for #494; hosted build, publication and runtime proof remain open.
     { name = "ibus-chewing" },
     { name = "libchewing" },
+    # Anthy, hangul, libpinyin, m17n and typing-booster input-method engines for #494; hosted build, publication and runtime proof remain open.
+    { name = "ibus-anthy" },
+    { name = "ibus-anthy-python" },
+    { name = "ibus-hangul" },
+    { name = "ibus-libpinyin" },
+    { name = "ibus-m17n" },
+    { name = "ibus-typing-booster" },
     # Recipe import only; build, publication and runtime proof remain on #508.
     { name = "uchardet", pr = 729 },
     # Published boot-screen outputs; recipe #312, source lock #320; runtime proof stays on #505.
@@ -392,6 +392,13 @@ packages = [
     # Disc-reading recipes; publication and runtime proof remain tracked in #475.
     { name = "libudfread", pr = 658 },
     { name = "libbluray", pr = 658 },
+    # 7zip recipe import (#499): Source0 is generated from the pinned upstream
+    # release without RAR support; hosted build, publication and runtime proof
+    # remain outstanding.
+    { name = "7zip", pr = 869 },
+    # compsize recipe was already imported in #686 (commit 1fbe19e1); record
+    # that existing PR and commit instead of re-importing it.
+    { name = "compsize", commit = "1fbe19e19d64204747a4fbaa69573573dd9a0d11", pr = 686 },
     # NetworkManager-ssh VPN plugin (main + gnome + selinux subpackages); recipe
     # import only, hosted build, publication and runtime proof remain outstanding.
     { name = "NetworkManager-ssh", pr = 770 },
