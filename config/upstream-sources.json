@@ -72,6 +72,13 @@
       "sha512": "d3032df7e8c345911144107bbc22224f63001a8ab8997e4566e2ca9c48a2686ca319e5820c74df190fea7aa1c66672063fe716921a138fefd5abad407056670b"
     },
     {
+      "name": "PackageKit",
+      "version": "1.4.0",
+      "url": "https://www.freedesktop.org/software/PackageKit/releases/PackageKit-1.4.0.tar.xz",
+      "filename": "PackageKit-1.4.0.tar.xz",
+      "sha512": "8ce37bf1f350f1f74085960e7a7f9fa8e8d7dc6e928f14d42c6b71e349da92867e89b2da78db56241a99e230b175acd0a12f0e4892031ba4f635f70e301a49aa"
+    },
+    {
       "name": "SDL3",
       "version": "3.4.16",
       "url": "https://www.libsdl.org/release/SDL3-3.4.16.tar.gz",
