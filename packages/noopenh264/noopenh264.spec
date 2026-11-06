@@ -1,7 +1,7 @@
 %global soversion 8
 
 Name:           noopenh264
-Version:        2.6.0
+Version:        2.7.0
 Release:        %autorelease
 Summary:        Fake implementation of the OpenH264 library
 
@@ -51,7 +51,7 @@ rm $RPM_BUILD_ROOT%{_libdir}/*.a
 
 %files
 %license COPYING*
-%doc README
+%doc README.md
 %{_libdir}/libopenh264.so.%{soversion}
 %{_libdir}/libopenh264.so.%{version}
 

@@ -26,7 +26,6 @@ lm_sensors
 lsof
 mozc
 mpage
-noopenh264
 protobuf3
 ptouch-driver
 python-typing-inspection

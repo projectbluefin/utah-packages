@@ -503,12 +503,9 @@ Left stuck, with the reason:
   package. `tests/test_canary.py` requires every Canary source to stay on
   the lookaside, so a flaky upstream host cannot fail Canary.
 - **The upstream bytes differ.**
-  - noopenh264: Codeberg's regenerated archive has the same contents but a
-    different gzip stream.
   - samba: Fedora recompresses upstream's `.tar.gz` as `.tar.xz`
     (`#/samba-....tar.xz` in `Source0`). The tar inside is identical.
-  - Each needs a decision to re-lock new bytes, and samba also needs a
-    recipe change.
+    It needs a decision to re-lock new bytes and a recipe change.
 - **No upstream equivalent:** xevd and xeve lock Fedora-generated `-free`
   tarballs (`*_gen_free_tarball.sh`).
 - **libao 1.2.2 exists only as a git tag.** The tag archive has no
@@ -534,6 +531,16 @@ content-addressed URL that can never resolve is not a mirror.
   fallback stays. The recipe's `%prep` runs `autoreconf -ifv` (the aspell
   pkg-config patch edits `configure.ac`), so the build regenerates its own
   autotools and never depends on whoever generated the tarball's.
+- noopenh264 2.6.0 -> 2.7.0: no forge feed the tool reads covers Codeberg,
+  and an Anitya feed never relocks. So the primary was re-locked by hand at
+  the locked version to the recipe's own `Source` (the Codeberg tag archive,
+  new digest), the package was dropped from the ratchet, and
+  `upstream_bump.py --package noopenh264 --apply` then moved it by swapping
+  the version into that primary. Fedora carries only 2.6.0, in other bytes,
+  so there is no fallback. 2.7.0 renamed `README` to `README.md`, which
+  `%doc` follows. The soname stays at 8. Codeberg generates archives on
+  demand; if a later fetch stops matching the lock, re-lock from a
+  fresh download instead of reaching for the lookaside.
 
 ### Hand version moves (2026-11-06)
 
