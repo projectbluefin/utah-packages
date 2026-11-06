@@ -312,9 +312,8 @@ packages = [
     # Recipe coverage only; slirp4netns uses the existing libslirp recipe.
     # Hosted build, publication, runtime solver and namespace tests remain on #507.
     { name = "slirp4netns", pr = 830 },
-    # Khronos OpenCL ICD loader recipe import only; hosted build, publication and
-    # runtime proof remain on #499.
-    { name = "OpenCL-ICD-Loader", pr = 834 },
+    # OpenCL ICD loader publication observed; runtime proof remains on #499.
+    { name = "OpenCL-ICD-Loader", pr = 834, published_run = 42171198494, published_nevra = "OpenCL-ICD-Loader-0:3.1-1.20260519gitb7bd280.hum1.bfin.x86_64" },
     # Language data recipe; build/publication and consumer proof remain tracked in #494.
     { name = "langtable", pr = 700 },
     { name = "python3-langtable", pr = 700 },
@@ -390,22 +389,18 @@ packages = [
     # Disc-reading recipes; publication and runtime proof remain tracked in #475.
     { name = "libudfread", pr = 658 },
     { name = "libbluray", pr = 658 },
-    # 7zip recipe import (#499): Source0 is generated from the pinned upstream
-    # release without RAR support; hosted build, publication and runtime proof
-    # remain outstanding.
-    { name = "7zip", pr = 869 },
-    # compsize recipe was already imported in #686 (commit 1fbe19e1); record
-    # that existing PR and commit instead of re-importing it.
-    { name = "compsize", commit = "1fbe19e19d64204747a4fbaa69573573dd9a0d11", pr = 686 },
-    # NetworkManager-ssh VPN plugin (main + gnome + selinux subpackages); recipe
-    # import only, hosted build, publication and runtime proof remain outstanding.
-    { name = "NetworkManager-ssh", pr = 770 },
-    { name = "NetworkManager-ssh-gnome", pr = 770 },
-    { name = "NetworkManager-ssh-selinux", pr = 770 },
+    # 7zip's source is generated without RAR support; runtime proof remains on #499.
+    { name = "7zip", pr = 869, published_run = 42171198494, published_nevra = "7zip-0:26.04-1.hum1.bfin.x86_64" },
+    # compsize recipe was already imported in #686 (commit 1fbe19e1).
+    { name = "compsize", commit = "1fbe19e19d64204747a4fbaa69573573dd9a0d11", pr = 686, published_run = 42171198494, published_nevra = "compsize-0:1.5^git20250123.d79eacf-16.hum1.bfin.x86_64" },
+    # NetworkManager-ssh VPN plugin and subpackages; runtime proof remains on #499.
+    { name = "NetworkManager-ssh", pr = 770, published_run = 42171198494, published_nevra = "NetworkManager-ssh-0:1.4.5-3.hum1.bfin.x86_64" },
+    { name = "NetworkManager-ssh-gnome", pr = 770, published_run = 42171198494, published_nevra = "NetworkManager-ssh-gnome-0:1.4.5-3.hum1.bfin.x86_64" },
+    { name = "NetworkManager-ssh-selinux", pr = 770, published_run = 42171198494, published_nevra = "NetworkManager-ssh-selinux-0:1.4.5-3.hum1.bfin.x86_64" },
     # bash-color-prompt recipe was already imported in #728 (commit e53a1bf5);
     # record that existing PR and commit to close the catalog gap instead of
     # re-importing the same source under this PR.
-    { name = "bash-color-prompt", commit = "e53a1bf5c5d30730b49132eab460e60699d5ddfc", pr = 728 },
+    { name = "bash-color-prompt", commit = "e53a1bf5c5d30730b49132eab460e60699d5ddfc", pr = 728, published_run = 42171198494, published_nevra = "bash-color-prompt-0:0.96.2-1.hum1.bfin.noarch" },
     # Shader compiler recipe; hosted build and runtime proof remain tracked in #475.
     { name = "libshaderc" },
     # #486 publication evidence for ifuse, iwd, flex, freerdp-libs, gamemode,
@@ -628,8 +623,8 @@ packages = [
     { name = "sso-mib-libs", pr = 574 },
     # foo2zjs and its runtime dependencies (argyllcms, lcms 1.x, libXScrnSaver).
     # Subpackages share their source recipe's PR.
-    { name = "argyllcms", pr = 588 },
-    { name = "argyllcms-data", pr = 588 },
+    { name = "argyllcms", pr = 588, published_run = 42171198494, published_nevra = "argyllcms-0:3.5.0-3.hum1.bfin.x86_64" },
+    { name = "argyllcms-data", pr = 588, published_run = 42171198494, published_nevra = "argyllcms-data-0:3.5.0-3.hum1.bfin.noarch" },
     { name = "foo2zjs", pr = 588 },
     { name = "lcms", pr = 588 },
     { name = "lcms-libs", pr = 588 },
@@ -651,10 +646,10 @@ packages = [
     # Braille source family and its Word conversion runtime dependency (#480).
     { name = "liblouisutdml", pr = 616 },
     { name = "liblouisutdml-utils", pr = 616 },
-    { name = "antiword", pr = 616 },
-    # Recipe import only; hosted build, publication, and runtime proof remain.
-    { name = "braille-printer-app" },
-    { name = "b43-fwcutter", pr = 813 },
+    { name = "antiword", pr = 616, published_run = 42171198494, published_nevra = "antiword-0:0.37-45.hum1.bfin.x86_64" },
+    # Published; runtime dependency and Braille print-path proof remain on #499.
+    { name = "braille-printer-app", pr = 899, published_run = 42171198494, published_nevra = "braille-printer-app-1:2.0~b0^386eea385f-12.hum1.bfin.x86_64" },
+    { name = "b43-fwcutter", pr = 813, published_run = 42171198494, published_nevra = "b43-fwcutter-0:021-1.hum1.bfin.x86_64" },
     { name = "sane-airscan", pr = 586 },
     { name = "sane-backends", pr = 586 },
     { name = "sane-backends-drivers-cameras", pr = 586 },
