@@ -23,9 +23,8 @@
 %bcond_without qt5
 %endif
 
-# Utah does not ship the Qt/QML plugin; avoid introducing the Qt WebEngine
-# closure solely to build a non-GNOME multimedia sink.
-%bcond_with qt6
+# Build the Qt 6 QML sink requested by the multimedia parity backlog.
+%bcond_without qt6
 
 #global gitrel     140
 #global gitcommit  9865730cfa5b3a8b2560d082e7e56b350042d3d2
@@ -33,7 +32,7 @@
 
 Name:           gstreamer1-plugins-good
 Version:        1.28.6
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        GStreamer plugins with good code and licensing
 
 License:        CC0-1.0 AND GPL-2.0-only AND LGPL-2.0-only AND LGPL-2.0-or-later AND LGPL-2.1-only AND LGPL-2.1-or-later AND xlock AND MIT AND BSD-3-Clause AND CC-BY-3.0 

@@ -213,9 +213,8 @@ class SubpackageNameParserTests(unittest.TestCase):
     - ``%package SUFFIX`` — implicit name. RPM tacks the suffix onto the
       spec's ``Name:``. Fedora-style specs use this for split-out build
       outputs that share the parent's provenance
-      (``%package qt6`` in ``gstreamer1-plugins-good.spec`` would ship
-      ``gstreamer1-plugins-good-qt6`` -- in that spec it is guarded by an
-      off-by-default bcond, so it does not).
+      (``%package qt6`` in ``gstreamer1-plugins-good.spec`` names
+      ``gstreamer1-plugins-good-qt6``).
 
     Guards matter as much as shapes: a ``%package`` only counts when every
     enclosing ``%if`` is known to be taken for the default build.
@@ -259,13 +258,7 @@ class SubpackageNameParserTests(unittest.TestCase):
             self.assertIn("gstreamer1-plugins-good-extras", names)
 
     def test_disabled_bcond_guard_excludes_the_subpackage(self) -> None:
-        """``%package`` under an off-by-default ``%bcond`` is not shipped.
-
-        ``packages/gstreamer1-plugins-good/`` is the real shape: the spec
-        sets ``%bcond_with qt6`` and guards ``%package qt6`` with ``%if
-        %{with qt6}``. Nothing in this factory passes ``--with qt6``, so
-        the subpackage is never built and the backlog name is still owed.
-        """
+        """An off-by-default ``%bcond`` hides its guarded subpackage."""
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             body = (

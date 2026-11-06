@@ -777,10 +777,9 @@ until the review's build and runtime acceptance requirements are met.
   never builds under that name here — stays `pending` until the operator
   closes it in `[resolved]` or `[wontfix]`.
 - A `%package` behind a disabled or undecidable `%if` does not count.
-  `packages/gstreamer1-plugins-good/` declares `%package qt6` under `%if
-  %{with qt6}` while the spec sets `%bcond_with qt6` and nothing in the
-  factory passes `--with qt6`, so `gstreamer1-plugins-good-qt6` is
-  `pending`: the factory build does not produce it. `packages/ffmpeg/`
+  `gstreamer1-plugins-good-qt6` is enabled by default, but must remain in the
+  backlog until its Qt dependencies, hosted build, and runtime payload are
+  verified; `already_recipe` does not prove publication. `packages/ffmpeg/`
   declares its `libav*` subpackages under `%if ! %{with freeworld_lavc}`,
   which is true by default, so those are `already_recipe`. Conditions the
   auditor cannot decide without a build target (`%ifarch`, `0%{?fedora}`)
@@ -1238,9 +1237,9 @@ the audited name is the main package, and runtime acceptance is
 `rpmspec` or a container: the `Source0` SHA-512 in `packages/ImageMagick/sources`
 was checked against the upstream tarball before locking it. Its BuildRequires
 (libheif, libjxl, libuhdr, jasper and others) are separate graph dependencies;
-a catalog record does not prove the build succeeds. The ffmpeg family,
-`LCEVCdec`, `davs2-libs` and `gstreamer1-plugins-good-qt6` stay pending in
-`[areas.codecs-media]`, so `#474` stays open.
+a catalog record does not prove the build succeeds. `LCEVCdec`, `davs2-libs`
+and `gstreamer1-plugins-good-qt6` stay in `[areas.codecs-media]` until their
+build and publication evidence is available, so `#474` stays open.
 
 ## Hand-locking an import without `rpmspec`
 
