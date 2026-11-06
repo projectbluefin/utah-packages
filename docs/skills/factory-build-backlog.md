@@ -111,6 +111,11 @@ batch issue's build, publication, dependency-resolution, or runtime acceptance.
 For a partial source-family PR, keep the batch issue open and list the remaining
 outputs and missing evidence explicitly.
 
+The `python-pysocks` Rawhide recipe disables its upstream tests because the
+`test_server` module is not packaged (see its `%check`). A successful RPM
+build does not exercise SOCKS connections: validate the installed
+`python3-pysocks` payload against a test proxy as separate runtime evidence.
+
 A 404 on a guessed dist-git name is not evidence that a source was removed
 from Fedora. Resolve the binary's actual source package first (the
 `sourcerpm` of the binary in Fedora's repodata): `python3-pyaudio` comes from
