@@ -2890,6 +2890,12 @@ packages:
     downstream_package_name: papers
     paths:
       - packages/papers
+  paps:
+    specfile_path: paps.spec
+    upstream_package_name: paps
+    downstream_package_name: paps
+    paths:
+      - packages/paps
   parallel:
     specfile_path: parallel.spec
     upstream_package_name: parallel
