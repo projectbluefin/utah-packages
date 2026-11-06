@@ -520,6 +520,13 @@ content-addressed URL that can never resolve is not a mirror.
   fallback stays. The recipe's `%prep` runs `autoreconf -ifv` (the aspell
   pkg-config patch edits `configure.ac`), so the build regenerates its own
   autotools and never depends on whoever generated the tarball's.
+  Rawhide's 2.8.21-2 drops aspell with `%bcond aspell %[... 0%{?fedora} <
+  46]` (rhbz#2564627). That does not apply here, so the recipe keeps aspell.
+  The hermetic root is Fedora 44 plus Hummingbird (`FEDORA_RELEASEVER` in
+  `tools/mock_config.py`), so `%fedora` is 44, and Fedora 44's release repo
+  carries `aspell-devel-12:0.60.8.1-7.fc44`. Neither the Fedora excludes
+  nor Hummingbird hide it; Hummingbird ships no aspell at all (its primary
+  `43ce178a...`, 2026-11-06). Re-check when `FEDORA_RELEASEVER` reaches 46.
 - noopenh264 2.6.0 -> 2.7.0: no forge feed the tool reads covers Codeberg,
   and an Anitya feed never relocks. So the primary was re-locked by hand at
   the locked version to the recipe's own `Source` (the Codeberg tag archive,
