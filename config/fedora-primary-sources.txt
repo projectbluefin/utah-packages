@@ -28,7 +28,6 @@ mozc
 mpage
 protobuf3
 ptouch-driver
-python-typing-inspection
 redhat-menus
 spandsp
 srt

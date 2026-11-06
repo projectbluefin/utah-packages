@@ -1,5 +1,5 @@
 Name:           python-typing-inspection
-Version:        0.4.4
+Version:        0.4.5
 Release:        %autorelease
 Summary:        Runtime typing introspection tools
 

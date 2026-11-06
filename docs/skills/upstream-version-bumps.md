@@ -494,14 +494,16 @@ the version; the daily run moves the lock from then on.
 Done on 2026-11-06 with matching bytes: device-mapper-persistent-data (GitHub
 archive), mozjs140 (ftp.mozilla.org), webkitgtk (webkitgtk.org), xmlrpc-c
 (SourceForge), and python-argcomplete (the PyPI `source` form). All five then
-proposed their next release.
+proposed their next release. python-typing-inspection followed once Canary
+stopped perturbing it (the PyPI `source` form, same bytes), and
+`upstream_bump.py --package python-typing-inspection --apply` then moved it
+0.4.4 -> 0.4.5; Fedora uploaded the same 0.4.5 sdist, so the rebuilt
+lookaside fallback resolves. Anitya answers HTTP 503 now and then, and the
+tool reports that as `skipped <pkg>: release-monitoring.org/...: HTTP Error
+503`; rerun it rather than editing the lock by hand.
 
-Left stuck, with the reason:
-
-- **Kept on the lookaside for Canary:** python-typing-inspection, until
-  Canary moved its perturbation to xevd (below). The upstream PyPI `source`
-  URL matches its bytes, so it is free to re-pin.
-- **The deliberate exception:** xevd and xeve. See below.
+Of the packages this re-pin left stuck, only xevd and xeve remain on the
+lookaside: they are the deliberate exception below.
 
 ### Re-locking new upstream bytes (owner decisions, 2026-11-06)
 
