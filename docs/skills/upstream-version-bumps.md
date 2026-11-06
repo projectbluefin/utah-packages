@@ -468,6 +468,64 @@ wins. grub2 was added to it with this change. Its Anitya feed makes every
 wpa_supplicant and tailscale stay off the list: they flow as same-major
 releases under the rolling policy.
 
+### Re-pinning a primary by hand, at the locked version
+
+Use this when a lock's `needs review` reason says the primary is Fedora's
+lookaside, or is filed under a content hash. Re-pin once, without changing
+the version; the daily run moves the lock from then on.
+
+1. Find the project's canonical download for the **locked** version. Usually
+   this is the spec's `Source0` with macros expanded. For PyPI, use the
+   stable form `files.pythonhosted.org/packages/source/<l>/<name>/<sdist>`,
+   which redirects to the hashed path and can be derived for the next
+   version.
+2. Stream it and compare its SHA-512 with the lock's `sha512`. Only an exact
+   match is the same tarball. On a match, set `url` to it and put the old
+   lookaside URL first in `fallback_urls`. Delete the package from
+   `config/fedora-primary-sources.txt` (the ratchet only shrinks; validate
+   fails if a non-Fedora primary is still listed). The file name, `sources`
+   manifest and spec do not change.
+3. If the bytes differ, stop. A re-pin that changes the digest is a new
+   source, not a re-pin.
+4. Check that `upstream_bump.py --package <name>` now proposes the next
+   release as an update, and that the derived URL is served. Move the version
+   in a separate commit, or let the daily run do it.
+
+Done on 2026-11-06 with matching bytes: device-mapper-persistent-data (GitHub
+archive), mozjs140 (ftp.mozilla.org), webkitgtk (webkitgtk.org), xmlrpc-c
+(SourceForge), and python-argcomplete (the PyPI `source` form). All five then
+proposed their next release.
+
+Left stuck, with the reason:
+
+- **Kept on the lookaside on purpose:** python-typing-inspection. The
+  upstream PyPI `source` URL matches its bytes, but it is Canary's perturbed
+  package. `tests/test_canary.py` requires every Canary source to stay on
+  the lookaside, so a flaky upstream host cannot fail Canary.
+- **The upstream bytes differ.**
+  - enchant2: the GitHub release asset's regenerated autotools files differ
+    from Fedora's copy.
+  - noopenh264: Codeberg's regenerated archive has the same contents but a
+    different gzip stream.
+  - samba: Fedora recompresses upstream's `.tar.gz` as `.tar.xz`
+    (`#/samba-....tar.xz` in `Source0`). The tar inside is identical.
+  - Each needs a decision to re-lock new bytes, and samba also needs a
+    recipe change.
+- **No upstream equivalent:** xevd and xeve lock Fedora-generated `-free`
+  tarballs (`*_gen_free_tarball.sh`).
+- **The next release cannot be derived from the current URL**, though the
+  current primary is already upstream:
+  - hyphen: 2.8.8 is only on SourceForge; 2.8.9 and later are GitHub
+    release assets.
+  - libao: 1.2.2 is only a git tag.
+  - linux-atm: 2.5.2 is `.tar.gz` under `linux-atm/2.5.2/`.
+  - python-pam: from 2.1.0 the sdist is `python_pam-<v>.tar.gz`.
+  - Each needs one hand version move with the new URL.
+- **A version-bound bundled file:** webkitgtk's `sources` pins
+  `webkitgtk-<version>.tar.xz.asc`, so `check_bumpable()` refuses every
+  move (`--package webkitgtk --apply` reports "its successor has to be
+  produced by hand"). Its 2.53.91 -> 2.54.2 move stays a hand bump.
+
 Left without a feed on purpose (2026-10-03): git snapshots (aribb24),
 sources with no upstream release (color-filesystem, kde-filesystem,
 kde-settings, kf5), generated sources whose `generate.input` the tool does
