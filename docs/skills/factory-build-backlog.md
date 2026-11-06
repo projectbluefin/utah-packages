@@ -343,13 +343,20 @@ that does not remove Linux headers. A successful build alone does not prove
 clipboard or display integration: test those in a SPICE guest after publication.
 
 For VMware guests, `open-vm-tools-desktop` is an unconditional subpackage of
-`open-vm-tools`; import the source family once. It needs `libmspack` for CAB
-extraction, so import that source too when neither published repository supplies
-it. Its `pkgconfig(libmspack)` BuildRequires gives the build graph the ordering
-edge; no manual stage is needed. Keep libmspack's upstream `make check` and
-Fedora's binary-content patch (`%autosetup -p2 -S git`). The main guest-tools
-recipe explicitly requires `xmlsec1-openssl`; match that provider in
-Hummingbird rather than importing a duplicate XML security library.
+`open-vm-tools`; import the source family once. Its CAB library `libmspack`
+is already a factory recipe (#846, published); do not import a second copy. Its
+`pkgconfig(libmspack)` BuildRequires gives the build graph the ordering edge; no
+manual stage is needed. The guest-tools recipe also BuildRequires
+`xmlsec1-openssl-devel`, `pkgconfig(libtirpc)`, `rpcgen`, `procps-devel` and
+`pkgconfig(gtkmm-4.0)`. None needs a recipe here: Hummingbird provides
+`xmlsec1-openssl-devel`, `libtirpc-devel` and `procps-ng-devel` (which provides
+`procps-devel` and `pkgconfig(libproc2)`), Fedora 44 provides `rpcgen` (not
+in Hummingbird), and the factory provides `gtkmm4.0-devel`. Published `quota`,
+`nfs-utils`, `oath-toolkit` and `igt-gpu-tools` already build against the same
+providers. Check a new BuildRequires against both repositories' primary
+metadata before importing a provider. The main recipe explicitly requires
+`xmlsec1-openssl`; match that provider in Hummingbird rather than importing a
+duplicate XML security library.
 
 The imported guest-tools recipe has no `%check`: its comment explains that
 `make check` regenerates a documentation font. Record that inherited limitation;
