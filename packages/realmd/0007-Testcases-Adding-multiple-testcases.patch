@@ -1,0 +1,235 @@
+From 8f0514034e3e521f27bae3b9108a249ebef32cfd Mon Sep 17 00:00:00 2001
+From: shridhargadekar <shridhar.always@gmail.com>
+Date: Fri, 5 Dec 2025 14:19:13 +0530
+Subject: [PATCH 07/20] Testcases: Adding multiple testcases
+
+Added Testcases for following scenarios:
+1. realm join --do-not-touch-config
+2.  Realm leave remove computer
+3. Realm renew command
+
+Rearranged the code, imports, doc-strigs.
+---
+ tests/test_realmd.py | 172 ++++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 163 insertions(+), 9 deletions(-)
+
+diff --git a/tests/test_realmd.py b/tests/test_realmd.py
+index c9b833d..a513fa7 100644
+--- a/tests/test_realmd.py
++++ b/tests/test_realmd.py
+@@ -1,18 +1,21 @@
++"""realmd test cases"""
++
+ from __future__ import annotations
+ 
+-import pytest
+-import time
+ import os
+ import sys
++import time
++from typing import Any
+ 
+-
+-from .topology import KnownTopology, KnownTopologyGroup
++import pytest
+ from sssd_test_framework.roles.ad import AD
+ from sssd_test_framework.roles.client import Client
+-from sssd_test_framework.roles.ipa import IPA
+ from sssd_test_framework.roles.generic import GenericADProvider
++from sssd_test_framework.roles.ipa import IPA
+ from sssd_test_framework.utils.realmd import RealmUtils
+ 
++from .topology import KnownTopology, KnownTopologyGroup
++
+ 
+ @pytest.mark.importance("critical")
+ @pytest.mark.topology(KnownTopologyGroup.AnyAD)
+@@ -38,7 +41,12 @@ def test_realm_join(client: Client, provider: Any):
+     :expectedresults:
+         1. A client system joined to the domain successfully
+     """
+-    r = client.realm.join(provider.host.domain, krb=False, user=provider.host.adminuser, password=provider.host.adminpw)
++    r = client.realm.join(
++        provider.host.domain,
++        krb=False,
++        user=f"{provider.host.adminuser}@{provider.host.domain.upper()}",
++        password=provider.host.adminpw,
++    )
+     assert r.rc == 0, "realm join operation failed!"
+     assert "Successfully enrolled machine in realm" in r.stderr, "realm failed to join client to the domain"
+ 
+@@ -48,11 +56,25 @@ def test_realm_join(client: Client, provider: Any):
+ def test_realm_leave(client: Client, provider: Any):
+     """
+     :title: realm leave
++    :setup:
++        1. Join client to the domain
+     :steps:
++        1. Leave realm
+     :expectedresults:
++        1. Client system is deconfigured for realm use
+     """
+-    client.realm.join(provider.host.domain, krb=False, user=provider.host.adminuser, password=provider.host.adminpw)
+-    r = client.realm.leave(provider.host.domain)
++    client.realm.join(
++        provider.host.domain,
++        krb=False,
++        user=f"{provider.host.adminuser}@{provider.host.domain.upper()}",
++        password=provider.host.adminpw,
++    )
++    r = client.realm.leave(
++        provider.host.domain,
++        krb=False,
++        user=f"{provider.host.adminuser}@{provider.host.domain.upper()}",
++        password=provider.host.adminpw,
++    )
+     assert r.rc == 0, "realm leave operation failed!"
+     assert "Successfully unenrolled machine from realm" in r.stderr, "realm failed to leave domain!"
+ 
+@@ -61,10 +83,142 @@ def test_realm_leave(client: Client, provider: Any):
+ @pytest.mark.topology(KnownTopologyGroup.AnyAD)
+ def test_realm_list(client: Client, provider: Any):
+     """
+-    :title: realm list
++    :title: realm list available domains
+     :steps:
++        1. Run realm list --all
+     :expectedresults:
++        1. List all configured and discovered realms
+     """
+     r = client.realm.list(args=["--all"])
+     assert r.rc == 0, "realm list operation failed!"
+     assert provider.host.domain in r.stdout, "realm failed to list domain"
++
++
++@pytest.mark.importance("critical")
++@pytest.mark.topology(KnownTopologyGroup.AnyAD)
++def test_realm_join_no_config_modification(client: Client, provider: Any):
++    """
++    :title: realm join without modifying local config
++    :steps:
++        1. Join a client system to the domain without modifying local configuration files.
++    :expectedresults:
++        1. A client system joined to the domain successfully, without modifying
++           local /etc/sssd/sssd.conf, /etc/krb5.conf.
++    """
++    config_path = {"sssd": "/etc/sssd/sssd.conf", "krb5": "/etc/krb5.conf"}
++    original_config = {"sssd": None, "krb5": None}  # original config content set to None
++
++    # Check original config file status
++    for key in config_path:
++        if client.fs.exists(config_path[key]):
++            original_config[key] = client.fs.read(config_path[key])
++        else:
++            original_config[key] = None  # config file didn't exist
++
++    r = client.realm.join(
++        provider.host.domain,
++        krb=False,
++        args=["--do-not-touch-config"],
++        user=f"{provider.host.adminuser}@{provider.host.domain.upper()}",
++        password=provider.host.adminpw,
++    )
++    assert r.rc == 0, "realm join operation failed!"
++    assert "Successfully enrolled machine in realm" in r.stderr, "realm failed to join client to the domain!"
++
++    # Using kinit -k validates that the keys in the keytab actually work against the KDC.
++    s = client.host.hostname.split('.')[0].upper()
++    p = f"{s}$@{provider.host.domain.upper()}"
++    k = client.host.conn.exec(["kinit", "-k", p])
++    assert k.rc == 0, f"kinit -k failed, keytab may be invalid or missing: {k.stderr}"
++
++    # Verify /etc/sssd/sssd.conf and /etc/krb5.conf are not modified
++    for key in original_config:
++        if original_config[key] is None:
++            assert not client.fs.exists(config_path[key]), f"{config_path[key]} was created unexpectedly!"
++        else:
++            new_conf = client.fs.read(config_path[key])
++            assert new_conf == original_config[key], f"{config_path[key]} was modified unexpectedly!"
++
++
++@pytest.mark.importance("critical")
++@pytest.mark.topology(KnownTopologyGroup.AnyAD)
++def test_realm_leave_remove_computer(client: Client, provider: Any):
++    """
++    :title: Realm leave remove computer
++    :steps:
++        1. Leave the realm with '--remove' option
++    :expectedresults:
++        2. Client computer account removed from Domain controller.
++    """
++    client.realm.join(
++        provider.host.domain,
++        krb=True,
++        user=f"{provider.host.adminuser}@{provider.host.domain.upper()}",
++        password=provider.host.adminpw,
++    )
++
++    r = client.realm.leave(
++        provider.host.domain,
++        krb=False,
++        args=["--remove"],
++        user=f"{provider.host.adminuser}@{provider.host.domain.upper()}",
++        password=provider.host.adminpw,
++    )
++
++    assert r.rc == 0, "realm leave operation failed!"
++    assert "Successfully unenrolled machine from realm" in r.stderr, "realm failed to leave domain!"
++
++    s = client.adcli.show_computer(
++        domain=provider.host.domain,
++        args=["--login-user", "Administrator", "--verbose"],
++        login_user="Administrator",
++        krb=False,
++        password=provider.host.adminpw,
++    )
++
++    assert s.rc != 0, "computer account exists!"
++
++
++@pytest.mark.importance("critical")
++@pytest.mark.topology(KnownTopologyGroup.AnyAD)
++def test_realm_renew(client: Client, provider: GenericADProvider):
++    """
++    :title: Realm renew command
++    :setup:
++        1. Join client to AD
++        2. Get the kvno number from hostkeytab
++    :steps:
++        1.Renew host-keytab with
++    :expectedresults:
++        1. Host-keytab is renewed
++    """
++    client.realm.join(
++        provider.host.domain,
++        krb=False,
++        user=provider.host.adminuser,
++        args=["--membership-software=adcli"],
++        password=provider.host.adminpw,
++    )
++
++    def get_kvno() -> int:
++        """Helper to get the current kvno from the keytab."""
++        klist_cmd = client.host.conn.exec(["klist", "-kt"])
++        assert klist_cmd.rc == 0, f"klist -kt failed: {klist_cmd.stderr}!"
++        # Parse klist output to find the kvno
++        kvno = []
++        for line in klist_cmd.stdout_lines:
++            line = line.strip()
++            if line.split()[0].isnumeric():
++                kvno.append(int(line.split()[0]))
++        return max(kvno)
++        raise ValueError("Could not parse kvno from klist output.")
++
++    old_kvno = get_kvno()
++
++    # Renew host-keytab
++    renew_cmd = client.realm.renew(provider.host.domain, args=["--computer-password-lifetime=0"])
++    assert renew_cmd.rc == 0, f"realm renew failed: {renew_cmd.stderr}!"
++
++    new_kvno = get_kvno()
++
++    assert new_kvno > old_kvno, "Keytab was not renewed (kvno did not increase).!"
+-- 
+2.54.0
+

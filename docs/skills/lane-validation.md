@@ -166,6 +166,18 @@ pass is reported on the pull request and the check stays red. The press holds a
 runner for as long as that run takes (about half an hour). A push after review
 changes the head, so the old proof no longer applies.
 
+The proof cannot survive on a fork pull request that `main` keeps overtaking:
+`main` requires branches to be up to date, each merge from `main` is a new
+head, and the hive cannot update a fork branch once `main` changes
+`.github/workflows/` (its App has no `workflows` permission). In that case,
+and for a fork pull request that itself changes `.github/`, a maintainer
+re-homes it instead. The maintainer creates `hive/adopt-<N>` from `main`,
+cherry-picks only the pull request's own non-merge commits with `--signoff`
+(authorship is preserved), resolves conflicts, runs `just check`, opens a new
+pull request naming the original author, then links and closes the original.
+An in-repository branch runs `Canary` with its own credentials, so no dispatch
+is needed (#812 → #892, #877 → #893, #862).
+
 ## Canary in the merge queue
 
 `Canary`, `Unit tests` and `Runtime contract` also run on `merge_group`, so a

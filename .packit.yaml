@@ -4,6 +4,12 @@ actions:
   create-archive:
     - bash -c 'python3 "$(git rev-parse --show-toplevel)/tools/packit_source0.py"'
 packages:
+  7zip:
+    specfile_path: 7zip.spec
+    upstream_package_name: 7zip
+    downstream_package_name: 7zip
+    paths:
+      - packages/7zip
   ImageMagick:
     specfile_path: ImageMagick.spec
     upstream_package_name: ImageMagick
@@ -226,6 +232,12 @@ packages:
     downstream_package_name: borgbackup
     paths:
       - packages/borgbackup
+  braille-printer-app:
+    specfile_path: braille-printer-app.spec
+    upstream_package_name: braille-printer-app
+    downstream_package_name: braille-printer-app
+    paths:
+      - packages/braille-printer-app
   brltty:
     specfile_path: brltty.spec
     upstream_package_name: brltty
@@ -310,6 +322,12 @@ packages:
     downstream_package_name: containerd
     paths:
       - packages/containerd
+  criu:
+    specfile_path: criu.spec
+    upstream_package_name: criu
+    downstream_package_name: criu
+    paths:
+      - packages/criu
   cryfs:
     specfile_path: cryfs.spec
     upstream_package_name: cryfs
@@ -346,6 +364,12 @@ packages:
     downstream_package_name: davfs2
     paths:
       - packages/davfs2
+  davs2:
+    specfile_path: davs2.spec
+    upstream_package_name: davs2
+    downstream_package_name: davs2
+    paths:
+      - packages/davs2
   dconf:
     specfile_path: dconf.spec
     upstream_package_name: dconf
@@ -364,6 +388,12 @@ packages:
     downstream_package_name: desktop-file-utils
     paths:
       - packages/desktop-file-utils
+  device-mapper-multipath:
+    specfile_path: device-mapper-multipath.spec
+    upstream_package_name: device-mapper-multipath
+    downstream_package_name: device-mapper-multipath
+    paths:
+      - packages/device-mapper-multipath
   device-mapper-persistent-data:
     specfile_path: device-mapper-persistent-data.spec
     upstream_package_name: device-mapper-persistent-data
@@ -1174,12 +1204,42 @@ packages:
     downstream_package_name: ibus
     paths:
       - packages/ibus
+  ibus-anthy:
+    specfile_path: ibus-anthy.spec
+    upstream_package_name: ibus-anthy
+    downstream_package_name: ibus-anthy
+    paths:
+      - packages/ibus-anthy
   ibus-chewing:
     specfile_path: ibus-chewing.spec
     upstream_package_name: ibus-chewing
     downstream_package_name: ibus-chewing
     paths:
       - packages/ibus-chewing
+  ibus-hangul:
+    specfile_path: ibus-hangul.spec
+    upstream_package_name: ibus-hangul
+    downstream_package_name: ibus-hangul
+    paths:
+      - packages/ibus-hangul
+  ibus-libpinyin:
+    specfile_path: ibus-libpinyin.spec
+    upstream_package_name: ibus-libpinyin
+    downstream_package_name: ibus-libpinyin
+    paths:
+      - packages/ibus-libpinyin
+  ibus-m17n:
+    specfile_path: ibus-m17n.spec
+    upstream_package_name: ibus-m17n
+    downstream_package_name: ibus-m17n
+    paths:
+      - packages/ibus-m17n
+  ibus-typing-booster:
+    specfile_path: ibus-typing-booster.spec
+    upstream_package_name: ibus-typing-booster
+    downstream_package_name: ibus-typing-booster
+    paths:
+      - packages/ibus-typing-booster
   ibus-unikey:
     specfile_path: ibus-unikey.spec
     upstream_package_name: ibus-unikey
@@ -1348,6 +1408,12 @@ packages:
     downstream_package_name: kf5
     paths:
       - packages/kf5
+  kf6-karchive:
+    specfile_path: kf6-karchive.spec
+    upstream_package_name: kf6-karchive
+    downstream_package_name: kf6-karchive
+    paths:
+      - packages/kf6-karchive
   kyotocabinet:
     specfile_path: kyotocabinet.spec
     upstream_package_name: kyotocabinet
@@ -1660,6 +1726,12 @@ packages:
     downstream_package_name: libdc1394
     paths:
       - packages/libdc1394
+  libde265:
+    specfile_path: libde265.spec
+    upstream_package_name: libde265
+    downstream_package_name: libde265
+    paths:
+      - packages/libde265
   libdecor:
     specfile_path: libdecor.spec
     upstream_package_name: libdecor
@@ -2194,6 +2266,12 @@ packages:
     downstream_package_name: libraw1394
     paths:
       - packages/libraw1394
+  libreport:
+    specfile_path: libreport.spec
+    upstream_package_name: libreport
+    downstream_package_name: libreport
+    paths:
+      - packages/libreport
   librist:
     specfile_path: librist.spec
     upstream_package_name: librist
@@ -2764,6 +2842,12 @@ packages:
     downstream_package_name: oddjob
     paths:
       - packages/oddjob
+  open-vm-tools:
+    specfile_path: open-vm-tools.spec
+    upstream_package_name: open-vm-tools
+    downstream_package_name: open-vm-tools
+    paths:
+      - packages/open-vm-tools
   openal-soft:
     specfile_path: openal-soft.spec
     upstream_package_name: openal-soft
@@ -2890,6 +2974,12 @@ packages:
     downstream_package_name: papers
     paths:
       - packages/papers
+  paps:
+    specfile_path: paps.spec
+    upstream_package_name: paps
+    downstream_package_name: paps
+    paths:
+      - packages/paps
   parallel:
     specfile_path: parallel.spec
     upstream_package_name: parallel
@@ -3166,6 +3256,12 @@ packages:
     downstream_package_name: python-h11
     paths:
       - packages/python-h11
+  python-html2text:
+    specfile_path: python-html2text.spec
+    upstream_package_name: python-html2text
+    downstream_package_name: python-html2text
+    paths:
+      - packages/python-html2text
   python-jaraco-classes:
     specfile_path: python-jaraco-classes.spec
     upstream_package_name: python-jaraco-classes
@@ -3202,6 +3298,12 @@ packages:
     downstream_package_name: python-llfuse
     paths:
       - packages/python-llfuse
+  python-more-itertools:
+    specfile_path: python-more-itertools.spec
+    upstream_package_name: python-more-itertools
+    downstream_package_name: python-more-itertools
+    paths:
+      - packages/python-more-itertools
   python-msgpack:
     specfile_path: python-msgpack.spec
     upstream_package_name: python-msgpack
@@ -3268,12 +3370,24 @@ packages:
     downstream_package_name: python-pyinotify
     paths:
       - packages/python-pyinotify
+  python-pysocks:
+    specfile_path: python-pysocks.spec
+    upstream_package_name: python-pysocks
+    downstream_package_name: python-pysocks
+    paths:
+      - packages/python-pysocks
   python-pyudev:
     specfile_path: python-pyudev.spec
     upstream_package_name: python-pyudev
     downstream_package_name: python-pyudev
     paths:
       - packages/python-pyudev
+  python-shtab:
+    specfile_path: python-shtab.spec
+    upstream_package_name: python-shtab
+    downstream_package_name: python-shtab
+    paths:
+      - packages/python-shtab
   python-six:
     specfile_path: python-six.spec
     upstream_package_name: python-six
@@ -3292,6 +3406,12 @@ packages:
     downstream_package_name: python-versioneer
     paths:
       - packages/python-versioneer
+  qemu:
+    specfile_path: qemu.spec
+    upstream_package_name: qemu
+    downstream_package_name: qemu
+    paths:
+      - packages/qemu
   qpdf:
     specfile_path: qpdf.spec
     upstream_package_name: qpdf
@@ -3328,12 +3448,24 @@ packages:
     downstream_package_name: range-v3
     paths:
       - packages/range-v3
+  rclone:
+    specfile_path: rclone.spec
+    upstream_package_name: rclone
+    downstream_package_name: rclone
+    paths:
+      - packages/rclone
   re2:
     specfile_path: re2.spec
     upstream_package_name: re2
     downstream_package_name: re2
     paths:
       - packages/re2
+  realmd:
+    specfile_path: realmd.spec
+    upstream_package_name: realmd
+    downstream_package_name: realmd
+    paths:
+      - packages/realmd
   redhat-menus:
     specfile_path: redhat-menus.spec
     upstream_package_name: redhat-menus
@@ -3346,12 +3478,24 @@ packages:
     downstream_package_name: rest
     paths:
       - packages/rest
+  restic:
+    specfile_path: restic.spec
+    upstream_package_name: restic
+    downstream_package_name: restic
+    paths:
+      - packages/restic
   rpcbind:
     specfile_path: rpcbind.spec
     upstream_package_name: rpcbind
     downstream_package_name: rpcbind
     paths:
       - packages/rpcbind
+  rpm-ostree:
+    specfile_path: rpm-ostree.spec
+    upstream_package_name: rpm-ostree
+    downstream_package_name: rpm-ostree
+    paths:
+      - packages/rpm-ostree
   rsync:
     specfile_path: rsync.spec
     upstream_package_name: rsync
@@ -3424,6 +3568,12 @@ packages:
     downstream_package_name: sassc
     paths:
       - packages/sassc
+  satyr:
+    specfile_path: satyr.spec
+    upstream_package_name: satyr
+    downstream_package_name: satyr
+    paths:
+      - packages/satyr
   sbc:
     specfile_path: sbc.spec
     upstream_package_name: sbc
@@ -3496,6 +3646,12 @@ packages:
     downstream_package_name: snowball
     paths:
       - packages/snowball
+  solaar:
+    specfile_path: solaar.spec
+    upstream_package_name: solaar
+    downstream_package_name: solaar
+    paths:
+      - packages/solaar
   sonic:
     specfile_path: sonic.spec
     upstream_package_name: sonic
@@ -3508,6 +3664,12 @@ packages:
     downstream_package_name: sord
     paths:
       - packages/sord
+  sos:
+    specfile_path: sos.spec
+    upstream_package_name: sos
+    downstream_package_name: sos
+    paths:
+      - packages/sos
   sound-theme-freedesktop:
     specfile_path: sound-theme-freedesktop.spec
     upstream_package_name: sound-theme-freedesktop

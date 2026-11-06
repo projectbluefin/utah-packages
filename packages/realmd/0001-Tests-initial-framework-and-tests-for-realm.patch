@@ -1,0 +1,538 @@
+From 2c9f029ccc486449878742420b524d3576ceb692 Mon Sep 17 00:00:00 2001
+From: shridhargadekar <shridhar.always@gmail.com>
+Date: Mon, 2 Jun 2025 22:07:48 +0530
+Subject: [PATCH 01/20] Tests: initial framework and tests for realm
+
+Initial framework related configurations. Elementary testcases
+to test fundamental methods of realm
+
+Reviewed-by: Jakub Vavra <jvavra@redhat.com>
+Reviewed-by: Sumit Bose <sbose@redhat.com>
+---
+ tests/__init__.py             |   0
+ tests/conftest.py             |  20 +++++++
+ tests/mhc.yaml                |  48 +++++++++++++++
+ tests/pyproject.toml          |  18 ++++++
+ tests/pytest.ini              |  15 +++++
+ tests/readme.pytest           |  28 +++++++++
+ tests/requirements.txt        |   7 +++
+ tests/setup.cfg               |  12 ++++
+ tests/test_realmd.py          |  70 ++++++++++++++++++++++
+ tests/topology.py             | 109 +++++++++++++++++++++++++++++++++
+ tests/topology_controllers.py | 110 ++++++++++++++++++++++++++++++++++
+ 11 files changed, 437 insertions(+)
+ create mode 100644 tests/__init__.py
+ create mode 100644 tests/conftest.py
+ create mode 100644 tests/mhc.yaml
+ create mode 100644 tests/pyproject.toml
+ create mode 100644 tests/pytest.ini
+ create mode 100644 tests/readme.pytest
+ create mode 100644 tests/requirements.txt
+ create mode 100644 tests/setup.cfg
+ create mode 100644 tests/test_realmd.py
+ create mode 100644 tests/topology.py
+ create mode 100644 tests/topology_controllers.py
+
+diff --git a/tests/__init__.py b/tests/__init__.py
+new file mode 100644
+index 0000000..e69de29
+diff --git a/tests/conftest.py b/tests/conftest.py
+new file mode 100644
+index 0000000..c53ae5f
+--- /dev/null
++++ b/tests/conftest.py
+@@ -0,0 +1,20 @@
++# Configuration file for multihost tests.
++
++from __future__ import annotations
++
++from pytest_mh import MultihostPlugin
++from sssd_test_framework.config import SSSDMultihostConfig
++
++# Load additional plugins
++pytest_plugins = (
++    "pytest_importance",
++    "pytest_mh",
++    "pytest_ticket",
++    "sssd_test_framework.fixtures",
++    "sssd_test_framework.markers",
++)
++
++
++def pytest_plugin_registered(plugin) -> None:
++    if isinstance(plugin, MultihostPlugin):
++        plugin.config_class = SSSDMultihostConfig
+diff --git a/tests/mhc.yaml b/tests/mhc.yaml
+new file mode 100644
+index 0000000..176173f
+--- /dev/null
++++ b/tests/mhc.yaml
+@@ -0,0 +1,48 @@
++domains:
++- id: sssd
++  hosts:
++  - hostname: client.test
++    role: client
++    artifacts:
++    - /etc/sssd/*
++    - /var/log/sssd/*
++    - /var/lib/sss/db/*
++
++  - hostname: dc.ad.test
++    role: ad
++    os:
++      family: windows
++    conn:
++      type: ssh
++      username: Administrator@ad.test
++      password: vagrant
++    config:
++      adminpw: vagrant
++      client:
++        ad_domain: ad.test
++
++  - hostname: dc.samba.test
++    role: samba
++    config:
++      binddn: CN=Administrator,CN=Users,DC=samba,DC=test
++      bindpw: Secret123
++      client:
++        ad_domain: samba.test
++        krb5_keytab: /var/enrollment/samba.test.keytab
++        ldap_krb5_keytab: /var/enrollment/samba.test.keytab
++
++  - hostname: master.ipa.test
++    role: ipa
++    config:
++      client:
++        ipa_domain: ipa.test
++        krb5_keytab: /var/enrollment/ipa.test.keytab
++        ldap_krb5_keytab: /var/enrollment/ipa.test.keytab
++    artifacts:
++    - /etc/sssd/*
++    - /var/log/dirsrv/*
++    - /var/log/httpd/*
++    - /var/log/ipa/*
++    - /var/log/krb5kdc.log
++    - /var/log/sssd/*
++    - /var/lib/sss/db/*
+diff --git a/tests/pyproject.toml b/tests/pyproject.toml
+new file mode 100644
+index 0000000..3cfce46
+--- /dev/null
++++ b/tests/pyproject.toml
+@@ -0,0 +1,18 @@
++[tool.mypy]
++exclude = "docs"
++
++[[tool.mypy.overrides]]
++module = "jc.*"
++ignore_missing_imports = true
++
++[[tool.mypy.overrides]]
++module = "ldap.*"
++ignore_missing_imports = true
++
++[tool.isort]
++line_length = 119
++profile = "black"
++add_imports = "from __future__ import annotations"
++
++[tool.black]
++line-length = 119
+diff --git a/tests/pytest.ini b/tests/pytest.ini
+new file mode 100644
+index 0000000..397817d
+--- /dev/null
++++ b/tests/pytest.ini
+@@ -0,0 +1,15 @@
++# For marker descriptions please look at https://tests.sssd.io/en/latest/marks.html
++[pytest]
++addopts = --strict-markers
++testpaths = .
++markers =
++    discover:
++    list:
++    join:
++    leave:
++    contains_workaround_for(gh=...,bz=...):
++    permit:
++    deny:
++    config:
++ticket_tools = bz,gh,jira
++
+diff --git a/tests/readme.pytest b/tests/readme.pytest
+new file mode 100644
+index 0000000..93b1c1e
+--- /dev/null
++++ b/tests/readme.pytest
+@@ -0,0 +1,28 @@
++# realm integration tests
++
++These tests will cover test scenarios for realm perform actions on a Domain-Controller.
++
++## Set up environment and install requirements
++** Refer following to set up environment
++```
++https://tests.sssd.io/en/latest/running-tests.html
++https://github.com/SSSD/sssd-ci-containers
++```
++
++** Setup python virtual environment**
++```
++python3 -m venv .venv
++source .venv/bin/activate
++```
++
++** Setup sssd-test-framework **
++```
++pip install -r requirements.txt
++```
++
++## To run tests from inside realmd/tests
++```
++# pytest --mh-config=mhc.yaml --mh-lazy-ssh -v
++Or
++# pytest --mh-config=mhc.yaml  --mh-log-path=/dev/stderr --pdb test_realmd.py
++````
+diff --git a/tests/requirements.txt b/tests/requirements.txt
+new file mode 100644
+index 0000000..d2c5ddf
+--- /dev/null
++++ b/tests/requirements.txt
+@@ -0,0 +1,7 @@
++flaky
++pytest
++git+https://github.com/next-actions/pytest-importance
++git+https://github.com/next-actions/pytest-mh
++git+https://github.com/next-actions/pytest-ticket
++git+https://github.com/next-actions/pytest-output
++git+https://github.com/SSSD/sssd-test-framework
+diff --git a/tests/setup.cfg b/tests/setup.cfg
+new file mode 100644
+index 0000000..8ef0a96
+--- /dev/null
++++ b/tests/setup.cfg
+@@ -0,0 +1,12 @@
++[metadata]
++description-file = readme.md
++
++[flake8]
++max-line-length = 119
++ignore = E203,W503
++exclude = .venv
++
++[pycodestyle]
++max-line-length = 119
++ignore = E203,W503
++exclude = .venv
+diff --git a/tests/test_realmd.py b/tests/test_realmd.py
+new file mode 100644
+index 0000000..c9b833d
+--- /dev/null
++++ b/tests/test_realmd.py
+@@ -0,0 +1,70 @@
++from __future__ import annotations
++
++import pytest
++import time
++import os
++import sys
++
++
++from .topology import KnownTopology, KnownTopologyGroup
++from sssd_test_framework.roles.ad import AD
++from sssd_test_framework.roles.client import Client
++from sssd_test_framework.roles.ipa import IPA
++from sssd_test_framework.roles.generic import GenericADProvider
++from sssd_test_framework.utils.realmd import RealmUtils
++
++
++@pytest.mark.importance("critical")
++@pytest.mark.topology(KnownTopologyGroup.AnyAD)
++def test_realm_discover(client: Client, provider: Any):
++    """
++    :title: realm discover a domain
++    :steps:
++        1. Request information about a domain
++    :expectedresults:
++        1. Information about a domain is retrieved
++    """
++    r = client.realm.discover(provider.host.domain, args=["--all", "--verbose"])
++    assert provider.host.domain in r.stdout, "realm failed to discover domain info"
++
++
++@pytest.mark.importance("critical")
++@pytest.mark.topology(KnownTopologyGroup.AnyAD)
++def test_realm_join(client: Client, provider: Any):
++    """
++    :title: realm join
++    :steps:
++        1. Join a client system to the domain
++    :expectedresults:
++        1. A client system joined to the domain successfully
++    """
++    r = client.realm.join(provider.host.domain, krb=False, user=provider.host.adminuser, password=provider.host.adminpw)
++    assert r.rc == 0, "realm join operation failed!"
++    assert "Successfully enrolled machine in realm" in r.stderr, "realm failed to join client to the domain"
++
++
++@pytest.mark.importance("critical")
++@pytest.mark.topology(KnownTopologyGroup.AnyAD)
++def test_realm_leave(client: Client, provider: Any):
++    """
++    :title: realm leave
++    :steps:
++    :expectedresults:
++    """
++    client.realm.join(provider.host.domain, krb=False, user=provider.host.adminuser, password=provider.host.adminpw)
++    r = client.realm.leave(provider.host.domain)
++    assert r.rc == 0, "realm leave operation failed!"
++    assert "Successfully unenrolled machine from realm" in r.stderr, "realm failed to leave domain!"
++
++
++@pytest.mark.importance("critical")
++@pytest.mark.topology(KnownTopologyGroup.AnyAD)
++def test_realm_list(client: Client, provider: Any):
++    """
++    :title: realm list
++    :steps:
++    :expectedresults:
++    """
++    r = client.realm.list(args=["--all"])
++    assert r.rc == 0, "realm list operation failed!"
++    assert provider.host.domain in r.stdout, "realm failed to list domain"
+diff --git a/tests/topology.py b/tests/topology.py
+new file mode 100644
+index 0000000..7d85910
+--- /dev/null
++++ b/tests/topology.py
+@@ -0,0 +1,109 @@
++"""SSSD predefined well-known topologies."""
++
++from __future__ import annotations
++
++from enum import unique
++from typing import final
++
++from pytest_mh import KnownTopologyBase, KnownTopologyGroupBase, Topology, TopologyDomain
++
++from sssd_test_framework.config import SSSDTopologyMark
++from .topology_controllers import (
++    ADTopologyController,
++    IPATopologyController,
++    SambaTopologyController,
++)
++
++__all__ = [
++    "KnownTopology",
++    "KnownTopologyGroup",
++]
++
++
++@final
++@unique
++class KnownTopology(KnownTopologyBase):
++    """
++    Well-known topologies that can be given to ``pytest.mark.topology``
++    directly. It is expected to use these values in favor of providing
++    custom marker values.
++
++    .. code-block:: python
++        :caption: Example usage
++
++        @pytest.mark.topology(KnownTopology.LDAP)
++        def test_ldap(client: Client, ldap: LDAP):
++            assert True
++    """
++
++    """
++    Client = SSSDTopologyMark(
++        name="client",
++        topology=Topology(TopologyDomain("sssd", client=1)),
++        controller=ClientTopologyController(),
++        fixtures=dict(client="sssd.client[0]"),
++    )
++    """
++    """
++    .. topology-mark:: KnownTopology.Client
++    """
++
++    AD = SSSDTopologyMark(
++        name="ad",
++        topology=Topology(TopologyDomain("sssd", client=1, ad=1)),
++        controller=ADTopologyController(),
++        domains=dict(test="sssd.ad[0]"),
++        fixtures=dict(client="sssd.client[0]", ad="sssd.ad[0]", provider="sssd.ad[0]"),
++    )
++    """
++    .. topology-mark:: KnownTopology.AD
++    """
++
++    Samba = SSSDTopologyMark(
++        name="samba",
++        topology=Topology(TopologyDomain("sssd", client=1, samba=1)),
++        controller=SambaTopologyController(),
++        domains={"test": "sssd.samba[0]"},
++        fixtures=dict(client="sssd.client[0]", samba="sssd.samba[0]", provider="sssd.samba[0]"),
++    )
++    """
++    .. topology-mark:: KnownTopology.Samba
++    """
++
++    IPA = SSSDTopologyMark(
++        name="ipa",
++        topology=Topology(TopologyDomain("sssd", client=1, ipa=1)),
++        controller=IPATopologyController(),
++        domains=dict(test="sssd.ipa[0]"),
++        fixtures=dict(client="sssd.client[0]", ipa="sssd.ipa[0]", provider="sssd.ipa[0]"),
++    )
++    """
++    .. topology-mark:: KnownTopology.IPA
++    """
++
++
++class KnownTopologyGroup(KnownTopologyGroupBase):
++    """
++    Groups of well-known topologies that can be given to ``pytest.mark.topology``
++    directly. It is expected to use these values in favor of providing
++    custom marker values.
++
++    The test is parametrized and runs multiple times, once per each topology.
++
++    .. code-block:: python
++        :caption: Example usage (runs on AD, IPA, LDAP and Samba topology)
++
++        @pytest.mark.topology(KnownTopologyGroup.AnyProvider)
++        def test_ldap(client: Client, provider: GenericProvider):
++            assert True
++    """
++
++    AnyAD = [KnownTopology.AD, KnownTopology.Samba]
++    """
++    .. topology-mark:: KnownTopologyGroup.AnyAD
++    """
++
++    AnyProvider = [KnownTopology.AD, KnownTopology.Samba]
++    """
++    .. topology-mark:: KnownTopologyGroup.AnyProvider
++    """
+diff --git a/tests/topology_controllers.py b/tests/topology_controllers.py
+new file mode 100644
+index 0000000..73a5c49
+--- /dev/null
++++ b/tests/topology_controllers.py
+@@ -0,0 +1,110 @@
++from __future__ import annotations
++
++from pytest_mh import BackupTopologyController
++from pytest_mh.conn import ProcessResult
++
++from sssd_test_framework.config import SSSDMultihostConfig
++from sssd_test_framework.hosts.ad import ADHost
++from sssd_test_framework.hosts.client import ClientHost
++from sssd_test_framework.hosts.samba import SambaHost
++from sssd_test_framework.hosts.ipa import IPAHost
++from sssd_test_framework.misc.ssh import retry_command
++
++__all__ = [
++    "ADTopologyController",
++    "SambaTopologyController",
++    "IPATopologyController",
++]
++
++
++class ProvisionedBackupTopologyController(BackupTopologyController[SSSDMultihostConfig]):
++    """
++    Provide basic restore functionality for topologies.
++    """
++
++    def __init__(self) -> None:
++        super().__init__()
++
++        self.provisioned: bool = False
++
++    def init(self, *args, **kwargs):
++        super().init(*args, **kwargs)
++        self.provisioned = self.name in self.multihost.provisioned_topologies
++
++    def topology_teardown(self) -> None:
++        if self.provisioned:
++            return
++
++        super().topology_teardown()
++
++    def teardown(self) -> None:
++        if self.provisioned:
++            self.restore_vanilla()
++            return
++
++        super().teardown()
++
++
++class ClientTopologyController(ProvisionedBackupTopologyController):
++    """
++    Client Topology Controller.
++    """
++
++    pass
++
++
++class ADTopologyController(ProvisionedBackupTopologyController):
++    """
++    AD Topology Controller.
++    """
++
++    @BackupTopologyController.restore_vanilla_on_error
++    def topology_setup(self, client: ClientHost, provider: ADHost) -> None:
++        if self.provisioned:
++            self.logger.info(f"Topology '{self.name}' is already provisioned")
++            return
++
++        # Remove any existing Kerberos configuration and keytab
++        client.fs.rm("/etc/krb5.conf")
++        client.fs.rm("/etc/krb5.keytab")
++
++        # Backup so we can restore to this state after each test
++        super().topology_setup()
++
++
++class IPATopologyController(ProvisionedBackupTopologyController):
++    """
++    IPA Topology Controller.
++    """
++
++    @BackupTopologyController.restore_vanilla_on_error
++    def topology_setup(self, client: ClientHost, ipa: IPAHost) -> None:
++        if self.provisioned:
++            self.logger.info(f"Topology '{self.name}' is already provisioned")
++            return
++
++        #self.logger.info(f"Enrolling {client.hostname} into {ipa.domain}")
++        self.logger.info(f"{client.hostname} into {ipa.domain}")
++        self.logger.info("**************************"*77)
++
++        # Remove any existing Kerberos configuration and keytab
++        client.fs.rm("/etc/krb5.conf")
++        client.fs.rm("/etc/krb5.keytab")
++
++        # Backup ipa-client-install files
++        client.fs.backup("/etc/ipa")
++        client.fs.backup("/var/lib/ipa-client")
++
++        # Join ipa domain
++        #client.conn.exec(["realm", "leave", ipa.domain], input=ipa.adminpw)
++
++        # Backup so we can restore to this state after each test
++        super().topology_setup()
++
++
++class SambaTopologyController(ADTopologyController):
++    """
++    Samba Topology Controller.
++    """
++
++    pass
+-- 
+2.54.0
+

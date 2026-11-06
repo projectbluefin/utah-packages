@@ -1,0 +1,15 @@
+summary: Basic smoke test for libreport
+prepare:
+    how: install
+    # Do not attempt to install conflicting subpackages.
+    exclude:
+        - abrt-atomic
+        - abrt-java-connector-container
+        - python3-abrt-container-addon
+    # Prerequisite for smoke testing liblibreport.
+    package:
+        - gcc
+execute:
+    script: |
+        tests/library-smoke.sh
+        report-cli --version

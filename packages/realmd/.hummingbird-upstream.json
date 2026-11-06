@@ -1,0 +1,8 @@
+{
+  "package": "realmd",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/realmd.git",
+  "commit": "9ec034308b8d52e19bbbb7c62986455c4695951a",
+  "tree": "d16a992f3805a1a0ea79efe67e34b630484ca735",
+  "imported_at": "2026-11-06T03:02:38.520260+00:00"
+}

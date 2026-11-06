@@ -26,7 +26,7 @@ from unittest.mock import patch
 
 from tools import generated_sources
 
-from tests.test_generated_sources import build_fpaste_archive, build_gpm_archive, build_input_archive, build_openal_soft_archive, read_archive
+from tests.test_generated_sources import build_fpaste_archive, build_gpm_archive, build_input_archive, build_openal_soft_archive, build_sevenzip_archive, read_archive
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -263,6 +263,40 @@ class BluefinArtworkGenerateTests(PackageDirMixin, unittest.TestCase):
         self.assertEqual(target.name, "bluefin-artwork-logos-9ab493b.tar.xz")
         self.assertEqual(target.read_bytes(), generated_sources._bluefin_artwork_transform(self.FILES, self.COMMIT))
         self.assertEqual(sorted(url for url, _, _ in fetch.requests), sorted(self.payloads))
+
+
+class SevenZipGenerateTests(PackageDirMixin, unittest.TestCase):
+    VERSION = "26.04"
+    URL = f"https://github.com/ip7z/7zip/archive/{VERSION}/7zip-{VERSION}.tar.gz"
+
+    def setUp(self):
+        super().setUp()
+        self.write_spec("7zip.spec", self.VERSION)
+        self.payload = build_sevenzip_archive(self.VERSION)
+
+    def test_an_unpinned_version_fails_before_any_download(self):
+        self.write_spec("7zip.spec", "1.00")
+        fetch = UrlopenRecorder({})
+        with patch.object(generated_sources.urllib.request, "urlopen", fetch):
+            with self.assertRaisesRegex(RuntimeError, "no pinned input SHA-512 for 7zip 1.00"):
+                generated_sources.generate("7zip", self.package_dir, self.out_dir)
+        self.assertEqual(fetch.requests, [])
+
+    def test_a_rerolled_upstream_archive_fails_closed_and_writes_nothing(self):
+        fetch = UrlopenRecorder({self.URL: self.payload})
+        with patch.object(generated_sources.urllib.request, "urlopen", fetch):
+            with self.assertRaisesRegex(RuntimeError, f"input archive mismatch for {self.URL}"):
+                generated_sources.generate("7zip", self.package_dir, self.out_dir)
+        self.assertEqual(list(self.out_dir.iterdir()), [])
+
+    def test_the_pinned_archive_is_transformed_into_the_named_target(self):
+        fetch = UrlopenRecorder({self.URL: self.payload})
+        with patch.object(generated_sources.urllib.request, "urlopen", fetch), \
+                patch.dict(generated_sources.SEVENZIP_INPUT_SHA512, {self.VERSION: sha512(self.payload)}):
+            target = generated_sources.generate("7zip", self.package_dir, self.out_dir)
+        self.assertEqual(target.name, f"7zip-{self.VERSION}.tar.xz")
+        self.assertEqual(target.read_bytes(), generated_sources._sevenzip_transform(self.payload, self.VERSION))
+        self.assertEqual([url for url, _, _ in fetch.requests], [self.URL])
 
 
 class OpenALSoftGenerateTests(PackageDirMixin, unittest.TestCase):

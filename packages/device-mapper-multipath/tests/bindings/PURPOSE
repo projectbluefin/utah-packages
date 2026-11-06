@@ -1,0 +1,7 @@
+make sure modify /etc/multipath/bindings changes alias
+
+steps:
+1. edit the /etc/multipath/bindings
+2. multipath -r
+check if the mpath is changed
+
