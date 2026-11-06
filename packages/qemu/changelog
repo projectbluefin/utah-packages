@@ -1,0 +1,183 @@
+* Thu Jan  9 2025 Daniel P. Berrangé <berrange@redhat.com> - 9.2.0-3
+- Fix pbkdf benchmarking on fast machines
+
+* Fri Dec 13 2024 Richard W.M. Jones <rjones@redhat.com> - 2:9.2.0-2
+- Rebuild for libnfs 6 (soname changed from 14 to 16)
+
+* Thu Dec 12 2024 Daniel P. Berrangé <berrange@redhat.com> - 9.2.0-1
+- Rebase to qemu 9.2.0
+
+* Wed Dec 11 2024 Richard W.M. Jones <rjones@redhat.com> - 2:9.2.0-0.6.rc3
+- Rebuild to fix qemu-aarch64-static SIGSEGV (RHBZ#2330793)
+
+* Fri Dec  6 2024 Daniel P. Berrangé <berrange@redhat.com> - 9.2.0-0.5.rc3
+- Rebase to qemu 9.2.0-rc3
+
+* Tue Dec 03 2024 Andrea Bolognani <abologna@redhat.com> - 9.2.0-0.4.rc1
+- Increase test timeout on riscv64
+
+* Mon Dec 02 2024 Richard W.M. Jones <rjones@redhat.com> - 9.2.0-0.3.rc1
+- Remove edk2 dependency on arm (32 bit) (RHBZ#2329331)
+
+* Fri Nov 29 2024 Daniel P. Berrangé <berrange@redhat.com> - 9.2.0-0.2.rc1
+- Fix crash querying virtio-balloon stats
+
+* Mon Nov 25 2024 Cole Robinson <crobinso@redhat.com> - 9.2.0-0.1.rc1
+- Rebase to qemu 9.2.0-rc1
+
+* Tue Nov 05 2024 Cole Robinson <crobinso@redhat.com> - 9.1.1-2
+- Fix spice audio regression with qemu 9.1.1
+
+* Thu Oct 24 2024 Cole Robinson <crobinso@redhat.com> - 9.1.1-1
+- Rebase to qemu 9.1.1 stable
+
+* Thu Oct 24 2024 Daniel P. Berrangé <berrange@redhat.com> - 9.1.0-4
+- Add openat2 support to linux-user
+- Fix compat with new glibc for 'struct sched_attr'
+
+* Wed Oct 16 2024 Daniel P. Berrangé <berrange@redhat.com> - 9.1.0-3
+- Replace BLACKLIST_RPC with QEMU_GA_ARGS in sysconfig file
+- Related rhbz #2258100
+
+* Mon Sep 16 2024 Richard W.M. Jones <rjones@redhat.com> - 2:9.1.0-2
+- Replace qemu --blacklist option with -b (related: RHBZ#2258100)
+
+* Thu Sep 05 2024 Cole Robinson <crobinso@redhat.com> - 9.1.0-1
+- New release qemu 9.1.0 GA
+
+* Thu Aug 29 2024 Cole Robinson <crobinso@redhat.com> - 9.1.0-0.3.rc4
+- New release qemu-9.1.0-rc4
+
+* Mon Aug 26 2024 Cole Robinson <crobinso@redhat.com> - 9.1.0-0.2.rc3
+- New release qemu-9.1.0-rc3
+
+* Tue Aug 20 2024 Cole Robinson <crobinso@redhat.com> - 9.1.0-0.1.rc2
+- New release qemu-9.1.0-rc2
+
+* Mon Aug 05 2024 Cole Robinson <crobinso@redhat.com> - 2:9.0.0-5
+- Fix static builds with new glib2
+- Add libdir/qemu to qemu-common (bz 2283996)
+
+* Mon Aug 05 2024 Richard W.M. Jones <rjones@redhat.com> - 2:9.0.0-4
+- Rebuild for Xen 4.19.0
+
+* Mon Jul 22 2024 Lumír Balhar <lbalhar@redhat.com> - 2:9.0.0-3
+- Add new systemtap-sdt-dtrace to build deps
+
+* Fri Jul 19 2024 Fedora Release Engineering <releng@fedoraproject.org> - 2:9.0.0-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_41_Mass_Rebuild
+
+* Wed Apr 24 2024 Cole Robinson <crobinso@redhat.com> - 9.0.0-1
+- New release qemu 9.0.0 GA
+
+* Tue Apr 23 2024 Cole Robinson <crobinso@redhat.com> - 9.0.0-0.1.rc4
+- New release qemu 9.0.0-rc4
+
+* Sat Apr 06 2024 Cole Robinson <crobinso@redhat.com> - 8.2.2-2
+- Rebuild for new libiscsi
+
+* Wed Mar 06 2024 Cole Robinson <crobinso@redhat.com> - 8.2.2-1
+- New release qemu 8.2.2
+
+* Mon Feb 26 2024 Richard W.M. Jones <rjones@redhat.com> - 2:8.2.0-9
+- ppc/spapr: Initialize max_cpus limit to SPAPR_IRQ_NR_IPIS (RHBZ#2265982)
+
+* Wed Feb 21 2024 Richard W.M. Jones <rjones@redhat.com> - 2:8.2.0-8
+- Fix user-emulation of FIFREEZE and FITHAW ioctls
+
+* Thu Feb 01 2024 Cole Robinson <crobinso@redhat.com> - 8.2.0-7
+- Enable PIE for qemu-user-static builds
+- Replace PVH build fix patch with version that should work on centos
+
+* Tue Jan 30 2024 Richard W.M. Jones <rjones@redhat.com> - 2:8.2.0-6
+- Fix builds on i686.
+
+* Fri Jan 26 2024 Fedora Release Engineering <releng@fedoraproject.org> - 2:8.2.0-4
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_40_Mass_Rebuild
+
+* Mon Jan 22 2024 Fedora Release Engineering <releng@fedoraproject.org> - 2:8.2.0-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_40_Mass_Rebuild
+
+* Fri Jan 12 2024 Daan De Meyer <daan.j.demeyer@gmail.com> - 8.2.0-2
+- Backport TCG patch that fixes OVMF boot with 4M variables
+
+* Tue Jan  9 2024 Daniel P. Berrangé <berrange@redhat.com> - 8.2.0-1
+- Update to 8.2.0 release
+- Add gpg verification of source tarball
+
+* Sat Dec  9 2023 Richard W.M. Jones <rjones@redhat.com> - 2:8.2.0-0.3.rc2
+- Further fix for Xen 4.18
+
+* Tue Dec 05 2023 Richard W.M. Jones <rjones@redhat.com> - 2:8.2.0-0.2.rc2
+- Bump and rebuild for xen 4.18.0
+
+* Sat Dec 02 2023 Cole Robinson <crobinso@redhat.com> - 8.2.0-0.1-rc2
+- Rebase to qemu 8.2.0-rc2
+
+* Wed Nov 29 2023 Richard W.M. Jones <rjones@redhat.com> - 2:8.1.2-3
+- Bump and rebuild for xen 4.18.0
+
+* Tue Nov 28 2023 Richard W.M. Jones <rjones@redhat.com> - 2:8.1.2-2
+- Bump and rebuild for capstone 5.0.1
+- Backport patch from crobinso to fix build on Rawhide
+
+* Tue Oct 17 2023 Cole Robinson <crobinso@redhat.com> - 8.1.2-1
+- Update to version 8.1.2
+
+* Tue Sep 26 2023 Cole Robinson <crobinso@redhat.com> - 8.1.1-1
+- Rebase to qemu 8.1.1
+
+* Thu Aug 24 2023 Cole Robinson <crobinso@redhat.com> - 8.1.0-2
+- Make qemu-docs noarch
+
+* Wed Aug 23 2023 Cole Robinson <crobinso@redhat.com> - 8.1.0-1
+- Rebase to qemu 8.1.0 GA
+
+* Mon Aug 21 2023 Davide Cavalca <dcavalca@fedoraproject.org> - 8.1.0-0.2-rc4
+- Adjust virtiofsd requires for el9 and older
+
+* Sun Aug 20 2023 Cole Robinson <crobinso@redhat.com> - 8.1.0-0.1-rc4
+- Rebase to qemu 8.1.0-rc4
+
+* Thu Jul 20 2023 Camilla Conte <cconte@redhat.com> - 2:8.0.3-1
+- New upstream release 8.0.3
+
+* Mon Jul 03 2023 Camilla Conte <cconte@redhat.com> - 2:8.0.2-1
+- New upstream release 8.0.2
+- Fix arabic keyboard layout name
+
+* Thu Jun 01 2023 Richard W.M. Jones <rjones@redhat.com> - 2:8.0.0-4
+- Rebuild for libnfs soname bump
+
+* Thu Apr 27 2023 Daniel P. Berrangé <berrange@redhat.com> - 8.0.0-3
+- Drop sgabios-bin requirement and related baggage
+
+* Tue Apr 25 2023 Daniel P. Berrangé <berrange@redhat.com> - 8.0.0-2
+- Obsolete qemu-virtiofsd on i686 (rhbz #2189368)
+
+* Thu Apr 20 2023 Eduardo Lima (Etrunko) <etrunko@redhat.com> - 8.0.0-1
+- Rebase to qemu 8.0.0
+
+* Wed Apr 19 2023 Eduardo Lima (Etrunko) <etrunko@redhat.com> - 7.2.1-1
+- Rebase to qemu 7.2.1
+
+* Mon Feb 27 2023 Richard W.M. Jones <rjones@redhat.com> - 7.2.0-7
+- Fix virtio-blk-pci detect-zeroes=unmap (RHBZ#2173357)
+- Fix build with glib2 2.75.3 (RHBZ#2173639)
+- Disable the tests on i686
+
+* Tue Jan 31 2023 Stefan Hajnoczi <stefanha@redhat.com> - 7.2.0-6
+- Enable libblkio
+
+* Fri Jan 20 2023 Fedora Release Engineering <releng@fedoraproject.org> - 2:7.2.0-5
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_38_Mass_Rebuild
+
+* Wed Jan 11 2023 Richard W.M. Jones <rjones@redhat.com> - 2:7.2.0-4
+- Rebuild for xen-4.17.0, second attempt
+
+* Tue Jan 10 2023 Daniel P. Berrangé <berrange@redhat.com> - 7.2.0-3
+- Fix compat with linux > 6.1 headers
+- Re-enable iotests
+
+* Tue Jan 03 2023 Richard W.M. Jones <rjones@redhat.com> - 2:7.2.0-2
+- Rebuild for xen-4.17.0
