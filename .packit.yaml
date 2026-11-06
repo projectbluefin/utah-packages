@@ -3316,6 +3316,12 @@ packages:
     downstream_package_name: python-pyinotify
     paths:
       - packages/python-pyinotify
+  python-pysocks:
+    specfile_path: python-pysocks.spec
+    upstream_package_name: python-pysocks
+    downstream_package_name: python-pysocks
+    paths:
+      - packages/python-pysocks
   python-pyudev:
     specfile_path: python-pyudev.spec
     upstream_package_name: python-pyudev
