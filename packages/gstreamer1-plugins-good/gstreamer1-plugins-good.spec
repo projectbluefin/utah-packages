@@ -23,8 +23,8 @@
 %bcond_without qt5
 %endif
 
-# Utah does not ship the Qt/QML plugin; avoid introducing the Qt WebEngine
-# closure solely to build a non-GNOME multimedia sink.
+# Keep the Qt 6 sink off until matching Qt dependencies are published and
+# a build with --with qt6 has been verified.
 %bcond_with qt6
 
 #global gitrel     140
