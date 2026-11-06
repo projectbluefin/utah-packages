@@ -117,6 +117,18 @@ class LaneTests(unittest.TestCase):
         self.assertIn('rpmspec -q --srpm --qf "%{NAME}\\n"', container)
         self.assertIn('bash /tools/check_rpm_source.sh "$expected_source" /work/result', container)
 
+    def test_the_mock_lane_guards_before_it_lists_for_upload(self) -> None:
+        workflow = (ROOT / ".github" / "workflows" / "build-stage.yml").read_text()
+        start = workflow.index("- name: Build the verified source in a mock root")
+        step = workflow[start : workflow.index("\n      - name:", start)]
+        guard = step.find("bash /tools/check_rpm_source.sh")
+        listing = step.find(UPLOAD_LISTING)
+        self.assertGreater(guard, -1, "mock lane never runs the guard")
+        self.assertGreater(listing, -1, "mock lane never lists its output")
+        self.assertLess(guard, listing, "mock lane uploads before it checks")
+        self.assertIn('/work/srpm/*.src.rpm', step[guard:listing])
+        self.assertIn('"$PWD/tools:/tools:ro,Z"', step)
+
 
 if __name__ == "__main__":
     unittest.main()
