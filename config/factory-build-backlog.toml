@@ -164,7 +164,6 @@ packages = [
     "gvfs-afp",
     "gvfs-archive",
     "intel-vaapi-driver",
-    "kf6-filesystem",
     "kf6-kimageformats",
     "kmod-v4l2loopback",
     "kvazaar-libs",
@@ -363,6 +362,8 @@ packages = [
     { name = "criu" },
     { name = "criu-libs" },
     { name = "kf6-karchive" },
+    # Recipe imported; hosted build, publication and runtime proof remain in #501.
+    { name = "kf6-filesystem" },
     { name = "ipset" },
     { name = "ipset-libs" },
     { name = "iptstate", pr = 697 },
