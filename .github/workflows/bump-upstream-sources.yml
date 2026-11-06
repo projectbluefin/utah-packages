@@ -143,6 +143,23 @@ jobs:
           CYCLE: ${{ inputs.target-cycle }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      # D9: every minimum a GNOME module's own build files declare for a
+      # dependency must be met by the factory's lock of that dependency
+      # (nautilus 51.1 asked meson for gtk4 >= 4.24.0 while gtk4 sat at
+      # 4.23.4, #565). Checked on the tree this run just bumped, so a module
+      # it moved is read with its new floors. Findings go to the job summary
+      # and as annotations; the job fails at its end, after the pull request
+      # and its gate, because an unmet floor is one dependency to move
+      # (`just gnome-dep-floors --apply`), not a reason to hold back every
+      # other bump. See docs/skills/gnome-dependency-floors.md.
+      - name: Check GNOME dependency floors
+        id: floors
+        continue-on-error: true
+        run: |
+          python3 tools/gnome_dep_floors.py --summary "$GITHUB_STEP_SUMMARY"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       # reports/multimedia-closure.json records each codec recipe's locked
       # version, so a bump that moves one leaves the committed report stale
       # and tests/test_multimedia_closure.py rejects it. Regenerate it here
@@ -250,3 +267,9 @@ jobs:
           gh workflow run bump-upstream-gate.yml -R "$REPOSITORY" \
             --ref bump/upstream-sources -f pr="$pr"
           echo "dispatched the bump gate for pull request $pr"
+
+      - name: Fail on an unmet GNOME dependency floor
+        if: steps.floors.outcome == 'failure'
+        run: |
+          echo "::error title=GNOME dependency floors::a GNOME module needs a newer dependency than the factory locks; see the 'Check GNOME dependency floors' step"
+          exit 1
