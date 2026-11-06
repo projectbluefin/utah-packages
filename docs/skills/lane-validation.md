@@ -101,11 +101,12 @@ as a substitute for maintainer review.
 A repair request naming a generic failed check can refer to this prerequisite.
 Read the failed job before changing code. Do not push an empty commit or
 rerun the fork job without proof: neither supplies the missing build evidence,
-and any new head other than a clean merge of `main` invalidates proof for the
-previous commit (see "A proven head survives merges of `main`" below). Finish
-necessary changes first, then give the maintainer the final full head SHA for
-review and dispatch. The default Canary set still does not build the imported
-recipe; that recipe needs its own scoped build and runtime acceptance evidence.
+and any new head other than a clean merge of a `main` that changed no pipeline
+path invalidates proof for the previous commit (see "A proven head survives
+merges of `main`" below). Finish necessary changes first, then give the
+maintainer the final full head SHA for review and dispatch. The default Canary
+set still does not build the imported recipe; that recipe needs its own scoped
+build and runtime acceptance evidence.
 
 A maintainer who has reviewed the diff runs **Canary for a fork pull request**
 (Actions tab, `canary-fork-pr.yml`) with the pull request number and the full
@@ -116,7 +117,8 @@ when the pull request is not open against `main`, when it changes 3000 or
 more files (GitHub's file list stops there), and when it changes
 `.github/` (workflow changes never run with this repository's credentials from
 a fork; push those by hand). A new push to the pull request needs a new
-review and a new run, unless it only merges `main` (below).
+review and a new run, unless it only merges `main` and `main` changed no
+pipeline path (below).
 
 The canary run builds the fork's code with `packages: write`, so the review is
 the security boundary, exactly as it was when a maintainer pushed the branch by
@@ -145,14 +147,15 @@ to start a fresh run on the same commit. A maintainer-run Canary that does not
 pass is reported on the pull request and the check stays red. The press holds a
 runner for as long as that run takes (about half an hour).
 
-A proven head survives merges of `main` (#862). The repository requires
-branches to be up to date, so the hive or the author merges `main` into the
-fork branch, and that new head has no run of its own: on #862 Canary passed at
-`345c7e6`, then hivecommons-hive[bot] pushed `48929a6` ("Merge branch 'main'",
-parents `345c7e6` and `main`'s `07878565`). The pull request's diff stayed the
-same, yet `Canary` went red and the hive nudged the contributor again. The fork's
-`Canary` now also accepts a passed copy at an earlier head when
-`tools/fork_canary.py carry_problem` finds nothing unreviewed between the two:
+A proven head survives merges of `main` that change no pipeline path. The
+repository requires branches to be up to date, so the hive or the author merges
+`main` into the fork branch, and that new head has no run of its own: on #862
+Canary passed at `345c7e6`, then hivecommons-hive[bot] pushed `48929a6` ("Merge
+branch 'main'", parents `345c7e6` and `main`'s `07878565`). The pull request's
+diff stayed the same, yet `Canary` went red and the hive nudged the contributor
+again. The fork's `Canary` now also accepts a passed copy at an earlier head
+when `tools/fork_canary.py carry_problem` finds nothing unreviewed and nothing
+unbuilt between the two:
 
 - the later head contains the proven one, and every commit it adds that is not
   on `main` is a two-parent merge with one parent on `main` and the other the
@@ -168,15 +171,30 @@ same, yet `Canary` went red and the hive nudged the contributor again. The fork'
   blob ids of those files differ even though nothing the pull request changes
   does;
 - the diff touches no `.github/` path (a copy pushed by hand for one is not
-  inherited), and the pull request targets `main`.
+  inherited), and the pull request targets `main`;
+- what came in from `main` between the two heads' merge bases touches no
+  pipeline path (`pipeline_changes`). The Canary built the proven head with
+  `main`'s pipeline as it was then, so a merged pipeline change was never built
+  with the pull request (#900 review). Only paths the Canary neither runs nor
+  builds are exempt: `docs/`, `site/`, `tests/`, `.agents/`, `.claude/`,
+  top-level `*.md`, and recipes outside the canary set (`packages/<name>/…`).
+  Everything else counts, including `.github/`, `tools/`, `Justfile`,
+  `config/` (the recipe-inventory exception above does not apply here),
+  `locks/`, `Containerfile`, `.packit.yaml`, `.gitattributes`, `reports/`, files
+  directly under `packages/`, and the canary set's own recipes. Otherwise the
+  notice says "main changed pipeline paths since … was built (…) … A maintainer
+  must dispatch 'Canary for a fork pull request' again with head …": do that,
+  with the new head.
 
 The `canary` job's checkout fetches the full, blobless history for this and
 executes nothing from it. When `main` was merged while the maintainer-run
 Canary was still running, the `refresh` job re-runs the new head's failed
 `Canary` once, quietly; it never closes, reopens or approves for a head nobody
-reviewed. A carried proof is the review's proof, not a build of the merged
-pipeline: if the merged `main` changed pipeline paths and you want them built
-with the pull request, dispatch the workflow again on the new head.
+reviewed.
+
+Expect this to carry over rarely: in the 60 `main` commits before #900, 56
+touched a pipeline path. #862 itself does not carry over, because `07878565`
+changed `tools/generated_sources.py`, `.packit.yaml` and `config/`.
 
 ## Canary in the merge queue
 

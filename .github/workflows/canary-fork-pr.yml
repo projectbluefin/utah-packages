@@ -26,10 +26,11 @@
 # why head_sha is mandatory.
 #
 # The proof survives a later head only when every commit after the proven one
-# is a clean merge of main that git makes by itself and the pull request's own
-# diff is unchanged (tools/fork_canary.py carry_problem): a branch kept up to
-# date with main needs no new review (#862). Any other commit, a resolved
-# conflict or an edited merge needs a new review and a new run.
+# is a clean merge of main that git makes by itself, the pull request's own
+# diff is unchanged, and what came in from main touches no pipeline path
+# (tools/fork_canary.py carry_problem): a branch kept up to date with main's
+# recipes and docs needs no new run (#862). Any other commit, a resolved
+# conflict, an edited merge, or a pipeline change on main needs a new run.
 #
 # Pull requests that change .github/ are refused: a push with GITHUB_TOKEN may
 # not carry workflow changes, and those workflows hold this repository's
@@ -127,7 +128,7 @@ jobs:
           REPOSITORY: ${{ github.repository }}
         run: |
           set -euo pipefail
-          gh pr comment "$PR" -R "$REPOSITORY" --body "Canary was run on this pull request at \`${HEAD_SHA}\` by @${ACTOR} after review, from the in-repository copy \`canary/pr-${PR}\`: https://github.com/${REPOSITORY}/actions/workflows/canary.yml?query=branch%3Acanary%2Fpr-${PR}. When that run passes, this pull request's own \`Canary\` check is re-run and turns green by itself. Merging \`main\` into the branch keeps the proof while the merge is clean and the pull request's own diff stays the same; any other new commit needs a new review and a new run."
+          gh pr comment "$PR" -R "$REPOSITORY" --body "Canary was run on this pull request at \`${HEAD_SHA}\` by @${ACTOR} after review, from the in-repository copy \`canary/pr-${PR}\`: https://github.com/${REPOSITORY}/actions/workflows/canary.yml?query=branch%3Acanary%2Fpr-${PR}. When that run passes, this pull request's own \`Canary\` check is re-run and turns green by itself. Merging \`main\` into the branch keeps the proof while the merge is clean, the pull request's own diff stays the same, and \`main\` changed no pipeline path; anything else needs a new review and a new run."
       # The copies are only needed while their pull request is open.
       - name: Delete copies of closed pull requests
         env:

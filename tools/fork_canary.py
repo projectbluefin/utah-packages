@@ -22,6 +22,10 @@ import sys
 from collections.abc import Callable, Sequence
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from tools import canary  # noqa: E402
+
 BRANCH_PREFIX = "canary/pr-"
 FULL_SHA = re.compile(r"^[0-9a-f]{40}$")
 # What a push with GITHUB_TOKEN cannot carry, and what must never come from a
@@ -38,6 +42,14 @@ BASE_GIT_REF = "refs/remotes/origin/main"
 # What a merge of main alone moves in a diff: the blob a hunk applies to and the
 # line it starts on. The hunk's own lines, context included, stay.
 HUNK_HEADER = re.compile(r"^@@ -\d+(?:,\d+)? \+\d+(?:,\d+)? @@")
+# What main may change under a carried proof: what the Canary neither runs nor
+# builds. That is docs, the site, tests, agent skills, top-level Markdown, and
+# recipes outside the canary set (packages/<name>/...). Every other path from
+# main is pipeline the proven head was never built with: .github/, tools/,
+# Justfile, config/, locks/, Containerfile, .packit.yaml, .gitattributes,
+# reports/, files directly under packages/, the canary set's own recipes, and
+# any path not named here.
+NOT_PIPELINE = ("docs/", "site/", "tests/", ".agents/", ".claude/")
 
 Git = Callable[[Sequence[str]], str]
 
@@ -141,7 +153,24 @@ def pr_patch(head: str, base: str, git: Git = _git) -> str:
     )
 
 
-def carry_problem(proven: str, head: str, base: str = BASE_GIT_REF, git: Git = _git) -> str | None:
+def pipeline_changes(names: Sequence[str], canary_set: Sequence[str]) -> list[str]:
+    """The paths among ``names`` that can change what the Canary builds or runs."""
+    built = {*canary_set, *canary.PERTURBED}
+
+    def inert(name: str) -> bool:
+        parts = name.split("/")
+        if name.startswith(NOT_PIPELINE):
+            return True
+        if len(parts) == 1:
+            return name.endswith(".md")
+        return parts[0] == "packages" and len(parts) > 2 and parts[1] not in built
+
+    return sorted({name for name in names if name and not inert(name)})
+
+
+def carry_problem(
+    proven: str, head: str, canary_set: Sequence[str], base: str = BASE_GIT_REF, git: Git = _git,
+) -> str | None:
     """Why a Canary that passed on ``proven`` does not prove ``head``; None when it does.
 
     It does only when every commit ``head`` adds after ``proven`` that is not on
@@ -149,7 +178,9 @@ def carry_problem(proven: str, head: str, base: str = BASE_GIT_REF, git: Git = _
     ``base``, the other ``proven`` or another such merge, and a tree identical to
     ``git merge-tree`` of the two, so no conflict was resolved and nothing was
     edited in the merge. The pull request's own diff must then be unchanged. That
-    leaves nothing the maintainer did not review: the rest is main's.
+    leaves nothing the maintainer did not review: the rest is main's. And what
+    main brought in, between the two heads' merge bases, must touch no pipeline
+    path: the Canary built the proven head with main's pipeline as it was then.
     """
     if git(["rev-list", "--max-count=1", proven, f"^{head}"]).strip():
         return f"{head[:12]} does not contain {proven[:12]}: it is older, or the branch was rewritten"
@@ -179,6 +210,16 @@ def carry_problem(proven: str, head: str, base: str = BASE_GIT_REF, git: Git = _
     protected = sorted(name for name in names if name.startswith(PROTECTED_PREFIX))
     if protected:
         return f"it changes {', '.join(protected)}, which never carries over; a maintainer pushes it by hand"
+    moved = git(["diff", "--no-renames", "--name-only", "-z",
+                 git(["merge-base", base, proven]).strip(), git(["merge-base", base, head]).strip()])
+    pipeline = pipeline_changes(moved.split("\0"), canary_set)
+    if pipeline:
+        shown = ", ".join(pipeline[:10]) + (f" and {len(pipeline) - 10} more" if len(pipeline) > 10 else "")
+        return (
+            f"{BASE_REF} changed pipeline paths since {proven[:12]} was built ({shown}), so Canary never "
+            f"built the merged pipeline and the proof does not carry over. A maintainer must dispatch "
+            f"'Canary for a fork pull request' again with head {head}"
+        )
     return None
 
 
@@ -188,6 +229,7 @@ def proof_main(argv: list[str], git: Git = _git) -> int:
     parser.add_argument("--pr", required=True, type=int)
     parser.add_argument("--head-sha", required=True)
     parser.add_argument("--base-ref", required=True, help="the pull request's base branch")
+    parser.add_argument("--set", required=True, type=json.loads, help="canary.yml's CANARY_SET (JSON list)")
     args = parser.parse_args(argv)
     if not FULL_SHA.fullmatch(args.head_sha):
         print(f"::error title=fork canary::not a full commit sha: {args.head_sha!r}")
@@ -207,14 +249,14 @@ def proof_main(argv: list[str], git: Git = _git) -> int:
         return 1
     for proven in heads:
         try:
-            problem = carry_problem(proven, args.head_sha, BASE_GIT_REF, git)
+            problem = carry_problem(proven, args.head_sha, args.set, BASE_GIT_REF, git)
         except (subprocess.CalledProcessError, OSError) as error:
             problem = f"git could not compare the two commits ({error})"
         if problem is None:
             print(
                 f"::notice title=fork canary::a maintainer-run Canary passed on {proven[:12]} from "
                 f"{branch_for(args.pr)}, and {args.head_sha[:12]} only merged {BASE_REF} into it "
-                "without changing the pull request's own diff"
+                "without changing the pull request's own diff or any pipeline path"
             )
             return 0
         print(f"::notice title=fork canary::the Canary that passed on {proven[:12]} does not carry "

@@ -510,8 +510,9 @@ jobs:
       # A fork pull request cannot publish, so it passes only on proof: a
       # maintainer-run Canary (canary-fork-pr.yml) that passed on exactly this
       # head commit, or on an earlier head this one only merged main into without
-      # changing the pull request's own diff (tools/fork_canary.py carry_problem;
-      # #862: a bot's "Merge branch 'main'" used to throw the proof away). The
+      # changing the pull request's own diff, while main changed no pipeline path
+      # (tools/fork_canary.py carry_problem; #862: a bot's "Merge branch 'main'"
+      # used to throw the proof away). The
       # proof is read from the API, so the fork's own run turns green by being
       # re-run after that one finishes (canary-fork-pr.yml, job refresh); the
       # check run of the dispatched run itself is not counted by the pull
@@ -553,10 +554,10 @@ jobs:
           fi
           if [ "$FORK" = true ]; then
             gh api "repos/$REPO/actions/workflows/canary.yml/runs?event=workflow_dispatch&status=completed&branch=canary/pr-${PR}&per_page=100" > proof.json
-            if python3 tools/fork_canary.py proof --runs-json proof.json --pr "$PR" --head-sha "$HEAD_SHA" --base-ref "$BASE_REF"; then
+            if python3 tools/fork_canary.py proof --runs-json proof.json --pr "$PR" --head-sha "$HEAD_SHA" --base-ref "$BASE_REF" --set "$CANARY_SET"; then
               exit 0
             fi
-            echo "::error::a fork pull request cannot publish the canary image, and no maintainer-run Canary has passed on ${HEAD_SHA}, or on an earlier head that this one only merged main into (the notices above say why each does not carry over). This is expected, not something the author can fix: a maintainer reviews the change, then runs the 'Canary for a fork pull request' workflow (Actions tab) with this pull request's number and head commit. This check turns green by itself when that run passes (#369)" >&2
+            echo "::error::a fork pull request cannot publish the canary image, and no maintainer-run Canary has passed on ${HEAD_SHA}, or on an earlier head that this one only merged main into without main changing a pipeline path (the notices above say why each does not carry over). This is expected, not something the author can fix: a maintainer reviews the change, then runs the 'Canary for a fork pull request' workflow (Actions tab) with this pull request's number and head commit. This check turns green by itself when that run passes (#369)" >&2
             exit 1
           fi
           echo "$RESULTS" | jq -r 'to_entries[] | "\(.key): \(.value.result)"'
