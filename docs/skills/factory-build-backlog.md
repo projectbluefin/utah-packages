@@ -137,6 +137,13 @@ recipe builds an unrelated, header-only EBNF library and does not provide
 `libell`. Check the binary's `sourcerpm` before inferring a source name from a
 shared prefix.
 
+`kpartx` is a binary subpackage of `device-mapper-multipath`, not a
+separate source recipe. The imported multipath recipe uses a primary upstream
+release archive and a second, SHA-512-pinned Fedora configuration file
+(`multipath.conf`) from lookaside. Both must be staged before building. Recipe
+coverage does not establish that the build, publication, dependency
+transaction, or partition mapping command succeeds; verify those separately.
+
 Before importing an audit name, read Utah's current `baselines/triage.toml` and
 pin the decision's commit when reconciling an existing `waived` entry into
 `[wontfix]`. The audit can include deliberately absent X11 client utilities

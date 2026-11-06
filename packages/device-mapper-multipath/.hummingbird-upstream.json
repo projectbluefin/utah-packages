@@ -1,0 +1,8 @@
+{
+  "package": "device-mapper-multipath",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/device-mapper-multipath.git",
+  "commit": "d95988f94fea6d40e9e06f27f740baba83374dea",
+  "tree": "6183244bf7a6b623572f0a6d0139f7899dedff56",
+  "imported_at": "2026-11-06T02:38:43.179366+00:00"
+}
