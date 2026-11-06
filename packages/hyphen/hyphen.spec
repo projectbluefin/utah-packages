@@ -1,9 +1,9 @@
 Name:          hyphen
 Summary:       A text hyphenation library
-Version:       2.8.8
-Release:       30%{?dist}
-Source:        https://downloads.sourceforge.net/hunspell/hyphen-%{version}.tar.gz
-URL:           https://sourceforge.net/projects/hunspell/
+Version:       2.8.10
+Release:       1%{?dist}
+Source:        https://github.com/hunspell/hyphen/releases/download/v%{version}/hyphen-%{version}.tar.gz
+URL:           https://github.com/hunspell/hyphen
 License:       GPL-2.0-only OR LGPL-2.1-or-later OR MPL-1.1
 BuildRequires: perl-interpreter
 BuildRequires: libtool
@@ -50,6 +50,9 @@ done
 popd
 
 %check
+# Fedora 2.8.10 masks both runs with `||:` because boundary.test fails on
+# ppc64le. This factory does not build ppc64le, and tools/validate.py refuses
+# a masked %check, so the suite stays fatal here.
 make check V=1
 %ifarch %{valgrind_arches}
 VALGRIND=memcheck make check
@@ -70,8 +73,12 @@ VALGRIND=memcheck make check
 %{_includedir}/hyphen.h
 %{_libdir}/*.so
 %{_bindir}/substrings.pl
+%{_libdir}/pkgconfig/hyphen.pc
 
 %changelog
+* Wed Oct 28 2026 Parag Nemade <panemade AT redhat DOT com> - 2.8.10-1
+- New upstream release 2.8.10 (rhbz#2562642)
+
 * Thu Jul 16 2026 Fedora Release Engineering <releng@fedoraproject.org> - 2.8.8-30
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_45_Mass_Rebuild
 

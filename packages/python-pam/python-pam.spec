@@ -1,30 +1,12 @@
 Name:           python-pam
-Version:        2.0.2
-Release:        20%{?dist}
+Version:        2.1.1
+Release:        1%{?dist}
 Summary:        Pure Python interface to the Pluggable Authentication Modules system on Linux
 License:        MIT
 URL:            https://github.com/FirefighterBlu3/python-pam
-Source0:        https://pypi.python.org/packages/source/p/%{name}/%{name}-%{version}.tar.gz
+Source0:        %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
 BuildArch:      noarch
 BuildRequires:  python3-devel
-
-# https://github.com/FirefighterBlu3/python-pam/pull/49
-# Don't ship pam/pam.py, which appears to be solely a footgun
-Patch:          0001-Don-t-ship-pam.py-in-the-module.patch
-# https://github.com/FirefighterBlu3/python-pam/pull/47
-# Drop use of six, we haven't supported Python 2 for years
-# This was an undeclared dependency, seems better to drop it
-# than declare it
-# Modified to correct the indent issue and drop changes to pam.py
-# since the prior patch demotes it to an example
-Patch:          47-mod.patch
-# https://github.com/FirefighterBlu3/python-pam/pull/50
-# Do not require wheel for building
-# The dependency is not necessary and is undesired in RHEL;
-# upstream has closed the PR and switched to poetry-core instead,
-# but that change is more disruptive to backport (and also undesired in RHEL).
-Patch:          https://github.com/FirefighterBlu3/python-pam/pull/50.patch
-
 
 %generate_buildrequires
 %pyproject_buildrequires
@@ -44,6 +26,10 @@ authenticate a given username / password against the PAM system on Linux.
 %prep
 %autosetup -p1
 
+# https://github.com/FirefighterBlu3/python-pam/issues/142
+# Remove reimplementation of the footgun
+rm -f python-pam/pam/pam.py
+
 %build
 %pyproject_wheel
 
@@ -55,10 +41,13 @@ authenticate a given username / password against the PAM system on Linux.
 %pyproject_check_import
 
 %files -n python3-pam -f %{pyproject_files}
-%doc README.md
+%doc README.md examples
 %license LICENSE
 
 %changelog
+* Sun Nov 01 2026 Juan Orti Alcaine <jortialc@redhat.com> - 2.1.1-1
+- Version 2.1.1 (#2535813)
+
 * Thu Jul 16 2026 Fedora Release Engineering <releng@fedoraproject.org> - 2.0.2-20
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_45_Mass_Rebuild
 
