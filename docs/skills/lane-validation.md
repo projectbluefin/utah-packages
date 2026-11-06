@@ -117,12 +117,15 @@ dispatch. The default Canary set still does not build the imported recipe;
 that recipe needs its own scoped build and runtime acceptance evidence.
 
 The witness tests must not freeze the list of workflows allowed to call the
-reusable builder. Adding a read-only caller does not itself change publication
-authority. Exercise the Canary's verdicts for missing, skipped and failed builds,
-and preserve the separate required publication proof. The read-only caller
-declares the scopes required by the reusable workflow; GitHub reduces a fork
-pull request's effective token to read-only, and `skip_publish` prevents its
-publication path.
+reusable builder, but every caller must still pass the never-`latest` check:
+no `publish_tag: latest`, an explicit `publish_tag` or `skip_publish` on each
+pass, and an `artifact_prefix`. Adding a read-only caller does not itself
+change publication authority. Exercise the Canary's verdicts for missing,
+skipped and failed builds, and preserve the separate required publication
+proof. In `canary-read-only.yml` only the two rebuild callers declare the
+write scopes the reusable workflow requires, because GitHub rejects the run
+at creation otherwise; they run only for fork heads, whose token GitHub
+reduces to read-only, and `skip_publish` prevents their publication path.
 
 A maintainer who has reviewed the diff runs **Canary for a fork pull request**
 (Actions tab, `canary-fork-pr.yml`) with the pull request number and the full

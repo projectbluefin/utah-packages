@@ -5,10 +5,18 @@
 # hands a fork's pull_request run a read-only token whatever the workflow
 # declares, and every build runs with skip_publish, so an image, a cache
 # entry, an attestation or a comment is out of reach whatever the pull
-# request changes. The build jobs still declare the write scopes
-# rebuild-rpms.yml asks for, because a called workflow may not request more
-# than its caller grants; without them the nested call is refused. Never
-# move this to pull_request_target.
+# request changes. Never move this to pull_request_target.
+#
+# Every job holds read scopes only, except the two rebuild-rpms.yml callers
+# (pass1, pass6). They must declare id-token, packages and attestations write
+# and issues write: GitHub checks a called workflow's declared permissions
+# (rebuild-rpms.yml, build-stage.yml, publish-repository.yml, and the report
+# job's issues: write) against its caller's declared permissions when it
+# creates the run, before any job `if` is evaluated, so dropping them turns
+# every run of this workflow, fork or not, into an invalid-workflow startup
+# failure. The declaration is not a grant here: those two jobs run only when
+# the head repository is not this one, where GitHub hands the run a
+# read-only token whatever is declared, and always with skip_publish.
 #
 # What it proves: the canary set builds through the default (hermetic) lane
 # and the container lane, and every package was locked and built from its
@@ -41,6 +49,9 @@ env:
 jobs:
   changes:
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: read
     outputs:
       run: ${{ steps.paths.outputs.run }}
       salt: ${{ steps.name.outputs.salt }}
@@ -78,9 +89,10 @@ jobs:
   # jobs by their caller's pass<N> job id.
   pass1:
     needs: changes
-    if: needs.changes.outputs.run == 'true'
-    # The scopes rebuild-rpms.yml declares (see the header); a fork's
-    # pull_request token stays read-only regardless.
+    # Fork heads only, checked here as well as in changes: this job's write
+    # declaration is never a grant (see the header).
+    if: needs.changes.outputs.run == 'true' && github.event.pull_request.head.repo.full_name != github.repository
+    # Exactly the scopes rebuild-rpms.yml and its nested workflows declare.
     permissions:
       contents: read
       id-token: write
@@ -123,9 +135,10 @@ jobs:
 
   pass6:
     needs: changes
-    if: needs.changes.outputs.run == 'true'
-    # The scopes rebuild-rpms.yml declares (see the header); a fork's
-    # pull_request token stays read-only regardless.
+    # Fork heads only, checked here as well as in changes: this job's write
+    # declaration is never a grant (see the header).
+    if: needs.changes.outputs.run == 'true' && github.event.pull_request.head.repo.full_name != github.repository
+    # Exactly the scopes rebuild-rpms.yml and its nested workflows declare.
     permissions:
       contents: read
       id-token: write
@@ -166,6 +179,7 @@ jobs:
     needs: [changes, pass1, verify-hermetic, pass6, verify-lane]
     if: always()
     runs-on: ubuntu-24.04
+    permissions: {}
     steps:
       - name: Decide
         env:
