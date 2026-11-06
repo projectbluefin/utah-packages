@@ -1,0 +1,172 @@
+From bbe641147d7f65b791b02496c4385f44e0676e47 Mon Sep 17 00:00:00 2001
+From: Joseph Marrero Corchado <jmarrero@redhat.com>
+Date: Mon, 21 Sep 2026 14:44:59 -0400
+Subject: [PATCH] tmpfiles: Relabel legacy SELinux store directories
+
+Installations predating the /var/lib/selinux compatibility symlink
+(PR #5572) keep real directories there across upgrades, since the
+tmpfiles.d `L` entry does not replace an existing directory. The
+file_contexts.subs_dist equivalence added in PR #5620 changes the
+expected label of that tree from semanage_store_t to selinux_config_t,
+so upgraded systems fail label-consistency checks such as the Fedora
+CoreOS upgrade tests.
+
+Add a recursive `Z` entry so systemd-tmpfiles restores labels on the
+legacy tree at boot using the booted policy's file contexts. `Z` does
+not follow symlinks, so on systems that already have the compatibility
+symlink it only relabels the link itself and never descends into
+/etc/selinux. Entries for one path run in file order, so `L` creates a
+missing symlink before `Z` sees it.
+
+This only restores label consistency. Upgraded systems still keep a real
+directory rather than the symlink; converting the legacy layout is left
+for a separate migration.
+
+Our kola VMs always start from a fresh install with the symlink, so add
+a destructive test that fabricates the legacy layout with the old
+labels, reboots, and checks that normal boot relabels the tree without
+changing its layout or contents. The nondestructive test also asserts
+the entry is shipped and the fresh-install symlink is consistent with
+the booted policy.
+
+Fixes: https://github.com/coreos/fedora-coreos-tracker/issues/2226
+
+Assisted-by: AI
+---
+ src/app/rpm-ostree-0-integration.conf         |  4 +
+ .../destructive/selinux-store-relabel         | 83 +++++++++++++++++++
+ tests/kolainst/nondestructive/misc.sh         | 13 +++
+ 3 files changed, 100 insertions(+)
+ create mode 100755 tests/kolainst/destructive/selinux-store-relabel
+
+diff --git a/src/app/rpm-ostree-0-integration.conf b/src/app/rpm-ostree-0-integration.conf
+index 39d3aa9c..e1148b17 100644
+--- a/src/app/rpm-ostree-0-integration.conf
++++ b/src/app/rpm-ostree-0-integration.conf
+@@ -5,6 +5,10 @@ d /var/mnt 0755 root root -
+ d /run/media 0755 root root -
+ L /var/lib/rpm - - - - ../../usr/share/rpm
+ L /var/lib/selinux - - - - ../../etc/selinux
++# Relabel legacy directories retained across upgrades to match the policy's
++# /var/lib/selinux -> /etc/selinux equivalence. Z does not follow symlinks.
++# https://github.com/coreos/fedora-coreos-tracker/issues/2226
++Z /var/lib/selinux - - - -
+ 
+ # this is normally owned by `filesystem`, but for multiple reasons, this doesn't
+ # work in the rpm-ostree flow
+diff --git a/tests/kolainst/destructive/selinux-store-relabel b/tests/kolainst/destructive/selinux-store-relabel
+new file mode 100755
+index 00000000..1dac0111
+--- /dev/null
++++ b/tests/kolainst/destructive/selinux-store-relabel
+@@ -0,0 +1,83 @@
++#!/bin/bash
++#
++# Installations predating the /var/lib/selinux compatibility symlink keep a
++# real directory tree there across upgrades, because the tmpfiles.d `L` entry
++# does not replace an existing directory. The policy's
++# /var/lib/selinux -> /etc/selinux equivalence then expects selinux_config_t
++# on that tree, while the legacy inodes still carry semanage_store_t.
++# Fabricate that legacy layout on a fresh system and verify the `Z` entry in
++# rpm-ostree-0-integration.conf relabels it during normal boot while leaving
++# layout and contents alone.
++# https://github.com/coreos/fedora-coreos-tracker/issues/2226
++set -xeuo pipefail
++
++. ${KOLA_EXT_DATA}/libtest.sh
++cd "$(mktemp -d)"
++
++integ=/usr/lib/tmpfiles.d/rpm-ostree-0-integration.conf
++store=/var/lib/selinux
++legacy_dirs="${store} ${store}/targeted ${store}/tmp"
++legacy_file=${store}/targeted/legacy.txt
++legacy_link=${store}/nested
++legacy_link_target=../../../etc/selinux/targeted
++# Survives the reboot, unlike our tmpdir.
++statedir=/var/tmp/selinux-store-relabel-test
++
++if [ "$(getenforce)" = Disabled ]; then
++  skip "SELinux is disabled"
++fi
++if ! grep -qF "Z ${store}" "${integ}"; then
++  skip "no Z ${store} entry in ${integ}"
++fi
++
++case "${AUTOPKGTEST_REBOOT_MARK:-}" in
++"")
++  test -L "${store}"
++  # Replace the compatibility symlink with the legacy real directory tree,
++  # plus a file and a nested symlink to check that contents survive and that
++  # a symlink inside the tree gets its own label fixed.
++  rm "${store}"
++  mkdir -p ${legacy_dirs}
++  echo legacy > "${legacy_file}"
++  chcon -R -t semanage_store_t "${store}"
++  ln -s "${legacy_link_target}" "${legacy_link}"
++
++  mkdir -p "${statedir}"
++  find -P "${store}" -printf '%p %y %m %U:%G %l\n' | sort > "${statedir}/layout.txt"
++  sha256sum "${legacy_file}" > "${statedir}/sums.txt"
++
++  # Sanity check: the fabricated tree is mislabeled under the booted policy.
++  restorecon -nRv "${store}" > before.txt
++  for d in ${legacy_dirs}; do
++    assert_file_has_content before.txt "^Would relabel ${d} from [^ ]*:semanage_store_t:s0 to "
++  done
++
++  /tmp/autopkgtest-reboot "1"
++  ;;
++"1")
++  test "$(systemctl show -P Result systemd-tmpfiles-setup.service)" = success
++  # The unit tolerates per-entry failures, so also check the journal.
++  journalctl -b -u systemd-tmpfiles-setup.service --no-pager > tmpfiles.log
++  assert_not_file_has_content tmpfiles.log "${store}"
++
++  # The layout is untouched: still a real directory, not the symlink.
++  test ! -L "${store}"
++  find -P "${store}" -printf '%p %y %m %U:%G %l\n' | sort > layout.txt
++  diff -u "${statedir}/layout.txt" layout.txt
++  sha256sum -c "${statedir}/sums.txt"
++  assert_streq "$(cat "${legacy_file}")" legacy
++  assert_symlink_has_content "${legacy_link}" "^${legacy_link_target}$"
++
++  # Labels now match the booted policy everywhere in the legacy tree.
++  restorecon -nRv "${store}" > after.txt
++  assert_file_empty after.txt
++  # Compare the type only; the SELinux user of the fabricated inodes depends
++  # on the test process context and is not what this entry is about.
++  for d in ${legacy_dirs}; do
++    assert_streq "$(stat -c %C "${d}" | cut -d: -f3)" "$(matchpathcon -n "${d}" | cut -d: -f3)"
++  done
++
++  echo "ok legacy ${store} relabeled at boot"
++  ;;
++*) fatal "unexpected mark: ${AUTOPKGTEST_REBOOT_MARK}";;
++esac
+diff --git a/tests/kolainst/nondestructive/misc.sh b/tests/kolainst/nondestructive/misc.sh
+index f4f8fd47..eb71651f 100755
+--- a/tests/kolainst/nondestructive/misc.sh
++++ b/tests/kolainst/nondestructive/misc.sh
+@@ -29,6 +29,19 @@ if grep -qF 'L /var/lib/selinux' "$integ"; then
+   assert_streq "$(readlink /var/lib/selinux)" "../../etc/selinux"
+   assert_not_file_has_content "$tmpfiles" '/var/lib/selinux'
+   echo "ok /var/lib/selinux compatibility symlink"
++  # Legacy installs keep a real directory tree here, which the policy's
++  # /var/lib/selinux -> /etc/selinux equivalence relabels via this Z entry.
++  # See https://github.com/coreos/fedora-coreos-tracker/issues/2226 and the
++  # destructive selinux-store-relabel test for the legacy layout itself.
++  if grep -qF 'Z /var/lib/selinux' "$integ"; then
++    assert_file_has_content_literal "$integ" 'Z /var/lib/selinux - - - -'
++    if [ "$(getenforce)" != Disabled ]; then
++      restorecon -nRv /var/lib/selinux > relabel.txt
++      assert_file_empty relabel.txt
++      rm -f relabel.txt
++    fi
++    echo "ok /var/lib/selinux relabel entry"
++  fi
+ else
+   echo "ok /var/lib/selinux compatibility symlink (not present in this build, skipping)"
+ fi
+-- 
+2.55.0
+

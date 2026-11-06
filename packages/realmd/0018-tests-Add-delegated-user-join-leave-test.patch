@@ -1,0 +1,200 @@
+From 215ca592862de3ed6e308c0bbeb7d4181e7cd9e4 Mon Sep 17 00:00:00 2001
+From: Shridhar Gadekar <shridhar.always@gmail.com>
+Date: Thu, 30 Apr 2026 13:04:00 +0530
+Subject: [PATCH 18/20] tests: Add delegated user join/leave test
+
+Add test_realm_join_leave_delegated_user to verify that:
+- A delegated user (with CreateChild + GenericAll permissions) can realm join
+- The same delegated user can realm leave (without --remove)
+- realm join without automatic UID/GID mapping
+
+Signed-off-by: Shridhar Gadekar <shridhar.always@gmail.com>
+---
+ tests/test_realmd.py | 173 ++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 169 insertions(+), 4 deletions(-)
+
+diff --git a/tests/test_realmd.py b/tests/test_realmd.py
+index ac51bf9..da99333 100644
+--- a/tests/test_realmd.py
++++ b/tests/test_realmd.py
+@@ -545,8 +545,173 @@ def test_realm_join_prestaged_delegated_explicit_ou(client: Client, provider: AD
+                 client.host.conn.run(f"realm leave {provider.host.domain}", raise_on_error=False)
+ 
+         client.host.conn.run("rm -f /etc/krb5.keytab /tmp/clear_attrs.ldif", raise_on_error=False)
+-        for cmd in [f"Remove-ADComputer -Identity '{short_hostname}' -Confirm:$false -ErrorAction SilentlyContinue",
+-                    f"Remove-ADUser -Identity '{DELEGATE_USER}' -Confirm:$false -ErrorAction SilentlyContinue",
+-                    f"Remove-ADOrganizationalUnit -Identity '{ou_dn}' -Recursive -Confirm:$false -ErrorAction SilentlyContinue"]:
+-            enc = base64.b64encode(cmd.encode('utf-16-le')).decode('utf-8')
++        for cmd in [
++            f"Remove-ADComputer -Identity '{short_hostname}' -Confirm:$false -ErrorAction SilentlyContinue",
++            f"Remove-ADUser -Identity '{DELEGATE_USER}' -Confirm:$false -ErrorAction SilentlyContinue",
++            (
++                f"Remove-ADOrganizationalUnit -Identity '{ou_dn}' "
++                f"-Recursive -Confirm:$false -ErrorAction SilentlyContinue"
++            ),
++        ]:
++            enc = base64.b64encode(cmd.encode("utf-16-le")).decode("utf-8")
+             provider.host.conn.run(f"powershell.exe -EncodedCommand {enc}", raise_on_error=False)
++
++
++@pytest.mark.importance("high")
++@pytest.mark.topology(KnownTopology.AD)
++def test_realm_join_leave_delegated_user(client: Client, provider: AD):
++    """
++    :title: realm join and leave using delegated user account
++    :setup:
++        1. Create a delegated user with "Add workstations to domain" permission
++    :steps:
++        1. Join the client using realm as the delegated user (not Domain Admin)
++        2. Verify the join succeeds
++        3. Verify keytab is created with correct machine account principals
++        4. Leave the domain using realm with the same delegated user (specifying user implies --remove)
++        5. Verify the leave succeeds
++    :expectedresults:
++        1. realm join succeeds without admin credentials
++        2. Computer account is created in AD
++        3. Keytab contains machine account principals
++        4. realm leave succeeds with delegated user
++        5. Computer object is removed from AD (specifying user implies --remove per man page)
++    :customerscenario: False
++    """
++    DELEGATE_USER = f"joinuser_{uuid.uuid4().hex[:6]}"
++    DELEGATE_PASS = "Secret123!Qaz"
++    short_hostname = client.host.hostname.split(".")[0].upper()
++
++    # Create delegated user using test framework
++    delegate_user = provider.user(DELEGATE_USER).add(password=DELEGATE_PASS)
++
++    # Grant permissions to join computers in the default Computers container
++    ps = (
++        f"$User = Get-ADUser -Identity '{DELEGATE_USER}'; "
++        f"$Domain = Get-ADDomain; "
++        f"$ComputersContainer = 'CN=Computers,' + $Domain.DistinguishedName; "
++        f'$Acl = Get-Acl -Path "AD:$ComputersContainer"; '
++        f"$CompGuid = [guid]'bf967a86-0de6-11d0-a285-00aa003049e2'; "
++        # Grant CreateChild to create computer objects
++        f"$Rule1 = New-Object System.DirectoryServices.ActiveDirectoryAccessRule("
++        f"$User.SID, 'CreateChild', 'Allow', $CompGuid); "
++        # Grant GenericAll on descendant computer objects to set all attributes
++        f"$Rule2 = New-Object System.DirectoryServices.ActiveDirectoryAccessRule("
++        f"$User.SID, 'GenericAll', 'Allow', 'Descendents', $CompGuid); "
++        f"$Acl.AddAccessRule($Rule1); "
++        f"$Acl.AddAccessRule($Rule2); "
++        f'Set-Acl -Path "AD:$ComputersContainer" -AclObject $Acl'
++    )
++    enc = base64.b64encode(ps.encode("utf-16-le")).decode("utf-8")
++    result = provider.host.conn.run(f"powershell.exe -EncodedCommand {enc}", raise_on_error=False)
++    assert result.rc == 0, f"Failed to grant join permissions: {result.stderr}!"
++
++    # Join domain with delegated user
++    join_result = client.realm.join(
++        domain=provider.host.domain,
++        user=DELEGATE_USER,
++        password=DELEGATE_PASS,
++        args=["--membership-software=adcli", "--verbose"],
++        krb=False,
++    )
++    assert join_result.rc == 0, f"Join failed: {join_result.stderr}!"
++
++    # Verify keytab
++    klist = client.host.conn.run("klist -kt", raise_on_error=False)
++    assert klist.rc == 0, f"klist failed: {klist.stderr}!"
++    assert short_hostname in klist.stdout.upper(), f"Machine account not in keytab: {klist.stdout}!"
++
++    # Verify computer object exists in AD using adcli
++    show_result = client.adcli.show_computer(
++        domain=provider.host.domain, login_user=DELEGATE_USER, password=DELEGATE_PASS, krb=False
++    )
++    assert show_result.rc == 0, f"Computer not found in AD: {show_result.stderr}!"
++
++    # Leave domain with delegated user (without --remove)
++    leave_result = client.realm.leave(domain=provider.host.domain, user=DELEGATE_USER, password=DELEGATE_PASS)
++    assert leave_result.rc == 0, f"Leave failed: {leave_result.stderr}!"
++
++    # Verify show-computer fails after leave (client is no longer joined)
++    show_after_leave = client.adcli.show_computer(
++        domain=provider.host.domain, login_user=DELEGATE_USER, password=DELEGATE_PASS, krb=False
++    )
++    assert show_after_leave.rc != 0, f"Show computer should fail after leave: {show_after_leave.stdout}!"
++
++
++@pytest.mark.importance("high")
++@pytest.mark.topology(KnownTopologyGroup.AnyAD)
++def test_realm_join_no_automatic_id_mapping(client: Client, provider: GenericADProvider):
++    """
++    :title: realm join without automatic UID/GID mapping
++    :setup:
++        1. Client and AD/Samba domain ready
++        2. Create a test user with explicit uidNumber and gidNumber in AD
++    :steps:
++        1. Join the domain with --automatic-id-mapping=no option
++        2. Verify the join succeeds
++        3. Verify SSSD configuration has ldap_id_mapping = False
++        4. Lookup the test user and verify it uses explicit UID/GID from AD
++    :expectedresults:
++        1. realm join succeeds with --automatic-id-mapping=no
++        2. Join completes successfully
++        3. SSSD configuration shows ldap_id_mapping = False
++        4. User lookup returns the explicit uidNumber/gidNumber from AD
++    :customerscenario: False
++    """
++    TEST_USER = f"testuser_{uuid.uuid4().hex[:6]}"
++    EXPLICIT_UID = 10001
++    EXPLICIT_GID = 10001
++
++    # Create test user with explicit UID/GID
++    test_user = provider.user(TEST_USER).add(uid=EXPLICIT_UID, gid=EXPLICIT_GID)
++
++    # Join domain without automatic ID mapping
++    join_result = client.realm.join(
++        domain=provider.host.domain,
++        user=provider.host.adminuser,
++        password=provider.host.adminpw,
++        args=["--automatic-id-mapping=no", "--verbose"],
++    )
++    assert join_result.rc == 0, f"Join failed: {join_result.stderr}!"
++
++    # Verify SSSD configuration has ID mapping disabled
++    sssd_conf = client.host.conn.run("cat /etc/sssd/sssd.conf", raise_on_error=False)
++    assert sssd_conf.rc == 0, f"Failed to read SSSD config: {sssd_conf.stderr}!"
++    assert "ldap_id_mapping = False" in sssd_conf.stdout, f"ID mapping not disabled in SSSD config: {sssd_conf.stdout}!"
++
++    # Lookup test user and verify explicit UID/GID (realmd requires fully-qualified names)
++    result = client.tools.id(f"{TEST_USER}@{provider.host.domain}")
++    assert result is not None, f"User {TEST_USER}@{provider.host.domain} not found!"
++    assert result.user.id == EXPLICIT_UID, f"Expected UID {EXPLICIT_UID}, got {result.user.id}!"
++    assert result.group.id == EXPLICIT_GID, f"Expected GID {EXPLICIT_GID}, got {result.group.id}!"
++
++
++@pytest.mark.importance("high")
++@pytest.mark.topology(KnownTopologyGroup.AnyAD)
++def test_realm_join_without_authentication(client: Client, provider: GenericADProvider):
++    """
++    :title: realm join should fail with invalid authentication
++    :setup:
++        1. Client and AD/Samba domain ready
++    :steps:
++        1. Attempt to join the domain with invalid credentials
++        2. Verify the join fails
++    :expectedresults:
++        1. realm join command fails
++        2. Error indicates authentication failure
++    :customerscenario: False
++    """
++    # Attempt to join with invalid credentials
++    join_result = client.host.conn.run(
++        f"realm join --verbose -U invaliduser {provider.host.domain}",
++        input="wrongpassword\n",
++        raise_on_error=False,
++    )
++    assert join_result.rc != 0, f"Join should fail with invalid credentials but succeeded: {join_result.stdout}!"
++
++    # Verify error message indicates authentication issue
++    error_output = join_result.stderr.lower()
++    assert any(
++        keyword in error_output
++        for keyword in ["password", "credential", "authentication", "failed", "permission", "invalid", "not found"]
++    ), f"Expected authentication error but got: {join_result.stderr}!"
+-- 
+2.54.0
+

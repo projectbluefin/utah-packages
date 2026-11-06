@@ -3292,6 +3292,12 @@ packages:
     downstream_package_name: python-versioneer
     paths:
       - packages/python-versioneer
+  qemu:
+    specfile_path: qemu.spec
+    upstream_package_name: qemu
+    downstream_package_name: qemu
+    paths:
+      - packages/qemu
   qpdf:
     specfile_path: qpdf.spec
     upstream_package_name: qpdf
@@ -3328,12 +3334,24 @@ packages:
     downstream_package_name: range-v3
     paths:
       - packages/range-v3
+  rclone:
+    specfile_path: rclone.spec
+    upstream_package_name: rclone
+    downstream_package_name: rclone
+    paths:
+      - packages/rclone
   re2:
     specfile_path: re2.spec
     upstream_package_name: re2
     downstream_package_name: re2
     paths:
       - packages/re2
+  realmd:
+    specfile_path: realmd.spec
+    upstream_package_name: realmd
+    downstream_package_name: realmd
+    paths:
+      - packages/realmd
   redhat-menus:
     specfile_path: redhat-menus.spec
     upstream_package_name: redhat-menus
@@ -3346,12 +3364,24 @@ packages:
     downstream_package_name: rest
     paths:
       - packages/rest
+  restic:
+    specfile_path: restic.spec
+    upstream_package_name: restic
+    downstream_package_name: restic
+    paths:
+      - packages/restic
   rpcbind:
     specfile_path: rpcbind.spec
     upstream_package_name: rpcbind
     downstream_package_name: rpcbind
     paths:
       - packages/rpcbind
+  rpm-ostree:
+    specfile_path: rpm-ostree.spec
+    upstream_package_name: rpm-ostree
+    downstream_package_name: rpm-ostree
+    paths:
+      - packages/rpm-ostree
   rsync:
     specfile_path: rsync.spec
     upstream_package_name: rsync

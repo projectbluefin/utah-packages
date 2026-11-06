@@ -1,0 +1,280 @@
+From d249eeb87ea3f1ce1c0f140c31cc3bfde72e10ea Mon Sep 17 00:00:00 2001
+From: Shridhar Gadekar <shridhar.always@gmail.com>
+Date: Wed, 11 Feb 2026 23:31:26 +0530
+Subject: [PATCH 14/20] Testcases: realm join leave, user login
+
+Testcases for realm join and leave with
+supported combintations of --client-software
+and --member-software
+user login allow, deny
+---
+ tests/test_realmd.py          | 169 +++++++++++++++++++++++++++++++++-
+ tests/topology_controllers.py |  48 ++++++++--
+ 2 files changed, 207 insertions(+), 10 deletions(-)
+
+diff --git a/tests/test_realmd.py b/tests/test_realmd.py
+index a513fa7..6e25cb9 100644
+--- a/tests/test_realmd.py
++++ b/tests/test_realmd.py
+@@ -126,7 +126,7 @@ def test_realm_join_no_config_modification(client: Client, provider: Any):
+     assert "Successfully enrolled machine in realm" in r.stderr, "realm failed to join client to the domain!"
+ 
+     # Using kinit -k validates that the keys in the keytab actually work against the KDC.
+-    s = client.host.hostname.split('.')[0].upper()
++    s = client.host.hostname.split(".")[0].upper()
+     p = f"{s}$@{provider.host.domain.upper()}"
+     k = client.host.conn.exec(["kinit", "-k", p])
+     assert k.rc == 0, f"kinit -k failed, keytab may be invalid or missing: {k.stderr}"
+@@ -222,3 +222,170 @@ def test_realm_renew(client: Client, provider: GenericADProvider):
+     new_kvno = get_kvno()
+ 
+     assert new_kvno > old_kvno, "Keytab was not renewed (kvno did not increase).!"
++
++
++@pytest.mark.importance("critical")
++@pytest.mark.topology(KnownTopologyGroup.AnyAD)
++@pytest.mark.parametrize(
++    "client_software, membership_software",
++    [
++        ("sssd", "adcli"),  # Standard modern Linux integration
++        ("sssd", "samba"),  # SSSD utilizing Samba tools for join
++        ("winbind", "samba"),  # Classic Samba/Winbind integration
++    ],
++)
++def test_realm_join_leave_combinations(
++    client: Client, provider: GenericADProvider, client_software: str, membership_software: str
++):
++    """
++    :title: Verify Realm Join/Leave with specific software combinations.
++    :description: Test joining and leaving the domain using supported combinations
++                  of client software (SSSD/Winbind) and membership software (adcli/Samba).
++    :id: realm-join-leave-combos
++    :steps:
++        1. Install required packages for the specific combination.
++        2. Join the domain explicitly setting client and membership software.
++        3. Verify the join was successful.
++        4. Leave the domain.
++        5. Verify the leave was successful and config cleaned up (for SSSD).
++    """
++
++    client.host.conn.exec(["dnf", "install", "-y", "samba-winbind-clients"], raise_on_error=False)
++    client.fs.touch("/etc/krb5.conf")
++
++    join_args = [f"--client-software={client_software}", f"--membership-software={membership_software}", "--verbose"]
++
++    join_cmd = client.realm.join(
++        domain=provider.host.domain,
++        krb=False,
++        user=f"{provider.host.adminuser}@{provider.host.domain.upper()}",
++        password=provider.host.adminpw,
++        args=join_args,
++    )
++
++    assert join_cmd.rc == 0, (
++        f"Realm join failed for {client_software}+{membership_software}!\n" f"Stderr: {join_cmd.stderr}"
++    )
++
++    leave_cmd = client.realm.leave(
++        domain=provider.host.domain,
++        krb=False,
++        user=f"{provider.host.adminuser}@{provider.host.domain.upper()}",
++        password=provider.host.adminpw,
++        args=["--verbose", "--remove"],
++    )
++
++    assert leave_cmd.rc == 0, (
++        f"Realm leave failed for {client_software}+{membership_software}!\n" f"Stderr: {leave_cmd.stderr}"
++    )
++
++    if client_software == "sssd":
++        sssd_conf_path = "/etc/sssd/sssd.conf"
++
++        if client.host.fs.exists(sssd_conf_path):
++            content = client.host.fs.read(sssd_conf_path)
++
++            assert provider.host.domain not in content, (
++                f"Cleanup Failed: Domain '{provider.host.domain}' configuration "
++                f"still found in {sssd_conf_path} after leave."
++            )
++
++
++@pytest.mark.importance("high")
++@pytest.mark.topology(KnownTopologyGroup.AnyAD)
++def test_realm_permit_user_access_control(client: Client, provider: GenericADProvider):
++    """
++    :title: Allow and deny a user to locally log in
++    :steps:
++        1. Join the domain.
++        2. Create two users.
++    :steps:
++        1. Permit user1 to log in locally.
++        2. sssd.conf contains 'access_provider = simple' and allowed user
++        3. Permitted user is able to log in locally
++        4. Non-permitted user is not able to log in locally
++        5. Permit user2 from log in locally
++        6. Withdraw user1 from log in
++    :expectedresults:
++        1. Permit command succeeds.
++        2. SSSD configuration contains "access_provider" and "allowed user"
++        3. Permitted user is allowed to log in local system.
++        4. Non-permitted user is denied to log in local system.
++        5. User2 able to log in
++        6. User1 not able to log in
++    """
++    u = "testuser"
++    u2 = "testuser2"
++    provider.user(u).add()
++    provider.user(u2).add()
++
++    client.realm.join(
++        domain=provider.host.domain, user=provider.host.adminuser, password=provider.host.adminpw, krb=False
++    )
++
++    client.sssd.domain["use_fully_qualified_names"] = "False"
++    client.realm.permit(args=[f"{u}@{provider.host.domain}", "--verbose"])
++
++    sssd_conf_path = "/etc/sssd/sssd.conf"
++    if client.host.fs.exists(sssd_conf_path):
++        conf_content = client.host.fs.read(sssd_conf_path)
++        assert "access_provider = simple" in conf_content, "Access provider not set to simple after realm deny/permit"
++        assert f"simple_allow_users = {u}" in conf_content, f"User {u} not in simple_allow_users list"
++
++    assert client.auth.ssh.password(f"{u}@{provider.host.domain}", "Secret123"), f"User {u} log in failed!"
++    assert not client.auth.ssh.password(f"{u2}@{provider.host.domain}", "Secret123"), "Failed to DENY log in!"
++
++    client.realm.permit(args=[f"{u2}@{provider.host.domain}", "--verbose"])
++    assert client.auth.ssh.password(f"{u2}@{provider.host.domain}", "Secret123"), f"User {u2} log in failed!"
++
++    client.realm.permit(args=["--withdraw", f"{u}@{provider.host.domain}", "--verbose"])
++    assert not client.auth.ssh.password(f"{u}@{provider.host.domain}", "Secret123"), "Failed to DENY log in!"
++
++
++@pytest.mark.importance("high")
++@pytest.mark.topology(KnownTopologyGroup.AnyAD)
++def test_realm_permit_group_access_control(client: Client, provider: GenericADProvider):
++    """
++    :title: Allow and deny a group based log in
++    :steps:
++        1. Join the domain.
++        2. Create two users and a group.
++        3. Add one user to the group.
++    :steps:
++        1. Permit group-members to log in locally.
++        2. sssd.conf contains 'access_provider = simple' and allowed user
++        3. Permitted user is able to log in locally
++        4. Non-permitted user is not able to log in locally
++        5. Withdraw log in for group
++    :expectedresults:
++        1. Permit command succeeds.
++        2. SSSD configuration contains "access_provider" and "allowed user"
++        3. Permitted user is allowed to log in local system.
++        4. Non-permitted user is denied to log in local system.
++        5. Groupmember user is denied to log in local system.
++    """
++    g = "testgroup"
++    ug1 = "user1"
++    u1 = provider.user(ug1).add()
++    ug2 = "user2"
++    provider.user(ug2).add()
++    provider.group(g).add().add_members([u1])
++
++    client.realm.join(
++        domain=provider.host.domain, user=provider.host.adminuser, password=provider.host.adminpw, krb=False
++    )
++
++    client.realm.permit(args=["--groups", g, "--verbose"])
++    i = client.tools.id(f"{ug1}@{provider.host.domain}")
++    assert ug1 in i.user.name, "User resolution failed!"
++    sssd_conf_path = "/etc/sssd/sssd.conf"
++    if client.host.fs.exists(sssd_conf_path):
++        conf_content = client.host.fs.read(sssd_conf_path)
++        assert "access_provider = simple" in conf_content, "Access provider not set to simple after realm deny/permit"
++        assert f"simple_allow_groups = {g}" in conf_content, f"group {g} not in simple_allow_groups list"
++
++    assert client.auth.ssh.password(f"{ug1}@{provider.host.domain}", "Secret123"), "User log in failed!"
++    assert not client.auth.ssh.password(f"{ug2}@{provider.host.domain}", "Secret123"), "Failed to DENY log in!"
++
++    client.realm.permit(args=["--withdraw", "--groups", g, "--verbose"])
++    assert not client.auth.ssh.password(f"{ug1}@{provider.host.domain}", "Secret123"), "Failed to DENY log in!"
+diff --git a/tests/topology_controllers.py b/tests/topology_controllers.py
+index 73a5c49..ab168f2 100644
+--- a/tests/topology_controllers.py
++++ b/tests/topology_controllers.py
+@@ -59,13 +59,42 @@ class ADTopologyController(ProvisionedBackupTopologyController):
+     """
+ 
+     @BackupTopologyController.restore_vanilla_on_error
+-    def topology_setup(self, client: ClientHost, provider: ADHost) -> None:
++    def topology_setup(self, client: ClientHost, provider: ADHost | SambaHost) -> None:
+         if self.provisioned:
+             self.logger.info(f"Topology '{self.name}' is already provisioned")
+             return
+ 
+-        # Remove any existing Kerberos configuration and keytab
+-        client.fs.rm("/etc/krb5.conf")
++        domain = provider.domain.lower()
++        realm = provider.domain.upper()
++        # Fallback to hostname if the conn object doesn't have a direct IP/host attribute exposed
++        kdc_hostname = getattr(provider.conn, "host", provider.hostname)
++
++        # 1. Force the correct FQDN on the client VM
++        # client_fqdn = f"{client.hostname.split('.')[0]}.{domain}"
++        # client.conn.exec(["hostnamectl", "set-hostname", client_fqdn])
++
++        # 2. Write the strict Kerberos configuration (replaces removing it)
++        client.fs.write(
++            "/etc/krb5.conf",
++            f"""[libdefaults]
++    default_realm = {realm}
++    dns_lookup_realm = true
++    dns_lookup_kdc = true
++    rdns = false
++
++[realms]
++    {realm} = {{
++        kdc = {kdc_hostname}
++        admin_server = {kdc_hostname}
++    }}
++
++[domain_realm]
++    .{domain} = {realm}
++    {domain} = {realm}
++""",
++        )
++
++        # 3. Remove any existing keytab
+         client.fs.rm("/etc/krb5.keytab")
+ 
+         # Backup so we can restore to this state after each test
+@@ -83,11 +112,15 @@ class IPATopologyController(ProvisionedBackupTopologyController):
+             self.logger.info(f"Topology '{self.name}' is already provisioned")
+             return
+ 
+-        #self.logger.info(f"Enrolling {client.hostname} into {ipa.domain}")
+         self.logger.info(f"{client.hostname} into {ipa.domain}")
+-        self.logger.info("**************************"*77)
++        self.logger.info("**************************" * 77)
++
++        # 1. Force the correct FQDN on the client VM
++        domain = ipa.domain.lower()
++        client_fqdn = f"{client.hostname.split('.')[0]}.{domain}"
++        client.conn.exec(["hostnamectl", "set-hostname", client_fqdn])
+ 
+-        # Remove any existing Kerberos configuration and keytab
++        # 2. Remove any existing Kerberos configuration and keytab (IPA requires a clean slate)
+         client.fs.rm("/etc/krb5.conf")
+         client.fs.rm("/etc/krb5.keytab")
+ 
+@@ -95,9 +128,6 @@ class IPATopologyController(ProvisionedBackupTopologyController):
+         client.fs.backup("/etc/ipa")
+         client.fs.backup("/var/lib/ipa-client")
+ 
+-        # Join ipa domain
+-        #client.conn.exec(["realm", "leave", ipa.domain], input=ipa.adminpw)
+-
+         # Backup so we can restore to this state after each test
+         super().topology_setup()
+ 
+-- 
+2.54.0
+

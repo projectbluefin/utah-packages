@@ -1,0 +1,44 @@
+From efa2e284606683acee63afeee6f319e07b85bbd5 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Pavel=20Filipensk=C3=BD?= <pfilipensky@samba.org>
+Date: Thu, 29 Jan 2026 20:40:39 +0100
+Subject: [PATCH 08/20] doc: Be explicit about default settings in realmd.conf
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Pavel Filipenský <pfilipensky@samba.org>
+---
+ doc/manual/realmd.conf.xml | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/doc/manual/realmd.conf.xml b/doc/manual/realmd.conf.xml
+index ad17639..54072c5 100644
+--- a/doc/manual/realmd.conf.xml
++++ b/doc/manual/realmd.conf.xml
+@@ -210,12 +210,13 @@ os-version = 9.9.9.9.9
+ 	<listitem>
+ 		<para>Set this to <parameter>no</parameter> to disable automatic
+ 		installation of packages via package-kit.</para>
++		<para>The default setting for this is <parameter>yes</parameter>.</para>
+ 
+ 		<informalexample>
+ <programlisting language="js">
+ [service]
+-automatic-install = no
+-# automatic-install = yes
++automatic-install = yes
++# automatic-install = no
+ </programlisting>
+ 		</informalexample>
+ 	</listitem>
+@@ -227,6 +228,7 @@ automatic-install = no
+ 		<para>Set this to <parameter>yes</parameter> to create a Samba
+ 		configuration file with id-mapping options used by Samba-3.5
+ 		and earlier version.</para>
++		<para>The default setting for this is <parameter>no</parameter>.</para>
+ 
+ 		<informalexample>
+ <programlisting language="js">
+-- 
+2.54.0
+
