@@ -25,7 +25,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from tools.buildroot_pin import parse as parse_buildroot_pin
 from tools.check_suppressed_tests import main as check_suppressed_tests
 from tools.bootstrap_upstream_sources import FEDORA_HOSTS
-from tools.bump_gate import REVIEW_ONLY, load_review_only
+from tools.bump_gate import API_GENERATIONS, REVIEW_ONLY, load_api_generations, load_review_only
 from tools.package_inventory import inventory
 from tools.source_lock_order import LOCK, order_error
 from tools.source_pipeline import SHA512_SOURCES_LINE
@@ -241,11 +241,13 @@ def check_plaintext_source_urls(root: Path) -> None:
 
 
 def check_bump_review_only(root: Path) -> None:
-    """Every name in the review-only list is a lock the bump could move.
+    """Every name in the bump's package lists is a lock the bump could move.
 
-    The list keeps upstream_bump.py and the bump gate from self-merging a
-    package's new upstream bytes. A misspelled or retired name protects
-    nothing and says otherwise, so it fails here, where a human is reading.
+    The review-only list keeps upstream_bump.py and the bump gate from
+    self-merging a package's new upstream bytes; the API-generations list
+    keeps another major of a lock from showing as a pending move. A
+    misspelled or retired name does neither and says otherwise, so it fails
+    here, where a human is reading.
     """
     lock = root / "config" / "upstream-sources.json"
     if not lock.is_file():
@@ -255,14 +257,16 @@ def check_bump_review_only(root: Path) -> None:
     except (OSError, json.JSONDecodeError):
         raise SystemExit(f"invalid source lock: {lock}")
     locked = {entry.get("name") for entry in data.get("packages", []) if isinstance(entry, dict)}
-    unknown = sorted(load_review_only(root) - locked)
-    if unknown:
-        raise SystemExit(
-            f"{REVIEW_ONLY} names packages the source lock does not carry: "
-            f"{', '.join(unknown)}\n"
-            "Each line must be the `name` of a config/upstream-sources.json entry; "
-            "a name that matches nothing guards nothing."
-        )
+    for listed, names in ((REVIEW_ONLY, load_review_only(root)),
+                          (API_GENERATIONS, load_api_generations(root))):
+        unknown = sorted(names - locked)
+        if unknown:
+            raise SystemExit(
+                f"{listed} names packages the source lock does not carry: "
+                f"{', '.join(unknown)}\n"
+                "Each line must be the `name` of a config/upstream-sources.json entry; "
+                "a name that matches nothing guards nothing."
+            )
 
 
 def check_source_lock_order(root: Path) -> None:

@@ -255,6 +255,49 @@ lose it. The libjwt hold that #575's commit message names never reached
 the library goes on `config/bump-review-only.txt` with the reason, the same
 way as libcdio.
 
+## Upstream's latest everywhere else (2026-11-06)
+
+The owner's direction is to build each project's newest release. Outside
+GNOME, `forge_proposal()` therefore moves a forge or Anitya lock to the
+newest stable release unless a consumer could break, and it says which rule
+applied:
+
+- **Same major**: `update`, as before.
+- **Calendar versions** (`YYYYMMDD`, `YYYY.MM`, each with optional `.N`
+  parts; `is_calendar()`) are one release line, so the leading date is not a
+  major. linux-firmware, alsa-sof-firmware and ntfs-3g move. The exception is
+  a recipe whose every listed soname carries the date
+  (`date_bound_libraries()`). abseil-cpp lists only
+  `libabsl_*.so.%{lib_version}` with `lib_version 2605.0.0`, so it stays
+  `review`. cryptopp's `libcryptopp.so.%{version}` sits beside
+  `libcryptopp.so.9`, so it is not bound.
+- **Cross-major (D7)**: `update` when no `%files` section, in any
+  subpackage, lists a versioned shared object (`versioned_libraries()`
+  matches `.so.<digit|*|%{macro}>`). That covers apps, CLI tools, firmware,
+  data, fonts, and Python or Perl modules: an unversioned `.so` extension
+  or plugin is not a soname. A library that lists one takes its newest
+  same-major release instead, and the cross-major release is `review` with
+  `soname-coupled: consumers must move in the same PR (<glob>)`. A file
+  list generated at build time (`%files -f`) is not visible to this check.
+- **Another API generation** is a separate package, never a pending move.
+  It is printed as `note … (different API generation (separate package))`.
+  `api_generation()` recognises it when the lock's name ends in its major
+  (gtk2, gtk3, gcr3, gtksourceview4, mozjs140, SDL3). For a lock whose name
+  does not say so, list it in `config/bump-api-generations.txt` (fuse,
+  libgweather, whose 40.x predates 4.0). `tools/validate.py` rejects a name
+  the lock does not carry. The rule also covers GNOME locks' notes.
+- **Unparseable feed**: a feed version on another numbering
+  (`scheme_mismatch()`) is never proposed. Either side may be a calendar
+  version while the other is not, a side may not start with a number, or the
+  leading number may jump a hundredfold. ghostscript lists 10080, lshw locks
+  B.02.20 against 02.20, hunspell-en locks 0.20260225 against 2026.02.25,
+  libvpl and OpenCL-ICD-Loader list old calendar tags. A bare integer is also
+  rejected against a dotted lock: thin-provisioning-tools' stray tag reads as
+  `2`, and D7 would otherwise have moved device-mapper-persistent-data
+  1.3.3 -> 2. If no comparable release is newer, the lock is `review` with
+  `unparseable feed: …; fix the lock's feed`.
+- `config/bump-review-only.txt` still wins over all of these.
+
 ## The bump gate
 
 The daily pull request on `bump/upstream-sources` merges itself
@@ -302,7 +345,9 @@ Constraints that shaped it, so they are not rediscovered:
   whatever the forge serves, and the gate merges it once it builds, so the
   forge is the only party vouching for the bytes. `config/bump-review-only.txt`
   names the packages where that is not enough -- root daemons, the boot
-  chain, firmware (gdm, fprintd, microcode_ctl, tpm2-tools, plymouth, ...).
+  chain, firmware (fprintd, microcode_ctl, tpm2-tools, plymouth, grub2, ...).
+  gdm was taken off on 2026-11-06: it is part of GNOME's release and follows
+  GNOME's newest stable release with gnome-shell and mutter.
   `upstream_bump.py` reports their releases as `needs review` and applies
   nothing; `bump_gate.py plan` refuses a pull request that moves one of
   their lock entries, whoever pushed it (a recipe-only change, such as a
@@ -494,7 +539,9 @@ the version; the daily run moves the lock from then on.
 Done on 2026-11-06 with matching bytes: device-mapper-persistent-data (GitHub
 archive), mozjs140 (ftp.mozilla.org), webkitgtk (webkitgtk.org), xmlrpc-c
 (SourceForge), and python-argcomplete (the PyPI `source` form). All five then
-proposed their next release.
+proposed their next release. linux-firmware followed the same procedure
+(www.kernel.org/pub/linux/kernel/firmware/, the spec's `Source0`), so its
+calendar rule moves it from 20260810 to 20261019.
 
 Left stuck, with the reason:
 

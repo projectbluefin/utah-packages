@@ -47,8 +47,11 @@ name: Bump upstream source locks
 # newest final, a lock on it takes point releases, a lock ahead of it takes
 # only its own point releases. App-scheme modules (major >= 40)
 # gnome-build-meta does not map move to their newest final.
-# Library-scheme modules it does not map, a new
-# library major, and forge majors are still reported for a human and never
+# Library-scheme modules it does not map stay review. Elsewhere the newest
+# release moves unless a consumer could break: a calendar version is one line,
+# and a cross-major release applies when the recipe ships no versioned shared
+# library; a soname-carrying library's cross-major release, another API
+# generation, and an unparseable feed version are reported and never
 # applied. No run can land on an alpha, beta or rc. target-cycle (e.g. 52 on
 # a GNOME-next branch) is the manual override: it ignores gnome-build-meta
 # and moves within the named cycle; prereleases stay unproposable.
