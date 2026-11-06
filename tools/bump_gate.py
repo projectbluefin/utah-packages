@@ -125,6 +125,19 @@ def load_review_only(root: Path) -> set[str]:
     return parse_review_only(path.read_text() if path.is_file() else None)
 
 
+# Locks bound to one API generation that their name does not spell. A gtk2,
+# gcr3 or mozjs140 lock names its generation, so upstream_bump.py reads it off
+# the name; fuse (fuse3 is a separate package) and libgweather (40.x is the
+# pre-4.0 numbering) do not. A release on another major of a listed lock is
+# another package, never a pending move.
+API_GENERATIONS = "config/bump-api-generations.txt"
+
+
+def load_api_generations(root: Path) -> set[str]:
+    path = root / API_GENERATIONS
+    return parse_review_only(path.read_text() if path.is_file() else None)
+
+
 def moved(base: dict[str, dict], head: dict[str, dict]) -> set[str]:
     """Packages whose lock entry differs between base and head: the bytes moved."""
     return {name for name, entry in head.items() if base.get(name) != entry}

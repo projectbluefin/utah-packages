@@ -1,0 +1,14 @@
+# Locks bound to one API generation that their name does not spell.
+#
+# tools/upstream_bump.py treats a release on another major of these locks as a
+# different API generation, i.e. a separate package, and prints it as a note
+# rather than a pending move. A lock whose name ends in its major (gtk2, gtk3,
+# gcr3, gtksourceview4, mozjs140, SDL3) is recognised from the name and needs
+# no line here.
+#
+# One `name` from config/upstream-sources.json per line; tools/validate.py
+# fails on a name the lock does not carry.
+# fuse 3 is the separate fuse3 package; this lock is the fuse 2 library.
+fuse
+# libgweather 40.x is the numbering before libgweather4 4.0, not a successor.
+libgweather
