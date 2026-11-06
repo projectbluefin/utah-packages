@@ -6,7 +6,6 @@
 # The list only shrinks.
 a52dec
 aribb24
-enchant2
 fdk-aac-free
 foo2zjs
 foomatic-db

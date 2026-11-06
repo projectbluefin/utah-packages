@@ -503,8 +503,6 @@ Left stuck, with the reason:
   package. `tests/test_canary.py` requires every Canary source to stay on
   the lookaside, so a flaky upstream host cannot fail Canary.
 - **The upstream bytes differ.**
-  - enchant2: the GitHub release asset's regenerated autotools files differ
-    from Fedora's copy.
   - noopenh264: Codeberg's regenerated archive has the same contents but a
     different gzip stream.
   - samba: Fedora recompresses upstream's `.tar.gz` as `.tar.xz`
@@ -520,6 +518,22 @@ Left stuck, with the reason:
   latency fix is already in 1.2.2, while the CVE-2017-11548 diff and the
   nanosleep patch still apply. That is a recipe change for a reviewer, not
   a hand bump.
+
+### Re-locking new upstream bytes (owner decisions, 2026-11-06)
+
+A lock whose upstream bytes differ from the lookaside copy is not re-pinned
+at its version. The owner's rule is upstream first: re-lock the primary to
+the project's own download, move to its newest release in the same commit,
+and keep the lookaside as a fallback only when Fedora carries the very same
+bytes (download both and compare). Otherwise drop the fallback; a
+content-addressed URL that can never resolve is not a mirror.
+
+- enchant2 2.8.19 -> 2.8.21: `upstream_bump.py --package enchant2 --apply`
+  relocks onto the explicit GitHub release-asset feed and drops the package
+  from the ratchet. Fedora uploaded the same 2.8.21 asset, so the lookaside
+  fallback stays. The recipe's `%prep` runs `autoreconf -ifv` (the aspell
+  pkg-config patch edits `configure.ac`), so the build regenerates its own
+  autotools and never depends on whoever generated the tarball's.
 
 ### Hand version moves (2026-11-06)
 
