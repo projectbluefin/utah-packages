@@ -61,10 +61,25 @@ a lock ahead of it gets a note and still takes point releases of its own
 series, never a newer series GNOME does not ship. App-scheme modules (major 40
 and up, prereleases spelled with markers) that gnome-build-meta does not map
 move to their newest final across majors. Library-scheme modules it does not
-map, and every forge feed, still only report a cross-cycle or cross-major
-release for review. gjs sat on the development release 1.89.2 after 1.90.1
-shipped, and gtk4 on 4.23.4 after 4.24.1, because the old rule never crossed
-a cycle. --cycle N remains the manual override, and skips gnome-build-meta.
+map still only report a cross-cycle or cross-major release for review. gjs
+sat on the development release 1.89.2 after 1.90.1 shipped, and gtk4 on
+4.23.4 after 4.24.1, because the old rule never crossed a cycle. --cycle N
+remains the manual override, and skips gnome-build-meta.
+
+Building upstream's latest elsewhere
+------------------------------------
+A forge or Anitya lock moves to upstream's newest stable release unless a
+consumer could break (forge_proposal). The same major always moves. A
+calendar-versioned lock (YYYYMMDD, YYYY.MM, with .N parts) is one release
+line and moves across its leading date, unless its soname carries the date
+(abseil-cpp). A cross-major release moves when the recipe's %files ships no
+versioned shared library in any subpackage. A library that ships one stays
+"review" with the soname glob named: consumers must move in the same pull
+request. Another API generation (gtk3 -> gtk 4, gcr3 -> gcr 4, fuse -> fuse
+3) is a separate package and only a note; the lock's name carries its major,
+or config/bump-api-generations.txt lists it. A feed version on another
+numbering (ghostscript 10080, lshw 02.20) is never proposed and reads
+"unparseable feed".
 
 A lock still on the Fedora lookaside can be relocked with an explicit
 --package run: to its GNOME module (the explicit feed's, else one named like
@@ -115,7 +130,14 @@ from tools.audit_gnome_build_meta import (
     resolve_element,
 )
 from tools.bootstrap_upstream_sources import FEDORA_HOSTS
-from tools.bump_gate import HOLDS, REVIEW_ONLY, dump_holds, load_holds, load_review_only
+from tools.bump_gate import (
+    HOLDS,
+    REVIEW_ONLY,
+    dump_holds,
+    load_api_generations,
+    load_holds,
+    load_review_only,
+)
 from tools.package_inventory import (
     FORGE_ARCHIVE,
     FORGE_RELEASE,
@@ -989,19 +1011,167 @@ def newer(candidate: str, current: str) -> bool:
     return version_key(candidate) > prefix
 
 
-def forge_proposal(name: str, entry: dict, feed: dict, opener=urllib.request.urlopen) -> dict:
-    """What a single git-forge lock should move to, if anything.
+# A calendar version: YYYYMMDD or YYYY.MM, each optionally followed by .N
+# components (linux-firmware 20260810, abseil-cpp 20260526.0, ntfs-3g
+# 2026.7.7, alsa-sof-firmware 2025.12.2). Its leading component is a date,
+# not a major, so a new year or day is not an incompatible series.
+CALENDAR = re.compile(
+    r"^(?:(?:19|20)\d\d(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])"
+    r"|(?:19|20)\d\d\.(?:0?[1-9]|1[0-2]))(?:\.\d+)*$"
+)
+LEADING_INT = re.compile(r"^(\d+)")
 
-    The safety rule mirrors the GNOME path's, with the major standing in for
-    the release cycle: a newer stable release sharing the current major is an
-    "update" and may be applied, while one that crosses a major is "review"
-    only. A major bump can move a soname and break every consumer in the
-    graph, which is a judgement no comparison of version strings can make.
+
+def is_calendar(version: str) -> bool:
+    """Whether a release is numbered by its date (see CALENDAR)."""
+    return bool(CALENDAR.match(version))
+
+
+def scheme_mismatch(current: str, candidate: str) -> bool:
+    """Whether a feed version follows a different numbering than the lock.
+
+    Such a version cannot be ordered against the lock, so proposing it would
+    be nonsense: ghostscript's feed lists 10080 beside the locked 10.08.0,
+    lshw locks B.02.20 against a feed of 02.20, and hunspell-en locks
+    0.20260225 against 2026.02.25, and thin-provisioning-tools carries a stray
+    tag that reads as 2 beside 1.3.3. Four signs: one side is a calendar
+    version and the other is not, a side does not start with a number, a
+    bare integer stands against a dotted lock, or the candidate's leading
+    number is a hundredfold-scale jump from the lock's.
+    """
+    if is_calendar(current) != is_calendar(candidate):
+        return True
+    lead_current, lead_candidate = LEADING_INT.match(current), LEADING_INT.match(candidate)
+    if not lead_current or not lead_candidate:
+        return True
+    if "." in current and candidate.isdigit():
+        return True
+    a, b = int(lead_current.group(1)), int(lead_candidate.group(1))
+    return not is_calendar(current) and b >= 100 and b > 10 * max(a, 1)
+
+
+# A lock whose name ends in a bare integer names its API generation when that
+# integer is its major: gtk2 2.24, gcr3 3.41, gtksourceview4 4.8, mozjs140
+# 140.13, SDL3 3.4. glibmm2.68 and gtkmm4.0 end in a dotted API version that is
+# not their major and are not matched.
+NAME_GENERATION = re.compile(r"(?<![\d.])(\d+)$")
+
+
+def api_generation(name: str, current: str, candidate: str, generations=frozenset()) -> bool:
+    """Whether `candidate` is another API generation of `name`, a separate package.
+
+    Fedora packages API generations side by side (gtk3 and gtk4, gcr3 and
+    gcr, fuse and fuse3), so gtk3's lock never moves to gtk 4.x. True when the
+    majors differ and either the name carries the lock's major or the lock is
+    listed in config/bump-api-generations.txt.
+    """
+    if major(tarball_version(candidate)) == major(tarball_version(current)):
+        return False
+    if name in generations:
+        return True
+    match = NAME_GENERATION.search(name)
+    return bool(match) and match.group(1) == major(tarball_version(current))
+
+
+SPEC_SECTION = re.compile(
+    r"^%(files|package|description|prep|build|install|check|clean|changelog|"
+    r"pre|post|preun|postun|pretrans|posttrans|trigger\w*|filetrigger\w*|"
+    r"transfiletrigger\w*|generate_buildrequires|conf|sourcelist|patchlist)\b"
+)
+# A versioned shared object in a file list: lib*.so.*, libfoo.so.1*,
+# libcryptopp.so.%{version}, %{_libdir}/*.so.*.
+VERSIONED_SO = re.compile(r"\S*\.so\.(?:\d|\*|\{|%\{?\??\w)\S*")
+DATE_RUN = re.compile(r"\d{4,}")
+
+
+def recipe_spec(root: Path, name: str) -> Path:
+    return root / "packages" / name / f"{name}.spec"
+
+
+def versioned_libraries(spec: Path) -> list[str] | None:
+    """Every versioned shared object a recipe's %files lists, or None without a spec.
+
+    A library's soname moves with its major, and every consumer linked
+    against the old one breaks until it is rebuilt, so such a recipe cannot
+    cross a major on its own. Only %files sections are read, in every
+    subpackage. A file list generated at build time (`%files -f`) is invisible
+    here; this factory's library recipes list their sonames explicitly.
+    """
+    if not spec.is_file():
+        return None
+    found, listing = [], False
+    for line in spec.read_text().splitlines():
+        section = SPEC_SECTION.match(line)
+        if section:
+            listing = section.group(1) == "files"
+            continue
+        if listing:
+            found.extend(VERSIONED_SO.findall(line.split("#", 1)[0]))
+    return list(dict.fromkeys(found))
+
+
+def date_bound_libraries(spec: Path, libraries: list[str]) -> list[str]:
+    """The libraries whose every listed soname carries a date or %{version}.
+
+    abseil-cpp lists only libabsl_*.so.%{lib_version}, and lib_version is
+    2605.0.0: its soname changes with every release, so a calendar move breaks
+    every consumer. cryptopp also lists libcryptopp.so.%{version}, but beside
+    libcryptopp.so.9, the soname that stays put; ntfs-3g lists
+    libntfs-3g.so.*. Neither is bound.
+    """
+    text = spec.read_text()
+    definitions = dict(MACRO_DEFINITION.findall(text))
+
+    def expanded(suffix: str) -> str:
+        return re.sub(r"%\{?\??(\w+)\}?", lambda m: definitions.get(m.group(1), m.group(0)), suffix)
+
+    suffixes: dict[str, list[str]] = {}
+    for library in libraries:
+        stem, _, suffix = library.partition(".so.")
+        suffixes.setdefault(stem, []).append(suffix)
+    bound = []
+    for stem, listed in suffixes.items():
+        if all(re.search(r"%\{?version\b", s) or DATE_RUN.search(expanded(s)) for s in listed):
+            bound.extend(f"{stem}.so.{s}" for s in listed)
+    return bound
+
+
+def describe(libraries: list[str]) -> str:
+    shown = ", ".join(libraries[:3])
+    return shown + (f" and {len(libraries) - 3} more" if len(libraries) > 3 else "")
+
+
+def forge_proposal(
+    name: str,
+    entry: dict,
+    feed: dict,
+    opener=urllib.request.urlopen,
+    root: Path | None = None,
+    generations=frozenset(),
+) -> dict:
+    """What a single git-forge or Anitya lock should move to, if anything.
+
+    The newest stable release is proposed as an applied "update" whenever no
+    consumer can break:
+
+    - it shares the lock's major;
+    - the lock is calendar-versioned (D6): a date is one release line, so
+      linux-firmware 20260810 moves to 20261019. The exception is a recipe
+      whose soname carries the date (abseil-cpp), which stays "review";
+    - it crosses a major and the recipe's %files ships no versioned shared
+      library in any subpackage (D7): apps, CLI tools, firmware, data, fonts
+      and Python or Perl modules have no consumer linked to a soname.
+
+    A library that ships a versioned .so takes its newest same-major release
+    and reports the cross-major one as "review", naming the soname glob:
+    consumers must move in the same pull request. Another API generation (a
+    separate package; see api_generation) is only a "note". A feed version
+    that follows another numbering (scheme_mismatch) is never proposed; if
+    it is the only newer one, the lock is "review" with an "unparseable feed"
+    reason.
 
     Prereleases are never proposed, and a forge whose API cannot be read is
     reported and skipped so one unreachable project does not stop the rest.
-    An Anitya feed takes the same rule; only where the versions come from
-    differs.
     """
     label = forge_label(feed)
     fetch = anitya_versions if feed["forge"] == "anitya" else forge_versions
@@ -1011,30 +1181,49 @@ def forge_proposal(name: str, entry: dict, feed: dict, opener=urllib.request.url
         return {"name": name, "error": f"{label}: {error}"}
 
     current = entry["version"]
-    newest = newest_stable(available)
+    base = {"name": name, "module": label, "current": current}
+    stable = [v for v in available if not is_prerelease(v)]
+    raw = newest_stable(stable)
+    if raw is None or not newer(raw, current):
+        return {**base, "latest": None}
+    comparable = [v for v in stable if not scheme_mismatch(current, v)]
+    newest = newest_stable(comparable)
     if newest is None or not newer(newest, current):
-        return {"name": name, "module": label, "current": current, "latest": None}
+        return {**base, "kind": "review", "latest": raw,
+                "reason": f"unparseable feed: {raw} does not follow the lock's "
+                f"version scheme ({current}); fix the lock's feed"}
+    if major(newest) == major(current):
+        return {**base, "kind": "update", "latest": newest}
 
-    same_major = [
-        v for v in available
-        if not is_prerelease(v) and major(v) == major(current)
-    ]
-    within = newest_stable(same_major)
-    if within is not None and newer(within, current):
-        return {
-            "kind": "update",
-            "name": name,
-            "module": label,
-            "current": current,
-            "latest": within,
-        }
-    return {
-        "kind": "review",
-        "name": name,
-        "module": label,
-        "current": current,
-        "latest": newest,
-    }
+    within = newest_stable([v for v in comparable if major(v) == major(current)])
+    within = within if within is not None and newer(within, current) else None
+    update_within = {**base, "kind": "update", "latest": within}
+    if api_generation(name, current, newest, generations):
+        if within:
+            return update_within
+        return {**base, "kind": "note", "latest": newest,
+                "reason": "different API generation (separate package)"}
+
+    spec = recipe_spec(root, name) if root is not None else None
+    libraries = versioned_libraries(spec) if spec is not None else None
+    if libraries is None:
+        reason = "crosses a major, and there is no recipe to inspect for a versioned shared library"
+    elif is_calendar(current):
+        bound = date_bound_libraries(spec, libraries)
+        if not bound:
+            return {**base, "kind": "update", "latest": newest,
+                    "reason": "calendar-versioned: one release line"}
+        reason = (f"calendar-versioned, but the soname carries the date "
+                  f"({describe(bound)}): consumers must move in the same PR")
+    elif not libraries:
+        return {**base, "kind": "update", "latest": newest,
+                "reason": "crosses a major; the recipe ships no versioned shared library"}
+    else:
+        reason = (f"soname-coupled: consumers must move in the same PR "
+                  f"({describe(libraries)})")
+    if within:
+        return update_within
+    return {**base, "kind": "review", "latest": newest, "reason": reason}
 
 
 def primary_blocker(name: str, entry: dict, feed: dict, latest: str) -> str | None:
@@ -1148,17 +1337,22 @@ def plan(
                   its newest final across majors. Applied like "final".
       "review" -- a newer release no rule here may pick: a later cycle of a
                   library-scheme module gnome-build-meta does not map, a new
-                  major of one it does, or anything when gnome-build-meta is
-                  unavailable. Reported so a human sees it, never applied.
+                  major of one it does, anything when gnome-build-meta is
+                  unavailable, and for forge/Anitya feeds a soname-coupled
+                  cross-major release or an unparseable feed version
+                  (forge_proposal). Reported so a human sees it, never applied.
       "note"   -- informational, never applied: the lock is ahead of GNOME's
                   series (it still takes its own point releases as "final"),
-                  or a newer series exists that GNOME does not ship
-                  (pango 1.90.0, the development line toward 2.0).
+                  a newer series exists that GNOME does not ship (pango
+                  1.90.0, the development line toward 2.0), or the newer
+                  release is another API generation, a separate package
+                  (gtk3 -> gtk 4.25).
 
     A module whose index cannot be read is reported and skipped rather than
     failing the run: one unreachable module must not stop the other sixteen.
     """
     locks = source_locks(root)
+    generations = load_api_generations(root)
     proposals = []
     loaded: dict = {}
 
@@ -1178,7 +1372,8 @@ def plan(
 
     for name, entry, feed in candidates(locks, only):
         if feed["forge"] != "gnome":
-            proposal = forge_proposal(name, entry, feed, opener=opener)
+            proposal = forge_proposal(name, entry, feed, opener=opener, root=root,
+                                      generations=generations)
             if proposal.get("kind") == "update" and not primary_tracks_forge(entry):
                 if feed.get("relock"):
                     # --package on an explicit forge feed: apply() moves the
@@ -1273,7 +1468,14 @@ def plan(
 
         newest = newest_stable(available, prerelease=is_gnome_prerelease)
         if not ahead and newest is not None and version_key(newest) > version_key(current):
-            if series is not None:
+            if api_generation(name, current, newest, generations):
+                # gtk2 -> gtk 3.94, gtk3 -> 4.25, gcr3 -> gcr 4.x: the
+                # newer major is another package, never a pending move.
+                proposals.append({
+                    **base, "kind": "note", "latest": newest,
+                    "reason": "different API generation (separate package)",
+                })
+            elif series is not None:
                 proposals.append({
                     **base, "kind": "note", "latest": newest,
                     "reason": f"GNOME {stable.release} ships the {series} series",
@@ -1459,7 +1661,7 @@ def main() -> int:
 
     applied = 0
     for bump in finals:
-        why = f" ({bump['reason']})" if bump["kind"] == "stable" and bump.get("reason") else ""
+        why = f" ({bump['reason']})" if bump.get("reason") else ""
         print(f"{bump['name']}: {bump['current']} -> {bump['latest']}{why}")
         if args.apply:
             # One release whose bytes cannot be fetched is reported and

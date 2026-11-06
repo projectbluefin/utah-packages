@@ -73,6 +73,7 @@ class ValidateScriptTests(unittest.TestCase):
         source_fallbacks=None,
         fedora_baseline=None,
         review_only=None,
+        api_generations=None,
         sources_files=None,
         lock_in_order=True,
     ) -> None:
@@ -106,6 +107,10 @@ class ValidateScriptTests(unittest.TestCase):
         if review_only is not None:
             (root / "config" / "bump-review-only.txt").write_text(
                 "# guarded\n" + "".join(f"{name}\n" for name in review_only)
+            )
+        if api_generations is not None:
+            (root / "config" / "bump-api-generations.txt").write_text(
+                "# bound\n" + "".join(f"{name}\n" for name in api_generations)
             )
         if buildroot_lock is not None:
             (root / "config" / "buildroot-lock.json").write_text(
@@ -469,6 +474,12 @@ class ValidateScriptTests(unittest.TestCase):
         assert result.returncode != 0
         assert "bump-review-only.txt names packages the source lock does not carry: gdm-typo" \
             in result.stderr
+
+    def test_rejects_an_api_generations_name_the_lock_does_not_carry(self) -> None:
+        result = self.check(api_generations=("example", "fuse-typo"))
+        assert result.returncode != 0
+        assert "bump-api-generations.txt names packages the source lock does not carry: " \
+            "fuse-typo" in result.stderr
 
     def test_rejects_a_source_lock_out_of_name_order(self) -> None:
         # Tail-appended imports conflicted on every merge; name order keeps

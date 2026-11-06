@@ -16,6 +16,10 @@ import urllib.error
 from tools.bump_gate import load_review_only
 from tools.upstream_bump import (
     GnomeStable,
+    api_generation,
+    is_calendar,
+    scheme_mismatch,
+    versioned_libraries,
     anitya_versions,
     apply,
     checkout_release,
@@ -2218,13 +2222,15 @@ class GnomeStablePlanTests(unittest.TestCase):
         self.assertEqual([(p["kind"], p["latest"]) for p in proposals], [("review", "2.6.0")])
 
     def test_an_element_on_another_library_major_is_another_api(self) -> None:
-        # gbm builds gcr 4.x; the gcr3 lock is the 3.x API, not its predecessor.
+        # gbm builds gcr 4.x; the gcr3 lock is the 3.x API, not its predecessor,
+        # so 4.x is another package: a note, never a pending move.
         with tempfile.TemporaryDirectory() as tmp:
             proposals = self.plan_with_gbm(
                 tmp, [("gcr3", "gcr", "3.41.2")],
                 {"gcr": ["3.41.2", "4.4.0", "4.4.1"]},
             )
-        self.assertEqual([(p["kind"], p["latest"]) for p in proposals], [("review", "4.4.1")])
+        self.assertEqual([(p["kind"], p["latest"]) for p in proposals], [("note", "4.4.1")])
+        self.assertEqual(proposals[0]["reason"], "different API generation (separate package)")
 
     def test_a_review_only_package_is_still_not_applied(self) -> None:
         from tools.bump_gate import REVIEW_ONLY
@@ -2297,8 +2303,13 @@ def run_main_with_gbm(root: Path, tree: Path, caches: dict[str, list[str]]):
 MESA_ANITYA_URL = "https://release-monitoring.org/api/v2/versions/?project_id=1970"
 
 
-def explicit_feed_tree(tmp: str, entry: dict) -> Path:
-    """A scratch tree with one lock on a project download, its recipe and manifest."""
+def explicit_feed_tree(tmp: str, entry: dict, files: str = "") -> Path:
+    """A scratch tree with one lock on a project download, its recipe and manifest.
+
+    `files` is the body of the spec's %files section; a library fixture lists
+    its soname there, because a recipe with no versioned shared library may
+    cross a major on its own.
+    """
     root = Path(tmp)
     (root / "config").mkdir()
     (root / "config" / "upstream-sources.json").write_text(
@@ -2308,6 +2319,7 @@ def explicit_feed_tree(tmp: str, entry: dict) -> Path:
     package.mkdir(parents=True)
     (package / f"{entry['name']}.spec").write_text(
         f"Version:        {entry['version']}\nRelease:        2%{{?dist}}\n"
+        + (f"\n%files\n{files}" if files else "")
     )
     (package / "sources").write_text(f"SHA512 ({entry['filename']}) = {entry['sha512']}\n")
     return root
@@ -2321,6 +2333,8 @@ class ExplicitFeedMoveTests(unittest.TestCase):
     1.28.6 -> 1.28.9, bluez 5.87 -> 5.88 -- although the primary was the
     project's own download and only needed the version swapped.
     """
+
+    MESA_FILES = "%{_libdir}/libGL.so.1*\n"
 
     MESA = {
         "name": "mesa",
@@ -2347,7 +2361,7 @@ class ExplicitFeedMoveTests(unittest.TestCase):
         new_url = "https://archive.mesa3d.org/mesa-26.2.6.tar.xz"
         opener = fake_opener({**self.anitya(["27.0.0", "26.2.6", "26.2.1"]), new_url: tarball})
         with tempfile.TemporaryDirectory() as tmp:
-            root = explicit_feed_tree(tmp, dict(self.MESA))
+            root = explicit_feed_tree(tmp, dict(self.MESA), files=self.MESA_FILES)
             proposals = plan(root, None, opener=opener)
             self.assertEqual([(p["kind"], p["latest"]) for p in proposals],
                              [("update", "26.2.6")])
@@ -2372,9 +2386,12 @@ class ExplicitFeedMoveTests(unittest.TestCase):
 
     def test_a_cross_major_release_is_still_review(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            root = explicit_feed_tree(tmp, dict(self.MESA))
+            root = explicit_feed_tree(tmp, dict(self.MESA), files=self.MESA_FILES)
             proposals = plan(root, None, opener=fake_opener(self.anitya(["27.0.0", "26.2.1"])))
         self.assertEqual([(p["kind"], p["latest"]) for p in proposals], [("review", "27.0.0")])
+        self.assertEqual(proposals[0]["reason"],
+                         "soname-coupled: consumers must move in the same PR "
+                         "(%{_libdir}/libGL.so.1*)")
 
     def test_a_primary_without_its_version_gets_its_own_reason(self) -> None:
         entry = {**self.MESA, "url": "https://archive.mesa3d.org/mesa-latest.tar.xz",
@@ -2459,3 +2476,175 @@ class ExplicitFeedMoveTests(unittest.TestCase):
         applied.assert_not_called()
         self.assertIn("needs review  grub2: 2.12 -> 2.16", err.getvalue())
         self.assertIn(REVIEW_ONLY, err.getvalue())
+
+
+class LatestEverywhereTests(unittest.TestCase):
+    """Upstream's newest release moves unless a consumer can break (D6, D7)."""
+
+    def plan_one(self, entry: dict, versions: list[str], files: str = "",
+                 spec_extra: str = "", generations: tuple = ()) -> list[dict]:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = explicit_feed_tree(tmp, entry, files=files)
+            if spec_extra:
+                spec = root / "packages" / entry["name"] / f"{entry['name']}.spec"
+                spec.write_text(spec_extra + spec.read_text())
+            if generations:
+                (root / "config" / "bump-api-generations.txt").write_text(
+                    "".join(f"{name}\n" for name in generations))
+            return plan(root, None, opener=fake_opener({
+                "https://release-monitoring.org/api/v2/versions/?project_id=1":
+                    json.dumps({"stable_versions": versions}).encode(),
+            }))
+
+    @staticmethod
+    def lock(name: str, version: str, filename: str | None = None) -> dict:
+        filename = filename or f"{name}-{version}.tar.xz"
+        return {"name": name, "version": version, "filename": filename,
+                "url": f"https://example.org/releases/{filename}",
+                "sha512": "a" * 128, "feed": "https://release-monitoring.org/project/1"}
+
+    def moves(self, proposals):
+        return [(p["kind"], p["latest"]) for p in proposals]
+
+    # D6: a date is one release line.
+    def test_a_calendar_version_moves_across_its_leading_date(self) -> None:
+        proposals = self.plan_one(self.lock("linux-firmware", "20260810"),
+                                  ["20261019", "20260810"], files="/usr/lib/firmware/*\n")
+        self.assertEqual(self.moves(proposals), [("update", "20261019")])
+        self.assertEqual(proposals[0]["reason"], "calendar-versioned: one release line")
+
+    def test_a_calendar_version_with_a_fixed_soname_still_moves(self) -> None:
+        # ntfs-3g: libntfs-3g.so.* does not carry the date.
+        proposals = self.plan_one(self.lock("ntfs-3g", "2025.12.2"),
+                                  ["2026.9.28", "2025.12.2"],
+                                  files="%{_libdir}/libntfs-3g.so.*\n")
+        self.assertEqual(self.moves(proposals), [("update", "2026.9.28")])
+
+    def test_a_date_bound_soname_keeps_a_calendar_lock_in_review(self) -> None:
+        # abseil-cpp: every library is libabsl_*.so.%{lib_version}, 2605.0.0.
+        proposals = self.plan_one(
+            self.lock("abseil-cpp", "20260526.0"), ["20260817.0", "20260526.0"],
+            spec_extra="%global lib_version 2605.0.0\n",
+            files="%{_libdir}/libabsl_base.so.%{lib_version}\n"
+                  "%{_libdir}/libabsl_city.so.%{lib_version}\n",
+        )
+        self.assertEqual(self.moves(proposals), [("review", "20260817.0")])
+        self.assertEqual(
+            proposals[0]["reason"],
+            "calendar-versioned, but the soname carries the date "
+            "(%{_libdir}/libabsl_base.so.%{lib_version}, "
+            "%{_libdir}/libabsl_city.so.%{lib_version}): consumers must move in the same PR",
+        )
+
+    # D7: no versioned shared library, no consumer to break.
+    def test_an_app_crosses_a_major(self) -> None:
+        proposals = self.plan_one(self.lock("fastfoo", "1.9.0"), ["2.1.0", "1.9.0"],
+                                  files="%{_bindir}/fastfoo\n%{_mandir}/man1/fastfoo.1*\n")
+        self.assertEqual(self.moves(proposals), [("update", "2.1.0")])
+        self.assertEqual(proposals[0]["reason"],
+                         "crosses a major; the recipe ships no versioned shared library")
+
+    def test_a_python_module_with_an_extension_crosses_a_major(self) -> None:
+        # An unversioned .so (a Python extension, a plugin) is not a soname.
+        proposals = self.plan_one(
+            self.lock("python-foo", "1.4.0"), ["2.0.1", "1.4.0"],
+            files="%{python3_sitearch}/foo/\n"
+                  "%{python3_sitearch}/foo/_speedups.cpython-*.so\n",
+        )
+        self.assertEqual(self.moves(proposals), [("update", "2.0.1")])
+
+    def test_a_library_in_any_subpackage_stays_review_naming_its_soname(self) -> None:
+        proposals = self.plan_one(
+            self.lock("libfoo", "1.2.0"), ["2.0.0", "1.2.0"],
+            files="%{_bindir}/foo\n\n%files libs\n%{_libdir}/libfoo.so.*\n",
+        )
+        self.assertEqual(self.moves(proposals), [("review", "2.0.0")])
+        self.assertEqual(proposals[0]["reason"],
+                         "soname-coupled: consumers must move in the same PR "
+                         "(%{_libdir}/libfoo.so.*)")
+
+    def test_a_library_still_takes_its_newest_same_major_release(self) -> None:
+        proposals = self.plan_one(self.lock("libfoo", "1.2.0"), ["2.0.0", "1.3.0", "1.2.0"],
+                                  files="%{_libdir}/libfoo.so.1*\n")
+        self.assertEqual(self.moves(proposals), [("update", "1.3.0")])
+
+    def test_versioned_libraries_reads_only_file_lists(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            spec = Path(tmp) / "x.spec"
+            spec.write_text(
+                "%install\nln -s libx.so.1 %{buildroot}%{_libdir}/libx.so.1.0\n"
+                "%files\n%{_bindir}/x\n%files devel\n%{_libdir}/libx.so\n"
+                "%changelog\n- shipped libx.so.2 once\n"
+            )
+            self.assertEqual(versioned_libraries(spec), [])
+            self.assertIsNone(versioned_libraries(Path(tmp) / "missing.spec"))
+
+    # Version-scheme oddities are never proposed.
+    def test_unparseable_feeds_get_their_own_reason(self) -> None:
+        for name, version, feed in (
+            ("ghostscript", "10.08.0", ["10080", "10.08.0"]),
+            ("lshw", "B.02.20", ["02.20"]),
+            ("hunspell-en", "0.20260225", ["2026.02.25"]),
+            ("libvpl", "2.17.0", ["2023.4.0", "2.17.0"]),
+        ):
+            with self.subTest(name=name):
+                proposals = self.plan_one(self.lock(name, version), feed,
+                                          files="%{_bindir}/x\n")
+                self.assertEqual(len(proposals), 1)
+                self.assertEqual(proposals[0]["kind"], "review")
+                self.assertTrue(proposals[0]["reason"].startswith("unparseable feed: "),
+                                proposals[0]["reason"])
+
+    def test_a_comparable_release_beside_feed_noise_still_moves(self) -> None:
+        proposals = self.plan_one(self.lock("ghostscript", "10.08.0"),
+                                  ["10080", "10.09.0", "10.08.0"], files="%{_bindir}/gs\n")
+        self.assertEqual(self.moves(proposals), [("update", "10.09.0")])
+
+    def test_scheme_mismatch(self) -> None:
+        self.assertTrue(scheme_mismatch("10.08.0", "10080"))
+        self.assertTrue(scheme_mismatch("B.02.20", "02.20"))
+        self.assertTrue(scheme_mismatch("0.20260225", "2026.02.25"))
+        self.assertFalse(scheme_mismatch("20260810", "20261019"))
+        self.assertFalse(scheme_mismatch("1.98.8", "1.104.5"))
+        self.assertFalse(scheme_mismatch("238", "239"))
+        # thin-provisioning-tools' stray tag reads as 2 beside the locked 1.3.3.
+        self.assertTrue(scheme_mismatch("1.3.3", "2"))
+        self.assertFalse(scheme_mismatch("62", "63"))
+
+    def test_is_calendar(self) -> None:
+        for version in ("20260810", "20260526.0", "2026.10.0", "2026.7.7", "2026.3"):
+            self.assertTrue(is_calendar(version), version)
+        for version in ("1.2.3", "238", "26.05", "0.20260225", "2026.13.1", "10080"):
+            self.assertFalse(is_calendar(version), version)
+
+    # Another API generation is a separate package, never a pending move.
+    def test_a_name_that_carries_its_major_never_crosses_it(self) -> None:
+        proposals = self.plan_one(self.lock("SDL3", "3.4.16"), ["4.0.0", "3.4.16"])
+        self.assertEqual(self.moves(proposals), [("note", "4.0.0")])
+        self.assertEqual(proposals[0]["reason"], "different API generation (separate package)")
+        proposals = self.plan_one(self.lock("SDL3", "3.4.16"), ["4.0.0", "3.4.20", "3.4.16"])
+        self.assertEqual(self.moves(proposals), [("update", "3.4.20")])
+
+    def test_the_api_generations_list_binds_a_lock_its_name_does_not(self) -> None:
+        proposals = self.plan_one(self.lock("fuse", "2.9.9"), ["3.18.3", "2.9.9"],
+                                  files="%{_bindir}/fusermount\n", generations=("fuse",))
+        self.assertEqual(self.moves(proposals), [("note", "3.18.3")])
+
+    def test_a_gnome_lock_on_an_older_api_generation_is_a_note(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = gnome_tree(tmp, [("gtk2", "gtk+", "2.24.33")])
+            proposals = plan(root, None, opener=cache_opener({"gtk+": ["2.24.33", "3.94.0"]}))
+        self.assertEqual(self.moves(proposals), [("note", "3.94.0")])
+        self.assertEqual(proposals[0]["reason"], "different API generation (separate package)")
+
+    def test_api_generation(self) -> None:
+        self.assertTrue(api_generation("gtk3", "3.24.52", "4.25.0"))
+        self.assertTrue(api_generation("mozjs140", "140.13.0", "141.0"))
+        self.assertFalse(api_generation("glibmm2.68", "2.86.0", "3.0.0"))
+        self.assertFalse(api_generation("gnome-desktop3", "51.0", "52.0"))
+        self.assertTrue(api_generation("libgweather", "4.6.0", "40.0", {"libgweather"}))
+        self.assertFalse(api_generation("gtk3", "3.24.52", "3.24.53"))
+
+    # D10: gdm follows GNOME's stable release like gnome-shell.
+    def test_gdm_is_not_review_only(self) -> None:
+        self.assertNotIn("gdm", load_review_only(ROOT))

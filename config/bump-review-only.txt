@@ -18,7 +18,10 @@ accountsservice
 cups-browsed
 cups-filters
 fprintd
-gdm
+# gdm is deliberately not listed (removed 2026-11-06): it is part of GNOME's
+# release, mapped in gnome-build-meta, and follows GNOME's newest stable
+# release with gnome-shell and mutter. Holding it back alone would pair a new
+# shell with an old login screen.
 # The bootloader: a bad release, or replaced bytes, can leave a machine
 # unbootable. Its release-monitoring.org feed makes every 2.x a same-major update.
 grub2
