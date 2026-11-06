@@ -565,8 +565,8 @@ content-addressed URL that can never resolve is not a mirror.
 
 ### xevd and xeve: the deliberate exception to upstream-first
 
-xevd and xeve (the MPEG-5 EVC decoder and encoder ffmpeg links) stay on
-Fedora's generated `-free` tarballs, on the lookaside, by owner decision.
+xevd and xeve (the MPEG-5 EVC decoder and encoder ffmpeg links) are built
+from Fedora's generated `-free` tarballs, on the lookaside, by owner decision.
 That is legally required, not a backlog item. Upstream
 (`github.com/mpeg5/xevd`, `github.com/mpeg5/xeve`) publishes only the full
 tree, including `src_main`, the EVC Main profile, whose added tools are
@@ -578,13 +578,19 @@ No upstream serves those bytes, so:
 - The primary stays the lookaside URL of Fedora's upload, and both names
   stay on `config/fedora-primary-sources.txt`. Do not re-lock them to the
   GitHub archive: that would ship `src_main`.
-- `upstream_bump.py --package xevd` (or `xeve`) keeps answering `needs
-  review ... the primary is Fedora's lookaside`. That is the expected
-  answer for these two; there is no upstream primary to hand it.
-- A version move follows Fedora's upload, never the upstream tag: re-import
-  Rawhide's recipe at the Koji-built commit and lock the lookaside URL of
-  the new `-free` tarball. On 2026-11-06 Rawhide had xevd 0.8.0 and xeve
-  0.7.1; the owner kept both at 0.7.0.
+- When upstream tags a newer release, `upstream_bump.py --package xevd` (or
+  `xeve`) answers `needs review ... the primary is Fedora's lookaside`.
+  That is the cue to move by hand, not a lock to re-pin upstream.
+- The policy is the `-free` tarball, not a frozen version. A version move
+  follows Fedora's upload, never the upstream tag: re-import Rawhide's
+  recipe at the Koji-built commit (`import_rawhide.py <pkg> --ref <commit>
+  --replace`), delete the inert `.gitignore`, and lock the lookaside URL of
+  the new `-free` tarball after downloading it, checking its SHA-512 against
+  `sources` and that it has no `src_main`. Done on 2026-11-06: xevd 0.7.0 ->
+  0.8.0 (Koji `xevd-0.8.0-1.fc46`, which renamed the format-overflow patch
+  without a version) and xeve 0.7.0 -> 0.7.1 (`xeve-0.7.1-1.fc46`). Neither
+  recipe carried a factory change. The sonames stay `.so.0`, and xevd's
+  public `inc/xevd.h` did not change.
 - Canary's pass3 perturbs xevd (`tools/canary.py` `PERTURBED`).
   `tests/test_canary.py` requires every Canary source on the lookaside, so
   a flaky upstream host cannot fail Canary, and xevd is the one package

@@ -6740,19 +6740,19 @@
     },
     {
       "name": "xevd",
-      "version": "0.7.0",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/xevd/xevd-free-0.7.0.tar.gz/sha512/3ddd2c752dc8743ef0df2ca30fa6f2d01ea8fe58fe3c531a16676eb508e59656e786f8424cc7f91137759ce27091b237af25a434fa0e0380e67cc0f1c0d7620e/xevd-free-0.7.0.tar.gz",
-      "filename": "xevd-free-0.7.0.tar.gz",
+      "version": "0.8.0",
+      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/xevd/xevd-free-0.8.0.tar.gz/sha512/28330cfc70b5d5b258dca7e5212d31b444e922e4e00771126ebf0e408c6a18d9e011751602e0d2d07c2c1d812b3c2643e3c72847b5619e28c37da292dd901083/xevd-free-0.8.0.tar.gz",
+      "filename": "xevd-free-0.8.0.tar.gz",
       "feed": "https://release-monitoring.org/project/378023",
-      "sha512": "3ddd2c752dc8743ef0df2ca30fa6f2d01ea8fe58fe3c531a16676eb508e59656e786f8424cc7f91137759ce27091b237af25a434fa0e0380e67cc0f1c0d7620e"
+      "sha512": "28330cfc70b5d5b258dca7e5212d31b444e922e4e00771126ebf0e408c6a18d9e011751602e0d2d07c2c1d812b3c2643e3c72847b5619e28c37da292dd901083"
     },
     {
       "name": "xeve",
-      "version": "0.7.0",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/xeve/xeve-free-0.7.0.tar.gz/sha512/62c64c0b8e5a1ad830dbec8d974079122734e20e65fd6cba2736639b7bd90f358c992e58d6cfe708e0d5efeaa3f675b2ba44c2dfa31dc762d06c002d59b14e33/xeve-free-0.7.0.tar.gz",
-      "filename": "xeve-free-0.7.0.tar.gz",
+      "version": "0.7.1",
+      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/xeve/xeve-free-0.7.1.tar.gz/sha512/866697b91868ed6d01c09eddea2f100046fb4cf6f5bad98ea324660738fe0097fb7bab892e19aec83663bdef90baf291ebc52e604b2e8a235c577343e4937973/xeve-free-0.7.1.tar.gz",
+      "filename": "xeve-free-0.7.1.tar.gz",
       "feed": "https://release-monitoring.org/project/378135",
-      "sha512": "62c64c0b8e5a1ad830dbec8d974079122734e20e65fd6cba2736639b7bd90f358c992e58d6cfe708e0d5efeaa3f675b2ba44c2dfa31dc762d06c002d59b14e33"
+      "sha512": "866697b91868ed6d01c09eddea2f100046fb4cf6f5bad98ea324660738fe0097fb7bab892e19aec83663bdef90baf291ebc52e604b2e8a235c577343e4937973"
     },
     {
       "name": "xfsprogs",
