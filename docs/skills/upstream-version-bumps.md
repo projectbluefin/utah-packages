@@ -494,32 +494,117 @@ the version; the daily run moves the lock from then on.
 Done on 2026-11-06 with matching bytes: device-mapper-persistent-data (GitHub
 archive), mozjs140 (ftp.mozilla.org), webkitgtk (webkitgtk.org), xmlrpc-c
 (SourceForge), and python-argcomplete (the PyPI `source` form). All five then
-proposed their next release.
+proposed their next release. python-typing-inspection followed once Canary
+stopped perturbing it (the PyPI `source` form, same bytes), and
+`upstream_bump.py --package python-typing-inspection --apply` then moved it
+0.4.4 -> 0.4.5; Fedora uploaded the same 0.4.5 sdist, so the rebuilt
+lookaside fallback resolves. Anitya answers HTTP 503 now and then, and the
+tool reports that as `skipped <pkg>: release-monitoring.org/...: HTTP Error
+503`; rerun it rather than editing the lock by hand.
 
-Left stuck, with the reason:
+Of the packages this re-pin left stuck, only xevd and xeve remain on the
+lookaside: they are the deliberate exception below.
 
-- **Kept on the lookaside on purpose:** python-typing-inspection. The
-  upstream PyPI `source` URL matches its bytes, but it is Canary's perturbed
-  package. `tests/test_canary.py` requires every Canary source to stay on
-  the lookaside, so a flaky upstream host cannot fail Canary.
-- **The upstream bytes differ.**
-  - enchant2: the GitHub release asset's regenerated autotools files differ
-    from Fedora's copy.
-  - noopenh264: Codeberg's regenerated archive has the same contents but a
-    different gzip stream.
-  - samba: Fedora recompresses upstream's `.tar.gz` as `.tar.xz`
-    (`#/samba-....tar.xz` in `Source0`). The tar inside is identical.
-  - Each needs a decision to re-lock new bytes, and samba also needs a
-    recipe change.
-- **No upstream equivalent:** xevd and xeve lock Fedora-generated `-free`
-  tarballs (`*_gen_free_tarball.sh`).
-- **libao 1.2.2 exists only as a git tag.** The tag archive has no
-  `configure`, only `autogen.sh` and `configure.ac`. The recipe edits
-  `configure` in `%prep` and runs `%configure` directly, so moving it needs
-  autoreconf and its BuildRequires. Of the carried patches, the pulse
-  latency fix is already in 1.2.2, while the CVE-2017-11548 diff and the
-  nanosleep patch still apply. That is a recipe change for a reviewer, not
-  a hand bump.
+### Re-locking new upstream bytes (owner decisions, 2026-11-06)
+
+A lock whose upstream bytes differ from the lookaside copy is not re-pinned
+at its version. The owner's rule is upstream first: re-lock the primary to
+the project's own download, move to its newest release in the same commit,
+and keep the lookaside as a fallback only when Fedora carries the very same
+bytes (download both and compare). Otherwise drop the fallback; a
+content-addressed URL that can never resolve is not a mirror.
+
+- enchant2 2.8.19 -> 2.8.21: `upstream_bump.py --package enchant2 --apply`
+  relocks onto the explicit GitHub release-asset feed and drops the package
+  from the ratchet. Fedora uploaded the same 2.8.21 asset, so the lookaside
+  fallback stays. The recipe's `%prep` runs `autoreconf -ifv` (the aspell
+  pkg-config patch edits `configure.ac`), so the build regenerates its own
+  autotools and never depends on whoever generated the tarball's.
+  Rawhide's 2.8.21-2 drops aspell with `%bcond aspell %[... 0%{?fedora} <
+  46]` (rhbz#2564627). That does not apply here, so the recipe keeps aspell.
+  The hermetic root is Fedora 44 plus Hummingbird (`FEDORA_RELEASEVER` in
+  `tools/mock_config.py`), so `%fedora` is 44, and Fedora 44's release repo
+  carries `aspell-devel-12:0.60.8.1-7.fc44`. Neither the Fedora excludes
+  nor Hummingbird hide it; Hummingbird ships no aspell at all (its primary
+  `43ce178a...`, 2026-11-06). Re-check when `FEDORA_RELEASEVER` reaches 46.
+- noopenh264 2.6.0 -> 2.7.0: no forge feed the tool reads covers Codeberg,
+  and an Anitya feed never relocks. So the primary was re-locked by hand at
+  the locked version to the recipe's own `Source` (the Codeberg tag archive,
+  new digest), the package was dropped from the ratchet, and
+  `upstream_bump.py --package noopenh264 --apply` then moved it by swapping
+  the version into that primary. Fedora carries only 2.6.0, in other bytes,
+  so there is no fallback. 2.7.0 renamed `README` to `README.md`, which
+  `%doc` follows. The soname stays at 8. Codeberg generates archives on
+  demand; if a later fetch stops matching the lock, re-lock from a
+  fresh download instead of reaching for the lookaside.
+- samba 4.25.0rc1 -> 4.25.1: Fedora's `Source0` renamed upstream's `.tar.gz`
+  to a `.tar.xz` it recompressed (`#/samba-....tar.xz`). Rawhide built
+  4.25.1, so its recipe was re-imported at the Koji commit
+  (`import_rawhide.py samba --ref <commit> --replace`), the inert files were
+  deleted, and the two factory deviations were put back (Ceph VFS modules
+  off, `libicu-devel >= 78`). `Source0`/`Source1` then name
+  `download.samba.org/pub/samba/stable/` directly, and `%prep` checks the
+  signature with `zcat` instead of `xzcat`. Fedora's `.tar.xz` holds other
+  bytes, so there is no fallback; the `.asc` is identical and stays a
+  bundled `sources` entry. The forced-rebuild `rebuild_reason` went with
+  the version that needed it.
+- Samba signs the **uncompressed** tar (`samba-X.tar.asc` beside
+  `samba-X.tar.gz`). `gpg --verify` against the `.tar.gz` reports a BAD
+  signature, so the lock sets `"signature_covers": "tar"` next to
+  `signature_url` and `gpg_key`. `source_pipeline.py` then decompresses
+  the download (gzip, xz or bzip2) before verifying. The default is
+  `"file"`, the published file itself, as for webkitgtk and cryptopp.
+  Like webkitgtk's, the version-bound `.asc` in `sources` makes
+  `check_bumpable()` refuse the next release, so samba moves by hand.
+- libao 1.2.0 -> 1.2.2: 1.2.2 exists only as a git tag, whose archive has
+  no `configure`. The primary was re-locked by hand at 1.2.0 to the GitHub
+  tag archive (`github.com/xiph/libao/archive/<v>/libao-<v>.tar.gz`; the
+  primary then names the feed, so the Anitya `feed` went), and
+  `upstream_bump.py --package libao --apply` moved it to 1.2.2. The tool
+  does not touch `Source0`, so the recipe change is by hand: `Source0`
+  names the tag archive, `%prep` runs `autoreconf -fi` after the patches
+  (BuildRequires autoconf, automake, libtool), and the old
+  `sed -i "s/-O20 -ffast-math//" configure` still matches the regenerated
+  `configure`. The pulse latency patch is merged upstream and was dropped;
+  the CVE-2017-11548 diff and the nanosleep patch apply with fuzz 0. The
+  soname stays at `libao.so.4` (`LIB_CURRENT` 5, `LIB_AGE` 1). No Fedora
+  copy of the tag archive exists, so there is no fallback.
+
+### xevd and xeve: the deliberate exception to upstream-first
+
+xevd and xeve (the MPEG-5 EVC decoder and encoder ffmpeg links) are built
+from Fedora's generated `-free` tarballs, on the lookaside, by owner decision.
+That is legally required, not a backlog item. Upstream
+(`github.com/mpeg5/xevd`, `github.com/mpeg5/xeve`) publishes only the full
+tree, including `src_main`, the EVC Main profile, whose added tools are
+patent-encumbered. Fedora's `*_gen_free_tarball.sh` (carried as `Source1`)
+deletes `src_main` and repacks the Baseline profile as
+`<name>-free-<version>.tar.gz`, and only that stripped tarball may ship.
+No upstream serves those bytes, so:
+
+- The primary stays the lookaside URL of Fedora's upload, and both names
+  stay on `config/fedora-primary-sources.txt`. Do not re-lock them to the
+  GitHub archive: that would ship `src_main`.
+- When upstream tags a newer release, `upstream_bump.py --package xevd` (or
+  `xeve`) answers `needs review ... the primary is Fedora's lookaside`.
+  That is the cue to move by hand, not a lock to re-pin upstream.
+- The policy is the `-free` tarball, not a frozen version. A version move
+  follows Fedora's upload, never the upstream tag: re-import Rawhide's
+  recipe at the Koji-built commit (`import_rawhide.py <pkg> --ref <commit>
+  --replace`), delete the inert `.gitignore`, and lock the lookaside URL of
+  the new `-free` tarball after downloading it, checking its SHA-512 against
+  `sources` and that it has no `src_main`. Done on 2026-11-06: xevd 0.7.0 ->
+  0.8.0 (Koji `xevd-0.8.0-1.fc46`, which renamed the format-overflow patch
+  without a version) and xeve 0.7.0 -> 0.7.1 (`xeve-0.7.1-1.fc46`). Neither
+  recipe carried a factory change. The sonames stay `.so.0`, and xevd's
+  public `inc/xevd.h` did not change.
+- Canary's pass3 perturbs xevd (`tools/canary.py` `PERTURBED`).
+  `tests/test_canary.py` requires every Canary source on the lookaside, so
+  a flaky upstream host cannot fail Canary, and xevd is the one package
+  whose lookaside primary is permanent. It is also a small CMake build
+  (`cmake`, `gcc`) that no Canary package depends on, so it builds in wave
+  0 with no factory repository and its perturbation reaches nothing else.
+  python-typing-inspection held that role until its PyPI re-pin.
 
 ### Hand version moves (2026-11-06)
 

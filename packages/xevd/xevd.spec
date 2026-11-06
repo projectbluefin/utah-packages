@@ -1,5 +1,5 @@
 Name:           xevd
-Version:        0.7.0
+Version:        0.8.0
 Release:        %autorelease
 Summary:        Reference MPEG-5 Part 1 (EVC) decoder
 
@@ -9,7 +9,7 @@ URL:            https://github.com/mpeg5/xevd
 Source0:        %{name}-free-%{version}.tar.gz
 # Script to generate tarball with unencumbered sources
 Source1:        %{name}_gen_free_tarball.sh
-Patch0:         %{name}-%{version}-format-overflow.patch
+Patch0:         %{name}-format-overflow.patch
 
 BuildRequires:  cmake >= 3.12
 BuildRequires:  gcc

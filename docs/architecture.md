@@ -291,7 +291,7 @@ the pipeline and not on a flaky upstream host.
 | --- | --- |
 | `pass1` | The set builds, passes precedence and a Hummingbird-only transaction over every binary it produced, and publishes, signs and attests `utah-packages:canary-<pr>`. Never `latest`. `verify-publish` then reads that digest with Utah's own `scripts/check-repo-availability.py`, fetched from Utah's `main`, asserts two layers with repodata first, and verifies the signature and provenance. |
 | `pass2` | The same set again compiles nothing: every build is a cache hit, so the key is stable from one run to the next. |
-| `pass3` | The same set plus `python-typing-inspection` with its recipe perturbed in the checkout: that one compiles and every other package still hits, so one package's change does not invalidate the cache wholesale. |
+| `pass3` | The same set plus `xevd` with its recipe perturbed in the checkout: that one compiles and every other package still hits, so one package's change does not invalidate the cache wholesale. xevd is a small CMake library no canary package depends on, and its lookaside source is permanent (only Fedora's patent-stripped tarball may ship). |
 
 The cache is salted with a digest of the build path (`tools/canary.py
 salt`), so a change to how packages are compiled compiles for real in
