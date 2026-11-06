@@ -1,0 +1,93 @@
+[archive]
+post_commands = [
+    ["rm", "-rf", "vendor/github.com/zeebo/blake3/LICENSE"]
+]
+
+[archive.dependency_overrides]
+"github.com/cronokirby/saferith" = "1f11f94"
+"github.com/zeebo/blake3" = "b032e7b6def0"
+"github.com/internxt/rclone-adapter" = "v0.1.0"
+
+[licensing]
+detector = "askalono"
+[[licensing.licenses]]
+path = "vendor/bazil.org/fuse/LICENSE"
+sha256sum = "b0310b2546ffbf6433751c452c66e5548460e49d1a4fc8260ba3ba93c81b18d7"
+expression = "BSD-2-Clause AND BSD-3-Clause"
+
+[[licensing.licenses]]
+path = "vendor/github.com/cloudflare/circl/LICENSE"
+sha256sum = "b0da1764fe4d13d610b695536fc3f2ebc362482d053a1cd258e36975bc6b97a7"
+expression = "BSD-3-Clause"
+
+[[licensing.licenses]]
+path = "vendor/gopkg.in/yaml.v3/LICENSE"
+sha256sum = "d18f6323b71b0b768bb5e9616e36da390fbd39369a81807cca352de4e4e6aa0b"
+expression = "Apache-2.0 AND MIT"
+
+[[licensing.licenses]]
+path = "vendor/moul.io/http2curl/v2/COPYRIGHT"
+sha256sum = "d05838dda4db5364992305df1d441704bb668108c2dda4c7e79f2bce4db1a39a"
+expression = "Apache-2.0 OR MIT"
+
+[[licensing.licenses]]
+path = "vendor/storj.io/infectious/LICENSE"
+sha256sum = "b46eabe2b771e0f345dc6ded565e1710a3a72d2c4a117eb6862ebdb398ebd87d"
+expression = "BSD-2-Clause AND MIT"
+
+[[licensing.licenses]]
+path = "vendor/github.com/willscott/go-nfs-client/LICENSE_BSD-2.txt"
+sha256sum = "02b23ef9af2c84ba65a6fd587e63c0ad8b33d8005f98683198c568a382200f04"
+expression = "BSD-2-Clause"
+[[licensing.licenses]]
+path = "COPYING"
+sha256sum = "8cd2e9e750b90a04b7d82dbbca3930c696ae0309d7c10464f90a44f45754cd04"
+expression = "MIT"
+[[licensing.licenses]]
+path = "cmd/bisync/LICENSE.cjnaz"
+sha256sum = "f3329cd6c4dcb098ddbbd8671f2457bbb7c82b3bd8129c73190d3468db77c4e6"
+expression = "MIT"
+[[licensing.licenses]]
+path = "cmd/serve/dlna/LICENSE.anacrolix"
+sha256sum = "d51c00bad765eba320d6f2f9c955a48f060835a3cd0b9803e06bbc345efffd4b"
+expression = "BSD-3-Clause"
+[[licensing.licenses]]
+path = "fs/rc/js/LICENSE.wasmexec"
+sha256sum = "4835612df0098ca95f8e7d9e3bffcb02358d435dbb38057c844c99d7f725eb20"
+expression = "BSD-3-Clause"
+[[licensing.licenses]]
+path = "vendor/github.com/calebcase/tmpfile/LICENSE.golang"
+sha256sum = "2d36597f7117c38b006835ae7f537487207d8ec407aa9d9980794b2030cbc067"
+expression = "BSD-3-Clause"
+[[licensing.licenses]]
+path = "vendor/github.com/minio/md5-simd/LICENSE.Golang"
+sha256sum = "2d36597f7117c38b006835ae7f537487207d8ec407aa9d9980794b2030cbc067"
+expression = "BSD-3-Clause"
+[[licensing.licenses]]
+path = "vendor/github.com/ncw/swift/v2/COPYING"
+sha256sum = "8cd2e9e750b90a04b7d82dbbca3930c696ae0309d7c10464f90a44f45754cd04"
+expression = "MIT"
+[[licensing.licenses]]
+path = "vendor/gopkg.in/yaml.v2/LICENSE.libyaml"
+sha256sum = "a94710b55e03b5285f77d048c5ba61bb9d6ee04a06c0eb90e68821e11b0c707a"
+expression = "MIT"
+[[licensing.licenses]]
+path = "vendor/moul.io/http2curl/v2/LICENSE-APACHE"
+sha256sum = "98a7468a8cdd7c010b2b09ebf87459695dc65a55e608fc2f6fcb10636174706a"
+expression = "Apache-2.0"
+[[licensing.licenses]]
+path = "vendor/moul.io/http2curl/v2/LICENSE-MIT"
+sha256sum = "ded78f83bdbffcdff5f79462cc9d655d9a1b1fcf5bba6359583ac9a1cf4fb980"
+expression = "MIT"
+[[licensing.licenses]]
+path = "vendor/github.com/shirou/gopsutil/v4/LICENSE"
+sha256sum = "ad1e64b82c04fb2ee6bfe521bff01266971ffaa70500024d4ac767c6033aafb9"
+expression = "BSD-3-Clause"
+[[licensing.licenses]]
+path = "vendor/github.com/cloudsoda/sddl/LICENSE"
+sha256sum = "e3a994d82e644b03a792a930f574002658412f62407f5fee083f2555c5f23118"
+expression = "LGPL-3.0-only"
+[[licensing.licenses]]
+path = "vendor/go.yaml.in/yaml/v3/LICENSE"
+sha256sum = "d18f6323b71b0b768bb5e9616e36da390fbd39369a81807cca352de4e4e6aa0b"
+expression = "MIT AND (MIT AND Apache-2.0)"

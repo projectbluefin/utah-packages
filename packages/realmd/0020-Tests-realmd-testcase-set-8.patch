@@ -1,0 +1,400 @@
+From c0c8f6b1e1347ee75c86ee06579ccb4b86b5e534 Mon Sep 17 00:00:00 2001
+From: Shridhar Gadekar <shridhar.always@gmail.com>
+Date: Thu, 23 Apr 2026 15:42:22 +0530
+Subject: [PATCH 20/20] Tests: realmd testcase set 8
+
+Added following scenarios:
+ 1. with `realm join` populate OS-name, os-version attributes
+ 2. realm join with qualified-names disabled using winbind
+ 3. realm join with qualified-names disabled
+ 4. realm join with modified default-home and default-shell
+
+Signed-off-by: Shridhar Gadekar <shridhar.always@gmail.com>
+---
+ tests/test_realmd.py          | 319 ++++++++++++++++++++++++++++++++++
+ tests/topology_controllers.py |  21 ++-
+ 2 files changed, 338 insertions(+), 2 deletions(-)
+
+diff --git a/tests/test_realmd.py b/tests/test_realmd.py
+index f4e8f4a..8c4b475 100644
+--- a/tests/test_realmd.py
++++ b/tests/test_realmd.py
+@@ -4,6 +4,7 @@ from __future__ import annotations
+ 
+ import base64
+ import re
++import time
+ import uuid
+ 
+ import pytest
+@@ -731,6 +732,65 @@ def test_realm_join_no_automatic_id_mapping(client: Client, provider: GenericADP
+     assert result.group.id == EXPLICIT_GID, f"Expected GID {EXPLICIT_GID}, got {result.group.id}!"
+ 
+ 
++@pytest.mark.importance("high")
++@pytest.mark.topology(KnownTopologyGroup.AnyAD)
++def test_realm_join_custom_computer_and_os_attributes(client: Client, provider: GenericADProvider):
++    """
++    :title: realm join with custom computer-name, os-name, and os-version
++    :steps:
++        1. Join domain with --computer-name, --os-name, and --os-version parameters
++        2. Use adcli show-computer to retrieve computer object attributes from AD
++        3. Verify computer name, operatingSystem, and operatingSystemVersion are set correctly
++        4. Leave domain with --remove to cleanup
++    :expectedresults:
++        1. Domain join succeeds with custom parameters
++        2. adcli show-computer retrieves computer object attributes successfully
++        3. All custom attributes are set correctly (computer name, operatingSystem, operatingSystemVersion)
++        4. Domain leave succeeds and computer object is removed
++    :customerscenario: False
++    """
++    custom_computer_name = "testpc-" + str(uuid.uuid4())[:8]
++    custom_os_name = "TestOS-Linux"
++    custom_os_version = "1.2.3.4.5"
++
++    domain = provider.host.domain
++
++    # Join with all custom attributes
++    join_result = client.realm.join(
++        domain=domain,
++        user=provider.host.adminuser,
++        password=provider.host.adminpw,
++        args=[
++            f"--computer-name={custom_computer_name}",
++            f"--os-name={custom_os_name}",
++            f"--os-version={custom_os_version}",
++            "--verbose",
++        ],
++        krb=False,
++    )
++
++    assert join_result.rc == 0, f"realm join failed: {join_result.stderr}"
++    assert "Successfully enrolled machine in realm" in join_result.stderr, "realm join success message not found"
++
++    # Query computer object using adcli show-computer
++    show_result = client.adcli.show_computer(
++        domain=domain,
++        login_user=provider.host.adminuser,
++        password=provider.host.adminpw,
++        args=["--verbose", custom_computer_name],
++        krb=False,
++    )
++
++    assert show_result.rc == 0, f"adcli show-computer failed: {show_result.stderr}!"
++
++    # Verify all custom attributes in output (check both stdout and stderr)
++    output = (show_result.stdout + show_result.stderr).lower()
++
++    assert custom_computer_name.lower() in output, f"Computer name '{custom_computer_name}' not found in AD!"
++    assert custom_os_name.lower() in output, f"operatingSystem '{custom_os_name}' not found in AD!"
++    assert custom_os_version.lower() in output, f"operatingSystemVersion '{custom_os_version}' not found in AD!"
++
++
+ @pytest.mark.importance("high")
+ @pytest.mark.topology(KnownTopologyGroup.AnyAD)
+ def test_realm_join_without_authentication(client: Client, provider: GenericADProvider):
+@@ -760,3 +820,262 @@ def test_realm_join_without_authentication(client: Client, provider: GenericADPr
+         keyword in error_output
+         for keyword in ["password", "credential", "authentication", "failed", "permission", "invalid", "not found"]
+     ), f"Expected authentication error but got: {join_result.stderr}!"
++
++
++@pytest.mark.importance("high")
++@pytest.mark.topology(KnownTopologyGroup.AnyAD)
++def test_realm_join_modified_default_home_and_shell(client: Client, provider: GenericADProvider):
++    """
++    :title: realm join with modified default-home and default-shell
++    :setup:
++        1. Client and AD domain are available
++    :steps:
++        1. Configure /etc/realmd.conf with custom default-home and default-shell
++        2. Restart realmd service to apply configuration
++        3. Join domain
++        4. Create a test user on AD
++        5. Query user information with getent passwd
++        6. Verify home directory matches custom path pattern
++        7. Verify shell matches custom setting
++        8. Verify sssd.conf contains the custom settings
++    :expectedresults:
++        1. Configuration file created successfully
++        2. realmd service restarts successfully
++        3. Domain join succeeds
++        4. Test user created successfully
++        5. getent returns user information
++        6. User home directory uses custom path: /home/<domain>/test/<user>
++        7. User shell is /bin/sh
++        8. sssd.conf contains default_shell and fallback_homedir settings
++    :customerscenario: False
++    """
++    domain = provider.host.domain
++    custom_home = "/home/%D/test/%U"
++    custom_shell = "/bin/sh"
++
++    # Configure /etc/realmd.conf with custom home and shell
++    realmd_conf = f"""[users]
++default-home = {custom_home}
++default-shell = {custom_shell}
++"""
++    client.fs.write("/etc/realmd.conf", realmd_conf)
++
++    # Restart realmd service to apply configuration
++    client.svc.restart("realmd.service")
++
++    # Join domain
++    join_result = client.realm.join(
++        domain=domain,
++        user=provider.host.adminuser,
++        password=provider.host.adminpw,
++        args=["--verbose"],
++        krb=False,
++    )
++
++    assert join_result.rc == 0, f"realm join failed: {join_result.stderr}"
++    assert "Successfully enrolled machine in realm" in join_result.stderr, "realm join success message not found"
++
++    # Create a test user on AD to verify
++    user = provider.user("testuser1").add()
++
++    # Query user information
++    user_query = f"{user.name}@{domain}"
++    getent_result = client.tools.getent.passwd(user_query)
++
++    assert getent_result is not None, f"getent passwd failed for user '{user_query}'"
++
++    # Verify home directory and shell in getent output
++    expected_home = f"/home/{domain}/test/{user.name}"
++
++    assert getent_result.home == expected_home, (
++        f"Custom home directory mismatch: expected '{expected_home}', got '{getent_result.home}'"
++    )
++    assert getent_result.shell == custom_shell, (
++        f"Custom shell mismatch: expected '{custom_shell}', got '{getent_result.shell}'"
++    )
++
++    # Verify sssd.conf contains the custom settings
++    sssd_conf = client.fs.read("/etc/sssd/sssd.conf")
++
++    assert "default_shell = /bin/sh" in sssd_conf, "default_shell not found in sssd.conf"
++    assert "fallback_homedir = /home/%d/test/%u" in sssd_conf, "fallback_homedir not found in sssd.conf"
++
++
++@pytest.mark.importance("high")
++@pytest.mark.topology(KnownTopologyGroup.AnyAD)
++def test_realm_join_qualified_names_off(client: Client, provider: GenericADProvider):
++    """
++    :title: realm join with qualified-names disabled
++    :setup:
++        1. Client and AD domain are available
++    :steps:
++        1. Configure /etc/realmd.conf with fully-qualified-names = no
++        2. Restart realmd service to apply configuration
++        3. Join domain without specifying client-software
++        4. Verify realm list shows login-formats: %U (unqualified)
++        5. Create test user on AD
++        6. Query user without @domain suffix using getent
++        7. Query group without domain qualification
++    :expectedresults:
++        1. Configuration file created successfully
++        2. realmd service restarts successfully
++        3. Domain join succeeds
++        4. realm list shows login-formats: %U (not %U@%D)
++        5. Test user created successfully
++        6. Users can be queried without @domain suffix
++        7. Groups can be queried without domain qualification
++    :customerscenario: False
++    """
++    domain = provider.host.domain
++
++    # Configure /etc/realmd.conf to disable fully-qualified-names
++    realmd_conf = f"""[{domain}]
++fully-qualified-names = no
++"""
++    client.fs.write("/etc/realmd.conf", realmd_conf)
++
++    # Restart realmd service to apply configuration
++    client.svc.restart("realmd.service")
++
++    joined = False
++    try:
++        # Join domain
++        join_result = client.realm.join(
++            domain=domain,
++            user=provider.host.adminuser,
++            password=provider.host.adminpw,
++            args=["--verbose"],
++            krb=False,
++        )
++
++        assert join_result.rc == 0, f"realm join failed: {join_result.stderr}"
++        assert "Successfully enrolled machine in realm" in join_result.stderr, "realm join success message not found"
++        joined = True
++
++        # Give services time to fully start
++        time.sleep(10)
++
++        # Verify realm list shows unqualified login format
++        list_result = client.realm.list()
++        assert list_result.rc == 0, f"realm list failed: {list_result.stderr}"
++
++        # Check for bz#967011 - login-formats should be %U (not %U@%D)
++        assert re.search(r"login-formats:\s*%U\s*$", list_result.stdout, re.MULTILINE | re.IGNORECASE), (
++            "realm list should show 'login-formats: %U' (unqualified)"
++        )
++
++        # Create a test user on AD
++        user = provider.user("testuser2").add()
++
++        # Wait for user to be available
++        time.sleep(5)
++
++        # Query user WITHOUT @domain suffix
++        getent_user_result = client.tools.getent.passwd(user.name)
++        assert getent_user_result is not None, f"getent passwd with unqualified name failed for user '{user.name}'"
++        assert getent_user_result.name == user.name, (
++            f"User name mismatch: expected '{user.name}', got '{getent_user_result.name}'"
++        )
++
++        # Query group without domain qualification
++        getent_group_result = client.tools.getent.group("domain users")
++        assert getent_group_result is not None, "getent group with unqualified name failed for 'domain users'"
++
++    finally:
++        # Cleanup: Leave the domain if joined
++        if joined:
++            client.realm.leave(
++                domain=domain,
++                user=provider.host.adminuser,
++                password=provider.host.adminpw,
++            )
++
++
++@pytest.mark.importance("high")
++@pytest.mark.topology(KnownTopologyGroup.AnyAD)
++def test_realm_join_qualified_names_off_winbind(client: Client, provider: GenericADProvider):
++    """
++    :title: realm join with qualified-names disabled using winbind
++    :setup:
++        1. Client and AD domain are available
++    :steps:
++        1. Configure /etc/realmd.conf with fully-qualified-names = no
++        2. Restart realmd service to apply configuration
++        3. Join domain with --client-software=winbind
++        4. Verify realm list shows login-formats: %U (unqualified)
++        5. Create test user on AD
++        6. Query user without @domain suffix using getent
++        7. Query group without domain qualification
++    :expectedresults:
++        1. Configuration file created successfully
++        2. realmd service restarts successfully
++        3. Domain join succeeds with winbind
++        4. realm list shows login-formats: %U (not %U@%D)
++        5. Test user created successfully
++        6. Users can be queried without @domain suffix
++        7. Groups can be queried without domain qualification
++    :customerscenario: False
++    """
++    domain = provider.host.domain
++
++    # Configure /etc/realmd.conf to disable fully-qualified-names
++    realmd_conf = f"""[{domain}]
++fully-qualified-names = no
++"""
++    client.fs.write("/etc/realmd.conf", realmd_conf)
++
++    # Restart realmd service to apply configuration
++    client.svc.restart("realmd.service")
++
++    joined = False
++    try:
++        # Join domain with winbind
++        join_result = client.realm.join(
++            domain=domain,
++            user=provider.host.adminuser,
++            password=provider.host.adminpw,
++            args=["--client-software=winbind", "--verbose"],
++            krb=False,
++        )
++
++        assert join_result.rc == 0, f"realm join failed: {join_result.stderr}"
++        assert "Successfully enrolled machine in realm" in join_result.stderr, "realm join success message not found"
++        joined = True
++
++        # Give winbind time to fully start (it's slow)
++        time.sleep(30)
++
++        # Verify realm list shows unqualified login format
++        list_result = client.realm.list()
++        assert list_result.rc == 0, f"realm list failed: {list_result.stderr}"
++
++        # Check for bz#967011 - login-formats should be %U (not %U@%D)
++        assert re.search(r"login-formats:\s*%U\s*$", list_result.stdout, re.MULTILINE | re.IGNORECASE), (
++            "realm list should show 'login-formats: %U' (unqualified)"
++        )
++
++        # Create a test user on AD
++        user = provider.user("testuser3").add()
++
++        # Wait for user to be available
++        time.sleep(5)
++
++        # Query user WITHOUT @domain suffix
++        getent_user_result = client.tools.getent.passwd(user.name)
++        assert getent_user_result is not None, f"getent passwd with unqualified name failed for user '{user.name}'"
++        assert getent_user_result.name == user.name, (
++            f"User name mismatch: expected '{user.name}', got '{getent_user_result.name}'"
++        )
++
++        # Query group without domain qualification
++        getent_group_result = client.tools.getent.group("domain users")
++        assert getent_group_result is not None, "getent group with unqualified name failed for 'domain users'"
++
++    finally:
++        # Cleanup: Leave the domain if joined
++        if joined:
++            client.realm.leave(
++                domain=domain,
++                user=provider.host.adminuser,
++                password=provider.host.adminpw,
++            )
+diff --git a/tests/topology_controllers.py b/tests/topology_controllers.py
+index 4ec95a9..4c32e8d 100644
+--- a/tests/topology_controllers.py
++++ b/tests/topology_controllers.py
+@@ -70,7 +70,7 @@ class ADTopologyController(ProvisionedBackupTopologyController):
+         # client_fqdn = f"{client.hostname.split('.')[0]}.{domain}"
+         # client.conn.exec(["hostnamectl", "set-hostname", client_fqdn])
+ 
+-        # 2. Write the strict Kerberos configuration (replaces removing it)
++        # 2. Write the strict Kerberos configuration first (needed for cleanup commands)
+         client.fs.write(
+             "/etc/krb5.conf",
+             f"""[libdefaults]
+@@ -91,7 +91,24 @@ class ADTopologyController(ProvisionedBackupTopologyController):
+ """,
+         )
+ 
+-        # 3. Remove any existing keytab
++        # 3. Clean up any existing domain memberships and computer accounts
++        # Leave realm with --remove to delete computer account from AD/Samba
++        client.conn.run(
++            f"realm leave --remove -U {provider.adminuser}@{realm} {domain}",
++            input=provider.adminpw,
++            raise_on_error=False,
++        )
++
++        # 4. Clean up any orphaned computer accounts (backup in case realm leave failed)
++        short_hostname = client.hostname.split(".")[0]
++        client.conn.run(
++            f"adcli delete-computer '{short_hostname}' --domain={domain} "
++            f"--login-user={provider.adminuser} --stdin-password",
++            input=provider.adminpw,
++            raise_on_error=False,
++        )
++
++        # 5. Remove any existing keytab
+         client.fs.rm("/etc/krb5.keytab")
+ 
+         # Backup so we can restore to this state after each test
+-- 
+2.54.0
+

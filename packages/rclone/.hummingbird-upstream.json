@@ -1,0 +1,8 @@
+{
+  "package": "rclone",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/rclone.git",
+  "commit": "5d2eeb24018e4af0264b6de587e3bd03b6d51710",
+  "tree": "360ee146589c6183caf5e9bd821761fc107ec77e",
+  "imported_at": "2026-11-06T03:02:37.499502+00:00"
+}
