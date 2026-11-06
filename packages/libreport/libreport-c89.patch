@@ -1,0 +1,28 @@
+Remove incorrect casts from tests/string_list.at
+
+The list_order argument already has the correct pointer type const
+char * const * (after array-to-pointer decay).
+
+Submitted upstream: <https://github.com/abrt/libreport/pull/802>
+
+diff --git a/tests/string_list.at b/tests/string_list.at
+index 6af162a2f8da3919..2118298da4de0ec3 100644
+--- a/tests/string_list.at
++++ b/tests/string_list.at
+@@ -22,13 +22,13 @@ int main(void)
+             NULL
+     };
+ 
+-    int index = libreport_index_of_string_in_list(FILENAME_REASON, (char**) list_order);
++    int index = libreport_index_of_string_in_list(FILENAME_REASON, list_order);
+     assert(index == 0);
+ 
+-    index = libreport_index_of_string_in_list(FILENAME_COUNT, (char**) list_order);
++    index = libreport_index_of_string_in_list(FILENAME_COUNT, list_order);
+     assert(index == 5);
+ 
+-    index = libreport_index_of_string_in_list("other", (char**) list_order);
++    index = libreport_index_of_string_in_list("other", list_order);
+     assert(index < 0);
+ 
+     return 0;
