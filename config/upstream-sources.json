@@ -6460,15 +6460,17 @@
     },
     {
       "name": "webkitgtk",
-      "version": "2.53.91",
-      "url": "https://webkitgtk.org/releases/webkitgtk-2.53.91.tar.xz",
-      "filename": "webkitgtk-2.53.91.tar.xz",
+      "version": "2.54.2",
+      "url": "https://webkitgtk.org/releases/webkitgtk-2.54.2.tar.xz",
+      "filename": "webkitgtk-2.54.2.tar.xz",
       "feed": "https://release-monitoring.org/project/5355",
-      "sha512": "0bb5ec4c75cf0dcd4ccc46b7cf8595722d447385b75ed6ec79333b56203f681077fa355600210edb4fe6344e4af2943c7fb5b1bff6e35a7ec1ea456d891a1951",
+      "sha512": "5e35d8d5d74e5e648df112db082cdb3b99949ce2a81c87af2462ebb5aba4e7e122b04ba421d826deebbffcd7fe2d620957450308539907ae2f41bdef7b5def24",
       "stage": 5,
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/webkitgtk/webkitgtk-2.53.91.tar.xz/sha512/0bb5ec4c75cf0dcd4ccc46b7cf8595722d447385b75ed6ec79333b56203f681077fa355600210edb4fe6344e4af2943c7fb5b1bff6e35a7ec1ea456d891a1951/webkitgtk-2.53.91.tar.xz"
-      ]
+        "https://src.fedoraproject.org/repo/pkgs/rpms/webkitgtk/webkitgtk-2.54.2.tar.xz/sha512/5e35d8d5d74e5e648df112db082cdb3b99949ce2a81c87af2462ebb5aba4e7e122b04ba421d826deebbffcd7fe2d620957450308539907ae2f41bdef7b5def24/webkitgtk-2.54.2.tar.xz"
+      ],
+      "signature_url": "https://webkitgtk.org/releases/webkitgtk-2.54.2.tar.xz.asc",
+      "gpg_key": "packages/webkitgtk/webkitgtk-keys.gpg"
     },
     {
       "name": "webrtc-audio-processing",
