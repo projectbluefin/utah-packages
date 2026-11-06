@@ -1879,13 +1879,12 @@
     },
     {
       "name": "hyphen",
-      "version": "2.8.8",
-      "url": "https://downloads.sourceforge.net/hunspell/hyphen-2.8.8.tar.gz",
-      "filename": "hyphen-2.8.8.tar.gz",
-      "feed": "https://release-monitoring.org/project/229523",
-      "sha512": "ee514952be56869840b70fb74f60eba14dc4de246733ff8705492367e8cf00c485f8778a9d5a7ba374c988d4ac9fedbe75826dc559e1b62465dbfba21f6ce7de",
+      "version": "2.8.10",
+      "url": "https://github.com/hunspell/hyphen/releases/download/v2.8.10/hyphen-2.8.10.tar.gz",
+      "filename": "hyphen-2.8.10.tar.gz",
+      "sha512": "11f84b64c41f74b7ac716a0c6e06710ee14d3a61df9b64111e73765273541aff8739fe2fb1ae9a6331df8eb180c92c2304150aa67628a1c76482259e849b3d3f",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/hyphen/hyphen-2.8.8.tar.gz/md5/5ade6ae2a99bc1e9e57031ca88d36dad/hyphen-2.8.8.tar.gz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/hyphen/hyphen-2.8.10.tar.gz/sha512/11f84b64c41f74b7ac716a0c6e06710ee14d3a61df9b64111e73765273541aff8739fe2fb1ae9a6331df8eb180c92c2304150aa67628a1c76482259e849b3d3f/hyphen-2.8.10.tar.gz"
       ]
     },
     {
