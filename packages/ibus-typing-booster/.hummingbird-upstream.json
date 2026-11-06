@@ -1,0 +1,8 @@
+{
+  "package": "ibus-typing-booster",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/ibus-typing-booster.git",
+  "commit": "9c6431d8c017da6ac546a8d545a5f1dc6bf5c50f",
+  "tree": "26ab30143c44a31460201866781efac0547dc496",
+  "imported_at": "2026-10-29T01:57:57.740736+00:00"
+}
