@@ -3,12 +3,13 @@
 # so ppp (stage 1) sees libatm.so.1.
 Summary: Tools to support ATM networking under Linux
 Name: linux-atm
-Version: 2.5.1
-Release: 47%{?dist}
+Version: 2.5.2
+Release: 1%{?dist}
 # The licensing here is a mess. This is as close to accurate as possible.
 License: GPL-2.0-only AND GPL-2.0-or-later AND LGPL-2.0-or-later
 URL: http://linux-atm.sourceforge.net/
-Source0: http://downloads.sf.net/%{name}/%{name}-%{version}.tgz
+# 2.5.2 is published as .tar.gz; 2.5.1 and earlier were .tgz.
+Source0: https://downloads.sourceforge.net/%{name}/%{name}-%{version}.tar.gz
 
 BuildRequires: automake
 BuildRequires: byacc
@@ -135,6 +136,9 @@ rm -rf _doc/init-redhat/{CVS,.cvsignore}
 %{_libdir}/libatm.so
 
 %changelog
+* Fri Nov 06 2026 Utah package factory <noreply@projectbluefin.io> - 2.5.2-1
+- Update to 2.5.2, published as .tar.gz (libatm soname unchanged: 1.0.0)
+
 * Sun Sep 21 2026 Utah package factory <noreply@projectbluefin.io> - 2.5.1-47
 - require kernel-headers < 7 rather than the unversioned glibc-kernheaders
   provide: ATM is gone from the kernel and kernel-headers 7 no longer ships
