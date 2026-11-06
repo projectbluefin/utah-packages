@@ -850,9 +850,11 @@ evidence does not hide current build health.
 
 Read both from one image: `python3 tools/package_index.py --image
 projectbluefin/utah-packages:latest --output <file>` writes the manifest
-digest, the publishing `run` and the source `revision` under `image`, and every
-binary with its source package and epoch/version/release under `packages`.
-Check that `revision` is on the target branch before citing it. The primary
+digest, publishing `run` and source `revision` under `image`. Its `packages`
+are grouped by source, with binary names and architectures in each entry's
+`rpms` list. For an exact binary NEVRA, read the binary's own primary metadata
+entry instead of assuming the source entry's version or epoch applies to every
+subpackage. Check that `revision` is on the target branch before citing it. The primary
 metadata checksum is in `repository/repodata/repomd.xml` inside the image's
 first layer (`fetch_image` in the same tool returns it). An import PR that
 left its name `already_recipe` pending evidence (`tslib`, #643) moves to
