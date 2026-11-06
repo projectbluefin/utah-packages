@@ -180,6 +180,23 @@ bump alone leaves `.hummingbird-upstream.json` on the old commit, which
 re-imports again. gtk4's 4.23.4 bump had done exactly that (pin at the 4.23.3
 commit); after the 4.24.1 re-pin the tool reports it `current`.
 
+`--replace` writes Fedora's recipe over the factory's own edits too. gjs
+carries a `%check` that skips the `gtk` suite (the hermetic buildroot has no
+portal service); its 1.90.1 re-pin restored Fedora's `xwfb-run` line until
+the hunk was put back. After the import, `git diff upstream/main --
+packages/<pkg>/<pkg>.spec` must show only the `Version:` line.
+
+A stale development series does not always fail a build. gjs stayed at
+1.89.2 after 1.90.0 shipped: gnome-shell only needs `>= 1.87.1`, so nothing
+broke, but 1.89.1 to 1.89.2 carry GBytes memory accounting that upstream
+reverted in 1.89.90 for GC thrash (gjs#742), and 1.90.1 fixes a GObject
+wrapper reference leak. A long-running GNOME Shell 51.1 on 1.89.2 ran about
+109 SpiderMonkey GC slices a second, mostly `TOO_MUCH_MALLOC`, and froze for
+seconds at a time; a fresh one did not, so the cost builds up over a session.
+The only warning was the GNOME audit's `needs_review` row, "release line
+1.89 (factory) vs 1.90 (gbm)". Treat that row as a pending cross-cycle bump,
+not as information.
+
 ## Soname-coupled bumps
 
 The gate builds each bumped recipe on its own, against the published
