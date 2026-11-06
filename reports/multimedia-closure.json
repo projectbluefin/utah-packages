@@ -13,8 +13,8 @@
   },
   "counts": {
     "requirements": 38,
-    "built": 31,
-    "equivalent": 3,
+    "built": 30,
+    "equivalent": 4,
     "exception": 4,
     "sources": 20,
     "upstream_parity": 0,
@@ -343,9 +343,9 @@
     {
       "requirement": "libfdk-aac",
       "origin": "codec-transaction",
-      "status": "built",
+      "status": "equivalent",
       "factory_source": "fdk-aac-free",
-      "factory_binary": "libfdk-aac",
+      "factory_binary": "fdk-aac-free",
       "upstream_spec_source": "https://github.com/rpmfusion/fdk-aac",
       "codec_parity": "fedora-restricted",
       "parity_note": "`libfdk-aac` is built by the Fedora dist-git `fdk-aac-free` recipe rather than by RPM Fusion's `fdk-aac` spec, the source named in [upstream_spec_sources]. `fdk-aac-free` is the variant Fedora can ship: it drops the patent-encumbered AAC profiles the full Fraunhofer FDK library carries under RPM Fusion's nonfree build, so it is not at parity with the RPM Fusion spec. Decoding and the AAC encoding ffmpeg's freeworld build links both come from this recipe, which provides the `libfdk-aac` capability Bluefin asks for.",
@@ -353,7 +353,8 @@
       "stage": 0,
       "version": "2.0.3",
       "nevra": null,
-      "recipe_provenance": "https://src.fedoraproject.org/rpms/fdk-aac-free.git"
+      "recipe_provenance": "https://src.fedoraproject.org/rpms/fdk-aac-free.git",
+      "note": "`libfdk-aac` is the capability Bluefin asks for; the factory source recipe `packages/fdk-aac-free` emits the binary `fdk-aac-free` and only *provides* the `libfdk-aac` capability, so the binary name is not the requirement name. `[built]` records `factory_binary = name` and would look up `nevra[libfdk-aac]`, which never matches a published `fdk-aac-free` NEVRA and would undercount `counts.published` by one. This maps the requirement to the real emitted binary `fdk-aac-free`; `codec_parity` is still derived from the `fdk-aac-free` source and matches `[parity.libfdk-aac]` (fedora-restricted), because `fdk-aac-free` is the variant Fedora can ship \u2014 it drops the patent-encumbered AAC profiles the RPM Fusion `fdk-aac` spec carries."
     },
     {
       "requirement": "libjxl",
