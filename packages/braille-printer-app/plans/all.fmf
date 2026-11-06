@@ -1,0 +1,6 @@
+summary: Test plan with all Fedora tests
+discover:
+       how: fmf
+       url: https://src.fedoraproject.org/tests/braille-printer-app.git
+execute:
+       how: tmt
