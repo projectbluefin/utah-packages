@@ -1,0 +1,8 @@
+{
+  "package": "qemu",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/qemu.git",
+  "commit": "b4db3b0829fc9b25fc986d9a8e2afc5b24624bfb",
+  "tree": "9c15c3e27c4f5fe2968d7f55aefa36ca2449418f",
+  "imported_at": "2026-11-06T02:50:01.253741+00:00"
+}
