@@ -1,0 +1,7 @@
+summary: Install RHEL specific GNOME desktop components
+description:
+    Currently no specific packages for RHEL.
+enabled: false
+adjust:
+    when: distro != fedora
+    enabled: true
