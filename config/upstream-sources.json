@@ -547,6 +547,13 @@
       ]
     },
     {
+      "name": "device-mapper-multipath",
+      "version": "0.15.1",
+      "url": "https://github.com/opensvc/multipath-tools/archive/0.15.1.tar.gz",
+      "filename": "multipath-tools-0.15.1.tgz",
+      "sha512": "14227c5268a765aad145e9a5cb8abff539bb5391ac158f4b20a7a16c667c01852ab07c3e68391d9604f320a13cae3ea5d1ff3b118f56616346ec129da0bae8a7"
+    },
+    {
       "name": "device-mapper-persistent-data",
       "version": "1.3.3",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/device-mapper-persistent-data/v1.3.3.tar.gz/sha512/0bba8f851fdfd65751564ca65d48c3ebca7c5839258db1401003c6cf58bb6a4c79f291135a96b4151ba1118fb1c6d083f49a0a9adc1362e06264253d7180ecd2/v1.3.3.tar.gz",

@@ -1,0 +1,57 @@
+
+flow: 
+
+# use user_friendly_names = no
+- login to iscsi target
+- run multipath -r 
+- device appear with their original name
+
+# use user_friendly_names = yes, configure some aliases
+- run multipath -r 
+- device appear with their alias name
+
+# edit /etc/multipath.conf again, and change use user_friendly_names =
+# no
+- run multipath -r 
+- device appear with their alias name
+
+the rename should work backwards
+
+
+
+# conf when using user_friendly_names = yes
+defaults {
+    polling_interval        5
+    getuid_callout          "/lib/udev/scsi_id -g -u -d /dev/%n"
+    no_path_retry           fail
+    user_friendly_names     yes
+    flush_on_last_del       yes
+    fast_io_fail_tmo        5
+    dev_loss_tmo            30
+    max_fds                 4096
+}
+
+multipaths {
+
+        multipath {
+                wwid                36090a068a0746b89ddee943b5b253db6
+                alias               rhev-a24-01_myDev1
+        }
+        multipath {
+                wwid               36090a068a074fb95ddeee43b5b259da7
+                alias               rhev-a24-01_myDev2
+        }
+}
+
+# conf when using user_friendly_names = no
+
+defaults {
+    polling_interval        5
+    getuid_callout          "/lib/udev/scsi_id -g -u -d /dev/%n"
+    no_path_retry           fail
+    user_friendly_names     no
+    flush_on_last_del       yes
+    fast_io_fail_tmo        5
+    dev_loss_tmo            30
+    max_fds                 4096
+}
