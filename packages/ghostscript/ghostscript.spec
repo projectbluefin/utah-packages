@@ -58,11 +58,13 @@
 # Hummingbird. This factory now carries urw-base35-fonts, but the other three
 # are in neither, so the switch stays off until they are imported too.
 %bcond system_resources 0
-# jbig2dec and ijs are built from the copies in the tarball. libjbig2dec.so.0
-# and libijs-0.35.so are in neither Hummingbird nor this factory, and libgs
-# checks jbig2dec's version at runtime anyway (see below), so the bundled copy
-# is the one that always matches. JBIG2 images in PDFs and the ijs device
-# both keep working.
+# jbig2dec and ijs are built from the copies in the tarball. libgs checks
+# jbig2dec's version at runtime: the version compiled into jbig.h at build
+# time must match the version saved inside libjbig2dec.so.0, or JBIG2 PDF
+# handling breaks (see the BuildRequires note below). That bundled copy is the
+# only one guaranteed to match, so it keeps working whether or not the system
+# libraries are ever packaged. Bundling it also means a new system jbig2dec
+# release never forces ghostscript to be rebuilt and released at the same time.
 %bcond system_jbig2dec_ijs 0
 # libpaper only picks the default paper size from /etc/papersize, and
 # libpaper.so.2 is in neither repository. CUPS passes the page size to gs
