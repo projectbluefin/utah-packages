@@ -1,0 +1,126 @@
+* Fri Jul 21 2023 Fedora Release Engineering <releng@fedoraproject.org> - 0.14.0-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_39_Mass_Rebuild
+
+* Fri Jan 20 2023 Fedora Release Engineering <releng@fedoraproject.org> - 0.14.0-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_38_Mass_Rebuild
+
+* Sat Jul 23 2022 Fedora Release Engineering <releng@fedoraproject.org> - 0.12.1-5
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_37_Mass_Rebuild
+
+* Tue Jul 19 2022 Maxwell G <gotmax@e.email> - 0.12.1-4
+- Rebuild for CVE-2022-{1705,32148,30631,30633,28131,30635,30632,30630,1962} in
+  golang
+
+* Sat Jun 18 2022 Robert-André Mauchin <zebob.m@gmail.com> - 0.12.1-3
+- Rebuilt for CVE-2022-1996, CVE-2022-24675, CVE-2022-28327, CVE-2022-27191,
+  CVE-2022-29526, CVE-2022-30629
+
+* Fri Jan 21 2022 Fedora Release Engineering <releng@fedoraproject.org> - 0.12.1-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_36_Mass_Rebuild
+
+* Thu Jan 20 2022 Steve Miller (copart) <code@rellims.com> - 0.12.1-1
+- Upgrade to upstream 0.12.1
+- Added upstream patch to tests (f1cfb97) for Go >= 1.16.10
+
+* Fri Jul 23 2021 Fedora Release Engineering <releng@fedoraproject.org> - 0.12.0-1
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_35_Mass_Rebuild
+
+* Tue Feb 16 2021 Kevin Anderson <andersonkw2@gmail.com> - 0.12.0-0
+- Upgrade to upstream 0.12.0
+
+* Wed Jan 27 2021 Fedora Release Engineering <releng@fedoraproject.org> - 0.10.0-4
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_34_Mass_Rebuild
+
+* Wed Oct 21 2020 Steve Miller (copart) <code@rellims.com> - 0.10.0-3
+- Removed patch 9abef3b, instead disabled tar tests
+
+* Wed Oct 21 2020 Steve Miller (copart) <code@rellims.com> - 0.10.0-2
+- Added upstream patch to tests (9abef3b) to resolve failed build
+
+* Wed Oct 21 2020 Steve Miller (copart) <code@rellims.com> - 0.10.0-1
+- Bumped to upstream 0.10.0
+  Resolves: #1880788
+
+* Sun Aug 30 2020 Steve Miller (copart) <code@rellims.com> - 0.9.6-6
+- Added upstream patch for AllowRoot build issue, commit 18fee4806f6a71e951eaee2a3910140c5efb46e3
+
+* Sat Aug 01 2020 Fedora Release Engineering <releng@fedoraproject.org> - 0.9.6-5
+- Second attempt - Rebuilt for
+  https://fedoraproject.org/wiki/Fedora_33_Mass_Rebuild
+
+* Wed Jul 29 2020 Fedora Release Engineering <releng@fedoraproject.org> - 0.9.6-4
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_33_Mass_Rebuild
+
+* Tue Mar 17 2020 Steve Miller (copart) <code@rellims.com> - 0.9.6-3
+- Added upstream patch for AccessTime test fix, commit 7cacba0394b1336dfee33e81cb1dc0e87f8ba10f
+
+* Tue Mar 17 2020 Steve Miller (copart) <code@rellims.com> - 0.9.6-2
+- Added upstream patch for tests in selinux, commit 2828a9c2b09a7e42ca8ca1c6ac506f87280c158b
+- Replaced deprecated gochecks and gobuildroot macros
+
+* Mon Mar 16 2020 Steve Miller (copart) <code@rellims.com> - 0.9.6-1
+- Bumped to upstream 0.9.6
+  Resolves: #1775745 and #1799976
+
+* Thu Jan 30 2020 Fedora Release Engineering <releng@fedoraproject.org> - 0.9.5-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_32_Mass_Rebuild
+
+* Fri Jul 26 2019 Fedora Release Engineering <releng@fedoraproject.org> - 0.9.5-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_31_Mass_Rebuild
+
+* Tue Apr 23 2019 Steve Miller (copart) <code@rellims.com> - 0.9.5-1
+- Bumped to upstream 0.9.5
+  Resolves: #1702384
+
+* Fri Feb 15 2019 Steve Miller (copart) <code@rellims.com> - 0.9.4-1
+- Bumped to upstream 0.9.4
+- Added new upstream dependency
+  golang(github.com/hashicorp/golang-lru/simplelru)
+
+* Sat Feb 02 2019 Fedora Release Engineering <releng@fedoraproject.org> - 0.9.3-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_30_Mass_Rebuild
+
+* Sat Nov 3 2018 Steve Miller (copart) <code@rellims.com> - 0.9.3-1
+- Bumped to upstream 0.9.3
+  Resolves: #1645405 and #1642891
+- redhat-rpm-config-123 triggers bugs in gosetup, remove it from Go spec files as it’s just an alias
+- https://lists.fedoraproject.org/archives/list/devel@xxxxxxxxxxxxxxxxxxxxxxx/message/RWD5YATAYAFWKIDZBB7EB6N5DAO4ZKFM/
+
+* Wed Aug 8 2018 Steve Miller (copart) <code@rellims.com> - 0.9.2-1
+- Bumped to upstream 0.9.2
+
+* Tue Jul 31 2018 Florian Weimer <fweimer@redhat.com> - 0.9.1-3
+- Rebuild with fixed binutils
+
+* Wed Jun 13 2018 Steve Miller (copart) <code@rellims.com> - 0.9.1-2
+- First package for Fedora
+- Rework using More Go packaging
+
+* Sun Jun 10 2018 Steve Miller (copart) <code@rellims.com> - 0.9.1-1
+- Bumped restic version
+
+* Sun May 27 2018 Steve Miller (copart) <code@rellims.com> - 0.9.0-1
+- Bumped restic version
+
+* Sun Mar 04 2018 Steve Miller (copart) <code@rellims.com> - 0.8.3-1
+- Bumped restic version
+
+* Tue Feb 20 2018 Steve Miller (copart) <code@rellims.com> - 0.8.2-1
+- Bumped restic version
+
+* Fri Jan 12 2018 Steve Miller (copart) <code@rellims.com> - 0.8.1-2
+- Added man pages
+- Added bash completion
+- Added zsh completion
+
+* Sun Jan 07 2018 Steve Miller (copart) <code@rellims.com> - 0.8.1-1
+- New Version
+
+* Sat Sep 16 2017 Philipp Baum <phil@phib.io> - 0.7.2-1
+- New Version
+
+* Sun Aug 27 2017 Philipp Baum <phil@phib.io> - 0.7.1-1
+- New Version
+
+* Wed Mar 15 2017 Philipp Baum <phil@phib.io> - 0.5.0-1
+- Initial package build

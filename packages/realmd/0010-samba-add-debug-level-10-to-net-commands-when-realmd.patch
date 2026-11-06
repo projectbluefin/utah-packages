@@ -1,0 +1,39 @@
+From e1eb08832fa58fcea5a3752277778d3d40c08a42 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Pavel=20Filipensk=C3=BD?= <pfilipensky@samba.org>
+Date: Thu, 29 Jan 2026 14:49:51 +0100
+Subject: [PATCH 10/20] samba: add debug level 10 to net commands when realmd
+ runs in debug mode
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Enable verbose debugging output for all net ads commands (join, leave,
+keytab) by adding the -d 10 flag when the realmd daemon is started with
+the -d flag or if 'debug' option is set to 'yes' in [service] section of
+realmd.conf
+
+Signed-off-by: Pavel Filipenský <pfilipensky@samba.org>
+---
+ service/realm-samba-enroll.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/service/realm-samba-enroll.c b/service/realm-samba-enroll.c
+index 9d776fa..ecf2792 100644
+--- a/service/realm-samba-enroll.c
++++ b/service/realm-samba-enroll.c
+@@ -277,6 +277,12 @@ begin_net_process (JoinClosure *join,
+ 		g_ptr_array_add (args, join->disco->explicit_server);
+ 	}
+ 
++	/* Add debug level when daemon is running in debug mode */
++	if (realm_daemon_has_debug_flag ()) {
++		g_ptr_array_add (args, "-d");
++		g_ptr_array_add (args, "10");
++	}
++
+ 	va_start (va, user_data);
+ 	do {
+ 		arg = va_arg (va, gchar *);
+-- 
+2.54.0
+

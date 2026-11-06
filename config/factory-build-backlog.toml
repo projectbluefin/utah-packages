@@ -125,12 +125,6 @@ packages = [
     "python3-s3transfer",
     "python3-secretstorage",
     "python3-shtab",
-    "qemu-guest-agent",
-    "rclone",
-    "realmd",
-    "restic",
-    # Utah waives rpm-ostree only; rpm-ostree-libs has no separate waiver.
-    "rpm-ostree-libs",
 ]
 
 [areas.fonts-i18n]
@@ -848,6 +842,16 @@ packages = [
     { name = "sssd-kcm", pr = 848 },
     { name = "sssd-krb5-common", pr = 848 },
     { name = "sssd-nfs-idmap", pr = 848 },
+    # Dev-tools batch #490: recipe imports for qemu-guest-agent, rclone, realmd,
+    # restic and rpm-ostree-libs. qemu-guest-agent ships under packages/qemu
+    # (the qemu source package); rpm-ostree-libs under packages/rpm-ostree.
+    # rpm-ostree itself stays [wontfix] per projectbluefin/utah#263.
+    # Hosted build, publication and runtime proof remain on #490.
+    { name = "qemu-guest-agent", pr = 903 },
+    { name = "rclone", pr = 903 },
+    { name = "realmd", pr = 903 },
+    { name = "restic", pr = 903 },
+    { name = "rpm-ostree-libs", pr = 903 },
 ]
 
 [wontfix]

@@ -1,0 +1,8 @@
+{
+  "package": "restic",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/restic.git",
+  "commit": "fc266f00d50116bfca5ddcd945b438be25fdf1d9",
+  "tree": "1bb06968afd775da08e187051201cb3f0028ab69",
+  "imported_at": "2026-11-06T03:02:39.196130+00:00"
+}
