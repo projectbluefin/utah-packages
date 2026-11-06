@@ -610,7 +610,9 @@ stopped perturbing it (the PyPI `source` form, same bytes), and
 0.4.4 -> 0.4.5; Fedora uploaded the same 0.4.5 sdist, so the rebuilt
 lookaside fallback resolves. Anitya answers HTTP 503 now and then, and the
 tool reports that as `skipped <pkg>: release-monitoring.org/...: HTTP Error
-503`; rerun it rather than editing the lock by hand.
+503`; rerun it rather than editing the lock by hand. linux-firmware followed
+the same procedure (www.kernel.org/pub/linux/kernel/firmware/, the spec's
+`Source0`), so its calendar rule moves it from 20260810 to 20261019.
 
 Of the packages this re-pin left stuck, only xevd and xeve remain on the
 lookaside: they are the deliberate exception below.
