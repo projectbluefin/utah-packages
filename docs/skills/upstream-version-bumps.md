@@ -504,13 +504,6 @@ Left stuck, with the reason:
   the lookaside, so a flaky upstream host cannot fail Canary.
 - **No upstream equivalent:** xevd and xeve lock Fedora-generated `-free`
   tarballs (`*_gen_free_tarball.sh`).
-- **libao 1.2.2 exists only as a git tag.** The tag archive has no
-  `configure`, only `autogen.sh` and `configure.ac`. The recipe edits
-  `configure` in `%prep` and runs `%configure` directly, so moving it needs
-  autoreconf and its BuildRequires. Of the carried patches, the pulse
-  latency fix is already in 1.2.2, while the CVE-2017-11548 diff and the
-  nanosleep patch still apply. That is a recipe change for a reviewer, not
-  a hand bump.
 
 ### Re-locking new upstream bytes (owner decisions, 2026-11-06)
 
@@ -556,6 +549,19 @@ content-addressed URL that can never resolve is not a mirror.
   `"file"`, the published file itself, as for webkitgtk and cryptopp.
   Like webkitgtk's, the version-bound `.asc` in `sources` makes
   `check_bumpable()` refuse the next release, so samba moves by hand.
+- libao 1.2.0 -> 1.2.2: 1.2.2 exists only as a git tag, whose archive has
+  no `configure`. The primary was re-locked by hand at 1.2.0 to the GitHub
+  tag archive (`github.com/xiph/libao/archive/<v>/libao-<v>.tar.gz`; the
+  primary then names the feed, so the Anitya `feed` went), and
+  `upstream_bump.py --package libao --apply` moved it to 1.2.2. The tool
+  does not touch `Source0`, so the recipe change is by hand: `Source0`
+  names the tag archive, `%prep` runs `autoreconf -fi` after the patches
+  (BuildRequires autoconf, automake, libtool), and the old
+  `sed -i "s/-O20 -ffast-math//" configure` still matches the regenerated
+  `configure`. The pulse latency patch is merged upstream and was dropped;
+  the CVE-2017-11548 diff and the nanosleep patch apply with fuzz 0. The
+  soname stays at `libao.so.4` (`LIB_CURRENT` 5, `LIB_AGE` 1). No Fedora
+  copy of the tag archive exists, so there is no fallback.
 
 ### Hand version moves (2026-11-06)
 
