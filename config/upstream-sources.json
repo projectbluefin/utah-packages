@@ -5239,13 +5239,12 @@
     },
     {
       "name": "python-pam",
-      "version": "2.0.2",
-      "url": "https://pypi.python.org/packages/source/p/python-pam/python-pam-2.0.2.tar.gz",
-      "filename": "python-pam-2.0.2.tar.gz",
-      "feed": "https://release-monitoring.org/project/5725",
-      "sha512": "a33279d47de07b32c5c5cadb0f666ea18b407de061cb80e0b1d6cd7370fd70ff14af8d2802a2e4dbdaaf102efd6cac83c4f2c5673615b3d174edca20a4f8b00a",
+      "version": "2.1.1",
+      "url": "https://github.com/FirefighterBlu3/python-pam/archive/v2.1.1/python-pam-2.1.1.tar.gz",
+      "filename": "python-pam-2.1.1.tar.gz",
+      "sha512": "ef1c3f904d70dea81cb6f2c5166096db226939c657ed7bb397a100718973ca2bc0f9dad5d862f2e4b6fa57ec43ddc2bc86932a16fffa03b6f769d57f8b74fc1c",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/python-pam/python-pam-2.0.2.tar.gz/sha512/a33279d47de07b32c5c5cadb0f666ea18b407de061cb80e0b1d6cd7370fd70ff14af8d2802a2e4dbdaaf102efd6cac83c4f2c5673615b3d174edca20a4f8b00a/python-pam-2.0.2.tar.gz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/python-pam/python-pam-2.1.1.tar.gz/sha512/ef1c3f904d70dea81cb6f2c5166096db226939c657ed7bb397a100718973ca2bc0f9dad5d862f2e4b6fa57ec43ddc2bc86932a16fffa03b6f769d57f8b74fc1c/python-pam-2.1.1.tar.gz"
       ]
     },
     {
