@@ -444,6 +444,13 @@ archive). Lock that archive by SHA-512, update `sources`, and set `%setup -n`
 to its commit-based directory; do not reuse the original archive's digest.
 This source-tree comparison is not a package build or runtime closure test.
 
+`braille-printer-app` is a separate source from `liblouisutdml`: its current
+recipe installs classic CUPS filters and drivers, not a standalone printer
+application. Its required utilities include `liblouisutdml-utils`, CUPS
+filters, ImageMagick, poppler-utils and unzip. Check the complete runtime
+transaction and an actual Braille print path before claiming functionality;
+the imported recipe and source pin alone do not establish either.
+
 The `liblouisutdml` recipe builds a PDF manual with `texinfo-tex`, whose
 Fedora TeX Live dependency chain needs ICU 77 in the build root. Like
 `liblouis`, it opts in to that build-only dependency; its configure script
