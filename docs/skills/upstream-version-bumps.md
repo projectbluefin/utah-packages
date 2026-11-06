@@ -498,10 +498,9 @@ proposed their next release.
 
 Left stuck, with the reason:
 
-- **Kept on the lookaside on purpose:** python-typing-inspection. The
-  upstream PyPI `source` URL matches its bytes, but it is Canary's perturbed
-  package. `tests/test_canary.py` requires every Canary source to stay on
-  the lookaside, so a flaky upstream host cannot fail Canary.
+- **Kept on the lookaside for Canary:** python-typing-inspection, until
+  Canary moved its perturbation to xevd (below). The upstream PyPI `source`
+  URL matches its bytes, so it is free to re-pin.
 - **The deliberate exception:** xevd and xeve. See below.
 
 ### Re-locking new upstream bytes (owner decisions, 2026-11-06)
@@ -584,6 +583,13 @@ No upstream serves those bytes, so:
   Rawhide's recipe at the Koji-built commit and lock the lookaside URL of
   the new `-free` tarball. On 2026-11-06 Rawhide had xevd 0.8.0 and xeve
   0.7.1; the owner kept both at 0.7.0.
+- Canary's pass3 perturbs xevd (`tools/canary.py` `PERTURBED`).
+  `tests/test_canary.py` requires every Canary source on the lookaside, so
+  a flaky upstream host cannot fail Canary, and xevd is the one package
+  whose lookaside primary is permanent. It is also a small CMake build
+  (`cmake`, `gcc`) that no Canary package depends on, so it builds in wave
+  0 with no factory repository and its perturbation reaches nothing else.
+  python-typing-inspection held that role until its PyPI re-pin.
 
 ### Hand version moves (2026-11-06)
 

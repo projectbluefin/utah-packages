@@ -49,7 +49,7 @@ def healthy_jobs() -> list[dict]:
             job(f'{name} / rebuild4 (["vulkan-loader"]) / build (vulkan-loader)', "skipped", "success"),
         ]
     jobs.append(job(
-        'pass3 / rebuild0 (["python-typing-inspection"]) / build (python-typing-inspection)',
+        'pass3 / rebuild0 (["xevd"]) / build (xevd)',
         "success", "success",
     ))
     return jobs
@@ -123,7 +123,7 @@ class LayerTests(unittest.TestCase):
 class CacheVerdictTests(unittest.TestCase):
     def verdict(self, jobs: list[dict]) -> list[str]:
         return canary.cache_problems(
-            canary.build_outcomes(jobs), SET, "python-typing-inspection"
+            canary.build_outcomes(jobs), SET, "xevd"
         )
 
     def test_a_healthy_canary_passes(self) -> None:
@@ -180,7 +180,7 @@ class CacheVerdictTests(unittest.TestCase):
         }
         outcomes = canary.build_outcomes(jobs)
         problems = canary.cache_problems(
-            outcomes, SET, "python-typing-inspection", locks=locks
+            outcomes, SET, "xevd", locks=locks
         )
         self.assertEqual(problems, [])
 
@@ -207,7 +207,7 @@ class CacheVerdictTests(unittest.TestCase):
         }
         outcomes = canary.build_outcomes(jobs)
         problems = canary.cache_problems(
-            outcomes, SET, "python-typing-inspection", locks=locks
+            outcomes, SET, "xevd", locks=locks
         )
         self.assertEqual(len(problems), 1)
         self.assertIn("pass2: vulkan-headers was compiled", problems[0])
@@ -225,7 +225,7 @@ class CacheVerdictTests(unittest.TestCase):
         }
         tolerated: list[str] = []
         problems = canary.cache_problems(
-            canary.build_outcomes(jobs), SET, "python-typing-inspection",
+            canary.build_outcomes(jobs), SET, "xevd",
             locks=locks, tolerated=tolerated,
         )
         self.assertEqual(problems, [])
@@ -245,7 +245,7 @@ class CacheVerdictTests(unittest.TestCase):
         ]}}}}
         tolerated: list[str] = []
         problems = canary.cache_problems(
-            canary.build_outcomes(jobs), SET, "python-typing-inspection",
+            canary.build_outcomes(jobs), SET, "xevd",
             locks=locks, tolerated=tolerated,
         )
         self.assertEqual(len(problems), 1)
@@ -422,7 +422,7 @@ class WorkflowShapeTests(unittest.TestCase):
         from tools.package_inventory import source_locks
 
         locks = source_locks(ROOT)
-        members = json.loads(self.workflow["env"]["CANARY_SET"]) + ["python-typing-inspection"]
+        members = json.loads(self.workflow["env"]["CANARY_SET"]) + list(canary.PERTURBED)
         for name in members:
             with self.subTest(name=name):
                 self.assertTrue(
@@ -449,7 +449,7 @@ class WorkflowShapeTests(unittest.TestCase):
             self.assertTrue(self.jobs[name]["with"]["skip_publish"])
             self.assertIn("pass1", self.jobs[name]["needs"])
         self.assertEqual(
-            self.jobs["pass3"]["with"]["perturb"], '["python-typing-inspection"]'
+            self.jobs["pass3"]["with"]["perturb"], json.dumps(list(canary.PERTURBED))
         )
 
     def test_pass4_fails_one_package_on_purpose_and_is_judged_separately(self) -> None:
@@ -797,7 +797,7 @@ class MainTests(unittest.TestCase):
     def run_cache(self, jobs: list[dict]) -> tuple[int, str, str]:
         return self.run_main([
             "verify-cache", self.jobs_file(jobs),
-            "--set", json.dumps(sorted(SET)), "--perturbed", "python-typing-inspection",
+            "--set", json.dumps(sorted(SET)), "--perturbed", "xevd",
         ])
 
     def test_verify_cache_accepts_a_healthy_run_and_prints_the_step_summary(self) -> None:
@@ -834,7 +834,7 @@ class MainTests(unittest.TestCase):
     def run_cache_with_locks(self, jobs: list[dict]) -> tuple[int, str, str]:
         return self.run_main([
             "verify-cache", self.jobs_file(jobs),
-            "--set", json.dumps(sorted(SET)), "--perturbed", "python-typing-inspection",
+            "--set", json.dumps(sorted(SET)), "--perturbed", "xevd",
             "--locks", str(self.work / "locks"),
         ])
 

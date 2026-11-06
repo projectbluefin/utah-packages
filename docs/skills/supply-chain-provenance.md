@@ -217,10 +217,14 @@ former primary, and remove exactly the promoted names from the ratchet.
 
 The fixed native Canary set has an additional lookaside-primary contract in
 `tests/test_canary.py`: libical, vulkan-headers, vulkan-loader, and the
-python-typing-inspection perturbation package. Treat their source migration
-as a separate change that also reconciles the Canary's availability contract
-and verifies it on the native runner; do not weaken that test during a bulk
-transport-only migration. Also check candidate hosts against the validator's
+xevd perturbation package (`tools/canary.py` `PERTURBED`). Treat their source
+migration as a separate change that also reconciles the Canary's
+availability contract and verifies it on the native runner; do not weaken
+that test during a bulk transport-only migration. The perturbation package
+is chosen to stay on the lookaside for good: xevd ships only as Fedora's
+patent-stripped `-free` tarball. It moved there from python-typing-inspection,
+whose PyPI source the upstream-first policy wanted as its primary.
+Also check candidate hosts against the validator's
 Fedora-host policy before editing: a project's own repository on
 `forge.fedoraproject.org` still counts as Fedora infrastructure.
 
