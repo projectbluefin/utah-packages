@@ -1,0 +1,54 @@
+test: ./runtest.sh
+duration: 50m
+framework: beakerlib
+require:
+# This stuff is only needed if gnome-desktop-testing
+# cannot be required as a package and needs to be cloned
+# from the git repo and build from source:
+#  - git
+#  - make
+#  - gcc
+#  - diffutils
+#  - autoconf
+#  - automake
+#  - libtool
+#  - glib2-devel
+#  - systemd-devel
+  - gnome-session
+  - gnome-shell
+  - gnome-shell-extension-no-overview
+  - dbus-x11
+  - xorg-x11-server-Xwayland
+  - xwayland-run
+  - ibus
+  - ibus-devel
+  - ibus-desktop-testing
+  - gnome-desktop-testing
+  - ibus-typing-booster
+  - ibus-typing-booster-tests
+  - python3-packaging
+  - rsync
+  - m17n-lib
+  - m17n-db-extras
+  - python3-enchant
+  - libappstream-glib
+  - desktop-file-utils
+  - python3-gobject
+  - python3-gobject-base
+  - hunspell-cs
+  - hunspell-de
+  - hunspell-en
+  - hunspell-es
+  - hunspell-fr
+  - hunspell-it
+  - hunspell-ko
+  - dconf
+  - python3-devel
+  - python3-pyxdg
+  - glibc-langpack-en
+  - glibc-langpack-cs
+  - glibc-langpack-km
+  - glibc-langpack-pt
+  - glibc-langpack-am
+  - glibc-langpack-de
+  - glibc-langpack-ar
