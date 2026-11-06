@@ -169,7 +169,6 @@ packages = [
     "PackageKit-glib",
     "appstream-data",
     "b43-openfwwf",
-    "braille-printer-app",
     "criu",
     "criu-libs",
     "desktop-backgrounds-gnome",
@@ -188,7 +187,6 @@ packages = [
     "kmod-v4l2loopback",
     "kpartx",
     "kvazaar-libs",
-    "libreport-filesystem",
     "lockdev",
     "mcelog",
     "memstrack",
@@ -660,6 +658,8 @@ packages = [
     { name = "liblouisutdml", pr = 616 },
     { name = "liblouisutdml-utils", pr = 616 },
     { name = "antiword", pr = 616 },
+    # Recipe import only; hosted build, publication, and runtime proof remain.
+    { name = "braille-printer-app" },
     { name = "b43-fwcutter", pr = 813 },
     { name = "sane-airscan", pr = 586 },
     { name = "sane-backends", pr = 586 },
@@ -785,6 +785,8 @@ packages = [
     { name = "libvarlink", commit = "26ebd2a8ecc9fdd617061452449c71a9fdcdf34d", pr = 519, published_nevra = "libvarlink-0:24.0.1-1.hum1.bfin.x86_64" },
     { name = "liburing", pr = 742 },
     { name = "lrzsz", pr = 742 },
+    # Recipe import only; hosted build, publication and runtime proof remain owed.
+    { name = "libreport-filesystem" },
     # librabbitmq (source librabbitmq) and libwmf-lite (source libwmf) recipe imports (#503).
     { name = "librabbitmq", pr = 756 },
     { name = "libwmf-lite", pr = 756 },

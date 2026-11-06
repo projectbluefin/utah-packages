@@ -437,6 +437,13 @@ archive). Lock that archive by SHA-512, update `sources`, and set `%setup -n`
 to its commit-based directory; do not reuse the original archive's digest.
 This source-tree comparison is not a package build or runtime closure test.
 
+`braille-printer-app` is a separate source from `liblouisutdml`: its current
+recipe installs classic CUPS filters and drivers, not a standalone printer
+application. Its required utilities include `liblouisutdml-utils`, CUPS
+filters, ImageMagick, poppler-utils and unzip. Check the complete runtime
+transaction and an actual Braille print path before claiming functionality;
+the imported recipe and source pin alone do not establish either.
+
 The `liblouisutdml` recipe builds a PDF manual with `texinfo-tex`, whose
 Fedora TeX Live dependency chain needs ICU 77 in the build root. Like
 `liblouis`, it opts in to that build-only dependency; its configure script
@@ -1099,6 +1106,14 @@ Fedora pins it by MD5, so confirm the `https://www.ohse.de/` bytes match that
 pin, repin `sources` to SHA-512, and use the `/md5/<md5>/` lookaside path as
 the fallback. `liburing` locks only `Source0`; like `dnsmasq`, its `.asc`
 signature is fetched from Fedora's lookaside by its `sources` SHA-512.
+
+`libreport-filesystem` is the directory-only subpackage of `libreport`, not
+a separate source recipe. The full source build needs `satyr-devel`; import
+`satyr` as well and let BuildRequires order the builds. A recipe registration
+does not prove either package was built or published: verify the filesystem
+RPM and its directory ownership in the hosted build and an installation using
+the permitted repositories. `mdadm` deliberately disables its optional ABRT
+hook; importing the directories does not re-enable that hook.
 
 `librabbitmq` and `libwmf-lite` (a subpackage of `libwmf`) lock their GitHub
 tag archives directly: those bytes equal the dist-git SHA-512 pins. Check the
