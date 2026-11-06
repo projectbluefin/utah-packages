@@ -1,0 +1,48 @@
+From e6c79f6248baf32a54852960d667468af639268e Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Pavel=20Filipensk=C3=BD?= <pfilipensky@samba.org>
+Date: Thu, 29 Jan 2026 20:10:05 +0100
+Subject: [PATCH 09/20] doc: document debug option in [service] section of
+ realmd.conf
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+The debug setting was already present in the defaults file
+realmd-defaults.conf, but was not documented in the manual page.
+
+Signed-off-by: Pavel Filipenský <pfilipensky@samba.org>
+---
+ doc/manual/realmd.conf.xml | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
+
+diff --git a/doc/manual/realmd.conf.xml b/doc/manual/realmd.conf.xml
+index 54072c5..6f2d433 100644
+--- a/doc/manual/realmd.conf.xml
++++ b/doc/manual/realmd.conf.xml
+@@ -205,6 +205,23 @@ os-version = 9.9.9.9.9
+ 
+ 	<variablelist>
+ 
++	<varlistentry>
++	<term><option>debug</option></term>
++	<listitem>
++		<para>Set this to <parameter>yes</parameter> to enable verbose
++		debug logging in realmd.</para>
++		<para>The default setting for this is <parameter>no</parameter>.</para>
++
++		<informalexample>
++<programlisting language="js">
++[service]
++debug = no
++# debug = yes
++</programlisting>
++		</informalexample>
++	</listitem>
++	</varlistentry>
++
+ 	<varlistentry>
+ 	<term><option>automatic-install</option></term>
+ 	<listitem>
+-- 
+2.54.0
+

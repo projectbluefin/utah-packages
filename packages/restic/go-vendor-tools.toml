@@ -1,0 +1,22 @@
+[archive]
+
+[licensing]
+detector = "askalono"
+[[licensing.licenses]]
+path = "vendor/github.com/anacrolix/fuse/LICENSE"
+sha256sum = "89200a888c16adac0bf570a9e874e0470bb1dd16f57d261d218e9aeb424de355"
+expression = "BSD-2-Clause AND BSD-3-Clause AND MIT"
+
+[[licensing.licenses]]
+path = "vendor/github.com/minio/md5-simd/LICENSE.Golang"
+sha256sum = "2d36597f7117c38b006835ae7f537487207d8ec407aa9d9980794b2030cbc067"
+expression = "BSD-3-Clause"
+
+[[licensing.licenses]]
+path = "vendor/github.com/ncw/swift/v2/COPYING"
+sha256sum = "8cd2e9e750b90a04b7d82dbbca3930c696ae0309d7c10464f90a44f45754cd04"
+expression = "MIT"
+[[licensing.licenses]]
+path = "vendor/go.yaml.in/yaml/v3/LICENSE"
+sha256sum = "d18f6323b71b0b768bb5e9616e36da390fbd39369a81807cca352de4e4e6aa0b"
+expression = "MIT AND (MIT AND Apache-2.0)"

@@ -1,0 +1,90 @@
+From 5ad0311459db3e291db88e1b9c2bcde912698cce Mon Sep 17 00:00:00 2001
+From: Sumit Bose <sbose@redhat.com>
+Date: Tue, 14 Oct 2025 10:37:01 +0200
+Subject: [PATCH 06/20] doc: add 'renew' option of realm man page
+
+---
+ doc/manual/realm.xml | 60 ++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 60 insertions(+)
+
+diff --git a/doc/manual/realm.xml b/doc/manual/realm.xml
+index 0693283..caa6308 100644
+--- a/doc/manual/realm.xml
++++ b/doc/manual/realm.xml
+@@ -38,6 +38,9 @@
+ 	<cmdsynopsis>
+ 		<command>realm leave</command> <arg choice="opt">-U user</arg> <arg choice="opt">realm-name</arg>
+ 	</cmdsynopsis>
++	<cmdsynopsis>
++		<command>realm renew</command> <arg choice="opt">realm-name</arg>
++	</cmdsynopsis>
+ 	<cmdsynopsis>
+ 		<command>realm list</command>
+ 	</cmdsynopsis>
+@@ -407,6 +410,63 @@ $ realm leave domain.example.com
+ 
+ </refsect1>
+ 
++<refsect1 id="man-renew">
++	<title>Renew</title>
++
++	<para>Renew the machine account password and update the keytab.</para>
++
++	<informalexample>
++<programlisting>
++$ realm renew
++</programlisting>
++<programlisting>
++$ realm renew --computer-password-lifetime=10 domain.example.com
++</programlisting>
++	</informalexample>
++
++	<para>Renew the machine account password with the help of the existing one
++	from a keytab and store the new version in the keytab. If no domain name is
++	given it is derived from the existing configuration.</para>
++
++	<para>The following options can be used:</para>
++
++	<variablelist>
++		<varlistentry>
++			<term><option>--membership-software=xxx</option></term>
++			<listitem><para>Use specified membership software, currently
++			only <replaceable>adcli</replaceable> is supported.
++			</para></listitem>
++		</varlistentry>
++		<varlistentry>
++			<term><option>--use-ldaps</option></term>
++			<listitem><para>See option description in
++			<xref linkend="man-join"/>.</para></listitem>
++		</varlistentry>
++		<varlistentry>
++			<term><option>--host-keytab=xxx</option></term>
++			<listitem><para>Path to the keytab, if not specified the
++			default keytab file will be used.</para></listitem>
++		</varlistentry>
++		<varlistentry>
++			<term><option>--host-fqdn=xxx</option></term>
++			<listitem><para>Fully-qualified name of the host, only needed
++			if it is not determined correctly automatically.
++			</para></listitem>
++		</varlistentry>
++		<varlistentry>
++			<term><option>--computer-password-lifetime=xxx</option></term>
++			<listitem><para>Lifetime of the machine account password in days,
++			default is 30.</para></listitem>
++		</varlistentry>
++		<varlistentry>
++			<term><option>--add-samba-data</option></term>
++			<listitem><para>Try to update Samba's internal machine account
++			password as well if a membership software other than Samba is used.
++			</para></listitem>
++		</varlistentry>
++	</variablelist>
++</refsect1>
++
+ <refsect1 id="man-list">
+ 	<title>List</title>
+ 
+-- 
+2.54.0
+
