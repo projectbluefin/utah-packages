@@ -1352,6 +1352,15 @@ then destroy the set. A version or help command does not exercise that path.
 
 `jbig2dec-libs` is an output of the `jbig2dec` source recipe, not a separate source. Ghostscript currently builds its bundled copy, so that does not establish availability of the separate library. The upstream recipe warns that consumers of its shared library must be rebuilt together on version changes; verify the hosted build, dependency transaction, and representative decoding before claiming runtime closure.
 
+## Checkpoint/restore package family
+
+`criu` and `criu-libs` come from one `criu` source recipe (`%package libs`);
+the same spec also builds `criu-devel`, the amdgpu and CUDA plugins,
+`python3-criu`, `crit` and `criu-ns`. Recipe coverage does not establish that
+the build, publication or a checkpoint/restore round trip works. Runtime
+verification needs a privileged environment (`CAP_SYS_ADMIN`/`CAP_CHECKPOINT_RESTORE`):
+checkpoint and restore a simple process; `criu check` alone does not exercise it.
+
 ## Windows domain enrollment (adcli)
 
 A spec using `%global with_selinux 1` can emit a SELinux subpackage even when the backlog auditor cannot evaluate its `%{with selinux}` guard. Check the default RPM expansion and retain build and publication verification as separate evidence; a recipe classification alone does not prove an installable binary.
