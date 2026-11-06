@@ -431,10 +431,14 @@ Now a release that already counts as an `update` (same major,
 `forge_proposal`) is applied whenever `primary_blocker()` finds the new
 primary derivable from the current one:
 
-- `swap_version()` replaces the locked version in `url`, `filename` and
-  `sha256_url` only as a whole number. It skips a match that follows a hex
-  digit or another component, or runs on into one. A plain `replace` also
-  rewrote a digest that contained `238` and turned `1.0.1` into `1.1.1`.
+- `swap_version()` replaces the locked version in `url`, `filename`,
+  `sha256_url` and `signature_url`, and only as a whole number. It skips a
+  match that follows a hex digit or another component, or runs on into one.
+  A plain `replace` also rewrote a digest that contained `238` and turned
+  `1.0.1` into `1.1.1`. `signature_url` was missing from that list until
+  2026-11-06. cryptopp's bump to 2026.11.0 would have kept the 2026.10.0
+  `.sig`, and `source_pipeline.py` would have rejected the new tarball. The
+  `gpg_key` belongs to the project, not the release, and does not move.
 - `rebuilt_fallback()` rebuilds every lookaside fallback in the SHA-512 form
   `planned_entry()` writes, from the new file name and digest. The legacy
   md5 pins (hyphen, libao, libtheora) cannot be updated by substitution.

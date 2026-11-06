@@ -683,10 +683,12 @@ def forge_planned_entry(entry: dict, release: str, digest: str) -> dict:
     GNOME entries are rebuilt from a known template; a forge or project URL
     has no template this tool can own, because projects choose their own tag
     and asset names. So the old version is swapped for the new one in the
-    primary url, filename and sha256_url, and every fallback is rebuilt by
-    rebuilt_fallback(): a lookaside fallback embeds the filename and the
-    digest, which is exactly what a field-by-field rewrite leaves pointing at
-    the old tarball.
+    primary url, filename, sha256_url and signature_url, and every fallback
+    is rebuilt by rebuilt_fallback(): a lookaside fallback embeds the
+    filename and the digest, which is exactly what a field-by-field rewrite
+    leaves pointing at the old tarball. A signature_url left behind would
+    make source_pipeline.py verify the new tarball against the old
+    release's signature and reject the bump (cryptopp's .sig).
 
     Swapping the bare version also fixes a v-prefixed tag in the same pass,
     since "v2.2.1" contains "2.2.1".
@@ -702,7 +704,7 @@ def forge_planned_entry(entry: dict, release: str, digest: str) -> dict:
             "so it cannot be bumped by substitution"
         )
     updated = dict(entry)
-    for field in ("url", "filename", "sha256_url"):
+    for field in ("url", "filename", "sha256_url", "signature_url"):
         if field in entry:
             updated[field] = swap_version(entry[field], current, release)
     if "fallback_urls" in entry:
