@@ -6779,10 +6779,13 @@
     {
       "name": "xmlrpc-c",
       "version": "1.60.04",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/xmlrpc-c/xmlrpc-c-1.60.04.tgz/sha512/68407053eec1e3f32187169f5bb976e9f043f1576dd9fb7a9076ed00414dd0293cfdf72527a314c244dd48986402af3c9cc33d110ed3b382a13190eb8dddb734/xmlrpc-c-1.60.04.tgz",
+      "url": "https://downloads.sourceforge.net/project/xmlrpc-c/Xmlrpc-c%20Super%20Stable/1.60.04/xmlrpc-c-1.60.04.tgz",
       "filename": "xmlrpc-c-1.60.04.tgz",
       "feed": "https://release-monitoring.org/project/9024",
-      "sha512": "68407053eec1e3f32187169f5bb976e9f043f1576dd9fb7a9076ed00414dd0293cfdf72527a314c244dd48986402af3c9cc33d110ed3b382a13190eb8dddb734"
+      "sha512": "68407053eec1e3f32187169f5bb976e9f043f1576dd9fb7a9076ed00414dd0293cfdf72527a314c244dd48986402af3c9cc33d110ed3b382a13190eb8dddb734",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/xmlrpc-c/xmlrpc-c-1.60.04.tgz/sha512/68407053eec1e3f32187169f5bb976e9f043f1576dd9fb7a9076ed00414dd0293cfdf72527a314c244dd48986402af3c9cc33d110ed3b382a13190eb8dddb734/xmlrpc-c-1.60.04.tgz"
+      ]
     },
     {
       "name": "xmodmap",
@@ -6864,10 +6867,13 @@
     {
       "name": "xvidcore",
       "version": "1.3.7",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/xvidcore/xvidcore-1.3.7.tar.bz2/sha512/e2b22e7a7e103af7adcc999d95484f991a0a33df02b912fe042b2e23d2af07381c737d23158dbf0fad770ee680572f86fbe04ab2ef33c81e2e0180ead2acc8ed/xvidcore-1.3.7.tar.bz2",
+      "url": "https://downloads.xvid.com/downloads/xvidcore-1.3.7.tar.bz2",
       "filename": "xvidcore-1.3.7.tar.bz2",
       "feed": "https://release-monitoring.org/project/14474",
-      "sha512": "e2b22e7a7e103af7adcc999d95484f991a0a33df02b912fe042b2e23d2af07381c737d23158dbf0fad770ee680572f86fbe04ab2ef33c81e2e0180ead2acc8ed"
+      "sha512": "e2b22e7a7e103af7adcc999d95484f991a0a33df02b912fe042b2e23d2af07381c737d23158dbf0fad770ee680572f86fbe04ab2ef33c81e2e0180ead2acc8ed",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/xvidcore/xvidcore-1.3.7.tar.bz2/sha512/e2b22e7a7e103af7adcc999d95484f991a0a33df02b912fe042b2e23d2af07381c737d23158dbf0fad770ee680572f86fbe04ab2ef33c81e2e0180ead2acc8ed/xvidcore-1.3.7.tar.bz2"
+      ]
     },
     {
       "name": "yelp",
