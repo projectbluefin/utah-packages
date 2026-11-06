@@ -49,7 +49,6 @@ packages = [
     "libavfilter",
     "libavformat",
     "libavutil",
-    "libde265",
     "libdovi",
     "libfdk-aac",
     "libklvanc",
@@ -286,6 +285,8 @@ packages = [
     { name = "rygel", pr = 823 },
     # NTFS-3G read-only plugin recipe for #488; hosted build, publication and runtime proof remain open.
     { name = "ntfs-3g-system-compression", pr = 771 },
+    # libde265 recipe import only; build and runtime proof remain on #475.
+    { name = "libde265", pr = 901 },
     # Recipe import only; hosted build, publication and device validation remain on #485.
     { name = "bcache-tools", pr = 833 },
     # Recipe import only; build, publication and runtime proof remain on #485.
