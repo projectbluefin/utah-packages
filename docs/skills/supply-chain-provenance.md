@@ -323,7 +323,10 @@ source.
 Everything else stays `rejected` and fails the run: a digest mismatch, a moved
 tag, a pinned input archive mismatch, a 404/410, a certificate failure, an
 unknown generator or git error, and an unfetchable signature, SHA-256
-manifest or bundled source.
+manifest or bundled source. An anti-bot HTML page served for an archive URL
+(`ChallengePage`, #889) is not an outage either: the host answered, so the
+next configured URL is tried, and if none serves the file the package is
+`rejected`; add a verified mirror to `fallback_urls`.
 
 ## The scheduled verification run is never cancelled
 
