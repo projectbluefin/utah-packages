@@ -1,0 +1,8 @@
+{
+  "package": "paps",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/paps.git",
+  "commit": "3de5ac33f712f492774ed9e7cec7f635b93f887a",
+  "tree": "6e7402eb9a50fd21fb2392b2d3149fbe7de81b6c",
+  "imported_at": "2026-11-06T02:22:44.783370+00:00"
+}

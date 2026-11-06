@@ -4696,6 +4696,16 @@
       ]
     },
     {
+      "name": "paps",
+      "version": "0.8.1",
+      "url": "https://github.com/dov/paps/releases/download/v0.8.1/paps-0.8.1.tar.xz",
+      "filename": "paps-0.8.1.tar.xz",
+      "sha512": "2fc4253d8ab95aeb8512e2009a7e7c44c810f219470bfae4ae628ed4295fd9ed35f6ed902377d1c539e265b4d94f681d362a0a9b87067c8ed3625ebd7d7e1b6b",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/paps/paps-0.8.1.tar.xz/sha512/2fc4253d8ab95aeb8512e2009a7e7c44c810f219470bfae4ae628ed4295fd9ed35f6ed902377d1c539e265b4d94f681d362a0a9b87067c8ed3625ebd7d7e1b6b/paps-0.8.1.tar.xz"
+      ]
+    },
+    {
       "name": "parallel",
       "version": "20260922",
       "url": "https://ftp.gnu.org/gnu/parallel/parallel-20260922.tar.bz2",
@@ -5254,6 +5264,13 @@
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/python-pyinotify/pyinotify-0.9.6.tar.gz/sha512/b52de43293b06b32236e90b7c33fac061f3095cd7d4aecec89a099d56020db1a85440ab9dcc8b521238c001fc49a1f37d1b16d621bc1acab4d7273aebcaadbc5/pyinotify-0.9.6.tar.gz"
       ]
+    },
+    {
+      "name": "python-pysocks",
+      "version": "1.7.1",
+      "url": "https://files.pythonhosted.org/packages/source/P/PySocks/PySocks-1.7.1.tar.gz",
+      "filename": "PySocks-1.7.1.tar.gz",
+      "sha512": "cef4a5ce8c67fb485644696a23bf68a721db47f3211212de2d4431eaf9ebd26077dd5a06f6dfa7fde2dcb9d7c1ed551facd014e999929cb4d7b504972c464016"
     },
     {
       "name": "python-pyudev",
