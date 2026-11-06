@@ -1,0 +1,8 @@
+/sbin/multipath -ll executes scsi_id on failed paths, resulting in needlessly verbose error messages
+
+steps:
+1. use scsi_debug to create a multipathed disk
+2. execute multipath -v2 and multipath -ll to list the device 
+3. fail the multipathed disk by executing 'echo 0 > /sys/bus/pseudo/drivers/scsi_debug/max_luns'
+4. execute 'multipath -v2'
+5. observe if have some similar message to '/lib/udev/scsi_id exitted with 1'

@@ -1,0 +1,20 @@
+verify that multipath doesn't try to assign new devices in-use user_friendly
+aliases.
+
+steps:
+1. setup config file and remove existing bindings file
+2. create scsi_debug devices
+3. start multipathd to create devices and bindings file
+4. look at path device ordering in multipathd output
+5. stop multipathd and remove devices
+6. blacklist the devices which were multipathed early in the config file
+7. remove the bindings file
+8. restart multipathd to create devices, where the later devices grab the
+   earlier user_friendly_names
+9. stop multipathd
+10. remove blacklists from the config file and remove bindings file
+11. restart multipathd
+12. Verify that all devices are there, the previously existing devices
+    still have the same alias, and all the devices match the bindings file
+13. reconfigure multipathd
+14. Verify that all devices are still there and still match.
