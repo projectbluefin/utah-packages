@@ -481,6 +481,13 @@
       ]
     },
     {
+      "name": "criu",
+      "version": "4.3",
+      "url": "https://github.com/checkpoint-restore/criu/archive/v4.3/criu-4.3.tar.gz",
+      "filename": "criu-4.3.tar.gz",
+      "sha512": "bd5e2722313e6c5bb67a33f57f1c39ee37615f12bb5004ac6892f9ba30b0ce07b46fdef78583a78e410bf7bfb9a12310ceb778443a08aec05de9f52043058896"
+    },
+    {
       "name": "cryfs",
       "version": "0.11.3",
       "url": "https://github.com/cryfs/cryfs/archive/0.11.3/cryfs-0.11.3.tar.gz",
@@ -535,6 +542,13 @@
       "url": "https://download.savannah.gnu.org/releases/davfs2/davfs2-1.7.3.tar.gz",
       "filename": "davfs2-1.7.3.tar.gz",
       "sha512": "300c49bb2556c1c0dc63ffbc8b19882f480d3184fe25d8e599092a2ae194a76d206b69dbb7691c26e1ea9c7852ffb651621d30d3ef4a226f9b286d5cfcbd378c"
+    },
+    {
+      "name": "davs2",
+      "version": "1.7^20220903gitb41cf11",
+      "url": "https://github.com/pkuvcl/davs2/archive/b41cf117452e2d73d827f02d3e30aa20f1c721ac/davs2-b41cf117452e2d73d827f02d3e30aa20f1c721ac.tar.gz",
+      "filename": "davs2-b41cf11.tar.gz",
+      "sha512": "fac67ea3a5f8251212994a075c7e6236ca3a7b92b3763cfdfa8f696272263b8aa074aea5b2bc8536b2e17111da1fb89f00b0cc071113da6b04aa0eee6df46c25"
     },
     {
       "name": "dconf",
@@ -2216,6 +2230,13 @@
       "url": "https://src.fedoraproject.org/rpms/kf5/raw/249e170c4968b43afee96b0768c4a335b81dfcbd/f/macros.kf5",
       "filename": "macros.kf5",
       "sha512": "252d27ab79bac05ecb322fdfa80b827d1e6676fdb4af6af77b50dd9b6f60b006cdf11199a64668334f36531d90994e7d20748bc79cdb987e89bf317f7afe69af"
+    },
+    {
+      "name": "kf6-karchive",
+      "version": "6.31.0",
+      "url": "https://download.kde.org/stable/frameworks/6.31/karchive-6.31.0.tar.xz",
+      "filename": "karchive-6.31.0.tar.xz",
+      "sha512": "f6428f1f4bfe02ab0a111196e256834adb32f54cbbf93af85f5de136ce4b2cbc7d7835a61827c470216cc3edc8200117374f370811f45b1426126a85f8ccbcb1"
     },
     {
       "name": "kyotocabinet",
@@ -4514,6 +4535,13 @@
       ]
     },
     {
+      "name": "open-vm-tools",
+      "version": "13.1.0",
+      "url": "https://github.com/vmware/open-vm-tools/releases/download/stable-13.1.0/open-vm-tools-13.1.0-25218885.tar.gz",
+      "filename": "open-vm-tools-13.1.0-25218885.tar.gz",
+      "sha512": "07086e2403bc4ab9727822ccfb7152e479f326a1d33c533bdcfb38b5ade8aa2ed3bc244130ab794ad5b99d9a0b3c3caecf0f37e2e1695bd97213f2236490bbb4"
+    },
+    {
       "name": "openal-soft",
       "version": "1.24.2",
       "filename": "openal-soft-1.24.2-clean.tar.xz",
@@ -5059,10 +5087,13 @@
     {
       "name": "python-argcomplete",
       "version": "3.6.3",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/python-argcomplete/argcomplete-3.6.3.tar.gz/sha512/d07756a8439fd8f30ea2823bbbe35b102c6822af907eed5d43649a378a703d8c20394127a842c9d6ce0af50d333518450d15c29fc3471e178c681ad95fa43a0a/argcomplete-3.6.3.tar.gz",
+      "url": "https://files.pythonhosted.org/packages/38/61/0b9ae6399dd4a58d8c1b1dc5a27d6f2808023d0b5dd3104bb99f45a33ff6/argcomplete-3.6.3.tar.gz",
       "filename": "argcomplete-3.6.3.tar.gz",
       "feed": "https://release-monitoring.org/project/3773",
-      "sha512": "d07756a8439fd8f30ea2823bbbe35b102c6822af907eed5d43649a378a703d8c20394127a842c9d6ce0af50d333518450d15c29fc3471e178c681ad95fa43a0a"
+      "sha512": "d07756a8439fd8f30ea2823bbbe35b102c6822af907eed5d43649a378a703d8c20394127a842c9d6ce0af50d333518450d15c29fc3471e178c681ad95fa43a0a",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/python-argcomplete/argcomplete-3.6.3.tar.gz/sha512/d07756a8439fd8f30ea2823bbbe35b102c6822af907eed5d43649a378a703d8c20394127a842c9d6ce0af50d333518450d15c29fc3471e178c681ad95fa43a0a/argcomplete-3.6.3.tar.gz"
+      ]
     },
     {
       "name": "python-click",
@@ -5081,10 +5112,13 @@
     {
       "name": "python-dasbus",
       "version": "1.7",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/python-dasbus/dasbus-1.7.tar.gz/sha512/ccf575d28d91ad96de78b8122eaf247182d22cee701859b1da83b2de2793362f164fe609187e8a9586083c55d985d95b6980b9ec291cb10d41d74dec03d8a873/dasbus-1.7.tar.gz",
+      "url": "https://files.pythonhosted.org/packages/37/79/9c5984d723ffbe2e839ee649690f3e1fa6544ab6a17a5150e5ac14a47072/dasbus-1.7.tar.gz",
       "filename": "dasbus-1.7.tar.gz",
       "feed": "https://release-monitoring.org/project/35433",
-      "sha512": "ccf575d28d91ad96de78b8122eaf247182d22cee701859b1da83b2de2793362f164fe609187e8a9586083c55d985d95b6980b9ec291cb10d41d74dec03d8a873"
+      "sha512": "ccf575d28d91ad96de78b8122eaf247182d22cee701859b1da83b2de2793362f164fe609187e8a9586083c55d985d95b6980b9ec291cb10d41d74dec03d8a873",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/python-dasbus/dasbus-1.7.tar.gz/sha512/ccf575d28d91ad96de78b8122eaf247182d22cee701859b1da83b2de2793362f164fe609187e8a9586083c55d985d95b6980b9ec291cb10d41d74dec03d8a873/dasbus-1.7.tar.gz"
+      ]
     },
     {
       "name": "python-dateutil",
@@ -5134,6 +5168,13 @@
       "sha512": "3fac3b788de93e2fed27029c4e21e3ceb016ec0d601e57e22ad7dda465158f83c4e21aee4bceef272576b635ed09df574f92c6df1537ab4f51cdccf65075acce"
     },
     {
+      "name": "python-html2text",
+      "version": "2025.4.15",
+      "url": "https://files.pythonhosted.org/packages/f8/27/e158d86ba1e82967cc2f790b0cb02030d4a8bef58e0c79a8590e9678107f/html2text-2025.4.15.tar.gz",
+      "filename": "html2text-2025.4.15.tar.gz",
+      "sha512": "2f12e293bb8aa87b4d03d3ec4698e8e8bf013acc9f69b25a2c7a1aacca9a8aaf646747c56a47bc15dae0601ecdc119ba4818daca933d4be7fa52f234c672d9f3"
+    },
+    {
       "name": "python-jaraco-classes",
       "version": "3.4.0",
       "url": "https://files.pythonhosted.org/packages/source/j/jaraco.classes/jaraco.classes-3.4.0.tar.gz",
@@ -5174,6 +5215,13 @@
       "url": "https://files.pythonhosted.org/packages/source/l/llfuse/llfuse-1.5.2.tar.gz",
       "filename": "llfuse-1.5.2.tar.gz",
       "sha512": "071fe2a7415959560a85cb5734261dc34d0d8cb83ca23413a06c6118ca7efc34ad17adcbf490b8cf71d8b2c55afd17e3fc0b091bfb12af842fc5c3f5b03de845"
+    },
+    {
+      "name": "python-more-itertools",
+      "version": "11.2.1",
+      "url": "https://files.pythonhosted.org/packages/52/b8/c63995bebbb9ac9c059350e0fb8c82c2420c85aeca7d34e40aecf3df9281/more_itertools-11.2.1.tar.gz",
+      "filename": "more-itertools-11.2.1.tar.gz",
+      "sha512": "765f8efebc11e985d261f55d9ecd45c8b318a2de0e6e584b291d15f36e1e423119d90cde27d45c0c0f0330b3904afc7f2453f66f5c8d605fd44e234406027db3"
     },
     {
       "name": "python-msgpack",
@@ -5286,6 +5334,13 @@
       "url": "https://pypi.io/packages/source/p/pyudev/pyudev-0.24.5.tar.gz",
       "filename": "pyudev-0.24.5.tar.gz",
       "sha512": "823314295b95bdd38ba10d4b4e008dcb40c0436da0eda78965bc59140e7d84bd3930707fc713560daa36028ec2805b2f9dad23d772ef17b9f945d837b6f0f66c"
+    },
+    {
+      "name": "python-shtab",
+      "version": "1.8.0",
+      "url": "https://files.pythonhosted.org/packages/b0/7a/7f131b6082d8b592c32e4312d0a6da3d0b28b8f0d305ddd93e49c9d89929/shtab-1.8.0.tar.gz",
+      "filename": "shtab-1.8.0.tar.gz",
+      "sha512": "4daf9b3a95ab309400aa466fa599c49cceb1a746d64712c753e05e36bd3e53f69a585e9ef15c57dc031709ff01b545946bf57ee21f8e34c52546850b132f0403"
     },
     {
       "name": "python-six",
@@ -5694,6 +5749,16 @@
       ]
     },
     {
+      "name": "solaar",
+      "version": "1.1.20",
+      "url": "https://github.com/pwr-Solaar/Solaar/archive/1.1.20/Solaar-1.1.20.tar.gz",
+      "filename": "Solaar-1.1.20.tar.gz",
+      "sha512": "40d02868ba946a1e855c0ee61aaf57d176db364dd963f91e8a87abb91f511df725acfb3403046e84a5824de950ad2c1f022c52e43f03d7e42df60f506d3d371a",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/solaar/Solaar-1.1.20.tar.gz/sha512/40d02868ba946a1e855c0ee61aaf57d176db364dd963f91e8a87abb91f511df725acfb3403046e84a5824de950ad2c1f022c52e43f03d7e42df60f506d3d371a/Solaar-1.1.20.tar.gz"
+      ]
+    },
+    {
       "name": "sonic",
       "version": "0.2.0^20210316gitba33141",
       "url": "https://github.com/waywardgeek/sonic/archive/ba331411f17702e01f6c2d7016eefebaa695871f/sonic-ba33141.tar.gz",
@@ -5706,6 +5771,16 @@
       "url": "https://download.drobilla.net/sord-0.16.22.tar.xz",
       "filename": "sord-0.16.22.tar.xz",
       "sha512": "3821500f810e3b1cdbd763db419445c931d8b61de571f475646f11a5740c521c93c47ecab2e81a580a0d94bf432faa0de78fe3be1138c87bf9baca8fe23bb0cd"
+    },
+    {
+      "name": "sos",
+      "version": "4.12.1",
+      "url": "https://github.com/sosreport/sos/archive/4.12.1.tar.gz",
+      "filename": "4.12.1.tar.gz",
+      "sha512": "74dc6e3d4f53db0f2e910ce419b7a06754d0bc30b3d0cf724e960c43583e2c965039f3a7d603c89be1d8b7592bbb83835128d855c59f14e58e618253c87c6401",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/sos/4.12.1.tar.gz/sha512/74dc6e3d4f53db0f2e910ce419b7a06754d0bc30b3d0cf724e960c43583e2c965039f3a7d603c89be1d8b7592bbb83835128d855c59f14e58e618253c87c6401/4.12.1.tar.gz"
+      ]
     },
     {
       "name": "sound-theme-freedesktop",

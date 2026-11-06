@@ -1,0 +1,11 @@
+summary:
+    Check basic functionality
+discover:
+    how: fmf
+    dist-git-source: true
+    dist-git-init: false
+prepare:
+    how: install
+    package: python3-html2text
+execute:
+    how: tmt

@@ -116,6 +116,15 @@ The `python-pysocks` Rawhide recipe disables its upstream tests because the
 build does not exercise SOCKS connections: validate the installed
 `python3-pysocks` payload against a test proxy as separate runtime evidence.
 
+The `python-more-itertools`, `python-shtab` and `python-html2text` recipes are
+noarch with no runtime dependencies, so their `[resolved]` records close the
+recipe import only; hosted build, publication and a permitted-repository
+runtime import remain outstanding on #489. `python-shtab`'s `sources` file
+carries both the 1.7.2 and 1.8.0 archives; the lock pins 1.8.0 to match the
+spec version. `shtab` only generates shell completion, so exercise it after
+publication by sourcing the installed `shtab` output in a shell to confirm the
+completion for at least one command is emitted.
+
 A 404 on a guessed dist-git name is not evidence that a source was removed
 from Fedora. Resolve the binary's actual source package first (the
 `sourcerpm` of the binary in Fedora's repodata): `python3-pyaudio` comes from
@@ -353,6 +362,31 @@ the graph can then place the headers before the agent from the package-name
 BuildRequires. The protocol recipe disables its Windows cross-build by default;
 that does not remove Linux headers. A successful build alone does not prove
 clipboard or display integration: test those in a SPICE guest after publication.
+
+For VMware guests, `open-vm-tools-desktop` is an unconditional subpackage of
+`open-vm-tools`; import the source family once. Its CAB library `libmspack`
+is already a factory recipe (#846, published); do not import a second copy. Its
+`pkgconfig(libmspack)` BuildRequires gives the build graph the ordering edge; no
+manual stage is needed. The guest-tools recipe also BuildRequires
+`xmlsec1-openssl-devel`, `pkgconfig(libtirpc)`, `rpcgen`, `procps-devel` and
+`pkgconfig(gtkmm-4.0)`. None needs a recipe here: Hummingbird provides
+`xmlsec1-openssl-devel`, `libtirpc-devel` and `procps-ng-devel` (which provides
+`procps-devel` and `pkgconfig(libproc2)`), Fedora 44 provides `rpcgen` (not
+in Hummingbird), and the factory provides `gtkmm4.0-devel`. Published `quota`,
+`nfs-utils`, `oath-toolkit` and `igt-gpu-tools` already build against the same
+providers. Check a new BuildRequires against both repositories' primary
+metadata before importing a provider. The main recipe explicitly requires
+`xmlsec1-openssl`; match that provider in Hummingbird rather than importing a
+duplicate XML security library.
+
+The imported guest-tools recipe has no `%check`: its comment explains that
+`make check` regenerates a documentation font. Record that inherited limitation;
+do not describe configuration tests as guest integration tests. Runtime
+acceptance needs an actual VMware guest: verify `vmtoolsd`, query
+`vmware-toolbox-cmd stat hosttime`, and exercise desktop resizing and clipboard
+transfer. A version command on a generic runner cannot establish host/guest
+integration. Recipe catalog closure does not establish those results or
+publication.
 
 ### Touchscreen library imports
 
@@ -1090,6 +1124,22 @@ primary metadata: the separately packaged interpreter is not proof that the
 audited library was published. Publication does not prove that the library
 resolves against the permitted repositories or can be loaded at runtime.
 
+### Solaar and sos imports
+
+`solaar-udev` is the udev-rules subpackage of the `solaar` source recipe;
+import `solaar`, not a separate recipe for the rules. Both `solaar` and `sos`
+lock their GitHub tag archives directly: those bytes equal the dist-git
+SHA-512 pins. Their Python BuildRequires (including `%pyproject_buildrequires`
+extras such as `hid-parser`) come from the Fedora 44 half of the build root;
+that is not proof the runtime `Requires` resolve on Hummingbird plus the
+factory. Verify the udev rules file and `sos report --help` against the
+permitted repositories before claiming runtime acceptance.
+
+`uavs3d-libs` has no Fedora dist-git recipe (`rpms/uavs3d` does not exist),
+so `tools/import_rawhide.py` cannot import it; it needs its own source
+decision. `shim-ia32` is a Secure Boot-signed bootloader binary and needs an
+explicit maintainer decision before any recipe work.
+
 ### NILFS utilities signature sources
 
 For `nilfs-utils`, the release archive and detached signature are separate
@@ -1302,6 +1352,15 @@ then destroy the set. A version or help command does not exercise that path.
 
 `jbig2dec-libs` is an output of the `jbig2dec` source recipe, not a separate source. Ghostscript currently builds its bundled copy, so that does not establish availability of the separate library. The upstream recipe warns that consumers of its shared library must be rebuilt together on version changes; verify the hosted build, dependency transaction, and representative decoding before claiming runtime closure.
 
+## Checkpoint/restore package family
+
+`criu` and `criu-libs` come from one `criu` source recipe (`%package libs`);
+the same spec also builds `criu-devel`, the amdgpu and CUDA plugins,
+`python3-criu`, `crit` and `criu-ns`. Recipe coverage does not establish that
+the build, publication or a checkpoint/restore round trip works. Runtime
+verification needs a privileged environment (`CAP_SYS_ADMIN`/`CAP_CHECKPOINT_RESTORE`):
+checkpoint and restore a simple process; `criu check` alone does not exercise it.
+
 ## Windows domain enrollment (adcli)
 
 A spec using `%global with_selinux 1` can emit a SELinux subpackage even when the backlog auditor cannot evaluate its `%{with selinux}` guard. Check the default RPM expansion and retain build and publication verification as separate evidence; a recipe classification alone does not prove an installable binary.
@@ -1372,3 +1431,17 @@ The kernel-module names in the same long-tail batch (`v4l2loopback`,
 kernel module packages. The #491 decision covers only `kernel-modules-extra`
 and `usbip`; do not extend it to these names. They stay pending until a
 maintainer records a kernel-module policy decision for them.
+
+## davs2 AVS2 decoder library
+
+Fedora dist-git has no `davs2`, so `davs2-libs` comes from the negativo17
+recipe imported with `tools/import_rawhide.py --branch master
+--remote-template 'https://github.com/negativo17/{package}.git' davs2`; the
+provenance keeps the `master` branch, commit and tree. The recipe builds
+`davs2` (CLI), `davs2-libs` (`libdavs2.so.16`) and `davs2-devel`; do not add a
+second recipe under the binary name. negativo17 carries no `sources` file, so
+the pinned upstream commit archive is locked only in
+`config/upstream-sources.json`. Recipe coverage does not establish a hosted
+build, publication or a representative AVS2 decode. `LCEVCdec` is still
+pending: the negativo17 recipe needs `CLI11`, `range-v3`, `plutovg-devel` and
+`libavdevice` build prerequisites that have no recipe here yet.

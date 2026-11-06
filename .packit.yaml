@@ -322,6 +322,12 @@ packages:
     downstream_package_name: containerd
     paths:
       - packages/containerd
+  criu:
+    specfile_path: criu.spec
+    upstream_package_name: criu
+    downstream_package_name: criu
+    paths:
+      - packages/criu
   cryfs:
     specfile_path: cryfs.spec
     upstream_package_name: cryfs
@@ -358,6 +364,12 @@ packages:
     downstream_package_name: davfs2
     paths:
       - packages/davfs2
+  davs2:
+    specfile_path: davs2.spec
+    upstream_package_name: davs2
+    downstream_package_name: davs2
+    paths:
+      - packages/davs2
   dconf:
     specfile_path: dconf.spec
     upstream_package_name: dconf
@@ -1396,6 +1408,12 @@ packages:
     downstream_package_name: kf5
     paths:
       - packages/kf5
+  kf6-karchive:
+    specfile_path: kf6-karchive.spec
+    upstream_package_name: kf6-karchive
+    downstream_package_name: kf6-karchive
+    paths:
+      - packages/kf6-karchive
   kyotocabinet:
     specfile_path: kyotocabinet.spec
     upstream_package_name: kyotocabinet
@@ -2824,6 +2842,12 @@ packages:
     downstream_package_name: oddjob
     paths:
       - packages/oddjob
+  open-vm-tools:
+    specfile_path: open-vm-tools.spec
+    upstream_package_name: open-vm-tools
+    downstream_package_name: open-vm-tools
+    paths:
+      - packages/open-vm-tools
   openal-soft:
     specfile_path: openal-soft.spec
     upstream_package_name: openal-soft
@@ -3232,6 +3256,12 @@ packages:
     downstream_package_name: python-h11
     paths:
       - packages/python-h11
+  python-html2text:
+    specfile_path: python-html2text.spec
+    upstream_package_name: python-html2text
+    downstream_package_name: python-html2text
+    paths:
+      - packages/python-html2text
   python-jaraco-classes:
     specfile_path: python-jaraco-classes.spec
     upstream_package_name: python-jaraco-classes
@@ -3268,6 +3298,12 @@ packages:
     downstream_package_name: python-llfuse
     paths:
       - packages/python-llfuse
+  python-more-itertools:
+    specfile_path: python-more-itertools.spec
+    upstream_package_name: python-more-itertools
+    downstream_package_name: python-more-itertools
+    paths:
+      - packages/python-more-itertools
   python-msgpack:
     specfile_path: python-msgpack.spec
     upstream_package_name: python-msgpack
@@ -3346,6 +3382,12 @@ packages:
     downstream_package_name: python-pyudev
     paths:
       - packages/python-pyudev
+  python-shtab:
+    specfile_path: python-shtab.spec
+    upstream_package_name: python-shtab
+    downstream_package_name: python-shtab
+    paths:
+      - packages/python-shtab
   python-six:
     specfile_path: python-six.spec
     upstream_package_name: python-six
@@ -3604,6 +3646,12 @@ packages:
     downstream_package_name: snowball
     paths:
       - packages/snowball
+  solaar:
+    specfile_path: solaar.spec
+    upstream_package_name: solaar
+    downstream_package_name: solaar
+    paths:
+      - packages/solaar
   sonic:
     specfile_path: sonic.spec
     upstream_package_name: sonic
@@ -3616,6 +3664,12 @@ packages:
     downstream_package_name: sord
     paths:
       - packages/sord
+  sos:
+    specfile_path: sos.spec
+    upstream_package_name: sos
+    downstream_package_name: sos
+    paths:
+      - packages/sos
   sound-theme-freedesktop:
     specfile_path: sound-theme-freedesktop.spec
     upstream_package_name: sound-theme-freedesktop
