@@ -236,6 +236,12 @@ owners and a remote whose repository name matches the source package; full
 commit and tree hashes remain mandatory. Never relabel that provenance as
 Fedora `rawhide` or a direct-upstream import to pass validation.
 
+`libde265` is a separate H.265 decoder library, imported from RPM Fusion's
+`libde265` recipe rather than Fedora dist-git. Its default recipe disables the
+standalone decoder executable while retaining the shared library. Verify the
+library with a consumer after the hosted build; an executable invocation is not
+available from this recipe.
+
 Upstream archives still supply the payload. A packaging snapshot script may
 repack a VCS checkout even when the same commit has a first-party archive.
 For x264, lock the full VideoLAN commit archive, adjust the unpack directory,
