@@ -169,7 +169,6 @@ packages = [
     "PackageKit-glib",
     "appstream-data",
     "b43-openfwwf",
-    "braille-printer-app",
     "criu",
     "criu-libs",
     "desktop-backgrounds-gnome",
@@ -659,6 +658,8 @@ packages = [
     { name = "liblouisutdml", pr = 616 },
     { name = "liblouisutdml-utils", pr = 616 },
     { name = "antiword", pr = 616 },
+    # Recipe import only; hosted build, publication, and runtime proof remain.
+    { name = "braille-printer-app" },
     { name = "b43-fwcutter", pr = 813 },
     { name = "sane-airscan", pr = 586 },
     { name = "sane-backends", pr = 586 },
