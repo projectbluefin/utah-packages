@@ -2225,6 +2225,13 @@
       "sha512": "252d27ab79bac05ecb322fdfa80b827d1e6676fdb4af6af77b50dd9b6f60b006cdf11199a64668334f36531d90994e7d20748bc79cdb987e89bf317f7afe69af"
     },
     {
+      "name": "kf6-karchive",
+      "version": "6.31.0",
+      "url": "https://download.kde.org/stable/frameworks/6.31/karchive-6.31.0.tar.xz",
+      "filename": "karchive-6.31.0.tar.xz",
+      "sha512": "f6428f1f4bfe02ab0a111196e256834adb32f54cbbf93af85f5de136ce4b2cbc7d7835a61827c470216cc3edc8200117374f370811f45b1426126a85f8ccbcb1"
+    },
+    {
       "name": "kyotocabinet",
       "version": "1.2.80",
       "url": "https://dbmx.net/kyotocabinet/pkg/kyotocabinet-1.2.80.tar.gz",
