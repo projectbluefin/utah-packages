@@ -397,9 +397,9 @@ reads as `2`).
 
 What a feed on a lookaside lock can do:
 
-- The **scheduled run only reports** it ("needs review"). It never applies,
-  by design: the new bytes are not in the lookaside, and no unattended run
-  moves a primary.
+- The **scheduled run only reports** it ("needs review", with the reason
+  `primary_blocker()` gives). It never applies, by design: the new bytes are
+  not in the lookaside, and no unattended run moves a primary off it.
 - A **`--package <name>` dispatch relocks** a GNOME or forge feed: the
   primary moves to the feed (the forge URL is the feed with the version
   substituted, so the feed must contain the locked version), the old lookaside
@@ -413,6 +413,56 @@ The lookaside fallback is keyed by the Fedora package, not the GNOME module
 (`rpms/gtk3/gtk-3.24.52.tar.xz/...`). `planned_entry()` used the module
 until 2026-10-03, which left gtk4 and gnome-desktop3 with `rpms/gtk/` and
 `rpms/gnome-desktop/` fallbacks that 404ed; both were corrected then.
+
+### Same-major moves on a project primary
+
+Most explicit feeds sit on a lock whose primary is already the project's own
+download: archive.mesa3d.org, gstreamer.freedesktop.org,
+kernel.org, SourceForge. Until 2026-11, `plan()` still treated every release
+read through an explicit feed or a fallback mirror the same way as a lookaside
+lock. It printed `needs review X: A -> B (the release feed is tracked through
+the lock's explicit feed; the new bytes must be ingested through the primary
+first)` for ordinary point releases: mesa 26.2.1 -> 26.2.6, gstreamer1 and
+its plugins 1.28.6 -> 1.28.9, bluez 5.87 -> 5.88, ffmpeg, lcms2, SDL3, the
+X.org libraries. Only `primary_tracks_forge()` (a GitHub or GitLab primary)
+let a move through, so these locks stayed pinned.
+
+Now a release that already counts as an `update` (same major,
+`forge_proposal`) is applied whenever `primary_blocker()` finds the new
+primary derivable from the current one:
+
+- `swap_version()` replaces the locked version in `url`, `filename` and
+  `sha256_url` only as a whole number. It skips a match that follows a hex
+  digit or another component, or runs on into one. A plain `replace` also
+  rewrote a digest that contained `238` and turned `1.0.1` into `1.1.1`.
+- `rebuilt_fallback()` rebuilds every lookaside fallback in the SHA-512 form
+  `planned_entry()` writes, from the new file name and digest. The legacy
+  md5 pins (hyphen, libao, libtheora) cannot be updated by substitution.
+  Other mirrors only get the version swapped.
+- `apply()` pins the SHA-512 of whatever the derived URL serves, as for
+  every bump. A URL that is not served fails as `skipped X: derived
+  download <url>: HTTP Error 404`, naming the URL to fix. On 2026-11-06 that
+  was hyphen 2.8.10 and linux-atm 2.5.2 (SourceForge), libao 1.2.2 (xiph),
+  and python-pam 2.1.1 (not under the old `pypi.python.org/packages/source` path).
+
+Three primaries are never derived from, and each prints its own `needs
+review` reason so it can be fixed per package:
+
+- **The primary is Fedora's lookaside.** The reason names the fix:
+  `--package <name>` for an explicit forge or GNOME feed. For an Anitya feed
+  or a fallback mirror, a hand re-pin. A primary is never pointed at Fedora,
+  and `apply()` refuses one.
+- **The primary does not carry its version**, e.g. a `latest` URL. The
+  reason quotes the URL.
+- **The primary is filed under a content hash**, e.g. PyPI's
+  `files.pythonhosted.org/packages/38/61/<blake2b>/` (python-argcomplete).
+  The next release lives under a hash nobody can predict, so re-pin it by hand.
+
+Cross-major releases stay `review`, and `config/bump-review-only.txt` still
+wins. grub2 was added to it with this change. Its Anitya feed makes every
+2.x a same-major update, and the bootloader is boot chain. bluez,
+wpa_supplicant and tailscale stay off the list: they flow as same-major
+releases under the rolling policy.
 
 Left without a feed on purpose (2026-10-03): git snapshots (aribb24),
 sources with no upstream release (color-filesystem, kde-filesystem,
