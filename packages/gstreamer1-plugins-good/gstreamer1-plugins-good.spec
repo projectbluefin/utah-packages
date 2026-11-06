@@ -372,6 +372,9 @@ find $RPM_BUILD_ROOT -name '*.la' -exec rm -fv {} ';'
 
 
 %changelog
+* Fri Nov 06 2026 Karibhou <Karibhou@users.noreply.github.com> - 1.28.6-2
+- Enable the Qt 6 qml6sink plugin.
+
 * Wed Aug 05 2026 Gwyn Ciesla <gwync@protonmail.com> - 1.28.6-1
 - 1.28.6
 
