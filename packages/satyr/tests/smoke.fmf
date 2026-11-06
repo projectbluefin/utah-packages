@@ -1,0 +1,10 @@
+summary: Basic smoke test for satyr
+prepare:
+    how: install
+    # Do not attempt to install conflicting subpackages.
+    exclude:
+        - abrt-atomic
+        - abrt-java-connector-container
+        - python3-abrt-container-addon
+execute:
+    script: satyr --version
