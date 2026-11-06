@@ -52,6 +52,12 @@ packages:
     downstream_package_name: OpenCL-ICD-Loader
     paths:
       - packages/OpenCL-ICD-Loader
+  PackageKit:
+    specfile_path: PackageKit.spec
+    upstream_package_name: PackageKit
+    downstream_package_name: PackageKit
+    paths:
+      - packages/PackageKit
   SDL3:
     specfile_path: SDL3.spec
     upstream_package_name: SDL3
