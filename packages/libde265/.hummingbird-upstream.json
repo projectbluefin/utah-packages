@@ -1,0 +1,8 @@
+{
+  "package": "libde265",
+  "branch": "master",
+  "remote": "https://github.com/rpmfusion/libde265.git",
+  "commit": "5b5ae4b9eb8fdc5ac546fb21c69a96cfc0acd82a",
+  "tree": "bdbe29967160701f432ca71c1e15db73a01f946c",
+  "imported_at": "2026-11-06T03:10:35.672370+00:00"
+}

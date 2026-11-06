@@ -1714,6 +1714,12 @@ packages:
     downstream_package_name: libdc1394
     paths:
       - packages/libdc1394
+  libde265:
+    specfile_path: libde265.spec
+    upstream_package_name: libde265
+    downstream_package_name: libde265
+    paths:
+      - packages/libde265
   libdecor:
     specfile_path: libdecor.spec
     upstream_package_name: libdecor
