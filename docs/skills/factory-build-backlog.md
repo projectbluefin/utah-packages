@@ -1067,6 +1067,10 @@ on the target's `%{?fedora}` macro; check the actual pinned buildroot and
 resulting RPM dependencies rather than assuming the conditional is on or off.
 The upstream test suite covers terminal capabilities, syntax parsing, and
 UTF-8 support; run it on every recipe bump.
+When reconciling `slang`, check the library binary itself in published
+primary metadata: the separately packaged interpreter is not proof that the
+audited library was published. Publication does not prove that the library
+resolves against the permitted repositories or can be loaded at runtime.
 
 ### NILFS utilities signature sources
 
