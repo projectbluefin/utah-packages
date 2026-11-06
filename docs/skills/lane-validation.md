@@ -196,6 +196,18 @@ Expect this to carry over rarely: in the 60 `main` commits before #900, 56
 touched a pipeline path. #862 itself does not carry over, because `07878565`
 changed `tools/generated_sources.py`, `.packit.yaml` and `config/`.
 
+The proof cannot survive on a fork pull request that `main` keeps overtaking:
+`main` requires branches to be up to date, each merge from `main` is a new
+head, and the hive cannot update a fork branch once `main` changes
+`.github/workflows/` (its App has no `workflows` permission). In that case,
+and for a fork pull request that itself changes `.github/`, a maintainer
+re-homes it instead. The maintainer creates `hive/adopt-<N>` from `main`,
+cherry-picks only the pull request's own non-merge commits with `--signoff`
+(authorship is preserved), resolves conflicts, runs `just check`, opens a new
+pull request naming the original author, then links and closes the original.
+An in-repository branch runs `Canary` with its own credentials, so no dispatch
+is needed (#812 → #892, #877 → #893, #862).
+
 ## Canary in the merge queue
 
 `Canary`, `Unit tests` and `Runtime contract` also run on `merge_group`, so a

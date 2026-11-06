@@ -202,6 +202,9 @@ metadata, not a source archive. Expand recipe macros explicitly and strip
 RPM's `#/local-filename` suffix from the download URL while preserving the
 lock's `filename`. Project names can differ from recipe names, as with
 `gstreamer1-plugins-base` and the upstream `gst-plugins-base` archive.
+For PyPI packages, resolve the version's source distribution from
+`https://pypi.org/pypi/<project>/<version>/json` and verify the returned
+`files.pythonhosted.org` URL against the locked SHA-512 before promoting it.
 
 Stream each candidate primary directly through SHA-512 without using the
 pipeline's fallback path. Promote only exact matches to the existing lock;
@@ -220,6 +223,24 @@ and verifies it on the native runner; do not weaken that test during a bulk
 transport-only migration. Also check candidate hosts against the validator's
 Fedora-host policy before editing: a project's own repository on
 `forge.fedoraproject.org` still counts as Fedora infrastructure.
+
+### Fork Canary approval is not a source-integrity failure
+
+A source-lock migration can require Canary even when its native package set
+is unchanged. If the fork's `Canary / Decide` step reports no maintainer-run
+proof and the build passes are skipped, no package build failed. Do not alter
+the locks, narrow Canary's relevance rules, or push an empty commit to bypass
+this gate.
+
+After reviewing the final head, a maintainer runs
+[`Canary for a fork pull request`](../../.github/workflows/canary-fork-pr.yml)
+on `main`, supplying the PR number and its full 40-character `head_sha`.
+The workflow copies that exact commit to `canary/pr-<N>`, dispatches Canary,
+and refreshes the fork's required check after a successful proof. Every new
+push, including a merge from `main`, invalidates the previous head's proof.
+If the agent lacks upstream write permission or workflow dispatch is blocked,
+report the approval blocker and final head to a maintainer; local validation
+and rerunning the fork check alone cannot supply that proof.
 
 ## Dead upstream hosts: releases.pagure.org
 

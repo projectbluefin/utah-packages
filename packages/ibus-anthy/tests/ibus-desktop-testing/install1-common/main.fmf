@@ -1,0 +1,88 @@
+summary: Install common GNOME desktop components
+description:
+    The listed packages are installed commonly between Fedora and
+    RHEL GNOME desktop components.
+require:
+    # IBus CI sets
+    - ibus
+    - ibus-desktop-testing
+    - dbus-x11
+    # https://pagure.io/fedora-comps/blob/main/f/comps-f41.xml.in
+    # dnf group info GNOME
+    # base-graphical mandatory
+    - mesa-dri-drivers
+    - mesa-vulkan-drivers
+    - plymouth-system-theme
+    # fonts default
+    - default-fonts-cjk-mono
+    - default-fonts-cjk-sans
+    - default-fonts-cjk-serif
+    - default-fonts-core-emoji
+    - default-fonts-core-math
+    - default-fonts-core-mono
+    - default-fonts-core-sans
+    - default-fonts-core-serif
+    - default-fonts-other-mono
+    - default-fonts-other-sans
+    - default-fonts-other-serif
+    # gnome-desktop mandatory
+    - dconf
+    - gdm
+    - gnome-connections
+    - gnome-control-center
+    - gnome-initial-setup
+    - gnome-session-wayland-session
+    - gnome-settings-daemon
+    - gnome-shell
+    - gnome-software
+    - gnome-text-editor
+    - nautilus
+    - polkit
+    - ptyxis
+    # gnome-desktop default
+    - avahi
+    - baobab
+    # Sometimes version mismatch with gnome-shell in rawhide
+    #- chrome-gnome-shell
+    - fprintd-pam
+    - glib-networking
+    - gnome-bluetooth
+    - gnome-browser-connector
+    - gnome-calculator
+    - gnome-characters
+    - gnome-classic-session
+    - gnome-clocks
+    - gnome-color-manager
+    - gnome-disk-utility
+    - gnome-font-viewer
+    - gnome-remote-desktop
+    - gnome-system-monitor
+    - gnome-user-docs
+    - gvfs-goa
+    - gvfs-mtp
+    - librsvg2
+    - libsane-hpaio
+    - loupe
+    - mesa-dri-drivers
+    - mesa-libEGL
+    - ModemManager
+    - NetworkManager-adsl
+    - NetworkManager-ppp
+    - NetworkManager-wwan
+    - PackageKit-command-not-found
+    - PackageKit-gtk3-module
+    - sane-backends-drivers-scanners
+    - snapshot
+    # Move systemd-oomd-defaults to Post-Installing section
+    - tracker
+    - tracker-miners
+    - xdg-desktop-portal
+    - xdg-desktop-portal-gnome
+    - xdg-desktop-portal-gtk
+    - xdg-user-dirs-gtk
+    # desktop-accessibility default
+    - at-spi2-atk
+    - at-spi2-core
+    - brltty
+    - orca
+    - speech-dispatcher

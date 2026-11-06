@@ -1,0 +1,152 @@
+From d6031da2b493e50aacc8ad9741d33ec251483bee Mon Sep 17 00:00:00 2001
+From: Sumit Bose <sbose@redhat.com>
+Date: Wed, 14 May 2025 14:14:49 +0200
+Subject: [PATCH 04/20] disco: check IPA specific extension in rootDSE
+
+In case an IPA server has restricted anonymous access it might not be
+possible to read the based DN to find the domain name or the Kerberos
+realm. As long as the rootDSE can be read we can identify an IPA domain
+by IPA specific LDAP extensions and derived the domain name from the
+default domain suffix. With this patch this information is used as a
+fallback if the base DN cannot be read.
+
+Resolves: https://gitlab.freedesktop.org/realmd/realmd/-/issues/44
+---
+ service/realm-disco-rootdse.c | 78 ++++++++++++++++++++++++++++++-----
+ 1 file changed, 68 insertions(+), 10 deletions(-)
+
+diff --git a/service/realm-disco-rootdse.c b/service/realm-disco-rootdse.c
+index d9b44b3..20febe2 100644
+--- a/service/realm-disco-rootdse.c
++++ b/service/realm-disco-rootdse.c
+@@ -34,6 +34,7 @@ struct _Closure {
+ 
+ 	gchar *default_naming_context;
+ 	gint msgid;
++	gboolean has_ipa_keytab_set_oid;
+ 
+ 	gboolean (* request) (GTask *task,
+ 	                      Closure *clo,
+@@ -177,6 +178,31 @@ request_krb_realm (GTask *task,
+ 	                    LDAP_SCOPE_SUB, "(objectClass=krbRealmContainer)", attrs);
+ }
+ 
++static gchar * get_domain_from_dn (const gchar *dn)
++{
++	char *domain;
++	gchar *out;
++
++	int ret;
++
++	ret = ldap_dn2domain ( (const char *) dn, &domain);
++	if (ret != 0 ) {
++		g_debug ("Failed to get domain name from DN %s", dn);
++		return NULL;
++	}
++	if (!realm_options_check_domain_name (domain)) {
++		ber_memfree (domain);
++		g_message ("Invalid value in domain name %s derived from %s",
++		           domain, dn);
++		return NULL;
++	}
++
++	out = g_strdup (domain);
++	ber_memfree (domain);
++
++	return out;
++}
++
+ static gboolean
+ result_domain_info (GTask *task,
+                     Closure *clo,
+@@ -188,8 +214,11 @@ result_domain_info (GTask *task,
+ 
+ 	entry = ldap_first_entry (ldap, message);
+ 
+-	/* If we can't retrieve this, then nothing more to do */
+-	if (entry == NULL) {
++	/* If we can't retrieve this, then nothing more to do. If we can
++         * already safely assume that the domain is IPA because an IPA
++         * specific LDAP extension was found, we try to derive the domain name
++         * and the Kerberos realm from the default naming context.  */
++	if (entry == NULL && !clo->has_ipa_keytab_set_oid) {
+ 		g_debug ("Couldn't read default naming context");
+ 		g_task_return_new_error (task, REALM_LDAP_ERROR, LDAP_NO_SUCH_OBJECT,
+ 		                         "Couldn't lookup domain name on LDAP server");
+@@ -198,21 +227,40 @@ result_domain_info (GTask *task,
+ 
+ 	/* What kind of server is it? */
+ 	clo->disco->server_software = NULL;
+-	bvs = ldap_get_values_len (ldap, entry, "info");
+-	if (bvs && bvs[0] && bvs[0]->bv_len >= 3) {
+-		if (g_ascii_strncasecmp (bvs[0]->bv_val, "IPA", 3) == 0)
+-			clo->disco->server_software = REALM_DBUS_IDENTIFIER_IPA;
++	if (entry == NULL) {
++		g_debug ("Couldn't read default naming context, assuming IPA");
++		clo->disco->server_software = REALM_DBUS_IDENTIFIER_IPA;
++	} else {
++		bvs = ldap_get_values_len (ldap, entry, "info");
++		if (bvs && bvs[0] && bvs[0]->bv_len >= 3) {
++			if (g_ascii_strncasecmp (bvs[0]->bv_val, "IPA", 3) == 0)
++				clo->disco->server_software = REALM_DBUS_IDENTIFIER_IPA;
++		}
++		ldap_value_free_len (bvs);
+ 	}
+-	ldap_value_free_len (bvs);
+ 
+ 	if (clo->disco->server_software)
+ 		g_debug ("Got server software: %s", clo->disco->server_software);
+ 
+ 	/* What is the domain name? */
+ 	g_free (clo->disco->domain_name);
+-	clo->disco->domain_name = entry_get_attribute (ldap, entry, "associatedDomain", TRUE);
+ 
+-	g_debug ("Got associatedDomain: %s", clo->disco->domain_name);
++	if (entry == NULL) {
++		clo->disco->domain_name = get_domain_from_dn (clo->default_naming_context);
++		if (clo->disco->domain_name != NULL) {
++			clo->disco->kerberos_realm = g_ascii_strup (clo->disco->domain_name, -1);
++		}
++	} else {
++		clo->disco->domain_name = entry_get_attribute (ldap, entry, "associatedDomain", TRUE);
++	}
++
++	g_debug ("Got domain name: %s", clo->disco->domain_name);
++
++	if (entry == NULL) {
++		/* LDAP already failed, no need for another try */
++		g_task_return_boolean (task, TRUE);
++		return FALSE;
++	}
+ 
+ 	/* Next search for Kerberos container */
+ 	clo->request = request_krb_realm;
+@@ -376,6 +424,15 @@ result_root_dse (GTask *task,
+ 			return FALSE;
+ 		}
+ 
++		/* Check for IPA's KEYTAB_SET_OID LDAP extension. Even if it
++		 * is not present we continue to check for IPA since there is
++		 * currently no other server type supported. */
++		clo->has_ipa_keytab_set_oid = FALSE;
++		if (entry_has_attribute (ldap, entry, "supportedExtension",
++		                         "2.16.840.1.113730.3.8.10.1")) {
++			clo->has_ipa_keytab_set_oid = TRUE;
++		}
++
+ 		/* Next search for IPA field */
+ 		clo->request = request_domain_info;
+ 		clo->result = NULL;
+@@ -388,7 +445,8 @@ request_root_dse (GTask *task,
+                   Closure *clo,
+                   LDAP *ldap)
+ {
+-	const char *attrs[] = { "defaultNamingContext", "supportedCapabilities", NULL };
++	const char *attrs[] = { "defaultNamingContext", "supportedCapabilities",
++	                        "supportedExtension", NULL };
+ 
+ 	clo->request = NULL;
+ 	clo->result = result_root_dse;
+-- 
+2.54.0
+

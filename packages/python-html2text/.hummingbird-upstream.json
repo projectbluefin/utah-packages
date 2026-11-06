@@ -1,0 +1,8 @@
+{
+  "package": "python-html2text",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/python-html2text.git",
+  "commit": "4f351c71c05de063775f1b6114bd9a0c0f9ee863",
+  "tree": "06a4de184ce9992c180ea8db6b7535c1e662eb47",
+  "imported_at": "2026-11-06T09:04:30.399251+00:00"
+}
