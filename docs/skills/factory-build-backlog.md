@@ -208,6 +208,13 @@ Use the consumer issue named by the batch assignment when the area's
 outputs, inspect current published repodata by binary name and its source
 RPM before importing a second recipe.
 
+`PackageKit-glib` is a subpackage of the `PackageKit` source recipe, not a
+separate source. The Rawhide recipe builds the DNF5 backend too and needs
+`pkgconfig(libdnf5) >= 5.4.3.0` at build time. Its GLib library does not
+require the PackageKit service by package name; a recipe import alone proves
+neither that the backend builds in the pinned root nor that the library can be
+installed and used from the published factory repository.
+
 The `Import Rawhide package` workflow does **not** make this move: its pull
 request carries the recipe, lock and `.packit.yaml`, but leaves the name in
 its area. Before merging one, add the `[resolved]` entry (with that PR's
