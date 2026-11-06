@@ -144,6 +144,12 @@ release archive and a second, SHA-512-pinned Fedora configuration file
 coverage does not establish that the build, publication, dependency
 transaction, or partition mapping command succeeds; verify those separately.
 
+The `kf6` source recipe supplies `kf6-filesystem` and `kf6-rpm-macros`.
+Its macro and license files are tracked in the imported packaging tree rather
+than an upstream release archive. Its lock uses `no_upstream_source`; the
+pinned dist-git provenance identifies those files. Recipe coverage alone does
+not establish a build, publication, or runtime dependency closure.
+
 Before importing an audit name, read Utah's current `baselines/triage.toml` and
 pin the decision's commit when reconciling an existing `waived` entry into
 `[wontfix]`. The audit can include deliberately absent X11 client utilities

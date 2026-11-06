@@ -2238,6 +2238,11 @@
       "sha512": "252d27ab79bac05ecb322fdfa80b827d1e6676fdb4af6af77b50dd9b6f60b006cdf11199a64668334f36531d90994e7d20748bc79cdb987e89bf317f7afe69af"
     },
     {
+      "name": "kf6",
+      "version": "6.31.0",
+      "no_upstream_source": true
+    },
+    {
       "name": "kf6-karchive",
       "version": "6.31.0",
       "url": "https://download.kde.org/stable/frameworks/6.31/karchive-6.31.0.tar.xz",

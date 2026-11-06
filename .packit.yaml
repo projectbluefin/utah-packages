@@ -1414,6 +1414,12 @@ packages:
     downstream_package_name: kf5
     paths:
       - packages/kf5
+  kf6:
+    specfile_path: kf6.spec
+    upstream_package_name: kf6
+    downstream_package_name: kf6
+    paths:
+      - packages/kf6
   kf6-karchive:
     specfile_path: kf6-karchive.spec
     upstream_package_name: kf6-karchive
