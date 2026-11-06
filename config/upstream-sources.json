@@ -1120,7 +1120,6 @@
       "version": "1.90.1",
       "url": "https://download.gnome.org/sources/gjs/1.90/gjs-1.90.1.tar.xz",
       "filename": "gjs-1.90.1.tar.xz",
-      "feed": "https://download.gnome.org/sources/gjs/1.89/gjs-1.89.2.tar.xz",
       "sha512": "1a0da3a65353297d226258e9b041de5da792f0d0df79902828ef8db7802a09c9f993e24c000021220e09b9a1bcd2f2d1d61e9ad3d69c8a062b243f878e654453",
       "stage": 7,
       "fallback_urls": [
