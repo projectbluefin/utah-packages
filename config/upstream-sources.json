@@ -5292,6 +5292,17 @@
       ]
     },
     {
+      "name": "qemu",
+      "version": "11.1.3",
+      "stage": 6,
+      "url": "https://download.qemu.org/qemu-11.1.3.tar.xz",
+      "filename": "qemu-11.1.3.tar.xz",
+      "sha512": "6bcade0af849e6a7f124e2b07d07e8a6e1fd160dcdc7f3c9c968cbdbc8922b2ddfa68493105ac14516f8eea83db6ef4dba07cc6776a61aa023508b31e53b9ef7",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/qemu/qemu-11.1.3.tar.xz/sha512/6bcade0af849e6a7f124e2b07d07e8a6e1fd160dcdc7f3c9c968cbdbc8922b2ddfa68493105ac14516f8eea83db6ef4dba07cc6776a61aa023508b31e53b9ef7/qemu-11.1.3.tar.xz"
+      ]
+    },
+    {
       "name": "qpdf",
       "version": "12.4.2",
       "url": "https://github.com/qpdf/qpdf/releases/download/v12.4.2/qpdf-12.4.2.tar.gz",
@@ -5346,6 +5357,16 @@
       ]
     },
     {
+      "name": "rclone",
+      "version": "1.75.2",
+      "url": "https://github.com/rclone/rclone/archive/refs/tags/v1.75.2/rclone-1.75.2.tar.gz",
+      "filename": "rclone-1.75.2.tar.gz",
+      "sha512": "0b05b09176d7a90dc47494b0cf827b35d9dc3ffa7f9d27d48efd563ae18ca7e7f6610426f23a53962246c8beee4b26482e982ce9200f62262859126ab1436907",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/rclone/rclone-1.75.2.tar.gz/sha512/0b05b09176d7a90dc47494b0cf827b35d9dc3ffa7f9d27d48efd563ae18ca7e7f6610426f23a53962246c8beee4b26482e982ce9200f62262859126ab1436907/rclone-1.75.2.tar.gz"
+      ]
+    },
+    {
       "name": "re2",
       "version": "20251105",
       "url": "https://github.com/google/re2/archive/2025-11-05/re2-2025-11-05.tar.gz",
@@ -5354,6 +5375,17 @@
       "stage": 4,
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/re2/re2-2025-11-05.tar.gz/sha512/d47f2507500ca7e004db49e30318f8713164cc3b8f28b0bdf5cdd6028985e7da4c9d0133c19fcd8f800bc666b86feb80a5c56e11fa962db72d561fb627272670/re2-2025-11-05.tar.gz"
+      ]
+    },
+    {
+      "name": "realmd",
+      "version": "0.17.1",
+      "stage": 3,
+      "url": "https://gitlab.freedesktop.org/realmd/realmd/uploads/204d05bd487908ece2ce2705a01d2b26/realmd-0.17.1.tar.gz",
+      "filename": "realmd-0.17.1.tar.gz",
+      "sha512": "24f6b1fd149f2cd9e8019be1cb1638d8bc25845238ced224512a212d9de47305cf2b0c613c203a92fff0987a94cc9e08f9b45b93eedd54593b0c34f3875d1480",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/realmd/realmd-0.17.1.tar.gz/sha512/24f6b1fd149f2cd9e8019be1cb1638d8bc25845238ced224512a212d9de47305cf2b0c613c203a92fff0987a94cc9e08f9b45b93eedd54593b0c34f3875d1480/realmd-0.17.1.tar.gz"
       ]
     },
     {
@@ -5376,11 +5408,31 @@
       ]
     },
     {
+      "name": "restic",
+      "version": "0.19.1",
+      "url": "https://github.com/restic/restic/releases/download/v0.19.1/restic-0.19.1.tar.gz",
+      "filename": "restic-0.19.1.tar.gz",
+      "sha512": "f707e085f35026a9c901c851c10190b18804d7c7f161f37933341a89fcc240f199084c8e93b35ce92237c67772d9673da9d78d8ccd0087714b765f9e8b384155",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/restic/restic-0.19.1.tar.gz/sha512/f707e085f35026a9c901c851c10190b18804d7c7f161f37933341a89fcc240f199084c8e93b35ce92237c67772d9673da9d78d8ccd0087714b765f9e8b384155/restic-0.19.1.tar.gz"
+      ]
+    },
+    {
       "name": "rpcbind",
       "version": "1.3.1",
       "url": "https://downloads.sourceforge.net/rpcbind/rpcbind-1.3.1.tar.bz2",
       "filename": "rpcbind-1.3.1.tar.bz2",
       "sha512": "364e841749cd00cf526b2d4a145be9c11fa9531637c8450cbb06f26502434ee890ccd5926ad3adad7b13fa9552a3a821801d24470b95108b9cafcfa023f562c8"
+    },
+    {
+      "name": "rpm-ostree",
+      "version": "2026.3",
+      "url": "https://github.com/coreos/rpm-ostree/releases/download/v2026.3/rpm-ostree-2026.3.tar.xz",
+      "filename": "rpm-ostree-2026.3.tar.xz",
+      "sha512": "34586a3e1ff9acc88ca62e5650ca30fcfe5825b6609ef36d9c601d558ca9468a295224abc3520135fb3805fcb860edb25b8a9689f56caf49d1df9559425318e5",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/rpm-ostree/rpm-ostree-2026.3.tar.xz/sha512/34586a3e1ff9acc88ca62e5650ca30fcfe5825b6609ef36d9c601d558ca9468a295224abc3520135fb3805fcb860edb25b8a9689f56caf49d1df9559425318e5/rpm-ostree-2026.3.tar.xz"
+      ]
     },
     {
       "name": "rsync",

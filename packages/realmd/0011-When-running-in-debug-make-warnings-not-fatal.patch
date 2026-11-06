@@ -1,0 +1,25 @@
+From 8c64f1f9c46e4be2789402d8fe0a631d8c42e21f Mon Sep 17 00:00:00 2001
+From: Sumit Bose <sbose@redhat.com>
+Date: Tue, 3 Feb 2026 15:18:33 +0100
+Subject: [PATCH 11/20] When running in --debug make warnings not fatal
+
+---
+ service/realm-daemon.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/service/realm-daemon.c b/service/realm-daemon.c
+index 85350a7..0ccb733 100644
+--- a/service/realm-daemon.c
++++ b/service/realm-daemon.c
+@@ -533,7 +533,7 @@ main (int argc,
+ 
+ 	if (service_debug) {
+ 		g_log_set_handler (G_LOG_DOMAIN, G_LOG_LEVEL_DEBUG, on_realm_log_debug, NULL);
+-		g_log_set_always_fatal (G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_WARNING);
++		g_log_set_always_fatal (G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
+ 	}
+ 
+ 	realm_error = realm_error_quark ();
+-- 
+2.54.0
+

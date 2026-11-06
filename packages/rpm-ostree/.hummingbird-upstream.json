@@ -1,0 +1,8 @@
+{
+  "package": "rpm-ostree",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/rpm-ostree.git",
+  "commit": "daf6d42a0d7c21f60fb770ddd56bd7bf7cab442c",
+  "tree": "b92d8cf7e312d543553734688cee60b8f68f75ed",
+  "imported_at": "2026-11-06T03:02:40.316994+00:00"
+}
