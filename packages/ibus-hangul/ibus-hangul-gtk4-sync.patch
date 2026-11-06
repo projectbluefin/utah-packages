@@ -1,0 +1,29 @@
+From 705dd2553695e47b638cb79d52cfbff03136b227 Mon Sep 17 00:00:00 2001
+From: Takao Fujiwara <tfujiwar@redhat.com>
+Date: Fri, 16 Sep 2022 17:01:15 +0900
+Subject: [PATCH] Change the definition of IBUS_CAP_SYNC_PROCESS_KEY
+
+After the new proces key event is integrated in ibus-x11,
+IBUS_CAP_SYNC_PROCESS_KEY capability is now set the sync mode only
+since ibus-hangul requires forward-key-event for the sync mode only.
+---
+ src/engine.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+Index: ibus-hangul-1.5.4/src/engine.c
+===================================================================
+--- ibus-hangul-1.5.4.orig/src/engine.c
++++ ibus-hangul-1.5.4/src/engine.c
+@@ -1577,7 +1577,11 @@ ibus_hangul_engine_process_key_event (IB
+      *
+      * See: https://github.com/choehwanjin/ibus-hangul/issues/40
+      */
+-    if (use_event_forwarding) {
++    if (use_event_forwarding
++#if IBUS_CHECK_VERSION(1, 5, 27)
++        && (hangul->caps & IBUS_CAP_SYNC_PROCESS_KEY_V2)
++#endif
++        ) {
+         if (!retval) {
+             ibus_engine_forward_key_event (engine, orig_keyval, keycode, modifiers);
+         }

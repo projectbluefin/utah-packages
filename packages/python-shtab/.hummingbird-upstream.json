@@ -1,0 +1,8 @@
+{
+  "package": "python-shtab",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/python-shtab.git",
+  "commit": "c563e54da4127fd710cf765fa05f6e2086c62bd0",
+  "tree": "3bf84649a80e6d6573d6026bcb4895330212a683",
+  "imported_at": "2026-11-06T09:04:29.513399+00:00"
+}
