@@ -282,7 +282,8 @@ class ProofTests(unittest.TestCase):
                 path = Path(tmp) / "runs.json"
                 path.write_text(json.dumps(payload))
                 with mock.patch("builtins.print"):
-                    return fork_canary.main(["proof", "--runs-json", str(path), "--pr", "622", "--head-sha", sha])
+                    return fork_canary.main(["proof", "--runs-json", str(path), "--pr", "622",
+                                             "--head-sha", sha, "--base-ref", "main"])
 
         self.assertEqual(run_proof({"workflow_runs": [dispatch_run()]}), 0)
         self.assertEqual(run_proof({"workflow_runs": []}), 1)
@@ -298,6 +299,171 @@ class ProofTests(unittest.TestCase):
         self.assertEqual(fork_branch.count("exit 0"), 1)
         self.assertLess(fork_branch.index("proof"), fork_branch.index("exit 0"))
         self.assertIn("exit 1", fork_branch)
+        self.assertIn('--base-ref "$BASE_REF"', fork_branch)
+        # Every passed copy of this pull request, not just one at this head: the
+        # tool decides which of them, if any, carries over.
+        self.assertIn("branch=canary/pr-${PR}", fork_branch)
+        self.assertEqual(decide["env"]["BASE_REF"], "${{ github.event.pull_request.base.ref }}")
+
+    def test_the_canary_job_has_the_history_carry_over_compares(self):
+        canary = yaml.safe_load((ROOT / ".github/workflows/canary.yml").read_text())
+        checkout = next(s for s in canary["jobs"]["canary"]["steps"]
+                        if str(s.get("uses", "")).startswith("actions/checkout"))
+        self.assertEqual(checkout["with"], {"fetch-depth": 0, "filter": "blob:none"})
+
+
+class CarryOverTests(unittest.TestCase):
+    """A proof carries over to a later head only through clean merges of main that keep the diff (#862)."""
+
+    LINES = [f"line {n}" for n in range(1, 41)]
+
+    def setUp(self):
+        import subprocess
+
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.repo = Path(self.tmp.name)
+        self.subprocess = subprocess
+        self.sh("init", "-q", "-b", "main")
+        for key, value in (("user.name", "t"), ("user.email", "t@example.com"), ("commit.gpgsign", "false")):
+            self.sh("config", key, value)
+        self.write("config.json", self.LINES)
+        self.commit("base")
+        self.sh("switch", "-q", "-c", "pr")
+        self.edit("config.json", 2, "line 2 from the pull request")
+        self.write("packages/foo/foo.spec", ["Name: foo"])
+        self.proven = self.commit("the reviewed change")
+        # main moves the same file far from the pull request's hunk, as #869
+        # did under #862, so the blobs differ but the pull request's diff does not.
+        self.sh("switch", "-q", "main")
+        self.edit("config.json", 38, "line 38 from main")
+        self.write("packages/bar/bar.spec", ["Name: bar"])
+        self.commit("main moves on")
+        self.sh("switch", "-q", "pr")
+
+    def sh(self, *args):
+        return self.subprocess.run(["git", "-C", str(self.repo), *args], capture_output=True,
+                                   text=True, check=True).stdout.strip()
+
+    def git(self, args):
+        return fork_canary._git(["-C", str(self.repo), *args])
+
+    def write(self, name, lines):
+        path = self.repo / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("\n".join(lines) + "\n")
+
+    def edit(self, name, number, text):
+        lines = (self.repo / name).read_text().splitlines()
+        lines[number - 1] = text
+        self.write(name, lines)
+
+    def commit(self, message):
+        self.sh("add", "-A")
+        self.sh("commit", "-q", "-m", message)
+        return self.sh("rev-parse", "HEAD")
+
+    def merge_main(self):
+        self.sh("merge", "-q", "--no-edit", "main")
+        return self.sh("rev-parse", "HEAD")
+
+    def problem(self, head):
+        return fork_canary.carry_problem(self.proven, head, "main", self.git)
+
+    def test_a_clean_merge_of_main_that_keeps_the_diff_is_covered(self):
+        head = self.merge_main()
+        self.assertNotEqual(self.sh("rev-parse", f"{head}:config.json"),
+                            self.sh("rev-parse", f"{self.proven}:config.json"))
+        self.assertIsNone(self.problem(head))
+
+    def test_merging_main_again_and_again_stays_covered(self):
+        self.merge_main()
+        self.sh("switch", "-q", "main")
+        self.write("packages/baz/baz.spec", ["Name: baz"])
+        self.commit("main moves again")
+        self.sh("switch", "-q", "pr")
+        self.assertIsNone(self.problem(self.merge_main()))
+
+    def test_a_contributor_commit_is_not_covered(self):
+        self.merge_main()
+        self.write("packages/foo/foo.spec", ["Name: foo", "Version: 2"])
+        head = self.commit("an unreviewed change")
+        self.assertRegex(self.problem(head), "is not a merge of main")
+
+    def test_a_contributor_commit_before_the_merge_is_not_covered(self):
+        self.write("packages/foo/foo.spec", ["Name: foo", "Version: 2"])
+        self.commit("an unreviewed change")
+        self.assertRegex(self.problem(self.merge_main()), "is not a merge of main")
+
+    def test_a_merge_that_resolves_a_conflict_is_not_covered(self):
+        self.sh("switch", "-q", "main")
+        self.edit("config.json", 2, "line 2 from main")
+        self.commit("main edits the same line")
+        self.sh("switch", "-q", "pr")
+        self.assertNotEqual(self.subprocess.run(["git", "-C", str(self.repo), "merge", "-q", "--no-edit", "main"],
+                                                capture_output=True).returncode, 0)
+        self.edit("config.json", 2, "line 2 resolved by the contributor")
+        head = self.commit("Merge branch 'main' into pr")
+        self.assertRegex(self.problem(head), "resolved a conflict")
+
+    def test_a_clean_merge_with_an_extra_edit_is_not_covered(self):
+        self.sh("merge", "-q", "--no-commit", "main")
+        self.write("packages/foo/foo.spec", ["Name: foo", "Source0: https://example.invalid/evil.tar"])
+        head = self.commit("Merge branch 'main' into pr")
+        self.assertRegex(self.problem(head), "changes more than merging main")
+
+    def test_a_merge_whose_other_parent_is_not_on_main_is_not_covered(self):
+        self.sh("switch", "-q", "-c", "side", "main~1")
+        self.write("packages/side/side.spec", ["Name: side"])
+        self.commit("not on main")
+        self.sh("switch", "-q", "pr")
+        self.sh("merge", "-q", "--no-edit", "side")
+        head = self.sh("rev-parse", "HEAD")
+        self.assertRegex(self.problem(head), "is not a merge of main")
+
+    def test_a_merge_that_changes_the_pull_requests_diff_is_not_covered(self):
+        # main lands the pull request's own hunk: git merges cleanly, but the
+        # pull request no longer changes what was reviewed.
+        self.sh("switch", "-q", "main")
+        self.edit("config.json", 2, "line 2 from the pull request")
+        self.commit("main makes the same change")
+        self.sh("switch", "-q", "pr")
+        self.assertRegex(self.problem(self.merge_main()), "own diff")
+
+    def test_a_rewritten_branch_is_not_covered(self):
+        self.sh("reset", "-q", "--hard", "HEAD~1")
+        self.write("packages/foo/foo.spec", ["Name: foo"])
+        self.edit("config.json", 2, "line 2 from the pull request")
+        self.commit("the same change, rewritten")
+        self.assertRegex(self.problem(self.merge_main()), "does not contain")
+
+    def test_a_workflow_change_never_carries_over(self):
+        # A copy pushed by hand for a .github/ change is not a proof to inherit.
+        self.write(".github/workflows/x.yml", ["on: push"])
+        self.proven = self.commit("a workflow change")
+        self.assertRegex(self.problem(self.merge_main()), r"\.github/workflows/x\.yml")
+
+    def test_the_proof_command_carries_a_passed_run_over_a_merge_of_main(self):
+        def run_proof(head, base_ref="main", runs=None):
+            with tempfile.TemporaryDirectory() as tmp:
+                path = Path(tmp) / "runs.json"
+                path.write_text(json.dumps({"workflow_runs": runs or [dispatch_run(head_sha=self.proven)]}))
+                argv = ["--runs-json", str(path), "--pr", "622", "--head-sha", head, "--base-ref", base_ref]
+                with mock.patch.object(fork_canary, "BASE_GIT_REF", "main"), \
+                        mock.patch("builtins.print") as out:
+                    code = fork_canary.proof_main(argv, git=self.git)
+                return code, "\n".join(str(c.args[0]) for c in out.call_args_list)
+
+        merged = self.merge_main()
+        code, out = run_proof(merged)
+        self.assertEqual(code, 0, out)
+        self.assertIn("only merged main", out)
+        self.assertEqual(run_proof(merged, base_ref="release")[0], 1)
+        self.assertEqual(run_proof(merged, runs=[dispatch_run(head_sha=self.proven, conclusion="failure")])[0], 1)
+        self.write("packages/foo/foo.spec", ["Name: foo", "Version: 2"])
+        code, out = run_proof(self.commit("an unreviewed change"))
+        self.assertEqual(code, 1)
+        self.assertIn("does not carry over", out)
 
 
 class CommandLineEntryPointTests(unittest.TestCase):
@@ -316,11 +482,13 @@ class CommandLineEntryPointTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "runs.json"
             path.write_text(json.dumps({"workflow_runs": [dispatch_run()]}))
-            ok = self.run_tool("proof", "--runs-json", str(path), "--pr", "622", "--head-sha", REVIEWED)
+            ok = self.run_tool("proof", "--runs-json", str(path), "--pr", "622", "--head-sha", REVIEWED,
+                               "--base-ref", "main")
             self.assertEqual(ok.returncode, 0, ok.stdout + ok.stderr)
             self.assertIn("maintainer-run Canary passed", ok.stdout)
             path.write_text(json.dumps({"workflow_runs": []}))
-            no = self.run_tool("proof", "--runs-json", str(path), "--pr", "622", "--head-sha", REVIEWED)
+            no = self.run_tool("proof", "--runs-json", str(path), "--pr", "622", "--head-sha", REVIEWED,
+                               "--base-ref", "main")
             self.assertEqual(no.returncode, 1)
             self.assertNotIn("usage:", no.stderr)
 
@@ -380,8 +548,22 @@ class RefreshJobTests(unittest.TestCase):
 
     def test_it_refreshes_only_the_commit_that_was_proven_on_an_open_pull_request(self):
         run = next(s for s in self.steps if s.get("name", "").startswith("Re-run"))["run"]
-        self.assertIn('"$(jq -r .head.sha pr.json)" != "$HEAD_SHA"', run)
         self.assertIn('"$(jq -r .state pr.json)" != open', run)
+        self.assertIn("moved=$(jq -r .head.sha pr.json)", run)
+        self.assertIn('if [ "$moved" != "$HEAD_SHA" ]; then', run)
+
+    def test_a_moved_head_is_only_re_run_quietly_never_reopened_or_approved(self):
+        # The proof may carry over to a head that only merged main (#862); that
+        # head's own Canary decides. Nobody reviewed it, so nothing is approved.
+        run = next(s for s in self.steps if s.get("name", "").startswith("Re-run"))["run"]
+        # YAML strips the block's indent, so the branch ends at the first fi in column 0.
+        moved = run.split('if [ "$moved" != "$HEAD_SHA" ]; then', 1)[1].split("\nfi\n", 1)[0]
+        self.assertNotIn("pr_run()", moved)
+        self.assertIn("event=pull_request&head_sha=${moved}", moved)
+        self.assertRegex(moved, r'if \[ "\$status" = completed \] && \[ "\$conclusion" = failure \]; then\s+gh run rerun "\$id" -R "\$REPOSITORY" --failed')
+        self.assertIn("exit 0", moved)
+        for forbidden in ("/approve", "gh pr close", "gh pr reopen"):
+            self.assertNotIn(forbidden, moved)
 
     def test_the_reopen_fallback_comes_only_after_a_quiet_rerun_failed(self):
         run = next(s for s in self.steps if s.get("name", "").startswith("Re-run"))["run"]
