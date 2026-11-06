@@ -1,0 +1,33 @@
+/zdtm:
+  summary: Test zdtm
+  test: ./run-zdtm.sh
+  duration: 30m
+  require:
+    - checkpolicy
+    - policycoreutils
+    - make
+    - gcc
+    - python3
+    - coreutils
+    - libnet-devel
+    # Both the current and compatibility protobuf packages provide these.
+    - pkgconfig(protobuf)
+    - pkgconfig(libprotobuf-c)
+    - python3-devel
+    - libnl3-devel
+    - libcap-devel
+    - libaio-devel
+    - libuuid-devel
+    - nftables-devel
+    - python3-pyyaml
+    - python3-protobuf
+    - python-unversioned-command
+    - crit
+    - python3-criu
+/podman:
+  summary: Test podman
+  test: ./run-podman-checkpoint-restore.sh
+  require:
+    - podman
+    - curl
+    - jq
