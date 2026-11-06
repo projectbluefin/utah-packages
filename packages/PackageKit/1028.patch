@@ -1,0 +1,2402 @@
+From d1a73d0355eeb3e689d7d3331fb41fc28daebfa5 Mon Sep 17 00:00:00 2001
+From: Frank Gehann <fg@fgehann.de>
+Date: Tue, 29 Sep 2026 10:18:38 +0200
+Subject: [PATCH 1/8] dnf5: Report item progress, speed and size left
+
+Package downloads only reported an overall percentage, so clients could
+not show which package is being downloaded, how fast, or how much is
+left. Report each package as downloading when its download starts, with
+its own item progress, and report the download speed and the remaining
+download size of the job.
+
+Transactions that do not download anything, like removals, no longer
+claim to be downloading.
+
+The download callbacks are only installed on the base while
+downloading, as the base outlives the job they report to.
+
+Add unit tests for the dnf5 backend, covering the download progress.
+
+Part of: https://github.com/PackageKit/PackageKit/issues/1019
+---
+ backends/dnf5/dnf5-backend-thread.cpp |  33 ++--
+ backends/dnf5/dnf5-backend-utils.cpp  | 206 +++++++++++++++++---
+ backends/dnf5/dnf5-backend-utils.hpp  |  57 +++++-
+ backends/dnf5/meson.build             |  21 +-
+ backends/dnf5/tests/definitions.cpp   | 101 ++++++++++
+ backends/dnf5/tests/dnf5-test-job.hpp |  47 +++++
+ backends/dnf5/tests/dnf5-tests.cpp    | 263 ++++++++++++++++++++++++++
+ backends/dnf5/tests/meson.build       |  24 +++
+ 8 files changed, 701 insertions(+), 51 deletions(-)
+ create mode 100644 backends/dnf5/tests/definitions.cpp
+ create mode 100644 backends/dnf5/tests/dnf5-test-job.hpp
+ create mode 100644 backends/dnf5/tests/dnf5-tests.cpp
+ create mode 100644 backends/dnf5/tests/meson.build
+
+diff --git a/backends/dnf5/dnf5-backend-thread.cpp b/backends/dnf5/dnf5-backend-thread.cpp
+index 17c3940b8..d71773b33 100644
+--- a/backends/dnf5/dnf5-backend-thread.cpp
++++ b/backends/dnf5/dnf5-backend-thread.cpp
+@@ -213,17 +213,17 @@ dnf5_query_thread(PkBackendJob *job, GVariant *params, gpointer user_data)
+ 				g_variant_get(params, "(^as&s)", &package_ids, &directory);
+ 				auto pkgs = dnf5_resolve_package_ids(*priv->base, package_ids);
+ 				libdnf5::repo::PackageDownloader downloader(*priv->base);
+-				uint64_t total_download_size = 0;
+-				for (const auto &pkg : pkgs)
+-					total_download_size += pkg.get_download_size();
+-
+-				priv->base->set_download_callbacks(
+-					std::make_unique<Dnf5DownloadCallbacks>(job, total_download_size));
++				auto callbacks = std::make_unique<Dnf5DownloadCallbacks>(job);
+ 				for (auto &pkg : pkgs) {
+-					dnf5_emit_pkg(job, pkg, PK_INFO_ENUM_DOWNLOADING);
++					callbacks->add_package(pkg);
+ 					downloader.add(pkg, directory);
+ 				}
+-				downloader.download();
++
++				pk_backend_job_set_status(job, PK_STATUS_ENUM_DOWNLOAD);
++				{
++					Dnf5ScopedDownloadCallbacks scoped(*priv->base, std::move(callbacks));
++					downloader.download();
++				}
+ 
+ 				std::vector<char *> files_c;
+ 				for (auto &pkg : pkgs) {
+@@ -670,20 +670,25 @@ dnf5_transaction_thread(PkBackendJob *job, GVariant *params, gpointer user_data)
+ 			return;
+ 		}
+ 
+-		pk_backend_job_set_status(job, PK_STATUS_ENUM_DOWNLOAD);
+-
+-		uint64_t total_download_size = 0;
++		auto callbacks = std::make_unique<Dnf5DownloadCallbacks>(job);
++		bool need_download = false;
+ 		for (const auto &item : trans.get_transaction_packages()) {
+ 			if (libdnf5::transaction::transaction_item_action_is_inbound(item.get_action())) {
+ 				auto pkg = item.get_package();
+ 				if (!pkg.is_available_locally()) {
+-					total_download_size += pkg.get_download_size();
++					callbacks->add_package(pkg);
++					need_download = true;
+ 				}
+ 			}
+ 		}
+ 
+-		priv->base->set_download_callbacks(std::make_unique<Dnf5DownloadCallbacks>(job, total_download_size));
+-		trans.download();
++		// removals and local packages have nothing to download
++		if (need_download)
++			pk_backend_job_set_status(job, PK_STATUS_ENUM_DOWNLOAD);
++		{
++			Dnf5ScopedDownloadCallbacks scoped(*priv->base, std::move(callbacks));
++			trans.download();
++		}
+ 
+ 		if (pk_bitfield_contain(transaction_flags, PK_TRANSACTION_FLAG_ENUM_ONLY_DOWNLOAD)) {
+ 			// Iterate over transaction items and report them as if they were being processed
+diff --git a/backends/dnf5/dnf5-backend-utils.cpp b/backends/dnf5/dnf5-backend-utils.cpp
+index e43f7fd98..182090609 100644
+--- a/backends/dnf5/dnf5-backend-utils.cpp
++++ b/backends/dnf5/dnf5-backend-utils.cpp
+@@ -374,16 +374,9 @@ dnf5_process_dependency(libdnf5::Base &base, const libdnf5::rpm::Package &pkg, P
+ 	return results;
+ }
+ 
+-void
+-dnf5_emit_pkg(PkBackendJob *job, const libdnf5::rpm::Package &pkg, PkInfoEnum info, PkInfoEnum severity)
++std::string
++dnf5_build_package_id(const libdnf5::rpm::Package &pkg)
+ {
+-	if (info == PK_INFO_ENUM_UNKNOWN) {
+-		info = PK_INFO_ENUM_AVAILABLE;
+-		if (pkg.get_install_time() > 0) {
+-			info = PK_INFO_ENUM_INSTALLED;
+-		}
+-	}
+-
+ 	std::string evr = pkg.get_evr();
+ 	std::string repo_id = pkg.get_repo_id();
+ 	if (pkg.get_install_time() > 0) {
+@@ -395,7 +388,20 @@ dnf5_emit_pkg(PkBackendJob *job, const libdnf5::rpm::Package &pkg, PkInfoEnum in
+ 		}
+ 	}
+ 
+-	std::string package_id = pkg.get_name() + ";" + evr + ";" + pkg.get_arch() + ";" + repo_id;
++	return pkg.get_name() + ";" + evr + ";" + pkg.get_arch() + ";" + repo_id;
++}
++
++void
++dnf5_emit_pkg(PkBackendJob *job, const libdnf5::rpm::Package &pkg, PkInfoEnum info, PkInfoEnum severity)
++{
++	if (info == PK_INFO_ENUM_UNKNOWN) {
++		info = PK_INFO_ENUM_AVAILABLE;
++		if (pkg.get_install_time() > 0) {
++			info = PK_INFO_ENUM_INSTALLED;
++		}
++	}
++
++	std::string package_id = dnf5_build_package_id(pkg);
+ 	if (severity != PK_INFO_ENUM_UNKNOWN) {
+ 		pk_backend_job_package_full(job, info, package_id.c_str(), pkg.get_summary().c_str(), severity);
+ 	} else {
+@@ -605,46 +611,194 @@ dnf5_remove_old_cache_directories(PkBackend *backend, const gchar *release_ver)
+ 	}
+ }
+ 
+-Dnf5DownloadCallbacks::Dnf5DownloadCallbacks(PkBackendJob *job, uint64_t total_size)
++Dnf5DownloadCallbacks::Dnf5DownloadCallbacks(PkBackendJob *job)
+     : job(job),
+-      total_size(total_size),
+-      finished_size(0),
++      total_size(0),
++      downloaded_size(0),
++      transferred_size(0),
++      percentage(-1),
++      speed_timestamp(0),
++      speed_transferred_size(0),
+       next_id(1)
+ {
+ }
+ 
++void
++Dnf5DownloadCallbacks::add_package(const libdnf5::rpm::Package &pkg)
++{
++	// libdnf5 describes package downloads by their full NEVRA
++	add_package(pkg.get_full_nevra(), dnf5_build_package_id(pkg), pkg.get_download_size(), pkg.get_summary());
++}
++
++void
++Dnf5DownloadCallbacks::add_package(
++	const std::string &description,
++	const std::string &package_id,
++	uint64_t download_size,
++	const std::string &summary)
++{
++	std::lock_guard<std::mutex> lock(mutex);
++	package_ids[description] = package_id;
++	summaries[package_id] = summary;
++	total_size += download_size;
++}
++
+ void *
+ Dnf5DownloadCallbacks::add_new_download(void *user_data, const char *description, double total_to_download)
+ {
+ 	std::lock_guard<std::mutex> lock(mutex);
+ 	void *id = reinterpret_cast<void *>(next_id++);
+-	item_progress[id] = 0;
++	Item item = {};
++	item.total_size = total_to_download > 0 ? total_to_download : 0;
++
++	// packages that are already available locally are not registered and
++	// do not count towards the download size
++	auto it = package_ids.find(description != nullptr ? description : "");
++	if (it != package_ids.end())
++		item.package_id = it->second;
++	items[id] = item;
+ 	return id;
+ }
+ 
+-int
+-Dnf5DownloadCallbacks::progress(void *user_cb_data, double total_to_download, double downloaded)
++double
++Dnf5DownloadCallbacks::item_fraction(const Item &item) const
+ {
+-	std::lock_guard<std::mutex> lock(mutex);
+-	item_progress[user_cb_data] = downloaded;
++	double fraction = 0;
++	if (item.total_size > 0)
++		fraction = std::clamp(item.downloaded / item.total_size, 0.0, 1.0);
+ 
++	guint completed = item.failed ? item.ends - 1 : item.ends;
++	return completed > 0 ? 1.0 : fraction;
++}
++
++void
++Dnf5DownloadCallbacks::announce(Item &item)
++{
++	if (item.announced || item.package_id.empty())
++		return;
++	item.announced = true;
++	pk_backend_job_package(
++		job,
++		PK_INFO_ENUM_DOWNLOADING,
++		item.package_id.c_str(),
++		summaries[item.package_id].c_str());
++}
++
++void
++Dnf5DownloadCallbacks::update_item_progress(Item &item)
++{
++	if (item.package_id.empty())
++		return;
++
++	guint item_percentage = (guint) (item_fraction(item) * 100);
++	if (item_percentage == item.percentage)
++		return;
++	item.percentage = item_percentage;
++	pk_backend_job_set_item_progress(job, item.package_id.c_str(), PK_STATUS_ENUM_DOWNLOAD, item_percentage);
++}
++
++void
++Dnf5DownloadCallbacks::update_progress()
++{
+ 	if (total_size > 0) {
+-		double current_total = finished_size;
+-		for (auto const &[id, prog] : item_progress) {
+-			current_total += prog;
++		gint new_percentage = (gint) (std::min(downloaded_size, (double) total_size) * 100 / total_size);
++		// the daemon refuses a percentage going down, which happens when a
++		// download restarts on another mirror
++		if (new_percentage > percentage) {
++			percentage = new_percentage;
++			pk_backend_job_set_percentage(job, (guint) percentage);
+ 		}
+-		pk_backend_job_set_percentage(job, (uint) (current_total * 100 / total_size));
++
++		double remaining = std::max((double) total_size - downloaded_size, 0.0);
++		pk_backend_job_set_download_size_remaining(job, (guint64) remaining);
++	}
++
++	// start measuring with the first data, as connecting to the mirrors
++	// would otherwise be averaged into the rate
++	gint64 now = g_get_monotonic_time();
++	if (speed_timestamp == 0) {
++		if (transferred_size > 0) {
++			speed_timestamp = now;
++			speed_transferred_size = transferred_size;
++		}
++		return;
++	}
++
++	// average over at least a second so the rate does not jump around
++	gint64 elapsed = now - speed_timestamp;
++	if (elapsed >= G_USEC_PER_SEC) {
++		double speed = (transferred_size - speed_transferred_size) * G_USEC_PER_SEC / elapsed;
++		pk_backend_job_set_speed(job, (guint) std::max(speed, 0.0));
++		speed_timestamp = now;
++		speed_transferred_size = transferred_size;
+ 	}
+-	return 0;
++}
++
++int
++Dnf5DownloadCallbacks::progress(void *user_cb_data, double total_to_download, double downloaded)
++{
++	std::lock_guard<std::mutex> lock(mutex);
++	auto it = items.find(user_cb_data);
++	if (it == items.end())
++		return OK;
++	Item &item = it->second;
++
++	// only registered packages count towards the download size
++	if (!item.package_id.empty()) {
++		downloaded_size += downloaded - item.downloaded;
++		transferred_size += downloaded - item.downloaded;
++	}
++
++	if (total_to_download > 0)
++		item.total_size = total_to_download;
++	item.downloaded = downloaded;
++
++	announce(item);
++	update_item_progress(item);
++	update_progress();
++	return OK;
+ }
+ 
+ int
+ Dnf5DownloadCallbacks::end(void *user_cb_data, TransferStatus status, const char *msg)
+ {
+ 	std::lock_guard<std::mutex> lock(mutex);
+-	finished_size += item_progress[user_cb_data];
+-	item_progress.erase(user_cb_data);
+-	return 0;
++	auto it = items.find(user_cb_data);
++	if (it == items.end())
++		return OK;
++	Item &item = it->second;
++
++	if (status != TransferStatus::ERROR && !item.package_id.empty()) {
++		// packages that already exist report no progress at all
++		downloaded_size += item.total_size - item.downloaded;
++		item.downloaded = item.total_size;
++	}
++	item.ends++;
++	item.failed = status == TransferStatus::ERROR;
++
++	announce(item);
++	update_item_progress(item);
++	update_progress();
++
++	bool finished = std::all_of(items.begin(), items.end(), [](const auto &entry) {
++		return entry.second.ends > 0;
++	});
++	if (finished)
++		pk_backend_job_set_speed(job, 0);
++	return OK;
++}
++
++Dnf5ScopedDownloadCallbacks::Dnf5ScopedDownloadCallbacks(
++	libdnf5::Base &base,
++	std::unique_ptr<Dnf5DownloadCallbacks> callbacks)
++    : base(base)
++{
++	base.set_download_callbacks(std::move(callbacks));
++}
++
++Dnf5ScopedDownloadCallbacks::~Dnf5ScopedDownloadCallbacks()
++{
++	base.set_download_callbacks(nullptr);
+ }
+ 
+ Dnf5TransactionCallbacks::Dnf5TransactionCallbacks(PkBackendJob *job)
+diff --git a/backends/dnf5/dnf5-backend-utils.hpp b/backends/dnf5/dnf5-backend-utils.hpp
+index 744fd7593..bd4dbe939 100644
+--- a/backends/dnf5/dnf5-backend-utils.hpp
++++ b/backends/dnf5/dnf5-backend-utils.hpp
+@@ -27,6 +27,7 @@
+ #include <libdnf5/repo/download_callbacks.hpp>
+ #include <libdnf5/rpm/transaction_callbacks.hpp>
+ #include <glib.h>
++#include <map>
+ #include <memory>
+ #include <mutex>
+ #include <string>
+@@ -63,6 +64,7 @@ bool dnf5_package_is_gui(const libdnf5::rpm::Package &pkg);
+ bool dnf5_package_filter(const libdnf5::rpm::Package &pkg, PkBitfield filters);
+ std::vector<libdnf5::rpm::Package>
+ dnf5_process_dependency(libdnf5::Base &base, const libdnf5::rpm::Package &pkg, PkRoleEnum role, gboolean recursive);
++std::string dnf5_build_package_id(const libdnf5::rpm::Package &pkg);
+ void dnf5_emit_pkg(
+ 	PkBackendJob *job,
+ 	const libdnf5::rpm::Package &pkg,
+@@ -74,23 +76,72 @@ std::vector<libdnf5::rpm::Package>
+ dnf5_resolve_package_ids(libdnf5::Base &base, gchar **package_ids, bool allow_cmdline_packages = true);
+ void dnf5_remove_old_cache_directories(PkBackend *backend, const gchar *release_ver);
+ 
++// Reports package download progress to a job. Packages registered with
++// add_package() are reported by package-id with item progress, and count
++// towards the percentage, speed and remaining download size. Downloads of
++// packages that were not registered, like local ones, are not reported.
+ class Dnf5DownloadCallbacks : public libdnf5::repo::DownloadCallbacks
+ {
+     public:
+-	explicit Dnf5DownloadCallbacks(PkBackendJob *job, uint64_t total_size = 0);
++	explicit Dnf5DownloadCallbacks(PkBackendJob *job);
++	void add_package(const libdnf5::rpm::Package &pkg);
++	// Register a download libdnf5 announces as @description, which is the
++	// full NEVRA for packages.
++	void add_package(
++		const std::string &description,
++		const std::string &package_id,
++		uint64_t download_size,
++		const std::string &summary = "");
+ 	void *add_new_download(void *user_data, const char *description, double total_to_download) override;
+ 	int progress(void *user_cb_data, double total_to_download, double downloaded) override;
+ 	int end(void *user_cb_data, TransferStatus status, const char *msg) override;
+ 
+     private:
++	struct Item {
++		std::string package_id;
++		double total_size;
++		double downloaded;
++		guint percentage;
++		guint ends;
++		// whether the last end was a failure, which does not complete anything
++		bool failed;
++		bool announced;
++	};
++
++	double item_fraction(const Item &item) const;
++	void announce(Item &item);
++	void update_item_progress(Item &item);
++	void update_progress();
++
+ 	PkBackendJob *job;
++	std::map<std::string, std::string> package_ids;
++	std::map<std::string, std::string> summaries;
+ 	uint64_t total_size;
+-	double finished_size;
+-	std::map<void *, double> item_progress;
++	std::map<void *, Item> items;
++	double downloaded_size;
++	// only what came over the network, unlike packages that already exist
++	double transferred_size;
++	gint percentage;
++	gint64 speed_timestamp;
++	double speed_transferred_size;
+ 	std::mutex mutex;
+ 	uint64_t next_id;
+ };
+ 
++// Installs download callbacks on a base for as long as it is in scope. The base
++// outlives the job the callbacks report to, so they must never stay behind.
++class Dnf5ScopedDownloadCallbacks
++{
++    public:
++	Dnf5ScopedDownloadCallbacks(libdnf5::Base &base, std::unique_ptr<Dnf5DownloadCallbacks> callbacks);
++	~Dnf5ScopedDownloadCallbacks();
++	Dnf5ScopedDownloadCallbacks(const Dnf5ScopedDownloadCallbacks &) = delete;
++	Dnf5ScopedDownloadCallbacks &operator=(const Dnf5ScopedDownloadCallbacks &) = delete;
++
++    private:
++	libdnf5::Base &base;
++};
++
+ class Dnf5TransactionCallbacks : public libdnf5::rpm::TransactionCallbacks
+ {
+     public:
+diff --git a/backends/dnf5/meson.build b/backends/dnf5/meson.build
+index bc8d9ec8b..18609f488 100644
+--- a/backends/dnf5/meson.build
++++ b/backends/dnf5/meson.build
+@@ -4,28 +4,33 @@ add_languages('cpp', native: false)
+ dnf5_dep = dependency('libdnf5', version: '>=5.4.3.0')
+ libdnf5_version = dnf5_dep.version().split('.')
+ 
++dnf5_cpp_args = [
++  '-std=c++20',
++  '-DLIBDNF5_VERSION_MAJOR=' + libdnf5_version[0],
++  '-DLIBDNF5_VERSION_MINOR=' + libdnf5_version[1],
++  '-DLIBDNF5_VERSION_PATCH=' + libdnf5_version[2],
++  '-DG_LOG_DOMAIN="PackageKit-DNF5"',
++]
++dnf5_vendor_source = 'dnf5-backend-vendor-@0@.cpp'.format(get_option('dnf_vendor'))
++
+ pk_backend_modules += shared_module(
+   'pk_backend_dnf5',
+   'pk-backend-dnf5.cpp',
+   'dnf5-backend-utils.cpp',
+   'dnf5-backend-thread.cpp',
+-  'dnf5-backend-vendor-@0@.cpp'.format(get_option('dnf_vendor')),
++  dnf5_vendor_source,
+   dependencies: [
+     dnf5_dep,
+     packagekit_glib2_dep,
+   ],
+-  cpp_args: [
+-    '-std=c++20',
+-    '-DLIBDNF5_VERSION_MAJOR=' + libdnf5_version[0],
+-    '-DLIBDNF5_VERSION_MINOR=' + libdnf5_version[1],
+-    '-DLIBDNF5_VERSION_PATCH=' + libdnf5_version[2],
+-    '-DG_LOG_DOMAIN="PackageKit-DNF5"',
+-  ],
++  cpp_args: dnf5_cpp_args,
+   include_directories: packagekit_src_include,
+   install: true,
+   install_dir: pk_plugin_dir,
+ )
+ 
++subdir('tests')
++
+ # Build rpm plugin for notifying PackageKit
+ rpm_dep = dependency('rpm', version: '>=4.20')
+ sdbus_cpp_dep = dependency('sdbus-c++')
+diff --git a/backends/dnf5/tests/definitions.cpp b/backends/dnf5/tests/definitions.cpp
+new file mode 100644
+index 000000000..10d4f3fdb
+--- /dev/null
++++ b/backends/dnf5/tests/definitions.cpp
+@@ -0,0 +1,101 @@
++/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
++ *
++ * Licensed under the GNU General Public License Version 2
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, see <https://www.gnu.org/licenses/>.
++ */
++
++#include "dnf5-test-job.hpp"
++
++/* Define the daemon symbols used by the dnf5 backend utilities, otherwise we
++ * can't link them. The progress reporting ones record what they are called
++ * with, so the tests can check what a client would see.
++ */
++
++Dnf5TestJob dnf5_test_job;
++
++void
++Dnf5TestJob::reset()
++{
++	statuses.clear();
++	percentages.clear();
++	speeds.clear();
++	download_size_remaining.clear();
++	item_progress.clear();
++	package_statuses.clear();
++}
++
++void
++pk_backend_job_set_status(PkBackendJob *job, PkStatusEnum status)
++{
++	dnf5_test_job.statuses.push_back(status);
++}
++
++void
++pk_backend_job_set_percentage(PkBackendJob *job, guint percentage)
++{
++	dnf5_test_job.percentages.push_back(percentage);
++}
++
++void
++pk_backend_job_set_speed(PkBackendJob *job, guint speed)
++{
++	dnf5_test_job.speeds.push_back(speed);
++}
++
++void
++pk_backend_job_set_download_size_remaining(PkBackendJob *job, guint64 download_size_remaining)
++{
++	dnf5_test_job.download_size_remaining.push_back(download_size_remaining);
++}
++
++void
++pk_backend_job_set_item_progress(PkBackendJob *job, const gchar *package_id, PkStatusEnum status, guint percentage)
++{
++	dnf5_test_job.item_progress.push_back({package_id, status, percentage});
++}
++
++void
++pk_backend_job_package_full(
++	PkBackendJob *job,
++	PkInfoEnum info,
++	const gchar *package_id,
++	const gchar *summary,
++	PkInfoEnum update_severity)
++{
++	dnf5_test_job.package_statuses.push_back({package_id, info});
++}
++
++void
++pk_backend_job_package(PkBackendJob *job, PkInfoEnum info, const gchar *package_id, const gchar *summary)
++{
++	pk_backend_job_package_full(job, info, package_id, summary, PK_INFO_ENUM_UNKNOWN);
++}
++
++void
++pk_backend_job_packages(PkBackendJob *job, GPtrArray *packages)
++{
++}
++
++gpointer
++pk_backend_get_user_data(PkBackend *backend)
++{
++	return NULL;
++}
++
++gchar *
++pk_util_get_root_dir(GKeyFile *conf)
++{
++	return g_strdup("/");
++}
+diff --git a/backends/dnf5/tests/dnf5-test-job.hpp b/backends/dnf5/tests/dnf5-test-job.hpp
+new file mode 100644
+index 000000000..5e0be8f80
+--- /dev/null
++++ b/backends/dnf5/tests/dnf5-test-job.hpp
+@@ -0,0 +1,47 @@
++/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
++ *
++ * Licensed under the GNU General Public License Version 2
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, see <https://www.gnu.org/licenses/>.
++ */
++
++#pragma once
++
++#include <pk-backend.h>
++#include <string>
++#include <vector>
++
++// What the backend reported to its job, in the order it was reported.
++struct Dnf5TestJob {
++	struct ItemProgress {
++		std::string package_id;
++		PkStatusEnum status;
++		guint percentage;
++	};
++	struct PackageStatus {
++		std::string package_id;
++		PkInfoEnum info;
++	};
++
++	std::vector<PkStatusEnum> statuses;
++	std::vector<guint> percentages;
++	std::vector<guint> speeds;
++	std::vector<guint64> download_size_remaining;
++	std::vector<ItemProgress> item_progress;
++	std::vector<PackageStatus> package_statuses;
++
++	void reset();
++};
++
++extern Dnf5TestJob dnf5_test_job;
+diff --git a/backends/dnf5/tests/dnf5-tests.cpp b/backends/dnf5/tests/dnf5-tests.cpp
+new file mode 100644
+index 000000000..b61ea9168
+--- /dev/null
++++ b/backends/dnf5/tests/dnf5-tests.cpp
+@@ -0,0 +1,263 @@
++/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
++ *
++ * Licensed under the GNU General Public License Version 2
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, see <https://www.gnu.org/licenses/>.
++ */
++
++#include "dnf5-backend-utils.hpp"
++#include "dnf5-test-job.hpp"
++#include <stdexcept>
++#include <vector>
++
++using TransferStatus = libdnf5::repo::DownloadCallbacks::TransferStatus;
++
++static const char *FOO_NEVRA = "foo-0:1.0-1.x86_64";
++static const char *FOO_ID = "foo;1.0-1;x86_64;fedora";
++static const char *BAR_NEVRA = "bar-0:2.0-1.noarch";
++static const char *BAR_ID = "bar;2.0-1;noarch;updates";
++
++// the job is never dereferenced, all calls end up in the recording stubs
++static PkBackendJob *const test_job = reinterpret_cast<PkBackendJob *>(0x1);
++
++static void
++dnf5_test_assert_percentages(const std::vector<guint> &expected)
++{
++	g_assert_cmpuint(dnf5_test_job.percentages.size(), ==, expected.size());
++	for (size_t i = 0; i < expected.size(); i++)
++		g_assert_cmpuint(dnf5_test_job.percentages[i], ==, expected[i]);
++}
++
++static void
++dnf5_test_assert_item_progress(size_t index, const char *package_id, guint percentage)
++{
++	g_assert_cmpuint(dnf5_test_job.item_progress.size(), >, index);
++	const auto &item = dnf5_test_job.item_progress[index];
++	g_assert_cmpstr(item.package_id.c_str(), ==, package_id);
++	g_assert_cmpint(item.status, ==, PK_STATUS_ENUM_DOWNLOAD);
++	g_assert_cmpuint(item.percentage, ==, percentage);
++}
++
++static void
++dnf5_test_download_packages(void)
++{
++	dnf5_test_job.reset();
++	Dnf5DownloadCallbacks cb(test_job);
++	cb.add_package(FOO_NEVRA, FOO_ID, 100);
++	cb.add_package(BAR_NEVRA, BAR_ID, 300);
++
++	void *foo = cb.add_new_download(nullptr, FOO_NEVRA, 100);
++	void *bar = cb.add_new_download(nullptr, BAR_NEVRA, 300);
++	// already available locally, so it was not registered
++	void *local = cb.add_new_download(nullptr, "local-0:1-1.x86_64", 50);
++
++	// nothing is reported before the downloads actually start
++	g_assert_true(dnf5_test_job.package_statuses.empty());
++	g_assert_true(dnf5_test_job.percentages.empty());
++
++	g_assert_cmpint(cb.progress(foo, 100, 50), ==, 0);
++	g_assert_cmpuint(dnf5_test_job.package_statuses.size(), ==, 1);
++	g_assert_cmpstr(dnf5_test_job.package_statuses[0].package_id.c_str(), ==, FOO_ID);
++	g_assert_cmpint(dnf5_test_job.package_statuses[0].info, ==, PK_INFO_ENUM_DOWNLOADING);
++	dnf5_test_assert_item_progress(0, FOO_ID, 50);
++	dnf5_test_assert_percentages({12});
++	g_assert_cmpuint(dnf5_test_job.download_size_remaining.back(), ==, 350);
++
++	// an unregistered package counts neither towards the size nor the items
++	cb.progress(local, 50, 50);
++	g_assert_cmpuint(dnf5_test_job.package_statuses.size(), ==, 1);
++	g_assert_cmpuint(dnf5_test_job.item_progress.size(), ==, 1);
++	dnf5_test_assert_percentages({12});
++	g_assert_cmpuint(dnf5_test_job.download_size_remaining.back(), ==, 350);
++
++	g_assert_cmpint(cb.end(foo, TransferStatus::SUCCESSFUL, nullptr), ==, 0);
++	dnf5_test_assert_item_progress(1, FOO_ID, 100);
++	dnf5_test_assert_percentages({12, 25});
++	g_assert_cmpuint(dnf5_test_job.download_size_remaining.back(), ==, 300);
++
++	// a package that already exists reports no progress, only its end
++	cb.end(bar, TransferStatus::ALREADYEXISTS, "Already downloaded");
++	g_assert_cmpuint(dnf5_test_job.package_statuses.size(), ==, 2);
++	g_assert_cmpstr(dnf5_test_job.package_statuses[1].package_id.c_str(), ==, BAR_ID);
++	g_assert_cmpint(dnf5_test_job.package_statuses[1].info, ==, PK_INFO_ENUM_DOWNLOADING);
++	dnf5_test_assert_item_progress(2, BAR_ID, 100);
++	dnf5_test_assert_percentages({12, 25, 100});
++	g_assert_cmpuint(dnf5_test_job.download_size_remaining.back(), ==, 0);
++
++	// the speed drops to zero only once every download has ended
++	g_assert_true(dnf5_test_job.speeds.empty());
++	cb.end(local, TransferStatus::ALREADYEXISTS, nullptr);
++	g_assert_cmpuint(dnf5_test_job.speeds.size(), ==, 1);
++	g_assert_cmpuint(dnf5_test_job.speeds.back(), ==, 0);
++}
++
++static void
++dnf5_test_download_percentage_monotonic(void)
++{
++	dnf5_test_job.reset();
++	Dnf5DownloadCallbacks cb(test_job);
++	cb.add_package(FOO_NEVRA, FOO_ID, 200);
++	void *foo = cb.add_new_download(nullptr, FOO_NEVRA, 200);
++
++	cb.progress(foo, 200, 100);
++	// the download restarts on another mirror
++	cb.progress(foo, 200, 20);
++	dnf5_test_assert_percentages({50});
++	g_assert_cmpuint(dnf5_test_job.download_size_remaining.back(), ==, 180);
++
++	cb.progress(foo, 200, 150);
++	dnf5_test_assert_percentages({50, 75});
++}
++
++static void
++dnf5_test_download_failed(void)
++{
++	dnf5_test_job.reset();
++	Dnf5DownloadCallbacks cb(test_job);
++	cb.add_package(FOO_NEVRA, FOO_ID, 100);
++	cb.add_package(BAR_NEVRA, BAR_ID, 100);
++	void *foo = cb.add_new_download(nullptr, FOO_NEVRA, 100);
++	cb.add_new_download(nullptr, BAR_NEVRA, 100);
++
++	cb.progress(foo, 100, 40);
++	cb.end(foo, TransferStatus::ERROR, "Curl error");
++
++	// a failed download is not reported as downloaded
++	g_assert_cmpuint(dnf5_test_job.download_size_remaining.back(), ==, 160);
++	dnf5_test_assert_percentages({20});
++	dnf5_test_assert_item_progress(dnf5_test_job.item_progress.size() - 1, FOO_ID, 40);
++	// and the transfer that is still running keeps the speed
++	g_assert_true(dnf5_test_job.speeds.empty());
++}
++
++static void
++dnf5_test_download_unknown_data(void)
++{
++	dnf5_test_job.reset();
++	Dnf5DownloadCallbacks cb(test_job);
++	cb.add_package(FOO_NEVRA, FOO_ID, 100);
++
++	void *unknown = reinterpret_cast<void *>(0x42);
++	g_assert_cmpint(cb.progress(unknown, 100, 50), ==, 0);
++	g_assert_cmpint(cb.end(unknown, TransferStatus::SUCCESSFUL, nullptr), ==, 0);
++	g_assert_true(dnf5_test_job.percentages.empty());
++	g_assert_true(dnf5_test_job.item_progress.empty());
++	g_assert_true(dnf5_test_job.package_statuses.empty());
++	g_assert_true(dnf5_test_job.speeds.empty());
++}
++
++static void
++dnf5_test_download_speed(void)
++{
++	dnf5_test_job.reset();
++	Dnf5DownloadCallbacks cb(test_job);
++	cb.add_package(FOO_NEVRA, FOO_ID, 1000);
++	void *foo = cb.add_new_download(nullptr, FOO_NEVRA, 1000);
++
++	// the rate is only reported once at least a second has passed
++	cb.progress(foo, 1000, 100);
++	g_assert_true(dnf5_test_job.speeds.empty());
++
++	g_usleep(G_USEC_PER_SEC + G_USEC_PER_SEC / 10);
++	cb.progress(foo, 1000, 600);
++	g_assert_cmpuint(dnf5_test_job.speeds.size(), ==, 1);
++	g_assert_cmpuint(dnf5_test_job.speeds[0], >, 0);
++	g_assert_cmpuint(dnf5_test_job.speeds[0], <=, 600);
++
++	cb.end(foo, TransferStatus::SUCCESSFUL, nullptr);
++	g_assert_cmpuint(dnf5_test_job.speeds.back(), ==, 0);
++}
++
++static void
++dnf5_test_download_speed_starts_with_data(void)
++{
++	dnf5_test_job.reset();
++	Dnf5DownloadCallbacks cb(test_job);
++	cb.add_package(FOO_NEVRA, FOO_ID, 100000);
++	void *foo = cb.add_new_download(nullptr, FOO_NEVRA, 100000);
++
++	// connecting to the mirrors takes a while before any data arrives,
++	// which must not be averaged into the rate
++	g_usleep(G_USEC_PER_SEC + G_USEC_PER_SEC / 10);
++	cb.progress(foo, 100000, 1000);
++	g_assert_true(dnf5_test_job.speeds.empty());
++
++	g_usleep(G_USEC_PER_SEC + G_USEC_PER_SEC / 10);
++	cb.progress(foo, 100000, 45000);
++	g_assert_cmpuint(dnf5_test_job.speeds.size(), ==, 1);
++	// 44000 bytes in about 1.1 seconds
++	g_assert_cmpuint(dnf5_test_job.speeds[0], >, 0);
++	g_assert_cmpuint(dnf5_test_job.speeds[0], <=, 44000);
++}
++
++static void
++dnf5_test_download_speed_ignores_existing(void)
++{
++	dnf5_test_job.reset();
++	Dnf5DownloadCallbacks cb(test_job);
++	cb.add_package(FOO_NEVRA, FOO_ID, 1000000);
++	cb.add_package(BAR_NEVRA, BAR_ID, 100000);
++	void *foo = cb.add_new_download(nullptr, FOO_NEVRA, 1000000);
++	void *bar = cb.add_new_download(nullptr, BAR_NEVRA, 100000);
++
++	// a package that already exists is copied, not transferred
++	cb.end(foo, TransferStatus::ALREADYEXISTS, nullptr);
++	g_usleep(G_USEC_PER_SEC + G_USEC_PER_SEC / 10);
++	cb.progress(bar, 100000, 1000);
++	g_assert_true(dnf5_test_job.speeds.empty());
++
++	g_usleep(G_USEC_PER_SEC + G_USEC_PER_SEC / 10);
++	cb.progress(bar, 100000, 45000);
++	g_assert_cmpuint(dnf5_test_job.speeds.size(), ==, 1);
++	g_assert_cmpuint(dnf5_test_job.speeds[0], >, 0);
++	g_assert_cmpuint(dnf5_test_job.speeds[0], <=, 44000);
++}
++
++static void
++dnf5_test_scoped_download_callbacks(void)
++{
++	libdnf5::Base base;
++	g_assert_null(base.get_download_callbacks());
++
++	{
++		Dnf5ScopedDownloadCallbacks scoped(base, std::make_unique<Dnf5DownloadCallbacks>(test_job));
++		g_assert_nonnull(base.get_download_callbacks());
++	}
++	g_assert_null(base.get_download_callbacks());
++
++	// the job must not stay behind when downloading fails either
++	try {
++		Dnf5ScopedDownloadCallbacks scoped(base, std::make_unique<Dnf5DownloadCallbacks>(test_job));
++		throw std::runtime_error("download failed");
++	} catch (const std::runtime_error &) {
++	}
++	g_assert_null(base.get_download_callbacks());
++}
++
++int
++main(int argc, char **argv)
++{
++	g_test_init(&argc, &argv, NULL);
++
++	g_test_add_func("/dnf5/download/packages", dnf5_test_download_packages);
++	g_test_add_func("/dnf5/download/percentage-monotonic", dnf5_test_download_percentage_monotonic);
++	g_test_add_func("/dnf5/download/failed", dnf5_test_download_failed);
++	g_test_add_func("/dnf5/download/unknown-data", dnf5_test_download_unknown_data);
++	g_test_add_func("/dnf5/download/speed", dnf5_test_download_speed);
++	g_test_add_func("/dnf5/download/speed-starts-with-data", dnf5_test_download_speed_starts_with_data);
++	g_test_add_func("/dnf5/download/speed-ignores-existing", dnf5_test_download_speed_ignores_existing);
++	g_test_add_func("/dnf5/download/scoped-callbacks", dnf5_test_scoped_download_callbacks);
++
++	return g_test_run();
++}
+diff --git a/backends/dnf5/tests/meson.build b/backends/dnf5/tests/meson.build
+new file mode 100644
+index 000000000..f5024f387
+--- /dev/null
++++ b/backends/dnf5/tests/meson.build
+@@ -0,0 +1,24 @@
++dnf5_tests_exe = executable(
++  'dnf5-tests',
++  'dnf5-tests.cpp',
++  'definitions.cpp',
++  '../dnf5-backend-utils.cpp',
++  '../' + dnf5_vendor_source,
++  include_directories: [
++    packagekit_src_include,
++    include_directories('..'),
++  ],
++  dependencies: [
++    dnf5_dep,
++    packagekit_glib2_dep,
++  ],
++  cpp_args: dnf5_cpp_args,
++  build_by_default: true,
++  install: false,
++)
++
++test(
++  'dnf5-backend-tests',
++  dnf5_tests_exe,
++  suite: 'dnf5',
++)
+
+From 7de5cd213aafa2da070a5951cafcb951fa878b84 Mon Sep 17 00:00:00 2001
+From: Frank Gehann <fg@fgehann.de>
+Date: Tue, 29 Sep 2026 10:18:58 +0200
+Subject: [PATCH 2/8] dnf5: Report progress while refreshing the cache
+
+refresh-cache did not report any progress, as it ran outside of a job
+thread and without download callbacks. Run it in a job thread like the
+other roles, and report the progress and speed of the repository
+metadata downloads, also when loading the repositories of the release
+to upgrade to.
+
+libdnf5 downloads the metadata in two stages: repomd.xml or the
+metalink first, to check whether the cache is still in sync, and then
+the remaining metadata of the repositories that are not. Which ones
+need the second stage is only known once it starts, so each stage
+accounts for half of a repository to keep the percentage from going
+backwards.
+
+Part of: https://github.com/PackageKit/PackageKit/issues/1019
+---
+ backends/dnf5/dnf5-backend-thread.cpp |  3 +-
+ backends/dnf5/dnf5-backend-utils.cpp  | 72 +++++++++++++++++++++------
+ backends/dnf5/dnf5-backend-utils.hpp  | 14 +++---
+ backends/dnf5/pk-backend-dnf5.cpp     | 19 +++++--
+ backends/dnf5/tests/dnf5-tests.cpp    | 69 +++++++++++++++++++++++++
+ 5 files changed, 149 insertions(+), 28 deletions(-)
+
+diff --git a/backends/dnf5/dnf5-backend-thread.cpp b/backends/dnf5/dnf5-backend-thread.cpp
+index d71773b33..0cf03af31 100644
+--- a/backends/dnf5/dnf5-backend-thread.cpp
++++ b/backends/dnf5/dnf5-backend-thread.cpp
+@@ -446,7 +446,8 @@ dnf5_transaction_thread(PkBackendJob *job, GVariant *params, gpointer user_data)
+ 			PkBitfield transaction_flags;
+ 			g_variant_get(params, "(t&su)", &transaction_flags, &distro_id, &upgrade_kind);
+ 			if (distro_id) {
+-				dnf5_setup_base(priv, TRUE, TRUE, distro_id);
++				pk_backend_job_set_status(job, PK_STATUS_ENUM_REFRESH_CACHE);
++				dnf5_setup_base(priv, TRUE, TRUE, distro_id, TRUE, job);
+ 
+ 				g_debug("Checking repositories for system upgrade to %s:", distro_id);
+ 				// ... logging code ...
+diff --git a/backends/dnf5/dnf5-backend-utils.cpp b/backends/dnf5/dnf5-backend-utils.cpp
+index 182090609..de7921541 100644
+--- a/backends/dnf5/dnf5-backend-utils.cpp
++++ b/backends/dnf5/dnf5-backend-utils.cpp
+@@ -73,7 +73,13 @@ dnf5_releasever_is_valid(const char *releasever)
+ }
+ 
+ void
+-dnf5_setup_base(PkBackendDnf5Private *priv, gboolean refresh, gboolean force, const char *releasever, gboolean online)
++dnf5_setup_base(
++	PkBackendDnf5Private *priv,
++	gboolean refresh,
++	gboolean force,
++	const char *releasever,
++	gboolean online,
++	PkBackendJob *job)
+ {
+ 	if (releasever != nullptr && !dnf5_releasever_is_valid(releasever))
+ 		throw std::invalid_argument(std::string("Invalid release version: ") + releasever);
+@@ -173,7 +179,13 @@ dnf5_setup_base(PkBackendDnf5Private *priv, gboolean refresh, gboolean force, co
+ 	}
+ 
+ 	g_debug("Loading repositories");
+-	repo_sack->load_repos();
++	if (job != nullptr) {
++		// report repository metadata downloads
++		Dnf5ScopedDownloadCallbacks callbacks(*priv->base, std::make_unique<Dnf5DownloadCallbacks>(job));
++		repo_sack->load_repos();
++	} else {
++		repo_sack->load_repos();
++	}
+ 
+ 	libdnf5::repo::RepoQuery query(*priv->base);
+ 	query.filter_enabled(true);
+@@ -196,9 +208,9 @@ dnf5_update_network_state(PkBackendDnf5Private *priv, gboolean online)
+ }
+ 
+ void
+-dnf5_refresh_cache(PkBackendDnf5Private *priv, gboolean force)
++dnf5_refresh_cache(PkBackendDnf5Private *priv, PkBackendJob *job, gboolean force)
+ {
+-	dnf5_setup_base(priv, TRUE, force);
++	dnf5_setup_base(priv, TRUE, force, nullptr, TRUE, job);
+ }
+ 
+ PkInfoEnum
+@@ -651,11 +663,13 @@ Dnf5DownloadCallbacks::add_new_download(void *user_data, const char *description
+ 	Item item = {};
+ 	item.total_size = total_to_download > 0 ? total_to_download : 0;
+ 
+-	// packages that are already available locally are not registered and
+-	// do not count towards the download size
+-	auto it = package_ids.find(description != nullptr ? description : "");
+-	if (it != package_ids.end())
+-		item.package_id = it->second;
++	if (!package_ids.empty()) {
++		// packages that are already available locally are not registered
++		// and do not count towards the download size
++		auto it = package_ids.find(description != nullptr ? description : "");
++		if (it != package_ids.end())
++			item.package_id = it->second;
++	}
+ 	items[id] = item;
+ 	return id;
+ }
+@@ -668,7 +682,20 @@ Dnf5DownloadCallbacks::item_fraction(const Item &item) const
+ 		fraction = std::clamp(item.downloaded / item.total_size, 0.0, 1.0);
+ 
+ 	guint completed = item.failed ? item.ends - 1 : item.ends;
+-	return completed > 0 ? 1.0 : fraction;
++	if (!package_ids.empty())
++		return completed > 0 ? 1.0 : fraction;
++
++	// Repository metadata is downloaded in two stages: first repomd.xml or the
++	// metalink is fetched to check whether the cache is still in sync, then
++	// the remaining metadata only for repositories that are not. Both stages
++	// end the same download, and which repositories need the second stage is
++	// only known once it starts, so each stage accounts for half of a
++	// repository to keep the overall percentage from going backwards.
++	if (completed > 1)
++		return 1.0;
++	if (completed == 1)
++		return item.reopened ? 0.5 + fraction / 2 : 0.5;
++	return fraction / 2;
+ }
+ 
+ void
+@@ -700,15 +727,25 @@ Dnf5DownloadCallbacks::update_item_progress(Item &item)
+ void
+ Dnf5DownloadCallbacks::update_progress()
+ {
+-	if (total_size > 0) {
+-		gint new_percentage = (gint) (std::min(downloaded_size, (double) total_size) * 100 / total_size);
+-		// the daemon refuses a percentage going down, which happens when a
+-		// download restarts on another mirror
++	if (!items.empty()) {
++		gint new_percentage = -1;
++		if (package_ids.empty()) {
++			double sum = 0;
++			for (auto const &[id, item] : items)
++				sum += item_fraction(item);
++			new_percentage = (gint) (sum * 100 / items.size());
++		} else if (total_size > 0) {
++			new_percentage = (gint) (std::min(downloaded_size, (double) total_size) * 100 / total_size);
++		}
++		// the daemon refuses a percentage going down, and the metadata sizes
++		// are only learned while downloading
+ 		if (new_percentage > percentage) {
+ 			percentage = new_percentage;
+ 			pk_backend_job_set_percentage(job, (guint) percentage);
+ 		}
++	}
+ 
++	if (total_size > 0) {
+ 		double remaining = std::max((double) total_size - downloaded_size, 0.0);
+ 		pk_backend_job_set_download_size_remaining(job, (guint64) remaining);
+ 	}
+@@ -744,11 +781,14 @@ Dnf5DownloadCallbacks::progress(void *user_cb_data, double total_to_download, do
+ 	Item &item = it->second;
+ 
+ 	// only registered packages count towards the download size
+-	if (!item.package_id.empty()) {
++	if (package_ids.empty() || !item.package_id.empty()) {
+ 		downloaded_size += downloaded - item.downloaded;
+ 		transferred_size += downloaded - item.downloaded;
+ 	}
+ 
++	// the second stage of a repository metadata download
++	if (item.ends > 0)
++		item.reopened = true;
+ 	if (total_to_download > 0)
+ 		item.total_size = total_to_download;
+ 	item.downloaded = downloaded;
+@@ -768,7 +808,7 @@ Dnf5DownloadCallbacks::end(void *user_cb_data, TransferStatus status, const char
+ 		return OK;
+ 	Item &item = it->second;
+ 
+-	if (status != TransferStatus::ERROR && !item.package_id.empty()) {
++	if (status != TransferStatus::ERROR && !package_ids.empty() && !item.package_id.empty()) {
+ 		// packages that already exist report no progress at all
+ 		downloaded_size += item.total_size - item.downloaded;
+ 		item.downloaded = item.total_size;
+diff --git a/backends/dnf5/dnf5-backend-utils.hpp b/backends/dnf5/dnf5-backend-utils.hpp
+index bd4dbe939..870eeb324 100644
+--- a/backends/dnf5/dnf5-backend-utils.hpp
++++ b/backends/dnf5/dnf5-backend-utils.hpp
+@@ -50,9 +50,10 @@ void dnf5_setup_base(
+ 	gboolean refresh = FALSE,
+ 	gboolean force = FALSE,
+ 	const char *releasever = nullptr,
+-	gboolean online = TRUE);
++	gboolean online = TRUE,
++	PkBackendJob *job = nullptr);
+ void dnf5_update_network_state(PkBackendDnf5Private *priv, gboolean online);
+-void dnf5_refresh_cache(PkBackendDnf5Private *priv, gboolean force);
++void dnf5_refresh_cache(PkBackendDnf5Private *priv, PkBackendJob *job, gboolean force);
+ PkInfoEnum dnf5_advisory_kind_to_info_enum(const std::string &type);
+ PkInfoEnum dnf5_update_severity_to_enum(const std::string &severity);
+ bool dnf5_force_distupgrade_on_upgrade(libdnf5::Base &base);
+@@ -76,10 +77,10 @@ std::vector<libdnf5::rpm::Package>
+ dnf5_resolve_package_ids(libdnf5::Base &base, gchar **package_ids, bool allow_cmdline_packages = true);
+ void dnf5_remove_old_cache_directories(PkBackend *backend, const gchar *release_ver);
+ 
+-// Reports package download progress to a job. Packages registered with
+-// add_package() are reported by package-id with item progress, and count
+-// towards the percentage, speed and remaining download size. Downloads of
+-// packages that were not registered, like local ones, are not reported.
++// Reports download progress to a job. Packages registered with add_package()
++// are reported by package-id with item progress and the remaining download
++// size. Without any registered package, every download is treated as
++// repository metadata and only the overall percentage and speed are reported.
+ class Dnf5DownloadCallbacks : public libdnf5::repo::DownloadCallbacks
+ {
+     public:
+@@ -105,6 +106,7 @@ class Dnf5DownloadCallbacks : public libdnf5::repo::DownloadCallbacks
+ 		guint ends;
+ 		// whether the last end was a failure, which does not complete anything
+ 		bool failed;
++		bool reopened;
+ 		bool announced;
+ 	};
+ 
+diff --git a/backends/dnf5/pk-backend-dnf5.cpp b/backends/dnf5/pk-backend-dnf5.cpp
+index 560034335..e5f036c37 100644
+--- a/backends/dnf5/pk-backend-dnf5.cpp
++++ b/backends/dnf5/pk-backend-dnf5.cpp
+@@ -411,18 +411,27 @@ pk_backend_repo_remove(
+ 	pk_backend_job_thread_create(job, dnf5_repo_thread, NULL, NULL);
+ }
+ 
+-void
+-pk_backend_refresh_cache(PkBackend *backend, PkBackendJob *job, gboolean force)
++static void
++pk_backend_refresh_cache_thread(PkBackendJob *job, GVariant *params, gpointer user_data)
+ {
+-	pk_backend_job_set_status(job, PK_STATUS_ENUM_REFRESH_CACHE);
++	PkBackend *backend = (PkBackend *) pk_backend_job_get_backend(job);
+ 	PkBackendDnf5Private *priv = (PkBackendDnf5Private *) pk_backend_get_user_data(backend);
++	gboolean force = FALSE;
++	g_variant_get(params, "(b)", &force);
++
++	pk_backend_job_set_status(job, PK_STATUS_ENUM_REFRESH_CACHE);
+ 	g_autoptr(GMutexLocker) locker = g_mutex_locker_new(&priv->mutex);
+ 	try {
+-		dnf5_refresh_cache(priv, force);
++		dnf5_refresh_cache(priv, job, force);
+ 	} catch (const std::exception &e) {
+ 		pk_backend_job_error_code(job, PK_ERROR_ENUM_INTERNAL_ERROR, "%s", e.what());
+ 	}
+-	pk_backend_job_finished(job);
++}
++
++void
++pk_backend_refresh_cache(PkBackend *backend, PkBackendJob *job, gboolean force)
++{
++	pk_backend_job_thread_create(job, pk_backend_refresh_cache_thread, NULL, NULL);
+ }
+ 
+ void
+diff --git a/backends/dnf5/tests/dnf5-tests.cpp b/backends/dnf5/tests/dnf5-tests.cpp
+index b61ea9168..33322ca83 100644
+--- a/backends/dnf5/tests/dnf5-tests.cpp
++++ b/backends/dnf5/tests/dnf5-tests.cpp
+@@ -157,6 +157,72 @@ dnf5_test_download_unknown_data(void)
+ 	g_assert_true(dnf5_test_job.speeds.empty());
+ }
+ 
++static void
++dnf5_test_download_metadata(void)
++{
++	dnf5_test_job.reset();
++	Dnf5DownloadCallbacks cb(test_job);
++
++	// repositories are described by name and have no known size
++	void *fedora = cb.add_new_download(nullptr, "Fedora 44 - x86_64", -1);
++	void *updates = cb.add_new_download(nullptr, "Fedora 44 - x86_64 - Updates", -1);
++
++	// first stage: repomd.xml
++	cb.progress(fedora, 100, 50);
++	dnf5_test_assert_percentages({12});
++	cb.end(fedora, TransferStatus::SUCCESSFUL, nullptr);
++	dnf5_test_assert_percentages({12, 25});
++	cb.end(updates, TransferStatus::SUCCESSFUL, nullptr);
++	dnf5_test_assert_percentages({12, 25, 50});
++	g_assert_cmpuint(dnf5_test_job.speeds.back(), ==, 0);
++
++	// second stage: the rest of the metadata of an out of sync repository
++	cb.progress(fedora, 200, 100);
++	dnf5_test_assert_percentages({12, 25, 50, 62});
++	cb.end(fedora, TransferStatus::SUCCESSFUL, nullptr);
++	dnf5_test_assert_percentages({12, 25, 50, 62, 75});
++
++	// repositories are no packages
++	g_assert_true(dnf5_test_job.item_progress.empty());
++	g_assert_true(dnf5_test_job.package_statuses.empty());
++	g_assert_true(dnf5_test_job.download_size_remaining.empty());
++}
++
++static void
++dnf5_test_download_metadata_failed(void)
++{
++	dnf5_test_job.reset();
++	Dnf5DownloadCallbacks cb(test_job);
++	void *fedora = cb.add_new_download(nullptr, "Fedora 44 - x86_64", -1);
++	void *updates = cb.add_new_download(nullptr, "Fedora 44 - x86_64 - Updates", -1);
++
++	cb.progress(fedora, 100, 50);
++	dnf5_test_assert_percentages({12});
++
++	// a repository that could not be downloaded is not complete
++	cb.end(fedora, TransferStatus::ERROR, "Cannot download repomd.xml");
++	dnf5_test_assert_percentages({12});
++	cb.end(updates, TransferStatus::SUCCESSFUL, nullptr);
++	dnf5_test_assert_percentages({12, 37});
++
++	// but it is no longer transferring anything
++	g_assert_cmpuint(dnf5_test_job.speeds.back(), ==, 0);
++}
++
++static void
++dnf5_test_download_metadata_unknown_size(void)
++{
++	dnf5_test_job.reset();
++	Dnf5DownloadCallbacks cb(test_job);
++	void *repo = cb.add_new_download(nullptr, "Fedora 44 - x86_64", -1);
++
++	// librepo does not know the size yet
++	cb.progress(repo, 0, 0);
++	dnf5_test_assert_percentages({0});
++	cb.end(repo, TransferStatus::SUCCESSFUL, nullptr);
++	dnf5_test_assert_percentages({0, 50});
++}
++
+ static void
+ dnf5_test_download_speed(void)
+ {
+@@ -254,6 +320,9 @@ main(int argc, char **argv)
+ 	g_test_add_func("/dnf5/download/percentage-monotonic", dnf5_test_download_percentage_monotonic);
+ 	g_test_add_func("/dnf5/download/failed", dnf5_test_download_failed);
+ 	g_test_add_func("/dnf5/download/unknown-data", dnf5_test_download_unknown_data);
++	g_test_add_func("/dnf5/download/metadata", dnf5_test_download_metadata);
++	g_test_add_func("/dnf5/download/metadata-failed", dnf5_test_download_metadata_failed);
++	g_test_add_func("/dnf5/download/metadata-unknown-size", dnf5_test_download_metadata_unknown_size);
+ 	g_test_add_func("/dnf5/download/speed", dnf5_test_download_speed);
+ 	g_test_add_func("/dnf5/download/speed-starts-with-data", dnf5_test_download_speed_starts_with_data);
+ 	g_test_add_func("/dnf5/download/speed-ignores-existing", dnf5_test_download_speed_ignores_existing);
+
+From 89a587d6ecea9710a55a336b9f269f1ac985b2cd Mon Sep 17 00:00:00 2001
+From: Frank Gehann <fg@fgehann.de>
+Date: Tue, 29 Sep 2026 10:19:18 +0200
+Subject: [PATCH 3/8] dnf5: Report what happens before installing
+
+Between downloading and installing, libdnf5 checks the package
+signatures and runs an rpm test transaction without calling any
+transaction callback, so nothing at all was reported for several
+seconds. Report this as test-commit with an unknown percentage, and
+report the signature verification and the preparation of the rpm
+transaction from their callbacks as sig-check and commit.
+
+Fixes: https://github.com/PackageKit/PackageKit/issues/1019
+---
+ backends/dnf5/dnf5-backend-thread.cpp |  5 ++++-
+ backends/dnf5/dnf5-backend-utils.cpp  | 22 ++++++++++++++++++++++
+ backends/dnf5/dnf5-backend-utils.hpp  |  3 +++
+ backends/dnf5/tests/dnf5-tests.cpp    | 22 ++++++++++++++++++++++
+ 4 files changed, 51 insertions(+), 1 deletion(-)
+
+diff --git a/backends/dnf5/dnf5-backend-thread.cpp b/backends/dnf5/dnf5-backend-thread.cpp
+index 0cf03af31..60c97b092 100644
+--- a/backends/dnf5/dnf5-backend-thread.cpp
++++ b/backends/dnf5/dnf5-backend-thread.cpp
+@@ -717,7 +717,10 @@ dnf5_transaction_thread(PkBackendJob *job, GVariant *params, gpointer user_data)
+ 			return;
+ 		}
+ 
+-		pk_backend_job_set_status(job, PK_STATUS_ENUM_RUNNING);
++		// libdnf5 checks the signatures and runs an rpm test transaction
++		// before any transaction callback is called
++		pk_backend_job_set_status(job, PK_STATUS_ENUM_TEST_COMMIT);
++		pk_backend_job_set_percentage(job, PK_BACKEND_PERCENTAGE_INVALID);
+ 		trans.set_callbacks(std::make_unique<Dnf5TransactionCallbacks>(job));
+ 		auto res = trans.run();
+ 		g_debug("Transaction run result: %s",
+diff --git a/backends/dnf5/dnf5-backend-utils.cpp b/backends/dnf5/dnf5-backend-utils.cpp
+index de7921541..f9858a58c 100644
+--- a/backends/dnf5/dnf5-backend-utils.cpp
++++ b/backends/dnf5/dnf5-backend-utils.cpp
+@@ -854,6 +854,28 @@ Dnf5TransactionCallbacks::before_begin(uint64_t total)
+ 	total_items = total;
+ }
+ 
++void
++Dnf5TransactionCallbacks::verify_start(uint64_t total)
++{
++	pk_backend_job_set_status(job, PK_STATUS_ENUM_SIG_CHECK);
++	pk_backend_job_set_percentage(job, 0);
++}
++
++void
++Dnf5TransactionCallbacks::verify_progress(uint64_t amount, uint64_t total)
++{
++	if (total > 0)
++		pk_backend_job_set_percentage(job, (uint) (amount * 100 / total));
++}
++
++void
++Dnf5TransactionCallbacks::transaction_start(uint64_t total)
++{
++	// rpm is preparing the transaction, there is no progress to report
++	pk_backend_job_set_status(job, PK_STATUS_ENUM_COMMIT);
++	pk_backend_job_set_percentage(job, PK_BACKEND_PERCENTAGE_INVALID);
++}
++
+ void
+ Dnf5TransactionCallbacks::elem_progress(const libdnf5::base::TransactionPackage &item, uint64_t amount, uint64_t total)
+ {
+diff --git a/backends/dnf5/dnf5-backend-utils.hpp b/backends/dnf5/dnf5-backend-utils.hpp
+index 870eeb324..417a1e221 100644
+--- a/backends/dnf5/dnf5-backend-utils.hpp
++++ b/backends/dnf5/dnf5-backend-utils.hpp
+@@ -149,6 +149,9 @@ class Dnf5TransactionCallbacks : public libdnf5::rpm::TransactionCallbacks
+     public:
+ 	explicit Dnf5TransactionCallbacks(PkBackendJob *job);
+ 	void before_begin(uint64_t total) override;
++	void verify_start(uint64_t total) override;
++	void verify_progress(uint64_t amount, uint64_t total) override;
++	void transaction_start(uint64_t total) override;
+ 	void elem_progress(const libdnf5::base::TransactionPackage &item, uint64_t amount, uint64_t total) override;
+ 	void install_progress(const libdnf5::base::TransactionPackage &item, uint64_t amount, uint64_t total) override;
+ 	void install_start(const libdnf5::base::TransactionPackage &item, uint64_t total) override;
+diff --git a/backends/dnf5/tests/dnf5-tests.cpp b/backends/dnf5/tests/dnf5-tests.cpp
+index 33322ca83..b8c341d21 100644
+--- a/backends/dnf5/tests/dnf5-tests.cpp
++++ b/backends/dnf5/tests/dnf5-tests.cpp
+@@ -290,6 +290,27 @@ dnf5_test_download_speed_ignores_existing(void)
+ 	g_assert_cmpuint(dnf5_test_job.speeds[0], <=, 44000);
+ }
+ 
++static void
++dnf5_test_transaction_phases(void)
++{
++	dnf5_test_job.reset();
++	Dnf5TransactionCallbacks cb(test_job);
++
++	cb.verify_start(4);
++	g_assert_cmpuint(dnf5_test_job.statuses.size(), ==, 1);
++	g_assert_cmpint(dnf5_test_job.statuses.back(), ==, PK_STATUS_ENUM_SIG_CHECK);
++	dnf5_test_assert_percentages({0});
++
++	cb.verify_progress(2, 4);
++	cb.verify_progress(3, 0);
++	dnf5_test_assert_percentages({0, 50});
++
++	// preparing the transaction has no progress of its own
++	cb.transaction_start(4);
++	g_assert_cmpint(dnf5_test_job.statuses.back(), ==, PK_STATUS_ENUM_COMMIT);
++	dnf5_test_assert_percentages({0, 50, PK_BACKEND_PERCENTAGE_INVALID});
++}
++
+ static void
+ dnf5_test_scoped_download_callbacks(void)
+ {
+@@ -326,6 +347,7 @@ main(int argc, char **argv)
+ 	g_test_add_func("/dnf5/download/speed", dnf5_test_download_speed);
+ 	g_test_add_func("/dnf5/download/speed-starts-with-data", dnf5_test_download_speed_starts_with_data);
+ 	g_test_add_func("/dnf5/download/speed-ignores-existing", dnf5_test_download_speed_ignores_existing);
++	g_test_add_func("/dnf5/transaction/phases", dnf5_test_transaction_phases);
+ 	g_test_add_func("/dnf5/download/scoped-callbacks", dnf5_test_scoped_download_callbacks);
+ 
+ 	return g_test_run();
+
+From 0d9901e4f764fb21f703397cc8e7c4f5e39b9e7c Mon Sep 17 00:00:00 2001
+From: Frank Gehann <fg@fgehann.de>
+Date: Tue, 29 Sep 2026 11:14:54 +0200
+Subject: [PATCH 4/8] dnf5: Report scriptlets and reloading after install
+
+Once rpm has processed every package, it still runs the %posttrans
+scriptlets and file triggers, and the backend then reloads the
+repositories. This took around 5 seconds in which nothing at all was
+reported, with the percentage stuck at 100.
+
+Report the scriptlets that run after the last package as run-hook, and
+the reloading as loading-cache, both with an unknown percentage.
+
+Related: https://github.com/PackageKit/PackageKit/issues/1019
+---
+ backends/dnf5/dnf5-backend-thread.cpp |  2 ++
+ backends/dnf5/dnf5-backend-utils.cpp  | 43 ++++++++++++++++++++++++++-
+ backends/dnf5/dnf5-backend-utils.hpp  | 11 +++++++
+ backends/dnf5/tests/dnf5-tests.cpp    | 25 ++++++++++++++++
+ 4 files changed, 80 insertions(+), 1 deletion(-)
+
+diff --git a/backends/dnf5/dnf5-backend-thread.cpp b/backends/dnf5/dnf5-backend-thread.cpp
+index 60c97b092..ab8f4a001 100644
+--- a/backends/dnf5/dnf5-backend-thread.cpp
++++ b/backends/dnf5/dnf5-backend-thread.cpp
+@@ -740,6 +740,8 @@ dnf5_transaction_thread(PkBackendJob *job, GVariant *params, gpointer user_data)
+ 		}
+ 
+ 		// Post-transaction base re-initialization to ensure state consistency
++		pk_backend_job_set_status(job, PK_STATUS_ENUM_LOADING_CACHE);
++		pk_backend_job_set_percentage(job, PK_BACKEND_PERCENTAGE_INVALID);
+ 		dnf5_setup_base(priv);
+ 
+ 	} catch (const std::exception &e) {
+diff --git a/backends/dnf5/dnf5-backend-utils.cpp b/backends/dnf5/dnf5-backend-utils.cpp
+index f9858a58c..e05eaff5b 100644
+--- a/backends/dnf5/dnf5-backend-utils.cpp
++++ b/backends/dnf5/dnf5-backend-utils.cpp
+@@ -844,10 +844,30 @@ Dnf5ScopedDownloadCallbacks::~Dnf5ScopedDownloadCallbacks()
+ Dnf5TransactionCallbacks::Dnf5TransactionCallbacks(PkBackendJob *job)
+     : job(job),
+       total_items(0),
+-      current_item_index(0)
++      current_item_index(0),
++      processed_items(0),
++      running_hooks(false)
+ {
+ }
+ 
++void
++Dnf5TransactionCallbacks::stop_element()
++{
++	processed_items++;
++}
++
++void
++Dnf5TransactionCallbacks::start_scriptlet()
++{
++	// %posttrans scriptlets and file triggers run once every element has been
++	// processed, and can take a while without any other progress
++	if (running_hooks || total_items == 0 || processed_items < total_items)
++		return;
++	running_hooks = true;
++	pk_backend_job_set_status(job, PK_STATUS_ENUM_RUN_HOOK);
++	pk_backend_job_set_percentage(job, PK_BACKEND_PERCENTAGE_INVALID);
++}
++
+ void
+ Dnf5TransactionCallbacks::before_begin(uint64_t total)
+ {
+@@ -906,6 +926,12 @@ Dnf5TransactionCallbacks::install_start(const libdnf5::base::TransactionPackage
+ 	dnf5_emit_pkg(job, item.get_package(), info);
+ }
+ 
++void
++Dnf5TransactionCallbacks::install_stop(const libdnf5::base::TransactionPackage &item, uint64_t amount, uint64_t total)
++{
++	stop_element();
++}
++
+ void
+ Dnf5TransactionCallbacks::uninstall_progress(
+ 	const libdnf5::base::TransactionPackage &item,
+@@ -928,3 +954,18 @@ Dnf5TransactionCallbacks::uninstall_start(const libdnf5::base::TransactionPackag
+ 	}
+ 	dnf5_emit_pkg(job, item.get_package(), info);
+ }
++
++void
++Dnf5TransactionCallbacks::uninstall_stop(const libdnf5::base::TransactionPackage &item, uint64_t amount, uint64_t total)
++{
++	stop_element();
++}
++
++void
++Dnf5TransactionCallbacks::script_start(
++	const libdnf5::base::TransactionPackage *item,
++	libdnf5::rpm::Nevra nevra,
++	ScriptType type)
++{
++	start_scriptlet();
++}
+diff --git a/backends/dnf5/dnf5-backend-utils.hpp b/backends/dnf5/dnf5-backend-utils.hpp
+index 417a1e221..42c239202 100644
+--- a/backends/dnf5/dnf5-backend-utils.hpp
++++ b/backends/dnf5/dnf5-backend-utils.hpp
+@@ -148,6 +148,11 @@ class Dnf5TransactionCallbacks : public libdnf5::rpm::TransactionCallbacks
+ {
+     public:
+ 	explicit Dnf5TransactionCallbacks(PkBackendJob *job);
++
++	// The progress of the transaction elements, as reported by rpm.
++	void stop_element();
++	void start_scriptlet();
++
+ 	void before_begin(uint64_t total) override;
+ 	void verify_start(uint64_t total) override;
+ 	void verify_progress(uint64_t amount, uint64_t total) override;
+@@ -155,12 +160,18 @@ class Dnf5TransactionCallbacks : public libdnf5::rpm::TransactionCallbacks
+ 	void elem_progress(const libdnf5::base::TransactionPackage &item, uint64_t amount, uint64_t total) override;
+ 	void install_progress(const libdnf5::base::TransactionPackage &item, uint64_t amount, uint64_t total) override;
+ 	void install_start(const libdnf5::base::TransactionPackage &item, uint64_t total) override;
++	void install_stop(const libdnf5::base::TransactionPackage &item, uint64_t amount, uint64_t total) override;
+ 	void
+ 	uninstall_progress(const libdnf5::base::TransactionPackage &item, uint64_t amount, uint64_t total) override;
+ 	void uninstall_start(const libdnf5::base::TransactionPackage &item, uint64_t total) override;
++	void uninstall_stop(const libdnf5::base::TransactionPackage &item, uint64_t amount, uint64_t total) override;
++	void script_start(const libdnf5::base::TransactionPackage *item, libdnf5::rpm::Nevra nevra, ScriptType type)
++		override;
+ 
+     private:
+ 	PkBackendJob *job;
+ 	uint64_t total_items;
+ 	uint64_t current_item_index;
++	uint64_t processed_items;
++	bool running_hooks;
+ };
+diff --git a/backends/dnf5/tests/dnf5-tests.cpp b/backends/dnf5/tests/dnf5-tests.cpp
+index b8c341d21..6b86d5073 100644
+--- a/backends/dnf5/tests/dnf5-tests.cpp
++++ b/backends/dnf5/tests/dnf5-tests.cpp
+@@ -311,6 +311,30 @@ dnf5_test_transaction_phases(void)
+ 	dnf5_test_assert_percentages({0, 50, PK_BACKEND_PERCENTAGE_INVALID});
+ }
+ 
++static void
++dnf5_test_transaction_hooks(void)
++{
++	dnf5_test_job.reset();
++	Dnf5TransactionCallbacks cb(test_job);
++	cb.before_begin(2);
++
++	// %pretrans and the scriptlets of each package are part of their elements
++	cb.start_scriptlet();
++	cb.stop_element();
++	cb.start_scriptlet();
++	cb.stop_element();
++	g_assert_true(dnf5_test_job.statuses.empty());
++
++	// %posttrans and file triggers only run once everything is processed
++	cb.start_scriptlet();
++	g_assert_cmpuint(dnf5_test_job.statuses.size(), ==, 1);
++	g_assert_cmpint(dnf5_test_job.statuses.back(), ==, PK_STATUS_ENUM_RUN_HOOK);
++	g_assert_cmpuint(dnf5_test_job.percentages.back(), ==, PK_BACKEND_PERCENTAGE_INVALID);
++
++	cb.start_scriptlet();
++	g_assert_cmpuint(dnf5_test_job.statuses.size(), ==, 1);
++}
++
+ static void
+ dnf5_test_scoped_download_callbacks(void)
+ {
+@@ -348,6 +372,7 @@ main(int argc, char **argv)
+ 	g_test_add_func("/dnf5/download/speed-starts-with-data", dnf5_test_download_speed_starts_with_data);
+ 	g_test_add_func("/dnf5/download/speed-ignores-existing", dnf5_test_download_speed_ignores_existing);
+ 	g_test_add_func("/dnf5/transaction/phases", dnf5_test_transaction_phases);
++	g_test_add_func("/dnf5/transaction/hooks", dnf5_test_transaction_hooks);
+ 	g_test_add_func("/dnf5/download/scoped-callbacks", dnf5_test_scoped_download_callbacks);
+ 
+ 	return g_test_run();
+
+From 493bcbd0ed9cc2b8d1666d7432927b52c90f756a Mon Sep 17 00:00:00 2001
+From: Frank Gehann <fg@fgehann.de>
+Date: Tue, 29 Sep 2026 11:15:32 +0200
+Subject: [PATCH 5/8] dnf5: Weigh install progress by package size
+
+The percentage of a transaction counted the processed packages, so the
+small packages that are usually installed first moved it most of the
+way before the large ones, which take most of the time, even started.
+Installing seven packages of 136 MiB showed 57% in the first 100 ms.
+
+Let the packages being installed split their share of the percentage
+by their installed size, as writing their files takes most of the
+time. Removing a package takes about as long whatever its size, so
+removed packages, also the old versions of updated ones, keep an equal
+share each, as before.
+
+Related: https://github.com/PackageKit/PackageKit/issues/1019
+---
+ backends/dnf5/dnf5-backend-thread.cpp |   5 +-
+ backends/dnf5/dnf5-backend-utils.cpp  | 112 ++++++++++++++------
+ backends/dnf5/dnf5-backend-utils.hpp  |  26 ++++-
+ backends/dnf5/tests/dnf5-tests.cpp    | 145 ++++++++++++++++++++++++++
+ 4 files changed, 254 insertions(+), 34 deletions(-)
+
+diff --git a/backends/dnf5/dnf5-backend-thread.cpp b/backends/dnf5/dnf5-backend-thread.cpp
+index ab8f4a001..7dfd10313 100644
+--- a/backends/dnf5/dnf5-backend-thread.cpp
++++ b/backends/dnf5/dnf5-backend-thread.cpp
+@@ -721,7 +721,10 @@ dnf5_transaction_thread(PkBackendJob *job, GVariant *params, gpointer user_data)
+ 		// before any transaction callback is called
+ 		pk_backend_job_set_status(job, PK_STATUS_ENUM_TEST_COMMIT);
+ 		pk_backend_job_set_percentage(job, PK_BACKEND_PERCENTAGE_INVALID);
+-		trans.set_callbacks(std::make_unique<Dnf5TransactionCallbacks>(job));
++		auto transaction_callbacks = std::make_unique<Dnf5TransactionCallbacks>(job);
++		for (const auto &item : trans.get_transaction_packages())
++			transaction_callbacks->add_package(item);
++		trans.set_callbacks(std::move(transaction_callbacks));
+ 		auto res = trans.run();
+ 		g_debug("Transaction run result: %s",
+ 			libdnf5::base::Transaction::transaction_result_to_string(res).c_str());
+diff --git a/backends/dnf5/dnf5-backend-utils.cpp b/backends/dnf5/dnf5-backend-utils.cpp
+index e05eaff5b..04b8d067f 100644
+--- a/backends/dnf5/dnf5-backend-utils.cpp
++++ b/backends/dnf5/dnf5-backend-utils.cpp
+@@ -844,16 +844,80 @@ Dnf5ScopedDownloadCallbacks::~Dnf5ScopedDownloadCallbacks()
+ Dnf5TransactionCallbacks::Dnf5TransactionCallbacks(PkBackendJob *job)
+     : job(job),
+       total_items(0),
+-      current_item_index(0),
+       processed_items(0),
++      processed_share(0),
++      current_share(0),
+       running_hooks(false)
+ {
+ }
+ 
++void
++Dnf5TransactionCallbacks::add_package(const libdnf5::base::TransactionPackage &item)
++{
++	auto pkg = item.get_package();
++	bool inbound = libdnf5::transaction::transaction_item_action_is_inbound(item.get_action());
++	add_package(pkg.get_full_nevra(), inbound, pkg.get_install_size());
++}
++
++void
++Dnf5TransactionCallbacks::add_package(const std::string &full_nevra, bool inbound, uint64_t installed_size)
++{
++	elements[{full_nevra, inbound}] = {inbound, installed_size};
++}
++
++double
++Dnf5TransactionCallbacks::element_share(const std::string &full_nevra, bool inbound) const
++{
++	if (elements.empty())
++		return total_items > 0 ? 1.0 / total_items : 0;
++
++	// elements that were not registered do not move the percentage
++	auto it = elements.find({full_nevra, inbound});
++	if (it == elements.end())
++		return 0;
++	if (!inbound)
++		return 1.0 / elements.size();
++
++	// removing a package takes about as long whatever its size, but
++	// installing one mostly depends on how much there is to write
++	uint64_t inbound_count = 0;
++	uint64_t inbound_size = 0;
++	for (const auto &[key, element] : elements) {
++		if (element.inbound) {
++			inbound_count++;
++			inbound_size += element.installed_size;
++		}
++	}
++	double inbound_share = (double) inbound_count / elements.size();
++	if (inbound_size == 0)
++		return inbound_share / inbound_count;
++	return inbound_share * it->second.installed_size / inbound_size;
++}
++
++void
++Dnf5TransactionCallbacks::start_element(const std::string &full_nevra, bool inbound)
++{
++	current_share = element_share(full_nevra, inbound);
++}
++
++void
++Dnf5TransactionCallbacks::element_progress(uint64_t amount, uint64_t total)
++{
++	if (total == 0)
++		return;
++
++	double fraction = std::min((double) amount / total, 1.0);
++	// the shares add up with rounding errors, which must not cut off 100%
++	double done = processed_share + fraction * current_share;
++	pk_backend_job_set_percentage(job, (guint) std::min(done * 100 + 1e-6, 100.0));
++}
++
+ void
+ Dnf5TransactionCallbacks::stop_element()
+ {
+ 	processed_items++;
++	processed_share += current_share;
++	current_share = 0;
+ }
+ 
+ void
+@@ -896,24 +960,6 @@ Dnf5TransactionCallbacks::transaction_start(uint64_t total)
+ 	pk_backend_job_set_percentage(job, PK_BACKEND_PERCENTAGE_INVALID);
+ }
+ 
+-void
+-Dnf5TransactionCallbacks::elem_progress(const libdnf5::base::TransactionPackage &item, uint64_t amount, uint64_t total)
+-{
+-	current_item_index = amount;
+-}
+-
+-void
+-Dnf5TransactionCallbacks::install_progress(
+-	const libdnf5::base::TransactionPackage &item,
+-	uint64_t amount,
+-	uint64_t total)
+-{
+-	if (total_items > 0 && total > 0) {
+-		double item_frac = (double) amount / total;
+-		pk_backend_job_set_percentage(job, (uint) ((current_item_index + item_frac) * 100 / total_items));
+-	}
+-}
+-
+ void
+ Dnf5TransactionCallbacks::install_start(const libdnf5::base::TransactionPackage &item, uint64_t total)
+ {
+@@ -924,24 +970,22 @@ Dnf5TransactionCallbacks::install_start(const libdnf5::base::TransactionPackage
+ 		info = PK_INFO_ENUM_UPDATING;
+ 	}
+ 	dnf5_emit_pkg(job, item.get_package(), info);
++	start_element(item.get_package().get_full_nevra(), true);
+ }
+ 
+ void
+-Dnf5TransactionCallbacks::install_stop(const libdnf5::base::TransactionPackage &item, uint64_t amount, uint64_t total)
++Dnf5TransactionCallbacks::install_progress(
++	const libdnf5::base::TransactionPackage &item,
++	uint64_t amount,
++	uint64_t total)
+ {
+-	stop_element();
++	element_progress(amount, total);
+ }
+ 
+ void
+-Dnf5TransactionCallbacks::uninstall_progress(
+-	const libdnf5::base::TransactionPackage &item,
+-	uint64_t amount,
+-	uint64_t total)
++Dnf5TransactionCallbacks::install_stop(const libdnf5::base::TransactionPackage &item, uint64_t amount, uint64_t total)
+ {
+-	if (total_items > 0 && total > 0) {
+-		double item_frac = (double) amount / total;
+-		pk_backend_job_set_percentage(job, (uint) ((current_item_index + item_frac) * 100 / total_items));
+-	}
++	stop_element();
+ }
+ 
+ void
+@@ -953,6 +997,16 @@ Dnf5TransactionCallbacks::uninstall_start(const libdnf5::base::TransactionPackag
+ 		info = PK_INFO_ENUM_CLEANUP;
+ 	}
+ 	dnf5_emit_pkg(job, item.get_package(), info);
++	start_element(item.get_package().get_full_nevra(), false);
++}
++
++void
++Dnf5TransactionCallbacks::uninstall_progress(
++	const libdnf5::base::TransactionPackage &item,
++	uint64_t amount,
++	uint64_t total)
++{
++	element_progress(amount, total);
+ }
+ 
+ void
+diff --git a/backends/dnf5/dnf5-backend-utils.hpp b/backends/dnf5/dnf5-backend-utils.hpp
+index 42c239202..4cfb35806 100644
+--- a/backends/dnf5/dnf5-backend-utils.hpp
++++ b/backends/dnf5/dnf5-backend-utils.hpp
+@@ -144,12 +144,21 @@ class Dnf5ScopedDownloadCallbacks
+ 	libdnf5::Base &base;
+ };
+ 
++// Reports the progress of an rpm transaction to a job. Every transaction
++// element registered with add_package() gets the same share of the
++// percentage, except that the packages being installed split their shares by
++// their installed size, as writing their files takes most of the time.
++// Without any registered package, every element weighs the same.
+ class Dnf5TransactionCallbacks : public libdnf5::rpm::TransactionCallbacks
+ {
+     public:
+ 	explicit Dnf5TransactionCallbacks(PkBackendJob *job);
++	void add_package(const libdnf5::base::TransactionPackage &item);
++	void add_package(const std::string &full_nevra, bool inbound, uint64_t installed_size);
+ 
+ 	// The progress of the transaction elements, as reported by rpm.
++	void start_element(const std::string &full_nevra, bool inbound);
++	void element_progress(uint64_t amount, uint64_t total);
+ 	void stop_element();
+ 	void start_scriptlet();
+ 
+@@ -157,21 +166,30 @@ class Dnf5TransactionCallbacks : public libdnf5::rpm::TransactionCallbacks
+ 	void verify_start(uint64_t total) override;
+ 	void verify_progress(uint64_t amount, uint64_t total) override;
+ 	void transaction_start(uint64_t total) override;
+-	void elem_progress(const libdnf5::base::TransactionPackage &item, uint64_t amount, uint64_t total) override;
+-	void install_progress(const libdnf5::base::TransactionPackage &item, uint64_t amount, uint64_t total) override;
+ 	void install_start(const libdnf5::base::TransactionPackage &item, uint64_t total) override;
++	void install_progress(const libdnf5::base::TransactionPackage &item, uint64_t amount, uint64_t total) override;
+ 	void install_stop(const libdnf5::base::TransactionPackage &item, uint64_t amount, uint64_t total) override;
++	void uninstall_start(const libdnf5::base::TransactionPackage &item, uint64_t total) override;
+ 	void
+ 	uninstall_progress(const libdnf5::base::TransactionPackage &item, uint64_t amount, uint64_t total) override;
+-	void uninstall_start(const libdnf5::base::TransactionPackage &item, uint64_t total) override;
+ 	void uninstall_stop(const libdnf5::base::TransactionPackage &item, uint64_t amount, uint64_t total) override;
+ 	void script_start(const libdnf5::base::TransactionPackage *item, libdnf5::rpm::Nevra nevra, ScriptType type)
+ 		override;
+ 
+     private:
++	struct Element {
++		bool inbound;
++		uint64_t installed_size;
++	};
++
++	double element_share(const std::string &full_nevra, bool inbound) const;
++
+ 	PkBackendJob *job;
++	// a reinstalled package is both installed and removed
++	std::map<std::pair<std::string, bool>, Element> elements;
+ 	uint64_t total_items;
+-	uint64_t current_item_index;
+ 	uint64_t processed_items;
++	double processed_share;
++	double current_share;
+ 	bool running_hooks;
+ };
+diff --git a/backends/dnf5/tests/dnf5-tests.cpp b/backends/dnf5/tests/dnf5-tests.cpp
+index 6b86d5073..db5f04ccf 100644
+--- a/backends/dnf5/tests/dnf5-tests.cpp
++++ b/backends/dnf5/tests/dnf5-tests.cpp
+@@ -311,6 +311,144 @@ dnf5_test_transaction_phases(void)
+ 	dnf5_test_assert_percentages({0, 50, PK_BACKEND_PERCENTAGE_INVALID});
+ }
+ 
++static void
++dnf5_test_transaction_weighted(void)
++{
++	dnf5_test_job.reset();
++	Dnf5TransactionCallbacks cb(test_job);
++	cb.add_package(FOO_NEVRA, true, 1000);
++	cb.add_package(BAR_NEVRA, true, 9000);
++	cb.before_begin(2);
++
++	// a small package moves the percentage only a little
++	cb.start_element(FOO_NEVRA, true);
++	cb.element_progress(0, 100);
++	cb.element_progress(100, 100);
++	cb.stop_element();
++	dnf5_test_assert_percentages({0, 10});
++
++	cb.start_element(BAR_NEVRA, true);
++	cb.element_progress(50, 100);
++	cb.element_progress(100, 100);
++	cb.stop_element();
++	dnf5_test_assert_percentages({0, 10, 55, 100});
++}
++
++static void
++dnf5_test_transaction_removal(void)
++{
++	dnf5_test_job.reset();
++	Dnf5TransactionCallbacks cb(test_job);
++	// removing a large package is not slower than removing a small one
++	cb.add_package(FOO_NEVRA, false, 1000000);
++	cb.add_package(BAR_NEVRA, false, 10);
++	cb.before_begin(2);
++
++	cb.start_element(FOO_NEVRA, false);
++	cb.element_progress(10, 10);
++	cb.stop_element();
++	dnf5_test_assert_percentages({50});
++}
++
++static void
++dnf5_test_transaction_complete(void)
++{
++	dnf5_test_job.reset();
++	Dnf5TransactionCallbacks cb(test_job);
++	std::vector<std::string> nevras;
++	for (int i = 0; i < 7; i++)
++		nevras.push_back("pkg" + std::to_string(i) + "-0:1.0-1.x86_64");
++	for (const auto &nevra : nevras)
++		cb.add_package(nevra, false, 100);
++	cb.before_begin(nevras.size());
++
++	// the shares must add up to all of it, despite rounding
++	for (const auto &nevra : nevras) {
++		cb.start_element(nevra, false);
++		cb.element_progress(1, 1);
++		cb.stop_element();
++	}
++	g_assert_cmpuint(dnf5_test_job.percentages.back(), ==, 100);
++}
++
++static void
++dnf5_test_transaction_upgrade(void)
++{
++	dnf5_test_job.reset();
++	Dnf5TransactionCallbacks cb(test_job);
++	cb.add_package("foo-0:2.0-1.x86_64", true, 300);
++	cb.add_package("bar-0:3.0-1.noarch", true, 100);
++	cb.add_package(FOO_NEVRA, false, 280);
++	cb.add_package(BAR_NEVRA, false, 90);
++	cb.before_begin(4);
++
++	// the new versions split their half by size, the old ones are removed
++	// one after the other
++	cb.start_element("foo-0:2.0-1.x86_64", true);
++	cb.element_progress(1, 1);
++	cb.stop_element();
++	cb.start_element("bar-0:3.0-1.noarch", true);
++	cb.element_progress(1, 1);
++	cb.stop_element();
++	cb.start_element(FOO_NEVRA, false);
++	cb.element_progress(1, 1);
++	cb.stop_element();
++	cb.start_element(BAR_NEVRA, false);
++	cb.element_progress(1, 1);
++	cb.stop_element();
++	dnf5_test_assert_percentages({37, 50, 75, 100});
++}
++
++static void
++dnf5_test_transaction_reinstall(void)
++{
++	dnf5_test_job.reset();
++	Dnf5TransactionCallbacks cb(test_job);
++	// a reinstalled package is installed and removed in the same transaction
++	cb.add_package(FOO_NEVRA, true, 100);
++	cb.add_package(FOO_NEVRA, false, 100);
++	cb.before_begin(2);
++
++	cb.start_element(FOO_NEVRA, true);
++	cb.element_progress(10, 10);
++	cb.stop_element();
++	cb.start_element(FOO_NEVRA, false);
++	cb.element_progress(10, 10);
++	dnf5_test_assert_percentages({50, 100});
++}
++
++static void
++dnf5_test_transaction_unregistered(void)
++{
++	dnf5_test_job.reset();
++	Dnf5TransactionCallbacks cb(test_job);
++	cb.before_begin(4);
++
++	// without registered packages, every element weighs the same
++	cb.start_element(FOO_NEVRA, true);
++	cb.element_progress(1, 2);
++	cb.stop_element();
++	cb.start_element(BAR_NEVRA, false);
++	cb.element_progress(2, 2);
++	dnf5_test_assert_percentages({12, 50});
++}
++
++static void
++dnf5_test_transaction_unknown_element(void)
++{
++	dnf5_test_job.reset();
++	Dnf5TransactionCallbacks cb(test_job);
++	cb.add_package(FOO_NEVRA, true, 100);
++	cb.before_begin(2);
++
++	cb.start_element(BAR_NEVRA, true);
++	cb.element_progress(10, 10);
++	cb.stop_element();
++	cb.start_element(FOO_NEVRA, true);
++	cb.element_progress(10, 10);
++	dnf5_test_assert_percentages({0, 100});
++}
++
+ static void
+ dnf5_test_transaction_hooks(void)
+ {
+@@ -372,6 +510,13 @@ main(int argc, char **argv)
+ 	g_test_add_func("/dnf5/download/speed-starts-with-data", dnf5_test_download_speed_starts_with_data);
+ 	g_test_add_func("/dnf5/download/speed-ignores-existing", dnf5_test_download_speed_ignores_existing);
+ 	g_test_add_func("/dnf5/transaction/phases", dnf5_test_transaction_phases);
++	g_test_add_func("/dnf5/transaction/weighted", dnf5_test_transaction_weighted);
++	g_test_add_func("/dnf5/transaction/removal", dnf5_test_transaction_removal);
++	g_test_add_func("/dnf5/transaction/upgrade", dnf5_test_transaction_upgrade);
++	g_test_add_func("/dnf5/transaction/complete", dnf5_test_transaction_complete);
++	g_test_add_func("/dnf5/transaction/reinstall", dnf5_test_transaction_reinstall);
++	g_test_add_func("/dnf5/transaction/unregistered", dnf5_test_transaction_unregistered);
++	g_test_add_func("/dnf5/transaction/unknown-element", dnf5_test_transaction_unknown_element);
+ 	g_test_add_func("/dnf5/transaction/hooks", dnf5_test_transaction_hooks);
+ 	g_test_add_func("/dnf5/download/scoped-callbacks", dnf5_test_scoped_download_callbacks);
+ 
+
+From 13d22896c607caaa4119ad726914736992c139c4 Mon Sep 17 00:00:00 2001
+From: Frank Gehann <fg@fgehann.de>
+Date: Wed, 7 Oct 2026 09:57:11 +0200
+Subject: [PATCH 6/8] dnf5: Complete transaction item and removal progress
+
+DNF5 only reported per-package download progress, leaving installed and
+removed items unfinished. RPM can also omit its final progress callback,
+leaving a successful removal below 100%.
+
+Report item progress and Finished notifications with the original
+package ID. Complete the weighted share at the element stop callback,
+including unknown totals, and set successful transaction progress to
+100% after reloading the repositories.
+
+Add regression tests for partial callbacks, item completion and removals
+without progress callbacks. All five PackageKit suites and real patched
+Discover scenarios pass on this branch.
+
+Use the existing 1.4.x package notification API. Eight checks with
+unmodified pkcon 1.4.0 and its API 18 library pass; public API and D-Bus
+definitions remain unchanged.
+---
+ backends/dnf5/dnf5-backend-thread.cpp |  2 +
+ backends/dnf5/dnf5-backend-utils.cpp  | 47 +++++++++++++++---
+ backends/dnf5/dnf5-backend-utils.hpp  | 10 +++-
+ backends/dnf5/tests/dnf5-tests.cpp    | 68 +++++++++++++++++++++++++--
+ 4 files changed, 116 insertions(+), 11 deletions(-)
+
+diff --git a/backends/dnf5/dnf5-backend-thread.cpp b/backends/dnf5/dnf5-backend-thread.cpp
+index 7dfd10313..9058d97b6 100644
+--- a/backends/dnf5/dnf5-backend-thread.cpp
++++ b/backends/dnf5/dnf5-backend-thread.cpp
+@@ -746,6 +746,8 @@ dnf5_transaction_thread(PkBackendJob *job, GVariant *params, gpointer user_data)
+ 		pk_backend_job_set_status(job, PK_STATUS_ENUM_LOADING_CACHE);
+ 		pk_backend_job_set_percentage(job, PK_BACKEND_PERCENTAGE_INVALID);
+ 		dnf5_setup_base(priv);
++		if (res == libdnf5::base::Transaction::TransactionRunResult::SUCCESS)
++			pk_backend_job_set_percentage(job, 100);
+ 
+ 	} catch (const std::exception &e) {
+ 		pk_backend_job_error_code(job, PK_ERROR_ENUM_TRANSACTION_ERROR, "%s", e.what());
+diff --git a/backends/dnf5/dnf5-backend-utils.cpp b/backends/dnf5/dnf5-backend-utils.cpp
+index 04b8d067f..6f5837ff2 100644
+--- a/backends/dnf5/dnf5-backend-utils.cpp
++++ b/backends/dnf5/dnf5-backend-utils.cpp
+@@ -847,6 +847,9 @@ Dnf5TransactionCallbacks::Dnf5TransactionCallbacks(PkBackendJob *job)
+       processed_items(0),
+       processed_share(0),
+       current_share(0),
++      current_status(PK_STATUS_ENUM_UNKNOWN),
++      current_percentage(-1),
++      current_complete(false),
+       running_hooks(false)
+ {
+ }
+@@ -895,18 +898,40 @@ Dnf5TransactionCallbacks::element_share(const std::string &full_nevra, bool inbo
+ }
+ 
+ void
+-Dnf5TransactionCallbacks::start_element(const std::string &full_nevra, bool inbound)
++Dnf5TransactionCallbacks::start_element(
++	const std::string &full_nevra,
++	bool inbound,
++	const std::string &package_id,
++	PkInfoEnum info)
+ {
+ 	current_share = element_share(full_nevra, inbound);
++	current_package_id = package_id;
++	current_percentage = -1;
++	current_complete = false;
++	current_status = inbound ? PK_STATUS_ENUM_INSTALL : PK_STATUS_ENUM_REMOVE;
++	if (info == PK_INFO_ENUM_UPDATING)
++		current_status = PK_STATUS_ENUM_UPDATE;
++	else if (info == PK_INFO_ENUM_CLEANUP)
++		current_status = PK_STATUS_ENUM_CLEANUP;
++	if (!current_package_id.empty()) {
++		pk_backend_job_package(job, info, current_package_id.c_str(), nullptr);
++		pk_backend_job_set_item_progress(job, current_package_id.c_str(), current_status, 0);
++		current_percentage = 0;
++	}
+ }
+ 
+ void
+ Dnf5TransactionCallbacks::element_progress(uint64_t amount, uint64_t total)
+ {
++	double fraction = total > 0 ? std::min((double) amount / total, 1.0) : 0;
++	guint percentage = total > 0 ? (guint) (fraction * 100) : PK_BACKEND_PERCENTAGE_INVALID;
++	if (!current_package_id.empty() && current_percentage != (gint) percentage) {
++		pk_backend_job_set_item_progress(job, current_package_id.c_str(), current_status, percentage);
++		current_percentage = (gint) percentage;
++	}
+ 	if (total == 0)
+ 		return;
+-
+-	double fraction = std::min((double) amount / total, 1.0);
++	current_complete = amount >= total;
+ 	// the shares add up with rounding errors, which must not cut off 100%
+ 	double done = processed_share + fraction * current_share;
+ 	pk_backend_job_set_percentage(job, (guint) std::min(done * 100 + 1e-6, 100.0));
+@@ -915,6 +940,14 @@ Dnf5TransactionCallbacks::element_progress(uint64_t amount, uint64_t total)
+ void
+ Dnf5TransactionCallbacks::stop_element()
+ {
++	// rpm can omit the last progress callback, especially for removals.
++	if (!current_complete)
++		element_progress(1, 1);
++	if (!current_package_id.empty()) {
++		pk_backend_job_set_item_progress(job, current_package_id.c_str(), PK_STATUS_ENUM_FINISHED, 100);
++		pk_backend_job_package(job, PK_INFO_ENUM_FINISHED, current_package_id.c_str(), nullptr);
++		current_package_id.clear();
++	}
+ 	processed_items++;
+ 	processed_share += current_share;
+ 	current_share = 0;
+@@ -969,8 +1002,8 @@ Dnf5TransactionCallbacks::install_start(const libdnf5::base::TransactionPackage
+ 	    || action == libdnf5::transaction::TransactionItemAction::DOWNGRADE) {
+ 		info = PK_INFO_ENUM_UPDATING;
+ 	}
+-	dnf5_emit_pkg(job, item.get_package(), info);
+-	start_element(item.get_package().get_full_nevra(), true);
++	auto pkg = item.get_package();
++	start_element(pkg.get_full_nevra(), true, dnf5_build_package_id(pkg), info);
+ }
+ 
+ void
+@@ -996,8 +1029,8 @@ Dnf5TransactionCallbacks::uninstall_start(const libdnf5::base::TransactionPackag
+ 	if (action == libdnf5::transaction::TransactionItemAction::REPLACED) {
+ 		info = PK_INFO_ENUM_CLEANUP;
+ 	}
+-	dnf5_emit_pkg(job, item.get_package(), info);
+-	start_element(item.get_package().get_full_nevra(), false);
++	auto pkg = item.get_package();
++	start_element(pkg.get_full_nevra(), false, dnf5_build_package_id(pkg), info);
+ }
+ 
+ void
+diff --git a/backends/dnf5/dnf5-backend-utils.hpp b/backends/dnf5/dnf5-backend-utils.hpp
+index 4cfb35806..5c58838f1 100644
+--- a/backends/dnf5/dnf5-backend-utils.hpp
++++ b/backends/dnf5/dnf5-backend-utils.hpp
+@@ -157,7 +157,11 @@ class Dnf5TransactionCallbacks : public libdnf5::rpm::TransactionCallbacks
+ 	void add_package(const std::string &full_nevra, bool inbound, uint64_t installed_size);
+ 
+ 	// The progress of the transaction elements, as reported by rpm.
+-	void start_element(const std::string &full_nevra, bool inbound);
++	void start_element(
++		const std::string &full_nevra,
++		bool inbound,
++		const std::string &package_id = {},
++		PkInfoEnum info = PK_INFO_ENUM_UNKNOWN);
+ 	void element_progress(uint64_t amount, uint64_t total);
+ 	void stop_element();
+ 	void start_scriptlet();
+@@ -191,5 +195,9 @@ class Dnf5TransactionCallbacks : public libdnf5::rpm::TransactionCallbacks
+ 	uint64_t processed_items;
+ 	double processed_share;
+ 	double current_share;
++	std::string current_package_id;
++	PkStatusEnum current_status;
++	gint current_percentage;
++	bool current_complete;
+ 	bool running_hooks;
+ };
+diff --git a/backends/dnf5/tests/dnf5-tests.cpp b/backends/dnf5/tests/dnf5-tests.cpp
+index db5f04ccf..5f43e54b0 100644
+--- a/backends/dnf5/tests/dnf5-tests.cpp
++++ b/backends/dnf5/tests/dnf5-tests.cpp
+@@ -40,12 +40,16 @@ dnf5_test_assert_percentages(const std::vector<guint> &expected)
+ }
+ 
+ static void
+-dnf5_test_assert_item_progress(size_t index, const char *package_id, guint percentage)
++dnf5_test_assert_item_progress(
++	size_t index,
++	const char *package_id,
++	guint percentage,
++	PkStatusEnum status = PK_STATUS_ENUM_DOWNLOAD)
+ {
+ 	g_assert_cmpuint(dnf5_test_job.item_progress.size(), >, index);
+ 	const auto &item = dnf5_test_job.item_progress[index];
+ 	g_assert_cmpstr(item.package_id.c_str(), ==, package_id);
+-	g_assert_cmpint(item.status, ==, PK_STATUS_ENUM_DOWNLOAD);
++	g_assert_cmpint(item.status, ==, status);
+ 	g_assert_cmpuint(item.percentage, ==, percentage);
+ }
+ 
+@@ -430,7 +434,63 @@ dnf5_test_transaction_unregistered(void)
+ 	cb.stop_element();
+ 	cb.start_element(BAR_NEVRA, false);
+ 	cb.element_progress(2, 2);
+-	dnf5_test_assert_percentages({12, 50});
++	dnf5_test_assert_percentages({12, 25, 50});
++}
++
++static void
++dnf5_test_transaction_item_completion(void)
++{
++	dnf5_test_job.reset();
++	Dnf5TransactionCallbacks cb(test_job);
++	cb.add_package(FOO_NEVRA, true, 100);
++	cb.add_package(BAR_NEVRA, true, 300);
++	cb.before_begin(2);
++	cb.start_element(FOO_NEVRA, true, FOO_ID, PK_INFO_ENUM_UPDATING);
++	cb.element_progress(50, 100);
++	// The stop callback must complete both the item and its weighted share,
++	// even if rpm never reported the last byte.
++	cb.stop_element();
++	cb.start_element(BAR_NEVRA, true, BAR_ID, PK_INFO_ENUM_INSTALLING);
++	cb.element_progress(300, 300);
++	cb.stop_element();
++
++	dnf5_test_assert_percentages({12, 25, 100});
++	dnf5_test_assert_item_progress(0, FOO_ID, 0, PK_STATUS_ENUM_UPDATE);
++	dnf5_test_assert_item_progress(1, FOO_ID, 50, PK_STATUS_ENUM_UPDATE);
++	dnf5_test_assert_item_progress(2, FOO_ID, 100, PK_STATUS_ENUM_UPDATE);
++	dnf5_test_assert_item_progress(3, FOO_ID, 100, PK_STATUS_ENUM_FINISHED);
++	dnf5_test_assert_item_progress(4, BAR_ID, 0, PK_STATUS_ENUM_INSTALL);
++	dnf5_test_assert_item_progress(5, BAR_ID, 100, PK_STATUS_ENUM_INSTALL);
++	dnf5_test_assert_item_progress(6, BAR_ID, 100, PK_STATUS_ENUM_FINISHED);
++	g_assert_cmpuint(dnf5_test_job.package_statuses.size(), ==, 4);
++	g_assert_cmpint(dnf5_test_job.package_statuses[1].info, ==, PK_INFO_ENUM_FINISHED);
++	g_assert_cmpstr(dnf5_test_job.package_statuses[1].package_id.c_str(), ==, FOO_ID);
++	g_assert_cmpint(dnf5_test_job.package_statuses[3].info, ==, PK_INFO_ENUM_FINISHED);
++	g_assert_cmpstr(dnf5_test_job.package_statuses[3].package_id.c_str(), ==, BAR_ID);
++}
++
++static void
++dnf5_test_transaction_removal_without_progress(void)
++{
++	dnf5_test_job.reset();
++	Dnf5TransactionCallbacks cb(test_job);
++	cb.add_package(FOO_NEVRA, false, 1000000);
++	cb.add_package(BAR_NEVRA, false, 10);
++	cb.before_begin(2);
++	cb.start_element(FOO_NEVRA, false, FOO_ID, PK_INFO_ENUM_REMOVING);
++	cb.stop_element();
++	cb.start_element(BAR_NEVRA, false, BAR_ID, PK_INFO_ENUM_CLEANUP);
++	cb.element_progress(0, 0);
++	cb.stop_element();
++
++	dnf5_test_assert_percentages({50, 100});
++	dnf5_test_assert_item_progress(0, FOO_ID, 0, PK_STATUS_ENUM_REMOVE);
++	dnf5_test_assert_item_progress(2, FOO_ID, 100, PK_STATUS_ENUM_FINISHED);
++	dnf5_test_assert_item_progress(3, BAR_ID, 0, PK_STATUS_ENUM_CLEANUP);
++	dnf5_test_assert_item_progress(4, BAR_ID, PK_BACKEND_PERCENTAGE_INVALID, PK_STATUS_ENUM_CLEANUP);
++	dnf5_test_assert_item_progress(6, BAR_ID, 100, PK_STATUS_ENUM_FINISHED);
++	g_assert_cmpuint(dnf5_test_job.package_statuses.size(), ==, 4);
++	g_assert_cmpint(dnf5_test_job.package_statuses.back().info, ==, PK_INFO_ENUM_FINISHED);
+ }
+ 
+ static void
+@@ -516,6 +576,8 @@ main(int argc, char **argv)
+ 	g_test_add_func("/dnf5/transaction/complete", dnf5_test_transaction_complete);
+ 	g_test_add_func("/dnf5/transaction/reinstall", dnf5_test_transaction_reinstall);
+ 	g_test_add_func("/dnf5/transaction/unregistered", dnf5_test_transaction_unregistered);
++	g_test_add_func("/dnf5/transaction/item-completion", dnf5_test_transaction_item_completion);
++	g_test_add_func("/dnf5/transaction/removal-without-progress", dnf5_test_transaction_removal_without_progress);
+ 	g_test_add_func("/dnf5/transaction/unknown-element", dnf5_test_transaction_unknown_element);
+ 	g_test_add_func("/dnf5/transaction/hooks", dnf5_test_transaction_hooks);
+ 	g_test_add_func("/dnf5/download/scoped-callbacks", dnf5_test_scoped_download_callbacks);
+
+From b7e5a477b8ff64288f6da92c3a221c105922b8ed Mon Sep 17 00:00:00 2001
+From: Frank Gehann <fg@fgehann.de>
+Date: Sun, 11 Oct 2026 08:54:53 +0200
+Subject: [PATCH 7/8] dnf5: Preserve transferred bytes across download retries
+
+Keep applying the full progress delta to downloaded size, but count the current attempt's downloaded bytes when progress resets. This prevents retries from subtracting previously transferred bytes from the speed accounting.
+
+Add a regression test covering a retry reset and subsequent progress. The backend builds and all 23 dnf5 tests pass.
+
+(cherry picked from commit 1864904c2a4bb466a7ab06f28eb2dc9fb14c0332)
+---
+ backends/dnf5/dnf5-backend-utils.cpp |  6 ++++--
+ backends/dnf5/tests/dnf5-tests.cpp   | 28 ++++++++++++++++++++++++++++
+ 2 files changed, 32 insertions(+), 2 deletions(-)
+
+diff --git a/backends/dnf5/dnf5-backend-utils.cpp b/backends/dnf5/dnf5-backend-utils.cpp
+index 6f5837ff2..0c79bbefe 100644
+--- a/backends/dnf5/dnf5-backend-utils.cpp
++++ b/backends/dnf5/dnf5-backend-utils.cpp
+@@ -782,8 +782,10 @@ Dnf5DownloadCallbacks::progress(void *user_cb_data, double total_to_download, do
+ 
+ 	// only registered packages count towards the download size
+ 	if (package_ids.empty() || !item.package_id.empty()) {
+-		downloaded_size += downloaded - item.downloaded;
+-		transferred_size += downloaded - item.downloaded;
++		double delta = downloaded - item.downloaded;
++		downloaded_size += delta;
++		// A retry resets progress without undoing bytes already transferred.
++		transferred_size += delta >= 0 ? delta : downloaded;
+ 	}
+ 
+ 	// the second stage of a repository metadata download
+diff --git a/backends/dnf5/tests/dnf5-tests.cpp b/backends/dnf5/tests/dnf5-tests.cpp
+index 5f43e54b0..b8f6f3b52 100644
+--- a/backends/dnf5/tests/dnf5-tests.cpp
++++ b/backends/dnf5/tests/dnf5-tests.cpp
+@@ -249,6 +249,33 @@ dnf5_test_download_speed(void)
+ 	g_assert_cmpuint(dnf5_test_job.speeds.back(), ==, 0);
+ }
+ 
++static void
++dnf5_test_download_speed_retry(void)
++{
++	dnf5_test_job.reset();
++	Dnf5DownloadCallbacks cb(test_job);
++	cb.add_package(FOO_NEVRA, FOO_ID, 1000);
++	void *foo = cb.add_new_download(nullptr, FOO_NEVRA, 1000);
++
++	cb.progress(foo, 1000, 800);
++	g_assert_cmpuint(dnf5_test_job.download_size_remaining.back(), ==, 200);
++
++	// A retry resets package progress, but its bytes still count towards speed.
++	g_usleep(G_USEC_PER_SEC + G_USEC_PER_SEC / 10);
++	cb.progress(foo, 1000, 100);
++	g_assert_cmpuint(dnf5_test_job.download_size_remaining.back(), ==, 900);
++	g_assert_cmpuint(dnf5_test_job.speeds.size(), ==, 1);
++	g_assert_cmpuint(dnf5_test_job.speeds.back(), >, 0);
++	g_assert_cmpuint(dnf5_test_job.speeds.back(), <=, 100);
++
++	g_usleep(G_USEC_PER_SEC + G_USEC_PER_SEC / 10);
++	cb.progress(foo, 1000, 300);
++	g_assert_cmpuint(dnf5_test_job.download_size_remaining.back(), ==, 700);
++	g_assert_cmpuint(dnf5_test_job.speeds.size(), ==, 2);
++	g_assert_cmpuint(dnf5_test_job.speeds.back(), >, 0);
++	g_assert_cmpuint(dnf5_test_job.speeds.back(), <=, 200);
++}
++
+ static void
+ dnf5_test_download_speed_starts_with_data(void)
+ {
+@@ -567,6 +594,7 @@ main(int argc, char **argv)
+ 	g_test_add_func("/dnf5/download/metadata-failed", dnf5_test_download_metadata_failed);
+ 	g_test_add_func("/dnf5/download/metadata-unknown-size", dnf5_test_download_metadata_unknown_size);
+ 	g_test_add_func("/dnf5/download/speed", dnf5_test_download_speed);
++	g_test_add_func("/dnf5/download/speed-retry", dnf5_test_download_speed_retry);
+ 	g_test_add_func("/dnf5/download/speed-starts-with-data", dnf5_test_download_speed_starts_with_data);
+ 	g_test_add_func("/dnf5/download/speed-ignores-existing", dnf5_test_download_speed_ignores_existing);
+ 	g_test_add_func("/dnf5/transaction/phases", dnf5_test_transaction_phases);
+
+From 8d558c9e2422417f051edeef0af783a758e3d7f2 Mon Sep 17 00:00:00 2001
+From: Frank Gehann <fg@fgehann.de>
+Date: Sat, 17 Oct 2026 16:34:15 +0200
+Subject: [PATCH 8/8] dnf5: Exclude non-RPM actions from progress weighting
+
+Only register inbound and outbound transaction packages. Reason changes do not receive RPM progress callbacks and must not dilute the progress shares of installed and removed packages.
+---
+ backends/dnf5/dnf5-backend-utils.cpp | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/backends/dnf5/dnf5-backend-utils.cpp b/backends/dnf5/dnf5-backend-utils.cpp
+index 0c79bbefe..41c5ecef9 100644
+--- a/backends/dnf5/dnf5-backend-utils.cpp
++++ b/backends/dnf5/dnf5-backend-utils.cpp
+@@ -859,8 +859,12 @@ Dnf5TransactionCallbacks::Dnf5TransactionCallbacks(PkBackendJob *job)
+ void
+ Dnf5TransactionCallbacks::add_package(const libdnf5::base::TransactionPackage &item)
+ {
++	auto action = item.get_action();
++	bool inbound = libdnf5::transaction::transaction_item_action_is_inbound(action);
++	if (!inbound && !libdnf5::transaction::transaction_item_action_is_outbound(action))
++		return;
++
+ 	auto pkg = item.get_package();
+-	bool inbound = libdnf5::transaction::transaction_item_action_is_inbound(item.get_action());
+ 	add_package(pkg.get_full_nevra(), inbound, pkg.get_install_size());
+ }
+ 

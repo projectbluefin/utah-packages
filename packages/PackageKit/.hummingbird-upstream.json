@@ -1,0 +1,8 @@
+{
+  "package": "PackageKit",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/PackageKit.git",
+  "commit": "bed0ec77a8f20167c8c11ac8812c99b62dbc6e8c",
+  "tree": "e41e71b8af97952c1827a70d7faa9ed395c6db11",
+  "imported_at": "2026-11-06T19:51:31.585356+00:00"
+}
