@@ -1,0 +1,1 @@
+Description:segfault in multipathd when 'multipath -r' is run during faulty paths 
