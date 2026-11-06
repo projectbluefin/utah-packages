@@ -4696,6 +4696,16 @@
       ]
     },
     {
+      "name": "paps",
+      "version": "0.8.1",
+      "url": "https://github.com/dov/paps/releases/download/v0.8.1/paps-0.8.1.tar.xz",
+      "filename": "paps-0.8.1.tar.xz",
+      "sha512": "2fc4253d8ab95aeb8512e2009a7e7c44c810f219470bfae4ae628ed4295fd9ed35f6ed902377d1c539e265b4d94f681d362a0a9b87067c8ed3625ebd7d7e1b6b",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/paps/paps-0.8.1.tar.xz/sha512/2fc4253d8ab95aeb8512e2009a7e7c44c810f219470bfae4ae628ed4295fd9ed35f6ed902377d1c539e265b4d94f681d362a0a9b87067c8ed3625ebd7d7e1b6b/paps-0.8.1.tar.xz"
+      ]
+    },
+    {
       "name": "parallel",
       "version": "20260922",
       "url": "https://ftp.gnu.org/gnu/parallel/parallel-20260922.tar.bz2",
