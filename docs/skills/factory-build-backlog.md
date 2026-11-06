@@ -1096,6 +1096,14 @@ pin, repin `sources` to SHA-512, and use the `/md5/<md5>/` lookaside path as
 the fallback. `liburing` locks only `Source0`; like `dnsmasq`, its `.asc`
 signature is fetched from Fedora's lookaside by its `sources` SHA-512.
 
+`libreport-filesystem` is the directory-only subpackage of `libreport`, not
+a separate source recipe. The full source build needs `satyr-devel`; import
+`satyr` as well and let BuildRequires order the builds. A recipe registration
+does not prove either package was built or published: verify the filesystem
+RPM and its directory ownership in the hosted build and an installation using
+the permitted repositories. `mdadm` deliberately disables its optional ABRT
+hook; importing the directories does not re-enable that hook.
+
 `librabbitmq` and `libwmf-lite` (a subpackage of `libwmf`) lock their GitHub
 tag archives directly: those bytes equal the dist-git SHA-512 pins. Check the
 archive bytes against the pin before you lock a source.
