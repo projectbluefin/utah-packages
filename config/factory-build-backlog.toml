@@ -107,20 +107,17 @@ packages = [
     "python3-email-validator",
     "python3-enchant",
     "python3-fido2",
-    "python3-html2text",
     "python3-httpcore",
     "python3-httpx",
     "python3-jeepney",
     "python3-keyring",
     "python3-keyring+completion",
-    "python3-more-itertools",
     "python3-pygit2",
     "python3-pyxdg",
     "python3-rapidfuzz",
     "python3-regex",
     "python3-s3transfer",
     "python3-secretstorage",
-    "python3-shtab",
 ]
 
 [areas.fonts-i18n]
@@ -445,6 +442,9 @@ packages = [
     { name = "python3-click" },
     { name = "python3-jmespath", pr = 798 },
     { name = "python3-pysocks" }, # Recipe coverage only; build/publication/runtime proof remains in #489.
+    { name = "python3-html2text" }, # Recipe coverage only; build/publication/runtime proof remains in #489.
+    { name = "python3-more-itertools" }, # Recipe coverage only; build/publication/runtime proof remains in #489.
+    { name = "python3-shtab" }, # Recipe coverage only; build/publication/runtime proof remains in #489.
     # Chromaprint recipe coverage only; publication and runtime proof remain in #487.
     { name = "libchromaprint", pr = 692 },
     { name = "leptonica", pr = 772 }, # Recipe import; publication and runtime proof remain.
