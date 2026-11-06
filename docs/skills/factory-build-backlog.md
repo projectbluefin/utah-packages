@@ -1372,3 +1372,17 @@ The kernel-module names in the same long-tail batch (`v4l2loopback`,
 kernel module packages. The #491 decision covers only `kernel-modules-extra`
 and `usbip`; do not extend it to these names. They stay pending until a
 maintainer records a kernel-module policy decision for them.
+
+## davs2 AVS2 decoder library
+
+Fedora dist-git has no `davs2`, so `davs2-libs` comes from the negativo17
+recipe imported with `tools/import_rawhide.py --branch master
+--remote-template 'https://github.com/negativo17/{package}.git' davs2`; the
+provenance keeps the `master` branch, commit and tree. The recipe builds
+`davs2` (CLI), `davs2-libs` (`libdavs2.so.16`) and `davs2-devel`; do not add a
+second recipe under the binary name. negativo17 carries no `sources` file, so
+the pinned upstream commit archive is locked only in
+`config/upstream-sources.json`. Recipe coverage does not establish a hosted
+build, publication or a representative AVS2 decode. `LCEVCdec` is still
+pending: the negativo17 recipe needs `CLI11`, `range-v3`, `plutovg-devel` and
+`libavdevice` build prerequisites that have no recipe here yet.

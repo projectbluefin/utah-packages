@@ -38,13 +38,12 @@ audit_measured_at = "2026-09-30T22:08:14Z"
 # projectbluefin/utah#383 - 49 names
 consumer_issue = "projectbluefin/utah#383"
 packages = [
-    # LCEVCdec and davs2-libs lack recipes; the Qt 6 sink is disabled until
+    # LCEVCdec lacks a recipe; the Qt 6 sink is disabled until
     # matching Qt prerequisites and a --with qt6 build are verified (#474).
     # #474's ffmpeg outputs moved to [resolved] as recipe coverage; the
     # remaining libav*/libsw* outputs of packages/ffmpeg listed here belong to
     # a later batch. Build/publication proof stays in projectbluefin/utah#383.
     "LCEVCdec",
-    "davs2-libs",
     "gstreamer1-plugins-good-qt6",
     "libavfilter",
     "libavformat",
@@ -809,6 +808,8 @@ packages = [
     { name = "xfsprogs", pr = 782 },
     # VVC encoder library from the negativo17 uvg266 recipe (#508); hosted build, publication and runtime proof remain outstanding.
     { name = "uvg266-libs" },
+    # davs2-libs is a subpackage of the negativo17 davs2 recipe (#474); hosted build, publication and runtime proof remain outstanding.
+    { name = "davs2-libs" },
     # Terminal and VTE emulator outputs (PR #413); publication verified in run 40569848351.
     # vte-profile and vte291-gtk4 are subpackages of vte291.spec.
     # Recipe and publication closure for projectbluefin/utah-packages#484.

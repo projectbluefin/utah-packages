@@ -358,6 +358,12 @@ packages:
     downstream_package_name: davfs2
     paths:
       - packages/davfs2
+  davs2:
+    specfile_path: davs2.spec
+    upstream_package_name: davs2
+    downstream_package_name: davs2
+    paths:
+      - packages/davs2
   dconf:
     specfile_path: dconf.spec
     upstream_package_name: dconf
