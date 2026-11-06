@@ -1,0 +1,61 @@
+From 8a1734b3feeb4bf90f9b60d6c5bb2eda4e29d749 Mon Sep 17 00:00:00 2001
+From: Sumit Bose <sbose@redhat.com>
+Date: Wed, 25 Jun 2025 09:55:39 +0200
+Subject: [PATCH 02/20] service: do not set config_file_version in sssd.conf
+
+The config_file_version option is not used by SSSD since quite some time
+and was removed recently.
+
+Resolves: https://issues.redhat.com/browse/RHEL-99877
+---
+ service/realm-sssd-config.c | 2 --
+ tests/test-sssd-config.c    | 6 +++---
+ 2 files changed, 3 insertions(+), 5 deletions(-)
+
+diff --git a/service/realm-sssd-config.c b/service/realm-sssd-config.c
+index 140d7dc..d02b01f 100644
+--- a/service/realm-sssd-config.c
++++ b/service/realm-sssd-config.c
+@@ -156,8 +156,6 @@ realm_sssd_config_add_domain (RealmIniConfig *config,
+ 
+ 	/* Setup a default sssd section */
+ 	realm_ini_config_set_list_diff (config, "sssd", "services", ", ", services, NULL);
+-	if (!realm_ini_config_have (config, "sssd", "config_file_version"))
+-		realm_ini_config_set (config, "sssd", "config_file_version", "2", NULL);
+ 
+ 	domains[0] = domain;
+ 	domains[1] = NULL;
+diff --git a/tests/test-sssd-config.c b/tests/test-sssd-config.c
+index 8f3fec5..f0a2562 100644
+--- a/tests/test-sssd-config.c
++++ b/tests/test-sssd-config.c
+@@ -90,7 +90,7 @@ test_add_domain (Test *test,
+                  gconstpointer unused)
+ {
+ 	const gchar *data = "[domain/one]\nval=1\n[sssd]\ndomains=one";
+-	const gchar *check = "[domain/one]\nval=1\n[sssd]\ndomains = one, two\nconfig_file_version = 2\nservices = nss, pam\n\n[domain/two]\ndos = 2\n";
++	const gchar *check = "[domain/one]\nval=1\n[sssd]\ndomains = one, two\nservices = nss, pam\n\n[domain/two]\ndos = 2\n";
+ 	GError *error = NULL;
+ 	gchar *output;
+ 	gboolean ret;
+@@ -140,7 +140,7 @@ static void
+ test_add_domain_only (Test *test,
+                       gconstpointer unused)
+ {
+-	const gchar *check = "\n[sssd]\ndomains = two\nconfig_file_version = 2\nservices = nss, pam\n\n[domain/two]\ndos = 2\n";
++	const gchar *check = "\n[sssd]\ndomains = two\nservices = nss, pam\n\n[domain/two]\ndos = 2\n";
+ 	GError *error = NULL;
+ 	gchar *output;
+ 	gboolean ret;
+@@ -342,7 +342,7 @@ static void
+ test_remove_and_add_domain (Test *test,
+                         gconstpointer unused)
+ {
+-	const gchar *data = "[domain/one]\nval = 1\n\n[nss]\ndefault_shell = /bin/bash\n\n[sssd]\ndomains = one, two\nconfig_file_version = 2\nservices = nss, pam\n\n[domain/two]\nval = 2\n";
++	const gchar *data = "[domain/one]\nval = 1\n\n[nss]\ndefault_shell = /bin/bash\n\n[sssd]\ndomains = one, two\nservices = nss, pam\n\n[domain/two]\nval = 2\n";
+ 	GError *error = NULL;
+ 	gchar *output;
+ 	gboolean ret;
+-- 
+2.54.0
+
