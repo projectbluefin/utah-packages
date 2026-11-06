@@ -537,6 +537,13 @@
       "sha512": "300c49bb2556c1c0dc63ffbc8b19882f480d3184fe25d8e599092a2ae194a76d206b69dbb7691c26e1ea9c7852ffb651621d30d3ef4a226f9b286d5cfcbd378c"
     },
     {
+      "name": "davs2",
+      "version": "1.7^20220903gitb41cf11",
+      "url": "https://github.com/pkuvcl/davs2/archive/b41cf117452e2d73d827f02d3e30aa20f1c721ac/davs2-b41cf117452e2d73d827f02d3e30aa20f1c721ac.tar.gz",
+      "filename": "davs2-b41cf11.tar.gz",
+      "sha512": "fac67ea3a5f8251212994a075c7e6236ca3a7b92b3763cfdfa8f696272263b8aa074aea5b2bc8536b2e17111da1fb89f00b0cc071113da6b04aa0eee6df46c25"
+    },
+    {
       "name": "dconf",
       "version": "51.0",
       "url": "https://download.gnome.org/sources/dconf/51/dconf-51.0.tar.xz",
@@ -6913,13 +6920,6 @@
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/zvbi/zvbi-0.2.46.tar.gz/sha512/61d87331690730ebdd494d27cc7315b0386e97d4dc92cef4e90286b0eccca2ee452632baf37221ef47835d1ca56b883abd7315fb5c7cdf78fb9f04bb03b5e3ff/zvbi-0.2.46.tar.gz"
       ]
-    },
-    {
-      "name": "davs2",
-      "version": "1.7^20220903gitb41cf11",
-      "url": "https://github.com/pkuvcl/davs2/archive/b41cf117452e2d73d827f02d3e30aa20f1c721ac/davs2-b41cf117452e2d73d827f02d3e30aa20f1c721ac.tar.gz",
-      "filename": "davs2-b41cf11.tar.gz",
-      "sha512": "fac67ea3a5f8251212994a075c7e6236ca3a7b92b3763cfdfa8f696272263b8aa074aea5b2bc8536b2e17111da1fb89f00b0cc071113da6b04aa0eee6df46c25"
     }
   ]
 }
