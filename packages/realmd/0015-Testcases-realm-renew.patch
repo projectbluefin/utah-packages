@@ -1,0 +1,231 @@
+From 06e2a4945ee25f39d1c10be4c1ee2035412d76a3 Mon Sep 17 00:00:00 2001
+From: Shridhar Gadekar <shridhar.always@gmail.com>
+Date: Mon, 13 Apr 2026 23:28:14 +0530
+Subject: [PATCH 15/20] Testcases: realm renew
+
+Testcases added:
+ 1. realm renew update keytab
+ 2. join a pre-staged computer in delegated ou
+---
+ tests/test_realmd.py | 199 +++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 199 insertions(+)
+
+diff --git a/tests/test_realmd.py b/tests/test_realmd.py
+index 6e25cb9..072fc38 100644
+--- a/tests/test_realmd.py
++++ b/tests/test_realmd.py
+@@ -3,8 +3,10 @@
+ from __future__ import annotations
+ 
+ import os
++import re
+ import sys
+ import time
++import base64
+ from typing import Any
+ 
+ import pytest
+@@ -389,3 +391,200 @@ def test_realm_permit_group_access_control(client: Client, provider: GenericADPr
+ 
+     client.realm.permit(args=["--withdraw", "--groups", g, "--verbose"])
+     assert not client.auth.ssh.password(f"{ug1}@{provider.host.domain}", "Secret123"), "Failed to DENY log in!"
++
++
++@pytest.mark.importance("high")
++@pytest.mark.topology(KnownTopologyGroup.AnyAD)
++def test_realm_renew_keytab(client: Client, provider: GenericADProvider):
++    """
++    :title: realm renew updates machine account password and increments KVNO
++    :steps:
++        1. Join the client to the AD domain using realm.
++        2. Check the initial KVNO of the machine account in the keytab.
++        3. Execute realm.renew() to trigger a password renewal.
++        4. Verify the KVNO in the keytab has incremented.
++        5. Verify authentication succeeds with the new keytab using kinit.
++        6. Verify the AD reports the matching updated KVNO using the kvno tool.
++    :expectedresults:
++        1. Client joins successfully.
++        2. realm renew completes without errors.
++        3. The keytab contains new entries with a higher KVNO.
++        4. kinit and kvno commands succeed against the DC.
++    """
++    short_hostname = client.host.hostname.split(".")[0].upper()
++    domain = provider.host.domain
++    realm = domain.upper()
++    machine_principal = f"{short_hostname}$@{realm}"
++    host_principal = f"host/{short_hostname}@{realm}"
++
++    # Step 1: Join the domain using native wrapper
++    join_command = client.realm.join(
++        domain=domain,
++        user=provider.host.adminuser,
++        password=provider.host.adminpw,
++        args=["--membership-software=adcli", "--verbose"],
++    )
++    assert join_command.rc == 0, f"realm join failed: {join_command.stderr}"
++
++    # Step 2: Get initial KVNO from keytab
++    res_klist1 = client.host.conn.run("klist -tk")
++    assert res_klist1.rc == 0, "Failed to read keytab"
++
++    # Extract all KVNOs for the machine principal and find the max (current)
++    kvnos1 = re.findall(rf"^\s*(\d+).*?{re.escape(machine_principal)}", res_klist1.stdout, re.MULTILINE)
++    assert kvnos1, "Could not find initial KVNO in keytab"
++    initial_kvno = max(int(k) for k in kvnos1)
++
++    # Step 3: Run the new realm renew subcommand via native wrapper
++    renew_command = client.realm.renew(domain=domain, args=["--computer-password-lifetime=0"])
++    assert renew_command.rc == 0, f"realm renew failed: {renew_command.stderr}"
++
++    # Step 4: Get updated KVNO from keytab and assert it incremented
++    res_klist2 = client.host.conn.run("klist -tk")
++    kvnos2 = re.findall(rf"^\s*(\d+).*?{re.escape(machine_principal)}", res_klist2.stdout, re.MULTILINE)
++    assert kvnos2, "Could not find new KVNO in keytab"
++    new_kvno = max(int(k) for k in kvnos2)
++
++    assert new_kvno > initial_kvno, f"KVNO did not increment! Old: {initial_kvno}, New: {new_kvno}"
++
++    # Step 5: Verify authentication with kinit using the machine account
++    res_kinit = client.host.conn.run(f"kinit -k '{machine_principal}'")
++    assert res_kinit.rc == 0, f"kinit failed after renew: {res_kinit.stderr}"
++
++    # Step 6: Verify AD agrees on the KVNO
++    res_kvno = client.host.conn.run(f"kvno '{host_principal}'")
++    assert res_kvno.rc == 0, f"kvno command failed: {res_kvno.stderr}"
++
++    # Parse 'kvno = X' from the output
++    kvno_match = re.search(r"kvno = (\d+)", res_kvno.stdout)
++    assert kvno_match, "Failed to parse kvno output from AD"
++    ad_kvno = int(kvno_match.group(1))
++
++    assert ad_kvno == new_kvno, f"AD KVNO ({ad_kvno}) does not match local keytab KVNO ({new_kvno})"
++
++    # Teardown: Clean up tickets and leave the domain using the native wrapper
++    client.host.conn.run("kdestroy", raise_on_error=False)
++    client.realm.leave(
++        domain=domain, user=provider.host.adminuser, password=provider.host.adminpw, raise_on_error=False
++    )
++
++
++@pytest.mark.importance("high")
++@pytest.mark.topology(KnownTopologyGroup.AnyAD)
++def test_realm_join_prestaged_delegated_explicit_ou(client: Client, provider: GenericADProvider):
++    """
++    :title: realm join pre-staged client with delegated user specifying computer-ou
++    :setup:
++        1. Create a delegated OU and a delegated user in AD.
++        2. Pre-stage the computer in the delegated OU using adcli (as Domain Admin).
++        3. Explicitly strip dNSHostName and servicePrincipalName to simulate a blank object.
++        4. Grant the delegated user rights to modify the computer object.
++    :steps:
++        1. Join the client using realm as the delegated user, explicitly passing --computer-ou.
++    :expectedresults:
++        1. realm successfully finds the computer object in the specified OU.
++        2. realm successfully joins the domain and modifies the missing attributes (dNSHostName).
++        3. Keytab entries are populated properly.
++    """
++    short_hostname = client.host.hostname.split(".")[0].upper()
++    ou_name = "DelegatedOU"
++    ou_dn = f"OU={ou_name},{provider.host.naming_context}"
++    delegate_user = "delegate_user"
++    delegate_pass = "Secret123!Qaz"
++
++    # Helper to run simple PowerShell commands for AD management
++    def run_ps(cmd: str):
++        import base64
++
++        encoded = base64.b64encode(cmd.encode("utf-16-le")).decode("utf-8")
++        return provider.host.conn.run(f"powershell -EncodedCommand {encoded}", raise_on_error=False)
++
++    # Setup 1: Clean previous runs, create the OU, and create the delegated user
++    setup_ps = f"""
++    $ErrorActionPreference = 'SilentlyContinue'
++    Remove-ADUser -Identity '{delegate_user}' -Confirm:$false
++    Set-ADOrganizationalUnit -Identity '{ou_dn}' -ProtectedFromAccidentalDeletion $false
++    Remove-ADOrganizationalUnit -Identity '{ou_dn}' -Recursive -Confirm:$false
++
++    $ErrorActionPreference = 'Stop'
++    New-ADOrganizationalUnit -Name '{ou_name}' -Path '{provider.host.naming_context}' -ProtectedFromAccidentalDeletion $false
++    $pwd = ConvertTo-SecureString "{delegate_pass}" -AsPlainText -Force
++    New-ADUser -Name "{delegate_user}" -SamAccountName "{delegate_user}" -AccountPassword $pwd -Enabled $true
++    """
++    run_ps(setup_ps)
++
++    try:
++        # Clean state on client before starting
++        client.host.conn.run("rm -f /etc/krb5.keytab", raise_on_error=False)
++
++        # Setup 2: Pre-stage the computer using the framework's adcli wrapper (As Admin)
++        preset_command = client.adcli.preset_computer(
++            domain=provider.host.domain,
++            login_user=provider.host.adminuser,
++            password=provider.host.adminpw,
++            args=["--verbose", f"--domain-ou={ou_dn}", short_hostname],
++            krb=False,
++        )
++        assert preset_command.rc == 0, f"adcli failed to pre-stage the computer: {preset_command.stderr}"
++
++        # Setup 3 & 4: Strip attributes and delegate permissions to the user
++        delegate_ps = f"""
++        $ErrorActionPreference = 'Stop'
++        Set-ADComputer -Identity '{short_hostname}' -Clear 'servicePrincipalName', 'dNSHostName'
++
++        $Comp = Get-ADComputer -Identity '{short_hostname}'
++        $User = Get-ADUser -Identity '{delegate_user}'
++        $Acl = Get-Acl -Path "AD:\\$($Comp.DistinguishedName)"
++
++        $Rule = New-Object System.DirectoryServices.ActiveDirectoryAccessRule(
++            $User.SID,
++            "WriteProperty, ExtendedRight",
++            "Allow",
++            [guid]"00000000-0000-0000-0000-000000000000"
++        )
++        $Acl.AddAccessRule($Rule)
++        Set-Acl -Path "AD:\\$($Comp.DistinguishedName)" -AclObject $Acl
++        """
++        run_ps(delegate_ps)
++
++        # Step 1: Join the domain using realm WITH explicit --computer-ou as the delegated user
++        join_command = client.realm.join(
++            domain=provider.host.domain,
++            user=delegate_user,
++            password=delegate_pass,
++            args=["--membership-software=adcli", "--verbose", f"--computer-ou={ou_dn}"],
++            krb=False,
++        )
++        assert (
++            join_command.rc == 0
++        ), f"realm failed to discover and join the pre-staged computer: {join_command.stderr}"
++
++        # Assert realmd performed the dNSHostName modification seen in your logs
++        assert (
++            "Modifying computer account: dNSHostName" in join_command.stderr
++        ), "realm did not repopulate dNSHostName as expected"
++
++        # Step 2: Verify the keytab was populated correctly
++        klist_cmd = client.host.conn.run("klist -kt")
++        assert klist_cmd.rc == 0, "Failed to read /etc/krb5.keytab after join"
++        assert short_hostname in klist_cmd.stdout.upper(), "Machine account not found in keytab"
++
++    finally:
++        # Teardown: Leave AD, remove keytab, and clean up the AD objects
++        try:
++            client.realm.leave(
++                domain=provider.host.domain, user=provider.host.adminuser, password=provider.host.adminpw
++            )
++        except Exception:
++            # Catching the exception ensures failure to leave doesn't block AD object cleanup
++            pass
++
++        client.host.conn.run("rm -f /etc/krb5.keytab", raise_on_error=False)
++
++        teardown_ps = f"""
++        $ErrorActionPreference = 'SilentlyContinue'
++        Remove-ADUser -Identity '{delegate_user}' -Confirm:$false
++        Set-ADOrganizationalUnit -Identity '{ou_dn}' -ProtectedFromAccidentalDeletion $false
++        Remove-ADOrganizationalUnit -Identity '{ou_dn}' -Recursive -Confirm:$false
++        """
++        run_ps(teardown_ps)
+-- 
+2.54.0
+
