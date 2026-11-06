@@ -1,0 +1,8 @@
+{
+  "package": "satyr",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/satyr.git",
+  "commit": "d242cc030daf012e751dbce010d6ac5c13bd92e9",
+  "tree": "d86ff28963d30c0e4de2c68da04e0951928a06e4",
+  "imported_at": "2026-11-06T02:23:32.624100+00:00"
+}
