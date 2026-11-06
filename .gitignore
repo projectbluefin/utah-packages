@@ -28,6 +28,10 @@ packages/*/*.asc
 !packages/*/*key*.asc
 !packages/*/*keyring*.asc
 !packages/bc/kevin_pizzini.asc
+# ...and a checksum file a spec carries as a SourceN and reads in %prep.
+# ibus-anthy greps %SOURCE1 (ibus-anthy.tar.gz.sum, tracked in dist-git) to
+# verify Source0; it is not in the lookaside sources manifest.
+!packages/ibus-anthy/ibus-anthy.tar.gz.sum
 !packages/pkcs11-provider/simo_redhat.asc
 !packages/python-pskc/*.asc
 packages/*/*.sha256sum
