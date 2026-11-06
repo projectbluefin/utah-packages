@@ -363,7 +363,7 @@ packages = [
     { name = "criu-libs" },
     { name = "kf6-karchive" },
     # Recipe imported; hosted build, publication and runtime proof remain in #501.
-    { name = "kf6-filesystem" },
+    { name = "kf6-filesystem", pr = 922 },
     { name = "ipset" },
     { name = "ipset-libs" },
     { name = "iptstate", pr = 697 },
