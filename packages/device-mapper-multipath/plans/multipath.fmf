@@ -1,0 +1,58 @@
+summary: basic functionality tests
+
+provision:
+    hardware:
+        memory: ">= 2 GB"
+
+prepare:
+    how: install
+    package:
+      - device-mapper-multipath
+      - perl
+
+discover:
+    how: shell
+    tests:
+     -  name: medium_error_scsi_debug
+        path: /tests/medium_error_scsi_debug
+        test: ./main.sh
+        duration: 15m
+     -  name: squelch_scsi_id
+        path: /tests/squelch_scsi_id
+        test: ./main.sh
+        duration: 15m
+     -  name: multipathd_oom
+        path: /tests/multipathd_oom
+        test: ./main.sh
+        duration: 15m
+     -  name: user_friendly_names
+        path: /tests/user_friendly_names
+        test: ./main.sh
+        duration: 15m
+     -  name: kpartx_4k_aligned
+        path: /tests/kpartx_4k_aligned
+        test: ./main.sh
+        duration: 15m
+     -  name: bindings
+        path: /tests/bindings
+        test: ./main.sh
+        duration: 15m
+     -  name: restate_module
+        path: /tests/restate_module
+        test: ./main.sh
+        duration: 15m
+     -  name: find_multipaths
+        path: /tests/find_multipaths
+        test: ./main.sh
+        duration: 15m
+     -  name: multipath_conf_syntax
+        path: /tests/multipath_conf_syntax
+        test: ./main.sh
+        duration: 15m
+     -  name: alias_clash
+        path: /tests/alias_clash
+        test: ./main.sh
+        duration: 15m
+
+execute:
+    how: tmt

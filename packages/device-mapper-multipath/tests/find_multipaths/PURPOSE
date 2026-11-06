@@ -1,0 +1,10 @@
+testing environment:
+1. enable|disable find_multipaths and do multipath reload
+mpathconf --find_multipaths y|n --with_multipathd y
+
+test cases:
+1. find_multipaths = no
+multipath will not blacklist the single devices
+2. find_multipaths = yes 
+multipath will blacklist the single devices
+multipath will not blacklist the non-single devices 
