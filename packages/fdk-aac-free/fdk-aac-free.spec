@@ -1,4 +1,10 @@
 Name:           fdk-aac-free
+# Bluefin's codec transaction asks for the library under the conventional
+# `libfdk-aac` name (see config/multimedia-closure.toml [transaction].codecs).
+# The recipe's package is `fdk-aac-free`, so it carries the capability here --
+# the same shape as mesa-libGL = "mesa" in the closure. ffmpeg's freeworld
+# build links libfdk-aac.so.2, which this recipe emits.
+Provides:       libfdk-aac
 Version:        2.0.3
 Release:        3%{?dist}
 Summary:        Third-Party Modified Version of the Fraunhofer FDK AAC Codec Library for Android

@@ -13,12 +13,12 @@
   },
   "counts": {
     "requirements": 38,
-    "built": 30,
+    "built": 31,
     "equivalent": 3,
-    "exception": 5,
-    "sources": 19,
+    "exception": 4,
+    "sources": 20,
     "upstream_parity": 0,
-    "fedora_restricted": 17,
+    "fedora_restricted": 18,
     "divergent": 0
   },
   "requirements": [
@@ -343,18 +343,17 @@
     {
       "requirement": "libfdk-aac",
       "origin": "codec-transaction",
-      "status": "exception",
-      "factory_source": null,
-      "factory_binary": null,
+      "status": "built",
+      "factory_source": "fdk-aac-free",
+      "factory_binary": "libfdk-aac",
       "upstream_spec_source": "https://github.com/rpmfusion/fdk-aac",
-      "codec_parity": null,
-      "parity_note": null,
-      "recipe": null,
-      "stage": null,
-      "version": null,
+      "codec_parity": "fedora-restricted",
+      "parity_note": "`libfdk-aac` is built by the Fedora dist-git `fdk-aac-free` recipe rather than by RPM Fusion's `fdk-aac` spec, the source named in [upstream_spec_sources]. `fdk-aac-free` is the variant Fedora can ship: it drops the patent-encumbered AAC profiles the full Fraunhofer FDK library carries under RPM Fusion's nonfree build, so it is not at parity with the RPM Fusion spec. Decoding and the AAC encoding ffmpeg's freeworld build links both come from this recipe, which provides the `libfdk-aac` capability Bluefin asks for.",
+      "recipe": "packages/fdk-aac-free",
+      "stage": 0,
+      "version": "2.0.3",
       "nevra": null,
-      "recipe_provenance": null,
-      "note": "negativo17's `libfdk-aac` is the complete Fraunhofer FDK AAC library, sourced from RPM Fusion's fdk-aac spec. Fedora ships `fdk-aac-free`, the subset with patent-encumbered profiles removed, built by `packages/fdk-aac-free`. Decoding comes from the FFmpeg libraries above; encoding uses fdk-aac-free."
+      "recipe_provenance": "https://src.fedoraproject.org/rpms/fdk-aac-free.git"
     },
     {
       "requirement": "libjxl",

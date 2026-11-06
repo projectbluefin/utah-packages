@@ -232,6 +232,18 @@ full set including the patent-encumbered plugins, which is the parity #230
 tracks.
 """
 
+[parity.libfdk-aac]
+status = "fedora-restricted"
+reason = """
+`libfdk-aac` is built by the Fedora dist-git `fdk-aac-free` recipe rather than
+by RPM Fusion's `fdk-aac` spec, the source named in [upstream_spec_sources].
+`fdk-aac-free` is the variant Fedora can ship: it drops the patent-encumbered
+AAC profiles the full Fraunhofer FDK library carries under RPM Fusion's
+nonfree build, so it is not at parity with the RPM Fusion spec. Decoding and
+the AAC encoding ffmpeg's freeworld build links both come from this recipe,
+which provides the `libfdk-aac` capability Bluefin asks for.
+"""
+
 [built]
 # requirement = the factory source recipe under `packages/` that emits a binary
 # of exactly this name.
@@ -274,6 +286,11 @@ gstreamer1-plugin-libav = "gstreamer1-plugin-libav"
 gstreamer1-plugin-openh264 = "gstreamer1-plugins-bad-free"
 lame = "lame"
 lame-libs = "lame"
+# `libfdk-aac` is answered by the Fedora dist-git `fdk-aac-free` recipe, which
+# emits the library under both its soname (`libfdk-aac.so.2`) and the
+# conventional `libfdk-aac` capability (added to the spec). It is not a
+# negativo17/RPM Fusion import, so it carries a [parity] entry below.
+libfdk-aac = "fdk-aac-free"
 # `libjxl` is not a source package anywhere; Fedora's jpegxl source emits it.
 libjxl = "jpegxl"
 ffmpegthumbnailer = "ffmpegthumbnailer"
@@ -335,14 +352,6 @@ a repository assembled with `createrepo_c` and no comps file has none, so
 are built. Its members are expanded into requirements of their own above, which
 is the measurable half; publishing a comps file alongside the repository is a
 publication-format change and belongs to a human.
-"""
-
-[exception.libfdk-aac]
-reason = """
-negativo17's `libfdk-aac` is the complete Fraunhofer FDK AAC library, sourced from
-RPM Fusion's fdk-aac spec. Fedora ships `fdk-aac-free`, the subset with patent-encumbered
-profiles removed, built by `packages/fdk-aac-free`. Decoding comes from the FFmpeg
-libraries above; encoding uses fdk-aac-free.
 """
 
 [exception.alsa-ucm]

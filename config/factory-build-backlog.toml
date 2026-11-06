@@ -49,7 +49,6 @@ packages = [
     "libavformat",
     "libavutil",
     "libdovi",
-    "libfdk-aac",
     "libklvanc",
     "libopenjph",
     "libplacebo",
@@ -230,6 +229,10 @@ packages = [
     # Codec recipe imports for #476; publication and runtime proof remain separate.
     { name = "x264-libs", pr = 633 },
     { name = "x265-libs", pr = 633 },
+    # libfdk-aac is provided by the fdk-aac-free recipe (#475), which now
+    # carries Provides: libfdk-aac. Hosted build, publication and runtime
+    # proof remain separate; no factory build is owed for this gap.
+    { name = "libfdk-aac" },
     { name = "vvdec-libs", pr = 633 },
     { name = "vvenc-libs", pr = 633 },
     { name = "xavs2-libs", pr = 633 },
