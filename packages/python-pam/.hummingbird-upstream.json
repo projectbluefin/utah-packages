@@ -2,7 +2,7 @@
   "package": "python-pam",
   "branch": "rawhide",
   "remote": "https://src.fedoraproject.org/rpms/python-pam.git",
-  "commit": "26a1c45bb0c0eef710ee45c8ce2063804064241b",
-  "tree": "e037c67c3f583dfdf3b527043a82ef726062362f",
-  "imported_at": "2026-09-05T15:19:27.751398+00:00"
+  "commit": "8292fbadb8135e1456ed8303166a7fae7194bd65",
+  "tree": "c6ed2bb06d8daff5d916bfd32ee2f3ca54d4ec2c",
+  "imported_at": "2026-11-06T19:05:44.545822+00:00"
 }

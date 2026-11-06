@@ -468,6 +468,92 @@ wins. grub2 was added to it with this change. Its Anitya feed makes every
 wpa_supplicant and tailscale stay off the list: they flow as same-major
 releases under the rolling policy.
 
+### Re-pinning a primary by hand, at the locked version
+
+Use this when a lock's `needs review` reason says the primary is Fedora's
+lookaside, or is filed under a content hash. Re-pin once, without changing
+the version; the daily run moves the lock from then on.
+
+1. Find the project's canonical download for the **locked** version. Usually
+   this is the spec's `Source0` with macros expanded. For PyPI, use the
+   stable form `files.pythonhosted.org/packages/source/<l>/<name>/<sdist>`,
+   which redirects to the hashed path and can be derived for the next
+   version.
+2. Stream it and compare its SHA-512 with the lock's `sha512`. Only an exact
+   match is the same tarball. On a match, set `url` to it and put the old
+   lookaside URL first in `fallback_urls`. Delete the package from
+   `config/fedora-primary-sources.txt` (the ratchet only shrinks; validate
+   fails if a non-Fedora primary is still listed). The file name, `sources`
+   manifest and spec do not change.
+3. If the bytes differ, stop. A re-pin that changes the digest is a new
+   source, not a re-pin.
+4. Check that `upstream_bump.py --package <name>` now proposes the next
+   release as an update, and that the derived URL is served. Move the version
+   in a separate commit, or let the daily run do it.
+
+Done on 2026-11-06 with matching bytes: device-mapper-persistent-data (GitHub
+archive), mozjs140 (ftp.mozilla.org), webkitgtk (webkitgtk.org), xmlrpc-c
+(SourceForge), and python-argcomplete (the PyPI `source` form). All five then
+proposed their next release.
+
+Left stuck, with the reason:
+
+- **Kept on the lookaside on purpose:** python-typing-inspection. The
+  upstream PyPI `source` URL matches its bytes, but it is Canary's perturbed
+  package. `tests/test_canary.py` requires every Canary source to stay on
+  the lookaside, so a flaky upstream host cannot fail Canary.
+- **The upstream bytes differ.**
+  - enchant2: the GitHub release asset's regenerated autotools files differ
+    from Fedora's copy.
+  - noopenh264: Codeberg's regenerated archive has the same contents but a
+    different gzip stream.
+  - samba: Fedora recompresses upstream's `.tar.gz` as `.tar.xz`
+    (`#/samba-....tar.xz` in `Source0`). The tar inside is identical.
+  - Each needs a decision to re-lock new bytes, and samba also needs a
+    recipe change.
+- **No upstream equivalent:** xevd and xeve lock Fedora-generated `-free`
+  tarballs (`*_gen_free_tarball.sh`).
+- **libao 1.2.2 exists only as a git tag.** The tag archive has no
+  `configure`, only `autogen.sh` and `configure.ac`. The recipe edits
+  `configure` in `%prep` and runs `%configure` directly, so moving it needs
+  autoreconf and its BuildRequires. Of the carried patches, the pulse
+  latency fix is already in 1.2.2, while the CVE-2017-11548 diff and the
+  nanosleep patch still apply. That is a recipe change for a reviewer, not
+  a hand bump.
+
+### Hand version moves (2026-11-06)
+
+Each move is a separate commit with an upstream primary, a SHA-512 lock, the
+lookaside fallback in `planned_entry`'s form, and the spec's `Version:` and
+`sources` changed together.
+
+- **When Rawhide already builds the target version**, re-import its recipe
+  at the Koji-built commit (`tools/import_rawhide.py <pkg> --ref <commit>
+  --replace`), delete the inert files, and lock the URL Rawhide's `Source0`
+  names. Check that its SHA-512 equals Rawhide's `sources` line.
+  - webkitgtk 2.53.91 -> 2.54.2: its `.asc` stays a bundled `sources`
+    entry. The lock now carries `signature_url` and `gpg_key`
+    (`packages/webkitgtk/webkitgtk-keys.gpg`), so `source_pipeline.py`
+    verifies the signature too. gpg reports a good signature, notes that
+    the key has expired, and exits 0.
+  - hyphen 2.8.8 -> 2.8.10: the GitHub release asset.
+  - python-pam 2.0.2 -> 2.1.1: Rawhide moved `Source0` to the GitHub tag
+    archive, not the renamed `python_pam` sdist, and the lock follows the
+    recipe.
+- **Rawhide can mask a test that the factory may not.** Rawhide's hyphen
+  2.8.10 appends `||:` to `make check` for a ppc64le failure, and
+  `tools/validate.py` refuses that. Keep the suite fatal, with a comment, on
+  top of the import. This factory builds no ppc64le.
+- **When Fedora has retired the package** (linux-atm, `dead.package`), keep
+  the factory recipe. Move `Version:` and `Source0` by hand with
+  `upstream_bump.rewrite_spec()`/`rewrite_sources()`. Check that every
+  patch applies with fuzz 0, and that the library `-version-info` (the
+  soname) did not move. Retire `dist_bump` and its `rebuild_reason`.
+- `webkitgtk`'s version-bound `.asc` still makes `check_bumpable()` refuse
+  its next release, so each webkitgtk move stays a hand move like this one.
+
+### Locks left without a feed
+
 Left without a feed on purpose (2026-10-03): git snapshots (aribb24),
 sources with no upstream release (color-filesystem, kde-filesystem,
 kde-settings, kf5), generated sources whose `generate.input` the tool does
