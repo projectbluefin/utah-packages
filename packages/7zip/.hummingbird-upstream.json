@@ -1,0 +1,8 @@
+{
+  "package": "7zip",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/7zip.git",
+  "commit": "7ad1b3b49aa83f6d6314cb295e8c8b18a98fddaa",
+  "tree": "05ffb7586034325574ddf0236050b20a182727aa",
+  "imported_at": "2026-11-01T14:56:58.104265+00:00"
+}
