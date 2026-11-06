@@ -1,0 +1,8 @@
+{
+  "package": "python-more-itertools",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/python-more-itertools.git",
+  "commit": "271c7b98de6a40edd9ce36a0ed60e5361104242f",
+  "tree": "b15fbddf39ae132191bf93cd80fcef1f9e94068c",
+  "imported_at": "2026-11-06T09:04:28.802238+00:00"
+}

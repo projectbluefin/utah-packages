@@ -1,0 +1,3 @@
+# python-shtab
+
+Automagic shell tab completion for Python CLI applications.

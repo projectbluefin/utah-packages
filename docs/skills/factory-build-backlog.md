@@ -116,6 +116,15 @@ The `python-pysocks` Rawhide recipe disables its upstream tests because the
 build does not exercise SOCKS connections: validate the installed
 `python3-pysocks` payload against a test proxy as separate runtime evidence.
 
+The `python-more-itertools`, `python-shtab` and `python-html2text` recipes are
+noarch with no runtime dependencies, so their `[resolved]` records close the
+recipe import only; hosted build, publication and a permitted-repository
+runtime import remain outstanding on #489. `python-shtab`'s `sources` file
+carries both the 1.7.2 and 1.8.0 archives; the lock pins 1.8.0 to match the
+spec version. `shtab` only generates shell completion, so exercise it after
+publication by sourcing the installed `shtab` output in a shell to confirm the
+completion for at least one command is emitted.
+
 A 404 on a guessed dist-git name is not evidence that a source was removed
 from Fedora. Resolve the binary's actual source package first (the
 `sourcerpm` of the binary in Fedora's repodata): `python3-pyaudio` comes from

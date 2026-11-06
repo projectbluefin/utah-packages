@@ -3214,6 +3214,12 @@ packages:
     downstream_package_name: python-h11
     paths:
       - packages/python-h11
+  python-html2text:
+    specfile_path: python-html2text.spec
+    upstream_package_name: python-html2text
+    downstream_package_name: python-html2text
+    paths:
+      - packages/python-html2text
   python-jaraco-classes:
     specfile_path: python-jaraco-classes.spec
     upstream_package_name: python-jaraco-classes
@@ -3250,6 +3256,12 @@ packages:
     downstream_package_name: python-llfuse
     paths:
       - packages/python-llfuse
+  python-more-itertools:
+    specfile_path: python-more-itertools.spec
+    upstream_package_name: python-more-itertools
+    downstream_package_name: python-more-itertools
+    paths:
+      - packages/python-more-itertools
   python-msgpack:
     specfile_path: python-msgpack.spec
     upstream_package_name: python-msgpack
@@ -3328,6 +3340,12 @@ packages:
     downstream_package_name: python-pyudev
     paths:
       - packages/python-pyudev
+  python-shtab:
+    specfile_path: python-shtab.spec
+    upstream_package_name: python-shtab
+    downstream_package_name: python-shtab
+    paths:
+      - packages/python-shtab
   python-six:
     specfile_path: python-six.spec
     upstream_package_name: python-six

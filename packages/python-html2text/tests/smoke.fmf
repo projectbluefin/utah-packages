@@ -1,0 +1,2 @@
+summary: A simple smoke test
+test: ./smoke.py

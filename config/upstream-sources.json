@@ -5110,6 +5110,13 @@
       "sha512": "3fac3b788de93e2fed27029c4e21e3ceb016ec0d601e57e22ad7dda465158f83c4e21aee4bceef272576b635ed09df574f92c6df1537ab4f51cdccf65075acce"
     },
     {
+      "name": "python-html2text",
+      "version": "2025.4.15",
+      "url": "https://files.pythonhosted.org/packages/f8/27/e158d86ba1e82967cc2f790b0cb02030d4a8bef58e0c79a8590e9678107f/html2text-2025.4.15.tar.gz",
+      "filename": "html2text-2025.4.15.tar.gz",
+      "sha512": "2f12e293bb8aa87b4d03d3ec4698e8e8bf013acc9f69b25a2c7a1aacca9a8aaf646747c56a47bc15dae0601ecdc119ba4818daca933d4be7fa52f234c672d9f3"
+    },
+    {
       "name": "python-jaraco-classes",
       "version": "3.4.0",
       "url": "https://files.pythonhosted.org/packages/source/j/jaraco.classes/jaraco.classes-3.4.0.tar.gz",
@@ -5150,6 +5157,13 @@
       "url": "https://files.pythonhosted.org/packages/source/l/llfuse/llfuse-1.5.2.tar.gz",
       "filename": "llfuse-1.5.2.tar.gz",
       "sha512": "071fe2a7415959560a85cb5734261dc34d0d8cb83ca23413a06c6118ca7efc34ad17adcbf490b8cf71d8b2c55afd17e3fc0b091bfb12af842fc5c3f5b03de845"
+    },
+    {
+      "name": "python-more-itertools",
+      "version": "11.2.1",
+      "url": "https://files.pythonhosted.org/packages/52/b8/c63995bebbb9ac9c059350e0fb8c82c2420c85aeca7d34e40aecf3df9281/more_itertools-11.2.1.tar.gz",
+      "filename": "more-itertools-11.2.1.tar.gz",
+      "sha512": "765f8efebc11e985d261f55d9ecd45c8b318a2de0e6e584b291d15f36e1e423119d90cde27d45c0c0f0330b3904afc7f2453f66f5c8d605fd44e234406027db3"
     },
     {
       "name": "python-msgpack",
@@ -5262,6 +5276,13 @@
       "url": "https://pypi.io/packages/source/p/pyudev/pyudev-0.24.5.tar.gz",
       "filename": "pyudev-0.24.5.tar.gz",
       "sha512": "823314295b95bdd38ba10d4b4e008dcb40c0436da0eda78965bc59140e7d84bd3930707fc713560daa36028ec2805b2f9dad23d772ef17b9f945d837b6f0f66c"
+    },
+    {
+      "name": "python-shtab",
+      "version": "1.8.0",
+      "url": "https://files.pythonhosted.org/packages/b0/7a/7f131b6082d8b592c32e4312d0a6da3d0b28b8f0d305ddd93e49c9d89929/shtab-1.8.0.tar.gz",
+      "filename": "shtab-1.8.0.tar.gz",
+      "sha512": "4daf9b3a95ab309400aa466fa599c49cceb1a746d64712c753e05e36bd3e53f69a585e9ef15c57dc031709ff01b545946bf57ee21f8e34c52546850b132f0403"
     },
     {
       "name": "python-six",
