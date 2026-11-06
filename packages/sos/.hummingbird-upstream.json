@@ -1,0 +1,8 @@
+{
+  "package": "sos",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/sos.git",
+  "commit": "b7e0bd11d113c4536a2062f9b197ae7e5a29f903",
+  "tree": "8841364b92670fca3dacb6dbe6c613ac5950d89f",
+  "imported_at": "2026-11-06T05:57:26.987751+00:00"
+}

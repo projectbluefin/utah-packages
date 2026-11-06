@@ -3634,6 +3634,12 @@ packages:
     downstream_package_name: snowball
     paths:
       - packages/snowball
+  solaar:
+    specfile_path: solaar.spec
+    upstream_package_name: solaar
+    downstream_package_name: solaar
+    paths:
+      - packages/solaar
   sonic:
     specfile_path: sonic.spec
     upstream_package_name: sonic
@@ -3646,6 +3652,12 @@ packages:
     downstream_package_name: sord
     paths:
       - packages/sord
+  sos:
+    specfile_path: sos.spec
+    upstream_package_name: sos
+    downstream_package_name: sos
+    paths:
+      - packages/sos
   sound-theme-freedesktop:
     specfile_path: sound-theme-freedesktop.spec
     upstream_package_name: sound-theme-freedesktop
