@@ -5611,6 +5611,16 @@
       ]
     },
     {
+      "name": "solaar",
+      "version": "1.1.20",
+      "url": "https://github.com/pwr-Solaar/Solaar/archive/1.1.20/Solaar-1.1.20.tar.gz",
+      "filename": "Solaar-1.1.20.tar.gz",
+      "sha512": "40d02868ba946a1e855c0ee61aaf57d176db364dd963f91e8a87abb91f511df725acfb3403046e84a5824de950ad2c1f022c52e43f03d7e42df60f506d3d371a",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/solaar/Solaar-1.1.20.tar.gz/sha512/40d02868ba946a1e855c0ee61aaf57d176db364dd963f91e8a87abb91f511df725acfb3403046e84a5824de950ad2c1f022c52e43f03d7e42df60f506d3d371a/Solaar-1.1.20.tar.gz"
+      ]
+    },
+    {
       "name": "sonic",
       "version": "0.2.0^20210316gitba33141",
       "url": "https://github.com/waywardgeek/sonic/archive/ba331411f17702e01f6c2d7016eefebaa695871f/sonic-ba33141.tar.gz",
@@ -5623,6 +5633,16 @@
       "url": "https://download.drobilla.net/sord-0.16.22.tar.xz",
       "filename": "sord-0.16.22.tar.xz",
       "sha512": "3821500f810e3b1cdbd763db419445c931d8b61de571f475646f11a5740c521c93c47ecab2e81a580a0d94bf432faa0de78fe3be1138c87bf9baca8fe23bb0cd"
+    },
+    {
+      "name": "sos",
+      "version": "4.12.1",
+      "url": "https://github.com/sosreport/sos/archive/4.12.1.tar.gz",
+      "filename": "4.12.1.tar.gz",
+      "sha512": "74dc6e3d4f53db0f2e910ce419b7a06754d0bc30b3d0cf724e960c43583e2c965039f3a7d603c89be1d8b7592bbb83835128d855c59f14e58e618253c87c6401",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/sos/4.12.1.tar.gz/sha512/74dc6e3d4f53db0f2e910ce419b7a06754d0bc30b3d0cf724e960c43583e2c965039f3a7d603c89be1d8b7592bbb83835128d855c59f14e58e618253c87c6401/4.12.1.tar.gz"
+      ]
     },
     {
       "name": "sound-theme-freedesktop",

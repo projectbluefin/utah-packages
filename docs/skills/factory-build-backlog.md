@@ -1074,6 +1074,22 @@ primary metadata: the separately packaged interpreter is not proof that the
 audited library was published. Publication does not prove that the library
 resolves against the permitted repositories or can be loaded at runtime.
 
+### Solaar and sos imports
+
+`solaar-udev` is the udev-rules subpackage of the `solaar` source recipe;
+import `solaar`, not a separate recipe for the rules. Both `solaar` and `sos`
+lock their GitHub tag archives directly: those bytes equal the dist-git
+SHA-512 pins. Their Python BuildRequires (including `%pyproject_buildrequires`
+extras such as `hid-parser`) come from the Fedora 44 half of the build root;
+that is not proof the runtime `Requires` resolve on Hummingbird plus the
+factory. Verify the udev rules file and `sos report --help` against the
+permitted repositories before claiming runtime acceptance.
+
+`uavs3d-libs` has no Fedora dist-git recipe (`rpms/uavs3d` does not exist),
+so `tools/import_rawhide.py` cannot import it; it needs its own source
+decision. `shim-ia32` is a Secure Boot-signed bootloader binary and needs an
+explicit maintainer decision before any recipe work.
+
 ### NILFS utilities signature sources
 
 For `nilfs-utils`, the release archive and detached signature are separate

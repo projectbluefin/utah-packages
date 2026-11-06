@@ -1,0 +1,8 @@
+{
+  "package": "solaar",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/solaar.git",
+  "commit": "e6542f18abf9ceb4cee3f7642c629e3f20ff1f0a",
+  "tree": "2a449a7027340d4cac35be22472ac0677a96d7eb",
+  "imported_at": "2026-11-06T05:57:26.238385+00:00"
+}
