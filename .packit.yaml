@@ -232,6 +232,12 @@ packages:
     downstream_package_name: borgbackup
     paths:
       - packages/borgbackup
+  braille-printer-app:
+    specfile_path: braille-printer-app.spec
+    upstream_package_name: braille-printer-app
+    downstream_package_name: braille-printer-app
+    paths:
+      - packages/braille-printer-app
   brltty:
     specfile_path: brltty.spec
     upstream_package_name: brltty
