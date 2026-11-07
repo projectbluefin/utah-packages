@@ -23,10 +23,8 @@ on:
     - cron: '23 4 * * 1'
 
 permissions:
-  contents: write
+  contents: read
   packages: write
-  pull-requests: write
-  actions: write
 
 concurrency:
   group: buildroot-mirror
@@ -34,12 +32,19 @@ concurrency:
 
 jobs:
   mirror:
+    # App credentials and mirror publication are restricted to trusted default main.
+    # A schedule payload carries no repository object, so checking the event's
+    # default branch would skip every weekly run; schedules always run on the
+    # default branch, so github.ref covers it.
+    if: github.repository_owner == 'projectbluefin' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     env:
       UPSTREAM: quay.io/fedora/fedora:44
       MIRROR: ghcr.io/projectbluefin/utah-buildroot
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
       - name: Copy fedora:44 to the mirror under a dated tag
         id: mirror
         env:
@@ -79,10 +84,24 @@ jobs:
           set -euo pipefail
           python3 tools/buildroot_pin.py set "$PIN"
           git diff --stat
+      - name: Get repository-scoped mergeraptor token
+        id: app-token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3
+        with:
+          client-id: ${{ secrets.MERGERAPTOR_APP_ID }}
+          private-key: ${{ secrets.MERGERAPTOR_PRIVATE_KEY }}
+          # No owner: scope to this repository; revoke the token at job completion.
+          repositories: ${{ github.event.repository.name }}
+          permission-contents: write
+          permission-pull-requests: write
       - name: Open a pull request for the new pin
-        id: cpr
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8
         with:
+          # App-authenticated writes trigger real PR CI, including Canary.
+          token: ${{ steps.app-token.outputs.token }}
+          add-paths: |
+            config/buildroot-image
+            config/buildroot-lock.json
           branch: chore/buildroot-mirror
           delete-branch: true
           title: 'chore(buildroot): move the build root to ${{ steps.mirror.outputs.tag }}'
@@ -96,19 +115,3 @@ jobs:
             Merging this moves every factory build to the new root, which
             changes every package cache key, so the next run rebuilds cold
             once. Batch it with other root-wide changes where possible.
-      - name: Dispatch bot-pr-validate on the PR head (#378)
-        # workflow_run cannot attach checks to GITHUB_TOKEN-opened bot PRs
-        # because pull_requests[] is empty for schedule/workflow_dispatch
-        # triggers. Dispatch bot-pr-validate explicitly so its check suite
-        # attaches to the PR head (#377). Skipped if cpr produced no PR
-        # (the upstream publish already matched an open pin).
-        if: steps.cpr.outputs.pull-request-number != ''
-        env:
-          PR: ${{ steps.cpr.outputs.pull-request-number }}
-          REPOSITORY: ${{ github.repository }}
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          gh workflow run bot-pr-validate.yml -R "$REPOSITORY" \
-            --ref chore/buildroot-mirror -f pr="$PR"
-          echo "dispatched bot-pr-validate for PR #$PR"
