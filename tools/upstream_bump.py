@@ -656,9 +656,14 @@ def carries_version(url: str, version: str) -> bool:
     return version_pattern(version).search(url) is not None
 
 
+# Fedora's lookaside files a source as <file>/<algo>/<hash>/<file>, or in the
+# legacy form <file>/<md5>/<file> with no algorithm segment.
 LOOKASIDE_URL = re.compile(
-    rf"^{re.escape(LOOKASIDE)}/(?P<package>[^/]+)/(?P<file>[^/]+)/[^/]+/[^/]+/(?P=file)$"
+    rf"^{re.escape(LOOKASIDE)}/(?P<package>[^/]+)/(?P<file>[^/]+)/(?:[^/]+/)?[^/]+/(?P=file)$"
 )
+
+# A path segment that is a bare digest (PyPI's /packages/38/61/<blake2b>/).
+CONTENT_HASH_SEGMENT = re.compile(r"/[0-9a-f]{32,}/")
 
 
 def rebuilt_fallback(url: str, current: str, release: str, digest: str) -> str:
@@ -666,9 +671,10 @@ def rebuilt_fallback(url: str, current: str, release: str, digest: str) -> str:
 
     A Fedora lookaside URL is content-addressed: it is rebuilt in the SHA-512
     form planned_entry() writes, from the new file name and the new digest,
-    whatever algorithm the old one used (hyphen and libao still carried md5
-    ones, whose old hash no substitution can update). It resolves once Fedora
-    uploads the same bytes. Any other mirror only has its version swapped.
+    whatever algorithm the old one used -- including the legacy four-segment
+    <file>/<md5>/<file> pins (libatasmart, startup-notification), whose old
+    hash no substitution can update. It resolves once Fedora uploads the same
+    bytes. Any other mirror only has its version swapped.
     """
     match = LOOKASIDE_URL.match(url)
     if match is None:
@@ -1076,10 +1082,6 @@ def primary_blocker(name: str, entry: dict, feed: dict, latest: str) -> str | No
         return (f"the primary {url} is filed under a content hash, so no {latest} "
                 "download can be derived from it; re-pin it by hand")
     return None
-
-
-# A path segment that is a bare digest (PyPI's /packages/38/61/<blake2b>/).
-CONTENT_HASH_SEGMENT = re.compile(r"/[0-9a-f]{32,}/")
 
 
 def is_app_scheme(version: str) -> bool:
