@@ -349,6 +349,21 @@ or claiming runtime closure. Do not extend the waiver to other pending
 long-tail names; each needs its own disposition. Keep the batch issue open
 when other outputs or their build/runtime evidence remain outstanding.
 
+### Removed-from-Fedora packages with no reachable upstream
+
+A dist-git 404 is not by itself proof of removal (see the `python3-pyaudio`
+note above), but a 404 in every dist-git namespace (`rpms/*`, `packages/*`,
+`containers/*`) combined with an unreachable upstream host is. `intel-vaapi-driver`
+and `kmod-v4l2loopback` 404 in `rpms/*` while their freedesktop sources stay
+unreachable, so no recipe can be imported; move both to `[wontfix]` with that
+reason and a link to the tracking issue, following the retired `vpnc`
+precedent. Same two-edit move as any wontfix: drop the name from
+`[areas.<area>].packages` and add `{ name = "<n>", reason = "..." }` to
+`[wontfix]`, keeping the 551-name partition and the pinned
+`audit_names_sha256` intact (`just factory-build-backlog` verifies both). Do
+not fold a removed package's consumer into an unrelated waiver; each needs its
+own disposition.
+
 ### Virtual machine guest integration
 
 `spice-webdavd` is a binary subpackage of **phodav**, alongside
