@@ -1,7 +1,7 @@
-From e99c3fd971c15586e7427e32884902deb7ae0dc3 Mon Sep 17 00:00:00 2001
+From 5ab917f54cf2bbc34a7a2f0fcd124ce4a0032c99 Mon Sep 17 00:00:00 2001
 From: Fabio Valentini <decathorpe@gmail.com>
 Date: Sat, 8 Aug 2026 00:19:03 +0200
-Subject: [PATCH 4/5] fix discovery of path dependencies that were not
+Subject: [PATCH 4/4] fix discovery of path dependencies that were not
  workspace members
 
 ---
@@ -9,7 +9,7 @@ Subject: [PATCH 4/5] fix discovery of path dependencies that were not
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/Cargo.toml b/Cargo.toml
-index ff1f7d6..0111d1a 100644
+index 7b323c8..f404d61 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -18,7 +18,7 @@ zvariant.opt-level = "z"
@@ -22,5 +22,5 @@ index ff1f7d6..0111d1a 100644
  default-members = ["glycin-dev-tools", "glycin-thumbnailer", "glycin-loaders/*"]
  
 -- 
-2.55.0
+2.56.0
 
