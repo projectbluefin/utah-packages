@@ -80,7 +80,7 @@
 
 Name:           pipewire
 Summary:        Media Sharing Server
-Version:        1.6.10
+Version:        1.6.11
 Release:        %{baserelease}%{?snapdate:.%{snapdate}git%{shortcommit}}%{?dist}
 # PipeWire is generally MIT but includes plugins using libraries under other licenses.
 # See the module specific License for details.
@@ -962,6 +962,9 @@ systemctl --no-reload preset --global pipewire.socket >/dev/null 2>&1 || :
 %{_datadir}/pipewire/pipewire.conf.d/50-raop.conf
 
 %changelog
+* Sat Nov 07 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 1.6.11
+- Update to 1.6.11
+
 * Thu Oct 29 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 1.6.10
 - Update to 1.6.10
 

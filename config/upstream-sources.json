@@ -965,13 +965,13 @@
     },
     {
       "name": "fwupd",
-      "version": "2.1.7",
-      "url": "https://github.com/fwupd/fwupd/releases/download/2.1.7/fwupd-2.1.7.tar.xz",
-      "filename": "fwupd-2.1.7.tar.xz",
+      "version": "2.1.9",
+      "url": "https://github.com/fwupd/fwupd/releases/download/2.1.9/fwupd-2.1.9.tar.xz",
+      "filename": "fwupd-2.1.9.tar.xz",
       "feed": "https://release-monitoring.org/project/5833",
-      "sha512": "52954e08f0066c8a0f3331b631e451230708cf5f4afed5ed8369f4558baae7dee6c1f929deb83e5201f55d48885d8591f1c96dbc5e28fdf3d67e6ec5dad6004f",
+      "sha512": "3dc43862262f571aa687efc503219e4f3de51860399ba9a5583ef120acb10473dfa70aecd289ee0669340a6ccdc085211803a24a3bcefcae3f3cb18e4265fcec",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/fwupd/fwupd-2.1.7.tar.xz/sha512/52954e08f0066c8a0f3331b631e451230708cf5f4afed5ed8369f4558baae7dee6c1f929deb83e5201f55d48885d8591f1c96dbc5e28fdf3d67e6ec5dad6004f/fwupd-2.1.7.tar.xz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/fwupd/fwupd-2.1.9.tar.xz/sha512/3dc43862262f571aa687efc503219e4f3de51860399ba9a5583ef120acb10473dfa70aecd289ee0669340a6ccdc085211803a24a3bcefcae3f3cb18e4265fcec/fwupd-2.1.9.tar.xz"
       ]
     },
     {
@@ -1853,13 +1853,13 @@
     },
     {
       "name": "hwdata",
-      "version": "0.410",
-      "url": "https://github.com/vcrhonek/hwdata/archive/v0.410.tar.gz",
-      "filename": "v0.410.tar.gz",
+      "version": "0.413",
+      "url": "https://github.com/vcrhonek/hwdata/archive/v0.413.tar.gz",
+      "filename": "v0.413.tar.gz",
       "feed": "https://github.com/vcrhonek/hwdata/archive/v0.410.tar.gz",
-      "sha512": "b0032c74e31847b0985563e95746b4f34247be3ad00c4a7348d5f23d860cb28b73b2625950456c50e254c8a4472ff6027687a5c5e3be56b0a20022a4737c3327",
+      "sha512": "d5a2630d929c5e2c015d3d996092d97da351c764f823c1af4c95bc01a7f20e64ccb87c0f37db2220a671397010cd6f83526282669e7f7f1a706fb021a2eca5da",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/hwdata/v0.410.tar.gz/sha512/b0032c74e31847b0985563e95746b4f34247be3ad00c4a7348d5f23d860cb28b73b2625950456c50e254c8a4472ff6027687a5c5e3be56b0a20022a4737c3327/v0.410.tar.gz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/hwdata/v0.413.tar.gz/sha512/d5a2630d929c5e2c015d3d996092d97da351c764f823c1af4c95bc01a7f20e64ccb87c0f37db2220a671397010cd6f83526282669e7f7f1a706fb021a2eca5da/v0.413.tar.gz"
       ]
     },
     {
@@ -1964,12 +1964,12 @@
     },
     {
       "name": "ibus-typing-booster",
-      "version": "2.31.1",
-      "url": "https://github.com/mike-fabian/ibus-typing-booster/releases/download/2.31.1/ibus-typing-booster-2.31.1.tar.gz",
-      "filename": "ibus-typing-booster-2.31.1.tar.gz",
-      "sha512": "3c97e5a0dc925feffed004fc620596b8dc970e1b9ecf65b30fe1deb6aed4233abd090d3386505670a62dd4aff55b29b6136c326c5cc223c9577bce2dcf88e51e",
+      "version": "2.31.3",
+      "url": "https://github.com/mike-fabian/ibus-typing-booster/releases/download/2.31.3/ibus-typing-booster-2.31.3.tar.gz",
+      "filename": "ibus-typing-booster-2.31.3.tar.gz",
+      "sha512": "2f08a32c71c2427f428d7fb3b6425a466e29f55f79e35d172843258411a60440401d7e570ff0c4e5a6221e7229c2f2b6710e3217a046ec568b165ac4bc4d8913",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/ibus-typing-booster/ibus-typing-booster-2.31.1.tar.gz/sha512/3c97e5a0dc925feffed004fc620596b8dc970e1b9ecf65b30fe1deb6aed4233abd090d3386505670a62dd4aff55b29b6136c326c5cc223c9577bce2dcf88e51e/ibus-typing-booster-2.31.1.tar.gz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/ibus-typing-booster/ibus-typing-booster-2.31.3.tar.gz/sha512/2f08a32c71c2427f428d7fb3b6425a466e29f55f79e35d172843258411a60440401d7e570ff0c4e5a6221e7229c2f2b6710e3217a046ec568b165ac4bc4d8913/ibus-typing-booster-2.31.3.tar.gz"
       ],
       "stage": 1
     },
@@ -2724,13 +2724,13 @@
     },
     {
       "name": "libcloudproviders",
-      "version": "0.4.1",
-      "url": "https://download.gnome.org/sources/libcloudproviders/0.4/libcloudproviders-0.4.1.tar.xz",
-      "filename": "libcloudproviders-0.4.1.tar.xz",
-      "sha512": "02a51c5c37d36efedcfe5cd303e5933bcfd588445d24025cecc6822778e857af52474df24f3fd258bb476170b54ad48eb60213a61c44c9b331e54f9779004bc4",
+      "version": "0.4.2",
+      "url": "https://download.gnome.org/sources/libcloudproviders/0.4/libcloudproviders-0.4.2.tar.xz",
+      "filename": "libcloudproviders-0.4.2.tar.xz",
+      "sha512": "6c2fb8e9416f3e51f9b4bf18b72aa65a661a94cc028cfa4cc347f3e6d3c0ca563c1c21563b6631b3606b1cdea998d7acfe24cc90efb693954a074b8d24f5f74e",
       "stage": 0,
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/libcloudproviders/libcloudproviders-0.4.1.tar.xz/sha512/02a51c5c37d36efedcfe5cd303e5933bcfd588445d24025cecc6822778e857af52474df24f3fd258bb476170b54ad48eb60213a61c44c9b331e54f9779004bc4/libcloudproviders-0.4.1.tar.xz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libcloudproviders/libcloudproviders-0.4.2.tar.xz/sha512/6c2fb8e9416f3e51f9b4bf18b72aa65a661a94cc028cfa4cc347f3e6d3c0ca563c1c21563b6631b3606b1cdea998d7acfe24cc90efb693954a074b8d24f5f74e/libcloudproviders-0.4.2.tar.xz"
       ]
     },
     {
@@ -3754,12 +3754,12 @@
     },
     {
       "name": "libspelling",
-      "version": "0.4.10",
-      "url": "https://download.gnome.org/sources/libspelling/0.4/libspelling-0.4.10.tar.xz",
-      "filename": "libspelling-0.4.10.tar.xz",
-      "sha512": "2dbeacb0ceb177804f5f9c8a4a9275fdaa24e19c2b75ecf017f3f4ded7874896a5e15a1377d3f3a98fa935697f6f3dad9c3cf91fe3a8f028cd7cb3e8068b9904",
+      "version": "0.4.11",
+      "url": "https://download.gnome.org/sources/libspelling/0.4/libspelling-0.4.11.tar.xz",
+      "filename": "libspelling-0.4.11.tar.xz",
+      "sha512": "f4f00796c9db777de0fc058b21a5dd25637ffd80e38b4e855a99888f54118c7dd0b8ffb45463a685d50bdb5674b24c9fdb3dc3ee97c68a849443ad847bc3db1e",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/libspelling/libspelling-0.4.10.tar.xz/sha512/2dbeacb0ceb177804f5f9c8a4a9275fdaa24e19c2b75ecf017f3f4ded7874896a5e15a1377d3f3a98fa935697f6f3dad9c3cf91fe3a8f028cd7cb3e8068b9904/libspelling-0.4.10.tar.xz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libspelling/libspelling-0.4.11.tar.xz/sha512/f4f00796c9db777de0fc058b21a5dd25637ffd80e38b4e855a99888f54118c7dd0b8ffb45463a685d50bdb5674b24c9fdb3dc3ee97c68a849443ad847bc3db1e/libspelling-0.4.11.tar.xz"
       ]
     },
     {
@@ -3783,13 +3783,13 @@
     },
     {
       "name": "libtatsu",
-      "version": "1.0.5",
-      "url": "https://github.com/libimobiledevice/libtatsu/releases/download/1.0.5/libtatsu-1.0.5.tar.bz2",
-      "filename": "libtatsu-1.0.5.tar.bz2",
-      "sha512": "5d683f9ee153f0958d2461f12017abccaf2f92d20dea6b219042f91a28daa5434df9a01315831a882acddbf6e0af1eb106c088f48efabff1c9f38c50f55a323f",
+      "version": "1.1.0",
+      "url": "https://github.com/libimobiledevice/libtatsu/releases/download/1.1.0/libtatsu-1.1.0.tar.bz2",
+      "filename": "libtatsu-1.1.0.tar.bz2",
+      "sha512": "f4b784b24ce6e5aa88ea280fa85a14ae841b691819c66e9a7d7a608e5a09c8515e7661a28909ea0806c343dacb6a76e00b6bee3cd752cb2f76927e220907dc9d",
       "stage": 1,
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/libtatsu/libtatsu-1.0.5.tar.bz2/sha512/5d683f9ee153f0958d2461f12017abccaf2f92d20dea6b219042f91a28daa5434df9a01315831a882acddbf6e0af1eb106c088f48efabff1c9f38c50f55a323f/libtatsu-1.0.5.tar.bz2"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libtatsu/libtatsu-1.1.0.tar.bz2/sha512/f4b784b24ce6e5aa88ea280fa85a14ae841b691819c66e9a7d7a608e5a09c8515e7661a28909ea0806c343dacb6a76e00b6bee3cd752cb2f76927e220907dc9d/libtatsu-1.1.0.tar.bz2"
       ]
     },
     {
@@ -4890,21 +4890,21 @@
     {
       "name": "pipewire",
       "stage": 6,
-      "version": "1.6.10",
-      "url": "https://gitlab.freedesktop.org/pipewire/pipewire/-/archive/1.6.10/pipewire-1.6.10.tar.gz",
-      "filename": "pipewire-1.6.10.tar.gz",
+      "version": "1.6.11",
+      "url": "https://gitlab.freedesktop.org/pipewire/pipewire/-/archive/1.6.11/pipewire-1.6.11.tar.gz",
+      "filename": "pipewire-1.6.11.tar.gz",
       "feed": "https://gitlab.freedesktop.org/pipewire/pipewire/-/archive/1.6.9/pipewire-1.6.9.tar.gz",
-      "sha512": "72e9dec0d464b9cadd9a1762541fca6436cf5b6f70236ff47603364e40a294a254451305c088ef9619cbb2747c4b284de971dfe73d91f7ff4a486635ff42588c",
+      "sha512": "61db8c92d7d250048b4a091ff8672a29ac7ac699f930978510bbdb48e250b2c92bf26d9970703639f4bc1fea2c384b5e76fb5538c3bbb640399d8dd420644b0e",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/pipewire/pipewire-1.6.10.tar.gz/sha512/72e9dec0d464b9cadd9a1762541fca6436cf5b6f70236ff47603364e40a294a254451305c088ef9619cbb2747c4b284de971dfe73d91f7ff4a486635ff42588c/pipewire-1.6.10.tar.gz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/pipewire/pipewire-1.6.11.tar.gz/sha512/61db8c92d7d250048b4a091ff8672a29ac7ac699f930978510bbdb48e250b2c92bf26d9970703639f4bc1fea2c384b5e76fb5538c3bbb640399d8dd420644b0e/pipewire-1.6.11.tar.gz"
       ]
     },
     {
       "name": "pipewire-libs-extra",
-      "version": "1.6.9",
-      "url": "https://gitlab.freedesktop.org/pipewire/pipewire/-/archive/1.6.9/pipewire-1.6.9.tar.gz",
-      "filename": "pipewire-1.6.9.tar.gz",
-      "sha512": "91a4790123f95c2a52592e4dcd7de90add681883710d3baa068f973c1477c4a9b7696df6afedbcb6c9f42abfdfa10dc01c383aa5d7ced33d781287a07bb18fd3",
+      "version": "1.6.11",
+      "url": "https://gitlab.freedesktop.org/pipewire/pipewire/-/archive/1.6.11/pipewire-1.6.11.tar.gz",
+      "filename": "pipewire-1.6.11.tar.gz",
+      "sha512": "61db8c92d7d250048b4a091ff8672a29ac7ac699f930978510bbdb48e250b2c92bf26d9970703639f4bc1fea2c384b5e76fb5538c3bbb640399d8dd420644b0e",
       "stage": 6
     },
     {
@@ -5799,10 +5799,10 @@
     },
     {
       "name": "slirp4netns",
-      "version": "1.3.1",
-      "url": "https://github.com/rootless-containers/slirp4netns/archive/v1.3.1.tar.gz",
-      "filename": "v1.3.1.tar.gz",
-      "sha512": "a4fe17116127df71033f48c969e6aecdaeef8b9927c899884451cafb4f166582d437978d4d956f13b3ae5f38b29e949a18d2ea43c70b3dcbe475d00a48f2a060"
+      "version": "1.3.7",
+      "url": "https://github.com/rootless-containers/slirp4netns/archive/v1.3.7.tar.gz",
+      "filename": "v1.3.7.tar.gz",
+      "sha512": "445cb9e695c30b1709a0669af106600e0febce7d1126c267b1bcaa4a8118c5d1f1c5dda7e5831471571ba729742dc67c880f7513ae0e43d40a02d45a0062b9b0"
     },
     {
       "name": "smartmontools",
@@ -6508,12 +6508,12 @@
     },
     {
       "name": "wayland-protocols",
-      "version": "1.49",
-      "url": "https://gitlab.freedesktop.org/wayland/wayland-protocols/-/releases/1.49/downloads/wayland-protocols-1.49.tar.xz",
-      "filename": "wayland-protocols-1.49.tar.xz",
-      "sha512": "c6f58586c4e3046fb545f31959eb662426ddf94cab627a136bec905c3a1c75087ed2850d49e44964241a9158a3559ad02607647a19fb5f1c1fb254160b04806c",
+      "version": "1.50",
+      "url": "https://gitlab.freedesktop.org/wayland/wayland-protocols/-/releases/1.50/downloads/wayland-protocols-1.50.tar.xz",
+      "filename": "wayland-protocols-1.50.tar.xz",
+      "sha512": "12cdc1c1d45e547f4216445f8f21a58cf3979bcf291ebc0270eda716af2fa39e482eb37c88edce9768a299b8da832421ef3cac64eb3abd5b2230a5d5f488f171",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/wayland-protocols/wayland-protocols-1.49.tar.xz/sha512/c6f58586c4e3046fb545f31959eb662426ddf94cab627a136bec905c3a1c75087ed2850d49e44964241a9158a3559ad02607647a19fb5f1c1fb254160b04806c/wayland-protocols-1.49.tar.xz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/wayland-protocols/wayland-protocols-1.50.tar.xz/sha512/12cdc1c1d45e547f4216445f8f21a58cf3979bcf291ebc0270eda716af2fa39e482eb37c88edce9768a299b8da832421ef3cac64eb3abd5b2230a5d5f488f171/wayland-protocols-1.50.tar.xz"
       ]
     },
     {
@@ -6589,13 +6589,13 @@
     {
       "name": "wireplumber",
       "stage": 4,
-      "version": "0.5.18",
-      "url": "https://gitlab.freedesktop.org/pipewire/wireplumber/-/archive/0.5.18/wireplumber-0.5.18.tar.bz2",
-      "filename": "wireplumber-0.5.18.tar.bz2",
+      "version": "0.5.19",
+      "url": "https://gitlab.freedesktop.org/pipewire/wireplumber/-/archive/0.5.19/wireplumber-0.5.19.tar.bz2",
+      "filename": "wireplumber-0.5.19.tar.bz2",
       "feed": "https://gitlab.freedesktop.org/pipewire/wireplumber/-/archive/0.5.14/wireplumber-0.5.14.tar.bz2",
-      "sha512": "b7177cacd58b86b707110137cb91642794f5c8a3dba7e184f947ba4025e9aca4c41543eecfe1230a69e636d4ba9715ad39d991d253f070d8221231ab3cf178b3",
+      "sha512": "09ec2ed03226bf4f740ed932e583580576d95a0983a907c0373be39e802799bd78cc0acd5284e240a1320f0ad77668494ff11a4f8ae16ef9d6f38adfc72d5b5f",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/wireplumber/wireplumber-0.5.18.tar.bz2/sha512/b7177cacd58b86b707110137cb91642794f5c8a3dba7e184f947ba4025e9aca4c41543eecfe1230a69e636d4ba9715ad39d991d253f070d8221231ab3cf178b3/wireplumber-0.5.18.tar.bz2"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/wireplumber/wireplumber-0.5.19.tar.bz2/sha512/09ec2ed03226bf4f740ed932e583580576d95a0983a907c0373be39e802799bd78cc0acd5284e240a1320f0ad77668494ff11a4f8ae16ef9d6f38adfc72d5b5f/wireplumber-0.5.19.tar.bz2"
       ]
     },
     {
