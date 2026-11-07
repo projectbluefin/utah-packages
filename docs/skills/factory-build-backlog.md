@@ -144,6 +144,12 @@ release archive and a second, SHA-512-pinned Fedora configuration file
 coverage does not establish that the build, publication, dependency
 transaction, or partition mapping command succeeds; verify those separately.
 
+The `kf6` source recipe supplies `kf6-filesystem` and `kf6-rpm-macros`.
+Its macro and license files are tracked in the imported packaging tree rather
+than an upstream release archive. Its lock uses `no_upstream_source`; the
+pinned dist-git provenance identifies those files. Recipe coverage alone does
+not establish a build, publication, or runtime dependency closure.
+
 Before importing an audit name, read Utah's current `baselines/triage.toml` and
 pin the decision's commit when reconciling an existing `waived` entry into
 `[wontfix]`. The audit can include deliberately absent X11 client utilities
@@ -207,6 +213,13 @@ Use the consumer issue named by the batch assignment when the area's
 `planned` records intent, while `untriaged` is not a waiver. For existing
 outputs, inspect current published repodata by binary name and its source
 RPM before importing a second recipe.
+
+`PackageKit-glib` is a subpackage of the `PackageKit` source recipe, not a
+separate source. The Rawhide recipe builds the DNF5 backend too and needs
+`pkgconfig(libdnf5) >= 5.4.3.0` at build time. Its GLib library does not
+require the PackageKit service by package name; a recipe import alone proves
+neither that the backend builds in the pinned root nor that the library can be
+installed and used from the published factory repository.
 
 The `Import Rawhide package` workflow does **not** make this move: its pull
 request carries the recipe, lock and `.packit.yaml`, but leaves the name in
@@ -1135,10 +1148,14 @@ that is not proof the runtime `Requires` resolve on Hummingbird plus the
 factory. Verify the udev rules file and `sos report --help` against the
 permitted repositories before claiming runtime acceptance.
 
-`uavs3d-libs` has no Fedora dist-git recipe (`rpms/uavs3d` does not exist),
-so `tools/import_rawhide.py` cannot import it; it needs its own source
-decision. `shim-ia32` is a Secure Boot-signed bootloader binary and needs an
-explicit maintainer decision before any recipe work.
+`uavs3d-libs` is the `%package libs` subpackage of the negativo17 `uavs3d`
+recipe imported for issue #507. It has no Fedora dist-git recipe (`rpms/
+uavs3d` does not exist), so it was imported from that source recipe rather
+than via `tools/import_rawhide.py`, and it is source-locked in
+`config/upstream-sources.json`. Hosted build, publication and runtime proof
+remain outstanding on #507. `shim-ia32` is a Secure Boot-signed bootloader
+binary and still needs an explicit maintainer decision before any recipe
+work.
 
 ### NILFS utilities signature sources
 

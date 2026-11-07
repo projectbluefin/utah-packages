@@ -1,0 +1,8 @@
+{
+  "package": "kf6",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/kf6.git",
+  "commit": "b786cb694541006b53195fb40b58353300f380f2",
+  "tree": "e25e22a3eb3520c54b5343bd65395ced14befbe0",
+  "imported_at": "2026-11-06T19:34:49.354610+00:00"
+}
