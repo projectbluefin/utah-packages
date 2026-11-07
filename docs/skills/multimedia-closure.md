@@ -53,7 +53,7 @@ holds to the current tree.
   standing exception no amount of building can clear.
 - **Are its members built?** That is the measurable question, and the group
   expands to sixteen of them — more names than the explicit install line
-  carries. Six were already covered by pipewire and wireplumber; five are
+  carries. Six were already covered by pipewire and wireplumber; four are
   tracked exceptions; `PackageKit-gstreamer-plugin` is excluded by the very
   install line that asks for the group, via `-x PackageKit*`.
 
