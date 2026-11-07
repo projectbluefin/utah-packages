@@ -5117,6 +5117,13 @@
       ]
     },
     {
+      "name": "python-anyio",
+      "version": "4.15.1",
+      "url": "https://files.pythonhosted.org/packages/a9/d2/f4d173e22df740bc37b1db102b386ba719b66e95b0f0d751f556b387e6d2/anyio-4.15.1.tar.gz",
+      "filename": "anyio-4.15.1.tar.gz",
+      "sha512": "5eff3a04d2d79cf8e5264799565a6c8a3cdab41e3ecebdfaf7c08fa75e41879f4dccaebec0e8676ccbbe834d541740dbbc011f6773bc0e98e6fbecbbd61e7467"
+    },
+    {
       "name": "python-argcomplete",
       "version": "3.6.3",
       "url": "https://files.pythonhosted.org/packages/38/61/0b9ae6399dd4a58d8c1b1dc5a27d6f2808023d0b5dd3104bb99f45a33ff6/argcomplete-3.6.3.tar.gz",
@@ -5187,6 +5194,13 @@
       "url": "https://github.com/rthalley/dnspython/archive/v2.8.0/dnspython-2.8.0.tar.gz",
       "filename": "dnspython-2.8.0.tar.gz",
       "sha512": "982b821da024eec27ab31429aef86dd0ccb376fd565e56a9c1254c081ace00a619d2a3692a25ca48a94101a6f96f1426767ec70e55f6143a153213020ad83cf0"
+    },
+    {
+      "name": "python-email-validator",
+      "version": "2.3.0",
+      "url": "https://github.com/JoshData/python-email-validator/archive/v2.3.0/python-email-validator-2.3.0.tar.gz",
+      "filename": "python-email-validator-2.3.0.tar.gz",
+      "sha512": "bb5f33d14f69bfdf51b967778471fc261eabfd9187981e9488db7918dafc18a3e0f0528d6c394720f8222150f9ff8d2f6cc968caca9804f220dfdb7199fa15ce"
     },
     {
       "name": "python-evdev",

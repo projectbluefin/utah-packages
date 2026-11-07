@@ -1,0 +1,8 @@
+{
+  "package": "python-email-validator",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/python-email-validator.git",
+  "commit": "b397802e2676a9135559e2f450c1886cc7098694",
+  "tree": "9515a457cb1ced583d5f0ebde23540eb04567a49",
+  "imported_at": "2026-11-07T07:51:15.798086+00:00"
+}

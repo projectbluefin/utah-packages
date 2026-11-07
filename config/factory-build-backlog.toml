@@ -99,10 +99,8 @@ packages = [
     "kernel-devel-matched",
     "kernel-tools",
     "kernel-tools-libs",
-    "python3-anyio",
     "python3-boto3",
     "python3-botocore",
-    "python3-email-validator",
     "python3-enchant",
     "python3-fido2",
     "python3-httpcore",
@@ -223,6 +221,12 @@ packages = [
     { name = "python3-jeepney" },
     { name = "python3-pyxdg" },
     { name = "python3-rapidfuzz" },
+    # Recipe imports for #489 (dev-tools parity): python3-anyio and
+    # python3-email-validator, moving these two pending dev-tools names into
+    # [resolved]. Build, publication and runtime proof remain on the #489
+    # follow-up; the recipe + source lock are the accepted output shipped here.
+    { name = "python3-anyio" },
+    { name = "python3-email-validator" },
     # S-Lang recipe from #719 is published; runtime resolution and payload proof remain on #507.
     { name = "slang", pr = 719, commit = "f22db6b5b26d3d05f84865cc57653ba8aa9edea6", published_run = 41780828846, published_nevra = "slang-0:2.3.3-10.hum1.bfin.x86_64" },
     # Recipe imports for #507 (solaar-udev is a subpackage of solaar); hosted build, publication and runtime proof remain owed.
