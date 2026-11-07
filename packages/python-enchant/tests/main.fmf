@@ -1,0 +1,7 @@
+require:
+- python3
+- python3-enchant
+- hunspell-en-US
+- hunspell-de
+test: python3 test_enchant.py -v
+framework: shell

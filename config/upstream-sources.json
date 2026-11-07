@@ -5135,6 +5135,20 @@
       ]
     },
     {
+      "name": "python-boto3",
+      "version": "1.43.125",
+      "url": "https://github.com/boto/boto3/archive/1.43.125/boto3-1.43.125.tar.gz",
+      "filename": "boto3-1.43.125.tar.gz",
+      "sha512": "dda2523e654c21d18dc66314272c19352b69aebb9c86ebc3c8fa87de0f98349849a63e3560c81166e8e0e27b2cc3b15c8c6939275352053a35d9de7564541d59"
+    },
+    {
+      "name": "python-botocore",
+      "version": "1.43.125",
+      "url": "https://files.pythonhosted.org/packages/ad/57/6d638614c940c73a750b8a4203989b3edbde5ff7f83cd9031e65cb97d69b/botocore-1.43.125.tar.gz",
+      "filename": "botocore-1.43.125.tar.gz",
+      "sha512": "b48c3d3f1ebc87cda61c1b7c87d7144bfd93adaf4dc6a5ed8072c7cf8dd57e9458522fea06d3201fbcf5b1463086eeff376d7221ba49d6c2c35bb37c5df568d8"
+    },
+    {
       "name": "python-click",
       "version": "8.4.2",
       "url": "https://github.com/pallets/click/archive/8.4.2/click-8.4.2.tar.gz",
@@ -5203,6 +5217,13 @@
       "sha512": "bb5f33d14f69bfdf51b967778471fc261eabfd9187981e9488db7918dafc18a3e0f0528d6c394720f8222150f9ff8d2f6cc968caca9804f220dfdb7199fa15ce"
     },
     {
+      "name": "python-enchant",
+      "version": "3.3.0",
+      "url": "https://files.pythonhosted.org/packages/36/ad/64925c937e41be75c7067c85757b3d45b148e9111187b37693269f583156/pyenchant-3.3.0.tar.gz",
+      "filename": "pyenchant-3.3.0.tar.gz",
+      "sha512": "b9d70697623415314d1ba145d02e8b6e37da19ad04efca5fd114c814cce9f12d0899751ec620efc6ada347754a28075ad351e81db3cf0165c4f3aad5b5ee5086"
+    },
+    {
       "name": "python-evdev",
       "version": "1.9.3",
       "url": "https://github.com/gvalkov/python-evdev/archive/refs/tags/v1.9.3.tar.gz",
@@ -5212,6 +5233,13 @@
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/python-evdev/v1.9.3.tar.gz/sha512/3f78fc21da5afcea7651a36c13fdb3e7c5cfac0327c0a365e2d825c849f4a19664defba07a5ada45665864888301b5b38478b4e7716014877951872ae912bee8/v1.9.3.tar.gz"
       ]
+    },
+    {
+      "name": "python-fido2",
+      "version": "2.2.1",
+      "url": "https://github.com/Yubico/python-fido2/archive/2.2.1/python-fido2-2.2.1.tar.gz",
+      "filename": "python-fido2-2.2.1.tar.gz",
+      "sha512": "fcf00e7458083299b5e3a5b5be13b3139fc785408f64341cdd05717d40533659bb66d41db0a122536a824a8ec54f08255855c3656a428d4bcb5270dc696b7a5d"
     },
     {
       "name": "python-h11",
@@ -5226,6 +5254,20 @@
       "url": "https://files.pythonhosted.org/packages/f8/27/e158d86ba1e82967cc2f790b0cb02030d4a8bef58e0c79a8590e9678107f/html2text-2025.4.15.tar.gz",
       "filename": "html2text-2025.4.15.tar.gz",
       "sha512": "2f12e293bb8aa87b4d03d3ec4698e8e8bf013acc9f69b25a2c7a1aacca9a8aaf646747c56a47bc15dae0601ecdc119ba4818daca933d4be7fa52f234c672d9f3"
+    },
+    {
+      "name": "python-httpcore",
+      "version": "1.0.9",
+      "url": "https://github.com/encode/httpcore/archive/1.0.9/httpcore-1.0.9.tar.gz",
+      "filename": "httpcore-1.0.9.tar.gz",
+      "sha512": "0a1300d9c887dda66b4ac0739406daacd274c1137163b79dd8997a5928438c5b4b130a347e08016a2554bef73aad14225cd5786ff13e932e8d2fb48a4e7245ae"
+    },
+    {
+      "name": "python-httpx",
+      "version": "0.28.1",
+      "url": "https://github.com/encode/httpx/archive/0.28.1/httpx-0.28.1.tar.gz",
+      "filename": "httpx-0.28.1.tar.gz",
+      "sha512": "5571957a3516533f1c1e76f311316811f6365e192d19ebae10c9ab0d0c4094d811063fd2be2995f3b6a41d6899a7882f27265badecf238a4f7903f976136d3ba"
     },
     {
       "name": "python-jaraco-classes",
@@ -5379,6 +5421,13 @@
       "stage": 0
     },
     {
+      "name": "python-pygit2",
+      "version": "1.20.1",
+      "url": "https://github.com/libgit2/pygit2/archive/v1.20.1.tar.gz",
+      "filename": "pygit2-1.20.1.tar.gz",
+      "sha512": "c2dd3e25dfc0ad1c3decd4b2b9583abcfacbc4322ae46ccd72fe8a637ffa693d2ea3f4c5b3749db74227041c22cf60cce8b1cdf720f28ddd8cfcff5357f4c352"
+    },
+    {
       "name": "python-pyinotify",
       "version": "0.9.6",
       "url": "https://files.pythonhosted.org/packages/source/p/pyinotify/pyinotify-0.9.6.tar.gz",
@@ -5415,6 +5464,13 @@
       "url": "https://files.pythonhosted.org/packages/source/r/regex/regex-2026.9.10.tar.gz",
       "filename": "regex-2026.9.10.tar.gz",
       "sha512": "ec7c1b2d6c549941ac6731a5490936e8fd3deffe8c34f12600b23c73dacb3818c02fc27fa88eb34aab6b3279ef6554d269565ffeb5530fd0707caad02b2d3c1d"
+    },
+    {
+      "name": "python-s3transfer",
+      "version": "0.19.3",
+      "url": "https://files.pythonhosted.org/packages/49/c5/0a5ce655109cb96b8dfad36908a4e108d15f5dc2eff8fbc3146c4312e704/s3transfer-0.19.3.tar.gz",
+      "filename": "s3transfer-0.19.3.tar.gz",
+      "sha512": "07745f7d8956d3e2963bf45ca7ccac876a52f2e1f84ccf18278d1d3229d9e491410e2f069749ab485e12b07cd00558f5b9d902b9ace66710485e4ed02b88fa92"
     },
     {
       "name": "python-shtab",
