@@ -3952,6 +3952,12 @@ packages:
     downstream_package_name: twolame
     paths:
       - packages/twolame
+  uavs3d:
+    specfile_path: uavs3d.spec
+    upstream_package_name: uavs3d
+    downstream_package_name: uavs3d
+    paths:
+      - packages/uavs3d
   uchardet:
     specfile_path: uchardet.spec
     upstream_package_name: uchardet

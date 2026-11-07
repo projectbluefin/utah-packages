@@ -1,0 +1,8 @@
+diff -Naur uavs3d-1fd04917cff50fac72ae23e45f82ca6fd9130bd8.old/CMakeLists.txt uavs3d-1fd04917cff50fac72ae23e45f82ca6fd9130bd8/CMakeLists.txt
+--- uavs3d-1fd04917cff50fac72ae23e45f82ca6fd9130bd8.old/CMakeLists.txt	2026-02-11 15:28:29.035421011 +0100
++++ uavs3d-1fd04917cff50fac72ae23e45f82ca6fd9130bd8/CMakeLists.txt	2026-02-11 15:31:05.901583782 +0100
+@@ -1,4 +1,4 @@
+-cmake_minimum_required(VERSION 3.1)
++cmake_minimum_required(VERSION 3.5)
+ 
+ project(uavs3d)
