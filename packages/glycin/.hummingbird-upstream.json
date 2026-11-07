@@ -2,7 +2,7 @@
   "package": "glycin",
   "branch": "rawhide",
   "remote": "https://src.fedoraproject.org/rpms/glycin.git",
-  "commit": "05a1b92499a04823e2ebf0c01f52c314bf0a4ecd",
-  "tree": "7430f1d9e85fa2d74cb6f4c5ece50d4956b35c38",
-  "imported_at": "2026-08-30T15:47:03.913276+00:00"
+  "commit": "f3250ea4e8f741b72505e4fe68648e62807e0f92",
+  "tree": "3d6a45c5615615939223da21dbcce447f560539d",
+  "imported_at": "2026-11-07T04:29:46.976674+00:00"
 }

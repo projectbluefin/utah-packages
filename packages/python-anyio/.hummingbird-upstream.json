@@ -1,0 +1,8 @@
+{
+  "package": "python-anyio",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/python-anyio.git",
+  "commit": "6a7871307959f252af895e64e970b90fea87480d",
+  "tree": "f81756ad27e36c9df15df8a4236553b85c0bff51",
+  "imported_at": "2026-11-07T07:43:10.496368+00:00"
+}

@@ -1,0 +1,8 @@
+{
+  "package": "python-rapidfuzz",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/python-rapidfuzz.git",
+  "commit": "20827c1deddc87a8a248f55f134fe681b321c52c",
+  "tree": "a7ad76b309a5531939dc62c37e32f46cd036ea14",
+  "imported_at": "2026-11-06T21:37:17.790606+00:00"
+}
