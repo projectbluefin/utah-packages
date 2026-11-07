@@ -571,8 +571,8 @@ reaching for `buildroot_icu77`, check the package's own `libicu-devel`.
   Check that path with and without `--merge`: omitting the flag used to empty
   the catalog before reporting the rejection (#520). A successful command
   without `--merge` still replaces the catalog, so keep the flag for imports.
-- Regenerate `.packit.yaml` with `python3 tools/render_packit_config.py
-  --write`.
+- Regenerate `.packit.yaml` and the source-lock order with `just
+  regenerate-inventory`.
 - Do not add inventory counts to documentation or tests: every import would
   have to edit them, and concurrent imports conflicted on them.
   `tests/test_recipe_set_agreement.py` and `tools/validate.py` read the
