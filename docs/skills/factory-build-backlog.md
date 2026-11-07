@@ -349,6 +349,21 @@ or claiming runtime closure. Do not extend the waiver to other pending
 long-tail names; each needs its own disposition. Keep the batch issue open
 when other outputs or their build/runtime evidence remain outstanding.
 
+### intel-vaapi-driver and kmod-v4l2loopback stay pending
+
+Neither name may move to `[wontfix]` on a dist-git 404. `intel-vaapi-driver`
+(the i965 VA driver) has no Fedora dist-git, and its upstream
+`github.com/intel/intel-vaapi-driver` is archived, but negativo17 still
+maintains `github.com/negativo17/intel-vaapi-driver`; import it through the
+existing `tools/import_rawhide.py --branch master --remote-template
+'https://github.com/negativo17/{package}.git'` path (see the uvg266 section).
+`kmod-v4l2loopback` is a binary output of RPM Fusion's `v4l2loopback-kmod`
+source package (built via kmodtool); the userspace `v4l2loopback` package is
+tracked separately, so a `rpms/kmod-v4l2loopback` 404 says nothing about it
+(resolve the source package first, as described above). It is an out-of-tree
+kernel module and stays pending with `v4l2loopback` under the kernel-module
+policy gate in the uvg266 section.
+
 ### Virtual machine guest integration
 
 `spice-webdavd` is a binary subpackage of **phodav**, alongside
