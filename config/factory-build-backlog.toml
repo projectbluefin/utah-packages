@@ -175,6 +175,17 @@ packages = [
 ]
 
 [resolved]
+# Dev-tools batch #489 publication fields from run 42397089583 (in progress
+# when read) describe the 22 #489 outputs carrying that published_run.
+# Image: ghcr.io/projectbluefin/utah-packages@sha256:57a2b32943a2e4eddeaf091fd40540fddfc8d5818f9c21a468798622d21a1551
+# Source revision: bf30870af5e5e680f72eeeb06f2f3a8bfb630289 (on main).
+# repomd.xml SHA-256: 7f64584706faafd48f4558818e35c39a90ad08818cb27b929b32b0fbb0b41233
+# Primary metadata SHA-256: 4c240cb51125c7c2b572257c8447ddad7d9c947562122c7f0b79721ed9c0f350
+# Run: https://github.com/projectbluefin/utah-packages/actions/runs/42397089583
+# Snapshot fetched 2026-11-07T21:40:29Z. Publication evidence only; not a runtime transaction.
+# In that run python-dns, python-regex, python-rapidfuzz, python-more-itertools
+# and python-SecretStorage failed to build, and the label still records the
+# python-keyring failure from run 42347331755; none of their outputs is published.
 # Long-tail #506 publication fields from run 40626803772 describe these seven outputs:
 # python3-cups, python3-linux-procfs, python3-pyaudio, qpdf-libs, quota, quota-nls, redhat-menus.
 # Image: ghcr.io/projectbluefin/utah-packages@sha256:2ff39e76a1473cf0a4299952b951080a79650363b1ac9c3b8e372cadcba5a319
@@ -210,15 +221,15 @@ packages = [
     # runtime proof remain on the #489 follow-up; the recipe + source lock
     # are the accepted output shipped here.
     { name = "python3-dns" },
-    { name = "python3-jeepney" },
-    { name = "python3-pyxdg" },
+    { name = "python3-jeepney", published_run = 42397089583, published_nevra = "python3-jeepney-0:0.9.0-1.hum1.bfin.noarch" },
+    { name = "python3-pyxdg", published_run = 42397089583, published_nevra = "python3-pyxdg-0:0.28-4.hum1.bfin.noarch" },
     { name = "python3-rapidfuzz" },
     # Recipe imports for #489 (dev-tools parity): python3-anyio and
     # python3-email-validator, moving these two pending dev-tools names into
     # [resolved]. Build, publication and runtime proof remain on the #489
     # follow-up; the recipe + source lock are the accepted output shipped here.
-    { name = "python3-anyio" },
-    { name = "python3-email-validator" },
+    { name = "python3-anyio", published_run = 42397089583, published_nevra = "python3-anyio-0:4.15.1-2.hum1.bfin.noarch" },
+    { name = "python3-email-validator", published_run = 42397089583, published_nevra = "python3-email-validator-0:2.3.0-1.hum1.bfin.noarch" },
     # Recipe imports for #489 (dev-tools parity): the remaining boto3, httpx,
     # fido2, pygit2 and enchant families. Build, publication and runtime proof
     # remain on #489; the recipe + source lock are the output shipped here.
@@ -266,9 +277,9 @@ packages = [
     { name = "opensc-libs", pr = 825 },
     # jaraco-family parity for #489 (partial source-family PR); hosted build,
     # publication and runtime proof remain open until #489 closes.
-    { name = "python3-jaraco-context", pr = 808 },
-    { name = "python3-jaraco-classes", pr = 808 },
-    { name = "python3-jaraco-functools", pr = 808 },
+    { name = "python3-jaraco-context", pr = 808, published_run = 42397089583, published_nevra = "python3-jaraco-context-0:6.1.0-1.hum1.bfin.noarch" },
+    { name = "python3-jaraco-classes", pr = 808, published_run = 42397089583, published_nevra = "python3-jaraco-classes-0:3.4.0-1.hum1.bfin.noarch" },
+    { name = "python3-jaraco-functools", pr = 808, published_run = 42397089583, published_nevra = "python3-jaraco-functools-0:4.6.0-1.hum1.bfin.noarch" },
     # Recipe import only; build, publication and runtime proof remain on #484.
     { name = "libgee" },
     # Recipe import only (Orca recommends it); build, publication and runtime proof remain on #484.
@@ -446,18 +457,19 @@ packages = [
     { name = "hypervfcopyd", pr = 607 },
     { name = "hypervkvpd", pr = 607 },
     { name = "hypervvssd", pr = 607 },
-    # Recipe coverage only; build/publication/runtime proof stays on #489.
-    { name = "python3-pexpect", pr = 684 },
-    { name = "python3-ptyprocess", pr = 684 },
-    { name = "python3-dateutil", pr = 613 },
-    { name = "python3-six", pr = 613 },
-    { name = "python3-h11" },
-    { name = "python3-click" },
-    { name = "python3-jmespath", pr = 798 },
-    { name = "python3-pysocks" }, # Recipe coverage only; build/publication/runtime proof remains in #489.
-    { name = "python3-html2text" }, # Recipe coverage only; build/publication/runtime proof remains in #489.
+    # Dev-tools outputs for #489. A published_run marks metadata presence in the
+    # snapshot named at the top of [resolved]; runtime proof stays on #489.
+    { name = "python3-pexpect", pr = 684, published_run = 42397089583, published_nevra = "python3-pexpect-0:4.9.0-19.hum1.bfin.noarch" },
+    { name = "python3-ptyprocess", pr = 684, published_run = 42397089583, published_nevra = "python3-ptyprocess-0:0.7.0-18.hum1.bfin.noarch" },
+    { name = "python3-dateutil", pr = 613, published_run = 42397089583, published_nevra = "python3-dateutil-1:2.9.0.post0-1.hum1.bfin.noarch" },
+    { name = "python3-six", pr = 613, published_run = 42397089583, published_nevra = "python3-six-0:1.17.0-1.hum1.bfin.noarch" },
+    { name = "python3-h11", published_run = 42397089583, published_nevra = "python3-h11-0:0.16.0-1.hum1.bfin.noarch" },
+    { name = "python3-click", published_run = 42397089583, published_nevra = "python3-click-1:8.4.2-1.hum1.bfin.noarch" },
+    { name = "python3-jmespath", pr = 798, published_run = 42397089583, published_nevra = "python3-jmespath-0:1.0.1-16.hum1.bfin.noarch" },
+    { name = "python3-pysocks", published_run = 42397089583, published_nevra = "python3-pysocks-0:1.7.1-35.hum1.bfin.noarch" }, # Published; runtime proof remains on #489.
+    { name = "python3-html2text", published_run = 42397089583, published_nevra = "python3-html2text-0:2025.4.15-8.hum1.bfin.noarch" }, # Published; runtime proof remains on #489.
     { name = "python3-more-itertools" }, # Recipe coverage only; build/publication/runtime proof remains in #489.
-    { name = "python3-shtab" }, # Recipe coverage only; build/publication/runtime proof remains in #489.
+    { name = "python3-shtab", published_run = 42397089583, published_nevra = "python3-shtab-0:1.8.0-1.hum1.bfin.noarch" }, # Published; runtime proof remains on #489.
     { name = "python3-secretstorage" }, # Recipe coverage only; build/publication/runtime proof remains in #489.
     { name = "python3-keyring" }, # Recipe coverage only; build/publication/runtime proof remains in #489.
     { name = "python3-keyring+completion" }, # Recipe coverage only; build/publication/runtime proof remains in #489.
@@ -482,8 +494,8 @@ packages = [
     # Cursor library import for #508; build/publication/runtime proof remains separate.
     { name = "xcb-util-cursor", pr = 620 },
     # Printing runtime providers for hplip/system-config-printer (projectbluefin/utah-packages#596, utah#390).
-    { name = "python3-olefile", pr = 596 },
-    { name = "python3-pillow", pr = 596 },
+    { name = "python3-olefile", pr = 596, published_run = 42397089583, published_nevra = "python3-olefile-0:0.47-15.hum1.bfin.noarch" },
+    { name = "python3-pillow", pr = 596, published_run = 42397089583, published_nevra = "python3-pillow-0:13.0.0-1.hum1.bfin.x86_64" },
     { name = "usbutils", pr = 596 },
     { name = "net-snmp-libs", pr = 596, published_run = 40511180133, published_nevra = "net-snmp-libs-1:5.9.5.2-10.hum1.bfin.x86_64" },
     { name = "python3-cups", pr = 596, published_run = 40626803772, published_nevra = "python3-cups-0:2.0.4-11.hum1.bfin.x86_64" },
@@ -541,7 +553,7 @@ packages = [
     { name = "NetworkManager-openvpn-gnome", pr = 522 },
     # tuned/powertop runtime providers (landing PR #595, utah#388).
     { name = "python3-inotify", pr = 595 },
-    { name = "python3-pyudev", pr = 595 },
+    { name = "python3-pyudev", pr = 595, published_run = 42397089583, published_nevra = "python3-pyudev-0:0.24.5-1.hum1.bfin.noarch" },
     { name = "virt-what", pr = 595 },
     { name = "libtraceevent", pr = 595 },
     { name = "python3-linux-procfs", pr = 595, published_run = 40626803772, published_nevra = "python3-linux-procfs-0:0.7.4-5.hum1.bfin.noarch" },
@@ -694,8 +706,8 @@ packages = [
     { name = "prefixdevname", pr = 819 },
     # Long-tail batch #505: recipe fix (broken Source0 URL) + source lock #897.
     { name = "paps", pr = 897 },
-    { name = "python3-llfuse", pr = 587 },
-    { name = "python3-msgpack", pr = 587 },
+    { name = "python3-llfuse", pr = 587, published_run = 42397089583, published_nevra = "python3-llfuse-0:1.5.2-5.hum1.bfin.x86_64" },
+    { name = "python3-msgpack", pr = 587, published_run = 42397089583, published_nevra = "python3-msgpack-0:1.2.1-1.hum1.bfin.x86_64" },
     { name = "smartmontools", pr = 587, published_run = 41233305890, published_nevra = "smartmontools-1:7.5-11.hum1.bfin.x86_64" },
     { name = "smartmontools-selinux", pr = 587, published_run = 41233305890, published_nevra = "smartmontools-selinux-1:7.5-11.hum1.bfin.noarch" },
     { name = "tcpdump", pr = 587 },
