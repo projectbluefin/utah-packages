@@ -1,0 +1,8 @@
+{
+  "package": "python-regex",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/python-regex.git",
+  "commit": "520df07c26dcc52974cadbe9f9369061674110ec",
+  "tree": "455545eb6b741fe039f1c34f21bebda6a641439f",
+  "imported_at": "2026-11-06T21:24:05.425554+00:00"
+}

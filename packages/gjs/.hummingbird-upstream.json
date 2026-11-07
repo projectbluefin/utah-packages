@@ -2,7 +2,7 @@
   "package": "gjs",
   "branch": "rawhide",
   "remote": "https://src.fedoraproject.org/rpms/gjs.git",
-  "commit": "81d8ab1bd4e042a506b6da0bbabbf0a2aef0f5f5",
-  "tree": "bd1eafed1abfba50879ed8a2dda8438333ab0157",
-  "imported_at": "2026-08-30T15:47:04.834953+00:00"
+  "commit": "91c473c164c8c73d2ba7ce9e9121935c300ffe6b",
+  "tree": "4205f2822bcc1570376278a32042f5c95880a1be",
+  "imported_at": "2026-11-06T18:06:17.963861+00:00"
 }

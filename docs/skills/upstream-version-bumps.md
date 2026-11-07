@@ -99,6 +99,21 @@ reads, directly or through another macro (alsa-sof-firmware's
 `%{version}` (pipewire, alsa-utils) is still overwritten with a literal. Both
 refusals are skipped with a reason, like a failed download.
 
+A vendored Rust recipe (`%bcond bundled_rust_deps 1`, as glycin, librsvg2
+and papers carry because Hummingbird has no crate RPMs) moves by hand, with Fedora's
+vendor tarball. Wait for Koji's Rawhide build at the new version, then
+`tools/import_rawhide.py <pkg> --ref <Koji commit> --replace`, put the local
+bcond back, and drop the inert `.gitignore`. The vendor tarball stays out of
+`config/upstream-sources.json`: its only lock is its `SHA512 (...)` line in
+`packages/<pkg>/sources`, which `source_pipeline.py` `bundled_sources()`
+fetches from the lookaside by that digest. Move the Source0 lock as a GNOME
+bump would (`planned_entry()`: URL, filename, SHA-512, lookaside fallback),
+and check both digests against the bytes you download (GNOME's
+`.sha256sum` for Source0, the lookaside URL for the vendor tarball).
+glycin 2.2~beta -> 2.2.2 (Rawhide `f3250ea`) took this path. The vendor
+tarball was cut after Fedora's patch 0001, so take Rawhide's patch set as
+it is: 2.2.2 dropped the gufo backport (0005) that 2.2~beta needed.
+
 ## When a bumped recipe fails
 
 `--apply` moves the version only; the recipe can still need the change a new
@@ -229,6 +244,23 @@ bump alone leaves `.hummingbird-upstream.json` on the old commit, which
 `rawhide_reimport.py` then reports as factory divergence and never
 re-imports again. gtk4's 4.23.4 bump had done exactly that (pin at the 4.23.3
 commit); after the 4.24.1 re-pin the tool reports it `current`.
+
+`--replace` writes Fedora's recipe over the factory's own edits too. gjs
+carries a `%check` that skips the `gtk` suite (the hermetic buildroot has no
+portal service); its 1.90.1 re-pin restored Fedora's `xwfb-run` line until
+the hunk was put back. After the import, `git diff upstream/main --
+packages/<pkg>/<pkg>.spec` must show only the `Version:` line.
+
+A stale development series does not always fail a build. gjs stayed at
+1.89.2 after 1.90.0 shipped: gnome-shell only needs `>= 1.87.1`, so nothing
+broke, but 1.89.1 to 1.89.2 carry GBytes memory accounting that upstream
+reverted in 1.89.90 for GC thrash (gjs#742), and 1.90.1 fixes a GObject
+wrapper reference leak. A long-running GNOME Shell 51.1 on 1.89.2 ran about
+109 SpiderMonkey GC slices a second, mostly `TOO_MUCH_MALLOC`, and froze for
+seconds at a time; a fresh one did not, so the cost builds up over a session.
+The only warning was the GNOME audit's `needs_review` row, "release line
+1.89 (factory) vs 1.90 (gbm)". Treat that row as a pending cross-cycle bump,
+not as information.
 
 ## Soname-coupled bumps
 
