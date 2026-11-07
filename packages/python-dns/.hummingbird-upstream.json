@@ -1,0 +1,8 @@
+{
+  "package": "python-dns",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/python-dns.git",
+  "commit": "934b1907282243a5d1fd1cc03229e26df466d727",
+  "tree": "2fcba75060a0944f49105dd0610560a8dd7cb96f",
+  "imported_at": "2026-11-06T21:39:25.040349+00:00"
+}
