@@ -42,6 +42,7 @@ from tools.upstream_bump import (
     forge_proposal,
     forge_versions,
     newer,
+    rebuilt_fallback,
     strip_tag_prefix,
     swap_version,
     candidates,
@@ -2313,6 +2314,48 @@ def explicit_feed_tree(tmp: str, entry: dict) -> Path:
     return root
 
 
+class RebuiltFallbackTests(unittest.TestCase):
+    """Every lookaside shape in the lock is rebuilt in the SHA-512 form."""
+
+    LOOKASIDE = "https://src.fedoraproject.org/repo/pkgs/rpms"
+    DIGEST = "c" * 128
+
+    def test_a_five_segment_lookaside_pin_gets_the_new_name_and_digest(self) -> None:
+        for algo, old in (("sha512", "a" * 128), ("md5", "b" * 32)):
+            with self.subTest(algo=algo):
+                url = (f"{self.LOOKASIDE}/mesa/mesa-26.2.1.tar.xz/{algo}/{old}/"
+                       "mesa-26.2.1.tar.xz")
+                self.assertEqual(
+                    rebuilt_fallback(url, "26.2.1", "26.2.6", self.DIGEST),
+                    f"{self.LOOKASIDE}/mesa/mesa-26.2.6.tar.xz/sha512/{self.DIGEST}/"
+                    "mesa-26.2.6.tar.xz",
+                )
+
+    def test_a_legacy_four_segment_md5_pin_is_not_left_with_its_old_hash(self) -> None:
+        # libatasmart's real lock entry: <file>/<md5>/<file>, no algorithm segment.
+        url = (f"{self.LOOKASIDE}/libatasmart/libatasmart-0.19.tar.xz/"
+               "53afe2b155c36f658e121fe6def33e77/libatasmart-0.19.tar.xz")
+        self.assertEqual(
+            rebuilt_fallback(url, "0.19", "0.20", self.DIGEST),
+            f"{self.LOOKASIDE}/libatasmart/libatasmart-0.20.tar.xz/sha512/{self.DIGEST}/"
+            "libatasmart-0.20.tar.xz",
+        )
+
+    def test_a_lookaside_url_whose_file_names_differ_is_only_version_swapped(self) -> None:
+        url = f"{self.LOOKASIDE}/mesa/mesa-26.2.1.tar.xz/{'b' * 32}/other-26.2.1.tar.xz"
+        self.assertEqual(
+            rebuilt_fallback(url, "26.2.1", "26.2.6", self.DIGEST),
+            f"{self.LOOKASIDE}/mesa/mesa-26.2.6.tar.xz/{'b' * 32}/other-26.2.6.tar.xz",
+        )
+
+    def test_another_mirror_only_has_its_version_swapped(self) -> None:
+        self.assertEqual(
+            rebuilt_fallback("https://mirror.example/mesa-26.2.1.tar.xz",
+                             "26.2.1", "26.2.6", self.DIGEST),
+            "https://mirror.example/mesa-26.2.6.tar.xz",
+        )
+
+
 class ExplicitFeedMoveTests(unittest.TestCase):
     """A same-major release read from an explicit feed moves the lock's own primary.
 
@@ -2332,9 +2375,10 @@ class ExplicitFeedMoveTests(unittest.TestCase):
         "fallback_urls": [
             "https://src.fedoraproject.org/repo/pkgs/rpms/mesa/mesa-26.2.1.tar.xz/"
             "sha512/" + "a" * 128 + "/mesa-26.2.1.tar.xz",
-            # A legacy md5 lookaside pin: its hash cannot be substituted.
+            # A legacy md5 lookaside pin, filed with no algorithm segment: its
+            # hash cannot be substituted.
             "https://src.fedoraproject.org/repo/pkgs/rpms/mesa/mesa-26.2.1.tar.xz/"
-            "md5/" + "b" * 32 + "/mesa-26.2.1.tar.xz",
+            + "b" * 32 + "/mesa-26.2.1.tar.xz",
         ],
     }
 
