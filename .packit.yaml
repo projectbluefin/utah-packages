@@ -1426,6 +1426,12 @@ packages:
     downstream_package_name: kf6-karchive
     paths:
       - packages/kf6-karchive
+  kvazaar:
+    specfile_path: kvazaar.spec
+    upstream_package_name: kvazaar
+    downstream_package_name: kvazaar
+    paths:
+      - packages/kvazaar
   kyotocabinet:
     specfile_path: kyotocabinet.spec
     upstream_package_name: kyotocabinet
