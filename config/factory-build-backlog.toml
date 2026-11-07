@@ -107,11 +107,8 @@ packages = [
     "python3-fido2",
     "python3-httpcore",
     "python3-httpx",
-    "python3-keyring",
-    "python3-keyring+completion",
     "python3-pygit2",
     "python3-s3transfer",
-    "python3-secretstorage",
 ]
 
 [areas.fonts-i18n]
@@ -158,7 +155,6 @@ packages = [
     "gvfs-afp",
     "gvfs-archive",
     "intel-vaapi-driver",
-    "kf6-kimageformats",
     "kmod-v4l2loopback",
     "lockdev",
     "mcelog",
@@ -368,6 +364,7 @@ packages = [
     { name = "criu" },
     { name = "criu-libs" },
     { name = "kf6-karchive" },
+    { name = "kf6-kimageformats" }, # Recipe coverage only; build/publication/runtime proof remains in #501.
     # Recipe imported; hosted build, publication and runtime proof remain in #501.
     { name = "kf6-filesystem", pr = 922 },
     { name = "ipset" },
@@ -455,6 +452,9 @@ packages = [
     { name = "python3-html2text" }, # Recipe coverage only; build/publication/runtime proof remains in #489.
     { name = "python3-more-itertools" }, # Recipe coverage only; build/publication/runtime proof remains in #489.
     { name = "python3-shtab" }, # Recipe coverage only; build/publication/runtime proof remains in #489.
+    { name = "python3-secretstorage" }, # Recipe coverage only; build/publication/runtime proof remains in #489.
+    { name = "python3-keyring" }, # Recipe coverage only; build/publication/runtime proof remains in #489.
+    { name = "python3-keyring+completion" }, # Recipe coverage only; build/publication/runtime proof remains in #489.
     # Chromaprint recipe coverage only; publication and runtime proof remain in #487.
     { name = "libchromaprint", pr = 692 },
     { name = "leptonica", pr = 772 }, # Recipe import; publication and runtime proof remain.
