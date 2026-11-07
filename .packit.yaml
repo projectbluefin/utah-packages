@@ -3574,6 +3574,12 @@ packages:
     downstream_package_name: range-v3
     paths:
       - packages/range-v3
+  rapidfuzz-cpp:
+    specfile_path: rapidfuzz-cpp.spec
+    upstream_package_name: rapidfuzz-cpp
+    downstream_package_name: rapidfuzz-cpp
+    paths:
+      - packages/rapidfuzz-cpp
   rclone:
     specfile_path: rclone.spec
     upstream_package_name: rclone

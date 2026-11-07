@@ -60,5 +60,7 @@ rst2html README.rst > README.html
 %doc docs/Features.html
 %doc docs/UnicodeProperties.html
 
-
+# Rawhide's recipe has no changelog section header, so rpmbuild reads the
+# generated changelog entries as file paths in the files list and fails.
+%changelog
 %autochangelog
