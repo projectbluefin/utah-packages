@@ -1,0 +1,8 @@
+{
+  "package": "python-botocore",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/python-botocore.git",
+  "commit": "194db7b725cd5f7bd595c526f89e41e041e1d424",
+  "tree": "6646e62ed066ef9c2bfb3034ba4554f7a8334c13",
+  "imported_at": "2026-11-07T17:40:09.083861+00:00"
+}
