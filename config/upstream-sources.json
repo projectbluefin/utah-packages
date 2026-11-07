@@ -2250,6 +2250,13 @@
       "sha512": "f6428f1f4bfe02ab0a111196e256834adb32f54cbbf93af85f5de136ce4b2cbc7d7835a61827c470216cc3edc8200117374f370811f45b1426126a85f8ccbcb1"
     },
     {
+      "name": "kvazaar",
+      "version": "2.3.2",
+      "url": "https://github.com/ultravideo/kvazaar/archive/v2.3.2.tar.gz",
+      "filename": "kvazaar-2.3.2.tar.gz",
+      "sha512": "fdb26de258e923c0cfa6741421689fc1d77c9b37040776e25d28d148d5254968e72d9716c26df45c3150afcac33a8fd61625488aa951183a1a1a347cc6f53fa7"
+    },
+    {
       "name": "kyotocabinet",
       "version": "1.2.80",
       "url": "https://dbmx.net/kyotocabinet/pkg/kyotocabinet-1.2.80.tar.gz",
