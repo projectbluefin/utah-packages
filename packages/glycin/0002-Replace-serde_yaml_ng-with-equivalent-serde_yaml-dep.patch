@@ -1,7 +1,7 @@
-From 9a24fda91e3a4d5cdb581e16072edbb4719fca5c Mon Sep 17 00:00:00 2001
+From 1862bfa55dd2f06c3fea48592ec69f9a75aaff33 Mon Sep 17 00:00:00 2001
 From: Fabio Valentini <decathorpe@gmail.com>
 Date: Mon, 24 Mar 2025 21:14:36 +0100
-Subject: [PATCH 2/5] Replace serde_yaml_ng with equivalent serde_yaml
+Subject: [PATCH 2/4] Replace serde_yaml_ng with equivalent serde_yaml
  dependency
 
 ---
@@ -24,5 +24,5 @@ index 4f9fe76..38b5d07 100644
  
  [[test]]
 -- 
-2.55.0
+2.56.0
 

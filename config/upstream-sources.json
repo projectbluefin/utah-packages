@@ -1171,14 +1171,14 @@
     },
     {
       "name": "glycin",
-      "version": "2.2~beta",
-      "url": "https://download.gnome.org/sources/glycin/2.2/glycin-2.2.beta.tar.xz",
-      "filename": "glycin-2.2.beta.tar.xz",
-      "feed": "https://download.gnome.org/sources/glycin/2.2/glycin-2.2.beta.tar.xz",
-      "sha512": "e6b9ba38e3cd8f121f344f53fc8643c29f679d1347973a89d517d6ef2712364849dafdf55e7143a9a49f13282539ad2c34fb0176bb083a01458feda02a3efdb8",
+      "version": "2.2.2",
+      "url": "https://download.gnome.org/sources/glycin/2.2/glycin-2.2.2.tar.xz",
+      "filename": "glycin-2.2.2.tar.xz",
+      "feed": "https://download.gnome.org/sources/glycin/2.2/glycin-2.2.2.tar.xz",
+      "sha512": "866a758cc543702439fad71a9631664d0cafb65a4bfeca234e0b3875d9c6baacdadeec54867ee12e797f9b4cd87cc9ec6849cfe688aa2c79838f73239799f85c",
       "stage": 0,
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/glycin/glycin-2.2.beta.tar.xz/sha512/e6b9ba38e3cd8f121f344f53fc8643c29f679d1347973a89d517d6ef2712364849dafdf55e7143a9a49f13282539ad2c34fb0176bb083a01458feda02a3efdb8/glycin-2.2.beta.tar.xz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/glycin/glycin-2.2.2.tar.xz/sha512/866a758cc543702439fad71a9631664d0cafb65a4bfeca234e0b3875d9c6baacdadeec54867ee12e797f9b4cd87cc9ec6849cfe688aa2c79838f73239799f85c/glycin-2.2.2.tar.xz"
       ]
     },
     {
