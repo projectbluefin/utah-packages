@@ -205,6 +205,10 @@ lock's `filename`. Project names can differ from recipe names, as with
 For PyPI packages, resolve the version's source distribution from
 `https://pypi.org/pypi/<project>/<version>/json` and verify the returned
 `files.pythonhosted.org` URL against the locked SHA-512 before promoting it.
+SourceForge's version-specific project path can be used over HTTPS even when
+the recipe names an HTTP download: for example, `xmlrpc-c` 1.60.04 uses the
+`Xmlrpc-c Super Stable/1.60.04` release directory. Verify the downloaded
+bytes, not just the project and version in the URL.
 
 Stream each candidate primary directly through SHA-512 without using the
 pipeline's fallback path. Promote only exact matches to the existing lock;
