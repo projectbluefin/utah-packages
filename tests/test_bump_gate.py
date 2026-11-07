@@ -601,40 +601,78 @@ class EnqueueBehaviorTests(unittest.TestCase):
         gh = self.bin / "gh"
         gh.write_text(
             "#!/usr/bin/env python3\n"
-            "import json, os, pathlib, sys\n"
-            "root = pathlib.Path(os.environ['FIXTURES'])\n"
+            "import json, os, subprocess, sys\n"
+            "root = os.environ['FIXTURES']\n"
             "args = sys.argv[1:]\n"
-            "with (root / 'calls.jsonl').open('a') as f:\n"
-            "    f.write(json.dumps({'args': args, 'token': os.environ.get('GH_TOKEN')}) + '\\n')\n"
+            "def read(name):\n"
+            "    with open(os.path.join(root, name)) as f:\n"
+            "        return f.read()\n"
+            "def log():\n"
+            "    with open(os.path.join(root, 'calls.jsonl'), 'a') as f:\n"
+            "        f.write(json.dumps({'args': args, 'token': os.environ.get('GH_TOKEN')}) + '\\n')\n"
+            "log()\n"
             "if args[:2] == ['pr', 'checks']:\n"
             "    sys.exit(int(os.environ.get('CHECKS_EXIT', '0')))\n"
             "if args[:2] == ['pr', 'view']:\n"
-            "    print(os.environ['CURRENT_HEAD'])\n"
-            "    sys.exit(0)\n"
-            "if any(arg.endswith('/dispatches') for arg in args):\n"
-            "    (root / 'dispatch.json').write_text(sys.stdin.read())\n"
+            "    pr = None\n"
+            "    try:\n"
+            "        pr = next(p for p in json.loads(read('prs.json')) if p['number'] == int(args[2]))\n"
+            "    except Exception:\n"
+            "        pass\n"
+            "    if pr:\n"
+            "        print(json.dumps({'state': pr['state'], 'headRefOid': pr['headRefOid'],\n"
+            "                          'behindCount': pr.get('behindCount', 0),\n"
+            "                          'headRefName': pr['headRefName']}))\n"
+            "    else:\n"
+            "        print(os.environ.get('CURRENT_HEAD', ''))\n"
             "    sys.exit(0)\n"
             "if args[:2] == ['pr', 'list']:\n"
-            "    name = 'prs.json'\n"
-            "elif any('/jobs?' in arg for arg in args):\n"
-            "    name = 'jobs.json'\n"
-            "elif args[:2] == ['api', 'graphql']:\n"
-            "    if any('enqueuePullRequest' in arg for arg in args):\n"
+            "    print(read('prs.json'))\n"
+            "    sys.exit(0)\n"
+            "if args[:2] == ['pr', 'checkout']:\n"
+            "    origin = os.path.join(os.environ.get('FIXTURES', ''), 'origin')\n"
+            "    subprocess.run(['git', 'clone', '-q', origin, '.'], check=True)\n"
+            "    subprocess.run(['git', 'checkout', '-q', 'bump/upstream-sources'], check=True)\n"
+            "    sys.exit(0)\n"
+            "if args[:2] == ['pr', 'edit']:\n"
+            "    with open(os.path.join(root, 'pr_edits.jsonl'), 'a') as f:\n"
+            "        f.write(json.dumps({'args': args}) + '\\n')\n"
+            "    sys.exit(0)\n"
+            "if args[:2] == ['api', 'graphql']:\n"
+            "    if 'enqueuePullRequest' in ' '.join(args):\n"
             "        if os.environ.get('ENQUEUE_EXIT'):\n"
             "            sys.exit(int(os.environ['ENQUEUE_EXIT']))\n"
-            "        name = 'enqueue.json'\n"
+            "        print(read('enqueue.json'))\n"
             "    else:\n"
             "        if os.environ.get('DISCOVERY_EXIT'):\n"
             "            sys.exit(int(os.environ['DISCOVERY_EXIT']))\n"
-            "        name = 'landing.json'\n"
-            "elif any(arg.endswith('/merge') for arg in args):\n"
-            "    name = 'merged.json'\n"
-            "elif args[0] == 'api':\n"
-            "    name = 'gate.json'\n"
-            "else:\n"
-            "    sys.exit('unexpected gh command: ' + repr(args))\n"
-            "print((root / name).read_text())\n")
+            "        print(read('landing.json'))\n"
+            "    sys.exit(0)\n"
+            "if args[0] == 'api' and any('/merge' in a for a in args):\n"
+            "    print(read('merged.json'))\n"
+            "    sys.exit(0)\n"
+            "if args[0] == 'api' and any('/dispatches' in a for a in args):\n"
+            "    with open(os.path.join(root, 'dispatch.json'), 'w') as f:\n"
+            "        f.write(sys.stdin.read())\n"
+            "    sys.exit(0)\n"
+            "if args[0] == 'api' and any('/jobs?' in a for a in args):\n"
+            "    print(read('jobs.json'))\n"
+            "    sys.exit(0)\n"
+            "if args[0] == 'api':\n"
+            "    print(read('gate.json'))\n"
+            "    sys.exit(0)\n"
+            "if args[:2] == ['workflow', 'run']:\n"
+            "    with open(os.path.join(root, 'dispatch.json'), 'w') as f:\n"
+            "        f.write(sys.stdin.read())\n"
+            "    sys.exit(0)\n"
+            "sys.exit('unexpected gh command: ' + repr(args))\n"
+        )
         gh.chmod(0o755)
+        # The landing step now runs the real tool; it must exist in the workspace.
+        (self.workspace / "tools").mkdir(exist_ok=True)
+        (self.workspace / "tools" / "land_bump.py").write_text(
+            (ROOT / "tools" / "land_bump.py").read_text()
+        )
         workflow = yaml.safe_load((WORKFLOWS / "bump-upstream-enqueue.yml").read_text())
         self.validate = workflow["jobs"]["validate"]["steps"][1]["run"]
         self.merge = workflow["jobs"]["enqueue"]["steps"][1]["run"]
@@ -694,6 +732,7 @@ class EnqueueBehaviorTests(unittest.TestCase):
     def run_landing(self) -> subprocess.CompletedProcess:
         for name, data in (
             ("landing.json", self.landing),
+            ("prs.json", self.prs),
             ("enqueue.json", {"data": {"enqueuePullRequest": {"mergeQueueEntry": {"id": "MQE_42"}}}}),
             ("merged.json", {"merged": True}),
         ):
@@ -785,10 +824,19 @@ class EnqueueBehaviorTests(unittest.TestCase):
         self.assertTrue(all(call["args"][:2] == ["api", "graphql"] for call in self.calls()))
 
     def test_later_branch_head_cannot_reuse_built_verdict(self) -> None:
-        self.landing["data"]["repository"]["pullRequest"]["headRefOid"] = "f" * 40
+        self.landing["data"]["repository"]["mergeQueue"] = None
+        self.prs[0]["headRefOid"] = "f" * 40
         result = self.run_landing()
-        self.assertNotEqual(result.returncode, 0)
-        self.assertEqual(len(self.calls()), 1)
+        # A moved head must never reuse the built verdict: the landing step
+        # re-syncs the branch onto main and redispatches the gate for a fresh
+        # exact-head build instead of merging the stale SHA.
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        merged = any(
+            "/pulls" in " ".join(c["args"]) and "/merge" in " ".join(c["args"])
+            for c in self.calls()
+        )
+        self.assertFalse(merged)
+        self.assertTrue((self.root / "dispatch.json").exists())
 
     def test_failed_required_checks_prevent_non_queue_merge(self) -> None:
         self.landing["data"]["repository"]["mergeQueue"] = None
