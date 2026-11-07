@@ -3,8 +3,8 @@
 %global pyver_under %(%{python3} -Esc "import sys; sys.stdout.write('{0.major}_{0.minor}'.format(sys.version_info))")
 
 Name:           imath
-Version:        3.2.3
-Release:        1%{?dist}
+Version:        3.1.12
+Release:        9%{?dist}
 Summary:        Library of 2D and 3D vector, matrix, and math operations for computer graphics
 
 License:        BSD-3-Clause
@@ -102,9 +102,6 @@ Requires:       python3-devel
 
 
 %changelog
-* Sat Nov 07 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 3.2.3-1
-- Update to 3.2.3
-
 * Wed Jul 22 2026 Python Maint <python-maint@redhat.com> - 3.1.12-9
 - Rebuilt for Python 3.15.0b4 ABI change
 

@@ -1,6 +1,6 @@
 Name:    libcamera
-Version: 0.8.0
-Release: 1%{?dist}
+Version: 0.7.2
+Release: 4%{?dist}
 Summary: A library to support complex camera ISPs
 # see .reuse/dep5 and COPYING for details
 License: LGPL-2.1-or-later
@@ -198,9 +198,6 @@ install -D -m 644 %SOURCE3 %{buildroot}/%{_udevrulesdir}/
 %{python3_sitearch}/*
 
 %changelog
-* Sat Nov 07 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 0.8.0-1
-- Update to 0.8.0
-
 * Thu Aug 27 2026 Milan Zamazal <mzamazal@redhat.com> - 0.7.2-4
 - Fix ov01a10 flickering (rhbz#2483190)
 
