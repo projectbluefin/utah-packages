@@ -168,7 +168,6 @@ packages = [
     "qt5-qtwayland",
     "qt5-qtx11extras",
     "qt5-qtxmlpatterns",
-    "shim-ia32",
     "ublue-os-akmods-addons",
     "v4l2loopback",
     "virtualbox-guest-additions",
@@ -919,4 +918,5 @@ packages = [
     { name = "rpm-ostree", reason = "Utah's pinned triage waives rpm-ostree because the image uses bootc for updates (projectbluefin/utah#263; https://github.com/projectbluefin/utah/blob/4eee67d0495406aba69a8e10926a3f30a7cf8437/baselines/triage.toml#L392-L394)." },
     { name = "sil-padauk-fonts", reason = "Bulk desktop font parity rejected by Utah: https://github.com/projectbluefin/utah/issues/393#issuecomment-5920428811; no individual addition accepted." },
     { name = "vazirmatn-vf-fonts", reason = "Bulk desktop font parity rejected by Utah: https://github.com/projectbluefin/utah/issues/393#issuecomment-5920428811; no individual addition accepted." },
+    { name = "shim-ia32", reason = "32-bit Secure Boot is retired across modern firmware and Utah is 64-bit only, so carrying a factory-built signed 32-bit first-stage bootloader opens a signed-bootloader surface with no current consumer. Maintainer decision: https://github.com/projectbluefin/utah-packages/issues/507#issuecomment-6710378910 (long-tail batch #507)." },
 ]
