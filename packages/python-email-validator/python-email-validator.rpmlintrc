@@ -1,0 +1,2 @@
+# Not real spelling errors!
+addFilter(r"spelling-error \('([Dd]eliverability|localhost)',")
