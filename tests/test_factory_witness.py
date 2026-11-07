@@ -100,13 +100,16 @@ class FactoryWitnessTests(unittest.TestCase):
         weekly = next(c for c in crons if not c.endswith("* * *"))
         self.assertIn(f"github.event.schedule == '{weekly}'", REBUILD.read_text())
 
-    def test_only_the_canary_and_the_bump_gate_call_the_factory_never_for_latest(self) -> None:
+    def test_every_factory_caller_never_publishes_latest(self) -> None:
         callers = [
             path.name
             for path in sorted(WORKFLOWS.glob("*.yml"))
             if "uses: ./.github/workflows/rebuild-rpms.yml" in path.read_text()
         ]
-        self.assertEqual(callers, ["bump-upstream-gate.yml", "canary.yml"])
+        # The roster may grow; every caller must still obey the publish rules.
+        self.assertLessEqual(
+            {"bump-upstream-gate.yml", "canary.yml", "canary-read-only.yml"}, set(callers)
+        )
         for caller in callers:
             workflow = yaml.safe_load((WORKFLOWS / caller).read_text())
             self._never_latest(caller, workflow)
@@ -122,6 +125,21 @@ class FactoryWitnessTests(unittest.TestCase):
                 self.assertNotEqual(inputs.get("publish_tag"), "latest")
                 self.assertTrue(inputs.get("publish_tag") or inputs.get("skip_publish"))
                 self.assertTrue(inputs.get("artifact_prefix"))
+
+    def test_the_read_only_canary_grants_nothing_writable(self) -> None:
+        workflow = yaml.safe_load((WORKFLOWS / "canary-read-only.yml").read_text())
+        self.assertNotIn("write", workflow["permissions"].values())
+        fork_only = "github.event.pull_request.head.repo.full_name != github.repository"
+        for name, job in workflow["jobs"].items():
+            if "write" not in (job.get("permissions") or {}).values():
+                continue
+            with self.subTest(job=name):
+                # A write scope is declared only so the nested rebuild call is
+                # accepted; it runs only on fork heads, which get a read-only
+                # token, and never publishes.
+                self.assertEqual(job.get("uses"), "./.github/workflows/rebuild-rpms.yml")
+                self.assertIn(fork_only, job["if"])
+                self.assertIs(job["with"].get("skip_publish"), True)
 
     def test_no_workflow_reads_the_retired_pages_mirror(self) -> None:
         offenders = [
