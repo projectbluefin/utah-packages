@@ -3232,6 +3232,12 @@ packages:
     downstream_package_name: python-annotated-types
     paths:
       - packages/python-annotated-types
+  python-anyio:
+    specfile_path: python-anyio.spec
+    upstream_package_name: python-anyio
+    downstream_package_name: python-anyio
+    paths:
+      - packages/python-anyio
   python-argcomplete:
     specfile_path: python-argcomplete.spec
     upstream_package_name: python-argcomplete
@@ -3280,6 +3286,12 @@ packages:
     downstream_package_name: python-dns
     paths:
       - packages/python-dns
+  python-email-validator:
+    specfile_path: python-email-validator.spec
+    upstream_package_name: python-email-validator
+    downstream_package_name: python-email-validator
+    paths:
+      - packages/python-email-validator
   python-evdev:
     specfile_path: python-evdev.spec
     upstream_package_name: python-evdev
