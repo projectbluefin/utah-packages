@@ -50,3 +50,11 @@ test:
 # entries only. Idempotent; `just validate` fails until the lock is sorted.
 sort-source-locks:
     python3 tools/source_lock_order.py
+
+# Every dependency floor a GNOME module declares (meson, configure.ac, CMake)
+# against the factory's locks (D9). It downloads every GNOME module's locked
+# tarball and the factory and Hummingbird repodata, so the daily bump runs it,
+# not `check`. `just gnome-dep-floors --apply` moves each unmet dependency with
+# tools/upstream_bump.py. See docs/skills/gnome-dependency-floors.md.
+gnome-dep-floors *args:
+    python3 tools/gnome_dep_floors.py {{args}}

@@ -29,6 +29,7 @@ Both are indexed below. A skill that exists but is not listed here fails
 | Change package-cache keys, eligibility, restore/publish ordering, or cache storage | [`skills/package-build-cache.md`](skills/package-build-cache.md) |
 | Add a codec recipe, sync Bluefin's package manifest, or answer whether the factory covers Bluefin's multimedia | [`skills/multimedia-closure.md`](skills/multimedia-closure.md) |
 | Change upstream version bumps, how GNOME locks follow GNOME's newest stable release (gnome-build-meta), their RPM release and rebuild counters, or the gate that merges the daily bump | [`skills/upstream-version-bumps.md`](skills/upstream-version-bumps.md) |
+| Check that the factory's locks meet every dependency floor a GNOME module declares (D9), or move a dependency a GNOME module needs newer | [`skills/gnome-dependency-floors.md`](skills/gnome-dependency-floors.md) |
 | Change which Rawhide recipe moves the daily `bump/rawhide-imports` PR takes unattended | [`skills/rawhide-recipe-reimports.md`](skills/rawhide-recipe-reimports.md) |
 | Import, configure, or verify font package recipes | [`skills/font-package-recipes.md`](skills/font-package-recipes.md) |
 | Import a terminal emulator (ptyxis, gnome-console, kgx) or its vte291 stack | [`skills/terminal-emulator-recipes.md`](skills/terminal-emulator-recipes.md) |
