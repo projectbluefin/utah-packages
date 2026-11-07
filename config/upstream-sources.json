@@ -2104,6 +2104,13 @@
       ]
     },
     {
+      "name": "intel-vaapi-driver",
+      "version": "2.4.5",
+      "url": "https://github.com/irql-notlessorequal/intel-vaapi-driver/archive/2.4.5.tar.gz",
+      "filename": "intel-vaapi-driver-2.4.5.tar.gz",
+      "sha512": "53995050135afcc0b549b0619e115397353269a1b2b091653f623ebac25def08032ce4ea1c2d6c2974f22e085dc4bc21c5629fc8e4c088bb8d4e14000975961b"
+    },
+    {
       "name": "intel-vpl-gpu-rt",
       "version": "26.3.5",
       "url": "https://github.com/intel/vpl-gpu-rt/archive/intel-onevpl-26.3.5/intel-onevpl-26.3.5.tar.gz",
