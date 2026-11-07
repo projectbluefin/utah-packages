@@ -83,7 +83,7 @@ DATA_FILES = frozenset({
     "config/fedora-primary-sources.txt",
 })
 # pass3 perturbs this recipe and reads its lock entry; it is not in CANARY_SET.
-PERTURBED = ("python-typing-inspection",)
+PERTURBED = ("xevd",)
 
 
 def sources_touch_existing(base: object, head: object) -> bool:

@@ -11,8 +11,8 @@
 %bcond nuspell 0
 
 Name:          enchant2
-Version:       2.8.19
-Release:       3%{?dist}
+Version:       2.8.21
+Release:       1%{?dist}
 Summary:       An Enchanting Spell Checking Library
 
 License:       LGPL-2.0-or-later
@@ -260,6 +260,9 @@ find %{buildroot} -name '*.la' -delete
 
 
 %changelog
+* Fri Nov 06 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 2.8.21-1
+- Update to 2.8.21
+
 * Sat Sep 26 2026 Utah package factory <noreply@anthropic.com> - 2.8.19-3
 - Build without the Nuspell backend: Fedora nuspell links ICU 77 and the
   factory ships ICU 78

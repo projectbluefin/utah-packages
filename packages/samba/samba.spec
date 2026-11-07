@@ -151,7 +151,7 @@
 %bcond varlink 0
 %endif
 
-%global samba_version 4.25.0
+%global samba_version 4.25.1
 
 # The release field is extended:
 # <pkgrel>[.<extraver>][.<snapinfo>]%%{?dist}[.<minorbump>]
@@ -166,7 +166,7 @@
 #                    default is 1).
 %global samba_release %autorelease
 
-%global pre_release rc1
+%global pre_release %nil
 %if "x%{?pre_release}" != "x"
 %global samba_release %autorelease -p -e %pre_release
 %endif
@@ -234,9 +234,10 @@ Summary:        Server and Client software to interoperate with Windows machines
 License:        GPL-3.0-or-later AND LGPL-3.0-or-later
 URL:            https://www.samba.org
 
-# This is a xz recompressed file of https://ftp.samba.org/pub/samba/samba-%%{version}%%{pre_release}.tar.gz
-Source0:        https://ftp.samba.org/pub/samba/samba-%{version}%{pre_release}.tar.gz#/samba-%{version}%{pre_release}.tar.xz
-Source1:        https://ftp.samba.org/pub/samba/samba-%{version}%{pre_release}.tar.asc
+# Upstream's own .tar.gz, not Fedora's xz recompression of it. Samba signs the
+# uncompressed tar, so %%prep decompresses it for the signature check.
+Source0:        https://download.samba.org/pub/samba/stable/samba-%{version}%{pre_release}.tar.gz
+Source1:        https://download.samba.org/pub/samba/stable/samba-%{version}%{pre_release}.tar.asc
 Source2:        samba-pubkey_AA99442FB680B620.gpg
 
 # Red Hat specific replacement-files
@@ -1382,9 +1383,9 @@ Python bindings for the LDB library
 
 %prep
 %if 0%{?fedora} || 0%{?rhel} >= 9
-xzcat %{SOURCE0} | %{gpgverify} --keyring='%{SOURCE2}' --signature='%{SOURCE1}' --data=-
+zcat %{SOURCE0} | %{gpgverify} --keyring='%{SOURCE2}' --signature='%{SOURCE1}' --data=-
 %else
-xzcat %{SOURCE0} | gpgv2 --quiet --keyring %{SOURCE2} %{SOURCE1} -
+zcat %{SOURCE0} | gpgv2 --quiet --keyring %{SOURCE2} %{SOURCE1} -
 %endif
 %autosetup -n samba-%{version}%{pre_release} -p1
 

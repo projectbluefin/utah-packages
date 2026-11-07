@@ -74,7 +74,7 @@ class PipelineRelevantTests(unittest.TestCase):
         added = "@@ -1,2 +1,3 @@\n  keep\n+{ name = \"gnome-tour\", pr = 551 },\n  keep2\n"
         self.assertFalse(self.relevant([f("config/factory-build-backlog.toml", added)]))
         self.assertFalse(self.relevant([f("config/fedora-primary-sources.txt", "@@ -1 +1,2 @@\n a\n+zinnia\n")]))
-        for name in ("libical", "vulkan-headers", "vulkan-loader", "python-typing-inspection"):
+        for name in ("libical", "vulkan-headers", "vulkan-loader", "xevd"):
             patch = f"@@ -1,2 +1,1 @@\n-{name}\n keep\n"
             with self.subTest(name=name):
                 self.assertTrue(self.relevant([f("config/fedora-primary-sources.txt", patch)]) if name in SET

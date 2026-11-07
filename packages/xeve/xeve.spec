@@ -1,5 +1,5 @@
 Name:           xeve
-Version:        0.7.0
+Version:        0.7.1
 Release:        %autorelease
 Summary:        Reference MPEG-5 Part 1 (EVC) encoder
 

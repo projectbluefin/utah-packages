@@ -1,11 +1,11 @@
 Name:           libao
-Version:        1.2.0
-Release:        32%{?dist}
+Version:        1.2.2
+Release:        1%{?dist}
 Summary:        Cross Platform Audio Output Library
 License:        GPL-2.0-or-later
 URL:            http://xiph.org/ao/
-Source0:        http://downloads.xiph.org/releases/ao/%{name}-%{version}.tar.gz
-Patch1:         0001-ao_pulse.c-fix-latency-calculation.patch
+# 1.2.2 is a git tag only: no release tarball, so no generated configure.
+Source0:        https://github.com/xiph/libao/archive/%{version}/%{name}-%{version}.tar.gz
 # https://gitlab.xiph.org/xiph/libao/commit/d5221655dfd1a2156aa6be83b5aadea7c1e0f5bd.diff
 # CVE 2017-11548
 Patch2:         d5221655dfd1a2156aa6be83b5aadea7c1e0f5bd.diff
@@ -14,6 +14,9 @@ BuildRequires:  gcc
 BuildRequires:  alsa-lib-devel
 BuildRequires:  pkgconfig(libpulse)
 BuildRequires: make
+BuildRequires:  autoconf
+BuildRequires:  automake
+BuildRequires:  libtool
 
 %description
 Libao is a cross-platform audio library that allows programs to output audio
@@ -31,9 +34,9 @@ developing applications that use %{name}.
 
 %prep
 %setup -q
-%patch -P1 -p1
 %patch -P2 -p1
 %patch -P3 -p1
+autoreconf -fi
 sed -i "s/-O20 -ffast-math//" configure
 
 
@@ -70,6 +73,10 @@ rm -rf $RPM_BUILD_ROOT%{_docdir}/%{name}*
 
 
 %changelog
+* Fri Nov 06 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 1.2.2-1
+- Update to 1.2.2, built from the upstream git tag archive with autoreconf
+- Drop 0001-ao_pulse.c-fix-latency-calculation.patch, merged upstream
+
 * Thu Jul 16 2026 Fedora Release Engineering <releng@fedoraproject.org> - 1.2.0-32
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_45_Mass_Rebuild
 
