@@ -38,7 +38,12 @@ The %{name}-devel package contains libraries and header files for developing
 applications that use %{name}.
 
 %prep
-%autosetup -p1 -n %{name}-%{commit}
+%autosetup -N -n %{name}-%{commit}
+%patch -P0 -p1
+%ifarch %{ix86}
+%patch -P1 -p1
+%endif
+%patch -P2 -p1
 sed -i '/libdir/ s/"lib"/"%{_lib}"/' source/CMakeLists.txt
 
 %build
