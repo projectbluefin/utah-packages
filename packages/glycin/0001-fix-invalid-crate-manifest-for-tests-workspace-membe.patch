@@ -1,7 +1,7 @@
-From 0c961becebb52b9e7077e4217b7dfdbcd6730b1b Mon Sep 17 00:00:00 2001
+From 31d6cca0e944e03a7b309c36ced25b12ecf62410 Mon Sep 17 00:00:00 2001
 From: Fabio Valentini <decathorpe@gmail.com>
 Date: Sat, 8 Mar 2025 18:43:41 +0100
-Subject: [PATCH 1/5] fix invalid crate manifest for tests workspace member
+Subject: [PATCH 1/4] fix invalid crate manifest for tests workspace member
 
 ---
  tests/Cargo.toml | 7 ++++++-
@@ -23,5 +23,5 @@ index 35d15cb..4f9fe76 100644
 +zbus = { workspace = true }
 +
 -- 
-2.55.0
+2.56.0
 

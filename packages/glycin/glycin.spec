@@ -8,7 +8,7 @@
 %bcond bundled_rust_deps 1
 
 Name:           glycin
-Version:        2.2~beta
+Version:        2.2.2
 Release:        %autorelease
 Summary:        Sandboxed image rendering
 
@@ -75,9 +75,6 @@ Patch:          0001-fix-invalid-crate-manifest-for-tests-workspace-membe.patch
 Patch:          0002-Replace-serde_yaml_ng-with-equivalent-serde_yaml-dep.patch
 Patch:          0003-drop-unused-benchmark-only-criterion-dev-dependency.patch
 Patch:          0004-fix-discovery-of-path-dependencies-that-were-not-wor.patch
-# backport https://gitlab.gnome.org/GNOME/glycin/-/commit/b918acf
-# to account for https://github.com/gufo-rs/gufo/commit/a8a4905
-Patch:          0005-Backport-changes-to-support-gufo-0.5.0-beta.1.patch
 
 %if 0%{?rhel}
 BuildRequires:  rust-toolset

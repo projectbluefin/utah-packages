@@ -1,0 +1,8 @@
+{
+  "package": "python-SecretStorage",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/python-SecretStorage.git",
+  "commit": "113b5b7f3ad623595c270812a039aadab275cf93",
+  "tree": "ac46c3d955495b2e20db4755f9d80e68631a330c",
+  "imported_at": "2026-11-07T03:04:47.153539+00:00"
+}

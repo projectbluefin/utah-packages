@@ -108,6 +108,37 @@ Strict freshness stays on. Behavioral coverage lives in
 `tests/test_update_armed_prs.py`, which executes the workflow body against a
 fake API client without using live credentials.
 
+## Trusted producer handoff to required PR checks
+
+`refresh-buildroot.yml` creates and updates `chore/buildroot-mirror` with the
+same repository-scoped mergeraptor App, requesting only contents and
+pull-request write access. Its job accepts only this organization's default
+`main` ref, including for manual dispatch: a dispatch on another ref must
+skip before checkout, mirror publication or credential minting. Checkout is
+of trusted main only, never a fork or PR head, with persisted Git credentials
+disabled. The pinned token action revokes its token at job completion.
+The PR commit is restricted to `config/buildroot-image` and
+`config/buildroot-lock.json`; publishing the mirror still uses the workflow's
+separate package-write `GITHUB_TOKEN`.
+
+App-authenticated PR creation and updates hand off to the normal
+`pull_request` workflows. This is required for the real **Canary**, **Unit
+tests** and **Runtime contract** checks, not merely a successful workflow
+whose job happens to be called `validate`. `bot-pr-validate.yml` remains for
+the Rawhide import caller and retains its exact-head, same-repository,
+bot-author trust checks; it performs static validation, not equivalent
+runtime acceptance. Buildroot refresh no longer dispatches it. Do not
+fabricate required statuses, weaken checks, grant auto-merge permissions or
+remove a hold to compensate for missing PR events.
+
+For a publication-free smoke check, inspect the workflow with `actionlint`
+and run `tests/test_buildroot_sharing.py` and `tests/test_bot_pr_trust.py`.
+Do not dispatch refresh merely to test this handoff: it publishes an image
+and may update a PR. On the next authorized scheduled refresh, inspect the
+exact resulting head's normal PR workflow jobs and required contexts;
+`action_required` with no jobs is not successful acceptance. Current-base
+freshness and Canary's real runtime verdict remain prerequisites for landing.
+
 ## Validating a change here
 
 - `just check` (factory contract + workflow quoting + runtime contract + tests)

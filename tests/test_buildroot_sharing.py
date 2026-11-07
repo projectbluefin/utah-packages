@@ -209,26 +209,31 @@ class BuildRootPinTests(unittest.TestCase):
         self.assertIn("ghcr.io/projectbluefin/utah-buildroot", refresh)
         self.assertIn("schedule:", refresh)
 
-    def test_a_dispatched_listener_validates_the_refreshed_pin(self) -> None:
-        # peter-evans/create-pull-request opens the chore/buildroot-mirror
-        # PR with the workflow's own GITHUB_TOKEN, so GitHub does not start a
-        # pull_request workflow for the resulting PR (#377): validate.yml
-        # would never see the new pin before merge. The bot workflow now
-        # dispatches bot-pr-validate.yml as its last step, in this
-        # repository's own context, so the validation steps re-run against the
-        # PR head SHA and the check suite attaches to the PR (#378).
+    def test_the_refresh_workflow_hands_off_to_real_pr_checks(self) -> None:
+        # The PR is opened with the mergeraptor App token so pull_request
+        # workflows (Canary, Unit tests, Runtime contract) run on its exact
+        # source head (#874). The workflow token itself must not be able to
+        # open PRs, and the old bot-pr-validate dispatch is gone.
+        refresh = (WORKFLOWS / "refresh-buildroot.yml").read_text()
+        self.assertIn("actions/create-github-app-token@", refresh)
+        self.assertIn("token: ${{ steps.app-token.outputs.token }}", refresh)
+        self.assertIn("persist-credentials: false", refresh)
+        self.assertNotIn("pull-requests: write\n", refresh.split("jobs:")[0])
+        self.assertNotIn("bot-pr-validate.yml", refresh)
+        # The schedule payload has no repository object, so this would skip
+        # every weekly run.
+        self.assertNotIn("github.event.repository.default_branch", refresh)
+
+    def test_the_rawhide_importer_still_dispatches_the_listener(self) -> None:
+        # bot-pr-validate.yml stays for import-rawhide-package.yml; keep its
+        # trust shape pinned (#377/#378): workflow_dispatch + pr input, no
+        # workflow_run trigger, resolves the head via `gh pr view`.
         listener = (WORKFLOWS / "bot-pr-validate.yml").read_text()
         self.assertIn("workflow_dispatch:", listener)
         self.assertIn("pr:", listener)
         self.assertIn("python3 tools/validate.py", listener)
-        # Bot workflow must dispatch the validator at the end of its run,
-        # otherwise the validate job never fires for the bot PR.
-        refresh_text = (WORKFLOWS / "refresh-buildroot.yml").read_text()
-        self.assertIn("bot-pr-validate.yml", refresh_text)
-        # The listener resolves the PR head SHA at runtime, never pins
-        # workflow_run.head_sha (which is main's HEAD for schedule runs and
-        # would re-validate main, not the bot PR). workflow_run trigger is
-        # rejected altogether.
+        importer = (WORKFLOWS / "import-rawhide-package.yml").read_text()
+        self.assertIn("bot-pr-validate.yml", importer)
         body = "\n".join(
             line for line in listener.splitlines() if not line.lstrip().startswith("#")
         )

@@ -1,0 +1,8 @@
+{
+  "package": "kf6-kimageformats",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/kf6-kimageformats.git",
+  "commit": "016eb80dcae64c4c9d6d33748b7791291b663ef9",
+  "tree": "cf542f7192a0d7342413a5d06e425d60f22b5f8b",
+  "imported_at": "2026-11-07T03:04:37.727107+00:00"
+}

@@ -1,0 +1,8 @@
+{
+  "package": "python-keyring",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/python-keyring.git",
+  "commit": "8621b364d144b9f84a31893d4db25eff40281620",
+  "tree": "4e627c6d0a80c225868ebb68c50b8d148302e7e4",
+  "imported_at": "2026-11-07T03:04:47.943529+00:00"
+}

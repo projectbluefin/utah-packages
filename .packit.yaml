@@ -1426,6 +1426,18 @@ packages:
     downstream_package_name: kf6-karchive
     paths:
       - packages/kf6-karchive
+  kf6-kimageformats:
+    specfile_path: kf6-kimageformats.spec
+    upstream_package_name: kf6-kimageformats
+    downstream_package_name: kf6-kimageformats
+    paths:
+      - packages/kf6-kimageformats
+  kvazaar:
+    specfile_path: kvazaar.spec
+    upstream_package_name: kvazaar
+    downstream_package_name: kvazaar
+    paths:
+      - packages/kvazaar
   kyotocabinet:
     specfile_path: kyotocabinet.spec
     upstream_package_name: kyotocabinet
@@ -3208,6 +3220,12 @@ packages:
     downstream_package_name: pyscard
     paths:
       - packages/pyscard
+  python-SecretStorage:
+    specfile_path: python-SecretStorage.spec
+    upstream_package_name: python-SecretStorage
+    downstream_package_name: python-SecretStorage
+    paths:
+      - packages/python-SecretStorage
   python-annotated-types:
     specfile_path: python-annotated-types.spec
     upstream_package_name: python-annotated-types
@@ -3256,6 +3274,12 @@ packages:
     downstream_package_name: python-distro
     paths:
       - packages/python-distro
+  python-dns:
+    specfile_path: python-dns.spec
+    upstream_package_name: python-dns
+    downstream_package_name: python-dns
+    paths:
+      - packages/python-dns
   python-evdev:
     specfile_path: python-evdev.spec
     upstream_package_name: python-evdev
@@ -3292,12 +3316,24 @@ packages:
     downstream_package_name: python-jaraco-functools
     paths:
       - packages/python-jaraco-functools
+  python-jeepney:
+    specfile_path: python-jeepney.spec
+    upstream_package_name: python-jeepney
+    downstream_package_name: python-jeepney
+    paths:
+      - packages/python-jeepney
   python-jmespath:
     specfile_path: python-jmespath.spec
     upstream_package_name: python-jmespath
     downstream_package_name: python-jmespath
     paths:
       - packages/python-jmespath
+  python-keyring:
+    specfile_path: python-keyring.spec
+    upstream_package_name: python-keyring
+    downstream_package_name: python-keyring
+    paths:
+      - packages/python-keyring
   python-linux-procfs:
     specfile_path: python-linux-procfs.spec
     upstream_package_name: python-linux-procfs
@@ -3394,6 +3430,18 @@ packages:
     downstream_package_name: python-pyudev
     paths:
       - packages/python-pyudev
+  python-rapidfuzz:
+    specfile_path: python-rapidfuzz.spec
+    upstream_package_name: python-rapidfuzz
+    downstream_package_name: python-rapidfuzz
+    paths:
+      - packages/python-rapidfuzz
+  python-regex:
+    specfile_path: python-regex.spec
+    upstream_package_name: python-regex
+    downstream_package_name: python-regex
+    paths:
+      - packages/python-regex
   python-shtab:
     specfile_path: python-shtab.spec
     upstream_package_name: python-shtab
@@ -3418,6 +3466,12 @@ packages:
     downstream_package_name: python-versioneer
     paths:
       - packages/python-versioneer
+  pyxdg:
+    specfile_path: pyxdg.spec
+    upstream_package_name: pyxdg
+    downstream_package_name: pyxdg
+    paths:
+      - packages/pyxdg
   qemu:
     specfile_path: qemu.spec
     upstream_package_name: qemu
