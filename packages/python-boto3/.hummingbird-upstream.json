@@ -1,0 +1,8 @@
+{
+  "package": "python-boto3",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/python-boto3.git",
+  "commit": "42ad70626c006a153da709ab70aa49735592dbef",
+  "tree": "dd6b676a22367669e58510df80bfa73443ae39b4",
+  "imported_at": "2026-11-07T17:40:07.909111+00:00"
+}

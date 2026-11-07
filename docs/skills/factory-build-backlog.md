@@ -632,10 +632,12 @@ Yubico C releases (`libyubikey`, `ykclient`, `ykpers`) still declare `http://ope
 By contrast, `yubikey-manager` (`python3-yubikey-manager`) is a `pyproject`
 package whose `[project].dependencies` generate runtime `python3dist(...)`
 `Requires` across multiple backlog areas. `python3-click`, `python3-pyscard`,
-`python3-pskc` and the `jaraco` libraries already have recipes in `[resolved]`;
-`python3-fido2` and `python3-keyring` (with `secretstorage`/`jeepney`) are still
-pending in `dev-tools`. Its recipe landed in #839 as recipe coverage only (both
-names moved to `[resolved]`). A later successful hosted build and publication
+`python3-pskc`, the `jaraco` libraries and `python3-keyring` (with
+`secretstorage`/`jeepney`) already have recipes in `[resolved]`.
+`python3-fido2`'s recipe landed in #949 as recipe coverage only (moved to
+`[resolved]`); its hosted build, publication and runtime proof remain
+outstanding on #489. The `yubikey-manager` recipe landed in #839 as recipe
+coverage only (both names moved to `[resolved]`). A later successful hosted build and publication
 covered both outputs; runtime dependency resolution and device validation
 remain separate on #479. Record the observed run and binary identities in the
 catalog, and recheck the current image before making publication claims:

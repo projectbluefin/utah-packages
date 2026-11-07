@@ -74,7 +74,10 @@ OIDC/Cosign, and publishes the result as an OCI image. Pull requests from
 forks never publish RPMs or images on their own; a maintainer can run Canary on
 a reviewed fork pull request, which builds the fork's code and publishes a
 `utah-packages:canary-…` image (see
-[docs/skills/lane-validation.md](docs/skills/lane-validation.md)).
+[docs/skills/lane-validation.md](docs/skills/lane-validation.md)). Until then,
+the automatic **Canary (read-only)** check builds the canary set from the
+fork's code through both build lanes without publishing; it proves the builds,
+not the signed image or the cache, so the maintainer run is still required.
 
 The build does **not** currently run in Mock, despite installing it. See
 *Agreed direction* in [docs/architecture.md](docs/architecture.md).

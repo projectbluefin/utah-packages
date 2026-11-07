@@ -323,7 +323,10 @@ line with a `# Utah:` comment, and pin the xz digest in `sources` and the lock.
 This is the one case where the `Source:` line moves: the build stages the
 lock's `filename`, so the two must agree. Before pinning, unpack Fedora's
 lookaside archive and `diff -r` it against the generated tree; for 7zip 26.04
-they are identical.
+and 26.05 they are identical. A security-only point release moves this way
+too: the recipe's input pin table and the spec version are the only edits
+the generator needs, and the upstream bump feed leaves generated sources
+alone by design, so watch these upstreams by hand.
 
 ## Source verification reporting
 
