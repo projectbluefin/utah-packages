@@ -1171,14 +1171,14 @@
     },
     {
       "name": "glycin",
-      "version": "2.2~beta",
-      "url": "https://download.gnome.org/sources/glycin/2.2/glycin-2.2.beta.tar.xz",
-      "filename": "glycin-2.2.beta.tar.xz",
-      "feed": "https://download.gnome.org/sources/glycin/2.2/glycin-2.2.beta.tar.xz",
-      "sha512": "e6b9ba38e3cd8f121f344f53fc8643c29f679d1347973a89d517d6ef2712364849dafdf55e7143a9a49f13282539ad2c34fb0176bb083a01458feda02a3efdb8",
+      "version": "2.2.2",
+      "url": "https://download.gnome.org/sources/glycin/2.2/glycin-2.2.2.tar.xz",
+      "filename": "glycin-2.2.2.tar.xz",
+      "feed": "https://download.gnome.org/sources/glycin/2.2/glycin-2.2.2.tar.xz",
+      "sha512": "866a758cc543702439fad71a9631664d0cafb65a4bfeca234e0b3875d9c6baacdadeec54867ee12e797f9b4cd87cc9ec6849cfe688aa2c79838f73239799f85c",
       "stage": 0,
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/glycin/glycin-2.2.beta.tar.xz/sha512/e6b9ba38e3cd8f121f344f53fc8643c29f679d1347973a89d517d6ef2712364849dafdf55e7143a9a49f13282539ad2c34fb0176bb083a01458feda02a3efdb8/glycin-2.2.beta.tar.xz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/glycin/glycin-2.2.2.tar.xz/sha512/866a758cc543702439fad71a9631664d0cafb65a4bfeca234e0b3875d9c6baacdadeec54867ee12e797f9b4cd87cc9ec6849cfe688aa2c79838f73239799f85c/glycin-2.2.2.tar.xz"
       ]
     },
     {
@@ -2248,6 +2248,13 @@
       "url": "https://download.kde.org/stable/frameworks/6.31/karchive-6.31.0.tar.xz",
       "filename": "karchive-6.31.0.tar.xz",
       "sha512": "f6428f1f4bfe02ab0a111196e256834adb32f54cbbf93af85f5de136ce4b2cbc7d7835a61827c470216cc3edc8200117374f370811f45b1426126a85f8ccbcb1"
+    },
+    {
+      "name": "kf6-kimageformats",
+      "version": "6.31.0",
+      "url": "https://download.kde.org/stable/frameworks/6.31/kimageformats-6.31.0.tar.xz",
+      "filename": "kimageformats-6.31.0.tar.xz",
+      "sha512": "fa467fa737f3af4abf2dd3fc4fc40fbf8de79ffa9150cd88c694ce98916ef34d69163ac36f6048c074aa560a35ebc66d6b606daab5d8b74e6132f44781f3716c"
     },
     {
       "name": "kvazaar",
@@ -5092,6 +5099,13 @@
       "sha512": "2f5f4bbbdc65c4116ea04a01241c5c714cf62335a65591eb60a400499792749dd2c3408624be374d46885636cdef573db58d72b207512375318069cad3abb187"
     },
     {
+      "name": "python-SecretStorage",
+      "version": "3.5.0",
+      "url": "https://github.com/mitya57/secretstorage/archive/3.5.0/secretstorage-3.5.0.tar.gz",
+      "filename": "secretstorage-3.5.0.tar.gz",
+      "sha512": "8a5ec3dcf5212fb1e8c431eaa424f83a50fd75a91368abf32e2210cb42a6fb041c0e235e8ef008eb9fc761931a2def5925d8a0e59a05d2b4f6cbcf32b7af6fbf"
+    },
+    {
       "name": "python-annotated-types",
       "version": "0.8.0",
       "url": "https://github.com/annotated-types/annotated-types/archive/v0.8.0/annotated-types-0.8.0.tar.gz",
@@ -5233,6 +5247,13 @@
       "url": "https://github.com/jmespath/jmespath.py/archive/1.0.1/jmespath.py-1.0.1.tar.gz",
       "filename": "jmespath.py-1.0.1.tar.gz",
       "sha512": "c1676a4b7565d25c2948569005c503a0ca33908de6ed16536767da2c00c634e4ee345bcaf88a01bf6cd2996aaf722faaedff80061ab65ee77e5bc0f494f86a70"
+    },
+    {
+      "name": "python-keyring",
+      "version": "25.7.0",
+      "url": "https://files.pythonhosted.org/packages/source/k/keyring/keyring-25.7.0.tar.gz",
+      "filename": "keyring-25.7.0.tar.gz",
+      "sha512": "24471413c4980c2bde3b4d1e4f8e4e196656f8898882cd5f9f3b3e088561ee4a365a54556c243bc1d0be5e85438113545ff6809791dbe3ed38998984e00227a5"
     },
     {
       "name": "python-linux-procfs",

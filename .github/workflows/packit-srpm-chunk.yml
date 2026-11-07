@@ -43,18 +43,14 @@ jobs:
           PACKAGE: ${{ matrix.package }}
         run: |
           mkdir -p work/srpm
-          # The digest below is what the packit image resolved to on
-          # 2026-09-17. That repository publishes one mutable tag and
-          # garbage-collects the digest it replaces, so a pin here dies on
-          # upstream schedule, not on any change to this repo: `docker run`
-          # answers `manifest unknown` and every srpm job exits 125 on every
-          # branch before the container starts. Two pins have gone that way
-          # already -- sha256:149e6e06...c947494, repinned by 15a9dd5, and
-          # sha256:8a178425...3fae43e1, dead by 2026-09-17. Renovate does not
-          # track it: its github-actions manager reads `container:` and
-          # `services:`, not an image named inside a `run:` script. Repin by
-          # resolving the tag, never by naming the tag here -- AGENTS.md
-          # requires a digest.
+          # The packit image is pinned by digest, never by tag alone
+          # (AGENTS.md). That repository publishes one mutable tag and
+          # garbage-collects the digest it replaces, so a stale pin answers
+          # `manifest unknown` and every srpm job exits 125 on every branch
+          # before the container starts. Renovate keeps the digest current
+          # through the quay.io customManager in renovate.json, which reads
+          # image references inside workflow `run:` scripts; merge its update
+          # PRs rather than repinning by hand.
           #
           # Keep this comment out of the `docker run` continuation below. A
           # comment line after a trailing `\` is joined onto the command and
