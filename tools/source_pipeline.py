@@ -10,8 +10,11 @@ checksum manifest; the downloaded archive must appear in that manifest.
 from __future__ import annotations
 
 import argparse
+import bz2
+import gzip
 import hashlib
 import json
+import lzma
 import shutil
 import subprocess
 import sys
@@ -108,10 +111,37 @@ def fetch_with_fallbacks(urls: list[str], destination: Path) -> str:
     raise RuntimeError("all source URLs failed: " + "; ".join(errors))
 
 
+# What a detached signature was made over. Most projects sign the file they
+# publish; Samba signs the uncompressed tar and publishes it gzipped (its
+# samba-X.tar.asc beside samba-X.tar.gz), so the lock says "tar" and the
+# download is decompressed before gpg sees it.
+SIGNATURE_COVERS = frozenset({"file", "tar"})
+DECOMPRESSORS = (
+    (b"\x1f\x8b", gzip.open),
+    (b"\xfd7zXZ\x00", lzma.open),
+    (b"BZh", bz2.open),
+)
+
+
+def decompressed_tar(archive: Path, destination: Path) -> Path:
+    """The uncompressed tar inside a gzip, xz or bzip2 download."""
+    with archive.open("rb") as handle:
+        magic = handle.read(6)
+    opener = next((open_ for prefix, open_ in DECOMPRESSORS if magic.startswith(prefix)), None)
+    if opener is None:
+        raise ValueError(f"{archive.name}: the signature covers the tar, but this is no gzip, xz or bzip2 file")
+    with opener(archive, "rb") as source, destination.open("wb") as tar:
+        shutil.copyfileobj(source, tar, 1024 * 1024)
+    return destination
+
+
 def verify_signature(package: dict, target: Path, directory: Path) -> None:
     key, signature_url = package.get("gpg_key"), package.get("signature_url")
     if bool(key) != bool(signature_url):
         raise ValueError("gpg_key and signature_url must be configured together")
+    covers = package.get("signature_covers", "file")
+    if covers not in SIGNATURE_COVERS:
+        raise ValueError(f"signature_covers must be one of {sorted(SIGNATURE_COVERS)}, not {covers!r}")
     if not key:
         return
     signature = directory / f"{target.name}.asc"
@@ -122,7 +152,8 @@ def verify_signature(package: dict, target: Path, directory: Path) -> None:
     with __import__("tempfile").TemporaryDirectory(prefix="source-pipeline-gpg-") as home:
         environment = {"GNUPGHOME": home}
         subprocess.run(["gpg", "--batch", "--import", str(key_path)], check=True, env=environment, capture_output=True)
-        subprocess.run(["gpg", "--batch", "--verify", str(signature), str(target)], check=True, env=environment, capture_output=True)
+        signed = target if covers == "file" else decompressed_tar(target, Path(home) / "signed.tar")
+        subprocess.run(["gpg", "--batch", "--verify", str(signature), str(signed)], check=True, env=environment, capture_output=True)
 
 
 LOOKASIDE = "https://src.fedoraproject.org/repo/pkgs/rpms/{pkg}/{name}/sha512/{hash}/{name}"

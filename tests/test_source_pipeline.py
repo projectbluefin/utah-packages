@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 
+import bz2
 import contextlib
 import email.message
+import gzip
 import hashlib
 import io
 import json
+import lzma
 import os
 from pathlib import Path
 import subprocess
@@ -475,6 +478,47 @@ class SignatureConfigurationTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "configured GPG key does not exist"):
                     verify_signature(package, root / "target", root)
             run.assert_not_called()
+
+    def verified_payload(self, archive: bytes, **lock) -> bytes:
+        """What gpg --verify was handed for a download with these lock fields."""
+        seen = []
+
+        def run(command, **_):
+            if "--verify" in command:
+                seen.append(Path(command[-1]).read_bytes())
+            return subprocess.CompletedProcess(command, 0)
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "key.gpg").write_bytes(b"key")
+            (root / "demo.tar.gz").write_bytes(archive)
+            package = {"gpg_key": str(root / "key.gpg"), "signature_url": "https://example.org/demo.tar.asc", **lock}
+            with patch("tools.source_pipeline.fetch"), patch("tools.source_pipeline.subprocess.run", side_effect=run):
+                verify_signature(package, root / "demo.tar.gz", root)
+        self.assertEqual(len(seen), 1)
+        return seen[0]
+
+    def test_a_signature_covers_the_downloaded_file_by_default(self) -> None:
+        archive = gzip.compress(b"tar bytes")
+        self.assertEqual(self.verified_payload(archive), archive)
+
+    def test_a_tar_signature_is_checked_against_the_decompressed_tar(self) -> None:
+        # Samba signs samba-X.tar and publishes samba-X.tar.gz.
+        for compress in (gzip.compress, lzma.compress, bz2.compress):
+            with self.subTest(compress=compress.__module__):
+                self.assertEqual(
+                    self.verified_payload(compress(b"tar bytes"), signature_covers="tar"), b"tar bytes"
+                )
+
+    def test_a_tar_signature_on_an_uncompressed_download_is_refused(self) -> None:
+        with self.assertRaisesRegex(ValueError, "no gzip, xz or bzip2 file"):
+            self.verified_payload(b"plain tar", signature_covers="tar")
+
+    def test_an_unknown_signature_scope_is_refused(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            with self.assertRaisesRegex(ValueError, "signature_covers must be one of"):
+                verify_signature({"name": "demo", "signature_covers": "tarball"}, root / "target", root)
 
 
 class SourceManifestTests(unittest.TestCase):

@@ -689,11 +689,13 @@
     },
     {
       "name": "enchant2",
-      "version": "2.8.19",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/enchant2/enchant-2.8.19.tar.gz/sha512/0aebd255d589637d0947f8832a194457f561e6000fbfdcff57e487f85203b5ddc77458d1eaad84fd8765052264ff2d9b1dbaf5fbce0ca194aa097f4944b302db/enchant-2.8.19.tar.gz",
-      "filename": "enchant-2.8.19.tar.gz",
-      "feed": "https://github.com/rrthomas/enchant/releases/download/v2.8.19/enchant-2.8.19.tar.gz",
-      "sha512": "0aebd255d589637d0947f8832a194457f561e6000fbfdcff57e487f85203b5ddc77458d1eaad84fd8765052264ff2d9b1dbaf5fbce0ca194aa097f4944b302db"
+      "version": "2.8.21",
+      "url": "https://github.com/rrthomas/enchant/releases/download/v2.8.21/enchant-2.8.21.tar.gz",
+      "filename": "enchant-2.8.21.tar.gz",
+      "sha512": "8e8bd820ff529f97215d9ca477fa6be8d330669b4378c36260e0460983beb6788d62b1f2b6602816b32aa0e12c012e1b1a2a1bacef9b86db7850a8d129c44f77",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/enchant2/enchant-2.8.21.tar.gz/sha512/8e8bd820ff529f97215d9ca477fa6be8d330669b4378c36260e0460983beb6788d62b1f2b6602816b32aa0e12c012e1b1a2a1bacef9b86db7850a8d129c44f77/enchant-2.8.21.tar.gz"
+      ]
     },
     {
       "name": "espeak-ng",
@@ -2472,14 +2474,10 @@
     },
     {
       "name": "libao",
-      "version": "1.2.0",
-      "url": "https://downloads.xiph.org/releases/ao/libao-1.2.0.tar.gz",
-      "filename": "libao-1.2.0.tar.gz",
-      "feed": "https://release-monitoring.org/project/7629",
-      "sha512": "9456953826c188d67129ad78366bb86d6243499f2cd340d20d61366f7e40a33f3f8ab601c7f18ce9e24aa22f898093b482b2415b7e428c1486ef7e5ac27b3ee4",
-      "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/libao/libao-1.2.0.tar.gz/md5/9f5dd20d7e95fd0dd72df5353829f097/libao-1.2.0.tar.gz"
-      ]
+      "version": "1.2.2",
+      "url": "https://github.com/xiph/libao/archive/1.2.2/libao-1.2.2.tar.gz",
+      "filename": "libao-1.2.2.tar.gz",
+      "sha512": "d2736d25b60862e7d7469611ce31b1df40a4366ab160e2ff1b46919ae91692d1596c8468e4f016303b306fc3ac1bddc7b727f535a362f403c3fe7c6532e9045a"
     },
     {
       "name": "libappindicator",
@@ -4474,11 +4472,11 @@
     },
     {
       "name": "noopenh264",
-      "version": "2.6.0",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/noopenh264/noopenh264-2.6.0.tar.gz/sha512/2945eeeb0da7c1689a068c55a07ab8fce48bf30b65beca8b1dbee101747836e1d7f9f50a69ac5feb44603443a375338e95473efe18e38c10c7c77125283d9090/noopenh264-2.6.0.tar.gz",
-      "filename": "noopenh264-2.6.0.tar.gz",
+      "version": "2.7.0",
+      "url": "https://codeberg.org/distro-openh264/noopenh264/archive/v2.7.0.tar.gz",
+      "filename": "noopenh264-2.7.0.tar.gz",
       "feed": "https://release-monitoring.org/project/386644",
-      "sha512": "2945eeeb0da7c1689a068c55a07ab8fce48bf30b65beca8b1dbee101747836e1d7f9f50a69ac5feb44603443a375338e95473efe18e38c10c7c77125283d9090"
+      "sha512": "cfce83a2fd2784d5405b4adc08b17a68caf945efd4eb27d679d12ec673a57ed472d908befa8d6e228724268848e20bddc6f74ceb93450e20a9f3973fb1aa89ae"
     },
     {
       "name": "ntfs-3g",
@@ -5350,11 +5348,14 @@
     },
     {
       "name": "python-typing-inspection",
-      "version": "0.4.4",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/python-typing-inspection/typing_inspection-0.4.4.tar.gz/sha512/1d207f47d29a4704fdd1ca2fa39277a658d7b4551da88887cbf90e42cbfc0eeb3dbd82f86ffbfc3438f7771e943dfa37f4bb3f06dcbe9e04a2a187d11536dba4/typing_inspection-0.4.4.tar.gz",
-      "filename": "typing_inspection-0.4.4.tar.gz",
+      "version": "0.4.5",
+      "url": "https://files.pythonhosted.org/packages/source/t/typing_inspection/typing_inspection-0.4.5.tar.gz",
+      "filename": "typing_inspection-0.4.5.tar.gz",
       "feed": "https://release-monitoring.org/project/377682",
-      "sha512": "1d207f47d29a4704fdd1ca2fa39277a658d7b4551da88887cbf90e42cbfc0eeb3dbd82f86ffbfc3438f7771e943dfa37f4bb3f06dcbe9e04a2a187d11536dba4"
+      "sha512": "39e912ecfa60e01ebf76d02057813699b9bcd30b923cca03f56cb89b173fd2ac7bda5a69eb1744b01a67bdb596b72eb7c298ab88379ec63cbb26a7dce743f996",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/python-typing-inspection/typing_inspection-0.4.5.tar.gz/sha512/39e912ecfa60e01ebf76d02057813699b9bcd30b923cca03f56cb89b173fd2ac7bda5a69eb1744b01a67bdb596b72eb7c298ab88379ec63cbb26a7dce743f996/typing_inspection-0.4.5.tar.gz"
+      ]
     },
     {
       "name": "python-versioneer",
@@ -5591,13 +5592,15 @@
     },
     {
       "name": "samba",
-      "version": "4.25.0rc1",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/samba/samba-4.25.0rc1.tar.xz/sha512/34b1a2ebf9b391fa9f03cfc6bb95cfb47237e1c0a677144b6e699420fe27fe22a113783e6bc17244948156091bf1d24debe3b996ff026724f0c2aaf06e2ed736/samba-4.25.0rc1.tar.xz",
-      "filename": "samba-4.25.0rc1.tar.xz",
+      "version": "4.25.1",
+      "url": "https://download.samba.org/pub/samba/stable/samba-4.25.1.tar.gz",
+      "filename": "samba-4.25.1.tar.gz",
       "feed": "https://release-monitoring.org/project/4758",
-      "sha512": "34b1a2ebf9b391fa9f03cfc6bb95cfb47237e1c0a677144b6e699420fe27fe22a113783e6bc17244948156091bf1d24debe3b996ff026724f0c2aaf06e2ed736",
+      "sha512": "2d0c186927b7d773681a960e276f2d3fd2b89fb6a9061c526e034e6cf5f8a3ec33a9f0b72c1b16e9a0cfa54b86af39b2cc608970ba471a535376a238827d8d61",
       "stage": 2,
-      "rebuild_reason": "Relink against Hummingbird ICU 78. 507b2bf made 78 the sole runtime ICU, but the published samba still requires libicuuc.so.77 and libicui18n.so.77, which no longer resolve; Release is %{samba_release}, a macro dist_bump refuses to guess at, so this entry change is what forces the rebuild."
+      "signature_url": "https://download.samba.org/pub/samba/stable/samba-4.25.1.tar.asc",
+      "signature_covers": "tar",
+      "gpg_key": "packages/samba/samba-pubkey_AA99442FB680B620.gpg"
     },
     {
       "name": "sane-airscan",
@@ -6737,19 +6740,19 @@
     },
     {
       "name": "xevd",
-      "version": "0.7.0",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/xevd/xevd-free-0.7.0.tar.gz/sha512/3ddd2c752dc8743ef0df2ca30fa6f2d01ea8fe58fe3c531a16676eb508e59656e786f8424cc7f91137759ce27091b237af25a434fa0e0380e67cc0f1c0d7620e/xevd-free-0.7.0.tar.gz",
-      "filename": "xevd-free-0.7.0.tar.gz",
+      "version": "0.8.0",
+      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/xevd/xevd-free-0.8.0.tar.gz/sha512/28330cfc70b5d5b258dca7e5212d31b444e922e4e00771126ebf0e408c6a18d9e011751602e0d2d07c2c1d812b3c2643e3c72847b5619e28c37da292dd901083/xevd-free-0.8.0.tar.gz",
+      "filename": "xevd-free-0.8.0.tar.gz",
       "feed": "https://release-monitoring.org/project/378023",
-      "sha512": "3ddd2c752dc8743ef0df2ca30fa6f2d01ea8fe58fe3c531a16676eb508e59656e786f8424cc7f91137759ce27091b237af25a434fa0e0380e67cc0f1c0d7620e"
+      "sha512": "28330cfc70b5d5b258dca7e5212d31b444e922e4e00771126ebf0e408c6a18d9e011751602e0d2d07c2c1d812b3c2643e3c72847b5619e28c37da292dd901083"
     },
     {
       "name": "xeve",
-      "version": "0.7.0",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/xeve/xeve-free-0.7.0.tar.gz/sha512/62c64c0b8e5a1ad830dbec8d974079122734e20e65fd6cba2736639b7bd90f358c992e58d6cfe708e0d5efeaa3f675b2ba44c2dfa31dc762d06c002d59b14e33/xeve-free-0.7.0.tar.gz",
-      "filename": "xeve-free-0.7.0.tar.gz",
+      "version": "0.7.1",
+      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/xeve/xeve-free-0.7.1.tar.gz/sha512/866697b91868ed6d01c09eddea2f100046fb4cf6f5bad98ea324660738fe0097fb7bab892e19aec83663bdef90baf291ebc52e604b2e8a235c577343e4937973/xeve-free-0.7.1.tar.gz",
+      "filename": "xeve-free-0.7.1.tar.gz",
       "feed": "https://release-monitoring.org/project/378135",
-      "sha512": "62c64c0b8e5a1ad830dbec8d974079122734e20e65fd6cba2736639b7bd90f358c992e58d6cfe708e0d5efeaa3f675b2ba44c2dfa31dc762d06c002d59b14e33"
+      "sha512": "866697b91868ed6d01c09eddea2f100046fb4cf6f5bad98ea324660738fe0097fb7bab892e19aec83663bdef90baf291ebc52e604b2e8a235c577343e4937973"
     },
     {
       "name": "xfsprogs",

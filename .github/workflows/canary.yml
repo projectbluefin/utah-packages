@@ -26,10 +26,10 @@
 #   pass6  the same set on the container lane, which build_lane exceptions
 #          still use. Every other pass builds through the hermetic lane, the
 #          default; verify-hermetic checks pass1's locks.
-#   pass3  the same set plus python-typing-inspection with its recipe
-#          perturbed in the checkout: that one compiles, every canary package
-#          must still hit. Proves a change to one package does not
-#          invalidate the cache wholesale.
+#   pass3  the same set plus xevd with its recipe perturbed in the
+#          checkout: that one compiles, every canary package must still
+#          hit. Proves a change to one package does not invalidate the
+#          cache wholesale.
 #
 # pass2 and pass3 need only pass1's cache entries, so they run side by side.
 # Neither publishes; pass1 already proved that path.
@@ -43,7 +43,9 @@
 # used samba.org, which answered a GitHub runner with bytes that did not
 # match the lock while serving the right tarball elsewhere; the source
 # pipeline rightly refuses that, and a canary must fail on the pipeline, not
-# on a flaky upstream host.
+# on a flaky upstream host. The perturbed package is xevd because its
+# lookaside primary is permanent: only Fedora's patent-stripped xevd-free
+# tarball may ship, so no upstream-first re-pin will ever move it.
 #
 # The job named "Canary" is the required check. It always runs, and passes
 # without building anything when a pull request touches no pipeline path.
@@ -205,7 +207,7 @@ jobs:
             echo "tag=$tag"
             echo "salt=$salt"
             echo "set=$CANARY_SET"
-            echo "set_plus=$(jq -c '. + ["python-typing-inspection"]' <<<"$CANARY_SET")"
+            echo "set_plus=$(jq -c '. + ["xevd"]' <<<"$CANARY_SET")"
             echo "lane_set=$(jq -c . <<<"${LANE_PACKAGES:-$CANARY_SET}")"
           } >> "$GITHUB_OUTPUT"
           echo "canary tag $tag, cache salt $salt"
@@ -312,7 +314,7 @@ jobs:
       skip_publish: true
       artifact_prefix: p3-
       cache_salt: ${{ needs.changes.outputs.salt }}
-      perturb: '["python-typing-inspection"]'
+      perturb: '["xevd"]'
 
   # A deliberately failing package: vulkan-loader's build job fails before
   # it produces anything. Incremental publish must still publish the rest to
@@ -495,7 +497,7 @@ jobs:
           gh api --paginate "repos/$REPOSITORY/actions/runs/$RUN_ID/attempts/$RUN_ATTEMPT/jobs?per_page=100" \
             --jq '.jobs[]' | jq -s . > jobs.json
           python3 tools/canary.py verify-cache jobs.json --set "$SET" \
-            --perturbed python-typing-inspection \
+            --perturbed xevd \
             ${{ hashFiles('locks/**/buildroot_lock.json') != '' && '--locks locks' || '' }} >> "$GITHUB_STEP_SUMMARY"
 
   canary:
