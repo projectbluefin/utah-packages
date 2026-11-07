@@ -165,7 +165,6 @@ packages = [
     "intel-vaapi-driver",
     "kf6-kimageformats",
     "kmod-v4l2loopback",
-    "kvazaar-libs",
     "lockdev",
     "mcelog",
     "memstrack",
@@ -367,6 +366,9 @@ packages = [
     { name = "kf6-filesystem", pr = 922 },
     { name = "ipset" },
     { name = "ipset-libs" },
+    # kvazaar-libs is a subpackage of the negativo17 kvazaar recipe (#501);
+    # hosted build, publication and runtime proof remain outstanding.
+    { name = "kvazaar-libs" },
     { name = "iptstate", pr = 697 },
     { name = "kyotocabinet-libs", pr = 767 },
     # Batch #502 publication: ghcr.io/projectbluefin/utah-packages@sha256:2ff39e76a1473cf0a4299952b951080a79650363b1ac9c3b8e372cadcba5a319
