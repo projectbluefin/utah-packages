@@ -299,6 +299,14 @@ class SevenZipGenerateTests(PackageDirMixin, unittest.TestCase):
         self.assertEqual(target.read_bytes(), generated_sources._sevenzip_transform(self.payload, self.VERSION))
         self.assertEqual([url for url, _, _ in fetch.requests], [self.URL])
 
+    def test_an_unreachable_upstream_is_classified_as_unavailable(self):
+        outage = urllib.error.URLError(ConnectionRefusedError("connection refused"))
+        with patch.object(generated_sources.urllib.request, "urlopen", side_effect=outage), \
+                patch.dict(generated_sources.SEVENZIP_INPUT_SHA512, {self.VERSION: sha512(self.payload)}):
+            with self.assertRaisesRegex(generated_sources.UpstreamUnreachable, "github.com/ip7z/7zip"):
+                generated_sources.generate("7zip", self.package_dir, self.out_dir)
+        self.assertEqual(list(self.out_dir.iterdir()), [])
+
 
 class OpenALSoftGenerateTests(PackageDirMixin, unittest.TestCase):
     VERSION = "1.24.2"

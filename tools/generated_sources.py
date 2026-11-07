@@ -661,9 +661,7 @@ def _sevenzip_generate(package_dir: Path, out_dir: Path) -> Path:
     if pin is None:
         raise RuntimeError(f"no pinned input SHA-512 for 7zip {version}")
     url = SEVENZIP_UPSTREAM_URL.format(version=version)
-    request = urllib.request.Request(url, headers={"User-Agent": "utah-packages-generated-source/1"})
-    with urllib.request.urlopen(request, timeout=300) as response:
-        payload = response.read()
+    payload = _fetch(url)
     actual = hashlib.sha512(payload).hexdigest()
     if actual != pin:
         raise RuntimeError(f"input archive mismatch for {url}: expected {pin}, got {actual}")
