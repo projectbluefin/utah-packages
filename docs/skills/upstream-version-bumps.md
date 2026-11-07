@@ -99,6 +99,21 @@ reads, directly or through another macro (alsa-sof-firmware's
 `%{version}` (pipewire, alsa-utils) is still overwritten with a literal. Both
 refusals are skipped with a reason, like a failed download.
 
+A vendored Rust recipe (`%bcond bundled_rust_deps 1`, as glycin, librsvg2
+and papers carry because Hummingbird has no crate RPMs) moves by hand, with Fedora's
+vendor tarball. Wait for Koji's Rawhide build at the new version, then
+`tools/import_rawhide.py <pkg> --ref <Koji commit> --replace`, put the local
+bcond back, and drop the inert `.gitignore`. The vendor tarball stays out of
+`config/upstream-sources.json`: its only lock is its `SHA512 (...)` line in
+`packages/<pkg>/sources`, which `source_pipeline.py` `bundled_sources()`
+fetches from the lookaside by that digest. Move the Source0 lock as a GNOME
+bump would (`planned_entry()`: URL, filename, SHA-512, lookaside fallback),
+and check both digests against the bytes you download (GNOME's
+`.sha256sum` for Source0, the lookaside URL for the vendor tarball).
+glycin 2.2~beta -> 2.2.2 (Rawhide `f3250ea`) took this path. The vendor
+tarball was cut after Fedora's patch 0001, so take Rawhide's patch set as
+it is: 2.2.2 dropped the gufo backport (0005) that 2.2~beta needed.
+
 ## When a bumped recipe fails
 
 `--apply` moves the version only; the recipe can still need the change a new
