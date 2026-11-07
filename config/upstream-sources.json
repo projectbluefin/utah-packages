@@ -5221,7 +5221,8 @@
       "version": "3.3.0",
       "url": "https://files.pythonhosted.org/packages/36/ad/64925c937e41be75c7067c85757b3d45b148e9111187b37693269f583156/pyenchant-3.3.0.tar.gz",
       "filename": "pyenchant-3.3.0.tar.gz",
-      "sha512": "b9d70697623415314d1ba145d02e8b6e37da19ad04efca5fd114c814cce9f12d0899751ec620efc6ada347754a28075ad351e81db3cf0165c4f3aad5b5ee5086"
+      "sha512": "b9d70697623415314d1ba145d02e8b6e37da19ad04efca5fd114c814cce9f12d0899751ec620efc6ada347754a28075ad351e81db3cf0165c4f3aad5b5ee5086",
+      "stage": 1
     },
     {
       "name": "python-evdev",
