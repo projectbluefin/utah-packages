@@ -349,20 +349,19 @@ or claiming runtime closure. Do not extend the waiver to other pending
 long-tail names; each needs its own disposition. Keep the batch issue open
 when other outputs or their build/runtime evidence remain outstanding.
 
-### Removed-from-Fedora packages with no reachable upstream
+### intel-vaapi-driver and kmod-v4l2loopback stay pending
 
-A dist-git 404 is not by itself proof of removal (see the `python3-pyaudio`
-note above), but a 404 in every dist-git namespace (`rpms/*`, `packages/*`,
-`containers/*`) combined with an unreachable upstream host is. `intel-vaapi-driver`
-and `kmod-v4l2loopback` 404 in `rpms/*` while their freedesktop sources stay
-unreachable, so no recipe can be imported; move both to `[wontfix]` with that
-reason and a link to the tracking issue, following the retired `vpnc`
-precedent. Same two-edit move as any wontfix: drop the name from
-`[areas.<area>].packages` and add `{ name = "<n>", reason = "..." }` to
-`[wontfix]`, keeping the 551-name partition and the pinned
-`audit_names_sha256` intact (`just factory-build-backlog` verifies both). Do
-not fold a removed package's consumer into an unrelated waiver; each needs its
-own disposition.
+Neither name may move to `[wontfix]` on a dist-git 404. `intel-vaapi-driver`
+(the i965 VA driver) has no Fedora dist-git, and its upstream
+`github.com/intel/intel-vaapi-driver` is archived, but negativo17 still
+maintains `github.com/negativo17/intel-vaapi-driver`; import it through the
+existing `tools/import_rawhide.py --branch master --remote-template
+'https://github.com/negativo17/{package}.git'` path (see the uvg266 section).
+`kmod-v4l2loopback` is a binary output of RPM Fusion's `v4l2loopback` source
+package, so a `rpms/kmod-v4l2loopback` 404 says nothing about it (resolve the
+source package first, as described below). It is an out-of-tree kernel module
+and stays pending with `v4l2loopback` under the kernel-module policy gate in
+the uvg266 section.
 
 ### Virtual machine guest integration
 
