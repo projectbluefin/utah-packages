@@ -179,7 +179,6 @@ packages = [
     "qt5-qtx11extras",
     "qt5-qtxmlpatterns",
     "shim-ia32",
-    "uavs3d-libs",
     "ublue-os-akmods-addons",
     "v4l2loopback",
     "virtualbox-guest-additions",
@@ -823,6 +822,8 @@ packages = [
     { name = "uvg266-libs" },
     # davs2-libs is a subpackage of the negativo17 davs2 recipe (#474); hosted build, publication and runtime proof remain outstanding.
     { name = "davs2-libs" },
+    # uavs3d-libs is the %package libs subpackage of the negativo17 uavs3d recipe imported for #507; hosted build, publication and runtime proof remain outstanding.
+    { name = "uavs3d-libs" },
     # Terminal and VTE emulator outputs (PR #413); publication verified in run 40569848351.
     # vte-profile and vte291-gtk4 are subpackages of vte291.spec.
     # Recipe and publication closure for projectbluefin/utah-packages#484.

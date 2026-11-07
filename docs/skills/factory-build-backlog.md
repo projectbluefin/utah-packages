@@ -1148,10 +1148,14 @@ that is not proof the runtime `Requires` resolve on Hummingbird plus the
 factory. Verify the udev rules file and `sos report --help` against the
 permitted repositories before claiming runtime acceptance.
 
-`uavs3d-libs` has no Fedora dist-git recipe (`rpms/uavs3d` does not exist),
-so `tools/import_rawhide.py` cannot import it; it needs its own source
-decision. `shim-ia32` is a Secure Boot-signed bootloader binary and needs an
-explicit maintainer decision before any recipe work.
+`uavs3d-libs` is the `%package libs` subpackage of the negativo17 `uavs3d`
+recipe imported for issue #507. It has no Fedora dist-git recipe (`rpms/
+uavs3d` does not exist), so it was imported from that source recipe rather
+than via `tools/import_rawhide.py`, and it is source-locked in
+`config/upstream-sources.json`. Hosted build, publication and runtime proof
+remain outstanding on #507. `shim-ia32` is a Secure Boot-signed bootloader
+binary and still needs an explicit maintainer decision before any recipe
+work.
 
 ### NILFS utilities signature sources
 
