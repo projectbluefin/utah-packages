@@ -3,13 +3,13 @@
   "packages": [
     {
       "name": "7zip",
-      "version": "26.04",
-      "filename": "7zip-26.04.tar.xz",
-      "sha512": "c57447f64b8b6a837f4c4dc35ef0dd450fd5edb8935fd5ec6c2586d8a4e4b830f0313c56a4fe8d6432af4c3cea8e11019626a463ac634b072b55222afda6b828",
+      "version": "26.05",
+      "filename": "7zip-26.05.tar.xz",
+      "sha512": "57008f90e542d1a41ce9d89a43331938b5edaf8173883dfb0d12d5055417e56d3635bafc9cff6904d74343ba0754b036514a13b52cdcbfe7d89d0c4c425beb33",
       "generate": {
         "script": "tools/generated_sources.py",
-        "input": "https://github.com/ip7z/7zip/archive/26.04/7zip-26.04.tar.gz (sha512-pinned)",
-        "method": "remove the RAR handler, codecs, crypto and unRarLicense.txt (unRAR license restriction, per strip-rar-support.sh) from the upstream release and repack deterministically as 7zip-26.04.tar.xz"
+        "input": "https://github.com/ip7z/7zip/archive/26.05/7zip-26.05.tar.gz (sha512-pinned)",
+        "method": "remove the RAR handler, codecs, crypto and unRarLicense.txt (unRAR license restriction, per strip-rar-support.sh) from the upstream release and repack deterministically as 7zip-26.05.tar.xz"
       }
     },
     {
