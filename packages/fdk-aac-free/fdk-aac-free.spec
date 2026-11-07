@@ -6,7 +6,7 @@ Name:           fdk-aac-free
 # build links libfdk-aac.so.2, which this recipe emits.
 Provides:       libfdk-aac
 Version:        2.0.3
-Release:        3%{?dist}
+Release:        4%{?dist}
 Summary:        Third-Party Modified Version of the Fraunhofer FDK AAC Codec Library for Android
 
 License:        FDK-AAC
@@ -66,6 +66,9 @@ find %{buildroot} -name '*.la' -print -delete
 
 
 %changelog
+* Sat Nov 07 2026 Utah package factory <noreply@projectbluefin.io> - 2.0.3-4
+- Provide libfdk-aac so the codec transaction resolves it through this package
+
 * Wed Jul 15 2026 Fedora Release Engineering <releng@fedoraproject.org> - 2.0.3-3
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_45_Mass_Rebuild
 
