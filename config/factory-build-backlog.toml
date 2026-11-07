@@ -154,8 +154,6 @@ packages = [
     "gupnp-av",
     "gvfs-afp",
     "gvfs-archive",
-    "intel-vaapi-driver",
-    "kmod-v4l2loopback",
     "lockdev",
     "mcelog",
     "memstrack",
@@ -911,4 +909,7 @@ packages = [
     { name = "rpm-ostree", reason = "Utah's pinned triage waives rpm-ostree because the image uses bootc for updates (projectbluefin/utah#263; https://github.com/projectbluefin/utah/blob/4eee67d0495406aba69a8e10926a3f30a7cf8437/baselines/triage.toml#L392-L394)." },
     { name = "sil-padauk-fonts", reason = "Bulk desktop font parity rejected by Utah: https://github.com/projectbluefin/utah/issues/393#issuecomment-5920428811; no individual addition accepted." },
     { name = "vazirmatn-vf-fonts", reason = "Bulk desktop font parity rejected by Utah: https://github.com/projectbluefin/utah/issues/393#issuecomment-5920428811; no individual addition accepted." },
+    # Removed from Fedora Rawhide; no recipe can be imported (projectbluefin/utah-packages#501).
+    { name = "intel-vaapi-driver", reason = "Removed from Fedora Rawhide (rpms/intel-vaapi-driver dist-git 404); the i965 VA driver is retired and its freedesktop source is unreachable. No recipe can be imported." },
+    { name = "kmod-v4l2loopback", reason = "Removed from Fedora Rawhide (rpms/kmod-v4l2loopback dist-git 404); its freedesktop source is unreachable. No recipe can be imported." },
 ]
