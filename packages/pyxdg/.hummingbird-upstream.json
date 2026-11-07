@@ -1,0 +1,8 @@
+{
+  "package": "pyxdg",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/pyxdg.git",
+  "commit": "e06273c59cb83fb1578776154832c7e2bd3de0ab",
+  "tree": "52123500b1c43655173080c019bffe36e56284c3",
+  "imported_at": "2026-11-06T21:37:18.479018+00:00"
+}

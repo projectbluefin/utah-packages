@@ -58,15 +58,17 @@
 # Hummingbird. This factory now carries urw-base35-fonts, but the other three
 # are in neither, so the switch stays off until they are imported too.
 %bcond system_resources 0
-# jbig2dec and ijs are built from the copies in the tarball. libjbig2dec.so.0
-# and libijs-0.35.so are in neither Hummingbird nor this factory, and libgs
-# checks jbig2dec's version at runtime anyway (see below), so the bundled copy
-# is the one that always matches. JBIG2 images in PDFs and the ijs device
-# both keep working.
+# jbig2dec and ijs are built from the copies in the tarball. This factory now
+# publishes libjbig2dec.so.0 and libijs-0.35.so (Hummingbird does not), but
+# libgs checks jbig2dec's version at runtime: the JBIG2_VERSION_* macros from
+# jbig2.h compiled into gs must match the version saved inside
+# libjbig2dec.so.0, or JBIG2 PDF handling breaks (see the BuildRequires note
+# below). The bundled copy is the only one guaranteed to match, and bundling
+# means a new system jbig2dec release never forces a ghostscript rebuild.
 %bcond system_jbig2dec_ijs 0
-# libpaper only picks the default paper size from /etc/papersize, and
-# libpaper.so.2 is in neither repository. CUPS passes the page size to gs
-# explicitly, so printing does not need it.
+# libpaper only picks the default paper size from /etc/papersize. This
+# factory now publishes libpaper.so.2 (Hummingbird does not), but CUPS
+# passes the page size to gs explicitly, so printing does not need it.
 %bcond libpaper 0
 # The gtk viewer (gsx) and the X11 devices are for viewing a document in a
 # window from the command line. Nothing in the Utah contract uses them, and
