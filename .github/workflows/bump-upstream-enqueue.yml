@@ -94,7 +94,9 @@ jobs:
           repositories: ${{ github.event.repository.name }}
           permission-contents: write
           permission-pull-requests: write
-      - name: Enqueue the built head or merge it once when no queue exists
+          # Re-dispatching the gate on a rebased head needs to run its workflow.
+          permission-actions: write
+      - name: Enqueue the built head, or rebase + rebuild it when it fell behind main
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           REPOSITORY: ${{ github.repository }}
@@ -102,48 +104,10 @@ jobs:
           SHA: ${{ needs.validate.outputs.sha }}
         run: |
           set -euo pipefail
-          # Query the queue itself, not a guessed ruleset setting. Errors or
-          # incomplete responses must never select the non-queue merge path.
-          query=$(cat <<'GRAPHQL'
-          query($owner: String!, $name: String!, $pr: Int!) {
-            repository(owner: $owner, name: $name) {
-              mergeQueue(branch: "main") { id }
-              pullRequest(number: $pr) {
-                id state baseRefName headRefOid isCrossRepository
-              }
-            }
-          }
-          GRAPHQL
-          )
-          gh api graphql -f owner="${REPOSITORY%/*}" -f name="${REPOSITORY#*/}" -F pr="$PR" \
-            -f query="$query" > landing.json
-          jq -e --arg sha "$SHA" '
-            ((.errors // []) | length == 0) and
-            (.data.repository | type == "object" and has("mergeQueue") and
-              (.mergeQueue == null or (.mergeQueue.id | type == "string" and length > 0)) and
-              (.pullRequest | .state == "OPEN" and .baseRefName == "main"
-                and .headRefOid == $sha and (.isCrossRepository | not)
-                and (.id | type == "string" and length > 0)))' landing.json > /dev/null
-          if jq -e '.data.repository.mergeQueue != null' landing.json > /dev/null; then
-            node=$(jq -r .data.repository.pullRequest.id landing.json)
-            mutation=$(cat <<'GRAPHQL'
-          mutation($pr: ID!, $sha: GitObjectID!) {
-            enqueuePullRequest(input: {pullRequestId: $pr, expectedHeadOid: $sha}) {
-              mergeQueueEntry { id }
-            }
-          }
-          GRAPHQL
-            )
-            gh api graphql -f pr="$node" -f sha="$SHA" \
-              -f query="$mutation" > enqueued.json
-            jq -e '((.errors // []) | length == 0) and
-              (.data.enqueuePullRequest.mergeQueueEntry.id | type == "string" and length > 0)' enqueued.json > /dev/null
-          else
-            gh pr checks "$PR" -R "$REPOSITORY" --required --watch
-            # A single SHA-pinned merge, never durable auto-merge: tomorrow's
-            # daily branch head must earn its own named-package build verdict.
-            gh api --method PUT "repos/$REPOSITORY/pulls/$PR/merge" \
-              -f sha="$SHA" -f merge_method=squash > merged.json
-            jq -e '.merged == true' merged.json > /dev/null
-          fi
+          # tools/land_bump.py re-reads the live pull request every attempt:
+          # enqueue when a queue exists, merge the exact built head when the PR
+          # still sits at it, or rebase onto main and re-dispatch the gate for a
+          # fresh exact-head verdict when the head moved or fell behind main
+          # while the gate built (the old single SHA-pinned merge 405s there).
+          python3 tools/land_bump.py --repository "$REPOSITORY" --pr "$PR" --sha "$SHA"
           # Publication follows only the actual App/queue push to main.
