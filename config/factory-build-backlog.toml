@@ -371,27 +371,29 @@ packages = [
     { name = "python3-pyscard", pr = 704 },
     # NILFS filesystem utilities imported for issue #488; publication still requires validation.
     { name = "nilfs-utils", pr = 702 },
-    # Recipe imported; hosted build, publication and runtime proof remain in #501.
-    { name = "jbig2dec-libs", pr = 817 },
-    { name = "kpartx" },
+    # Batch #501 publication observed in run 42397089583 (in progress when read; not a
+    # workflow-success claim): ghcr.io/projectbluefin/utah-packages@sha256:2caa51d7a9d9c9ac4a03d438635e22c55dc63669dae57ea5dd6bab90e02ed659
+    # (revision bf30870af5e5e680f72eeeb06f2f3a8bfb630289, primary sha256:6a462cbcf9aae9c563d16ee5117bc7be172095604175620b4fc400881189442c).
+    # Publication accounting only; permitted-repository transactions and runtime proof remain in #501.
+    { name = "jbig2dec-libs", pr = 817, published_run = 42397089583, published_nevra = "jbig2dec-libs-0:0.20-1.hum1.bfin.x86_64" },
+    { name = "kpartx", pr = 898, published_run = 42397089583, published_nevra = "kpartx-0:0.15.1-1.hum1.bfin.x86_64" },
     # PackageKit GLib library; hosted build and runtime proof remain in #499.
     { name = "PackageKit-glib", pr = 923 },
     { name = "criu" },
     { name = "criu-libs" },
-    { name = "kf6-karchive" },
-    { name = "kf6-kimageformats" }, # Recipe coverage only; build/publication/runtime proof remains in #501.
-    # Recipe imported; hosted build, publication and runtime proof remain in #501.
-    { name = "kf6-filesystem", pr = 922 },
-    { name = "ipset" },
-    { name = "ipset-libs" },
-    # kvazaar-libs is a subpackage of the negativo17 kvazaar recipe (#501);
-    # hosted build, publication and runtime proof remain outstanding.
-    { name = "kvazaar-libs" },
-    { name = "iptstate", pr = 697 },
-    { name = "kyotocabinet-libs", pr = 767 },
-    # i965 VA driver from the negativo17 recipe (#501); hosted build,
-    # publication and runtime proof remain outstanding.
-    { name = "intel-vaapi-driver" },
+    { name = "kf6-karchive", pr = 910, published_run = 42397089583, published_nevra = "kf6-karchive-0:6.31.0-1.hum1.bfin.x86_64" },
+    { name = "kf6-kimageformats", pr = 937, published_run = 42397089583, published_nevra = "kf6-kimageformats-0:6.31.0-1.hum1.bfin.x86_64" },
+    { name = "kf6-filesystem", pr = 922, published_run = 42397089583, published_nevra = "kf6-filesystem-0:6.31.0-1.hum1.bfin.x86_64" },
+    { name = "ipset", pr = 809, published_run = 42397089583, published_nevra = "ipset-0:7.24-4.hum1.bfin.x86_64" },
+    { name = "ipset-libs", pr = 809, published_run = 42397089583, published_nevra = "ipset-libs-0:7.24-4.hum1.bfin.x86_64" },
+    # kvazaar-libs is a subpackage of the negativo17 kvazaar recipe (#501).
+    { name = "kvazaar-libs", pr = 933, published_run = 42397089583, published_nevra = "kvazaar-libs-0:2.3.2-1.hum1.bfin.x86_64" },
+    # iptstate: #714 adopted the closed #697.
+    { name = "iptstate", pr = 714, published_run = 42397089583, published_nevra = "iptstate-0:2.3.0-2.hum1.bfin.x86_64" },
+    { name = "kyotocabinet-libs", pr = 767, published_run = 42397089583, published_nevra = "kyotocabinet-libs-0:1.2.80-10.hum1.bfin.x86_64" },
+    # i965 VA driver from the negativo17 recipe (#953, merged after image revision
+    # bf30870a); hosted build, publication and runtime proof remain outstanding.
+    { name = "intel-vaapi-driver", pr = 953 },
     # Batch #502 publication: ghcr.io/projectbluefin/utah-packages@sha256:2ff39e76a1473cf0a4299952b951080a79650363b1ac9c3b8e372cadcba5a319
     # Run: https://github.com/projectbluefin/utah-packages/actions/runs/40626803772
     # Recipe/publication accounting only; dependency transactions and runtime proof remain in #502.
@@ -655,9 +657,10 @@ packages = [
     { name = "argyllcms", pr = 588, published_run = 42171198494, published_nevra = "argyllcms-0:3.5.0-3.hum1.bfin.x86_64" },
     { name = "argyllcms-data", pr = 588, published_run = 42171198494, published_nevra = "argyllcms-data-0:3.5.0-3.hum1.bfin.noarch" },
     { name = "foo2zjs", pr = 588 },
-    { name = "lcms", pr = 588 },
-    { name = "lcms-libs", pr = 588 },
-    { name = "libXScrnSaver", pr = 588 },
+    # lcms 1.x and libXScrnSaver: observed in the #501 publication image above (run 42397089583).
+    { name = "lcms", pr = 588, published_run = 42397089583, published_nevra = "lcms-0:1.19-44.hum1.bfin.x86_64" },
+    { name = "lcms-libs", pr = 588, published_run = 42397089583, published_nevra = "lcms-libs-0:1.19-44.hum1.bfin.x86_64" },
+    { name = "libXScrnSaver", pr = 588, published_run = 42397089583, published_nevra = "libXScrnSaver-0:1.2.5-2.hum1.bfin.x86_64" },
     # Printing/scanning SANE + drivers wave. libieee1284 is a runtime dependency of
     # sane-backends (libieee1284.so.3). Subpackages share their source recipe's PR.
     { name = "c2esp", pr = 586 },
@@ -735,6 +738,9 @@ packages = [
     { name = "libdhash", pr = 597, published_run = 40626803772, published_nevra = "libdhash-0:0.5.0-63.hum1.bfin.x86_64" },
     # nfs-utils subpackage imported in #524; publication verified for #502.
     { name = "libnfsidmap", pr = 524, published_run = 40626803772, published_nevra = "libnfsidmap-1:2.9.2-1.rc1.hum1.bfin.1.x86_64" },
+    # libbasicobjects is retired upstream: ding-libs 0.7.0 folds it into libini_config
+    # (Obsoletes: libbasicobjects <= 0.1.1), so no RPM carries this name; the published
+    # libini_config replaces it. Same for libcollection, libpath_utils and libref_array.
     { name = "libbasicobjects", pr = 597 },
     { name = "libpath_utils", pr = 597 },
     { name = "libref_array", pr = 597 },
@@ -754,7 +760,8 @@ packages = [
     { name = "urw-base35-p052-fonts", pr = 631, published_run = 40481255792, published_nevra = "urw-base35-p052-fonts-0:20200910-29.hum1.bfin.noarch" },
     { name = "urw-base35-standard-symbols-ps-fonts", pr = 631, published_run = 40481255792, published_nevra = "urw-base35-standard-symbols-ps-fonts-0:20200910-29.hum1.bfin.noarch" },
     { name = "urw-base35-z003-fonts", pr = 631, published_run = 40481255792, published_nevra = "urw-base35-z003-fonts-0:20200910-29.hum1.bfin.noarch" },
-    { name = "libXres", pr = 646 },
+    # libXres: #690 adopted the closed #646; observed in the #501 publication image (run 42397089583).
+    { name = "libXres", pr = 690, published_run = 42397089583, published_nevra = "libXres-0:1.2.2-8.hum1.bfin.x86_64" },
     # VPN / smart-card PKCS#11 provider and Yubico C/personalization stack (projectbluefin/utah-packages#479, utah#389).
     # libyubikey is ykpers's build and runtime dependency (libyubikey.so.0).
     { name = "libyubikey", pr = 685, published_run = 41232660647, published_nevra = "libyubikey-0:1.13-28.hum1.bfin.x86_64" },
