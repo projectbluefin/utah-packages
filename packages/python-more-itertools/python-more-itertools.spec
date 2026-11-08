@@ -26,6 +26,12 @@ Summary:        %{summary}
 
 %prep
 %autosetup -p1 -n more_itertools-%{version}
+# 11.2.x asks for flit_core 4, which Rawhide carries as the separate
+# python-flit-core source; the build root here only has flit_core 3.12.
+# 3.12 builds a wheel with byte-identical modules (only the Generator and
+# Metadata-Version lines in dist-info differ), so accept it.
+sed -i 's/"flit_core >=4,<5"/"flit_core >=3.12,<5"/' pyproject.toml
+grep -q '"flit_core >=3.12,<5"' pyproject.toml
 
 %generate_buildrequires
 %pyproject_buildrequires -r %{?with_tests: -t}

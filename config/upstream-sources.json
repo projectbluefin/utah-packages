@@ -2104,6 +2104,13 @@
       ]
     },
     {
+      "name": "intel-vaapi-driver",
+      "version": "2.4.5",
+      "url": "https://github.com/irql-notlessorequal/intel-vaapi-driver/archive/2.4.5.tar.gz",
+      "filename": "intel-vaapi-driver-2.4.5.tar.gz",
+      "sha512": "53995050135afcc0b549b0619e115397353269a1b2b091653f623ebac25def08032ce4ea1c2d6c2974f22e085dc4bc21c5629fc8e4c088bb8d4e14000975961b"
+    },
+    {
       "name": "intel-vpl-gpu-rt",
       "version": "26.3.5",
       "url": "https://github.com/intel/vpl-gpu-rt/archive/intel-onevpl-26.3.5/intel-onevpl-26.3.5.tar.gz",
@@ -5575,6 +5582,17 @@
       "sha512": "b8b632b8e0f2a3234ef61813212c237f648cd741e816ca57bd86f82f6459f7d755e2b70361d2aa43847874fb546a31a792ab1c3ba90292818ae7313438dc62d0",
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/range-v3/range-v3-0.12.0.tar.gz/sha512/b8b632b8e0f2a3234ef61813212c237f648cd741e816ca57bd86f82f6459f7d755e2b70361d2aa43847874fb546a31a792ab1c3ba90292818ae7313438dc62d0/range-v3-0.12.0.tar.gz"
+      ]
+    },
+    {
+      "name": "rapidfuzz-cpp",
+      "version": "3.3.4",
+      "url": "https://github.com/rapidfuzz/rapidfuzz-cpp/archive/v3.3.4/rapidfuzz-cpp-3.3.4.tar.gz",
+      "filename": "rapidfuzz-cpp-3.3.4.tar.gz",
+      "feed": "https://github.com/rapidfuzz/rapidfuzz-cpp/archive/v3.3.4/rapidfuzz-cpp-3.3.4.tar.gz",
+      "sha512": "f20e3bc23cc51c89df5ac26f3ab43daed5a3715eda1c47db59c6460e6a97f7a6afe4aa1f6557192d3b7b6a4591631192fa61d77a991dbe3ea38b68b0391e544f",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/rapidfuzz-cpp/rapidfuzz-cpp-3.3.4.tar.gz/sha512/f20e3bc23cc51c89df5ac26f3ab43daed5a3715eda1c47db59c6460e6a97f7a6afe4aa1f6557192d3b7b6a4591631192fa61d77a991dbe3ea38b68b0391e544f/rapidfuzz-cpp-3.3.4.tar.gz"
       ]
     },
     {

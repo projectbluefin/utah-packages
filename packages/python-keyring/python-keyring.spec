@@ -31,6 +31,11 @@ BuildRequires:  help2man
 %if %{with desktop_tests}
 # Run graphical tests in non-graphical build environment.
 BuildRequires:  xwayland-run
+# xwfb-run starts a compositor and xwayland-run does not depend on one, so a
+# build root that installs only xwayland-run fails with "No such file or
+# directory: 'weston'" before a single test runs. Fedora's builders have it
+# for other reasons; ask for it rather than dropping the suite.
+BuildRequires:  weston
 # Enable libsecret backend
 BuildRequires:  python3-gobject
 BuildRequires:  libsecret

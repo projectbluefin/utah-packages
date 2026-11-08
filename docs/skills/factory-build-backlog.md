@@ -349,14 +349,22 @@ or claiming runtime closure. Do not extend the waiver to other pending
 long-tail names; each needs its own disposition. Keep the batch issue open
 when other outputs or their build/runtime evidence remain outstanding.
 
-### intel-vaapi-driver and kmod-v4l2loopback stay pending
+### intel-vaapi-driver import; kmod-v4l2loopback stays pending
 
 Neither name may move to `[wontfix]` on a dist-git 404. `intel-vaapi-driver`
 (the i965 VA driver) has no Fedora dist-git, and its upstream
-`github.com/intel/intel-vaapi-driver` is archived, but negativo17 still
-maintains `github.com/negativo17/intel-vaapi-driver`; import it through the
-existing `tools/import_rawhide.py --branch master --remote-template
-'https://github.com/negativo17/{package}.git'` path (see the uvg266 section).
+`github.com/intel/intel-vaapi-driver` is archived, so it is imported from
+`github.com/negativo17/intel-vaapi-driver` with `tools/import_rawhide.py
+--branch master --remote-template 'https://github.com/negativo17/{package}.git'
+intel-vaapi-driver` (see the uvg266 section). That recipe's `Source0` is the
+maintained `irql-notlessorequal/intel-vaapi-driver` fork (Epoch 1, release
+archive locked in `config/upstream-sources.json`), not the archived Intel
+repository; keep the fork as the primary URL. The recipe is `ExclusiveArch:
+%{ix86} x86_64` and carries the AppStream helper sources (`*.metainfo.xml`,
+`*.py`, `*.svg`) beside the spec. Its `%check` validates only the metainfo, so
+runtime acceptance means installing it from Hummingbird plus the factory and
+running `vainfo` on Intel GEN graphics (Gen 8 or older) with
+`LIBVA_DRIVER_NAME=i965`.
 `kmod-v4l2loopback` is a binary output of RPM Fusion's `v4l2loopback-kmod`
 source package (built via kmodtool); the userspace `v4l2loopback` package is
 tracked separately, so a `rpms/kmod-v4l2loopback` 404 says nothing about it
@@ -900,6 +908,26 @@ recipe's runtime requirements already have a factory recipe when it lands.
 When concurrent disposition PRs conflict during rebase, retain each distinct
 `[resolved]` and `[wontfix]` record in the catalog, then verify with
 `just factory-build-backlog` before continuing the rebase.
+
+### Dev-tools Python recipes that import but do not build
+
+A clean Rawhide import is not a build. The first factory run after the #489
+imports (run 42397089583) failed six of them, each on a build-root
+difference rather than a code bug. Read the `check-s<N>-<package>` artifact's
+`build.log` (or the job log for a lock-resolve failure) before changing a
+recipe:
+
+| Recipe | Failure | Fix |
+| --- | --- | --- |
+| `python-SecretStorage`, `python-keyring` | `%check` runs `xwfb-run`, which finds no `weston` | `BuildRequires: weston`, as `libayatana-ido` and `libglvnd` already do |
+| `python-regex` | Rawhide's spec has `%autochangelog` with no `%changelog` header, so its entries are read as `%files` paths | Add the `%changelog` line |
+| `python-dns` | Hummingbird's idna 3.20 dropped UTS #46 transitional mapping; two upstream tests assert it | Backport the test-only part of dnspython `6af77d7e` as a patch |
+| `python-rapidfuzz` | 3.14.6 wants rapidfuzz-cpp 3.3.4; Fedora 44 supplies 3.3.3 and CMake falls back to the deleted `extern/` copy | Import Rawhide's `rapidfuzz-cpp` 3.3.4 recipe |
+| `python-more-itertools` | 11.2.1 asks for `flit_core >=4`; the build root has 3.12.0 (Rawhide moved flit-core 4 to a separate `python-flit-core` source) | Relax the floor in `%prep`; 3.12 builds byte-identical modules |
+
+Do not import `python-flit-core` 4 to satisfy one recipe: the factory repo
+would then hand flit-core 4 to every Python build, including the ones whose
+`pyproject.toml` caps it below 4.
 
 ### Reconciling published batches
 

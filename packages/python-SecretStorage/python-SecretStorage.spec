@@ -17,6 +17,11 @@ BuildRequires:  python3-devel
 %if %{with tests}
 BuildRequires:  /usr/bin/dbus-launch
 BuildRequires:  xwayland-run
+# xwfb-run starts a compositor and xwayland-run does not depend on one, so a
+# build root that installs only xwayland-run fails with "No such file or
+# directory: 'weston'" before a single test runs. Fedora's builders have it
+# for other reasons; ask for it rather than dropping the suite.
+BuildRequires:  weston
 BuildRequires:  libsecret-mock-service
 BuildRequires:  python3-dbus
 BuildRequires:  python3-gobject-base
