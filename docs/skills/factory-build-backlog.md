@@ -349,14 +349,22 @@ or claiming runtime closure. Do not extend the waiver to other pending
 long-tail names; each needs its own disposition. Keep the batch issue open
 when other outputs or their build/runtime evidence remain outstanding.
 
-### intel-vaapi-driver and kmod-v4l2loopback stay pending
+### intel-vaapi-driver import; kmod-v4l2loopback stays pending
 
 Neither name may move to `[wontfix]` on a dist-git 404. `intel-vaapi-driver`
 (the i965 VA driver) has no Fedora dist-git, and its upstream
-`github.com/intel/intel-vaapi-driver` is archived, but negativo17 still
-maintains `github.com/negativo17/intel-vaapi-driver`; import it through the
-existing `tools/import_rawhide.py --branch master --remote-template
-'https://github.com/negativo17/{package}.git'` path (see the uvg266 section).
+`github.com/intel/intel-vaapi-driver` is archived, so it is imported from
+`github.com/negativo17/intel-vaapi-driver` with `tools/import_rawhide.py
+--branch master --remote-template 'https://github.com/negativo17/{package}.git'
+intel-vaapi-driver` (see the uvg266 section). That recipe's `Source0` is the
+maintained `irql-notlessorequal/intel-vaapi-driver` fork (Epoch 1, release
+archive locked in `config/upstream-sources.json`), not the archived Intel
+repository; keep the fork as the primary URL. The recipe is `ExclusiveArch:
+%{ix86} x86_64` and carries the AppStream helper sources (`*.metainfo.xml`,
+`*.py`, `*.svg`) beside the spec. Its `%check` validates only the metainfo, so
+runtime acceptance means installing it from Hummingbird plus the factory and
+running `vainfo` on Intel GEN graphics (Gen 8 or older) with
+`LIBVA_DRIVER_NAME=i965`.
 `kmod-v4l2loopback` is a binary output of RPM Fusion's `v4l2loopback-kmod`
 source package (built via kmodtool); the userspace `v4l2loopback` package is
 tracked separately, so a `rpms/kmod-v4l2loopback` 404 says nothing about it

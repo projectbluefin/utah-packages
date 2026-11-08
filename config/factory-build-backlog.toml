@@ -144,7 +144,6 @@ packages = [
     "gupnp-av",
     "gvfs-afp",
     "gvfs-archive",
-    "intel-vaapi-driver",
     "kmod-v4l2loopback",
     "lockdev",
     "mcelog",
@@ -390,6 +389,9 @@ packages = [
     { name = "kvazaar-libs" },
     { name = "iptstate", pr = 697 },
     { name = "kyotocabinet-libs", pr = 767 },
+    # i965 VA driver from the negativo17 recipe (#501); hosted build,
+    # publication and runtime proof remain outstanding.
+    { name = "intel-vaapi-driver" },
     # Batch #502 publication: ghcr.io/projectbluefin/utah-packages@sha256:2ff39e76a1473cf0a4299952b951080a79650363b1ac9c3b8e372cadcba5a319
     # Run: https://github.com/projectbluefin/utah-packages/actions/runs/40626803772
     # Recipe/publication accounting only; dependency transactions and runtime proof remain in #502.
