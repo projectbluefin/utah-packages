@@ -1059,6 +1059,17 @@ main but not yet in the published image stay in `[resolved]` without
 publication fields until a run ships them. Partial reconciliation PRs must
 link the tracking issue with `Refs #<issue>`, not a closing keyword.
 
+Some batch names can never appear in published metadata. `libbasicobjects`
+(#501) is retired upstream: `ding-libs` 0.7.0 folds it into `libini_config`
+through `Obsoletes: libbasicobjects <= 0.1.1`, so no RPM carries the name.
+Record it as resolved by the import, cite the `Obsoletes:` line and the
+replacement's published NEVRA, and do not fill `published_nevra` with
+another binary's identity. Also check each record's `pr` before adding
+publication fields: a closed proposal (`iptstate` #697, `libXres` #646)
+should point at the merged adoption PR (#714, #690) instead. A recipe merged
+after the image's `revision` (`intel-vaapi-driver`, #953) stays without
+publication fields even when its sibling batch outputs are present.
+
 When rebasing an import over other backlog changes, retain the base branch's
 publication evidence and add only the new recipe's closing record. Run
 `just regenerate-inventory` after combining the catalog and recipe inputs
