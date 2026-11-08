@@ -496,12 +496,12 @@
     },
     {
       "name": "cryfs",
-      "version": "0.11.3",
-      "url": "https://github.com/cryfs/cryfs/archive/0.11.3/cryfs-0.11.3.tar.gz",
-      "filename": "cryfs-0.11.3.tar.gz",
-      "sha512": "a4dd3781f7c26f56b6973cd1d4491c4bfcff4e72d19a2c18aa8dcbd7713e3801f52462a35c3db98e3f339d08f28d6d6cc49ec6b20aa932da4c90ad072b95c8a4",
+      "version": "0.11.4",
+      "url": "https://github.com/cryfs/cryfs/archive/0.11.4/cryfs-0.11.4.tar.gz",
+      "filename": "cryfs-0.11.4.tar.gz",
+      "sha512": "a1aa9377cb0881f08f536f4b2116b27aeef71739e6a1362b209f38f1b54a9ae9e11a2a47ceaa28dcabd74d1ac57f0c92e3d1d8060eabeef4e7efd3d62cc7feea",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/cryfs/cryfs-0.11.3.tar.gz/sha512/a4dd3781f7c26f56b6973cd1d4491c4bfcff4e72d19a2c18aa8dcbd7713e3801f52462a35c3db98e3f339d08f28d6d6cc49ec6b20aa932da4c90ad072b95c8a4/cryfs-0.11.3.tar.gz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/cryfs/cryfs-0.11.4.tar.gz/sha512/a1aa9377cb0881f08f536f4b2116b27aeef71739e6a1362b209f38f1b54a9ae9e11a2a47ceaa28dcabd74d1ac57f0c92e3d1d8060eabeef4e7efd3d62cc7feea/cryfs-0.11.4.tar.gz"
       ]
     },
     {
@@ -779,12 +779,12 @@
     },
     {
       "name": "fastfetch",
-      "version": "2.70.0",
-      "url": "https://github.com/fastfetch-cli/fastfetch/archive/2.70.0/fastfetch-2.70.0.tar.gz",
-      "filename": "fastfetch-2.70.0.tar.gz",
-      "sha512": "72843e7a411bc2d6f32bd1b8800758b6a3f4e3519b6a044134c578fed0a6345ce35b6001ceffcdf2bd5b5ac6dd9c27e0662a051439f57a17fd4145657b2da571",
+      "version": "2.71.0",
+      "url": "https://github.com/fastfetch-cli/fastfetch/archive/2.71.0/fastfetch-2.71.0.tar.gz",
+      "filename": "fastfetch-2.71.0.tar.gz",
+      "sha512": "d13b865c3b16a515c89359fb5ea03c17e50ee7b0860470d24265e4b85cbe537754749e388b795c0b36328c024e785fb9397a62c85b1c98e7cde26c35768aa3b7",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/fastfetch/fastfetch-2.70.0.tar.gz/sha512/72843e7a411bc2d6f32bd1b8800758b6a3f4e3519b6a044134c578fed0a6345ce35b6001ceffcdf2bd5b5ac6dd9c27e0662a051439f57a17fd4145657b2da571/fastfetch-2.70.0.tar.gz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/fastfetch/fastfetch-2.71.0.tar.gz/sha512/d13b865c3b16a515c89359fb5ea03c17e50ee7b0860470d24265e4b85cbe537754749e388b795c0b36328c024e785fb9397a62c85b1c98e7cde26c35768aa3b7/fastfetch-2.71.0.tar.gz"
       ]
     },
     {
@@ -820,10 +820,10 @@
     {
       "name": "ffmpegthumbnailer",
       "stage": 4,
-      "version": "2.3.1",
-      "url": "https://github.com/dirkvdb/ffmpegthumbnailer/archive/v2.3.1/ffmpegthumbnailer-2.3.1.tar.gz",
-      "filename": "ffmpegthumbnailer-2.3.1.tar.gz",
-      "sha512": "11e0ce46cfbf34b04097841343a64b86719d61b25c062023c866939c4b21e59bab55572b35e4d48f125796f660703979dbe5b98f52004fea4ac4507b6bac3098"
+      "version": "2.4.1",
+      "url": "https://github.com/dirkvdb/ffmpegthumbnailer/archive/v2.4.1/ffmpegthumbnailer-2.4.1.tar.gz",
+      "filename": "ffmpegthumbnailer-2.4.1.tar.gz",
+      "sha512": "08639dfb1d6b5c282b1309abaf56e593a7b67a13ebd56dd36cf972a627ba013ddf88d0c610e64afc113510ba9162d4c53c07558400c1a60d9bd292f09442953c"
     },
     {
       "name": "fish",
@@ -946,13 +946,13 @@
     },
     {
       "name": "fribidi",
-      "version": "1.0.16",
-      "url": "https://github.com/fribidi/fribidi/releases/download/v1.0.16/fribidi-1.0.16.tar.xz",
-      "filename": "fribidi-1.0.16.tar.xz",
+      "version": "1.0.18",
+      "url": "https://github.com/fribidi/fribidi/releases/download/v1.0.18/fribidi-1.0.18.tar.xz",
+      "filename": "fribidi-1.0.18.tar.xz",
       "feed": "https://github.com/fribidi/fribidi/releases/download/v1.0.16/fribidi-1.0.16.tar.xz",
-      "sha512": "e3a56f36155f6813e3609473639fc533de742309f561c463012dc90b412a1ac7694b765d92669b2cbfaee973ca0e92fa5e926e68a1a078921f26ef17d82ab651",
+      "sha512": "c7bf95e6695652ee935afc3067cb7667e77859bb6d27e7fc2b5294e1bc17d1a0c2ed5f7eef709999f7e51ec4475934f0a4abefde79bc3db577ca2f4361c92a1c",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/fribidi/fribidi-1.0.16.tar.xz/sha512/e3a56f36155f6813e3609473639fc533de742309f561c463012dc90b412a1ac7694b765d92669b2cbfaee973ca0e92fa5e926e68a1a078921f26ef17d82ab651/fribidi-1.0.16.tar.xz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/fribidi/fribidi-1.0.18.tar.xz/sha512/c7bf95e6695652ee935afc3067cb7667e77859bb6d27e7fc2b5294e1bc17d1a0c2ed5f7eef709999f7e51ec4475934f0a4abefde79bc3db577ca2f4361c92a1c/fribidi-1.0.18.tar.xz"
       ]
     },
     {
@@ -965,13 +965,13 @@
     },
     {
       "name": "fwupd",
-      "version": "2.1.7",
-      "url": "https://github.com/fwupd/fwupd/releases/download/2.1.7/fwupd-2.1.7.tar.xz",
-      "filename": "fwupd-2.1.7.tar.xz",
+      "version": "2.1.9",
+      "url": "https://github.com/fwupd/fwupd/releases/download/2.1.9/fwupd-2.1.9.tar.xz",
+      "filename": "fwupd-2.1.9.tar.xz",
       "feed": "https://release-monitoring.org/project/5833",
-      "sha512": "52954e08f0066c8a0f3331b631e451230708cf5f4afed5ed8369f4558baae7dee6c1f929deb83e5201f55d48885d8591f1c96dbc5e28fdf3d67e6ec5dad6004f",
+      "sha512": "3dc43862262f571aa687efc503219e4f3de51860399ba9a5583ef120acb10473dfa70aecd289ee0669340a6ccdc085211803a24a3bcefcae3f3cb18e4265fcec",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/fwupd/fwupd-2.1.7.tar.xz/sha512/52954e08f0066c8a0f3331b631e451230708cf5f4afed5ed8369f4558baae7dee6c1f929deb83e5201f55d48885d8591f1c96dbc5e28fdf3d67e6ec5dad6004f/fwupd-2.1.7.tar.xz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/fwupd/fwupd-2.1.9.tar.xz/sha512/3dc43862262f571aa687efc503219e4f3de51860399ba9a5583ef120acb10473dfa70aecd289ee0669340a6ccdc085211803a24a3bcefcae3f3cb18e4265fcec/fwupd-2.1.9.tar.xz"
       ]
     },
     {
@@ -991,13 +991,13 @@
     },
     {
       "name": "fzf",
-      "version": "0.74.5",
-      "url": "https://github.com/junegunn/fzf/archive/v0.74.5/fzf-0.74.5.tar.gz",
-      "filename": "fzf-0.74.5.tar.gz",
+      "version": "0.75.0",
+      "url": "https://github.com/junegunn/fzf/archive/v0.75.0/fzf-0.75.0.tar.gz",
+      "filename": "fzf-0.75.0.tar.gz",
       "feed": "https://github.com/junegunn/fzf/archive/v0.74.3/fzf-0.74.3.tar.gz",
-      "sha512": "eaec28c8ba3a0ce6a5400c2563f35882b80043ebb01316d5bf638590a1ac67d71b07b5c5f9471bcec026553d59ed8baeac0dfb5d74e77bc952d1957f8c078ee4",
+      "sha512": "f7bae3b7dfe67addd7aca810f5bb5fab3c67962904c1193b26f125e84fe6a710fde5d8569c39c898be7e0c36e65ac56682ab341d1e04058cd250cdc550264081",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/fzf/fzf-0.74.5.tar.gz/sha512/eaec28c8ba3a0ce6a5400c2563f35882b80043ebb01316d5bf638590a1ac67d71b07b5c5f9471bcec026553d59ed8baeac0dfb5d74e77bc952d1957f8c078ee4/fzf-0.74.5.tar.gz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/fzf/fzf-0.75.0.tar.gz/sha512/f7bae3b7dfe67addd7aca810f5bb5fab3c67962904c1193b26f125e84fe6a710fde5d8569c39c898be7e0c36e65ac56682ab341d1e04058cd250cdc550264081/fzf-0.75.0.tar.gz"
       ]
     },
     {
@@ -1853,13 +1853,13 @@
     },
     {
       "name": "hwdata",
-      "version": "0.410",
-      "url": "https://github.com/vcrhonek/hwdata/archive/v0.410.tar.gz",
-      "filename": "v0.410.tar.gz",
+      "version": "0.413",
+      "url": "https://github.com/vcrhonek/hwdata/archive/v0.413.tar.gz",
+      "filename": "v0.413.tar.gz",
       "feed": "https://github.com/vcrhonek/hwdata/archive/v0.410.tar.gz",
-      "sha512": "b0032c74e31847b0985563e95746b4f34247be3ad00c4a7348d5f23d860cb28b73b2625950456c50e254c8a4472ff6027687a5c5e3be56b0a20022a4737c3327",
+      "sha512": "d5a2630d929c5e2c015d3d996092d97da351c764f823c1af4c95bc01a7f20e64ccb87c0f37db2220a671397010cd6f83526282669e7f7f1a706fb021a2eca5da",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/hwdata/v0.410.tar.gz/sha512/b0032c74e31847b0985563e95746b4f34247be3ad00c4a7348d5f23d860cb28b73b2625950456c50e254c8a4472ff6027687a5c5e3be56b0a20022a4737c3327/v0.410.tar.gz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/hwdata/v0.413.tar.gz/sha512/d5a2630d929c5e2c015d3d996092d97da351c764f823c1af4c95bc01a7f20e64ccb87c0f37db2220a671397010cd6f83526282669e7f7f1a706fb021a2eca5da/v0.413.tar.gz"
       ]
     },
     {
@@ -1964,12 +1964,12 @@
     },
     {
       "name": "ibus-typing-booster",
-      "version": "2.31.1",
-      "url": "https://github.com/mike-fabian/ibus-typing-booster/releases/download/2.31.1/ibus-typing-booster-2.31.1.tar.gz",
-      "filename": "ibus-typing-booster-2.31.1.tar.gz",
-      "sha512": "3c97e5a0dc925feffed004fc620596b8dc970e1b9ecf65b30fe1deb6aed4233abd090d3386505670a62dd4aff55b29b6136c326c5cc223c9577bce2dcf88e51e",
+      "version": "2.31.3",
+      "url": "https://github.com/mike-fabian/ibus-typing-booster/releases/download/2.31.3/ibus-typing-booster-2.31.3.tar.gz",
+      "filename": "ibus-typing-booster-2.31.3.tar.gz",
+      "sha512": "2f08a32c71c2427f428d7fb3b6425a466e29f55f79e35d172843258411a60440401d7e570ff0c4e5a6221e7229c2f2b6710e3217a046ec568b165ac4bc4d8913",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/ibus-typing-booster/ibus-typing-booster-2.31.1.tar.gz/sha512/3c97e5a0dc925feffed004fc620596b8dc970e1b9ecf65b30fe1deb6aed4233abd090d3386505670a62dd4aff55b29b6136c326c5cc223c9577bce2dcf88e51e/ibus-typing-booster-2.31.1.tar.gz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/ibus-typing-booster/ibus-typing-booster-2.31.3.tar.gz/sha512/2f08a32c71c2427f428d7fb3b6425a466e29f55f79e35d172843258411a60440401d7e570ff0c4e5a6221e7229c2f2b6710e3217a046ec568b165ac4bc4d8913/ibus-typing-booster-2.31.3.tar.gz"
       ],
       "stage": 1
     },
@@ -2040,10 +2040,10 @@
     },
     {
       "name": "imath",
-      "version": "3.1.12",
-      "url": "https://github.com/AcademySoftwareFoundation/Imath/archive/v3.1.12/Imath-3.1.12.tar.gz",
-      "filename": "Imath-3.1.12.tar.gz",
-      "sha512": "32628dfcacb610310b81ffe017a66215cf5fb84c2e0a6ac8c94a68c048be3d2b97eb57965dd253770184d5824cce1e5440b8eefb2834666b273b3193ff108343"
+      "version": "3.2.3",
+      "url": "https://github.com/AcademySoftwareFoundation/Imath/archive/v3.2.3/Imath-3.2.3.tar.gz",
+      "filename": "Imath-3.2.3.tar.gz",
+      "sha512": "a89556f178de90e4b3d62b4d3b34f3d3eb6d511c24f70e2c066e15dac1bf0e89908c486d195b0bc2da00292aee800376f8a241b83253c33688dfd85a048a252f"
     },
     {
       "name": "inih",
@@ -2681,12 +2681,12 @@
     },
     {
       "name": "libcamera",
-      "version": "0.7.2",
-      "url": "https://gitlab.freedesktop.org/camera/libcamera/-/archive/v0.7.2/libcamera-v0.7.2.tar.bz2",
-      "filename": "libcamera-v0.7.2.tar.bz2",
-      "sha512": "b25a4df03ee193f60b5ab4675315f5857b3f779a3acc360dae2eff19af207400ca78b16295f8660fa1297019813a4b397416fa8ec8925748d5456459c04506ef",
+      "version": "0.8.0",
+      "url": "https://gitlab.freedesktop.org/camera/libcamera/-/archive/v0.8.0/libcamera-v0.8.0.tar.bz2",
+      "filename": "libcamera-v0.8.0.tar.bz2",
+      "sha512": "b8d0d2bfb406120db32cb494f610e16dccf4fa232f0e083229ee477015cd9082e529556f222d9473a2ec71cf025c65a8d7ab581334ed4d15a6053303b8b10668",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/libcamera/libcamera-v0.7.2.tar.bz2/sha512/b25a4df03ee193f60b5ab4675315f5857b3f779a3acc360dae2eff19af207400ca78b16295f8660fa1297019813a4b397416fa8ec8925748d5456459c04506ef/libcamera-v0.7.2.tar.bz2"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libcamera/libcamera-v0.8.0.tar.bz2/sha512/b8d0d2bfb406120db32cb494f610e16dccf4fa232f0e083229ee477015cd9082e529556f222d9473a2ec71cf025c65a8d7ab581334ed4d15a6053303b8b10668/libcamera-v0.8.0.tar.bz2"
       ]
     },
     {
@@ -2731,13 +2731,13 @@
     },
     {
       "name": "libcloudproviders",
-      "version": "0.4.1",
-      "url": "https://download.gnome.org/sources/libcloudproviders/0.4/libcloudproviders-0.4.1.tar.xz",
-      "filename": "libcloudproviders-0.4.1.tar.xz",
-      "sha512": "02a51c5c37d36efedcfe5cd303e5933bcfd588445d24025cecc6822778e857af52474df24f3fd258bb476170b54ad48eb60213a61c44c9b331e54f9779004bc4",
+      "version": "0.4.2",
+      "url": "https://download.gnome.org/sources/libcloudproviders/0.4/libcloudproviders-0.4.2.tar.xz",
+      "filename": "libcloudproviders-0.4.2.tar.xz",
+      "sha512": "6c2fb8e9416f3e51f9b4bf18b72aa65a661a94cc028cfa4cc347f3e6d3c0ca563c1c21563b6631b3606b1cdea998d7acfe24cc90efb693954a074b8d24f5f74e",
       "stage": 0,
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/libcloudproviders/libcloudproviders-0.4.1.tar.xz/sha512/02a51c5c37d36efedcfe5cd303e5933bcfd588445d24025cecc6822778e857af52474df24f3fd258bb476170b54ad48eb60213a61c44c9b331e54f9779004bc4/libcloudproviders-0.4.1.tar.xz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libcloudproviders/libcloudproviders-0.4.2.tar.xz/sha512/6c2fb8e9416f3e51f9b4bf18b72aa65a661a94cc028cfa4cc347f3e6d3c0ca563c1c21563b6631b3606b1cdea998d7acfe24cc90efb693954a074b8d24f5f74e/libcloudproviders-0.4.2.tar.xz"
       ]
     },
     {
@@ -3212,12 +3212,12 @@
     },
     {
       "name": "libkrun",
-      "version": "1.19.7",
-      "url": "https://github.com/libkrun/libkrun/archive/refs/tags/v1.19.7.tar.gz",
-      "filename": "v1.19.7.tar.gz",
-      "sha512": "54bf0dedc30220177c6f0e7f39e5a62bd658e8d7fd1f1051f021bf60df03d79c61171bbd31711336bf0f7a6d48419aa79035d72592c0afbfacda6b3b13bc6955",
+      "version": "1.19.8",
+      "url": "https://github.com/libkrun/libkrun/archive/refs/tags/v1.19.8.tar.gz",
+      "filename": "v1.19.8.tar.gz",
+      "sha512": "c56662c83bab12bd7d8c8908fed73ada843960cc9c967f1dbb5e54529649c9a64acf10485dc78d6cce45470a2537bf41ea139b6c3ecb788bdb9c884eeb11b94a",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/libkrun/v1.19.7.tar.gz/sha512/54bf0dedc30220177c6f0e7f39e5a62bd658e8d7fd1f1051f021bf60df03d79c61171bbd31711336bf0f7a6d48419aa79035d72592c0afbfacda6b3b13bc6955/v1.19.7.tar.gz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libkrun/v1.19.8.tar.gz/sha512/c56662c83bab12bd7d8c8908fed73ada843960cc9c967f1dbb5e54529649c9a64acf10485dc78d6cce45470a2537bf41ea139b6c3ecb788bdb9c884eeb11b94a/v1.19.8.tar.gz"
       ]
     },
     {
@@ -3549,13 +3549,13 @@
     },
     {
       "name": "libplist",
-      "version": "2.7.0",
-      "url": "https://github.com/libimobiledevice/libplist/releases/download/2.7.0/libplist-2.7.0.tar.bz2",
-      "filename": "libplist-2.7.0.tar.bz2",
+      "version": "2.8.1",
+      "url": "https://github.com/libimobiledevice/libplist/releases/download/2.8.1/libplist-2.8.1.tar.bz2",
+      "filename": "libplist-2.8.1.tar.bz2",
       "feed": "https://github.com/libimobiledevice/libplist/releases/download/2.7.0/libplist-2.7.0.tar.bz2",
-      "sha512": "83d0398b75ea9e610e49b4b96a7675b854c7551d4faf3e82e74c5c45cf04bbd95478cc40688f0995742e6a50601744d2a36641d0673aa7cc413f5ce2ec42f2d4",
+      "sha512": "5fac7f1a947b73053f41c6765e3225e822cf64a1defe73ffcadeec21c3af2b048de5a3981ccae44ef617932fe56778a470159d09b85ef0d196da160c70b2470f",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/libplist/libplist-2.7.0.tar.bz2/sha512/83d0398b75ea9e610e49b4b96a7675b854c7551d4faf3e82e74c5c45cf04bbd95478cc40688f0995742e6a50601744d2a36641d0673aa7cc413f5ce2ec42f2d4/libplist-2.7.0.tar.bz2"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libplist/libplist-2.8.1.tar.bz2/sha512/5fac7f1a947b73053f41c6765e3225e822cf64a1defe73ffcadeec21c3af2b048de5a3981ccae44ef617932fe56778a470159d09b85ef0d196da160c70b2470f/libplist-2.8.1.tar.bz2"
       ]
     },
     {
@@ -3761,12 +3761,12 @@
     },
     {
       "name": "libspelling",
-      "version": "0.4.10",
-      "url": "https://download.gnome.org/sources/libspelling/0.4/libspelling-0.4.10.tar.xz",
-      "filename": "libspelling-0.4.10.tar.xz",
-      "sha512": "2dbeacb0ceb177804f5f9c8a4a9275fdaa24e19c2b75ecf017f3f4ded7874896a5e15a1377d3f3a98fa935697f6f3dad9c3cf91fe3a8f028cd7cb3e8068b9904",
+      "version": "0.4.11",
+      "url": "https://download.gnome.org/sources/libspelling/0.4/libspelling-0.4.11.tar.xz",
+      "filename": "libspelling-0.4.11.tar.xz",
+      "sha512": "f4f00796c9db777de0fc058b21a5dd25637ffd80e38b4e855a99888f54118c7dd0b8ffb45463a685d50bdb5674b24c9fdb3dc3ee97c68a849443ad847bc3db1e",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/libspelling/libspelling-0.4.10.tar.xz/sha512/2dbeacb0ceb177804f5f9c8a4a9275fdaa24e19c2b75ecf017f3f4ded7874896a5e15a1377d3f3a98fa935697f6f3dad9c3cf91fe3a8f028cd7cb3e8068b9904/libspelling-0.4.10.tar.xz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libspelling/libspelling-0.4.11.tar.xz/sha512/f4f00796c9db777de0fc058b21a5dd25637ffd80e38b4e855a99888f54118c7dd0b8ffb45463a685d50bdb5674b24c9fdb3dc3ee97c68a849443ad847bc3db1e/libspelling-0.4.11.tar.xz"
       ]
     },
     {
@@ -3790,13 +3790,13 @@
     },
     {
       "name": "libtatsu",
-      "version": "1.0.5",
-      "url": "https://github.com/libimobiledevice/libtatsu/releases/download/1.0.5/libtatsu-1.0.5.tar.bz2",
-      "filename": "libtatsu-1.0.5.tar.bz2",
-      "sha512": "5d683f9ee153f0958d2461f12017abccaf2f92d20dea6b219042f91a28daa5434df9a01315831a882acddbf6e0af1eb106c088f48efabff1c9f38c50f55a323f",
+      "version": "1.1.0",
+      "url": "https://github.com/libimobiledevice/libtatsu/releases/download/1.1.0/libtatsu-1.1.0.tar.bz2",
+      "filename": "libtatsu-1.1.0.tar.bz2",
+      "sha512": "f4b784b24ce6e5aa88ea280fa85a14ae841b691819c66e9a7d7a608e5a09c8515e7661a28909ea0806c343dacb6a76e00b6bee3cd752cb2f76927e220907dc9d",
       "stage": 1,
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/libtatsu/libtatsu-1.0.5.tar.bz2/sha512/5d683f9ee153f0958d2461f12017abccaf2f92d20dea6b219042f91a28daa5434df9a01315831a882acddbf6e0af1eb106c088f48efabff1c9f38c50f55a323f/libtatsu-1.0.5.tar.bz2"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libtatsu/libtatsu-1.1.0.tar.bz2/sha512/f4b784b24ce6e5aa88ea280fa85a14ae841b691819c66e9a7d7a608e5a09c8515e7661a28909ea0806c343dacb6a76e00b6bee3cd752cb2f76927e220907dc9d/libtatsu-1.1.0.tar.bz2"
       ]
     },
     {
@@ -4897,21 +4897,21 @@
     {
       "name": "pipewire",
       "stage": 6,
-      "version": "1.6.10",
-      "url": "https://gitlab.freedesktop.org/pipewire/pipewire/-/archive/1.6.10/pipewire-1.6.10.tar.gz",
-      "filename": "pipewire-1.6.10.tar.gz",
+      "version": "1.6.11",
+      "url": "https://gitlab.freedesktop.org/pipewire/pipewire/-/archive/1.6.11/pipewire-1.6.11.tar.gz",
+      "filename": "pipewire-1.6.11.tar.gz",
       "feed": "https://gitlab.freedesktop.org/pipewire/pipewire/-/archive/1.6.9/pipewire-1.6.9.tar.gz",
-      "sha512": "72e9dec0d464b9cadd9a1762541fca6436cf5b6f70236ff47603364e40a294a254451305c088ef9619cbb2747c4b284de971dfe73d91f7ff4a486635ff42588c",
+      "sha512": "61db8c92d7d250048b4a091ff8672a29ac7ac699f930978510bbdb48e250b2c92bf26d9970703639f4bc1fea2c384b5e76fb5538c3bbb640399d8dd420644b0e",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/pipewire/pipewire-1.6.10.tar.gz/sha512/72e9dec0d464b9cadd9a1762541fca6436cf5b6f70236ff47603364e40a294a254451305c088ef9619cbb2747c4b284de971dfe73d91f7ff4a486635ff42588c/pipewire-1.6.10.tar.gz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/pipewire/pipewire-1.6.11.tar.gz/sha512/61db8c92d7d250048b4a091ff8672a29ac7ac699f930978510bbdb48e250b2c92bf26d9970703639f4bc1fea2c384b5e76fb5538c3bbb640399d8dd420644b0e/pipewire-1.6.11.tar.gz"
       ]
     },
     {
       "name": "pipewire-libs-extra",
-      "version": "1.6.9",
-      "url": "https://gitlab.freedesktop.org/pipewire/pipewire/-/archive/1.6.9/pipewire-1.6.9.tar.gz",
-      "filename": "pipewire-1.6.9.tar.gz",
-      "sha512": "91a4790123f95c2a52592e4dcd7de90add681883710d3baa068f973c1477c4a9b7696df6afedbcb6c9f42abfdfa10dc01c383aa5d7ced33d781287a07bb18fd3",
+      "version": "1.6.11",
+      "url": "https://gitlab.freedesktop.org/pipewire/pipewire/-/archive/1.6.11/pipewire-1.6.11.tar.gz",
+      "filename": "pipewire-1.6.11.tar.gz",
+      "sha512": "61db8c92d7d250048b4a091ff8672a29ac7ac699f930978510bbdb48e250b2c92bf26d9970703639f4bc1fea2c384b5e76fb5538c3bbb640399d8dd420644b0e",
       "stage": 6
     },
     {
@@ -5157,10 +5157,10 @@
     },
     {
       "name": "python-click",
-      "version": "8.4.2",
-      "url": "https://github.com/pallets/click/archive/8.4.2/click-8.4.2.tar.gz",
-      "filename": "click-8.4.2.tar.gz",
-      "sha512": "2731993c89d7386a8bfd4f51131384a2a67c4ee33e54f92a055b685ba4cf74c854fb5aca0c92e3a24d04bf7725e169edf457d1f18a660b5361aabbbcdd550657"
+      "version": "8.5.1",
+      "url": "https://github.com/pallets/click/archive/8.5.1/click-8.5.1.tar.gz",
+      "filename": "click-8.5.1.tar.gz",
+      "sha512": "b9f2f3e17981893f5a1895dd97b6965cafafb2bc8a2865393eb772179c88ddc268237bf144179ccb9508b9b9b71419e217ba3befd4dec043f34a2bb2da8d8c58"
     },
     {
       "name": "python-cups",
@@ -5211,10 +5211,10 @@
     },
     {
       "name": "python-dns",
-      "version": "2.8.0",
-      "url": "https://github.com/rthalley/dnspython/archive/v2.8.0/dnspython-2.8.0.tar.gz",
-      "filename": "dnspython-2.8.0.tar.gz",
-      "sha512": "982b821da024eec27ab31429aef86dd0ccb376fd565e56a9c1254c081ace00a619d2a3692a25ca48a94101a6f96f1426767ec70e55f6143a153213020ad83cf0"
+      "version": "2.9.2",
+      "url": "https://github.com/rthalley/dnspython/archive/v2.9.2/dnspython-2.9.2.tar.gz",
+      "filename": "dnspython-2.9.2.tar.gz",
+      "sha512": "f8f471b812b3db85ad1a0b2e0a3513735da0eac3c134b9559743cba59305d42cc8adab82be8b4ef589ae32985dfcb5483c03ac34d1aa90740da0eaadca7b7d1b"
     },
     {
       "name": "python-email-validator",
@@ -5406,14 +5406,14 @@
     },
     {
       "name": "python-pydantic",
-      "version": "2.13.5",
-      "url": "https://github.com/pydantic/pydantic/archive/v2.13.5/pydantic-2.13.5.tar.gz",
-      "filename": "pydantic-2.13.5.tar.gz",
+      "version": "2.14.3",
+      "url": "https://github.com/pydantic/pydantic/archive/v2.14.3/pydantic-2.14.3.tar.gz",
+      "filename": "pydantic-2.14.3.tar.gz",
       "feed": "https://github.com/pydantic/pydantic/archive/v2.13.5/pydantic-2.13.5.tar.gz",
-      "sha512": "fd607e9bb5599737638401e9dedb4baa454b7f308b461319d59913b603f6e072354c40b161802c8198ee0961052207a2a4da7b861da6fbfd14f2dbb0f61ba762",
+      "sha512": "5eca72d533db678f5ea6cd2c9de1c681a6e1e2d9d7dbf9d65c62e941e73cac5725053c7709c0b7d9650d71eb3cad29ce0b5795270638ebf93ebd231cd87aa5a7",
       "stage": 4,
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/python-pydantic/pydantic-2.13.5.tar.gz/sha512/fd607e9bb5599737638401e9dedb4baa454b7f308b461319d59913b603f6e072354c40b161802c8198ee0961052207a2a4da7b861da6fbfd14f2dbb0f61ba762/pydantic-2.13.5.tar.gz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/python-pydantic/pydantic-2.14.3.tar.gz/sha512/5eca72d533db678f5ea6cd2c9de1c681a6e1e2d9d7dbf9d65c62e941e73cac5725053c7709c0b7d9650d71eb3cad29ce0b5795270638ebf93ebd231cd87aa5a7/pydantic-2.14.3.tar.gz"
       ]
     },
     {
@@ -5430,10 +5430,10 @@
     },
     {
       "name": "python-pygit2",
-      "version": "1.20.1",
-      "url": "https://github.com/libgit2/pygit2/archive/v1.20.1.tar.gz",
-      "filename": "pygit2-1.20.1.tar.gz",
-      "sha512": "c2dd3e25dfc0ad1c3decd4b2b9583abcfacbc4322ae46ccd72fe8a637ffa693d2ea3f4c5b3749db74227041c22cf60cce8b1cdf720f28ddd8cfcff5357f4c352"
+      "version": "1.21.0",
+      "url": "https://github.com/libgit2/pygit2/archive/v1.21.0.tar.gz",
+      "filename": "pygit2-1.21.0.tar.gz",
+      "sha512": "3097a9316af958646ea37096e85e035990795748da1a575c8bfa99f189c1b69de01f6fa3ee8ca338c1ba4c2a79b31020451443c5d96b50f74b146b2b06240f65"
     },
     {
       "name": "python-pyinotify",
@@ -5888,10 +5888,10 @@
     },
     {
       "name": "slirp4netns",
-      "version": "1.3.1",
-      "url": "https://github.com/rootless-containers/slirp4netns/archive/v1.3.1.tar.gz",
-      "filename": "v1.3.1.tar.gz",
-      "sha512": "a4fe17116127df71033f48c969e6aecdaeef8b9927c899884451cafb4f166582d437978d4d956f13b3ae5f38b29e949a18d2ea43c70b3dcbe475d00a48f2a060"
+      "version": "1.3.7",
+      "url": "https://github.com/rootless-containers/slirp4netns/archive/v1.3.7.tar.gz",
+      "filename": "v1.3.7.tar.gz",
+      "sha512": "445cb9e695c30b1709a0669af106600e0febce7d1126c267b1bcaa4a8118c5d1f1c5dda7e5831471571ba729742dc67c880f7513ae0e43d40a02d45a0062b9b0"
     },
     {
       "name": "smartmontools",
@@ -6083,10 +6083,10 @@
     },
     {
       "name": "sso-mib",
-      "version": "0.10.2",
-      "url": "https://github.com/siemens/sso-mib/archive/v0.10.2/sso-mib-0.10.2.tar.gz",
-      "filename": "sso-mib-0.10.2.tar.gz",
-      "sha512": "d2950336fceaa55f13791afbb23695f193c639f81e24f210eb8a8d91225e84037f80944cc81304c23bac30ea1fd7ff4c093f6be6aa093333c45bd650f8f0336e"
+      "version": "0.11.0",
+      "url": "https://github.com/siemens/sso-mib/archive/v0.11.0/sso-mib-0.11.0.tar.gz",
+      "filename": "sso-mib-0.11.0.tar.gz",
+      "sha512": "ddc201db9af1880b6255937f33ec0e85d2ae5e2cc58018c674c7d01d897af1f88ef01f41d4eff8cebd6ab0fcabc2cb1e028d193317874fb1a0aaf51ef626a3c5"
     },
     {
       "name": "sssd",
@@ -6566,10 +6566,10 @@
     },
     {
       "name": "vvdec",
-      "version": "3.2.0",
-      "url": "https://github.com/fraunhoferhhi/vvdec/archive/refs/tags/v3.2.0.tar.gz",
-      "filename": "vvdec-3.2.0.tar.gz",
-      "sha512": "bb0085fbcd02fc22fe4e3a277907da8ca2b84b6e0769680a6792eb558fff62d1e7ae0a15a1377967562bb06513046e5eb38749dd08ee06f8badb5b8c246af17e",
+      "version": "3.2.1",
+      "url": "https://github.com/fraunhoferhhi/vvdec/archive/refs/tags/v3.2.1.tar.gz",
+      "filename": "vvdec-3.2.1.tar.gz",
+      "sha512": "35c9fa714530985cece58c76aa09a2e73abb192ae3bcb2780c0bd01baca3bddaeeda8e643c9c350ecd315b024f9322e4cedf9a05f4965172226d14aa513e2525",
       "lookaside": "rpmfusion-free"
     },
     {
@@ -6604,12 +6604,12 @@
     },
     {
       "name": "wayland-protocols",
-      "version": "1.49",
-      "url": "https://gitlab.freedesktop.org/wayland/wayland-protocols/-/releases/1.49/downloads/wayland-protocols-1.49.tar.xz",
-      "filename": "wayland-protocols-1.49.tar.xz",
-      "sha512": "c6f58586c4e3046fb545f31959eb662426ddf94cab627a136bec905c3a1c75087ed2850d49e44964241a9158a3559ad02607647a19fb5f1c1fb254160b04806c",
+      "version": "1.50",
+      "url": "https://gitlab.freedesktop.org/wayland/wayland-protocols/-/releases/1.50/downloads/wayland-protocols-1.50.tar.xz",
+      "filename": "wayland-protocols-1.50.tar.xz",
+      "sha512": "12cdc1c1d45e547f4216445f8f21a58cf3979bcf291ebc0270eda716af2fa39e482eb37c88edce9768a299b8da832421ef3cac64eb3abd5b2230a5d5f488f171",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/wayland-protocols/wayland-protocols-1.49.tar.xz/sha512/c6f58586c4e3046fb545f31959eb662426ddf94cab627a136bec905c3a1c75087ed2850d49e44964241a9158a3559ad02607647a19fb5f1c1fb254160b04806c/wayland-protocols-1.49.tar.xz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/wayland-protocols/wayland-protocols-1.50.tar.xz/sha512/12cdc1c1d45e547f4216445f8f21a58cf3979bcf291ebc0270eda716af2fa39e482eb37c88edce9768a299b8da832421ef3cac64eb3abd5b2230a5d5f488f171/wayland-protocols-1.50.tar.xz"
       ]
     },
     {
@@ -6685,13 +6685,13 @@
     {
       "name": "wireplumber",
       "stage": 4,
-      "version": "0.5.18",
-      "url": "https://gitlab.freedesktop.org/pipewire/wireplumber/-/archive/0.5.18/wireplumber-0.5.18.tar.bz2",
-      "filename": "wireplumber-0.5.18.tar.bz2",
+      "version": "0.5.19",
+      "url": "https://gitlab.freedesktop.org/pipewire/wireplumber/-/archive/0.5.19/wireplumber-0.5.19.tar.bz2",
+      "filename": "wireplumber-0.5.19.tar.bz2",
       "feed": "https://gitlab.freedesktop.org/pipewire/wireplumber/-/archive/0.5.14/wireplumber-0.5.14.tar.bz2",
-      "sha512": "b7177cacd58b86b707110137cb91642794f5c8a3dba7e184f947ba4025e9aca4c41543eecfe1230a69e636d4ba9715ad39d991d253f070d8221231ab3cf178b3",
+      "sha512": "09ec2ed03226bf4f740ed932e583580576d95a0983a907c0373be39e802799bd78cc0acd5284e240a1320f0ad77668494ff11a4f8ae16ef9d6f38adfc72d5b5f",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/wireplumber/wireplumber-0.5.18.tar.bz2/sha512/b7177cacd58b86b707110137cb91642794f5c8a3dba7e184f947ba4025e9aca4c41543eecfe1230a69e636d4ba9715ad39d991d253f070d8221231ab3cf178b3/wireplumber-0.5.18.tar.bz2"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/wireplumber/wireplumber-0.5.19.tar.bz2/sha512/09ec2ed03226bf4f740ed932e583580576d95a0983a907c0373be39e802799bd78cc0acd5284e240a1320f0ad77668494ff11a4f8ae16ef9d6f38adfc72d5b5f/wireplumber-0.5.19.tar.bz2"
       ]
     },
     {
