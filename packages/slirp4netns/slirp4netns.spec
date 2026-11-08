@@ -1,5 +1,5 @@
 Name: slirp4netns
-Version: 1.3.1
+Version: 1.3.7
 Release: %autorelease
 License: GPL-2.0-only
 Summary: slirp for network namespaces
