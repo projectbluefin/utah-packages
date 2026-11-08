@@ -2040,10 +2040,10 @@
     },
     {
       "name": "imath",
-      "version": "3.2.3",
-      "url": "https://github.com/AcademySoftwareFoundation/Imath/archive/v3.2.3/Imath-3.2.3.tar.gz",
-      "filename": "Imath-3.2.3.tar.gz",
-      "sha512": "a89556f178de90e4b3d62b4d3b34f3d3eb6d511c24f70e2c066e15dac1bf0e89908c486d195b0bc2da00292aee800376f8a241b83253c33688dfd85a048a252f"
+      "version": "3.1.12",
+      "url": "https://github.com/AcademySoftwareFoundation/Imath/archive/v3.1.12/Imath-3.1.12.tar.gz",
+      "filename": "Imath-3.1.12.tar.gz",
+      "sha512": "32628dfcacb610310b81ffe017a66215cf5fb84c2e0a6ac8c94a68c048be3d2b97eb57965dd253770184d5824cce1e5440b8eefb2834666b273b3193ff108343"
     },
     {
       "name": "inih",
@@ -2681,12 +2681,12 @@
     },
     {
       "name": "libcamera",
-      "version": "0.8.0",
-      "url": "https://gitlab.freedesktop.org/camera/libcamera/-/archive/v0.8.0/libcamera-v0.8.0.tar.bz2",
-      "filename": "libcamera-v0.8.0.tar.bz2",
-      "sha512": "b8d0d2bfb406120db32cb494f610e16dccf4fa232f0e083229ee477015cd9082e529556f222d9473a2ec71cf025c65a8d7ab581334ed4d15a6053303b8b10668",
+      "version": "0.7.2",
+      "url": "https://gitlab.freedesktop.org/camera/libcamera/-/archive/v0.7.2/libcamera-v0.7.2.tar.bz2",
+      "filename": "libcamera-v0.7.2.tar.bz2",
+      "sha512": "b25a4df03ee193f60b5ab4675315f5857b3f779a3acc360dae2eff19af207400ca78b16295f8660fa1297019813a4b397416fa8ec8925748d5456459c04506ef",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/libcamera/libcamera-v0.8.0.tar.bz2/sha512/b8d0d2bfb406120db32cb494f610e16dccf4fa232f0e083229ee477015cd9082e529556f222d9473a2ec71cf025c65a8d7ab581334ed4d15a6053303b8b10668/libcamera-v0.8.0.tar.bz2"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libcamera/libcamera-v0.7.2.tar.bz2/sha512/b25a4df03ee193f60b5ab4675315f5857b3f779a3acc360dae2eff19af207400ca78b16295f8660fa1297019813a4b397416fa8ec8925748d5456459c04506ef/libcamera-v0.7.2.tar.bz2"
       ]
     },
     {

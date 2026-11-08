@@ -21,10 +21,6 @@ License:        ISC
 URL:            http://www.dnspython.org
 
 Source0:        https://github.com/rthalley/%{pypi_name}/archive/v%{version}%{rctag}/%{pypi_name}-%{version}%{rctag}.tar.gz
-# Hummingbird's idna (3.19 and later) no longer performs UTS #46 transitional
-# processing, so two upstream tests that assert the old mapping fail in check.
-# Upstream removed them in 6af77d7e; backport only the test change.
-Patch:          dnspython-2.8.0-idna-3.19-transitional-tests.patch
 
 BuildArch:      noarch
 
