@@ -335,3 +335,28 @@ to identical file trees; lock the upstream bytes and update the source
 manifest to match. Fedora's channel-allocation patch preserves its fallback
 when the IRM cannot be reached, allowing capture to proceed. A recipe does not
 prove streaming or hardware support; verify the behavior with a device.
+
+## LCEVC decoder source family
+
+The `LCEVCdec` source is available from negativo17, not Fedora dist-git.
+Its `cmake(CLI11)` build dependency comes from Fedora's lowercase `cli11`
+source, which emits `cli11-devel`; `range-v3` and the FFmpeg pkg-config
+providers already have factory recipes. The imported development subpackage
+also requires `plutovg-devel`, so register the `plutovg` source and preserve
+its system-STB and shared-library-version patches. Let BuildRequires order
+compilation; a runtime `Requires` does not establish a build-order edge.
+
+The upstream CMake setup always finds Python, and the Vulkan shader compiler
+uses it even when functional tests are disabled. Declare `python3` outside
+the test conditional. The FFmpeg finder requires `libavcodec`, `libavfilter`,
+`libavformat` and `libavutil`; list each pkg-config BuildRequires explicitly.
+The donor builds and ships unit-test executables but runs its network-heavy
+functional tests only with its tests bcond. A successful default build does
+not establish that those tests ran or that a video decodes correctly.
+
+Verify hosted builds, published binary identities and installation using only
+Hummingbird plus the factory separately. Exercise `lcevc_dec_sample` with a
+known LCEVC-enhanced video and compare its decoded output; a help command is
+not decoding evidence. Keep the batch open for that proof and the disabled
+Qt 6 GStreamer sink. Recipe records alone do not establish full FFmpeg codec
+coverage: inspect current published binary names and provenance too.

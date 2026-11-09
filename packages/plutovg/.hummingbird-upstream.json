@@ -1,0 +1,8 @@
+{
+  "package": "plutovg",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/plutovg.git",
+  "commit": "f2d223ba3369e080116da70c9d047cb8ed225ef9",
+  "tree": "d7dc959c8659b4267c335918c7bed64d9cf75b6a",
+  "imported_at": "2026-11-09T00:44:23.248441+00:00"
+}

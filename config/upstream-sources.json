@@ -23,6 +23,13 @@
       ]
     },
     {
+      "name": "LCEVCdec",
+      "version": "4.3.1",
+      "url": "https://github.com/v-novaltd/LCEVCdec/archive/4.3.1.tar.gz",
+      "filename": "LCEVCdec-4.3.1.tar.gz",
+      "sha512": "4ec6d4cfc1ac4a12219b338c8473f695f16a86866eb538f2ad01c1587320651e8352e49e4f00a5f74a0515d35959a18dec5322436d94addf6ebd3ebfae389bc7"
+    },
+    {
       "name": "LibRaw",
       "version": "0.22.2",
       "url": "https://www.libraw.org/data/LibRaw-0.22.2.tar.gz",
@@ -436,6 +443,16 @@
       "sha512": "7b22bdd05b8e0bf8b24ab79db128dbab9f8c2c167f4b1d3073922b8ff1e0f0e8917322283d6d4091002f014f42692984f4f641761f05965d3b66fb3eca14dc46",
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/cjson/cjson-1.7.19.tar.gz/sha512/7b22bdd05b8e0bf8b24ab79db128dbab9f8c2c167f4b1d3073922b8ff1e0f0e8917322283d6d4091002f014f42692984f4f641761f05965d3b66fb3eca14dc46/cjson-1.7.19.tar.gz"
+      ]
+    },
+    {
+      "name": "cli11",
+      "version": "2.7.2",
+      "url": "https://github.com/CLIUtils/CLI11/archive/v2.7.2/cli11-2.7.2.tar.gz",
+      "filename": "cli11-2.7.2.tar.gz",
+      "sha512": "437cd9d704c1b0de0516bdc8cb115befb2e7170417375a64845a2bc2385fa07948c4af724ec615d27fbc102dbe13a7117f33873d6776fe9b17f293d42fe64dd9",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/cli11/cli11-2.7.2.tar.gz/sha512/437cd9d704c1b0de0516bdc8cb115befb2e7170417375a64845a2bc2385fa07948c4af724ec615d27fbc102dbe13a7117f33873d6776fe9b17f293d42fe64dd9/cli11-2.7.2.tar.gz"
       ]
     },
     {
@@ -4950,6 +4967,16 @@
       "sha512": "5a2af2ab09cf8088ea05b07f6feed90b9df57ec6201a64f9c06cde447d3f9faf532a07094b5f62617163374bb03f974d62b11e27b48ba2a83e4459339d32b157",
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/pkcs11-provider/pkcs11-provider-1.3.0.tar.xz/sha512/5a2af2ab09cf8088ea05b07f6feed90b9df57ec6201a64f9c06cde447d3f9faf532a07094b5f62617163374bb03f974d62b11e27b48ba2a83e4459339d32b157/pkcs11-provider-1.3.0.tar.xz"
+      ]
+    },
+    {
+      "name": "plutovg",
+      "version": "1.3.3",
+      "url": "https://github.com/sammycage/plutovg/archive/v1.3.3/plutovg-1.3.3.tar.gz",
+      "filename": "plutovg-1.3.3.tar.gz",
+      "sha512": "57349751bfc9020e63042f472d828ddc509f724d0c82cdaf34e2047f6333de192c5a4cc6aed376e98a000bd68b3b05f1c00ca84bf7163a16c6c2860bc33fb8d0",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/plutovg/plutovg-1.3.3.tar.gz/sha512/57349751bfc9020e63042f472d828ddc509f724d0c82cdaf34e2047f6333de192c5a4cc6aed376e98a000bd68b3b05f1c00ca84bf7163a16c6c2860bc33fb8d0/plutovg-1.3.3.tar.gz"
       ]
     },
     {

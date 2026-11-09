@@ -194,11 +194,11 @@ the audited name is the main package, and runtime acceptance is
 `rpmspec` or a container: the `Source0` SHA-512 in `packages/ImageMagick/sources`
 was checked against the upstream tarball before locking it. Its BuildRequires
 (libheif, libjxl, libuhdr, jasper and others) are separate graph dependencies;
-a catalog record does not prove the build succeeds. `LCEVCdec`, `davs2-libs`
-and the default-disabled `gstreamer1-plugins-good-qt6` stay pending in
-`[areas.codecs-media]`, so `#474` stays open. For the Qt sink, inspect the
-hosted buildroot's Qt NEVRAs and the resulting RPMs before enabling the
-default; verify publication and `qml6sink` at runtime separately.
+a catalog record does not prove the build succeeds. `LCEVCdec` and
+`davs2-libs` have recipe records in `[resolved]`; the default-disabled
+`gstreamer1-plugins-good-qt6` stays pending in `[areas.codecs-media]`. Recipe
+accounting does not close `#474`. For the Qt sink, inspect the hosted
+buildroot's Qt NEVRAs and the resulting RPMs before enabling the default; verify publication and `qml6sink` at runtime separately.
 
 ## Hand-locking an import without `rpmspec`
 
@@ -313,6 +313,14 @@ provenance keeps the `master` branch, commit and tree. The recipe builds
 second recipe under the binary name. negativo17 carries no `sources` file, so
 the pinned upstream commit archive is locked only in
 `config/upstream-sources.json`. Recipe coverage does not establish a hosted
-build, publication or a representative AVS2 decode. `LCEVCdec` is still
-pending: the negativo17 recipe needs `CLI11`, `range-v3`, `plutovg-devel` and
-`libavdevice` build prerequisites that have no recipe here yet.
+build, publication or a representative AVS2 decode. `LCEVCdec` comes from
+the negativo17 recipe too; resolve
+`cmake(CLI11)` through the lowercase Fedora source package `cli11`, and
+reuse the existing `range-v3` and `ffmpeg` recipes. The donor development
+subpackage requires `plutovg-devel`, supplied by `plutovg`. Its upstream
+CMake setup and Vulkan shader compiler require Python even when functional
+tests are disabled, and its FFmpeg finder also needs `libavfilter`,
+`libavformat` and `libavutil` pkg-config modules. Declare these requirements
+explicitly rather than relying on transitive buildroot packages. See
+[multimedia closure](../multimedia-closure.md#lcevc-decoder-source-family) for
+the remaining build and runtime evidence.
