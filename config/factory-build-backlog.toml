@@ -683,7 +683,7 @@ packages = [
     { name = "b43-fwcutter", pr = 813, published_run = 42171198494, published_nevra = "b43-fwcutter-0:021-1.hum1.bfin.x86_64" },
     # Open b43 firmware: recipe import only; hosted build, publication and
     # runtime proof remain on #499.
-    { name = "b43-openfwwf" },
+    { name = "b43-openfwwf", pr = 957 },
     { name = "sane-airscan", pr = 586 },
     { name = "sane-backends", pr = 586 },
     { name = "sane-backends-drivers-cameras", pr = 586 },
