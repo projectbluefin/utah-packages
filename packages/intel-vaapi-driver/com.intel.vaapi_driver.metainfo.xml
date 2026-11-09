@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="driver">
+  <id>com.intel.vaapi_driver</id>
+  <name>Intel VA-API driver (legacy)</name>
+  <summary>Intel GEN Graphics family video acceleration driver</summary>
+  <developer id="com.intel">
+    <name>Intel Corporation</name>
+  </developer>
+  <icon type="local">/usr/share/pixmaps/com.intel.vaapi_driver.svg</icon>
+  <description>
+    <p>VA-API (Video Acceleration API) user mode driver for Intel GEN Graphics family.</p>
+  </description>
+  <keywords>
+    <keyword>Decode</keyword>
+    <keyword>Encode</keyword>
+    <keyword>HW</keyword>
+    <keyword>Intel</keyword>
+    <keyword>Media</keyword>
+    <keyword>VA-API</keyword>
+    <keyword>Video</keyword>
+    <keyword>av1</keyword>
+    <keyword>avc</keyword>
+    <keyword>driver</keyword>
+    <keyword>h264</keyword>
+    <keyword>h265</keyword>
+    <keyword>hevc</keyword>
+    <keyword>jpeg</keyword>
+    <keyword>mpeg2</keyword>
+    <keyword>vaapi</keyword>
+    <keyword>vc-1</keyword>
+    <keyword>vp8</keyword>
+    <keyword>vp9</keyword>
+  </keywords>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT AND EPL-1.0</project_license>
+  <url type="homepage">https://github.com/intel/intel-vaapi-driver</url>
+  <update_contact>negativo17@gmail.com</update_contact>
+</component>

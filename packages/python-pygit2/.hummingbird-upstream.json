@@ -1,0 +1,8 @@
+{
+  "package": "python-pygit2",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/python-pygit2.git",
+  "commit": "16bd070996c15ed67b8cdeacb0fa478cf363bf25",
+  "tree": "015cca0d55968fdee388b36de2fc9a375c676401",
+  "imported_at": "2026-11-07T17:40:12.377006+00:00"
+}

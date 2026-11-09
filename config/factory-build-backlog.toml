@@ -99,14 +99,6 @@ packages = [
     "kernel-devel-matched",
     "kernel-tools",
     "kernel-tools-libs",
-    "python3-boto3",
-    "python3-botocore",
-    "python3-enchant",
-    "python3-fido2",
-    "python3-httpcore",
-    "python3-httpx",
-    "python3-pygit2",
-    "python3-s3transfer",
 ]
 
 [areas.fonts-i18n]
@@ -142,7 +134,6 @@ packages = [
 consumer_issue = "projectbluefin/utah#396"
 packages = [
     "appstream-data",
-    "b43-openfwwf",
     "desktop-backgrounds-gnome",
     "evolution-ews-core",
     "evolution-ews-langpacks",
@@ -152,7 +143,6 @@ packages = [
     "gupnp-av",
     "gvfs-afp",
     "gvfs-archive",
-    "intel-vaapi-driver",
     "kmod-v4l2loopback",
     "lockdev",
     "mcelog",
@@ -176,13 +166,23 @@ packages = [
     "qt5-qtwayland",
     "qt5-qtx11extras",
     "qt5-qtxmlpatterns",
-    "shim-ia32",
     "ublue-os-akmods-addons",
     "v4l2loopback",
     "virtualbox-guest-additions",
 ]
 
 [resolved]
+# Dev-tools batch #489 publication fields from run 42397089583 (in progress
+# when read) describe the 22 #489 outputs carrying that published_run.
+# Image: ghcr.io/projectbluefin/utah-packages@sha256:57a2b32943a2e4eddeaf091fd40540fddfc8d5818f9c21a468798622d21a1551
+# Source revision: bf30870af5e5e680f72eeeb06f2f3a8bfb630289 (on main).
+# repomd.xml SHA-256: 7f64584706faafd48f4558818e35c39a90ad08818cb27b929b32b0fbb0b41233
+# Primary metadata SHA-256: 4c240cb51125c7c2b572257c8447ddad7d9c947562122c7f0b79721ed9c0f350
+# Run: https://github.com/projectbluefin/utah-packages/actions/runs/42397089583
+# Snapshot fetched 2026-11-07T21:40:29Z. Publication evidence only; not a runtime transaction.
+# In that run python-dns, python-regex, python-rapidfuzz, python-more-itertools
+# and python-SecretStorage failed to build, and the label still records the
+# python-keyring failure from run 42347331755; none of their outputs is published.
 # Long-tail #506 publication fields from run 40626803772 describe these seven outputs:
 # python3-cups, python3-linux-procfs, python3-pyaudio, qpdf-libs, quota, quota-nls, redhat-menus.
 # Image: ghcr.io/projectbluefin/utah-packages@sha256:2ff39e76a1473cf0a4299952b951080a79650363b1ac9c3b8e372cadcba5a319
@@ -218,15 +218,26 @@ packages = [
     # runtime proof remain on the #489 follow-up; the recipe + source lock
     # are the accepted output shipped here.
     { name = "python3-dns" },
-    { name = "python3-jeepney" },
-    { name = "python3-pyxdg" },
+    { name = "python3-jeepney", published_run = 42397089583, published_nevra = "python3-jeepney-0:0.9.0-1.hum1.bfin.noarch" },
+    { name = "python3-pyxdg", published_run = 42397089583, published_nevra = "python3-pyxdg-0:0.28-4.hum1.bfin.noarch" },
     { name = "python3-rapidfuzz" },
     # Recipe imports for #489 (dev-tools parity): python3-anyio and
     # python3-email-validator, moving these two pending dev-tools names into
     # [resolved]. Build, publication and runtime proof remain on the #489
     # follow-up; the recipe + source lock are the accepted output shipped here.
-    { name = "python3-anyio" },
-    { name = "python3-email-validator" },
+    { name = "python3-anyio", published_run = 42397089583, published_nevra = "python3-anyio-0:4.15.1-2.hum1.bfin.noarch" },
+    { name = "python3-email-validator", published_run = 42397089583, published_nevra = "python3-email-validator-0:2.3.0-1.hum1.bfin.noarch" },
+    # Recipe imports for #489 (dev-tools parity): the remaining boto3, httpx,
+    # fido2, pygit2 and enchant families. Build, publication and runtime proof
+    # remain on #489; the recipe + source lock are the output shipped here.
+    { name = "python3-boto3" },
+    { name = "python3-botocore" },
+    { name = "python3-enchant" },
+    { name = "python3-fido2" },
+    { name = "python3-httpcore" },
+    { name = "python3-httpx" },
+    { name = "python3-pygit2" },
+    { name = "python3-s3transfer" },
     # S-Lang recipe from #719 is published; runtime resolution and payload proof remain on #507.
     { name = "slang", pr = 719, commit = "f22db6b5b26d3d05f84865cc57653ba8aa9edea6", published_run = 41780828846, published_nevra = "slang-0:2.3.3-10.hum1.bfin.x86_64" },
     # Recipe imports for #507 (solaar-udev is a subpackage of solaar); hosted build, publication and runtime proof remain owed.
@@ -263,9 +274,9 @@ packages = [
     { name = "opensc-libs", pr = 825 },
     # jaraco-family parity for #489 (partial source-family PR); hosted build,
     # publication and runtime proof remain open until #489 closes.
-    { name = "python3-jaraco-context", pr = 808 },
-    { name = "python3-jaraco-classes", pr = 808 },
-    { name = "python3-jaraco-functools", pr = 808 },
+    { name = "python3-jaraco-context", pr = 808, published_run = 42397089583, published_nevra = "python3-jaraco-context-0:6.1.0-1.hum1.bfin.noarch" },
+    { name = "python3-jaraco-classes", pr = 808, published_run = 42397089583, published_nevra = "python3-jaraco-classes-0:3.4.0-1.hum1.bfin.noarch" },
+    { name = "python3-jaraco-functools", pr = 808, published_run = 42397089583, published_nevra = "python3-jaraco-functools-0:4.6.0-1.hum1.bfin.noarch" },
     # Recipe import only; build, publication and runtime proof remain on #484.
     { name = "libgee" },
     # Recipe import only (Orca recommends it); build, publication and runtime proof remain on #484.
@@ -280,8 +291,14 @@ packages = [
     # BuildRequires pkgconfig(gupnp-av-1.0), but gupnp-av has no factory recipe
     # yet (pending in [areas.long-tail], projectbluefin/utah#396).
     { name = "rygel", pr = 823 },
-    # NTFS-3G read-only plugin recipe for #488; hosted build, publication and runtime proof remain open.
-    { name = "ntfs-3g-system-compression", pr = 771 },
+    # Batch #488 publication observed in run 42559053279 (in progress when read; not a
+    # workflow-success claim): ghcr.io/projectbluefin/utah-packages@sha256:11318e23d0f093c58fa8136e48ae7c8acae9e849c272152055473b707aff5d72
+    # (revision ff2affebb786e98a466ba95896374163ec20f60e, primary sha256:f5f28143c3d3a0a3680325b05270573f656547211b33925a0086651a07480c10).
+    # Publication accounting only; permitted-repository transactions and runtime proof remain in #488.
+    # The image's factory-state label lists mtr, ntfs-3g-system-compression and
+    # open-vm-tools as failed at their current input digest: the published RPMs
+    # are older retained builds (built 2026-10-27, 2026-10-28 and 2026-11-06).
+    { name = "ntfs-3g-system-compression", pr = 771, published_run = 42559053279, published_nevra = "ntfs-3g-system-compression-0:1.1-5.hum1.bfin.x86_64" },
     # libde265 recipe import only; build and runtime proof remain on #475.
     { name = "libde265", pr = 901 },
     # Recipe import only; hosted build, publication and device validation remain on #485.
@@ -357,26 +374,32 @@ packages = [
     { name = "pam_yubico", pr = 706 },
     # Smart-card Python binding; hosted build and runtime proof remain in #506.
     { name = "python3-pyscard", pr = 704 },
-    # NILFS filesystem utilities imported for issue #488; publication still requires validation.
-    { name = "nilfs-utils", pr = 702 },
-    # Recipe imported; hosted build, publication and runtime proof remain in #501.
-    { name = "jbig2dec-libs", pr = 817 },
-    { name = "kpartx" },
+    # NILFS filesystem utilities for issue #488 (#702 adopted by #715); #488 publication evidence
+    # is described on the ntfs-3g-system-compression record.
+    { name = "nilfs-utils", pr = 715, published_run = 42559053279, published_nevra = "nilfs-utils-0:2.2.11-9.hum1.bfin.x86_64" },
+    # Batch #501 publication observed in run 42397089583 (in progress when read; not a
+    # workflow-success claim): ghcr.io/projectbluefin/utah-packages@sha256:2caa51d7a9d9c9ac4a03d438635e22c55dc63669dae57ea5dd6bab90e02ed659
+    # (revision bf30870af5e5e680f72eeeb06f2f3a8bfb630289, primary sha256:6a462cbcf9aae9c563d16ee5117bc7be172095604175620b4fc400881189442c).
+    # Publication accounting only; permitted-repository transactions and runtime proof remain in #501.
+    { name = "jbig2dec-libs", pr = 817, published_run = 42397089583, published_nevra = "jbig2dec-libs-0:0.20-1.hum1.bfin.x86_64" },
+    { name = "kpartx", pr = 898, published_run = 42397089583, published_nevra = "kpartx-0:0.15.1-1.hum1.bfin.x86_64" },
     # PackageKit GLib library; hosted build and runtime proof remain in #499.
     { name = "PackageKit-glib", pr = 923 },
     { name = "criu" },
     { name = "criu-libs" },
-    { name = "kf6-karchive" },
-    { name = "kf6-kimageformats" }, # Recipe coverage only; build/publication/runtime proof remains in #501.
-    # Recipe imported; hosted build, publication and runtime proof remain in #501.
-    { name = "kf6-filesystem", pr = 922 },
-    { name = "ipset" },
-    { name = "ipset-libs" },
-    # kvazaar-libs is a subpackage of the negativo17 kvazaar recipe (#501);
-    # hosted build, publication and runtime proof remain outstanding.
-    { name = "kvazaar-libs" },
-    { name = "iptstate", pr = 697 },
-    { name = "kyotocabinet-libs", pr = 767 },
+    { name = "kf6-karchive", pr = 910, published_run = 42397089583, published_nevra = "kf6-karchive-0:6.31.0-1.hum1.bfin.x86_64" },
+    { name = "kf6-kimageformats", pr = 937, published_run = 42397089583, published_nevra = "kf6-kimageformats-0:6.31.0-1.hum1.bfin.x86_64" },
+    { name = "kf6-filesystem", pr = 922, published_run = 42397089583, published_nevra = "kf6-filesystem-0:6.31.0-1.hum1.bfin.x86_64" },
+    { name = "ipset", pr = 809, published_run = 42397089583, published_nevra = "ipset-0:7.24-4.hum1.bfin.x86_64" },
+    { name = "ipset-libs", pr = 809, published_run = 42397089583, published_nevra = "ipset-libs-0:7.24-4.hum1.bfin.x86_64" },
+    # kvazaar-libs is a subpackage of the negativo17 kvazaar recipe (#501).
+    { name = "kvazaar-libs", pr = 933, published_run = 42397089583, published_nevra = "kvazaar-libs-0:2.3.2-1.hum1.bfin.x86_64" },
+    # iptstate: #714 adopted the closed #697.
+    { name = "iptstate", pr = 714, published_run = 42397089583, published_nevra = "iptstate-0:2.3.0-2.hum1.bfin.x86_64" },
+    { name = "kyotocabinet-libs", pr = 767, published_run = 42397089583, published_nevra = "kyotocabinet-libs-0:1.2.80-10.hum1.bfin.x86_64" },
+    # i965 VA driver from the negativo17 recipe (#953, merged after image revision
+    # bf30870a); hosted build, publication and runtime proof remain outstanding.
+    { name = "intel-vaapi-driver", pr = 953 },
     # Batch #502 publication: ghcr.io/projectbluefin/utah-packages@sha256:2ff39e76a1473cf0a4299952b951080a79650363b1ac9c3b8e372cadcba5a319
     # Run: https://github.com/projectbluefin/utah-packages/actions/runs/40626803772
     # Recipe/publication accounting only; dependency transactions and runtime proof remain in #502.
@@ -386,9 +409,10 @@ packages = [
     { name = "libev", pr = 844 },
     # Microsoft CAB compression library recipe import (#502); hosted build, publication and runtime proof remain outstanding.
     { name = "libmspack", pr = 846 },
-    # VMware recipe imports only; build and guest validation remain in #488.
-    { name = "open-vm-tools", pr = 812 },
-    { name = "open-vm-tools-desktop", pr = 812 },
+    # VMware recipes (#812 adopted by #892, built by run 42216043584); #488 publication
+    # evidence is on the ntfs-3g-system-compression record. Guest validation remains in #488.
+    { name = "open-vm-tools", pr = 892, published_run = 42559053279, published_nevra = "open-vm-tools-0:13.1.0-1.hum1.bfin.x86_64" },
+    { name = "open-vm-tools-desktop", pr = 892, published_run = 42559053279, published_nevra = "open-vm-tools-desktop-0:13.1.0-1.hum1.bfin.x86_64" },
     # Paper-size library recipe import (#502); hosted build, publication and runtime proof remain outstanding.
     { name = "libpaper", pr = 853 },
     { name = "gnome-rounded-blur", commit = "f8589ccd95a48a1f26826c8764330c9f7811a09d", pr = 440, published_run = 40151594832, published_nevra = "gnome-rounded-blur-0:1.0.1^20260809gitf3bfcc7-1.hum1.bfin.x86_64" },
@@ -424,8 +448,8 @@ packages = [
     { name = "libell", pr = 793, published_run = 41173029071, published_nevra = "libell-0:0.83-1.hum1.bfin.x86_64" },
     # Flex source import; consumer validation remains tracked in #486.
     { name = "flex", pr = 654, published_run = 41111585693, published_nevra = "flex-0:2.6.4-25.hum1.bfin.x86_64" },
-    # Existing GPU monitor recipe; publication/runtime proof remains in #488.
-    { name = "nvtop", commit = "e19a229", pr = 410 },
+    # Existing GPU monitor recipe; published (#488 evidence on the ntfs-3g-system-compression record), runtime proof remains in #488.
+    { name = "nvtop", commit = "e19a229", pr = 410, published_run = 42559053279, published_nevra = "nvtop-0:3.3.2-1.hum1.bfin.x86_64" },
     # Long-tail batch (projectbluefin/utah-packages#607, part of #500).
     # Six source packages imported from Fedora rawhide dist-git, each now
     # source-locked in config/upstream-sources.json.
@@ -443,18 +467,19 @@ packages = [
     { name = "hypervfcopyd", pr = 607 },
     { name = "hypervkvpd", pr = 607 },
     { name = "hypervvssd", pr = 607 },
-    # Recipe coverage only; build/publication/runtime proof stays on #489.
-    { name = "python3-pexpect", pr = 684 },
-    { name = "python3-ptyprocess", pr = 684 },
-    { name = "python3-dateutil", pr = 613 },
-    { name = "python3-six", pr = 613 },
-    { name = "python3-h11" },
-    { name = "python3-click" },
-    { name = "python3-jmespath", pr = 798 },
-    { name = "python3-pysocks" }, # Recipe coverage only; build/publication/runtime proof remains in #489.
-    { name = "python3-html2text" }, # Recipe coverage only; build/publication/runtime proof remains in #489.
+    # Dev-tools outputs for #489. A published_run marks metadata presence in the
+    # snapshot named at the top of [resolved]; runtime proof stays on #489.
+    { name = "python3-pexpect", pr = 684, published_run = 42397089583, published_nevra = "python3-pexpect-0:4.9.0-19.hum1.bfin.noarch" },
+    { name = "python3-ptyprocess", pr = 684, published_run = 42397089583, published_nevra = "python3-ptyprocess-0:0.7.0-18.hum1.bfin.noarch" },
+    { name = "python3-dateutil", pr = 613, published_run = 42397089583, published_nevra = "python3-dateutil-1:2.9.0.post0-1.hum1.bfin.noarch" },
+    { name = "python3-six", pr = 613, published_run = 42397089583, published_nevra = "python3-six-0:1.17.0-1.hum1.bfin.noarch" },
+    { name = "python3-h11", published_run = 42397089583, published_nevra = "python3-h11-0:0.16.0-1.hum1.bfin.noarch" },
+    { name = "python3-click", published_run = 42397089583, published_nevra = "python3-click-1:8.4.2-1.hum1.bfin.noarch" },
+    { name = "python3-jmespath", pr = 798, published_run = 42397089583, published_nevra = "python3-jmespath-0:1.0.1-16.hum1.bfin.noarch" },
+    { name = "python3-pysocks", published_run = 42397089583, published_nevra = "python3-pysocks-0:1.7.1-35.hum1.bfin.noarch" }, # Published; runtime proof remains on #489.
+    { name = "python3-html2text", published_run = 42397089583, published_nevra = "python3-html2text-0:2025.4.15-8.hum1.bfin.noarch" }, # Published; runtime proof remains on #489.
     { name = "python3-more-itertools" }, # Recipe coverage only; build/publication/runtime proof remains in #489.
-    { name = "python3-shtab" }, # Recipe coverage only; build/publication/runtime proof remains in #489.
+    { name = "python3-shtab", published_run = 42397089583, published_nevra = "python3-shtab-0:1.8.0-1.hum1.bfin.noarch" }, # Published; runtime proof remains on #489.
     { name = "python3-secretstorage" }, # Recipe coverage only; build/publication/runtime proof remains in #489.
     { name = "python3-keyring" }, # Recipe coverage only; build/publication/runtime proof remains in #489.
     { name = "python3-keyring+completion" }, # Recipe coverage only; build/publication/runtime proof remains in #489.
@@ -479,8 +504,8 @@ packages = [
     # Cursor library import for #508; build/publication/runtime proof remains separate.
     { name = "xcb-util-cursor", pr = 620 },
     # Printing runtime providers for hplip/system-config-printer (projectbluefin/utah-packages#596, utah#390).
-    { name = "python3-olefile", pr = 596 },
-    { name = "python3-pillow", pr = 596 },
+    { name = "python3-olefile", pr = 596, published_run = 42397089583, published_nevra = "python3-olefile-0:0.47-15.hum1.bfin.noarch" },
+    { name = "python3-pillow", pr = 596, published_run = 42397089583, published_nevra = "python3-pillow-0:13.0.0-1.hum1.bfin.x86_64" },
     { name = "usbutils", pr = 596 },
     { name = "net-snmp-libs", pr = 596, published_run = 40511180133, published_nevra = "net-snmp-libs-1:5.9.5.2-10.hum1.bfin.x86_64" },
     { name = "python3-cups", pr = 596, published_run = 40626803772, published_nevra = "python3-cups-0:2.0.4-11.hum1.bfin.x86_64" },
@@ -523,7 +548,7 @@ packages = [
     # conditional, so they are closed here explicitly.
     { name = "default-editor", pr = 514 },
     { name = "htop", pr = 514, published_run = 41111585693, published_nevra = "htop-0:3.5.3-1.hum1.bfin.x86_64" },
-    { name = "nano", pr = 514 },
+    { name = "nano", pr = 514, published_run = 42559053279, published_nevra = "nano-0:9.2-1.hum1.bfin.x86_64" },
     { name = "nano-default-editor", pr = 514 },
     { name = "rsync", pr = 514, published_run = 41233305890, published_nevra = "rsync-0:3.5.1-1.hum1.bfin.x86_64" },
     { name = "tmux", pr = 514 },
@@ -538,7 +563,7 @@ packages = [
     { name = "NetworkManager-openvpn-gnome", pr = 522 },
     # tuned/powertop runtime providers (landing PR #595, utah#388).
     { name = "python3-inotify", pr = 595 },
-    { name = "python3-pyudev", pr = 595 },
+    { name = "python3-pyudev", pr = 595, published_run = 42397089583, published_nevra = "python3-pyudev-0:0.24.5-1.hum1.bfin.noarch" },
     { name = "virt-what", pr = 595 },
     { name = "libtraceevent", pr = 595 },
     { name = "python3-linux-procfs", pr = 595, published_run = 40626803772, published_nevra = "python3-linux-procfs-0:0.7.4-5.hum1.bfin.noarch" },
@@ -548,13 +573,13 @@ packages = [
     { name = "autofs", pr = 524 },
     { name = "cifs-utils", pr = 524 },
     { name = "cifs-utils-info", pr = 524 },
-    { name = "nfs-client-utils", pr = 524 },
-    { name = "nfs-common-utils", pr = 524 },
-    { name = "nfs-utils", pr = 524 },
-    { name = "nfsv3-client-utils", pr = 524 },
-    { name = "nfsv4-client-utils", pr = 524 },
-    { name = "pinentry", pr = 524 },
-    { name = "pinentry-gnome3", pr = 524 },
+    { name = "nfs-client-utils", pr = 524, published_run = 42559053279, published_nevra = "nfs-client-utils-1:2.9.2-1.rc1.hum1.bfin.1.x86_64" },
+    { name = "nfs-common-utils", pr = 524, published_run = 42559053279, published_nevra = "nfs-common-utils-1:2.9.2-1.rc1.hum1.bfin.1.x86_64" },
+    { name = "nfs-utils", pr = 524, published_run = 42559053279, published_nevra = "nfs-utils-1:2.9.2-1.rc1.hum1.bfin.1.x86_64" },
+    { name = "nfsv3-client-utils", pr = 524, published_run = 42559053279, published_nevra = "nfsv3-client-utils-1:2.9.2-1.rc1.hum1.bfin.1.x86_64" },
+    { name = "nfsv4-client-utils", pr = 524, published_run = 42559053279, published_nevra = "nfsv4-client-utils-1:2.9.2-1.rc1.hum1.bfin.1.x86_64" },
+    { name = "pinentry", pr = 524, published_run = 42559053279, published_nevra = "pinentry-0:1.3.3-1.hum1.bfin.x86_64" },
+    { name = "pinentry-gnome3", pr = 524, published_run = 42559053279, published_nevra = "pinentry-gnome3-0:1.3.3-1.hum1.bfin.x86_64" },
     { name = "rpcbind", pr = 524 },
     # H.264 decode path + bad-free dep closure wave (landing PR #526).
     # gstreamer1-plugin-dav1d is the binary subpackage of rust-gst-plugin-dav1d;
@@ -639,9 +664,10 @@ packages = [
     { name = "argyllcms", pr = 588, published_run = 42171198494, published_nevra = "argyllcms-0:3.5.0-3.hum1.bfin.x86_64" },
     { name = "argyllcms-data", pr = 588, published_run = 42171198494, published_nevra = "argyllcms-data-0:3.5.0-3.hum1.bfin.noarch" },
     { name = "foo2zjs", pr = 588 },
-    { name = "lcms", pr = 588 },
-    { name = "lcms-libs", pr = 588 },
-    { name = "libXScrnSaver", pr = 588 },
+    # lcms 1.x and libXScrnSaver: observed in the #501 publication image above (run 42397089583).
+    { name = "lcms", pr = 588, published_run = 42397089583, published_nevra = "lcms-0:1.19-44.hum1.bfin.x86_64" },
+    { name = "lcms-libs", pr = 588, published_run = 42397089583, published_nevra = "lcms-libs-0:1.19-44.hum1.bfin.x86_64" },
+    { name = "libXScrnSaver", pr = 588, published_run = 42397089583, published_nevra = "libXScrnSaver-0:1.2.5-2.hum1.bfin.x86_64" },
     # Printing/scanning SANE + drivers wave. libieee1284 is a runtime dependency of
     # sane-backends (libieee1284.so.3). Subpackages share their source recipe's PR.
     { name = "c2esp", pr = 586 },
@@ -663,6 +689,9 @@ packages = [
     # Published; runtime dependency and Braille print-path proof remain on #499.
     { name = "braille-printer-app", pr = 899, published_run = 42171198494, published_nevra = "braille-printer-app-1:2.0~b0^386eea385f-12.hum1.bfin.x86_64" },
     { name = "b43-fwcutter", pr = 813, published_run = 42171198494, published_nevra = "b43-fwcutter-0:021-1.hum1.bfin.x86_64" },
+    # Open b43 firmware: recipe import only; hosted build, publication and
+    # runtime proof remain on #499.
+    { name = "b43-openfwwf", pr = 957 },
     { name = "sane-airscan", pr = 586 },
     { name = "sane-backends", pr = 586 },
     { name = "sane-backends-drivers-cameras", pr = 586 },
@@ -684,15 +713,15 @@ packages = [
     { name = "lshw", pr = 587, published_run = 40511180133, published_nevra = "lshw-0:B.02.20-13.hum1.bfin.x86_64" },
     { name = "lsof", pr = 587 },
     { name = "man-pages", pr = 587 },
-    { name = "mtr", pr = 587 },
-    { name = "nvme-cli", pr = 587 },
+    { name = "mtr", pr = 587, published_run = 42559053279, published_nevra = "mtr-2:0.96-2.hum1.bfin.x86_64" },
+    { name = "nvme-cli", pr = 587, published_run = 42559053279, published_nevra = "nvme-cli-0:2.16-6.hum1.bfin.x86_64" },
     { name = "pinfo", commit = "c2c7cd8c3f440a81b9aafe204bc9d22b0532fe0e", pr = 587, published_run = 40626803772, published_nevra = "pinfo-0:0.6.13-11.hum1.bfin.x86_64" },
     { name = "perl-Unicode-Normalize", pr = 783 },
     { name = "prefixdevname", pr = 819 },
     # Long-tail batch #505: recipe fix (broken Source0 URL) + source lock #897.
     { name = "paps", pr = 897 },
-    { name = "python3-llfuse", pr = 587 },
-    { name = "python3-msgpack", pr = 587 },
+    { name = "python3-llfuse", pr = 587, published_run = 42397089583, published_nevra = "python3-llfuse-0:1.5.2-5.hum1.bfin.x86_64" },
+    { name = "python3-msgpack", pr = 587, published_run = 42397089583, published_nevra = "python3-msgpack-0:1.2.1-1.hum1.bfin.x86_64" },
     { name = "smartmontools", pr = 587, published_run = 41233305890, published_nevra = "smartmontools-1:7.5-11.hum1.bfin.x86_64" },
     { name = "smartmontools-selinux", pr = 587, published_run = 41233305890, published_nevra = "smartmontools-selinux-1:7.5-11.hum1.bfin.noarch" },
     { name = "tcpdump", pr = 587 },
@@ -719,6 +748,9 @@ packages = [
     { name = "libdhash", pr = 597, published_run = 40626803772, published_nevra = "libdhash-0:0.5.0-63.hum1.bfin.x86_64" },
     # nfs-utils subpackage imported in #524; publication verified for #502.
     { name = "libnfsidmap", pr = 524, published_run = 40626803772, published_nevra = "libnfsidmap-1:2.9.2-1.rc1.hum1.bfin.1.x86_64" },
+    # libbasicobjects is retired upstream: ding-libs 0.7.0 folds it into libini_config
+    # (Obsoletes: libbasicobjects <= 0.1.1), so no RPM carries this name; the published
+    # libini_config replaces it. Same for libcollection, libpath_utils and libref_array.
     { name = "libbasicobjects", pr = 597 },
     { name = "libpath_utils", pr = 597 },
     { name = "libref_array", pr = 597 },
@@ -738,7 +770,8 @@ packages = [
     { name = "urw-base35-p052-fonts", pr = 631, published_run = 40481255792, published_nevra = "urw-base35-p052-fonts-0:20200910-29.hum1.bfin.noarch" },
     { name = "urw-base35-standard-symbols-ps-fonts", pr = 631, published_run = 40481255792, published_nevra = "urw-base35-standard-symbols-ps-fonts-0:20200910-29.hum1.bfin.noarch" },
     { name = "urw-base35-z003-fonts", pr = 631, published_run = 40481255792, published_nevra = "urw-base35-z003-fonts-0:20200910-29.hum1.bfin.noarch" },
-    { name = "libXres", pr = 646 },
+    # libXres: #690 adopted the closed #646; observed in the #501 publication image (run 42397089583).
+    { name = "libXres", pr = 690, published_run = 42397089583, published_nevra = "libXres-0:1.2.2-8.hum1.bfin.x86_64" },
     # VPN / smart-card PKCS#11 provider and Yubico C/personalization stack (projectbluefin/utah-packages#479, utah#389).
     # libyubikey is ykpers's build and runtime dependency (libyubikey.so.0).
     { name = "libyubikey", pr = 685, published_run = 41232660647, published_nevra = "libyubikey-0:1.13-28.hum1.bfin.x86_64" },
@@ -836,9 +869,10 @@ packages = [
     { name = "vte291", commit = "ded82d6174382a397a2d7ddc066daeabe2e31232", pr = 413, published_run = 40569848351, published_nevra = "vte291-0:0.84.1-1.hum1.bfin.x86_64" },
     { name = "vte291-gtk4", commit = "ded82d6174382a397a2d7ddc066daeabe2e31232", pr = 413, published_run = 40569848351, published_nevra = "vte291-gtk4-0:0.84.1-1.hum1.bfin.x86_64" },
     # D-Bus helper service and its home-directory creator (#488). oddjob-mkhomedir
-    # is an unconditional subpackage of oddjob.spec; build and runtime evidence pending.
-    { name = "oddjob", pr = 784 },
-    { name = "oddjob-mkhomedir", pr = 784 },
+    # is an unconditional subpackage of oddjob.spec; published (#488 evidence on the
+    # ntfs-3g-system-compression record), runtime evidence pending.
+    { name = "oddjob", pr = 784, published_run = 42559053279, published_nevra = "oddjob-0:0.34.7-20.hum1.bfin.x86_64" },
+    { name = "oddjob-mkhomedir", pr = 784, published_run = 42559053279, published_nevra = "oddjob-mkhomedir-0:0.34.7-20.hum1.bfin.x86_64" },
     # Dev-tools batch (#487) recipe imports; hosted build, publication and runtime proof remain.
     # libsss_* are unconditional %package subpackages of sssd.spec.
     { name = "libcaca", pr = 848 },
@@ -916,4 +950,5 @@ packages = [
     { name = "rpm-ostree", reason = "Utah's pinned triage waives rpm-ostree because the image uses bootc for updates (projectbluefin/utah#263; https://github.com/projectbluefin/utah/blob/4eee67d0495406aba69a8e10926a3f30a7cf8437/baselines/triage.toml#L392-L394)." },
     { name = "sil-padauk-fonts", reason = "Bulk desktop font parity rejected by Utah: https://github.com/projectbluefin/utah/issues/393#issuecomment-5920428811; no individual addition accepted." },
     { name = "vazirmatn-vf-fonts", reason = "Bulk desktop font parity rejected by Utah: https://github.com/projectbluefin/utah/issues/393#issuecomment-5920428811; no individual addition accepted." },
+    { name = "shim-ia32", reason = "32-bit Secure Boot is retired across modern firmware and Utah is 64-bit only, so carrying a factory-built signed 32-bit first-stage bootloader opens a signed-bootloader surface with no current consumer. Maintainer decision: https://github.com/projectbluefin/utah-packages/issues/507#issuecomment-6710378910 (long-tail batch #507)." },
 ]

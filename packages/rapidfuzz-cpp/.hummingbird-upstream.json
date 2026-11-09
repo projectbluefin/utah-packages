@@ -1,0 +1,8 @@
+{
+  "package": "rapidfuzz-cpp",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/rapidfuzz-cpp.git",
+  "commit": "f463f7258f0adfe1559031764b19f617cb76ba7d",
+  "tree": "dc6d7f5a1dc331bede9bb3bd517479cf0881d55c",
+  "imported_at": "2026-11-07T21:38:30.517191+00:00"
+}

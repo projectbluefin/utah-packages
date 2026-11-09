@@ -80,6 +80,16 @@ pipeline path: its token has no `packages: write`, so `canary.yml` fails it with
 "a fork pull request cannot publish the canary image". The author cannot fix
 that, and neither can an agent working from a fork; do not ask them to.
 
+The same fork pull request also gets **Canary (read-only)**
+(`canary-read-only.yml`) automatically, with no maintainer step. It builds the
+canary set from the fork's code through the hermetic lane and the container
+lane with a read-only token and no publish, and proves every package was
+locked and built from its lock. It cannot prove the signed image, cache
+stability across passes, incremental publish or incremental selection, all of
+which need a publish, so it does not replace the required `Canary` check: that
+still needs the maintainer run below. A failing read-only canary is a real
+build failure the author can fix.
+
 Recipe imports can still need this proof when they add source-generation
 support under `tools/`, even if the change only registers a new package in
 `GIT_ARCHIVE_SOURCES` in `tools/generated_sources.py`. That is a pipeline
@@ -105,6 +115,17 @@ and any new head invalidates proof for the previous commit. Finish necessary
 changes first, then give the maintainer the final full head SHA for review and
 dispatch. The default Canary set still does not build the imported recipe;
 that recipe needs its own scoped build and runtime acceptance evidence.
+
+The witness tests must not freeze the list of workflows allowed to call the
+reusable builder, but every caller must still pass the never-`latest` check:
+no `publish_tag: latest`, an explicit `publish_tag` or `skip_publish` on each
+pass, and an `artifact_prefix`. Adding a read-only caller does not itself
+change publication authority. Exercise the Canary's verdicts for missing,
+skipped and failed builds, and preserve the separate required publication
+proof. In `canary-read-only.yml` only the two rebuild callers declare the
+write scopes the reusable workflow requires, because GitHub rejects the run
+at creation otherwise; they run only for fork heads, whose token GitHub
+reduces to read-only, and `skip_publish` prevents their publication path.
 
 A maintainer who has reviewed the diff runs **Canary for a fork pull request**
 (Actions tab, `canary-fork-pr.yml`) with the pull request number and the full

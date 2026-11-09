@@ -1,5 +1,5 @@
 Name:       wireplumber
-Version:    0.5.18
+Version:    0.5.19
 Release:    1%{?dist}
 Summary:    A modular session/policy manager for PipeWire
 
@@ -133,6 +133,9 @@ fi
 %{_datadir}/doc/wireplumber/
 
 %changelog
+* Sun Nov 08 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 0.5.19-1
+- Update to 0.5.19
+
 * Thu Oct 29 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 0.5.18-1
 - Update to 0.5.18
 
