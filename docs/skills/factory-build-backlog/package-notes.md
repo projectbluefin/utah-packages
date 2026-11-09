@@ -1,3 +1,23 @@
+## QR-code library source recovery
+
+`qrencode-libs` is an unconditional binary subpackage of `qrencode`, alongside
+the command and development files; import the source recipe once. Its old
+`fukuchi.org` release URL returns HTTP 404, but Fedora's lookaside preserves
+the original `qrencode-4.1.1.tar.bz2` matching the recipe's SHA-512. Keep the
+HTTPS upstream URL as primary and the checksum-addressed lookaside URL in
+`fallback_urls`; an unavailable primary does not require a Fedora-primary
+ratchet exception. Preserve the recipe's `%check`, which runs the upstream
+library tests independently of the optional SDL viewer.
+
+The [maintainer decision on #506](https://github.com/projectbluefin/utah-packages/issues/506#issuecomment-6741419743)
+authorizes this source recovery only. `python3-perf` remains tied to the
+kernel-tools decision on #487, and the Qt5 outputs remain pending a product
+decision; do not move them into `[wontfix]` as part of the library import.
+Recipe accounting does not establish hosted build, publication or runtime
+acceptance. After publication, install from Hummingbird plus the factory and
+exercise `qrencode -t PNG -o qr.png 'Utah'`; record the binary identity and
+result separately from source verification.
+
 ## Firewall connection monitor acceptance
 
 `iptstate` is a standalone source and binary, not an `iptables` subpackage.

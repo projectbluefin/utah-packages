@@ -5548,6 +5548,16 @@
       "sha512": "97193fd5eb6460dcf2c179c445f756c553af5c3b8a0ab89ed78ea022bdbe147a73bc6e815e18d37b04d3a462fefe32ea3dd238c2a92a10616c3c38e170ce013e"
     },
     {
+      "name": "qrencode",
+      "version": "4.1.1",
+      "url": "https://fukuchi.org/works/qrencode/qrencode-4.1.1.tar.bz2",
+      "filename": "qrencode-4.1.1.tar.bz2",
+      "sha512": "981b3242c213e1b40ac88711912dd8c27ea11f3437d1a04b6b226499a6e991a8f0b3b10f818bcc104812192a1dac4ce05f16ecd847a50cb03d4859b84bad89b8",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/qrencode/qrencode-4.1.1.tar.bz2/sha512/981b3242c213e1b40ac88711912dd8c27ea11f3437d1a04b6b226499a6e991a8f0b3b10f818bcc104812192a1dac4ce05f16ecd847a50cb03d4859b84bad89b8/qrencode-4.1.1.tar.bz2"
+      ]
+    },
+    {
       "name": "qt6-qtdeclarative",
       "version": "6.11.2",
       "url": "https://download.qt.io/official_releases/qt/6.11/6.11.2/submodules/qtdeclarative-everywhere-src-6.11.2.tar.xz",
