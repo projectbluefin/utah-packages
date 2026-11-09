@@ -1,0 +1,12 @@
+- hosts: localhost
+  roles:
+  - role: standard-test-beakerlib
+    tags:
+    - classic
+    - container
+    - atomic
+    tests:
+    - smoke
+    required_packages:
+    - qrencode
+    - file
