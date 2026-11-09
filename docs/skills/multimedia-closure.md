@@ -346,6 +346,11 @@ also requires `plutovg-devel`, so register the `plutovg` source and preserve
 its system-STB and shared-library-version patches. Let BuildRequires order
 compilation; a runtime `Requires` does not establish a build-order edge.
 
+Keep an explicit `BuildRequires: cli11-devel` alongside `cmake(CLI11)`.
+The extractor sees subpackage names and `.pc` files but not generated CMake
+provides. Without the package requirement, an unpublished CLI11 import has
+no edge to the decoder, so their first build can land in the same wave.
+
 The upstream CMake setup always finds Python, and the Vulkan shader compiler
 uses it even when functional tests are disabled. Declare `python3` outside
 the test conditional. The FFmpeg finder requires `libavcodec`, `libavfilter`,

@@ -19,6 +19,7 @@ Source0:        https://github.com/v-novaltd/%{name}/archive/%{version}.tar.gz#/
 
 BuildRequires:  cmake
 BuildRequires:  cmake(CLI11)
+BuildRequires:  cli11-devel
 BuildRequires:  cmake(fmt)
 BuildRequires:  cmake(glfw3)
 BuildRequires:  cmake(nlohmann_json)
