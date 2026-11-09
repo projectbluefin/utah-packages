@@ -4,7 +4,7 @@
 
 Name:       uavs3d
 Version:    1.2.0~%{date}git%{shortcommit}
-Release:    8%{?dist}
+Release:    9%{?dist}
 Summary:    AVS3 decoder library
 URL:        https://github.com/uavs3/uavs3d
 License:    BSD
@@ -31,7 +31,7 @@ profile.
 
 %package devel
 Summary:    Header files for uavs3d library
-Requires:   %{name}%{?_isa} = %{version}-%{release}
+Requires:   %{name}-libs%{?_isa} = %{version}-%{release}
 
 %description devel
 The %{name}-devel package contains libraries and header files for developing
@@ -73,6 +73,10 @@ install -p -m 755 -D %{__cmake_builddir}/uavs3dec %{buildroot}%{_bindir}/uavs3de
 %{_libdir}/pkgconfig/%{name}.pc
 
 %changelog
+* Mon Nov 09 2026 Utah Packages <packages@projectbluefin.io> - 1.2.0~20251213git0e20d2c-9
+- Make the devel subpackage require the libs subpackage that owns
+  libuavs3d.so.1, not the uavs3dec command-line package.
+
 * Wed Feb 11 2026 Simone Caronni <negativo17@gmail.com> - 1.2.0~20251213git0e20d2c-8
 - Update to latest snapshot.
 - Fix build on cmake 3.5+.
