@@ -999,7 +999,7 @@ asset's SHA-512 in both `sources` and the source lock, with no Fedora fallback
 because Fedora's archive has different bytes. Do not generalize this comparison
 to later releases: investigate any future mismatch before changing a pin.
 
-### Broadcom firmware extraction tool
+### Broadcom firmware extraction tool and open firmware
 
 `b43-fwcutter` is the standalone source and binary for extracting firmware;
 `b43-openfwwf` is a separate firmware source, not its subpackage or a required
@@ -1016,6 +1016,38 @@ only Hummingbird plus the factory, run `b43-fwcutter -l`, and extract a supporte
 user-supplied firmware image into a disposable directory. Record the input
 identity, extraction result and output files; a version check alone is not
 firmware extraction proof. Do not bundle a proprietary input into the recipe.
+
+`b43-openfwwf` is the open firmware for the 4306, 4311 (rev 1), 4318 and 4320
+chips. Its upstream host `netweb.ing.unibs.it` serves the 2009 release only over
+plain HTTP, which `tools/validate.py` rejects in the source lock. The lock's
+primary URL is the Internet Archive capture of that exact upstream URL
+(`web/20231025104009id_/`, the raw-bytes form), with Fedora's SHA-512 lookaside
+path as the fallback; both served bytes matching Fedora's `sources` pin. Do not
+relabel the lookaside as primary: an upstream release exists. The recipe
+assembles the firmware with `b43-asm` from `b43-tools`, which the Fedora half
+of the build root supplies, so it is a BuildRequires only and needs no factory
+recipe. For runtime acceptance, install it from Hummingbird plus the factory,
+confirm `/lib/firmware/b43-open/ucode5.fw` and the `modprobe.d` options file
+are present, and load `b43` with `fwpostfix=-open` on a supported adapter.
+Without that hardware, record file presence only; it is not driver proof.
+
+### Fedora-only catalog and branding outputs
+
+Two long-tail names have no upstream outside Fedora and conflict with Utah's
+own choices, so neither is importable without a maintainer decision:
+
+- `appstream-data` packages Fedora's weekly catalog of Fedora repository
+  applications, built by Fedora infrastructure and downloaded from
+  `dl.fedoraproject.org`; Fedora is its only source. It feeds RPM software
+  centres (`gnome-software`, PackageKit), while Utah excludes
+  `gnome-software` and ships the Flatpak store Bazaar.
+- `desktop-backgrounds-gnome` is a subpackage of Fedora's `desktop-backgrounds`
+  source. It sets the Fedora release wallpaper as the GNOME default and
+  requires `fNN-backgrounds-gnome`; its other archives are MD5-pinned,
+  lookaside-only tarballs. Utah's desktop contract pins Bluefin's wallpaper.
+
+Keep both pending until a maintainer records a `[wontfix]` decision or an
+accepted use case; do not import them merely to satisfy parity.
 
 ### Shell prompt test dependencies
 
