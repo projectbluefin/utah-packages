@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 
+import contextlib
 import io
 import json
 import os
 from pathlib import Path
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -11,9 +13,14 @@ from unittest.mock import patch
 import urllib.error
 
 from tools.upstream_bump import (
+    GnomeStable,
     anitya_versions,
     apply,
+    checkout_release,
     cycle_final,
+    gbm_tags,
+    load_gnome_stable,
+    newest_gbm_tag,
     release_cycle,
     gnome_module,
     is_gnome_prerelease,
@@ -1938,3 +1945,318 @@ class AnityaFeedTests(unittest.TestCase):
             proposals = plan(root, None, opener=fake_opener({}))
         self.assertEqual(len(proposals), 1)
         self.assertIn("error", proposals[0])
+
+
+GBM_PIN = {
+    "schema": 1,
+    "source": {
+        "name": "gnome-build-meta",
+        "url": "https://gitlab.gnome.org/GNOME/gnome-build-meta.git",
+        "release_tag": "51.0",
+        "release_commit": "a" * 40,
+    },
+    "element_path": {"project_conf": "project.conf", "root": "elements"},
+    "factory_alias": {},
+    "mapping": {
+        "gjs": "sdk/gjs.bst",
+        "pango": "sdk/pango.bst",
+        "gtk4": "sdk/gtk.bst",
+        "gdm": "core/gdm.bst",
+    },
+}
+
+
+def gbm_fixture(tmp: str, elements: dict[str, str]) -> Path:
+    """A gnome-build-meta tree whose elements ship one tarball each.
+
+    `elements` maps an element path under elements/ to the tarball url as
+    gbm spells it, through the gnome_downloads alias. The tree is no git
+    checkout, so load_gnome_stable() names it after its directory: 51.1.
+    """
+    tree = Path(tmp) / "51.1"
+    (tree / "include").mkdir(parents=True)
+    (tree / "include" / "aliases.yml").write_text(
+        "aliases:\n  gnome_downloads: https://download.gnome.org/sources/\n"
+    )
+    for path, url in elements.items():
+        element = tree / "elements" / path
+        element.parent.mkdir(parents=True, exist_ok=True)
+        element.write_text(
+            f"kind: meson\nsources:\n- kind: tar\n  url: {url}\n  ref: {'0' * 64}\n"
+        )
+    return tree
+
+
+def gnome_tree(tmp: str, locks: list[tuple[str, str, str]]) -> Path:
+    """A factory tree with one GNOME-primary lock per (name, module, version)."""
+    root = Path(tmp) / "factory"
+    (root / "config").mkdir(parents=True)
+    packages = []
+    for name, module, version in locks:
+        tarball = tarball_version(version)
+        packages.append({
+            "name": name,
+            "version": version,
+            "url": f"https://download.gnome.org/sources/{module}/"
+            f"{release_cycle(tarball)}/{module}-{tarball}.tar.xz",
+            "filename": f"{module}-{tarball}.tar.xz",
+            "sha512": "d" * 128,
+        })
+    (root / "config" / "upstream-sources.json").write_text(
+        json.dumps({"packages": packages}, indent=2) + "\n"
+    )
+    (root / "config" / "gnome-build-meta.json").write_text(json.dumps(GBM_PIN))
+    return root
+
+
+def cache_opener(caches: dict[str, list[str]]):
+    return fake_opener({
+        f"https://download.gnome.org/sources/{module}/cache.json":
+            json.dumps([4, {}, {module: versions}, {}]).encode()
+        for module, versions in caches.items()
+    })
+
+
+# GNOME 51.1 as gnome-build-meta defines it, trimmed to the cases below.
+GBM_51 = {
+    "sdk/gjs.bst": "gnome_downloads:gjs/1.90/gjs-1.90.0.tar.xz",
+    "sdk/pango.bst": "gnome_downloads:pango/1.58/pango-1.58.2.tar.xz",
+    "sdk/gtk.bst": "gnome_downloads:gtk/4.24/gtk-4.24.1.tar.xz",
+    "sdk/gcr.bst": "gnome_downloads:gcr/4.4/gcr-4.4.1.tar.xz",
+    "core/gdm.bst": "gnome_downloads:gdm/51/gdm-51.1.tar.xz",
+}
+
+
+class GnomeStableReleaseTests(unittest.TestCase):
+    """GNOME's newest stable release is gnome-build-meta's highest plain tag."""
+
+    TAGS = ["49.10", "49.9", "49-branchpoint", "49.alpha.1", "50.6", "51.0", "51.1",
+            "52.alpha", "52.beta", "52.rc", "sam/openqa-s3-test"]
+
+    def test_tag_selection_ignores_alpha_beta_and_rc(self) -> None:
+        self.assertEqual(newest_gbm_tag(self.TAGS), "51.1")
+        self.assertEqual(newest_gbm_tag(["51.1", "52.alpha", "52.beta", "52.rc"]), "51.1")
+        # Numeric, not lexical: 49.10 is newer than 49.9.
+        self.assertEqual(newest_gbm_tag(["49.9", "49.10", "50.alpha"]), "49.10")
+        self.assertIsNone(newest_gbm_tag(["52.alpha", "52.beta"]))
+
+    def test_ls_remote_listing_is_parsed_into_tag_names(self) -> None:
+        listing = "".join(f"{'0' * 40}\trefs/tags/{tag}\n" for tag in self.TAGS)
+        calls = []
+
+        def run(argv, **_):
+            calls.append(argv)
+            return subprocess.CompletedProcess(argv, 0, stdout=listing, stderr="")
+
+        self.assertEqual(gbm_tags("https://example.invalid/gbm.git", run=run), self.TAGS)
+        self.assertEqual(calls[0][:4], ["git", "ls-remote", "--tags", "--refs"])
+
+    def test_without_a_tree_the_newest_stable_tag_is_cloned_shallowly(self) -> None:
+        calls = []
+
+        def run(argv, **_):
+            calls.append(argv)
+            if "ls-remote" in argv:
+                listing = "".join(f"{'0' * 40}\trefs/tags/{t}\n" for t in self.TAGS)
+                return subprocess.CompletedProcess(argv, 0, stdout=listing, stderr="")
+            if "clone" in argv:
+                (Path(argv[-1]) / "elements").mkdir(parents=True)
+                return subprocess.CompletedProcess(argv, 0, stdout="", stderr="")
+            raise AssertionError(f"unexpected git call {argv}")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = gnome_tree(tmp, [])
+            with contextlib.redirect_stdout(io.StringIO()):
+                stable = load_gnome_stable(root, None, Path(tmp), run=run)
+        self.assertEqual(stable.release, "51.1")
+        clone = next(argv for argv in calls if "clone" in argv)
+        self.assertIn("--depth", clone)
+        self.assertEqual(clone[clone.index("--branch") + 1], "51.1")
+
+    def test_a_supplied_tree_is_used_without_the_network(self) -> None:
+        def run(argv, **_):
+            raise AssertionError(f"no git call expected, got {argv}")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = gnome_tree(tmp, [])
+            tree = gbm_fixture(tmp, GBM_51)
+            with contextlib.redirect_stdout(io.StringIO()):
+                stable = load_gnome_stable(root, tree, Path(tmp), run=run)
+            self.assertEqual(stable.version("gjs", "gjs"), "1.90.0")
+
+    def test_a_checkout_at_a_development_tag_is_refused(self) -> None:
+        def run(argv, **_):
+            return subprocess.CompletedProcess(argv, 0, stdout="52.beta\n", stderr="")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            tree = Path(tmp)
+            (tree / ".git").mkdir()
+            with self.assertRaises(ValueError):
+                checkout_release(tree, run=run)
+
+
+class GnomeStablePlanTests(unittest.TestCase):
+    """GNOME locks follow the series GNOME's newest stable release ships."""
+
+    def plan_with_gbm(self, tmp, locks, caches, only=None, cycle=None):
+        root = gnome_tree(tmp, locks)
+        tree = gbm_fixture(tmp, GBM_51)
+        return plan(
+            root, only, opener=cache_opener(caches), cycle=cycle,
+            gnome_stable=lambda: GnomeStable(tree, "51.1", GBM_PIN),
+        )
+
+    def test_gjs_moves_off_the_development_series_gnome_left_behind(self) -> None:
+        # gjs was imported mid-cycle at 1.89.2 and stayed there after 1.90.0
+        # and 1.90.1 shipped: GNOME 51.1 ships 1.90.x, so the lock moves to
+        # that series' newest final, past the 1.89.90 beta.
+        with tempfile.TemporaryDirectory() as tmp:
+            proposals = self.plan_with_gbm(
+                tmp, [("gjs", "gjs", "1.89.2")],
+                {"gjs": ["1.88.0", "1.89.1", "1.89.2", "1.89.90", "1.90.0", "1.90.1"]},
+            )
+        self.assertEqual(len(proposals), 1)
+        self.assertEqual(proposals[0]["kind"], "stable")
+        self.assertEqual(proposals[0]["current"], "1.89.2")
+        self.assertEqual(proposals[0]["latest"], "1.90.1")
+
+    def test_gjs_stable_move_is_applied_by_main(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = gnome_tree(tmp, [("gjs", "gjs", "1.89.2")])
+            tree = gbm_fixture(tmp, GBM_51)
+            code, applied, out, _ = run_main_with_gbm(
+                root, tree, {"gjs": ["1.89.2", "1.89.90", "1.90.0", "1.90.1"]}
+            )
+        self.assertEqual(code, 0)
+        self.assertEqual(applied, [("gjs", "1.90.1")])
+        self.assertIn("gjs: 1.89.2 -> 1.90.1 (GNOME 51.1 ships the 1.90 series)", out)
+
+    def test_pango_stays_on_the_series_gnome_ships_not_its_development_line(self) -> None:
+        # 1.90 is pango's development line toward 2.0; GNOME 51.1 ships 1.58.
+        with tempfile.TemporaryDirectory() as tmp:
+            proposals = self.plan_with_gbm(
+                tmp, [("pango", "pango", "1.58.2")],
+                {"pango": CycleScopeTests.PANGO},
+            )
+        for proposal in proposals:
+            self.assertNotIn(proposal.get("kind"), ("final", "stable", "update", "relock"))
+        self.assertEqual([p["kind"] for p in proposals], ["note"])
+
+    def test_a_lock_ahead_of_gnome_takes_point_releases_never_a_newer_series(self) -> None:
+        # A human moved gtk4 to 4.26 with --cycle; GNOME 51.1 still ships
+        # 4.24. The lock is never frozen: 4.26.1 is applied as an in-cycle
+        # final. 4.27.0 is a series GNOME does not ship, so it is never taken,
+        # and nothing moves the lock back to 4.24.
+        with tempfile.TemporaryDirectory() as tmp:
+            proposals = self.plan_with_gbm(
+                tmp, [("gtk4", "gtk", "4.26.0")],
+                {"gtk": ["4.24.0", "4.24.1", "4.26.0", "4.26.1", "4.27.0"]},
+            )
+        self.assertEqual(
+            [(p["kind"], p["latest"]) for p in proposals],
+            [("note", None), ("final", "4.26.1")],
+        )
+        self.assertIn("ahead of GNOME 51.1", proposals[0]["reason"])
+        self.assertNotIn("4.27.0", [p["latest"] for p in proposals])
+
+    def test_an_in_series_point_release_is_still_final(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            proposals = self.plan_with_gbm(
+                tmp, [("gtk4", "gtk", "4.24.0")],
+                {"gtk": ["4.24.0", "4.24.1", "4.25.1"]},
+            )
+        self.assertEqual([(p["kind"], p["latest"]) for p in proposals], [("final", "4.24.1")])
+
+    def test_an_unmapped_app_scheme_module_moves_across_majors_never_to_a_beta(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            proposals = self.plan_with_gbm(
+                tmp, [("decibels", "decibels", "50.2")],
+                {"decibels": ["50.1", "50.2", "51.alpha", "51.0", "51.1", "52.alpha", "52.beta"]},
+            )
+        self.assertEqual(len(proposals), 1)
+        self.assertEqual(proposals[0]["kind"], "stable")
+        self.assertEqual(proposals[0]["latest"], "51.1")
+
+    def test_an_unmapped_library_scheme_module_is_still_review(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            proposals = self.plan_with_gbm(
+                tmp, [("libfoo", "libfoo", "2.4.1")],
+                {"libfoo": ["2.4.0", "2.4.1", "2.5.1", "2.6.0"]},
+            )
+        self.assertEqual([(p["kind"], p["latest"]) for p in proposals], [("review", "2.6.0")])
+
+    def test_an_element_on_another_library_major_is_another_api(self) -> None:
+        # gbm builds gcr 4.x; the gcr3 lock is the 3.x API, not its predecessor.
+        with tempfile.TemporaryDirectory() as tmp:
+            proposals = self.plan_with_gbm(
+                tmp, [("gcr3", "gcr", "3.41.2")],
+                {"gcr": ["3.41.2", "4.4.0", "4.4.1"]},
+            )
+        self.assertEqual([(p["kind"], p["latest"]) for p in proposals], [("review", "4.4.1")])
+
+    def test_a_review_only_package_is_still_not_applied(self) -> None:
+        from tools.bump_gate import REVIEW_ONLY
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = gnome_tree(tmp, [("gdm", "gdm", "50.2")])
+            (root / REVIEW_ONLY).write_text("# runs as root\ngdm\n")
+            tree = gbm_fixture(tmp, GBM_51)
+            code, applied, _, err = run_main_with_gbm(
+                root, tree, {"gdm": ["50.2", "51.0", "51.1"]}
+            )
+        self.assertEqual(code, 0)
+        self.assertEqual(applied, [])
+        self.assertIn("needs review  gdm: 50.2 -> 51.1", err)
+        self.assertIn(REVIEW_ONLY, err)
+
+    def test_an_unavailable_gbm_falls_back_to_review(self) -> None:
+        def unavailable():
+            raise ValueError("git ls-remote: could not resolve host")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = gnome_tree(tmp, [("gjs", "gjs", "1.89.2")])
+            proposals = plan(
+                root, None, opener=cache_opener({"gjs": ["1.89.2", "1.90.0", "1.90.1"]}),
+                gnome_stable=unavailable,
+            )
+        self.assertEqual(
+            [(p.get("kind"), p["name"]) for p in proposals],
+            [(None, "gnome-build-meta"), ("review", "gjs")],
+        )
+
+    def test_an_explicit_cycle_never_reads_gbm(self) -> None:
+        def unexpected():
+            raise AssertionError("--cycle is the manual override")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = gnome_tree(tmp, [("gjs", "gjs", "1.89.2")])
+            proposals = plan(
+                root, None, opener=cache_opener({"gjs": ["1.89.2", "1.90.0", "1.90.1"]}),
+                cycle="1.90", gnome_stable=unexpected,
+            )
+        self.assertEqual([(p["kind"], p["latest"]) for p in proposals], [("final", "1.90.1")])
+
+
+def run_main_with_gbm(root: Path, tree: Path, caches: dict[str, list[str]]):
+    """main() --apply end to end on a fixture gbm tree, with no network.
+
+    cache.json comes from `caches`; apply() is mocked, so what main() would
+    write is returned as (name, version) pairs.
+    """
+    from unittest import mock
+
+    from tools import upstream_bump
+
+    out, err = io.StringIO(), io.StringIO()
+    argv = ["upstream_bump.py", "--apply", "--root", str(root), "--gbm-dir", str(tree)]
+    with mock.patch.object(sys, "argv", argv), \
+            mock.patch.dict(os.environ, {}, clear=False), \
+            mock.patch.object(upstream_bump, "releases",
+                              side_effect=lambda module, opener=None: caches[module]), \
+            mock.patch.object(upstream_bump, "apply", return_value={}) as applied, \
+            contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+        os.environ.pop("GITHUB_OUTPUT", None)
+        out.reconfigure = lambda **_: None
+        code = upstream_bump.main()
+    moved = [(c.args[1]["name"], c.args[1]["latest"]) for c in applied.call_args_list]
+    return code, moved, out.getvalue(), err.getvalue()
