@@ -48,8 +48,6 @@ packages = [
     "libavformat",
     "libavutil",
     "libdovi",
-    "libklvanc",
-    "libopenjph",
     "libplacebo",
 
     "libswresample",
@@ -306,6 +304,10 @@ packages = [
     { name = "ntfs-3g-system-compression", pr = 771, published_run = 42559053279, published_nevra = "ntfs-3g-system-compression-0:1.1-5.hum1.bfin.x86_64" },
     # libde265 recipe import only; build and runtime proof remain on #475.
     { name = "libde265", pr = 901 },
+    # FFmpeg's optional broadcast-metadata (libklvanc) and HTJ2K (openjph)
+    # libraries: recipe imports only; build and runtime proof remain on #475.
+    { name = "libklvanc", pr = 974 },
+    { name = "libopenjph", pr = 974 },
     # Recipe import only; hosted build, publication and device validation remain on #485.
     { name = "bcache-tools", pr = 833 },
     # Recipe import only; build, publication and runtime proof remain on #485.
