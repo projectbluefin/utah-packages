@@ -38,7 +38,10 @@
   prematurely can prevent the entire parent package from building.
   `packages/ffmpeg/`
   declares its `libav*` subpackages under `%if ! %{with freeworld_lavc}`,
-  which is true by default, so those are `already_recipe`. Conditions the
+  which is true by default, so those are `already_recipe`. An
+  `already_recipe` name still listed under an area is not done until a batch
+  moves it to `[resolved]` with the recipe's PR (ffmpeg's split `libav*` and
+  `libsw*` rows cite `pr = 70`). Conditions the
   auditor cannot decide without a build target (`%ifarch`, `0%{?fedora}`)
   are treated as not taken — an extra `pending` name is visible work, a
   false `already_recipe` hides a gap. A `%bcond` declared inside such a
