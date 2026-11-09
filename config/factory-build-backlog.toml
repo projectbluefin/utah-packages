@@ -38,12 +38,11 @@ audit_measured_at = "2026-09-30T22:08:14Z"
 # projectbluefin/utah#383 - 49 names
 consumer_issue = "projectbluefin/utah#383"
 packages = [
-    # LCEVCdec lacks a recipe; the Qt 6 sink is disabled until
+    # The Qt 6 sink is disabled until
     # matching Qt prerequisites and a --with qt6 build are verified (#474).
     # #474's ffmpeg outputs moved to [resolved] as recipe coverage; the
     # remaining libav*/libsw* outputs of packages/ffmpeg listed here belong to
     # a later batch. Build/publication proof stays in projectbluefin/utah#383.
-    "LCEVCdec",
     "gstreamer1-plugins-good-qt6",
     "libavfilter",
     "libavformat",
@@ -210,6 +209,8 @@ packages = [
 packages = [
     # qrencode-libs: qrencode recipe imported for #506; build and runtime proof remain outstanding.
     { name = "qrencode-libs", pr = 971 },
+    # LCEVCdec recipe coverage only (#474); hosted build, publication and runtime proof remain outstanding.
+    { name = "LCEVCdec", pr = 958 },
     # Recipe import for #489 (dev-tools parity). Build, publication and
     # runtime proof remain on the #489 follow-up; the recipe + source lock
     # are the accepted output shipped here.
