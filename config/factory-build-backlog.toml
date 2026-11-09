@@ -294,8 +294,14 @@ packages = [
     # BuildRequires pkgconfig(gupnp-av-1.0), but gupnp-av has no factory recipe
     # yet (pending in [areas.long-tail], projectbluefin/utah#396).
     { name = "rygel", pr = 823 },
-    # NTFS-3G read-only plugin recipe for #488; hosted build, publication and runtime proof remain open.
-    { name = "ntfs-3g-system-compression", pr = 771 },
+    # Batch #488 publication observed in run 42559053279 (in progress when read; not a
+    # workflow-success claim): ghcr.io/projectbluefin/utah-packages@sha256:11318e23d0f093c58fa8136e48ae7c8acae9e849c272152055473b707aff5d72
+    # (revision ff2affebb786e98a466ba95896374163ec20f60e, primary sha256:f5f28143c3d3a0a3680325b05270573f656547211b33925a0086651a07480c10).
+    # Publication accounting only; permitted-repository transactions and runtime proof remain in #488.
+    # The image's factory-state label lists mtr, ntfs-3g-system-compression and
+    # open-vm-tools as failed at their current input digest: the published RPMs
+    # are older retained builds (built 2026-10-27, 2026-10-28 and 2026-11-06).
+    { name = "ntfs-3g-system-compression", pr = 771, published_run = 42559053279, published_nevra = "ntfs-3g-system-compression-0:1.1-5.hum1.bfin.x86_64" },
     # libde265 recipe import only; build and runtime proof remain on #475.
     { name = "libde265", pr = 901 },
     # Recipe import only; hosted build, publication and device validation remain on #485.
@@ -371,8 +377,9 @@ packages = [
     { name = "pam_yubico", pr = 706 },
     # Smart-card Python binding; hosted build and runtime proof remain in #506.
     { name = "python3-pyscard", pr = 704 },
-    # NILFS filesystem utilities imported for issue #488; publication still requires validation.
-    { name = "nilfs-utils", pr = 702 },
+    # NILFS filesystem utilities for issue #488 (#702 adopted by #715); #488 publication evidence
+    # is described on the ntfs-3g-system-compression record.
+    { name = "nilfs-utils", pr = 715, published_run = 42559053279, published_nevra = "nilfs-utils-0:2.2.11-9.hum1.bfin.x86_64" },
     # Batch #501 publication observed in run 42397089583 (in progress when read; not a
     # workflow-success claim): ghcr.io/projectbluefin/utah-packages@sha256:2caa51d7a9d9c9ac4a03d438635e22c55dc63669dae57ea5dd6bab90e02ed659
     # (revision bf30870af5e5e680f72eeeb06f2f3a8bfb630289, primary sha256:6a462cbcf9aae9c563d16ee5117bc7be172095604175620b4fc400881189442c).
@@ -405,9 +412,10 @@ packages = [
     { name = "libev", pr = 844 },
     # Microsoft CAB compression library recipe import (#502); hosted build, publication and runtime proof remain outstanding.
     { name = "libmspack", pr = 846 },
-    # VMware recipe imports only; build and guest validation remain in #488.
-    { name = "open-vm-tools", pr = 812 },
-    { name = "open-vm-tools-desktop", pr = 812 },
+    # VMware recipes (#812 adopted by #892, built by run 42216043584); #488 publication
+    # evidence is on the ntfs-3g-system-compression record. Guest validation remains in #488.
+    { name = "open-vm-tools", pr = 892, published_run = 42559053279, published_nevra = "open-vm-tools-0:13.1.0-1.hum1.bfin.x86_64" },
+    { name = "open-vm-tools-desktop", pr = 892, published_run = 42559053279, published_nevra = "open-vm-tools-desktop-0:13.1.0-1.hum1.bfin.x86_64" },
     # Paper-size library recipe import (#502); hosted build, publication and runtime proof remain outstanding.
     { name = "libpaper", pr = 853 },
     { name = "gnome-rounded-blur", commit = "f8589ccd95a48a1f26826c8764330c9f7811a09d", pr = 440, published_run = 40151594832, published_nevra = "gnome-rounded-blur-0:1.0.1^20260809gitf3bfcc7-1.hum1.bfin.x86_64" },
@@ -443,8 +451,8 @@ packages = [
     { name = "libell", pr = 793, published_run = 41173029071, published_nevra = "libell-0:0.83-1.hum1.bfin.x86_64" },
     # Flex source import; consumer validation remains tracked in #486.
     { name = "flex", pr = 654, published_run = 41111585693, published_nevra = "flex-0:2.6.4-25.hum1.bfin.x86_64" },
-    # Existing GPU monitor recipe; publication/runtime proof remains in #488.
-    { name = "nvtop", commit = "e19a229", pr = 410 },
+    # Existing GPU monitor recipe; published (#488 evidence on the ntfs-3g-system-compression record), runtime proof remains in #488.
+    { name = "nvtop", commit = "e19a229", pr = 410, published_run = 42559053279, published_nevra = "nvtop-0:3.3.2-1.hum1.bfin.x86_64" },
     # Long-tail batch (projectbluefin/utah-packages#607, part of #500).
     # Six source packages imported from Fedora rawhide dist-git, each now
     # source-locked in config/upstream-sources.json.
@@ -543,7 +551,7 @@ packages = [
     # conditional, so they are closed here explicitly.
     { name = "default-editor", pr = 514 },
     { name = "htop", pr = 514, published_run = 41111585693, published_nevra = "htop-0:3.5.3-1.hum1.bfin.x86_64" },
-    { name = "nano", pr = 514 },
+    { name = "nano", pr = 514, published_run = 42559053279, published_nevra = "nano-0:9.2-1.hum1.bfin.x86_64" },
     { name = "nano-default-editor", pr = 514 },
     { name = "rsync", pr = 514, published_run = 41233305890, published_nevra = "rsync-0:3.5.1-1.hum1.bfin.x86_64" },
     { name = "tmux", pr = 514 },
@@ -568,13 +576,13 @@ packages = [
     { name = "autofs", pr = 524 },
     { name = "cifs-utils", pr = 524 },
     { name = "cifs-utils-info", pr = 524 },
-    { name = "nfs-client-utils", pr = 524 },
-    { name = "nfs-common-utils", pr = 524 },
-    { name = "nfs-utils", pr = 524 },
-    { name = "nfsv3-client-utils", pr = 524 },
-    { name = "nfsv4-client-utils", pr = 524 },
-    { name = "pinentry", pr = 524 },
-    { name = "pinentry-gnome3", pr = 524 },
+    { name = "nfs-client-utils", pr = 524, published_run = 42559053279, published_nevra = "nfs-client-utils-1:2.9.2-1.rc1.hum1.bfin.1.x86_64" },
+    { name = "nfs-common-utils", pr = 524, published_run = 42559053279, published_nevra = "nfs-common-utils-1:2.9.2-1.rc1.hum1.bfin.1.x86_64" },
+    { name = "nfs-utils", pr = 524, published_run = 42559053279, published_nevra = "nfs-utils-1:2.9.2-1.rc1.hum1.bfin.1.x86_64" },
+    { name = "nfsv3-client-utils", pr = 524, published_run = 42559053279, published_nevra = "nfsv3-client-utils-1:2.9.2-1.rc1.hum1.bfin.1.x86_64" },
+    { name = "nfsv4-client-utils", pr = 524, published_run = 42559053279, published_nevra = "nfsv4-client-utils-1:2.9.2-1.rc1.hum1.bfin.1.x86_64" },
+    { name = "pinentry", pr = 524, published_run = 42559053279, published_nevra = "pinentry-0:1.3.3-1.hum1.bfin.x86_64" },
+    { name = "pinentry-gnome3", pr = 524, published_run = 42559053279, published_nevra = "pinentry-gnome3-0:1.3.3-1.hum1.bfin.x86_64" },
     { name = "rpcbind", pr = 524 },
     # H.264 decode path + bad-free dep closure wave (landing PR #526).
     # gstreamer1-plugin-dav1d is the binary subpackage of rust-gst-plugin-dav1d;
@@ -708,8 +716,8 @@ packages = [
     { name = "lshw", pr = 587, published_run = 40511180133, published_nevra = "lshw-0:B.02.20-13.hum1.bfin.x86_64" },
     { name = "lsof", pr = 587 },
     { name = "man-pages", pr = 587 },
-    { name = "mtr", pr = 587 },
-    { name = "nvme-cli", pr = 587 },
+    { name = "mtr", pr = 587, published_run = 42559053279, published_nevra = "mtr-2:0.96-2.hum1.bfin.x86_64" },
+    { name = "nvme-cli", pr = 587, published_run = 42559053279, published_nevra = "nvme-cli-0:2.16-6.hum1.bfin.x86_64" },
     { name = "pinfo", commit = "c2c7cd8c3f440a81b9aafe204bc9d22b0532fe0e", pr = 587, published_run = 40626803772, published_nevra = "pinfo-0:0.6.13-11.hum1.bfin.x86_64" },
     { name = "perl-Unicode-Normalize", pr = 783 },
     { name = "prefixdevname", pr = 819 },
@@ -864,9 +872,10 @@ packages = [
     { name = "vte291", commit = "ded82d6174382a397a2d7ddc066daeabe2e31232", pr = 413, published_run = 40569848351, published_nevra = "vte291-0:0.84.1-1.hum1.bfin.x86_64" },
     { name = "vte291-gtk4", commit = "ded82d6174382a397a2d7ddc066daeabe2e31232", pr = 413, published_run = 40569848351, published_nevra = "vte291-gtk4-0:0.84.1-1.hum1.bfin.x86_64" },
     # D-Bus helper service and its home-directory creator (#488). oddjob-mkhomedir
-    # is an unconditional subpackage of oddjob.spec; build and runtime evidence pending.
-    { name = "oddjob", pr = 784 },
-    { name = "oddjob-mkhomedir", pr = 784 },
+    # is an unconditional subpackage of oddjob.spec; published (#488 evidence on the
+    # ntfs-3g-system-compression record), runtime evidence pending.
+    { name = "oddjob", pr = 784, published_run = 42559053279, published_nevra = "oddjob-0:0.34.7-20.hum1.bfin.x86_64" },
+    { name = "oddjob-mkhomedir", pr = 784, published_run = 42559053279, published_nevra = "oddjob-mkhomedir-0:0.34.7-20.hum1.bfin.x86_64" },
     # Dev-tools batch (#487) recipe imports; hosted build, publication and runtime proof remain.
     # libsss_* are unconditional %package subpackages of sssd.spec.
     { name = "libcaca", pr = 848 },
