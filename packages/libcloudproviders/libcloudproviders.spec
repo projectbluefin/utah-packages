@@ -2,7 +2,7 @@
 
 Name:           libcloudproviders
 Summary:        Library for integration of cloud storage providers
-Version:        0.4.1
+Version:        0.4.2
 Release:        %autorelease
 License:        LGPL-3.0-or-later
 

@@ -1,0 +1,8 @@
+{
+  "package": "python-enchant",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/python-enchant.git",
+  "commit": "5ae738deea6ac1d59eceb4769a32b38630665fe8",
+  "tree": "545d0422b72e5b8de0abc08b7e869454e6a7cd4a",
+  "imported_at": "2026-11-07T17:40:09.808259+00:00"
+}

@@ -305,9 +305,9 @@ class SevenZipTransformTests(unittest.TestCase):
 
     def test_metadata_names_the_recipe_source_and_pinned_input(self):
         metadata = generated_sources.metadata_for("7zip", ROOT / "packages" / "7zip")
-        self.assertEqual(metadata["filename"], "7zip-26.04.tar.xz")
-        self.assertIn("ip7z/7zip/archive/26.04/7zip-26.04.tar.gz", metadata["generate"]["input"])
-        self.assertIn("26.04", generated_sources.SEVENZIP_INPUT_SHA512)
+        self.assertEqual(metadata["filename"], "7zip-26.05.tar.xz")
+        self.assertIn("ip7z/7zip/archive/26.05/7zip-26.05.tar.gz", metadata["generate"]["input"])
+        self.assertIn("26.05", generated_sources.SEVENZIP_INPUT_SHA512)
         spec = (ROOT / "packages" / "7zip" / "7zip.spec").read_text()
         self.assertIn("Source:         %{name}-%{version}.tar.xz", spec)
 

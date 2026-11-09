@@ -1,0 +1,8 @@
+{
+  "package": "intel-vaapi-driver",
+  "branch": "master",
+  "remote": "https://github.com/negativo17/intel-vaapi-driver.git",
+  "commit": "f9b4576698c733310c93f5e7acf447bbe6f97601",
+  "tree": "00b7e6e3516fa815a36f0946d61f4a8d310d1392",
+  "imported_at": "2026-11-07T23:49:46.351340+00:00"
+}

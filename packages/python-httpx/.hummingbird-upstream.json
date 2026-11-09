@@ -1,0 +1,8 @@
+{
+  "package": "python-httpx",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/python-httpx.git",
+  "commit": "5047ae148baf51dc44290fee83f3348325f175b5",
+  "tree": "51bec4f5f90b7d15e4d978b7376006405bfef9af",
+  "imported_at": "2026-11-07T17:40:11.714115+00:00"
+}
