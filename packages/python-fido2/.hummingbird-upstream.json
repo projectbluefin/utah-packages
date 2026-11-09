@@ -1,0 +1,8 @@
+{
+  "package": "python-fido2",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/python-fido2.git",
+  "commit": "558a967a49d274c2c0c5c387397c5958e8d1b2f9",
+  "tree": "97f5ded0b8e7d041dbf9fe1ba1f395c353d2a00f",
+  "imported_at": "2026-11-07T17:40:10.471665+00:00"
+}

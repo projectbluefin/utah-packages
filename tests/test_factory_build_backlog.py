@@ -512,7 +512,7 @@ class CatalogConsistencyTests(unittest.TestCase):
 
     The 551-name audit source is fixed; closing a gap moves a name out of
     an area into either ``[resolved]`` or ``[wontfix]`` (the two-edit
-    closing contract documented in docs/skills/factory-build-backlog.md).
+    closing contract documented in docs/skills/factory-build-backlog/closing-a-backlog-gap.md).
     That means the assertion is on the *sum* of the three tables, not on
     the backlog alone -- a PR that closes a gap without recording the
     decision would shrink the sum below 551, and a PR that closes a gap

@@ -1,5 +1,5 @@
 Name:           libtatsu
-Version:        1.0.5
+Version:        1.1.0
 Release:        %autorelease
 Summary:        Library handling the communication with Apple's TSS
 

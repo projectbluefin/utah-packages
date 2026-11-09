@@ -1,0 +1,8 @@
+{
+  "package": "python-httpcore",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/python-httpcore.git",
+  "commit": "908b7e07da9e42c59822d376d01203bfc4464e63",
+  "tree": "b8df9e507482e0ac7cbfe20112d7466f42f2cea4",
+  "imported_at": "2026-11-07T17:40:11.098868+00:00"
+}

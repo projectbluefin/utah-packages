@@ -184,6 +184,12 @@ packages:
     downstream_package_name: b43-fwcutter
     paths:
       - packages/b43-fwcutter
+  b43-openfwwf:
+    specfile_path: b43-openfwwf.spec
+    upstream_package_name: b43-openfwwf
+    downstream_package_name: b43-openfwwf
+    paths:
+      - packages/b43-openfwwf
   bash-color-prompt:
     specfile_path: bash-color-prompt.spec
     upstream_package_name: bash-color-prompt
@@ -1324,6 +1330,12 @@ packages:
     downstream_package_name: intel-mediasdk
     paths:
       - packages/intel-mediasdk
+  intel-vaapi-driver:
+    specfile_path: intel-vaapi-driver.spec
+    upstream_package_name: intel-vaapi-driver
+    downstream_package_name: intel-vaapi-driver
+    paths:
+      - packages/intel-vaapi-driver
   intel-vpl-gpu-rt:
     specfile_path: intel-vpl-gpu-rt.spec
     upstream_package_name: intel-vpl-gpu-rt
@@ -3244,6 +3256,18 @@ packages:
     downstream_package_name: python-argcomplete
     paths:
       - packages/python-argcomplete
+  python-boto3:
+    specfile_path: python-boto3.spec
+    upstream_package_name: python-boto3
+    downstream_package_name: python-boto3
+    paths:
+      - packages/python-boto3
+  python-botocore:
+    specfile_path: python-botocore.spec
+    upstream_package_name: python-botocore
+    downstream_package_name: python-botocore
+    paths:
+      - packages/python-botocore
   python-click:
     specfile_path: python-click.spec
     upstream_package_name: python-click
@@ -3292,12 +3316,24 @@ packages:
     downstream_package_name: python-email-validator
     paths:
       - packages/python-email-validator
+  python-enchant:
+    specfile_path: python-enchant.spec
+    upstream_package_name: python-enchant
+    downstream_package_name: python-enchant
+    paths:
+      - packages/python-enchant
   python-evdev:
     specfile_path: python-evdev.spec
     upstream_package_name: python-evdev
     downstream_package_name: python-evdev
     paths:
       - packages/python-evdev
+  python-fido2:
+    specfile_path: python-fido2.spec
+    upstream_package_name: python-fido2
+    downstream_package_name: python-fido2
+    paths:
+      - packages/python-fido2
   python-h11:
     specfile_path: python-h11.spec
     upstream_package_name: python-h11
@@ -3310,6 +3346,18 @@ packages:
     downstream_package_name: python-html2text
     paths:
       - packages/python-html2text
+  python-httpcore:
+    specfile_path: python-httpcore.spec
+    upstream_package_name: python-httpcore
+    downstream_package_name: python-httpcore
+    paths:
+      - packages/python-httpcore
+  python-httpx:
+    specfile_path: python-httpx.spec
+    upstream_package_name: python-httpx
+    downstream_package_name: python-httpx
+    paths:
+      - packages/python-httpx
   python-jaraco-classes:
     specfile_path: python-jaraco-classes.spec
     upstream_package_name: python-jaraco-classes
@@ -3424,6 +3472,12 @@ packages:
     downstream_package_name: python-pydantic-core
     paths:
       - packages/python-pydantic-core
+  python-pygit2:
+    specfile_path: python-pygit2.spec
+    upstream_package_name: python-pygit2
+    downstream_package_name: python-pygit2
+    paths:
+      - packages/python-pygit2
   python-pyinotify:
     specfile_path: python-pyinotify.spec
     upstream_package_name: python-pyinotify
@@ -3454,6 +3508,12 @@ packages:
     downstream_package_name: python-regex
     paths:
       - packages/python-regex
+  python-s3transfer:
+    specfile_path: python-s3transfer.spec
+    upstream_package_name: python-s3transfer
+    downstream_package_name: python-s3transfer
+    paths:
+      - packages/python-s3transfer
   python-shtab:
     specfile_path: python-shtab.spec
     upstream_package_name: python-shtab
@@ -3526,6 +3586,12 @@ packages:
     downstream_package_name: range-v3
     paths:
       - packages/range-v3
+  rapidfuzz-cpp:
+    specfile_path: rapidfuzz-cpp.spec
+    upstream_package_name: rapidfuzz-cpp
+    downstream_package_name: rapidfuzz-cpp
+    paths:
+      - packages/rapidfuzz-cpp
   rclone:
     specfile_path: rclone.spec
     upstream_package_name: rclone

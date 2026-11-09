@@ -1,5 +1,5 @@
 Name:           libspelling
-Version:        0.4.10
+Version:        0.4.11
 Release:        %autorelease
 Summary:        Spellcheck library for GTK 4
 License:        LGPL-2.1-or-later
