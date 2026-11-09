@@ -40,18 +40,12 @@ consumer_issue = "projectbluefin/utah#383"
 packages = [
     # The Qt 6 sink is disabled until
     # matching Qt prerequisites and a --with qt6 build are verified (#474).
-    # #474's ffmpeg outputs moved to [resolved] as recipe coverage; the
-    # remaining libav*/libsw* outputs of packages/ffmpeg listed here belong to
-    # a later batch. Build/publication proof stays in projectbluefin/utah#383.
+    # The libav*/libsw* outputs of packages/ffmpeg moved to [resolved] as
+    # recipe coverage (#474, #475). Build/publication proof stays in
+    # projectbluefin/utah#383.
     "gstreamer1-plugins-good-qt6",
-    "libavfilter",
-    "libavformat",
-    "libavutil",
     "libdovi",
     "libplacebo",
-
-    "libswresample",
-    "libswscale",
     "libxavs",
 ]
 
@@ -374,6 +368,14 @@ packages = [
     { name = "ffmpegthumbnailer-libs", pr = 414 },
     { name = "libavcodec", pr = 70 },
     { name = "libavdevice", pr = 70 },
+    # The rest of packages/ffmpeg's split libraries (#475): the default build
+    # ships them as lib*-free, the licensing-approved freeworld_lavc build
+    # (#383) under these exact names. Hosted build proof stays on #383.
+    { name = "libavfilter", pr = 70 },
+    { name = "libavformat", pr = 70 },
+    { name = "libavutil", pr = 70 },
+    { name = "libswresample", pr = 70 },
+    { name = "libswscale", pr = 70 },
     { name = "libdc1394", pr = 794 },
     { name = "libiec61883", pr = 801 },
     { name = "libraw1394", pr = 681 },
