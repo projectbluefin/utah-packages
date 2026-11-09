@@ -184,6 +184,12 @@ packages:
     downstream_package_name: b43-fwcutter
     paths:
       - packages/b43-fwcutter
+  b43-openfwwf:
+    specfile_path: b43-openfwwf.spec
+    upstream_package_name: b43-openfwwf
+    downstream_package_name: b43-openfwwf
+    paths:
+      - packages/b43-openfwwf
   bash-color-prompt:
     specfile_path: bash-color-prompt.spec
     upstream_package_name: bash-color-prompt
