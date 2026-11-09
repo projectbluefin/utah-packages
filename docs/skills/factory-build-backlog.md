@@ -1208,10 +1208,12 @@ permitted repositories before claiming runtime acceptance.
 recipe imported for issue #507. It has no Fedora dist-git recipe (`rpms/
 uavs3d` does not exist), so it was imported from that source recipe rather
 than via `tools/import_rawhide.py`, and it is source-locked in
-`config/upstream-sources.json`. Hosted build, publication and runtime proof
-remain outstanding on #507. `shim-ia32` is a Secure Boot-signed bootloader
-binary and still needs an explicit maintainer decision before any recipe
-work.
+`config/upstream-sources.json`. negativo17's `uavs3d-devel` required the
+`uavs3dec` CLI package; the factory points it at `uavs3d-libs`, which owns
+`libuavs3d.so.1`, matching `davs2` and `xeve` (issue #935). Keep that on a
+re-import. Hosted build, publication and runtime proof remain outstanding on
+#507. `shim-ia32` is a Secure Boot-signed bootloader binary and still needs an
+explicit maintainer decision before any recipe work.
 
 ### NILFS utilities signature sources
 
