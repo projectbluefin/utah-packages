@@ -134,7 +134,6 @@ packages = [
 consumer_issue = "projectbluefin/utah#396"
 packages = [
     "appstream-data",
-    "b43-openfwwf",
     "desktop-backgrounds-gnome",
     "evolution-ews-core",
     "evolution-ews-langpacks",
@@ -682,6 +681,9 @@ packages = [
     # Published; runtime dependency and Braille print-path proof remain on #499.
     { name = "braille-printer-app", pr = 899, published_run = 42171198494, published_nevra = "braille-printer-app-1:2.0~b0^386eea385f-12.hum1.bfin.x86_64" },
     { name = "b43-fwcutter", pr = 813, published_run = 42171198494, published_nevra = "b43-fwcutter-0:021-1.hum1.bfin.x86_64" },
+    # Open b43 firmware: recipe import only; hosted build, publication and
+    # runtime proof remain on #499.
+    { name = "b43-openfwwf", pr = 957 },
     { name = "sane-airscan", pr = 586 },
     { name = "sane-backends", pr = 586 },
     { name = "sane-backends-drivers-cameras", pr = 586 },
