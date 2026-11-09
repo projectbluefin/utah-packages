@@ -1,0 +1,8 @@
+{
+  "package": "b43-openfwwf",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/b43-openfwwf.git",
+  "commit": "1521cfd92397714148d87092d6c0f99992c71021",
+  "tree": "701aa2053eaf9237bc25ae39dc94c06f304cbfdc",
+  "imported_at": "2026-11-09T00:41:38.197428+00:00"
+}
