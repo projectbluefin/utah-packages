@@ -45,5 +45,3 @@ webkitgtk
 words
 xevd
 xeve
-xmlrpc-c
-xvidcore

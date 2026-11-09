@@ -23,6 +23,13 @@
       ]
     },
     {
+      "name": "LCEVCdec",
+      "version": "4.3.1",
+      "url": "https://github.com/v-novaltd/LCEVCdec/archive/4.3.1.tar.gz",
+      "filename": "LCEVCdec-4.3.1.tar.gz",
+      "sha512": "4ec6d4cfc1ac4a12219b338c8473f695f16a86866eb538f2ad01c1587320651e8352e49e4f00a5f74a0515d35959a18dec5322436d94addf6ebd3ebfae389bc7"
+    },
+    {
       "name": "LibRaw",
       "version": "0.22.2",
       "url": "https://www.libraw.org/data/LibRaw-0.22.2.tar.gz",
@@ -436,6 +443,16 @@
       "sha512": "7b22bdd05b8e0bf8b24ab79db128dbab9f8c2c167f4b1d3073922b8ff1e0f0e8917322283d6d4091002f014f42692984f4f641761f05965d3b66fb3eca14dc46",
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/cjson/cjson-1.7.19.tar.gz/sha512/7b22bdd05b8e0bf8b24ab79db128dbab9f8c2c167f4b1d3073922b8ff1e0f0e8917322283d6d4091002f014f42692984f4f641761f05965d3b66fb3eca14dc46/cjson-1.7.19.tar.gz"
+      ]
+    },
+    {
+      "name": "cli11",
+      "version": "2.7.2",
+      "url": "https://github.com/CLIUtils/CLI11/archive/v2.7.2/cli11-2.7.2.tar.gz",
+      "filename": "cli11-2.7.2.tar.gz",
+      "sha512": "437cd9d704c1b0de0516bdc8cb115befb2e7170417375a64845a2bc2385fa07948c4af724ec615d27fbc102dbe13a7117f33873d6776fe9b17f293d42fe64dd9",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/cli11/cli11-2.7.2.tar.gz/sha512/437cd9d704c1b0de0516bdc8cb115befb2e7170417375a64845a2bc2385fa07948c4af724ec615d27fbc102dbe13a7117f33873d6776fe9b17f293d42fe64dd9/cli11-2.7.2.tar.gz"
       ]
     },
     {
@@ -3221,6 +3238,16 @@
       "sha512": "facbd82607363f7fc8767b3299b6f8b4e0aeb1e7a65d956bedf5ef1719304aac2f420f763ac2c08167f2176475f04b6c6c30fd448b7991a6fc6756793b8ad92c"
     },
     {
+      "name": "libklvanc",
+      "version": "1.6.0",
+      "url": "https://github.com/stoth68000/libklvanc/archive/vid.obe.1.6.0.tar.gz",
+      "filename": "vid.obe.1.6.0.tar.gz",
+      "sha512": "0e4744291e79a80a98fd882bbde07f3fb216725a5f725f729819eba60dee04d38c9c8cf119d1b0c2fb248b0fd8f852b45acae415e8cf8731aaf24197894e5760",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libklvanc/vid.obe.1.6.0.tar.gz/sha512/0e4744291e79a80a98fd882bbde07f3fb216725a5f725f729819eba60dee04d38c9c8cf119d1b0c2fb248b0fd8f852b45acae415e8cf8731aaf24197894e5760/vid.obe.1.6.0.tar.gz"
+      ]
+    },
+    {
       "name": "libkrun",
       "version": "1.19.8",
       "url": "https://github.com/libkrun/libkrun/archive/refs/tags/v1.19.8.tar.gz",
@@ -4642,6 +4669,16 @@
       ]
     },
     {
+      "name": "openjph",
+      "version": "0.32.0",
+      "url": "https://github.com/aous72/OpenJPH/archive/refs/tags/0.32.0/OpenJPH-0.32.0.tar.gz",
+      "filename": "OpenJPH-0.32.0.tar.gz",
+      "sha512": "4207570b05deef8e46ca6d8b2dba0d5fd4a02e3bed8ddcc5d950b4404368505d918a6047c716143a56cd38e8e778f62c046b6472d7ff8bc0a71a2ab694bfdd07",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/openjph/OpenJPH-0.32.0.tar.gz/sha512/4207570b05deef8e46ca6d8b2dba0d5fd4a02e3bed8ddcc5d950b4404368505d918a6047c716143a56cd38e8e778f62c046b6472d7ff8bc0a71a2ab694bfdd07/OpenJPH-0.32.0.tar.gz"
+      ]
+    },
+    {
       "name": "openpace",
       "version": "1.1.4",
       "url": "https://github.com/frankmorgner/openpace/releases/download/1.1.4/openpace-1.1.4.tar.gz",
@@ -4950,6 +4987,16 @@
       "sha512": "5a2af2ab09cf8088ea05b07f6feed90b9df57ec6201a64f9c06cde447d3f9faf532a07094b5f62617163374bb03f974d62b11e27b48ba2a83e4459339d32b157",
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/pkcs11-provider/pkcs11-provider-1.3.0.tar.xz/sha512/5a2af2ab09cf8088ea05b07f6feed90b9df57ec6201a64f9c06cde447d3f9faf532a07094b5f62617163374bb03f974d62b11e27b48ba2a83e4459339d32b157/pkcs11-provider-1.3.0.tar.xz"
+      ]
+    },
+    {
+      "name": "plutovg",
+      "version": "1.3.3",
+      "url": "https://github.com/sammycage/plutovg/archive/v1.3.3/plutovg-1.3.3.tar.gz",
+      "filename": "plutovg-1.3.3.tar.gz",
+      "sha512": "57349751bfc9020e63042f472d828ddc509f724d0c82cdaf34e2047f6333de192c5a4cc6aed376e98a000bd68b3b05f1c00ca84bf7163a16c6c2860bc33fb8d0",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/plutovg/plutovg-1.3.3.tar.gz/sha512/57349751bfc9020e63042f472d828ddc509f724d0c82cdaf34e2047f6333de192c5a4cc6aed376e98a000bd68b3b05f1c00ca84bf7163a16c6c2860bc33fb8d0/plutovg-1.3.3.tar.gz"
       ]
     },
     {
@@ -5546,6 +5593,16 @@
       "url": "https://github.com/qpdf/qpdf/releases/download/v12.4.2/qpdf-12.4.2.tar.gz",
       "filename": "qpdf-12.4.2.tar.gz",
       "sha512": "97193fd5eb6460dcf2c179c445f756c553af5c3b8a0ab89ed78ea022bdbe147a73bc6e815e18d37b04d3a462fefe32ea3dd238c2a92a10616c3c38e170ce013e"
+    },
+    {
+      "name": "qrencode",
+      "version": "4.1.1",
+      "url": "https://fukuchi.org/works/qrencode/qrencode-4.1.1.tar.bz2",
+      "filename": "qrencode-4.1.1.tar.bz2",
+      "sha512": "981b3242c213e1b40ac88711912dd8c27ea11f3437d1a04b6b226499a6e991a8f0b3b10f818bcc104812192a1dac4ce05f16ecd847a50cb03d4859b84bad89b8",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/qrencode/qrencode-4.1.1.tar.bz2/sha512/981b3242c213e1b40ac88711912dd8c27ea11f3437d1a04b6b226499a6e991a8f0b3b10f818bcc104812192a1dac4ce05f16ecd847a50cb03d4859b84bad89b8/qrencode-4.1.1.tar.bz2"
+      ]
     },
     {
       "name": "qt6-qtdeclarative",
@@ -6959,10 +7016,13 @@
     {
       "name": "xmlrpc-c",
       "version": "1.60.04",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/xmlrpc-c/xmlrpc-c-1.60.04.tgz/sha512/68407053eec1e3f32187169f5bb976e9f043f1576dd9fb7a9076ed00414dd0293cfdf72527a314c244dd48986402af3c9cc33d110ed3b382a13190eb8dddb734/xmlrpc-c-1.60.04.tgz",
+      "url": "https://downloads.sourceforge.net/project/xmlrpc-c/Xmlrpc-c%20Super%20Stable/1.60.04/xmlrpc-c-1.60.04.tgz",
       "filename": "xmlrpc-c-1.60.04.tgz",
       "feed": "https://release-monitoring.org/project/9024",
-      "sha512": "68407053eec1e3f32187169f5bb976e9f043f1576dd9fb7a9076ed00414dd0293cfdf72527a314c244dd48986402af3c9cc33d110ed3b382a13190eb8dddb734"
+      "sha512": "68407053eec1e3f32187169f5bb976e9f043f1576dd9fb7a9076ed00414dd0293cfdf72527a314c244dd48986402af3c9cc33d110ed3b382a13190eb8dddb734",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/xmlrpc-c/xmlrpc-c-1.60.04.tgz/sha512/68407053eec1e3f32187169f5bb976e9f043f1576dd9fb7a9076ed00414dd0293cfdf72527a314c244dd48986402af3c9cc33d110ed3b382a13190eb8dddb734/xmlrpc-c-1.60.04.tgz"
+      ]
     },
     {
       "name": "xmodmap",
@@ -7044,10 +7104,13 @@
     {
       "name": "xvidcore",
       "version": "1.3.7",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/xvidcore/xvidcore-1.3.7.tar.bz2/sha512/e2b22e7a7e103af7adcc999d95484f991a0a33df02b912fe042b2e23d2af07381c737d23158dbf0fad770ee680572f86fbe04ab2ef33c81e2e0180ead2acc8ed/xvidcore-1.3.7.tar.bz2",
+      "url": "https://downloads.xvid.com/downloads/xvidcore-1.3.7.tar.bz2",
       "filename": "xvidcore-1.3.7.tar.bz2",
       "feed": "https://release-monitoring.org/project/14474",
-      "sha512": "e2b22e7a7e103af7adcc999d95484f991a0a33df02b912fe042b2e23d2af07381c737d23158dbf0fad770ee680572f86fbe04ab2ef33c81e2e0180ead2acc8ed"
+      "sha512": "e2b22e7a7e103af7adcc999d95484f991a0a33df02b912fe042b2e23d2af07381c737d23158dbf0fad770ee680572f86fbe04ab2ef33c81e2e0180ead2acc8ed",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/xvidcore/xvidcore-1.3.7.tar.bz2/sha512/e2b22e7a7e103af7adcc999d95484f991a0a33df02b912fe042b2e23d2af07381c737d23158dbf0fad770ee680572f86fbe04ab2ef33c81e2e0180ead2acc8ed/xvidcore-1.3.7.tar.bz2"
+      ]
     },
     {
       "name": "yelp",
