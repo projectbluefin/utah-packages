@@ -123,6 +123,14 @@ first layer (`fetch_image` in the same tool returns it). An import PR that
 left its name `already_recipe` pending evidence (`tslib`, #643) moves to
 `[resolved]` in a later reconciliation PR once that image carries the binary;
 cite the original import PR and merge commit rather than the reconciliation.
+
+The same image's `org.projectbluefin.factory.state` label names the sources
+whose latest attempt failed at their current input digest (`failed`); their
+published RPMs are older retained builds. Check every source you cite against
+it and compare each binary's primary `buildtime`. In the #488 reconciliation
+`mtr`, `ntfs-3g-system-compression` and `open-vm-tools` were in `failed`, so
+the catalog comment records that their publication evidence is a retained
+build, not current build health.
 ### X11 resource library imports
 
 The audited `libXres` binary is the main output of source recipe `libXres`;
