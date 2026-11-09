@@ -54,6 +54,19 @@ class GraphTests(unittest.TestCase):
         recipes = {"gtk4": recipe("gtk4", ["gtk4-devel", "glib2-devel"], ["gtk4-devel"])}
         self.assertEqual(graph(recipes, {"glib2": {"glib2-devel"}})["gtk4"], set())
 
+    def test_python3dist_is_derived_from_the_recipe_name(self) -> None:
+        # python3dist(botocore) is generated at build time, so rpmspec cannot
+        # report it and an import run with botocore not yet published would
+        # otherwise build boto3 in the same wave and fail its hermetic lock.
+        recipes = {
+            "python-botocore": recipe("python-botocore"),
+            "python-boto3": recipe("python-boto3", ["python3dist(botocore)"]),
+        }
+        edges = graph(recipes, published=None)
+        self.assertEqual(edges["python-boto3"], {"python-botocore"})
+        order = waves({"python-botocore", "python-boto3"}, edges, {})
+        self.assertGreater(order["python-boto3"], order["python-botocore"])
+
 
 class WaveTests(unittest.TestCase):
     EDGES = {
