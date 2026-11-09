@@ -39,7 +39,6 @@ Tools and utilities for developing with icu.
 
 %package -n lib%{name}
 Summary: International Components for Unicode - libraries
-Recommends: icu-tzdata
 
 %description -n lib%{name}
 The International Components for Unicode (ICU) libraries provide

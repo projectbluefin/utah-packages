@@ -111,10 +111,12 @@ as a substitute for maintainer review.
 A repair request naming a generic failed check can refer to this prerequisite.
 Read the failed job before changing code. Do not push an empty commit or
 rerun the fork job without proof: neither supplies the missing build evidence,
-and any new head invalidates proof for the previous commit. Finish necessary
-changes first, then give the maintainer the final full head SHA for review and
-dispatch. The default Canary set still does not build the imported recipe;
-that recipe needs its own scoped build and runtime acceptance evidence.
+and any new head other than a clean merge of a `main` that changed no pipeline
+path invalidates proof for the previous commit (see "A proven head survives
+merges of `main`" below). Finish necessary changes first, then give the
+maintainer the final full head SHA for review and dispatch. The default Canary
+set still does not build the imported recipe; that recipe needs its own scoped
+build and runtime acceptance evidence.
 
 The witness tests must not freeze the list of workflows allowed to call the
 reusable builder, but every caller must still pass the never-`latest` check:
@@ -136,7 +138,8 @@ when the pull request is not open against `main`, when it changes 3000 or
 more files (GitHub's file list stops there), and when it changes
 `.github/` (workflow changes never run with this repository's credentials from
 a fork; push those by hand). A new push to the pull request needs a new
-review and a new run.
+review and a new run, unless it only merges `main` and `main` changed no
+pipeline path (below).
 
 The canary run builds the fork's code with `packages: write`, so the review is
 the security boundary, exactly as it was when a maintainer pushed the branch by
@@ -163,14 +166,62 @@ that began before `canary.yml` could read the proof reuses its old workflow
 file and fails again, so the job then closes and reopens the pull request once
 to start a fresh run on the same commit. A maintainer-run Canary that does not
 pass is reported on the pull request and the check stays red. The press holds a
-runner for as long as that run takes (about half an hour). A push after review
-changes the head, so the old proof no longer applies.
+runner for as long as that run takes (about half an hour).
 
-The proof cannot survive on a fork pull request that `main` keeps overtaking:
-`main` requires branches to be up to date, each merge from `main` is a new
-head, and the hive cannot update a fork branch once `main` changes
-`.github/workflows/` (its App has no `workflows` permission). In that case,
-and for a fork pull request that itself changes `.github/`, a maintainer
+A proven head survives merges of `main` that change no pipeline path. The
+repository requires branches to be up to date, so the hive or the author merges
+`main` into the fork branch, and that new head has no run of its own: on #862
+Canary passed at `345c7e6`, then hivecommons-hive[bot] pushed `48929a6` ("Merge
+branch 'main'", parents `345c7e6` and `main`'s `07878565`). The pull request's
+diff stayed the same, yet `Canary` went red and the hive nudged the contributor
+again. The fork's `Canary` now also accepts a passed copy at an earlier head
+when `tools/fork_canary.py carry_problem` finds nothing unreviewed and nothing
+unbuilt between the two:
+
+- the later head contains the proven one, and every commit it adds that is not
+  on `main` is a two-parent merge with one parent on `main` and the other the
+  proven head or another such merge. A contributor commit, a rewritten branch,
+  or a merge of anything but `main` does not carry over;
+- each of those merges has exactly the tree `git merge-tree --write-tree` makes
+  from its parents, so a resolved conflict or an edit hidden in a merge does
+  not carry over;
+- the pull request's own diff against its merge base is unchanged: every hunk
+  byte for byte, binary payloads and modes included. Only `index` lines and hunk
+  positions are ignored, because `main` changing the same file elsewhere moves
+  them (it did on #862: `config/upstream-sources.json` and a skill file), so the
+  blob ids of those files differ even though nothing the pull request changes
+  does;
+- the diff touches no `.github/` path (a copy pushed by hand for one is not
+  inherited), and the pull request targets `main`;
+- what came in from `main` between the two heads' merge bases touches no
+  pipeline path (`pipeline_changes`). The Canary built the proven head with
+  `main`'s pipeline as it was then, so a merged pipeline change was never built
+  with the pull request (#900 review). Only paths the Canary neither runs nor
+  builds are exempt: `docs/`, `site/`, `tests/`, `.agents/`, `.claude/`,
+  top-level `*.md`, and recipes outside the canary set (`packages/<name>/…`).
+  Everything else counts, including `.github/`, `tools/`, `Justfile`,
+  `config/` (the recipe-inventory exception above does not apply here),
+  `locks/`, `Containerfile`, `.packit.yaml`, `.gitattributes`, `reports/`, files
+  directly under `packages/`, and the canary set's own recipes. Otherwise the
+  notice says "main changed pipeline paths since … was built (…) … A maintainer
+  must dispatch 'Canary for a fork pull request' again with head …": do that,
+  with the new head.
+
+The `canary` job's checkout fetches the full, blobless history for this and
+executes nothing from it. When `main` was merged while the maintainer-run
+Canary was still running, the `refresh` job re-runs the new head's failed
+`Canary` once, quietly; it never closes, reopens or approves for a head nobody
+reviewed.
+
+Expect this to carry over rarely: in the 60 `main` commits before #900, 56
+touched a pipeline path. #862 itself does not carry over, because `07878565`
+changed `tools/generated_sources.py`, `.packit.yaml` and `config/`.
+
+The proof still cannot survive on a fork pull request that `main` keeps
+overtaking with pipeline changes: each such merge from `main` is a new head
+that does not carry over, and the hive cannot update a fork branch once `main`
+changes `.github/workflows/` (its App has no `workflows` permission). In that
+case, and for a fork pull request that itself changes `.github/`, a maintainer
 re-homes it instead. The maintainer creates `hive/adopt-<N>` from `main`,
 cherry-picks only the pull request's own non-merge commits with `--signoff`
 (authorship is preserved), resolves conflicts, runs `just check`, opens a new

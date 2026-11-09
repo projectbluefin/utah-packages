@@ -275,6 +275,16 @@
       "sha512": "2ae2a00a7cdfc5c74cc0cc8d7a4042eae9a0f78b83d8ead77fb2cb55f99095f463b6b2bb0aed3238eeb256e404f1427043f6bca5262b38cd19f0c3237d96a11b"
     },
     {
+      "name": "b43-openfwwf",
+      "version": "5.2",
+      "url": "https://web.archive.org/web/20231025104009id_/http://netweb.ing.unibs.it/openfwwf/firmware/openfwwf-5.2.tar.gz",
+      "filename": "openfwwf-5.2.tar.gz",
+      "sha512": "17c2332dea6d0e49a3916bcf46394cb81d9bfa7c2bee56c16267c9b2919f079c240617549f0998acd53a5b63b61a3b04ea1af84b304977c061eff508feaf4bf5",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/b43-openfwwf/openfwwf-5.2.tar.gz/sha512/17c2332dea6d0e49a3916bcf46394cb81d9bfa7c2bee56c16267c9b2919f079c240617549f0998acd53a5b63b61a3b04ea1af84b304977c061eff508feaf4bf5/openfwwf-5.2.tar.gz"
+      ]
+    },
+    {
       "name": "bash-color-prompt",
       "version": "0.96.2",
       "url": "https://github.com/juhp/bash-color-prompt/archive/refs/tags/v0.96.2.tar.gz",
@@ -6949,10 +6959,13 @@
     {
       "name": "xmlrpc-c",
       "version": "1.60.04",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/xmlrpc-c/xmlrpc-c-1.60.04.tgz/sha512/68407053eec1e3f32187169f5bb976e9f043f1576dd9fb7a9076ed00414dd0293cfdf72527a314c244dd48986402af3c9cc33d110ed3b382a13190eb8dddb734/xmlrpc-c-1.60.04.tgz",
+      "url": "https://downloads.sourceforge.net/project/xmlrpc-c/Xmlrpc-c%20Super%20Stable/1.60.04/xmlrpc-c-1.60.04.tgz",
       "filename": "xmlrpc-c-1.60.04.tgz",
       "feed": "https://release-monitoring.org/project/9024",
-      "sha512": "68407053eec1e3f32187169f5bb976e9f043f1576dd9fb7a9076ed00414dd0293cfdf72527a314c244dd48986402af3c9cc33d110ed3b382a13190eb8dddb734"
+      "sha512": "68407053eec1e3f32187169f5bb976e9f043f1576dd9fb7a9076ed00414dd0293cfdf72527a314c244dd48986402af3c9cc33d110ed3b382a13190eb8dddb734",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/xmlrpc-c/xmlrpc-c-1.60.04.tgz/sha512/68407053eec1e3f32187169f5bb976e9f043f1576dd9fb7a9076ed00414dd0293cfdf72527a314c244dd48986402af3c9cc33d110ed3b382a13190eb8dddb734/xmlrpc-c-1.60.04.tgz"
+      ]
     },
     {
       "name": "xmodmap",
@@ -7034,10 +7047,13 @@
     {
       "name": "xvidcore",
       "version": "1.3.7",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/xvidcore/xvidcore-1.3.7.tar.bz2/sha512/e2b22e7a7e103af7adcc999d95484f991a0a33df02b912fe042b2e23d2af07381c737d23158dbf0fad770ee680572f86fbe04ab2ef33c81e2e0180ead2acc8ed/xvidcore-1.3.7.tar.bz2",
+      "url": "https://downloads.xvid.com/downloads/xvidcore-1.3.7.tar.bz2",
       "filename": "xvidcore-1.3.7.tar.bz2",
       "feed": "https://release-monitoring.org/project/14474",
-      "sha512": "e2b22e7a7e103af7adcc999d95484f991a0a33df02b912fe042b2e23d2af07381c737d23158dbf0fad770ee680572f86fbe04ab2ef33c81e2e0180ead2acc8ed"
+      "sha512": "e2b22e7a7e103af7adcc999d95484f991a0a33df02b912fe042b2e23d2af07381c737d23158dbf0fad770ee680572f86fbe04ab2ef33c81e2e0180ead2acc8ed",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/xvidcore/xvidcore-1.3.7.tar.bz2/sha512/e2b22e7a7e103af7adcc999d95484f991a0a33df02b912fe042b2e23d2af07381c737d23158dbf0fad770ee680572f86fbe04ab2ef33c81e2e0180ead2acc8ed/xvidcore-1.3.7.tar.bz2"
+      ]
     },
     {
       "name": "yelp",
