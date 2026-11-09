@@ -336,6 +336,25 @@ manifest to match. Fedora's channel-allocation patch preserves its fallback
 when the IRM cannot be reached, allowing capture to proceed. A recipe does not
 prove streaming or hardware support; verify the behavior with a device.
 
+## Broadcast metadata and HTJ2K libraries
+
+`libklvanc` (SDI vertical ancillary data) and `libopenjph` (High-Throughput
+JPEG 2000) are optional FFmpeg inputs, both plain Fedora dist-git imports
+whose upstream GitHub archives match the Fedora `sources` SHA-512 pins.
+`libopenjph` is an output of the `openjph` source, not a source of its own.
+Fedora's `openjph` builds MinGW cross-compiled outputs by default; the recipe
+sets `%bcond mingw 0`, as `libdeflate` and `abseil-cpp` do, so the build
+root needs no MinGW toolchain. Its `ojph_compress` and `ojph_expand` tools
+link `libtiff`, which Hummingbird ships.
+
+`libklvanc`'s recipe deletes its sample programs, so there is no command to
+run: verify it through a consumer that links `libklvanc.so.0`. Use
+`ojph_compress` and `ojph_expand` to round-trip a test image for
+`libopenjph`. The ffmpeg recipe still passes `--disable-libklvanc` and
+does not enable `libopenjph`; turning either on is a separate ffmpeg change
+that needs these libraries published first. A recipe import is not
+publication or runtime evidence for any of these outputs.
+
 ## LCEVC decoder source family
 
 The `LCEVCdec` source is available from negativo17, not Fedora dist-git.
