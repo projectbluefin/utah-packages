@@ -2,7 +2,7 @@
   "package": "hyphen",
   "branch": "rawhide",
   "remote": "https://src.fedoraproject.org/rpms/hyphen.git",
-  "commit": "2e47d48a9ef67e5de2ba585e1bd3ecfdc337d69d",
-  "tree": "94a35147be6acf6d97ff176817476afc3d151e49",
-  "imported_at": "2026-09-03T22:53:13.146386+00:00"
+  "commit": "4d06a03667ec1ea8d27a4dfe4db5c230ced6be9a",
+  "tree": "465a5f197db1ba2e05c92b930666cc7c8032b4c8",
+  "imported_at": "2026-11-06T19:01:56.951338+00:00"
 }

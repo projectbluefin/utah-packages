@@ -6,7 +6,6 @@
 # The list only shrinks.
 a52dec
 aribb24
-device-mapper-persistent-data
 enchant2
 fdk-aac-free
 foo2zjs
@@ -27,7 +26,6 @@ livesys-scripts
 lm_sensors
 lsof
 mozc
-mozjs140
 mpage
 noopenh264
 protobuf3
@@ -41,9 +39,7 @@ usermode
 volume_key
 vulkan-headers
 vulkan-loader
-webkitgtk
 words
 xevd
 xeve
-xmlrpc-c
 xvidcore
