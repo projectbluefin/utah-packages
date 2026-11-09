@@ -93,7 +93,7 @@ catalog edit is the whole backlog change: no report or total is committed. The
 `factory-build-backlog` gate in `just check` and CI holds the catalog to the
 pinned audit digest and the recipe inventory, and its printed summary lists a
 name left behind as `already_recipe`. See
-[`factory-build-backlog.md`](skills/factory-build-backlog.md#closing-a-backlog-gap).
+[`factory-build-backlog/closing-a-backlog-gap.md`](skills/factory-build-backlog/closing-a-backlog-gap.md#closing-a-backlog-gap).
 
 For manual imports, removals, and PR recovery, first combine current `main`
 and the PR's recipe, source-lock, and backlog catalog changes, retaining
