@@ -7,6 +7,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
+import yaml
+
 from tools.bot_pr_trust import verify
 
 REPO = Path(__file__).resolve().parent.parent
@@ -24,10 +26,13 @@ class BotPrTrustTests(unittest.TestCase):
         verify(pr or self.pr, "projectbluefin/utah-packages", sha or self.sha,
                branch or self.pr["headRefName"])
 
-    def test_accepts_current_import_and_buildroot_heads(self):
+    def test_accepts_current_import_head(self):
         self.check()
+
+    def test_rejects_retired_buildroot_dispatch(self):
         self.pr["headRefName"] = "chore/buildroot-mirror"
-        self.check()
+        with self.assertRaisesRegex(ValueError, "dispatch ref is not an allowed bot branch"):
+            self.check()
 
     def test_accepts_import_package_with_plus(self):
         self.pr["headRefName"] = "import/rawhide-libsigc++30"
@@ -108,3 +113,22 @@ class BotPrTrustCliTests(unittest.TestCase):
         result = subprocess.run([sys.executable, "-m", "tools.bot_pr_trust", str(self.metadata)],
                                 cwd=REPO, capture_output=True, text=True, check=False)
         self.assertEqual(result.returncode, 2)
+
+
+class BotPrReportTests(unittest.TestCase):
+    def test_report_only_contacts_github_for_import_branches(self):
+        workflow = yaml.safe_load((REPO / ".github/workflows/bot-pr-validate.yml").read_text())
+        report = workflow["jobs"]["report"]["steps"][0]["run"]
+        stubs = 'gh() { echo gh-called; }; jq() { return 0; };\n'
+        for branch, allowed in (("import/rawhide-demo", True),
+                                ("import/rawhide-libsigc++30", True),
+                                ("chore/buildroot-mirror", False)):
+            with self.subTest(branch=branch), tempfile.TemporaryDirectory() as scratch:
+                result = subprocess.run(
+                    ["bash", "--noprofile", "--norc", "-c", stubs + report],
+                    cwd=scratch, env={"BRANCH": branch, "PR": "1", "REPOSITORY": REPOSITORY,
+                                      "SHA": "a" * 40, "RUN_URL": "https://example.invalid/run"},
+                    capture_output=True, text=True, check=False,
+                )
+                self.assertEqual(result.returncode, 0 if allowed else 1, result.stderr)
+                self.assertEqual(result.stdout.strip(), "gh-called" if allowed else "")
