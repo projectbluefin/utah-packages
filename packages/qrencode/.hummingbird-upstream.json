@@ -1,0 +1,8 @@
+{
+  "package": "qrencode",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/qrencode.git",
+  "commit": "fcb1ab5bbbdca9e20a2cbb335dcaf9241646d98f",
+  "tree": "2f80d0a164e7df28e17bf218b4b35dd11d64e550",
+  "imported_at": "2026-11-09T14:36:46.591431+00:00"
+}
