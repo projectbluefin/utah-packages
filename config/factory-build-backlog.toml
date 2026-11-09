@@ -369,8 +369,8 @@ packages = [
     { name = "libavcodec", pr = 70 },
     { name = "libavdevice", pr = 70 },
     # The rest of packages/ffmpeg's split libraries (#475): the default build
-    # ships them as lib*-free, the licensing-approved freeworld_lavc build
-    # (#383) under these exact names. Hosted build proof stays on #383.
+    # declares their lib*-free variants. This records recipe coverage only;
+    # full-codec build/publication proof stays in projectbluefin/utah#383.
     { name = "libavfilter", pr = 70 },
     { name = "libavformat", pr = 70 },
     { name = "libavutil", pr = 70 },
