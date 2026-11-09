@@ -37,6 +37,22 @@ class CapabilityTests(unittest.TestCase):
 
 
 class GraphTests(unittest.TestCase):
+    def test_unpublished_cli11_builds_before_lcevc_decoder(self) -> None:
+        spec = Path(__file__).parent.parent / "packages/LCEVCdec/LCEVCdec.spec"
+        brs = [
+            line.split(None, 1)[1].strip()
+            for line in spec.read_text().splitlines()
+            if line.startswith("BuildRequires:")
+        ]
+        recipes = {
+            "cli11": recipe("cli11", provides=["cli11-devel", "pkgconfig(CLI11)"]),
+            "LCEVCdec": recipe("LCEVCdec", brs),
+        }
+        edges = graph(recipes, published=None)
+        self.assertEqual(edges["LCEVCdec"], {"cli11"})
+        order = waves(set(recipes), edges, {})
+        self.assertGreater(order["LCEVCdec"], order["cli11"])
+
     def test_subpackage_and_explicit_provides_become_edges(self) -> None:
         recipes = {
             "vulkan-headers": recipe("vulkan-headers"),

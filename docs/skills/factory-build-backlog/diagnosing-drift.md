@@ -11,6 +11,10 @@
   If the catalog conflict is two independent additions to `[resolved]`, keep
   both sets of records; neither supersedes the other. Preserve unrelated skill
   sections added on `main` when the reconciliation guidance conflicts too.
+  If an older commit edits the former monolithic skill, retain the split
+  index from `main` and move only the incoming guidance to its owning file.
+  Check the pre-rebase PR diff for documentation moved by earlier merge
+  resolutions: a linear rebase does not replay those merge commits.
 - A `pending` count that grows means a name was added to the catalog
   without a recipe; run `just factory-build-backlog` for the per-area
   summary, or add `--output <path>` to `python3 tools/factory_build_backlog.py`
