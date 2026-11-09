@@ -209,7 +209,7 @@ packages = [
 # Each entry: package name and the commit that closed the gap.
 packages = [
     # qrencode-libs: qrencode recipe imported for #506; build and runtime proof remain outstanding.
-    { name = "qrencode-libs" },
+    { name = "qrencode-libs", pr = 971 },
     # Recipe import for #489 (dev-tools parity). Build, publication and
     # runtime proof remain on the #489 follow-up; the recipe + source lock
     # are the accepted output shipped here.
