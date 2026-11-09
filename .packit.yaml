@@ -2038,6 +2038,12 @@ packages:
     downstream_package_name: libjwt
     paths:
       - packages/libjwt
+  libklvanc:
+    specfile_path: libklvanc.spec
+    upstream_package_name: libklvanc
+    downstream_package_name: libklvanc
+    paths:
+      - packages/libklvanc
   libkrun:
     specfile_path: libkrun.spec
     upstream_package_name: libkrun
@@ -2932,6 +2938,12 @@ packages:
     downstream_package_name: openjpeg
     paths:
       - packages/openjpeg
+  openjph:
+    specfile_path: openjph.spec
+    upstream_package_name: openjph
+    downstream_package_name: openjph
+    paths:
+      - packages/openjph
   openpace:
     specfile_path: openpace.spec
     upstream_package_name: openpace
