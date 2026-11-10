@@ -6,7 +6,7 @@ from pathlib import Path
 
 
 def verify(pr: dict, repository: str, sha: str, branch: str) -> None:
-    if not re.fullmatch(r"(?:chore/buildroot-mirror|import/rawhide-[A-Za-z0-9][A-Za-z0-9_.+-]*)", branch):
+    if not re.fullmatch(r"import/rawhide-[A-Za-z0-9][A-Za-z0-9_.+-]*", branch):
         raise ValueError("dispatch ref is not an allowed bot branch")
     expected = (pr.get("state") == "OPEN" and pr.get("baseRefName") == "main"
                 and pr.get("headRefName") == branch and pr.get("headRefOid") == sha

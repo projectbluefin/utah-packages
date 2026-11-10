@@ -83,7 +83,7 @@ jobs:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           set -euo pipefail
-          [[ "$BRANCH" =~ ^(chore/buildroot-mirror|import/rawhide-[A-Za-z0-9][A-Za-z0-9_.+-]*)$ ]] || exit 1
+          [[ "$BRANCH" =~ ^import/rawhide-[A-Za-z0-9][A-Za-z0-9_.+-]*$ ]] || exit 1
           gh pr view "$PR" -R "$REPOSITORY" \
             --json state,baseRefName,headRefName,headRefOid,headRepository,author > pr.json
           jq -e --arg sha "$SHA" --arg branch "$BRANCH" --arg repo "$REPOSITORY" '
