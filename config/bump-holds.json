@@ -4,6 +4,10 @@
       "version": "2.90.1",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/40072946213"
     },
+    "gnome-keyring": {
+      "version": "51.1",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/42773931857"
+    },
     "gssproxy": {
       "version": "0.9.3",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/40172661348"
@@ -40,6 +44,14 @@
       "version": "1.3.3",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/40843653428"
     },
+    "libklvanc": {
+      "version": "1.7.0",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/42773931857"
+    },
+    "openjph": {
+      "version": "0.33.0",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/42773931857"
+    },
     "pyscard": {
       "version": "2.3.2",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/40833963568"
@@ -55,6 +67,10 @@
     "simdutf": {
       "version": "9.3.3",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/40833963568"
+    },
+    "snowball": {
+      "version": "3.2.0",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/42773931857"
     },
     "splix": {
       "version": "2.0.2",

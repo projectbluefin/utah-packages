@@ -258,13 +258,13 @@
     },
     {
       "name": "at-spi2-core",
-      "version": "2.61.1",
-      "url": "https://download.gnome.org/sources/at-spi2-core/2.61/at-spi2-core-2.61.1.tar.xz",
-      "filename": "at-spi2-core-2.61.1.tar.xz",
+      "version": "2.62.1",
+      "url": "https://download.gnome.org/sources/at-spi2-core/2.62/at-spi2-core-2.62.1.tar.xz",
+      "filename": "at-spi2-core-2.62.1.tar.xz",
       "feed": "https://download.gnome.org/sources/at-spi2-core/2.61/at-spi2-core-2.61.1.tar.xz",
-      "sha512": "201e7ed8bef8ddcdd0ff5c96aaf166edea95fb3d839c3bed9e5ef4778f6772aeaff62768c3fe05d4eb145583c63ff8a55bf9c504fa818a4d12abb7b3facaf7dc",
+      "sha512": "34637dfdebc26f6e3bc26380b2be3dd79b24c36103cd60eb4493caea127444b8830f620ff7ce3167f06d10d33499e4f25b69020c6e0527e0cb03098644726ec5",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/at-spi2-core/at-spi2-core-2.61.1.tar.xz/sha512/201e7ed8bef8ddcdd0ff5c96aaf166edea95fb3d839c3bed9e5ef4778f6772aeaff62768c3fe05d4eb145583c63ff8a55bf9c504fa818a4d12abb7b3facaf7dc/at-spi2-core-2.61.1.tar.xz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/at-spi2-core/at-spi2-core-2.62.1.tar.xz/sha512/34637dfdebc26f6e3bc26380b2be3dd79b24c36103cd60eb4493caea127444b8830f620ff7ce3167f06d10d33499e4f25b69020c6e0527e0cb03098644726ec5/at-spi2-core-2.62.1.tar.xz"
       ]
     },
     {
@@ -742,14 +742,14 @@
     },
     {
       "name": "evolution-data-server",
-      "version": "3.61.3",
-      "url": "https://download.gnome.org/sources/evolution-data-server/3.61/evolution-data-server-3.61.3.tar.xz",
-      "filename": "evolution-data-server-3.61.3.tar.xz",
+      "version": "3.62.1",
+      "url": "https://download.gnome.org/sources/evolution-data-server/3.62/evolution-data-server-3.62.1.tar.xz",
+      "filename": "evolution-data-server-3.62.1.tar.xz",
       "feed": "https://download.gnome.org/sources/evolution-data-server/3.61/evolution-data-server-3.61.3.tar.xz",
-      "sha512": "5473d9b64d07603ec2bb775cb126c0104b1768d04f5c75e591bcd50d60017f1d839b2bb8af75f15fa77184a6b53594559a80632085bef7b0030a34be3d07baa2",
+      "sha512": "dd204d69f365f702e3c2207cdbb1cccfb33adc6f46088338ce6b1c2343e80dc0160449f11c7ffc33a23d590a5bc4a8b7b3e67c8bad3351e81409471e24df9df9",
       "stage": 9,
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/evolution-data-server/evolution-data-server-3.61.3.tar.xz/sha512/5473d9b64d07603ec2bb775cb126c0104b1768d04f5c75e591bcd50d60017f1d839b2bb8af75f15fa77184a6b53594559a80632085bef7b0030a34be3d07baa2/evolution-data-server-3.61.3.tar.xz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/evolution-data-server/evolution-data-server-3.62.1.tar.xz/sha512/dd204d69f365f702e3c2207cdbb1cccfb33adc6f46088338ce6b1c2343e80dc0160449f11c7ffc33a23d590a5bc4a8b7b3e67c8bad3351e81409471e24df9df9/evolution-data-server-3.62.1.tar.xz"
       ]
     },
     {
@@ -1765,12 +1765,12 @@
     },
     {
       "name": "gvfs",
-      "version": "1.61.91",
-      "url": "https://download.gnome.org/sources/gvfs/1.61/gvfs-1.61.91.tar.xz",
-      "filename": "gvfs-1.61.91.tar.xz",
-      "sha512": "6873df98a1589a9b7216e2e0abc7b0391478a38561eebf3970e6a05baa6f4e842fc43eb2c243ae5ea9a000e941601e01f39507fb6f1fae23fc5a11bff42e0b98",
+      "version": "1.62.0",
+      "url": "https://download.gnome.org/sources/gvfs/1.62/gvfs-1.62.0.tar.xz",
+      "filename": "gvfs-1.62.0.tar.xz",
+      "sha512": "c7ae140ea4492b980bdef48147a10421ffa6087ce0126407fa4d8e0f26ee79a45b90c762d4920bbbbc74d816a50d58aada2bc37d3314990c86dcc9eaebcb917d",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/gvfs/gvfs-1.61.91.tar.xz/sha512/6873df98a1589a9b7216e2e0abc7b0391478a38561eebf3970e6a05baa6f4e842fc43eb2c243ae5ea9a000e941601e01f39507fb6f1fae23fc5a11bff42e0b98/gvfs-1.61.91.tar.xz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/gvfs/gvfs-1.62.0.tar.xz/sha512/c7ae140ea4492b980bdef48147a10421ffa6087ce0126407fa4d8e0f26ee79a45b90c762d4920bbbbc74d816a50d58aada2bc37d3314990c86dcc9eaebcb917d/gvfs-1.62.0.tar.xz"
       ],
       "stage": 3
     },
@@ -3786,14 +3786,14 @@
     },
     {
       "name": "libsoup3",
-      "version": "3.7.3",
-      "url": "https://download.gnome.org/sources/libsoup/3.7/libsoup-3.7.3.tar.xz",
-      "filename": "libsoup-3.7.3.tar.xz",
+      "version": "3.8.1",
+      "url": "https://download.gnome.org/sources/libsoup/3.8/libsoup-3.8.1.tar.xz",
+      "filename": "libsoup-3.8.1.tar.xz",
       "feed": "https://download.gnome.org/sources/libsoup/3.7/libsoup-3.7.2.tar.xz",
-      "sha512": "44e166742ba649e9b0e6b00d4bcbc80685be8f328a425fcbe1efd960121c33c89b668b19fef2723c93c92af6729d953b5353d133c47d4d18d74886537daa36f6",
+      "sha512": "a52736ba2c42fd1202613edfe67998676dbd066079dd852de5fb61b87e48c5f31a7a6beb9bb0dc122e8ab08f25ad7b3ce1e944cc20d115a7144b0daf39545cb2",
       "buildroot_icu77": true,
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/libsoup3/libsoup-3.7.3.tar.xz/sha512/44e166742ba649e9b0e6b00d4bcbc80685be8f328a425fcbe1efd960121c33c89b668b19fef2723c93c92af6729d953b5353d133c47d4d18d74886537daa36f6/libsoup-3.7.3.tar.xz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libsoup3/libsoup-3.8.1.tar.xz/sha512/a52736ba2c42fd1202613edfe67998676dbd066079dd852de5fb61b87e48c5f31a7a6beb9bb0dc122e8ab08f25ad7b3ce1e944cc20d115a7144b0daf39545cb2/libsoup-3.8.1.tar.xz"
       ]
     },
     {
@@ -4577,10 +4577,10 @@
     },
     {
       "name": "nvtop",
-      "version": "3.3.2",
-      "url": "https://github.com/Syllo/nvtop/archive/3.3.2/nvtop-3.3.2.tar.gz",
-      "filename": "nvtop-3.3.2.tar.gz",
-      "sha512": "a88f7d6a09712462f1448ec8e3b86285c423e20767b07ac2ead20bfbb219e78c04da6ac08781b213c41bde6997ad56a6dc08be45de465986633781464a5a1a58"
+      "version": "3.4.0",
+      "url": "https://github.com/Syllo/nvtop/archive/3.4.0/nvtop-3.4.0.tar.gz",
+      "filename": "nvtop-3.4.0.tar.gz",
+      "sha512": "170da46785c7a9b93e067a39f21298617b4be6a367baa2162e114d027cdbed58e2da8a8adcfe432b0115771bd6314a5fbe409fe8dd1ec1cde5d22e5b57687ac2"
     },
     {
       "name": "oath-toolkit",
