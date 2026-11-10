@@ -18,6 +18,7 @@ accountsservice
 cups-browsed
 cups-filters
 fprintd
+fwupd
 gdm
 libblockdev
 libfprint
