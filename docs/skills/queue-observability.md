@@ -127,9 +127,13 @@ tests** and **Runtime contract** checks, not merely a successful workflow
 whose job happens to be called `validate`. `bot-pr-validate.yml` remains for
 the Rawhide import caller and retains its exact-head, same-repository,
 bot-author trust checks; it performs static validation, not equivalent
-runtime acceptance. Buildroot refresh no longer dispatches it. Do not
-fabricate required statuses, weaken checks, grant auto-merge permissions or
-remove a hold to compensate for missing PR events.
+runtime acceptance. Buildroot refresh no longer dispatches it. Keep both the
+Python trust guard and the failure-report shell guard restricted to
+`import/rawhide-*`; `chore/buildroot-mirror` belongs to the App-created PR
+path and must be rejected even with otherwise matching bot PR metadata.
+Cover both guards in `tests/test_bot_pr_trust.py` when changing this boundary.
+Do not fabricate required statuses, weaken checks, grant auto-merge
+permissions or remove a hold to compensate for missing PR events.
 
 For a publication-free smoke check, inspect the workflow with `actionlint`
 and run `tests/test_buildroot_sharing.py` and `tests/test_bot_pr_trust.py`.
