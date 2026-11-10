@@ -3585,6 +3585,17 @@
       "sha512": "b0b355469f6aeb85c72bed7df38ea033459032ab1a3d8686dd7cb4ed60f1091a5d962c6e5055e420e739f3ddd5bfc17de0e8b66ac541233107ddcfe46412ecf5"
     },
     {
+      "name": "libplacebo",
+      "version": "7.387.0",
+      "url": "https://github.com/haasn/libplacebo/archive/v7.387.0/libplacebo-7.387.0.tar.gz",
+      "filename": "libplacebo-7.387.0.tar.gz",
+      "feed": "https://github.com/haasn/libplacebo/archive/v7.387.0/libplacebo-7.387.0.tar.gz",
+      "sha512": "a0c2b20f3656f94226beb12f7555f114974e89e73923f17b76866ab4a1e5bc34af8edf601ba7efc983e67127b79c409143f9d0292f6264ba7a4dd5008a20e0f4",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libplacebo/libplacebo-7.387.0.tar.gz/sha512/a0c2b20f3656f94226beb12f7555f114974e89e73923f17b76866ab4a1e5bc34af8edf601ba7efc983e67127b79c409143f9d0292f6264ba7a4dd5008a20e0f4/libplacebo-7.387.0.tar.gz"
+      ]
+    },
+    {
       "name": "libplist",
       "version": "2.8.1",
       "url": "https://github.com/libimobiledevice/libplist/releases/download/2.8.1/libplist-2.8.1.tar.bz2",

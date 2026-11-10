@@ -331,7 +331,11 @@ the remaining build and runtime evidence.
 `tools/import_rawhide.py libplacebo --branch rawhide` (dist-git commit
 `91447b7890b81c1b6c6d3b58ef61f4b3a657dc62`, the branch head). The dist-git
 recipe carries its own `sources` file, so the release archive SHA-512 is
-locked in the recipe; no `config/upstream-sources.json` entry is needed.
+locked in the recipe; the same release archive SHA-512 is also registered in
+`config/upstream-sources.json` (primary `https://github.com/haasn/libplacebo/archive/v7.387.0/`,
+Fedora lookaside as fallback) so `just regenerate-inventory` picks it up and
+the factory build fetches it. The dist-git recipe's own `sources` file carries
+the same digest, not a separate lock.
 
 `libplacebo`'s Dolby Vision support depends on `libdovi`, whose canonical
 upstream `code.mpv.org` is unreachable from the build environment and which
