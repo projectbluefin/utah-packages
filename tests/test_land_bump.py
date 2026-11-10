@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import json
 import unittest
+from subprocess import CalledProcessError
 from tools import land_bump
 from tools.land_bump import (
     ENQUEUE_MUTATION,
@@ -30,6 +31,7 @@ from tools.land_bump import (
     LandingError,
     MovedHeadError,
     PrStatus,
+    SubprocessGh,
     land,
 )
 
@@ -228,6 +230,168 @@ class ClosedTests(unittest.TestCase):
             land(repository=REPOSITORY, pr=123, sha=SHA, gh=gh, git=git)
         self.assertEqual(gh.merge_calls, [])
         self.assertEqual(git.rebases, 0)
+
+
+# --------------------------------------------------------------------------- #
+# The real SubprocessGh persistence, scripted so the label-create-before-add
+# ordering and the land() call order are verified end to end (no network).
+# --------------------------------------------------------------------------- #
+
+
+class RecordingGh(SubprocessGh):
+    """The real SubprocessGh with its subprocess.run scripted. Every gh command
+    is appended to ``log`` (when given); ``labels`` answers the resync-count
+    read, ``status`` answers the pr_status read, and ``fail_on`` makes a chosen
+    command raise so a probe can fail the label edit."""
+
+    def __init__(
+        self,
+        repository,
+        *,
+        labels=None,
+        status=None,
+        fail_on=None,
+        log=None,
+    ) -> None:
+        super().__init__(repository)
+        self._labels = labels or []
+        self._status = status or {
+            "state": "OPEN",
+            "headRefOid": OTHER_SHA,
+            "behindCount": 5,
+            "headRefName": "bump/upstream-sources",
+        }
+        self._fail_on = fail_on or set()
+        self.log = log
+
+    def _gh(self, *args):
+        cmd = ["gh", *args]
+        if self.log is not None:
+            self.log.append(cmd)
+        if args[0] == "api" and args[1] == "graphql":
+            # No merge queue: exercise the no-queue landing path.
+            return json.dumps({
+                "data": {
+                    "repository": {
+                        "mergeQueue": {},
+                        "pullRequest": {
+                            "state": "OPEN",
+                            "baseRefName": "main",
+                            "isCrossRepository": False,
+                            "id": "PR_123",
+                        },
+                    },
+                },
+            })
+        if args[0] == "pr" and args[1] == "view" and "--json" in args:
+            if args[args.index("--json") + 1] == "labels":
+                return json.dumps({"labels": self._labels})
+            return json.dumps(self._status)
+        if args[0] == "label" and args[1] == "create":
+            return ""
+        if args[0] == "pr" and args[1] == "edit":
+            if "edit" in self._fail_on:
+                raise CalledProcessError(1, cmd)
+            return ""
+        if args[0] == "workflow" and args[1] == "run":
+            return ""
+        raise AssertionError(f"unexpected gh command: {cmd}")
+
+
+class RecordingGit:
+    """Records each rebase onto a shared ``log`` so its order relative to the
+    gh persistence and dispatch calls can be asserted."""
+
+    def __init__(self, log=None) -> None:
+        self.log = log
+        self.rebases = 0
+
+    def rebase_onto_main(self, repository, pr, branch):
+        self.rebases += 1
+        if self.log is not None:
+            self.log.append(("rebase", repository, pr, branch))
+        return "c" * 40
+
+
+class ResyncLabelAdapterTests(unittest.TestCase):
+    """The persistence adapter, exercised through the real SubprocessGh so the
+    label-create-before-add ordering is actually verified end to end."""
+
+    def _gh(self, *, labels=None, fail_on=None, log=None):
+        return RecordingGh(REPOSITORY, labels=labels, fail_on=fail_on, log=log)
+
+    def test_first_re_sync_creates_the_label_then_adds_it(self) -> None:
+        log = []
+        gh = self._gh(labels=[], log=log)
+        gh.set_resync_count(REPOSITORY, 123, 1)
+        # The label exists in the repo before gh pr edit can add it, and the
+        # first re-sync has no older count to drop.
+        self.assertEqual(
+            log[0],
+            ["gh", "label", "create", "bump-resync:1", "-R", REPOSITORY,
+             "--color", "ededed", "--force"],
+        )
+        self.assertEqual(
+            log[1],
+            ["gh", "pr", "edit", "123", "-R", REPOSITORY,
+             "--add-label", "bump-resync:1"],
+        )
+
+    def test_a_later_re_sync_adds_before_removing_the_old_count(self) -> None:
+        # Creating the new label before removing the old one means a failure
+        # between the two can never lose the saved budget.
+        log = []
+        gh = self._gh(labels=["bump-resync:1"], log=log)
+        gh.set_resync_count(REPOSITORY, 123, 2)
+        self.assertEqual(len(log), 2)
+        create, edit = log
+        self.assertEqual(create[2], "create")
+        self.assertEqual(create[3], "bump-resync:2")
+        self.assertEqual(edit[2], "edit")
+        self.assertEqual(edit[edit.index("--add-label") + 1], "bump-resync:2")
+        self.assertEqual(edit[edit.index("--remove-label") + 1], "bump-resync:1")
+        self.assertLess(edit.index("--add-label"), edit.index("--remove-label"))
+
+    def test_resync_count_is_zero_without_any_label(self) -> None:
+        self.assertEqual(self._gh(labels=[]).resync_count(REPOSITORY, 123), 0)
+
+    def test_resync_count_reads_the_highest_count_label(self) -> None:
+        gh = self._gh(
+            labels=[{"name": "bump-resync:1"}, {"name": "bump-resync:3"}]
+        )
+        self.assertEqual(gh.resync_count(REPOSITORY, 123), 3)
+
+
+class ResyncPersistenceOrderTests(unittest.TestCase):
+    """In land() the counter is persisted before the branch is rewritten and the
+    gate re-dispatched, so a failed save never leaves a rebased, undispatched
+    branch behind."""
+
+    def test_persistence_precedes_rebase_and_dispatch(self) -> None:
+        log = []
+        gh = RecordingGh(REPOSITORY, labels=[], log=log)
+        git = RecordingGit(log=log)
+        outcome = land(repository=REPOSITORY, pr=123, sha=SHA, gh=gh, git=git)
+        self.assertEqual(outcome, "rebased")
+        create_idx = next(i for i, c in enumerate(log) if isinstance(c, list) and len(c) > 2 and c[2] == "create")
+        rebase_idx = next(i for i, c in enumerate(log) if isinstance(c, tuple))
+        dispatch_idx = next(i for i, c in enumerate(log) if isinstance(c, list) and len(c) > 2 and c[2] == "run")
+        self.assertLess(create_idx, rebase_idx)
+        self.assertLess(rebase_idx, dispatch_idx)
+
+    def test_a_failed_label_save_touches_no_branch(self) -> None:
+        # The label addition fails: the save raises before the branch is
+        # rewritten, so nothing is rebased and the gate is not re-dispatched.
+        log = []
+        gh = RecordingGh(REPOSITORY, labels=[], fail_on={"edit"}, log=log)
+        git = RecordingGit(log=log)
+        with self.assertRaises(CalledProcessError):
+            land(repository=REPOSITORY, pr=123, sha=SHA, gh=gh, git=git)
+        self.assertEqual(git.rebases, 0)
+        self.assertFalse(any(isinstance(c, tuple) for c in log))
+        self.assertFalse(
+            any(isinstance(c, list) and len(c) > 2 and c[2] == "run" for c in log)
+        )
 
 
 class CliTests(unittest.TestCase):

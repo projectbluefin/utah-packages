@@ -172,21 +172,22 @@ def land(
             pass
 
     # Stale: the built head is no longer the PR tip, either because the branch
-    # moved or because it fell behind main while the gate built. Rebase the
-    # branch onto main, re-dispatch the gate so a fresh exact-head verdict is
-    # produced on the new head, and let the re-triggered enqueue job land it.
-    # Never arm durable auto-merge; never relax strict freshness. The re-sync is
-    # bounded: a gate that keeps falling behind main is retried only up to
-    # MAX_RESYNC times, then the tool fails closed and leaves the bump for a
-    # human instead of looping forever.
+    # moved or because it fell behind main while the gate built. Reserve the
+    # re-sync on the PR first (so a crash before the rebuild still consumes the
+    # budget), rebase the branch onto main, then re-dispatch the gate so a fresh
+    # exact-head verdict is produced on the new head and the re-triggered
+    # enqueue job lands it. Never arm durable auto-merge; never relax strict
+    # freshness. The re-sync is bounded: a gate that keeps falling behind main
+    # is retried only up to MAX_RESYNC times, then the tool fails closed and
+    # leaves the bump for a human instead of looping forever.
     resyncs = gh.resync_count(repository, pr)
     if resyncs >= MAX_RESYNC:
         raise LandingError(
             f"bump {pr} was rebased {MAX_RESYNC} times without a fresh "
             f"exact-head verdict; leaving it for a human"
         )
-    git.rebase_onto_main(repository, pr, status.head_ref_name)
     gh.set_resync_count(repository, pr, resyncs + 1)
+    git.rebase_onto_main(repository, pr, status.head_ref_name)
     gh.redispatch_gate(repository, pr, status.head_ref_name)
     return "rebased"
 
@@ -297,17 +298,24 @@ class SubprocessGh:
         return count
 
     def set_resync_count(self, repository: str, pr: int, count: int) -> None:
-        # Replace any previous counter label with the new value. The first
-        # re-sync sets bump-resync:1, so there is no older label to remove yet.
-        if count > 1:
-            self._gh(
-                "pr", "edit", str(pr), "-R", repository,
-                "--remove-label", f"{RESYNC_LABEL}:{count - 1}",
-            )
+        # Create the destination label first (idempotent with --force) so the
+        # counter survives even if the PR edit below fails: `gh pr edit
+        # --add-label` refuses a label that does not exist in the repository.
+        # The first re-sync sets bump-resync:1, so there is no older label to
+        # remove yet; afterwards the previous count label is dropped. Creating
+        # the new label before removing the old one means a failure between the
+        # two can never lose the saved budget.
         self._gh(
-            "pr", "edit", str(pr), "-R", repository,
-            "--add-label", f"{RESYNC_LABEL}:{count}",
+            "label", "create", f"{RESYNC_LABEL}:{count}", "-R", repository,
+            "--color", "ededed", "--force",
         )
+        args = [
+            "pr", "edit", str(pr), "-R", repository, "--add-label",
+            f"{RESYNC_LABEL}:{count}",
+        ]
+        if count > 1:
+            args.extend(["--remove-label", f"{RESYNC_LABEL}:{count - 1}"])
+        self._gh(*args)
 
 
 class SubprocessGit:
