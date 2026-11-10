@@ -352,6 +352,15 @@ Constraints that shaped it, so they are not rediscovered:
   `expectedHeadOid` for queue entry or the merge API's `sha` for direct
   landing. A newer bump's gate cancels an older one through the concurrency
   group; a later branch push cannot reuse a successful build verdict.
+- A no-queue bump whose head moved or fell behind main is not a build
+  failure: `tools/land_bump.py` rebases the bump branch onto main, records a
+  `bump-resync:N` counter label on the PR, and re-dispatches the gate so a
+  fresh exact-head verdict is produced on the new head. The counter label is
+  created before the branch is rewritten, and the save happens before the
+  rebase, so a failed label add never leaves a rebased, undispatched branch
+  behind. The re-sync is bounded to three attempts (`MAX_RESYNC`): after three
+  rebases with no fresh exact-head verdict the tool fails closed and leaves the
+  bump for a human instead of looping forever. See `tests/test_land_bump.py`.
 - Partial failure holds instead of blocking. When the only problem is that
   some bumped packages failed (the build reached a verdict, both outputs
   are present, every bumped package was selected, every failure is a
