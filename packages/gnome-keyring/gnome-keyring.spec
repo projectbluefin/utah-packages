@@ -5,7 +5,7 @@
 %bcond_without ssh_agent
 
 Name:           gnome-keyring
-Version:        50.0
+Version:        51.1
 Release:        %autorelease
 Summary:        Framework for managing passwords and other secrets
 
