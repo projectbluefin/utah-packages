@@ -337,16 +337,13 @@ Fedora lookaside as fallback) so `just regenerate-inventory` picks it up and
 the factory build fetches it. The dist-git recipe's own `sources` file carries
 the same digest, not a separate lock.
 
-`libplacebo`'s Dolby Vision support depends on `libdovi`, whose canonical
-upstream `code.mpv.org` is unreachable from the build environment and which
-is absent from Fedora dist-git, RPM Fusion nonfree and the negativo17
-GitHub mirror. The only reachable `libdovi` (the `quietvoid/dovi_tool` Rust
-port packaged by OpenMandriva) installs only `dovi/rpu_parser.h`, a
-different API from mpv's `dovi.h`, so importing it would not satisfy
-`libplacebo`'s `dependency('dovi', >=1.6.7)`. `libdovi` therefore stays
-pending on `#475` as an environment blocker. `libplacebo` is built with
-`-Dlibdovi=disabled` (its meson `libdovi` feature is `auto`) so it is
-buildable in the factory closure without Dolby Vision; re-enable
-`-Dlibdovi=enabled` once `libdovi` is imported. Recipe coverage does not
+`libplacebo` optionally uses `libdovi` from `quietvoid/dovi_tool` to parse
+raw Dolby Vision metadata. That project provides `libdovi/rpu_parser.h`
+and the `dovi` pkg-config dependency required by this release.
+`libdovi` remains unimported under #475; packaging and hosted build proof
+remain pending. This recipe temporarily uses `-Dlibdovi=disabled`, which
+disables the external metadata parser, not the separate built-in `dovi`
+reshaping feature. Re-enable `-Dlibdovi=enabled` once the dependency is
+available. Recipe coverage does not
 establish a hosted build, publication or a representative Vulkan render;
 those remain on `#475`.

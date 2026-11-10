@@ -16,9 +16,7 @@ BuildRequires:  gcc-c++
 BuildRequires:  meson
 BuildRequires:  glad2
 BuildRequires:  lcms2-devel
-# libdovi (Dolby Vision) is out of scope for #475: its canonical upstream
-# code.mpv.org is unreachable from the build environment, so libplacebo is
-# built without Dolby Vision support until libdovi is imported.
+# The optional libdovi metadata parser remains unimported under #475.
 BuildRequires:  libepoxy-devel
 %if %{with unwind}
 BuildRequires:  libunwind-devel
@@ -62,9 +60,7 @@ developing applications that use %{name}.
 
 
 %build
-# libdovi (Dolby Vision) is disabled: its canonical upstream code.mpv.org is
-# unreachable from the build environment, so libplacebo builds without Dolby
-# Vision support until libdovi is imported (#475).
+# Enable the optional libdovi parser once its dependency is imported (#475).
 %meson \
  -Dd3d11=disabled \
  -Ddemos=False \
