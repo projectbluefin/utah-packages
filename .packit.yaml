@@ -2260,6 +2260,12 @@ packages:
     downstream_package_name: libpinyin
     paths:
       - packages/libpinyin
+  libplacebo:
+    specfile_path: libplacebo.spec
+    upstream_package_name: libplacebo
+    downstream_package_name: libplacebo
+    paths:
+      - packages/libplacebo
   libplist:
     specfile_path: libplist.spec
     upstream_package_name: libplist

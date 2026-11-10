@@ -1,0 +1,8 @@
+{
+  "package": "libplacebo",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libplacebo.git",
+  "commit": "91447b7890b81c1b6c6d3b58ef61f4b3a657dc62",
+  "tree": "c6b3d280e952edf47750e44902df740e059cb94f",
+  "imported_at": "2026-11-10T03:06:00.713351+00:00"
+}
