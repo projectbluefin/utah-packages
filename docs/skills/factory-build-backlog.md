@@ -73,6 +73,7 @@ Order is significant: the strongest signal wins. Reordering the
 This skill is split by section so concurrent edits do not collide. Edit the file that owns the section.
 
 - [Closing a backlog gap](factory-build-backlog/closing-a-backlog-gap.md#closing-a-backlog-gap)
+- [QR-code library source recovery](factory-build-backlog/package-notes.md#qr-code-library-source-recovery)
 - [Diagnosing drift](factory-build-backlog/diagnosing-drift.md#diagnosing-drift)
 - [Boot-screen output reconciliation](factory-build-backlog/diagnosing-drift.md#boot-screen-output-reconciliation)
 - [Firewall connection monitor acceptance](factory-build-backlog/package-notes.md#firewall-connection-monitor-acceptance)

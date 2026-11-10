@@ -38,23 +38,14 @@ audit_measured_at = "2026-09-30T22:08:14Z"
 # projectbluefin/utah#383 - 49 names
 consumer_issue = "projectbluefin/utah#383"
 packages = [
-    # LCEVCdec lacks a recipe; the Qt 6 sink is disabled until
+    # The Qt 6 sink is disabled until
     # matching Qt prerequisites and a --with qt6 build are verified (#474).
-    # #474's ffmpeg outputs moved to [resolved] as recipe coverage; the
-    # remaining libav*/libsw* outputs of packages/ffmpeg listed here belong to
-    # a later batch. Build/publication proof stays in projectbluefin/utah#383.
-    "LCEVCdec",
+    # The libav*/libsw* outputs of packages/ffmpeg moved to [resolved] as
+    # recipe coverage (#474, #475). Build/publication proof stays in
+    # projectbluefin/utah#383.
     "gstreamer1-plugins-good-qt6",
-    "libavfilter",
-    "libavformat",
-    "libavutil",
     "libdovi",
-    "libklvanc",
-    "libopenjph",
     "libplacebo",
-
-    "libswresample",
-    "libswscale",
     "libxavs",
 ]
 
@@ -143,7 +134,6 @@ packages = [
     "gvfs-afp",
     "gvfs-archive",
     "kmod-v4l2loopback",
-    "lockdev",
     "mcelog",
     "memstrack",
     "mkpasswd",
@@ -158,7 +148,6 @@ packages = [
     "pam_afs_session",
     "python3-perf",
     "qadwaitadecorations-qt5",
-    "qrencode-libs",
     "qt5-qtdeclarative",
     "qt5-qtsvg",
     "qt5-qttranslations",
@@ -209,6 +198,10 @@ packages = [
 # Packages that left the backlog because a recipe was imported.
 # Each entry: package name and the commit that closed the gap.
 packages = [
+    # qrencode-libs: qrencode recipe imported for #506; build and runtime proof remain outstanding.
+    { name = "qrencode-libs", pr = 971 },
+    # LCEVCdec recipe coverage only (#474); hosted build, publication and runtime proof remain outstanding.
+    { name = "LCEVCdec", pr = 958 },
     # Recipe import for #489 (dev-tools parity). Build, publication and
     # runtime proof remain on the #489 follow-up; the recipe + source lock
     # are the accepted output shipped here.
@@ -304,6 +297,10 @@ packages = [
     { name = "ntfs-3g-system-compression", pr = 771, published_run = 42559053279, published_nevra = "ntfs-3g-system-compression-0:1.1-5.hum1.bfin.x86_64" },
     # libde265 recipe import only; build and runtime proof remain on #475.
     { name = "libde265", pr = 901 },
+    # FFmpeg's optional broadcast-metadata (libklvanc) and HTJ2K (openjph)
+    # libraries: recipe imports only; build and runtime proof remain on #475.
+    { name = "libklvanc", pr = 974 },
+    { name = "libopenjph", pr = 974 },
     # Recipe import only; hosted build, publication and device validation remain on #485.
     { name = "bcache-tools", pr = 833 },
     # Recipe import only; build, publication and runtime proof remain on #485.
@@ -371,6 +368,14 @@ packages = [
     { name = "ffmpegthumbnailer-libs", pr = 414 },
     { name = "libavcodec", pr = 70 },
     { name = "libavdevice", pr = 70 },
+    # The rest of packages/ffmpeg's split libraries (#475): the default build
+    # declares their lib*-free variants. This records recipe coverage only;
+    # full-codec build/publication proof stays in projectbluefin/utah#383.
+    { name = "libavfilter", pr = 70 },
+    { name = "libavformat", pr = 70 },
+    { name = "libavutil", pr = 70 },
+    { name = "libswresample", pr = 70 },
+    { name = "libswscale", pr = 70 },
     { name = "libdc1394", pr = 794 },
     { name = "libiec61883", pr = 801 },
     { name = "libraw1394", pr = 681 },
@@ -954,4 +959,5 @@ packages = [
     { name = "sil-padauk-fonts", reason = "Bulk desktop font parity rejected by Utah: https://github.com/projectbluefin/utah/issues/393#issuecomment-5920428811; no individual addition accepted." },
     { name = "vazirmatn-vf-fonts", reason = "Bulk desktop font parity rejected by Utah: https://github.com/projectbluefin/utah/issues/393#issuecomment-5920428811; no individual addition accepted." },
     { name = "shim-ia32", reason = "32-bit Secure Boot is retired across modern firmware and Utah is 64-bit only, so carrying a factory-built signed 32-bit first-stage bootloader opens a signed-bootloader surface with no current consumer. Maintainer decision: https://github.com/projectbluefin/utah-packages/issues/507#issuecomment-6710378910 (long-tail batch #507)." },
+    { name = "lockdev", reason = "Unmaintained 2011 snapshot with no verifiable upstream tarball; its only consumer (libgphoto2 serial/RS-232 port locking) is already disabled in the factory. Maintainer decision: https://github.com/projectbluefin/utah-packages/issues/503#issuecomment-6748174216 (long-tail batch #503)." },
 ]

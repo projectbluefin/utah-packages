@@ -160,32 +160,82 @@ Verify a fix with `rebuild-rpms.yml` dispatched on the `fix/recipe-<name>`
 ref with `packages=["<name>"]`; a non-main ref publishes only a
 branch-named tag.
 
-## A consumer that needs the next cycle
+## GNOME locks follow GNOME's newest stable release
 
-The scheduled bump never crosses a release cycle (`plan()`, `cycle_final`),
-so a library locked on a GNOME development series stays there after the
-stable series ships. gtk4 sat at 4.23.4 (cycle 4.23) while 4.24.0 and 4.24.1
-were out; every run printed `needs review gtk4: 4.23.4 -> 4.24.1 (crosses a
-release cycle or a major)` and applied nothing, until nautilus 51.1 failed
-meson configure with `gtk4 ... found 4.23.4 but need: '>= 4.24.0'` (#565).
-Nothing in RPM metadata warned: nautilus's spec still says
-`pkgconfig(gtk4) >= 4.22.0`, so the BuildRequires resolved and only meson
-knew the real floor.
+Utah is a rolling release. A GNOME package tracks GNOME's own newest stable
+release automatically and never stays on an old or development series.
+Fedora supplies the recipe and the build root, never the version decision.
 
-How to spot it: a configure failure naming a factory library's *locked*
-version below a `>=` floor, or a `needs review` line for a library whose
-locked minor is odd (GNOME's development series) once the even minor has
-a final. Compare the consumer's `meson.build` floor with the lock, not its
-spec. Move it on one package with the repo's own tool, which then does the
-download, digest, spec, `sources` and fallback in one step:
+Why the scheduled bump needs GNOME's word for it: version numbers alone
+cannot separate GNOME's development series from its stable ones (pango
+1.58.2 is stable, 1.90.0 is the development line toward 2.0; see
+`cycle_final`). The old rule therefore never crossed a release cycle, and
+two locks imported mid-cycle stayed on development releases after the stable
+series shipped:
+
+- gtk4 sat at 4.23.4 while 4.24.0 and 4.24.1 were out, until nautilus 51.1
+  failed meson configure with `gtk4 ... found 4.23.4 but need: '>= 4.24.0'`
+  (#565). Nautilus's spec still said `pkgconfig(gtk4) >= 4.22.0`, so the
+  BuildRequires resolved and only meson knew the real floor.
+- gjs sat at 1.89.2 (the 1.89 development series) after 1.90.0 and 1.90.1
+  shipped. Every run printed `needs review gjs: 1.89.2 -> 1.90.1 (crosses a
+  release cycle or a major)` and applied nothing.
+
+GNOME's release definition is GNOME/gnome-build-meta (BuildStream).
+download.gnome.org stopped publishing `core/<NN>/<ver>/versions` after 47.
+`plan()` reads gnome-build-meta through the audit's own parser
+(`tools/audit_gnome_build_meta.py`: `Loader`, `resolve_element`,
+`_gbm_version`, `_gbm_gnome_modules`). Do not write a second one.
+
+- **Which release**: the highest tag matching `^\d+\.\d+$`
+  (`newest_gbm_tag`). `51.1` counts; `52.alpha`, `52.beta`, `52.rc`,
+  `49.alpha.1` and `49-branchpoint` do not. One `git ls-remote --tags`,
+  then a depth-1 clone of that tag (about 13 MB, about 2 s).
+  `--gbm-dir DIR` reuses a tree that already holds files, and otherwise
+  clones into it and keeps it. The daily workflow passes
+  `$RUNNER_TEMP/gnome-build-meta`, so its report and apply steps read the
+  same release. A git checkout at a non-stable tag is refused. A tree that
+  is not a checkout is named after its directory.
+- **Which element**: `config/gnome-build-meta.json` `mapping` (RPM name to
+  element, through `factory_alias`) first. Then the element whose own
+  source is on a GNOME host and whose stem is the lock's module. The
+  element's primary source must belong to that module. A library-scheme
+  element on another major is another API, so it counts as unmapped: gbm
+  builds gcr 4.x, not a successor to the gcr3 lock at 3.41, and
+  gtksourceview 5.x, not a successor to gtksourceview4 at 4.8.
+- **What moves** (kinds; `main()` applies `final`, `stable`, `update`,
+  `relock`):
+  - The lock's series is older than the `release_cycle()` of the version
+    that release ships: kind `stable`, to the newest final of that series
+    in cache.json (`is_gnome_prerelease` filters out `1.89.90`-style
+    betas). gjs 1.89.2 goes to 1.90.1 under GNOME 51.1.
+  - The lock is on that series: the in-cycle rule as before (`final`). A
+    newer series GNOME does not ship is printed as a `note`, not as review
+    (pango 1.90.0).
+  - The lock is ahead of that series: a `note` says so, and the in-cycle
+    rule still applies (`final`), so it is never frozen. A human put it
+    there with `--cycle`. No unattended run moves it to a newer series that
+    GNOME does not ship, or back to GNOME's series.
+  - An app-scheme module (major 40 and up, prereleases spelled with a
+    marker) that gnome-build-meta does not map: kind `stable`, to its
+    newest final across majors. It never moves to `52.beta`.
+  - A library-scheme module gnome-build-meta does not map, and every forge
+    feed: cross-cycle or cross-major releases are still `review`.
+- `config/bump-review-only.txt` still wins. A `stable` move of a listed
+  package (gdm) is demoted to `needs review`, the same as a `final` one.
+- If gnome-build-meta cannot be reached, the run reports `skipped
+  gnome-build-meta: ...` and every GNOME lock falls back to its own cycle.
+  Cross-cycle releases are then only reported.
+- `--cycle N` is the manual override: it skips gnome-build-meta and moves
+  within cycle N (GNOME-next branches, or one package by hand):
 
 ```sh
 python3 tools/upstream_bump.py --package gtk4 --cycle 4.24          # report
 python3 tools/upstream_bump.py --package gtk4 --cycle 4.24 --apply
 ```
 
-Then check the new tarball against GNOME's `.sha256sum`, and that the
-lookaside fallback URL actually serves the same bytes. If Rawhide's recipe at
+After a manual move, check the new tarball against GNOME's `.sha256sum`,
+and check that the lookaside fallback URL serves the same bytes. If Rawhide's recipe at
 the new version differs only by `Version:` and `sources`, re-pin provenance
 with `tools/import_rawhide.py <pkg> --ref <Koji-built commit> --replace`
 (take the commit from Koji's `getBuild().source`) and delete the inert
@@ -239,7 +289,7 @@ way as libcdio.
 
 ## The bump gate
 
-The daily in-cycle pull request on `bump/upstream-sources` merges itself
+The daily pull request on `bump/upstream-sources` merges itself
 through `.github/workflows/bump-upstream-gate.yml`, and only when every
 bumped recipe builds. Decisions live in `tools/bump_gate.py` and are covered
 by `tests/test_bump_gate.py`; the workflow only acts on them.

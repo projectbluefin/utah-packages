@@ -1,0 +1,8 @@
+{
+  "package": "cli11",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/cli11.git",
+  "commit": "29da7102a7011b09a90b57d1a31c1942d798fd5e",
+  "tree": "ad375d29decf5226e3934394256f3a4aa105500f",
+  "imported_at": "2026-11-09T00:44:31.531225+00:00"
+}

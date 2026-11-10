@@ -335,3 +335,52 @@ to identical file trees; lock the upstream bytes and update the source
 manifest to match. Fedora's channel-allocation patch preserves its fallback
 when the IRM cannot be reached, allowing capture to proceed. A recipe does not
 prove streaming or hardware support; verify the behavior with a device.
+
+## Broadcast metadata and HTJ2K libraries
+
+`libklvanc` (SDI vertical ancillary data) and `libopenjph` (High-Throughput
+JPEG 2000) are optional FFmpeg inputs, both plain Fedora dist-git imports
+whose upstream GitHub archives match the Fedora `sources` SHA-512 pins.
+`libopenjph` is an output of the `openjph` source, not a source of its own.
+Fedora's `openjph` builds MinGW cross-compiled outputs by default; the recipe
+sets `%bcond mingw 0`, as `libdeflate` and `abseil-cpp` do, so the build
+root needs no MinGW toolchain. Its `ojph_compress` and `ojph_expand` tools
+link `libtiff`, which Hummingbird ships.
+
+`libklvanc`'s recipe deletes its sample programs, so there is no command to
+run: verify it through a consumer that links `libklvanc.so.0`. Use
+`ojph_compress` and `ojph_expand` to round-trip a test image for
+`libopenjph`. The ffmpeg recipe still passes `--disable-libklvanc` and
+does not enable `libopenjph`; turning either on is a separate ffmpeg change
+that needs these libraries published first. A recipe import is not
+publication or runtime evidence for any of these outputs.
+
+## LCEVC decoder source family
+
+The `LCEVCdec` source is available from negativo17, not Fedora dist-git.
+Its `cmake(CLI11)` build dependency comes from Fedora's lowercase `cli11`
+source, which emits `cli11-devel`; `range-v3` and the FFmpeg pkg-config
+providers already have factory recipes. The imported development subpackage
+also requires `plutovg-devel`, so register the `plutovg` source and preserve
+its system-STB and shared-library-version patches. Let BuildRequires order
+compilation; a runtime `Requires` does not establish a build-order edge.
+
+Keep an explicit `BuildRequires: cli11-devel` alongside `cmake(CLI11)`.
+The extractor sees subpackage names and `.pc` files but not generated CMake
+provides. Without the package requirement, an unpublished CLI11 import has
+no edge to the decoder, so their first build can land in the same wave.
+
+The upstream CMake setup always finds Python, and the Vulkan shader compiler
+uses it even when functional tests are disabled. Declare `python3` outside
+the test conditional. The FFmpeg finder requires `libavcodec`, `libavfilter`,
+`libavformat` and `libavutil`; list each pkg-config BuildRequires explicitly.
+The donor builds and ships unit-test executables but runs its network-heavy
+functional tests only with its tests bcond. A successful default build does
+not establish that those tests ran or that a video decodes correctly.
+
+Verify hosted builds, published binary identities and installation using only
+Hummingbird plus the factory separately. Exercise `lcevc_dec_sample` with a
+known LCEVC-enhanced video and compare its decoded output; a help command is
+not decoding evidence. Keep the batch open for that proof and the disabled
+Qt 6 GStreamer sink. Recipe records alone do not establish full FFmpeg codec
+coverage: inspect current published binary names and provenance too.

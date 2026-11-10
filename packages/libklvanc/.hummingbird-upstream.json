@@ -1,0 +1,8 @@
+{
+  "package": "libklvanc",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libklvanc.git",
+  "commit": "74dc2ce37c223e8bfd33ecae8ce75c0209b3bd42",
+  "tree": "dfb702dd17312387eae08053ce099355d47678c2",
+  "imported_at": "2026-11-09T17:28:41.710782+00:00"
+}

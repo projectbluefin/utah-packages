@@ -16,6 +16,12 @@ packages:
     downstream_package_name: ImageMagick
     paths:
       - packages/ImageMagick
+  LCEVCdec:
+    specfile_path: LCEVCdec.spec
+    upstream_package_name: LCEVCdec
+    downstream_package_name: LCEVCdec
+    paths:
+      - packages/LCEVCdec
   LibRaw:
     specfile_path: LibRaw.spec
     upstream_package_name: LibRaw
@@ -298,6 +304,12 @@ packages:
     downstream_package_name: cjson
     paths:
       - packages/cjson
+  cli11:
+    specfile_path: cli11.spec
+    upstream_package_name: cli11
+    downstream_package_name: cli11
+    paths:
+      - packages/cli11
   codec2:
     specfile_path: codec2.spec
     upstream_package_name: codec2
@@ -2026,6 +2038,12 @@ packages:
     downstream_package_name: libjwt
     paths:
       - packages/libjwt
+  libklvanc:
+    specfile_path: libklvanc.spec
+    upstream_package_name: libklvanc
+    downstream_package_name: libklvanc
+    paths:
+      - packages/libklvanc
   libkrun:
     specfile_path: libkrun.spec
     upstream_package_name: libkrun
@@ -2920,6 +2938,12 @@ packages:
     downstream_package_name: openjpeg
     paths:
       - packages/openjpeg
+  openjph:
+    specfile_path: openjph.spec
+    upstream_package_name: openjph
+    downstream_package_name: openjph
+    paths:
+      - packages/openjph
   openpace:
     specfile_path: openpace.spec
     upstream_package_name: openpace
@@ -3124,6 +3148,12 @@ packages:
     downstream_package_name: pkcs11-provider
     paths:
       - packages/pkcs11-provider
+  plutovg:
+    specfile_path: plutovg.spec
+    upstream_package_name: plutovg
+    downstream_package_name: plutovg
+    paths:
+      - packages/plutovg
   plymouth:
     specfile_path: plymouth.spec
     upstream_package_name: plymouth
@@ -3556,6 +3586,12 @@ packages:
     downstream_package_name: qpdf
     paths:
       - packages/qpdf
+  qrencode:
+    specfile_path: qrencode.spec
+    upstream_package_name: qrencode
+    downstream_package_name: qrencode
+    paths:
+      - packages/qrencode
   qt6-qtdeclarative:
     specfile_path: qt6-qtdeclarative.spec
     upstream_package_name: qt6-qtdeclarative
