@@ -324,3 +324,25 @@ tests are disabled, and its FFmpeg finder also needs `libavfilter`,
 explicitly rather than relying on transitive buildroot packages. See
 [multimedia closure](../multimedia-closure.md#lcevc-decoder-source-family) for
 the remaining build and runtime evidence.
+
+## libplacebo GPU rendering library
+
+`libplacebo` imports from Fedora Rawhide dist-git via
+`tools/import_rawhide.py libplacebo --branch rawhide` (dist-git commit
+`91447b7890b81c1b6c6d3b58ef61f4b3a657dc62`, the branch head). The dist-git
+recipe carries its own `sources` file, so the release archive SHA-512 is
+locked in the recipe; no `config/upstream-sources.json` entry is needed.
+
+`libplacebo`'s Dolby Vision support depends on `libdovi`, whose canonical
+upstream `code.mpv.org` is unreachable from the build environment and which
+is absent from Fedora dist-git, RPM Fusion nonfree and the negativo17
+GitHub mirror. The only reachable `libdovi` (the `quietvoid/dovi_tool` Rust
+port packaged by OpenMandriva) installs only `dovi/rpu_parser.h`, a
+different API from mpv's `dovi.h`, so importing it would not satisfy
+`libplacebo`'s `dependency('dovi', >=1.6.7)`. `libdovi` therefore stays
+pending on `#475` as an environment blocker. `libplacebo` is built with
+`-Dlibdovi=disabled` (its meson `libdovi` feature is `auto`) so it is
+buildable in the factory closure without Dolby Vision; re-enable
+`-Dlibdovi=enabled` once `libdovi` is imported. Recipe coverage does not
+establish a hosted build, publication or a representative Vulkan render;
+those remain on `#475`.

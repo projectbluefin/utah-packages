@@ -2242,6 +2242,12 @@ packages:
     downstream_package_name: libpciaccess
     paths:
       - packages/libpciaccess
+  libplacebo:
+    specfile_path: libplacebo.spec
+    upstream_package_name: libplacebo
+    downstream_package_name: libplacebo
+    paths:
+      - packages/libplacebo
   libpfm:
     specfile_path: libpfm.spec
     upstream_package_name: libpfm
