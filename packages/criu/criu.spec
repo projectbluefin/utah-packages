@@ -13,7 +13,7 @@
 
 Name: criu
 Version: 4.3
-Release: 1%{?dist}
+Release: 3%{?dist}
 Summary: Tool for Checkpoint/Restore in User-space
 License: GPL-2.0-only AND LGPL-2.1-only AND MIT
 URL: http://criu.org/
@@ -32,6 +32,16 @@ Source10: criu-rpc_pb2.py
 # Patch the pycriu Makefile so rpc_pb2.py copies the shipped file instead of
 # running protoc. See Source10 above.
 Patch100: criu-rpc_pb2.patch
+
+# The same fix for the 75 image bindings (rpc_pb2.py is not one of them): shipped
+# protobuf-3.19.x files, including opts_pb2.py which some image bindings import,
+# so the pycriu build copies files the pinned protobuf 3.19.6 runtime can import
+# instead of regenerating them with the factory's protoc 6.x (utah-packages#985).
+Source11: criu-pycriu-images.tar
+
+# Patch the pycriu images Makefile so it copies the shipped image bindings
+# (Source11) instead of running protoc. See Source11 above.
+Patch101: criu-images-pb2.patch
 
 Source5: criu-tmpfiles.conf
 
@@ -127,6 +137,11 @@ This script can help to workaround the so called "PID mismatch" problem.
 %setup -q
 %patch -P 99 -p1
 %patch -P 100 -p1
+%patch -P 101 -p1
+# Extract the shipped protobuf-3.19.x image bindings so the pycriu build copies
+# them instead of regenerating with the factory's protoc 6.x (utah-packages#985).
+mkdir -p %{_builddir}/criu-pycriu-images
+tar xf %{SOURCE11} -C %{_builddir}/criu-pycriu-images
 
 %build
 # This package calls LD directly without specifying the LTO plugins.  Until
@@ -151,7 +166,7 @@ LDWRAPPER
 chmod +x %{_builddir}/bin/ld
 
 # %{?_smp_mflags} does not work
-CFLAGS+="%{optflags}" make V=1 WERROR=0 LD=%{_builddir}/bin/ld PREFIX=%{_prefix} RUNDIR=/run/criu PYTHON=%{py_binary} PLUGINDIR=%{_libdir}/criu NETWORK_LOCK_DEFAULT=NETWORK_LOCK_NFTABLES RPC_PB2_PY=%{SOURCE10}
+CFLAGS+="%{optflags}" make V=1 WERROR=0 LD=%{_builddir}/bin/ld PREFIX=%{_prefix} RUNDIR=/run/criu PYTHON=%{py_binary} PLUGINDIR=%{_libdir}/criu NETWORK_LOCK_DEFAULT=NETWORK_LOCK_NFTABLES RPC_PB2_PY=%{SOURCE10} PYCRIU_IMAGES_PB2=%{_builddir}/criu-pycriu-images
 make V=1 WERROR=0 PREFIX=%{_prefix} PLUGINDIR=%{_libdir}/criu amdgpu_plugin
 make docs V=1
 
@@ -214,6 +229,11 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/libcriu.a
 %tmpfiles_create %{name}.conf
 
 %changelog
+* Thu Nov 11 2026 scanner <scanner@hive.local> - 4.3-3
+- Ship the protobuf-3.19.x image bindings too, not just rpc_pb2.py, and copy
+  them in the pycriu build instead of regenerating with protoc 6.x, fixing the
+  ImportError of google.protobuf.runtime_version under the factory's pinned
+  protobuf 3.19.6 (utah-packages#985).
 * Thu Nov 11 2026 scanner <scanner@hive.local> - 4.3-2
 - Ship a protobuf-3.19.x-compatible rpc_pb2.py and copy it in the pycriu
   build instead of regenerating with protoc 6.x, fixing the ImportError of
