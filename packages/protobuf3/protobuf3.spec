@@ -128,7 +128,7 @@ BuildRequires:  mingw64-zlib
 
 Provides:       protobuf = %{version}-%{release}
 Provides:       protobuf%{?_isa} = %{version}-%{release}
-Conflicts:      protobuf < 4~~
+Obsoletes:      protobuf < 4~~
 
 %description
 Protocol Buffers are a way of encoding structured data in an efficient
@@ -148,7 +148,7 @@ Summary:        Protocol Buffers compiler
 Requires:       %{name} = %{version}-%{release}
 Provides:       protobuf-compiler = %{version}-%{release}
 Provides:       protobuf-compiler%{?_isa} = %{version}-%{release}
-Conflicts:      protobuf-compiler < 4~~
+Obsoletes:      protobuf-compiler < 4~~
 
 %description compiler
 This package contains Protocol Buffers compiler for all programming
@@ -161,7 +161,7 @@ Requires:       %{name}-compiler = %{version}-%{release}
 Requires:       zlib-devel
 Provides:       protobuf-devel = %{version}-%{release}
 Provides:       protobuf-devel%{?_isa} = %{version}-%{release}
-Conflicts:      protobuf-devel < 4~~
+Obsoletes:      protobuf-devel < 4~~
 
 %description devel
 This package contains Protocol Buffers compiler for all languages and
@@ -171,7 +171,7 @@ C++ headers and libraries
 Summary:        Protocol Buffers LITE_RUNTIME libraries
 Provides:       protobuf-lite = %{version}-%{release}
 Provides:       protobuf-lite%{?_isa} = %{version}-%{release}
-Conflicts:      protobuf-lite < 4~~
+Obsoletes:      protobuf-lite < 4~~
 
 %description lite
 Protocol Buffers built with optimize_for = LITE_RUNTIME.
@@ -186,7 +186,7 @@ Requires:       %{name}-devel = %{version}-%{release}
 Requires:       %{name}-lite = %{version}-%{release}
 Provides:       protobuf-lite-devel = %{version}-%{release}
 Provides:       protobuf-lite-devel%{?_isa} = %{version}-%{release}
-Conflicts:      protobuf-lite-devel < 4~~
+Obsoletes:      protobuf-lite-devel < 4~~
 
 %description lite-devel
 This package contains development libraries built with
@@ -209,7 +209,7 @@ BuildArch:      noarch
 Conflicts:      %{name}-compiler > %{version}
 Conflicts:      %{name}-compiler < %{version}
 %py_provides    python3-protobuf
-Conflicts:      python3-protobuf < 4~~
+Obsoletes:      python3-protobuf < 4~~
 
 %description -n python3-protobuf3
 This package contains Python libraries for Google Protocol Buffers
@@ -219,7 +219,7 @@ This package contains Python libraries for Google Protocol Buffers
 Summary:        Vim syntax highlighting for Google Protocol Buffers descriptions
 BuildArch:      noarch
 Provides:       protobuf-vim = %{version}-%{release}
-Conflicts:      protobuf-vim < 4~~
+Obsoletes:      protobuf-vim < 4~~
 # We don’t really need vim or vim-enhanced to be already installed in order to
 # install a plugin for it. We do need to depend on vim-filesystem, which
 # provides the necessary directory structure.
@@ -233,7 +233,7 @@ descriptions in Vim editor
 Summary:        Emacs mode for Google Protocol Buffers descriptions
 BuildArch:      noarch
 Provides:       protobuf-emacs = %{version}-%{release}
-Conflicts:      protobuf-emacs < 4~~
+Obsoletes:      protobuf-emacs < 4~~
 Requires:       emacs-filesystem >= %{_emacs_version}
 
 %description emacs
@@ -244,7 +244,7 @@ descriptions in the Emacs editor.
 %package -n mingw32-protobuf3
 Summary:        MinGW Windows protobuf library
 Provides:       mingw32-protobuf = %{version}-%{release}
-Conflicts:      mingw32-protobuf < 4~~
+Obsoletes:      mingw32-protobuf < 4~~
 
 %description -n mingw32-protobuf3
 MinGW Windows protobuf library.
@@ -252,7 +252,7 @@ MinGW Windows protobuf library.
 %package -n mingw32-protobuf3-tools
 Summary:        MinGW Windows protobuf library tools
 Provides:       mingw32-protobuf-tools = %{version}-%{release}
-Conflicts:      mingw32-protobuf-tools < 4~~
+Obsoletes:      mingw32-protobuf-tools < 4~~
 
 %description -n mingw32-protobuf3-tools
 MinGW Windows protobuf library tools.
@@ -260,7 +260,7 @@ MinGW Windows protobuf library tools.
 %package -n mingw64-protobuf3
 Summary:       MinGW Windows protobuf library
 Provides:       mingw64-protobuf = %{version}-%{release}
-Conflicts:      mingw64-protobuf < 4~~
+Obsoletes:      mingw64-protobuf < 4~~
 
 %description -n mingw64-protobuf3
 MinGW Windows protobuf library.
@@ -268,7 +268,7 @@ MinGW Windows protobuf library.
 %package -n mingw64-protobuf3-tools
 Summary:       MinGW Windows protobuf library tools
 Provides:       mingw64-protobuf-tools = %{version}-%{release}
-Conflicts:      mingw64-protobuf-tools < 4~~
+Obsoletes:      mingw64-protobuf-tools < 4~~
 
 %description -n mingw64-protobuf3-tools
 MinGW Windows protobuf library tools.
