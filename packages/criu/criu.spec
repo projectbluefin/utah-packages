@@ -214,7 +214,7 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/libcriu.a
 %tmpfiles_create %{name}.conf
 
 %changelog
-* Thu Nov 11 2026 Hive <hive@projectbluefin.io> - 4.3-2
+* Thu Nov 11 2026 scanner <scanner@hive.local> - 4.3-2
 - Ship a protobuf-3.19.x-compatible rpc_pb2.py and copy it in the pycriu
   build instead of regenerating with protoc 6.x, fixing the ImportError of
   google.protobuf.runtime_version under the factory's pinned protobuf 3.19.6
