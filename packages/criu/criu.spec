@@ -24,6 +24,15 @@ Source0: https://github.com/checkpoint-restore/criu/archive/v%{version}/criu-%{v
 # in RPM and DEB is different.
 Patch99: criu.pc.patch
 
+# Generated protobuf-3.19.x rpc_pb2.py, shipped so the pycriu build copies a
+# file the pinned protobuf 3.19.6 runtime can import instead of regenerating
+# one with the factory's protoc 6.x (utah-packages#983).
+Source10: criu-rpc_pb2.py
+
+# Patch the pycriu Makefile so rpc_pb2.py copies the shipped file instead of
+# running protoc. See Source10 above.
+Patch100: criu-rpc_pb2.patch
+
 Source5: criu-tmpfiles.conf
 
 BuildRequires: gcc
@@ -117,6 +126,7 @@ This script can help to workaround the so called "PID mismatch" problem.
 %prep
 %setup -q
 %patch -P 99 -p1
+%patch -P 100 -p1
 
 %build
 # This package calls LD directly without specifying the LTO plugins.  Until
@@ -141,7 +151,7 @@ LDWRAPPER
 chmod +x %{_builddir}/bin/ld
 
 # %{?_smp_mflags} does not work
-CFLAGS+="%{optflags}" make V=1 WERROR=0 LD=%{_builddir}/bin/ld PREFIX=%{_prefix} RUNDIR=/run/criu PYTHON=%{py_binary} PLUGINDIR=%{_libdir}/criu NETWORK_LOCK_DEFAULT=NETWORK_LOCK_NFTABLES
+CFLAGS+="%{optflags}" make V=1 WERROR=0 LD=%{_builddir}/bin/ld PREFIX=%{_prefix} RUNDIR=/run/criu PYTHON=%{py_binary} PLUGINDIR=%{_libdir}/criu NETWORK_LOCK_DEFAULT=NETWORK_LOCK_NFTABLES RPC_PB2_PY=%{SOURCE10}
 make V=1 WERROR=0 PREFIX=%{_prefix} PLUGINDIR=%{_libdir}/criu amdgpu_plugin
 make docs V=1
 
@@ -204,6 +214,11 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/libcriu.a
 %tmpfiles_create %{name}.conf
 
 %changelog
+* Thu Nov 11 2026 Hive <hive@projectbluefin.io> - 4.3-2
+- Ship a protobuf-3.19.x-compatible rpc_pb2.py and copy it in the pycriu
+  build instead of regenerating with protoc 6.x, fixing the ImportError of
+  google.protobuf.runtime_version under the factory's pinned protobuf 3.19.6
+  (utah-packages#983).
 * Tue Oct 20 2026 Radostin Stoyanov <rstoyanov@fedoraproject.org> - 4.3-1
 - Update to 4.3
 - Enable LZ4 compression support
