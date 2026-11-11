@@ -42,10 +42,10 @@ packages = [
     # matching Qt prerequisites and a --with qt6 build are verified (#474).
     # The libav*/libsw* outputs of packages/ffmpeg moved to [resolved] as
     # recipe coverage (#474, #475). Build/publication proof stays in
-    # projectbluefin/utah#383.
+    # projectbluefin/utah#383. libplacebo moved to [resolved] as recipe
+    # coverage (PR 977); its Dolby Vision support stays blocked on libdovi.
     "gstreamer1-plugins-good-qt6",
     "libdovi",
-    "libplacebo",
     "libxavs",
 ]
 
@@ -301,6 +301,10 @@ packages = [
     # libraries: recipe imports only; build and runtime proof remain on #475.
     { name = "libklvanc", pr = 974 },
     { name = "libopenjph", pr = 974 },
+    # libplacebo recipe import only (PR 977); its Dolby Vision support is
+    # built with -Dlibdovi=disabled because libdovi is an environment
+    # blocker on #475. Build, publication and runtime proof remain on #475.
+    { name = "libplacebo", pr = 977 },
     # Recipe import only; hosted build, publication and device validation remain on #485.
     { name = "bcache-tools", pr = 833 },
     # Recipe import only; build, publication and runtime proof remain on #485.
