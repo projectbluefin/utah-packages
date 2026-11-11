@@ -771,10 +771,10 @@
     },
     {
       "name": "exfatprogs",
-      "version": "1.4.3",
-      "url": "https://github.com/exfatprogs/exfatprogs/releases/download/1.4.3/exfatprogs-1.4.3.tar.xz",
-      "filename": "exfatprogs-1.4.3.tar.xz",
-      "sha512": "8452801873088029319abe477135a970ed6cdaccc087e620694714f1f6653e7a1875572720c9cf2af0b1c116f4bc6a71a1b0e4a903b75affff9d19b78d451d8d"
+      "version": "1.4.4",
+      "url": "https://github.com/exfatprogs/exfatprogs/releases/download/1.4.4/exfatprogs-1.4.4.tar.xz",
+      "filename": "exfatprogs-1.4.4.tar.xz",
+      "sha512": "9de26cd2529d45c33316a2dd73dbc27571c0cb5d8d01f56fa60ba2e209b68d6ba064fcfee26ac04c070503ad4edbbeec89b30b3eea013c94ce2b1dc6f9a8a351"
     },
     {
       "name": "exiv2",
@@ -1991,12 +1991,12 @@
     },
     {
       "name": "ibus-typing-booster",
-      "version": "2.31.3",
-      "url": "https://github.com/mike-fabian/ibus-typing-booster/releases/download/2.31.3/ibus-typing-booster-2.31.3.tar.gz",
-      "filename": "ibus-typing-booster-2.31.3.tar.gz",
-      "sha512": "2f08a32c71c2427f428d7fb3b6425a466e29f55f79e35d172843258411a60440401d7e570ff0c4e5a6221e7229c2f2b6710e3217a046ec568b165ac4bc4d8913",
+      "version": "2.31.4",
+      "url": "https://github.com/mike-fabian/ibus-typing-booster/releases/download/2.31.4/ibus-typing-booster-2.31.4.tar.gz",
+      "filename": "ibus-typing-booster-2.31.4.tar.gz",
+      "sha512": "b20598b949e7976bfa236b3f8ef61efa980547b41ce0ce5be03a61f3f02c7fba96784ca1db68f88b1d939b32e1eeaf29dd611d0d90cd8f9acfe26e134da542ea",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/ibus-typing-booster/ibus-typing-booster-2.31.3.tar.gz/sha512/2f08a32c71c2427f428d7fb3b6425a466e29f55f79e35d172843258411a60440401d7e570ff0c4e5a6221e7229c2f2b6710e3217a046ec568b165ac4bc4d8913/ibus-typing-booster-2.31.3.tar.gz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/ibus-typing-booster/ibus-typing-booster-2.31.4.tar.gz/sha512/b20598b949e7976bfa236b3f8ef61efa980547b41ce0ce5be03a61f3f02c7fba96784ca1db68f88b1d939b32e1eeaf29dd611d0d90cd8f9acfe26e134da542ea/ibus-typing-booster-2.31.4.tar.gz"
       ],
       "stage": 1
     },
@@ -3838,13 +3838,13 @@
     },
     {
       "name": "libtatsu",
-      "version": "1.1.0",
-      "url": "https://github.com/libimobiledevice/libtatsu/releases/download/1.1.0/libtatsu-1.1.0.tar.bz2",
-      "filename": "libtatsu-1.1.0.tar.bz2",
-      "sha512": "f4b784b24ce6e5aa88ea280fa85a14ae841b691819c66e9a7d7a608e5a09c8515e7661a28909ea0806c343dacb6a76e00b6bee3cd752cb2f76927e220907dc9d",
+      "version": "1.1.1",
+      "url": "https://github.com/libimobiledevice/libtatsu/releases/download/1.1.1/libtatsu-1.1.1.tar.bz2",
+      "filename": "libtatsu-1.1.1.tar.bz2",
+      "sha512": "f4e0b729ea41d608c88c3cad2100f397300afb2468a9f9a3cecf0d561b8fa49146ecd660d3f02f50070a97e176aea5e5f7a9f401edaf1f252c84347289f9098b",
       "stage": 1,
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/libtatsu/libtatsu-1.1.0.tar.bz2/sha512/f4b784b24ce6e5aa88ea280fa85a14ae841b691819c66e9a7d7a608e5a09c8515e7661a28909ea0806c343dacb6a76e00b6bee3cd752cb2f76927e220907dc9d/libtatsu-1.1.0.tar.bz2"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libtatsu/libtatsu-1.1.1.tar.bz2/sha512/f4e0b729ea41d608c88c3cad2100f397300afb2468a9f9a3cecf0d561b8fa49146ecd660d3f02f50070a97e176aea5e5f7a9f401edaf1f252c84347289f9098b/libtatsu-1.1.1.tar.bz2"
       ]
     },
     {
@@ -4118,13 +4118,13 @@
     },
     {
       "name": "libxmlb",
-      "version": "0.3.29",
-      "url": "https://github.com/hughsie/libxmlb/releases/download/0.3.29/libxmlb-0.3.29.tar.xz",
-      "filename": "libxmlb-0.3.29.tar.xz",
+      "version": "0.3.30",
+      "url": "https://github.com/hughsie/libxmlb/releases/download/0.3.30/libxmlb-0.3.30.tar.xz",
+      "filename": "libxmlb-0.3.30.tar.xz",
       "feed": "https://github.com/hughsie/libxmlb/releases/download/0.3.29/libxmlb-0.3.29.tar.xz",
-      "sha512": "f133a9e42b35d59bbc592fe9350cec465b42f33fcaddb42bff5c40e694bd8c60cd352833ae8c942f1df589e6066ba14159ec813f1bf4dada765fd69af09295b9",
+      "sha512": "e881b7941b2882f4cef35f8b1453a12eb772d918a0786b54b17034c25bf4dd61780e2e8b35c8d8f42ecfc2599ca020fe89a2e421c65b735e7d49e8f52eacf150",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/libxmlb/libxmlb-0.3.29.tar.xz/sha512/f133a9e42b35d59bbc592fe9350cec465b42f33fcaddb42bff5c40e694bd8c60cd352833ae8c942f1df589e6066ba14159ec813f1bf4dada765fd69af09295b9/libxmlb-0.3.29.tar.xz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libxmlb/libxmlb-0.3.30.tar.xz/sha512/e881b7941b2882f4cef35f8b1453a12eb772d918a0786b54b17034c25bf4dd61780e2e8b35c8d8f42ecfc2599ca020fe89a2e421c65b735e7d49e8f52eacf150/libxmlb-0.3.30.tar.xz"
       ]
     },
     {
@@ -4857,13 +4857,13 @@
     },
     {
       "name": "passim",
-      "version": "0.1.12",
-      "url": "https://github.com/hughsie/passim/releases/download/0.1.12/passim-0.1.12.tar.xz",
-      "filename": "passim-0.1.12.tar.xz",
+      "version": "0.1.13",
+      "url": "https://github.com/hughsie/passim/releases/download/0.1.13/passim-0.1.13.tar.xz",
+      "filename": "passim-0.1.13.tar.xz",
       "feed": "https://github.com/hughsie/passim/releases/download/0.1.12/passim-0.1.12.tar.xz",
-      "sha512": "615d42d471fb054bd4156cd1f773eda7115ce36d2714b84eecf911a6dd9d1809e9b55cbcc39eab2b43af4137275d65fb7debae3b98aa50a5b8df121148022721",
+      "sha512": "87c11df6648a5058a04a5f520ed4aa5cf6f7fdacfe4866e2d7377e6b24982741773343ede79058f22a44ac40b216b6ba40556877b5aa0e76205f585b24eecc72",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/passim/passim-0.1.12.tar.xz/sha512/615d42d471fb054bd4156cd1f773eda7115ce36d2714b84eecf911a6dd9d1809e9b55cbcc39eab2b43af4137275d65fb7debae3b98aa50a5b8df121148022721/passim-0.1.12.tar.xz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/passim/passim-0.1.13.tar.xz/sha512/87c11df6648a5058a04a5f520ed4aa5cf6f7fdacfe4866e2d7377e6b24982741773343ede79058f22a44ac40b216b6ba40556877b5aa0e76205f585b24eecc72/passim-0.1.13.tar.xz"
       ]
     },
     {
