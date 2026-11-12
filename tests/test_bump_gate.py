@@ -621,7 +621,7 @@ class EnqueueBehaviorTests(unittest.TestCase):
             "        pass\n"
             "    if pr:\n"
             "        print(json.dumps({'state': pr['state'], 'headRefOid': pr['headRefOid'],\n"
-            "                          'behindBy': pr.get('behindBy', 0),\n"
+            "                          'behindBy': pr.get('behindBy', {'count': 0}),\n"
             "                          'headRefName': pr['headRefName']}))\n"
             "    else:\n"
             "        print(os.environ.get('CURRENT_HEAD', ''))\n"

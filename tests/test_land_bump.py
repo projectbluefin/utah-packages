@@ -259,7 +259,7 @@ class RecordingGh(SubprocessGh):
         self._status = status or {
             "state": "OPEN",
             "headRefOid": OTHER_SHA,
-            "behindBy": 5,
+            "behindBy": {"count": 5},
             "headRefName": "bump/upstream-sources",
         }
         self._fail_on = fail_on or set()
