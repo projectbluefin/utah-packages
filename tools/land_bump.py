@@ -245,7 +245,9 @@ class SubprocessGh:
         return PrStatus(
             state=data["state"],
             head_ref_oid=data["headRefOid"],
-            behind_count=int(data["behindBy"]),
+            # `gh pr view --json behindBy` reports the GraphQL StaleState object
+            # {"count": N}, never a bare int; read the count out of it.
+            behind_count=int(data["behindBy"]["count"]),
             head_ref_name=data["headRefName"],
         )
 
