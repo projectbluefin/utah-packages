@@ -621,7 +621,7 @@ class EnqueueBehaviorTests(unittest.TestCase):
             "        pass\n"
             "    if pr:\n"
             "        print(json.dumps({'state': pr['state'], 'headRefOid': pr['headRefOid'],\n"
-            "                          'behindCount': pr.get('behindCount', 0),\n"
+            "                          'behindBy': pr.get('behindBy', 0),\n"
             "                          'headRefName': pr['headRefName']}))\n"
             "    else:\n"
             "        print(os.environ.get('CURRENT_HEAD', ''))\n"
@@ -679,7 +679,9 @@ class EnqueueBehaviorTests(unittest.TestCase):
         )
         workflow = yaml.safe_load((WORKFLOWS / "bump-upstream-enqueue.yml").read_text())
         self.validate = workflow["jobs"]["validate"]["steps"][1]["run"]
-        self.merge = workflow["jobs"]["enqueue"]["steps"][1]["run"]
+        self.merge = next(
+            s["run"] for s in workflow["jobs"]["enqueue"]["steps"] if "run" in s
+        )
         gate_workflow = yaml.safe_load((WORKFLOWS / "bump-upstream-gate.yml").read_text())
         self.handoff = gate_workflow["jobs"]["merge"]["steps"][-1]["run"]
         self.gate = {
