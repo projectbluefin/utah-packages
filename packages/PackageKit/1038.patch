@@ -1,0 +1,37 @@
+From 8e2ce0e173089f18bee885c76e4da1439e2efff3 Mon Sep 17 00:00:00 2001
+From: Gordon Messmer <gmessmer@redhat.com>
+Date: Tue, 3 Nov 2026 22:05:21 +0000
+Subject: [PATCH] dnf5: Keep cache-only mode for offline upgrades
+
+Reuse the transaction's detected network state when rebuilding the
+base for the target release. This prevents offline system upgrades
+from attempting to refresh repository metadata.
+---
+ backends/dnf5/dnf5-backend-thread.cpp | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/backends/dnf5/dnf5-backend-thread.cpp b/backends/dnf5/dnf5-backend-thread.cpp
+index 9058d97b6..81e9724b0 100644
+--- a/backends/dnf5/dnf5-backend-thread.cpp
++++ b/backends/dnf5/dnf5-backend-thread.cpp
+@@ -435,9 +435,10 @@ dnf5_transaction_thread(PkBackendJob *job, GVariant *params, gpointer user_data)
+ 	PkRoleEnum role = pk_backend_job_get_role(job);
+ 
+ 	g_autoptr(GMutexLocker) locker = g_mutex_locker_new(&priv->mutex);
++	gboolean online = pk_backend_is_online(backend);
+ 
+ 	// Update cache-only mode based on current network state
+-	dnf5_update_network_state(priv, pk_backend_is_online(backend));
++	dnf5_update_network_state(priv, online);
+ 
+ 	try {
+ 		if (role == PK_ROLE_ENUM_UPGRADE_SYSTEM) {
+@@ -447,7 +448,7 @@ dnf5_transaction_thread(PkBackendJob *job, GVariant *params, gpointer user_data)
+ 			g_variant_get(params, "(t&su)", &transaction_flags, &distro_id, &upgrade_kind);
+ 			if (distro_id) {
+ 				pk_backend_job_set_status(job, PK_STATUS_ENUM_REFRESH_CACHE);
+-				dnf5_setup_base(priv, TRUE, TRUE, distro_id, TRUE, job);
++				dnf5_setup_base(priv, TRUE, TRUE, distro_id, online, job);
+ 
+ 				g_debug("Checking repositories for system upgrade to %s:", distro_id);
+ 				// ... logging code ...
