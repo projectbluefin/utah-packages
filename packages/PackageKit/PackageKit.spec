@@ -15,6 +15,8 @@ Source0:   http://www.freedesktop.org/software/PackageKit/releases/%{name}-%{ver
 Patch0001:    https://github.com/PackageKit/PackageKit/pull/1014.patch
 ## Fix various progress reporting issues
 Patch0002:    https://github.com/PackageKit/PackageKit/pull/1028.patch
+## Fix for offline-updates
+Patch0003:    https://github.com/PackageKit/PackageKit/pull/1038.patch
 
 # Patches proposed upstream (501~1000)
 
