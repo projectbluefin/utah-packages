@@ -8,11 +8,14 @@ of being regenerated at build time.
 
 ## Source10 — `criu-rpc_pb2.py` (single file)
 
-```
-# From a checkout of criu 4.3 with protobuf-3.19.x on PATH:
-protoc -I=lib/pycriu/images --python_out=/tmp/rpc \
-    lib/pycriu/images/rpc.proto
-cp /tmp/rpc/lib/pycriu/images/rpc_pb2.py packages/criu/criu-rpc_pb2.py
+```sh
+# From a checkout of criu 4.3 with protobuf-3.19.x on PATH. The pycriu images
+# Makefile generates from images/*.proto with -I=images, so mirror that: the
+input proto path is images/rpc.proto and protoc writes the result directly into
+the --python_out directory.
+cd lib/pycriu/images
+protoc -I=images --python_out=/tmp/rpc images/rpc.proto
+cp /tmp/rpc/rpc_pb2.py packages/criu/criu-rpc_pb2.py
 ```
 
 Patched into `lib/pycriu/Makefile` (Patch100) so the build copies
@@ -20,14 +23,18 @@ Patched into `lib/pycriu/Makefile` (Patch100) so the build copies
 
 ## Source11 — `criu-pycriu-images.tar` (75 image bindings)
 
-```
-# Same environment as above; generate every image binding except rpc_pb2.py:
-protoc -I=lib/pycriu/images --python_out=/tmp/images \
-    lib/pycriu/images/*.proto
+```sh
+# Same environment as above. Generate every image binding except rpc_pb2.py into
+# a criu-pycriu-images/ directory so the tarball carries that exact prefix
+(the spec extracts it with --strip-components=1).
+mkdir -p /tmp/images/criu-pycriu-images
+cd lib/pycriu/images
+protoc -I=images --python_out=/tmp/images/criu-pycriu-images images/*.proto
 # rpc_pb2.py is handled separately (Source10), so drop it from the image set:
-rm -f /tmp/images/lib/pycriu/images/rpc_pb2.py
-# Tar under a flat criu-pycriu-images/ prefix (Patch101 extracts it there):
-tar cf packages/criu/criu-pycriu-images.tar -C /tmp/images lib/pycriu/images
+rm -f /tmp/images/criu-pycriu-images/rpc_pb2.py
+# Archive exactly criu-pycriu-images/ so --strip-components=1 lands the 75
+# bindings at criu-pycriu-images/<name>_pb2.py in the build dir:
+tar cf packages/criu/criu-pycriu-images.tar -C /tmp/images criu-pycriu-images
 ```
 
 The tarball holds 76 entries (the `criu-pycriu-images/` dir + 75 `*_pb2.py`),
