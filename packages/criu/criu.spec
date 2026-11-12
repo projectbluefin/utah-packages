@@ -141,7 +141,9 @@ This script can help to workaround the so called "PID mismatch" problem.
 # Extract the shipped protobuf-3.19.x image bindings so the pycriu build copies
 # them instead of regenerating with the factory's protoc 6.x (utah-packages#985).
 mkdir -p %{_builddir}/criu-pycriu-images
-tar xf %{SOURCE11} -C %{_builddir}/criu-pycriu-images
+# SOURCE11 entries are already rooted at criu-pycriu-images/, so strip the
+# prefix to avoid a nested directory (utah-packages#985, hive finding).
+tar xf %{SOURCE11} --strip-components=1 -C %{_builddir}/criu-pycriu-images
 
 %build
 # This package calls LD directly without specifying the LTO plugins.  Until
@@ -172,6 +174,10 @@ make docs V=1
 
 
 %install
+# Export the image-bindings location so the per-target install makes (which
+# rebuild the pycriu library) receive PYCRIU_IMAGES_PB2 instead of expanding
+# the source to "/*" (utah-packages#985, hive finding).
+export PYCRIU_IMAGES_PB2=%{_builddir}/criu-pycriu-images
 sed -e "s,--upgrade --ignore-installed,--no-index --no-deps -v --no-build-isolation,g" -i lib/Makefile -i crit/Makefile
 make install-criu LD=%{_builddir}/bin/ld DESTDIR=$RPM_BUILD_ROOT PREFIX=%{_prefix} LIBDIR=%{_libdir} BINDIR=%{_bindir} SBINDIR=%{_sbindir}
 make install-lib LD=%{_builddir}/bin/ld DESTDIR=$RPM_BUILD_ROOT PREFIX=%{_prefix} LIBDIR=%{_libdir} PYTHON=%{py_binary} PIPFLAGS="--no-build-isolation --no-index --no-deps --progress-bar off --upgrade --ignore-installed"
