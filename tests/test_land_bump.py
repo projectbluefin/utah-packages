@@ -32,6 +32,7 @@ from tools.land_bump import (
     MovedHeadError,
     PrStatus,
     SubprocessGh,
+    SubprocessGit,
     land,
 )
 
@@ -258,7 +259,7 @@ class RecordingGh(SubprocessGh):
         self._status = status or {
             "state": "OPEN",
             "headRefOid": OTHER_SHA,
-            "behindCount": 5,
+            "behindBy": 5,
             "headRefName": "bump/upstream-sources",
         }
         self._fail_on = fail_on or set()
@@ -391,6 +392,72 @@ class ResyncPersistenceOrderTests(unittest.TestCase):
         self.assertFalse(any(isinstance(c, tuple) for c in log))
         self.assertFalse(
             any(isinstance(c, list) and len(c) > 2 and c[2] == "run" for c in log)
+        )
+
+
+class RealInvocationTests(unittest.TestCase):
+    """The decision paths are mocked, but queue_and_pr / rebase_onto_main run the
+    real `gh`/`git` invocations the enqueue job depends on. These lock in the
+    flags a plain decision test would never catch: the Int! PR variable must go
+    with -F (GitHub refuses to coerce a -f string), and the rebase must clone and
+    set an identity before touching the PR branch."""
+
+    def _patch(self, record):
+        class R:
+            def __init__(self, stdout=""):
+                self.stdout = stdout
+
+        def fake_run(cmd, **kw):
+            record.append(list(cmd))
+            # queue_and_pr reads pullRequest.id from the graphql response.
+            if cmd[1:3] == ["api", "graphql"]:
+                return R(json.dumps({
+                    "data": {"repository": {
+                        "mergeQueue": {},
+                        "pullRequest": {
+                            "state": "OPEN",
+                            "baseRefName": "main",
+                            "isCrossRepository": False,
+                            "id": "PR_123",
+                        },
+                    }},
+                }))
+            return R()
+
+        orig = land_bump.subprocess.run
+        land_bump.subprocess.run = fake_run
+        self.addCleanup(lambda: setattr(land_bump.subprocess, "run", orig))
+        return record
+
+    def test_queue_and_pr_sends_the_int_pr_with_F(self) -> None:
+        calls = self._patch([])
+        gh = SubprocessGh(REPOSITORY)
+        queue_id, pr_id = gh.queue_and_pr(REPOSITORY, 123)
+        self.assertIsNone(queue_id)
+        self.assertEqual(pr_id, "PR_123")
+        graphql = next(c for c in calls if c[1:3] == ["api", "graphql"])
+        self.assertIn("-F", graphql)
+        self.assertIn("pr=123", graphql)
+        # $pr is Int! in LANDING_QUERY; -f passes a string GitHub refuses to
+        # coerce ("Could not coerce value to Int"), so it must go with -F.
+        self.assertNotIn("-f pr=123", " ".join(graphql))
+
+    def test_rebase_sets_identity_before_rebase_and_pushes_the_fork(self) -> None:
+        calls = self._patch([])
+        git = SubprocessGit("/tmp/empty")
+        git.rebase_onto_main(REPOSITORY, 123, "bump/upstream-sources")
+        # `gh pr checkout` performs the clone; the author identity is set on the
+        # freshly checked-out branch before the rebase replays bump commits.
+        checkout_idx = next(i for i, c in enumerate(calls) if c[:3] == ["gh", "pr", "checkout"])
+        self.assertEqual(calls[checkout_idx][3:], ["123", "-R", REPOSITORY])
+        self.assertTrue(any(c[:3] == ["git", "config", "user.email"] for c in calls[checkout_idx:]))
+        self.assertTrue(any(c[:3] == ["git", "config", "user.name"] for c in calls[checkout_idx:]))
+        tail = calls[checkout_idx:]
+        self.assertIn(["git", "fetch", "origin", "main"], tail)
+        self.assertIn(["git", "rebase", "origin/main"], tail)
+        self.assertIn(
+            ["git", "push", "--force-with-lease", "origin", "HEAD:bump/upstream-sources"],
+            tail,
         )
 
 

@@ -214,7 +214,7 @@ class SubprocessGh:
         owner, name = repository.split("/", 1)
         raw = self._gh(
             "api", "graphql",
-            "-f", f"owner={owner}", "-f", f"name={name}", "-f", f"pr={pr}",
+            "-f", f"owner={owner}", "-f", f"name={name}", "-F", f"pr={pr}",
             "-f", "query={}".format(LANDING_QUERY),
         )
         payload = json.loads(raw)
@@ -239,13 +239,13 @@ class SubprocessGh:
     def pr_status(self, repository: str, pr: int) -> PrStatus:
         raw = self._gh(
             "pr", "view", str(pr), "-R", repository,
-            "--json", "state,headRefOid,behindCount,headRefName",
+            "--json", "state,headRefOid,behindBy,headRefName",
         )
         data = json.loads(raw)
         return PrStatus(
             state=data["state"],
             head_ref_oid=data["headRefOid"],
-            behind_count=int(data["behindCount"]),
+            behind_count=int(data["behindBy"]),
             head_ref_name=data["headRefName"],
         )
 
@@ -333,9 +333,10 @@ class SubprocessGit:
         return proc.stdout.strip()
 
     def rebase_onto_main(self, repository: str, pr: int, branch: str) -> str:
-        # A fresh checkout, rebase onto the latest main, force-push the branch.
-        # `gh pr checkout` clones the repo into the throwaway workdir and checks
-        # out the pull request branch; the rebase pulls in the latest main.
+        # `gh pr checkout` clones the pull request's branch into the throwaway
+        # workdir and points origin at it; set an author identity first so the
+        # replayed bump commits can be authored, then rebase onto the latest
+        # main and force-push the rewritten branch back to the fork.
         subprocess.run(
             ["gh", "pr", "checkout", str(pr), "-R", repository],
             cwd=self.workdir,
@@ -343,6 +344,8 @@ class SubprocessGit:
             text=True,
             check=True,
         )
+        self._git("config", "user.email", "scanner@hive.local")
+        self._git("config", "user.name", "Hive Scanner")
         self._git("fetch", "origin", "main")
         self._git("rebase", "origin/main")
         self._git("push", "--force-with-lease", "origin", f"HEAD:{branch}")

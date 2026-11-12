@@ -84,7 +84,10 @@ jobs:
     runs-on: ubuntu-24.04
     permissions: {}
     steps:
-      # A fresh runner, no checkout and no branch tools or downloaded artifacts.
+      # land_bump.py runs from tools/, so the tool must be on the runner; the
+      # rebase path clones the PR branch itself via `gh pr checkout`.
+      - name: Checkout the repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Mint a token only for this repository
         id: app-token
         uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3
