@@ -1,8 +1,8 @@
 {
   "holds": {
     "flex": {
-      "version": "2.6.5",
-      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/42978061829"
+      "version": "2.6.9",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/43173089916"
     },
     "glib-networking": {
       "version": "2.90.1",
