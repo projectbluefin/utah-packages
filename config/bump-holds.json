@@ -1,5 +1,13 @@
 {
   "holds": {
+    "criu": {
+      "version": "4.3.1",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/43384286878"
+    },
+    "flex": {
+      "version": "2.6.11",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/43384286878"
+    },
     "glib-networking": {
       "version": "2.90.1",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/40072946213"
@@ -48,6 +56,10 @@
       "version": "1.7.0",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/42773931857"
     },
+    "libkrunfw": {
+      "version": "5.6.4",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/43384286878"
+    },
     "openjph": {
       "version": "0.33.0",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/42773931857"
@@ -79,6 +91,10 @@
     "svt-vp9": {
       "version": "0.3.1",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/40833963568"
+    },
+    "udisks2": {
+      "version": "2.12.0",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/43384286878"
     },
     "upower": {
       "version": "1.91.5",

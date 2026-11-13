@@ -5,7 +5,7 @@
 %global kernel linux-6.12.109
 
 Name:           libkrunfw
-Version:        5.6.4
+Version:        5.6.2
 Release:        1%{?dist}
 Summary:        A dynamic library bundling the guest payload consumed by libkrun
 License:        LGPL-2.1-only AND GPL-2.0-only
@@ -113,9 +113,6 @@ cp %{SOURCE1} tarballs/
 %endif
 
 %changelog
-* Fri Nov 13 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 5.6.4-1
-- Update to 5.6.4
-
 * Fri Sep 25 2026 Sergio Lopez <slp@redhat.com> - 5.6.2-1
 - Update to 5.6.2 which bundles a 6.12.109 kernel
 
