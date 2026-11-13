@@ -24,7 +24,7 @@
 
 Name:    udisks2
 Summary: Disk Manager
-Version: 2.11.2
+Version: 2.12.0
 Release: 1%{?dist}
 License: GPL-2.0-or-later
 URL:     https://github.com/storaged-project/udisks
@@ -341,6 +341,9 @@ fi
 %endif
 
 %changelog
+* Fri Nov 13 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 2.12.0-1
+- Update to 2.12.0
+
 * Thu Aug 06 2026 Tomas Bzatek <tbzatek@redhat.com> - 2.11.2-1
 - Version 2.11.2
 

@@ -516,10 +516,10 @@
     },
     {
       "name": "criu",
-      "version": "4.3",
-      "url": "https://github.com/checkpoint-restore/criu/archive/v4.3/criu-4.3.tar.gz",
-      "filename": "criu-4.3.tar.gz",
-      "sha512": "bd5e2722313e6c5bb67a33f57f1c39ee37615f12bb5004ac6892f9ba30b0ce07b46fdef78583a78e410bf7bfb9a12310ceb778443a08aec05de9f52043058896"
+      "version": "4.3.1",
+      "url": "https://github.com/checkpoint-restore/criu/archive/v4.3.1/criu-4.3.1.tar.gz",
+      "filename": "criu-4.3.1.tar.gz",
+      "sha512": "18d0021eee0e03f28b2296a7d0e2c7a7928a9ae2df1f98f2ce585be6be51ee1f8798df3a462b0817609d38048713df62fd8aac9fe955b9f0fd19a04d0a0f8794"
     },
     {
       "name": "cryfs",
@@ -897,12 +897,12 @@
     },
     {
       "name": "flex",
-      "version": "2.6.4",
-      "url": "https://github.com/westes/flex/releases/download/v2.6.4/flex-2.6.4.tar.gz",
-      "filename": "flex-2.6.4.tar.gz",
-      "sha512": "e9785f3d620a204b7d20222888917dc065c2036cae28667065bf7862dfa1b25235095a12fd04efdbd09bfd17d3452e6b9ef953a8c1137862ff671c97132a082e",
+      "version": "2.6.11",
+      "url": "https://github.com/westes/flex/releases/download/v2.6.11/flex-2.6.11.tar.gz",
+      "filename": "flex-2.6.11.tar.gz",
+      "sha512": "4ed5a4716638c5a87ee379b2bd0986865cf82d87d3f4303fe2d8f9e1d2ecabef0e8793deb17b9a1d2138a571c13e51d730265606f742b652cebbd6f98df6b631",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/flex/flex-2.6.4.tar.gz/sha512/e9785f3d620a204b7d20222888917dc065c2036cae28667065bf7862dfa1b25235095a12fd04efdbd09bfd17d3452e6b9ef953a8c1137862ff671c97132a082e/flex-2.6.4.tar.gz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/flex/flex-2.6.11.tar.gz/sha512/4ed5a4716638c5a87ee379b2bd0986865cf82d87d3f4303fe2d8f9e1d2ecabef0e8793deb17b9a1d2138a571c13e51d730265606f742b652cebbd6f98df6b631/flex-2.6.11.tar.gz"
       ]
     },
     {
@@ -3259,12 +3259,12 @@
     },
     {
       "name": "libkrunfw",
-      "version": "5.6.2",
-      "url": "https://github.com/containers/libkrunfw/archive/refs/tags/v5.6.2.tar.gz",
-      "filename": "v5.6.2.tar.gz",
-      "sha512": "e554eba00ee15b50eef22b138e0976a40146875f4a7d649b7570862ece2f6cba1437b9e55e905aa011351281697cc12345e722c227b14b3160b0a9f441339c4c",
+      "version": "5.6.4",
+      "url": "https://github.com/containers/libkrunfw/archive/refs/tags/v5.6.4.tar.gz",
+      "filename": "v5.6.4.tar.gz",
+      "sha512": "ac8cff70f182d31bc48ffa6766736c72a64f46b19587d23c47a76138407bbd3a62c16d786f32e877c007920f71805f0217922f92cef10e82e7ab466c25ab4c2c",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/libkrunfw/v5.6.2.tar.gz/sha512/e554eba00ee15b50eef22b138e0976a40146875f4a7d649b7570862ece2f6cba1437b9e55e905aa011351281697cc12345e722c227b14b3160b0a9f441339c4c/v5.6.2.tar.gz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libkrunfw/v5.6.4.tar.gz/sha512/ac8cff70f182d31bc48ffa6766736c72a64f46b19587d23c47a76138407bbd3a62c16d786f32e877c007920f71805f0217922f92cef10e82e7ab466c25ab4c2c/v5.6.4.tar.gz"
       ]
     },
     {
@@ -6455,13 +6455,13 @@
     },
     {
       "name": "udisks2",
-      "version": "2.11.2",
-      "url": "https://github.com/storaged-project/udisks/releases/download/udisks-2.11.2/udisks-2.11.2.tar.bz2",
-      "filename": "udisks-2.11.2.tar.bz2",
+      "version": "2.12.0",
+      "url": "https://github.com/storaged-project/udisks/releases/download/udisks-2.12.0/udisks-2.12.0.tar.bz2",
+      "filename": "udisks-2.12.0.tar.bz2",
       "feed": "https://github.com/storaged-project/udisks/releases/download/udisks-2.11.2/udisks-2.11.2.tar.bz2",
-      "sha512": "3996ac935cb330eb7f286f25a716da52ca374b14cc7b4f2e60a7e4b0b0745559607fa8c6d1e96e777b44eb8e07eb16e1ad6bc00b3051adea14e865df3efa2662",
+      "sha512": "b9967fc5acf744599e8255520d21eb601450f0cd79082d2c2019497027915e08e9ed2d6147889cddbe969a944881e67b52d1f0cc9cd89b3c230b9310c463e2cc",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/udisks2/udisks-2.11.2.tar.bz2/sha512/3996ac935cb330eb7f286f25a716da52ca374b14cc7b4f2e60a7e4b0b0745559607fa8c6d1e96e777b44eb8e07eb16e1ad6bc00b3051adea14e865df3efa2662/udisks-2.11.2.tar.bz2"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/udisks2/udisks-2.12.0.tar.bz2/sha512/b9967fc5acf744599e8255520d21eb601450f0cd79082d2c2019497027915e08e9ed2d6147889cddbe969a944881e67b52d1f0cc9cd89b3c230b9310c463e2cc/udisks-2.12.0.tar.bz2"
       ]
     },
     {

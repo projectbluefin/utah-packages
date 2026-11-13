@@ -12,7 +12,7 @@
 %undefine _annotated_build
 
 Name: criu
-Version: 4.3
+Version: 4.3.1
 Release: 1%{?dist}
 Summary: Tool for Checkpoint/Restore in User-space
 License: GPL-2.0-only AND LGPL-2.1-only AND MIT
@@ -204,6 +204,9 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/libcriu.a
 %tmpfiles_create %{name}.conf
 
 %changelog
+* Fri Nov 13 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 4.3.1-1
+- Update to 4.3.1
+
 * Tue Oct 20 2026 Radostin Stoyanov <rstoyanov@fedoraproject.org> - 4.3-1
 - Update to 4.3
 - Enable LZ4 compression support
