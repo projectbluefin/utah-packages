@@ -1,5 +1,5 @@
 Name:           fastfetch
-Version:        2.71.0
+Version:        2.70.0
 Release:        1%{?dist}
 Summary:        Fast neofetch-like system information tool
 
@@ -128,9 +128,6 @@ find src/logo/ascii -type d -empty -delete
 
 
 %changelog
-* Sun Nov 08 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 2.71.0-1
-- Update to 2.71.0
-
 * Thu Oct 22 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 2.70.0-1
 - Update to 2.70.0
 

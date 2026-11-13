@@ -160,6 +160,35 @@ Verify a fix with `rebuild-rpms.yml` dispatched on the `fix/recipe-<name>`
 ref with `packages=["<name>"]`; a non-main ref publishes only a
 branch-named tag.
 
+### A daily bump that reached `main` without the gate
+
+A daily bump pull request that merges by any route other than the gate's
+own enqueue (a fixer commit, then a plain merge) never built its bumped
+recipes: its checks build only what the Canary lanes pick. #942 merged
+that way on 2026-11-08 and broke eleven recipes at once (cryfs, fastfetch,
+ffmpegthumbnailer, fribidi, libkrun, libplist, python-click, python-dns,
+python-pydantic, sso-mib, vvdec), first seen in run 43358822069 (#990):
+rejected patches, moved sonames, a new `libsasl2` dependency, a `trio`
+floor Hummingbird lacks, a `%check` regression. Consumers kept the previous
+builds, so nothing was lost, but the failures repeat every run.
+
+Undo it the way the gate would have, with the gate's own tool, run against
+the bump's parent instead of a merge base:
+
+```sh
+python3 tools/bump_gate.py trim --base <bump-commit>^ --head HEAD \
+  --hold '["<name>", ...]' --run-url <failing run>
+python3 tools/multimedia_closure.py --output reports/multimedia-closure.json
+```
+
+`trim` restores each recipe directory and lock entry byte for byte and holds
+the failed version, so later bumps skip it until the next upstream release.
+Check first that nothing after the bump touched those recipes
+(`git log <bump-commit>.. -- packages/<name>`); `trim` would drop that work
+too. The closure report records codec versions, so regenerate it whenever a
+held package is one of them (ffmpegthumbnailer here). Moving a held package
+forward is then an ordinary `fix/recipe-<name>` pull request, as above.
+
 ## GNOME locks follow GNOME's newest stable release
 
 Utah is a rolling release. A GNOME package tracks GNOME's own newest stable
