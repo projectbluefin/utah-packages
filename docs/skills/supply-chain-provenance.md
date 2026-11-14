@@ -352,12 +352,14 @@ the exceptions are a list to shorten rather than a property to grep for.
 
 ## The scheduled verification run is never cancelled
 
-`.github/workflows/source-pipeline.yml` runs every 30 minutes over every
-lock. Keep `cancel-in-progress: false` and the job's `timeout-minutes`: with
-cancellation on, a slow-upstream day made each run outlast the cron tick and
-be cancelled by the next, so for hours no run reported a mismatch at all
-(#445). A newer run checks nothing an older one does not, and GitHub keeps
-only one pending run per group, so nothing piles up.
+`.github/workflows/source-pipeline.yml` runs every two hours over every lock;
+build and source-bump workflows also verify the sources they use. The periodic
+full-lock audit drops from 336 to 84 scheduled runs per week without changing
+package selection, digest/signature checks, or rejected-source reporting.
+Keep `cancel-in-progress: false` and the job's `timeout-minutes`: with
+cancellation on, a slow-upstream day made each run outlast the old 30-minute
+cron tick and be cancelled by the next, so for hours no run reported a mismatch
+at all (#445). GitHub keeps only one pending run per group, so nothing piles up.
 
 ## FIPS-mode OpenSSL refuses `hashlib.new('md5')`
 
