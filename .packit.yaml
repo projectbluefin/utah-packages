@@ -250,6 +250,12 @@ packages:
     downstream_package_name: borgbackup
     paths:
       - packages/borgbackup
+  bpftop:
+    specfile_path: bpftop.spec
+    upstream_package_name: bpftop
+    downstream_package_name: bpftop
+    paths:
+      - packages/bpftop
   braille-printer-app:
     specfile_path: braille-printer-app.spec
     upstream_package_name: braille-printer-app
