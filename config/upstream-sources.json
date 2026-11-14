@@ -1593,6 +1593,18 @@
       "feed": "https://release-monitoring.org/project/230920"
     },
     {
+      "name": "gst-thumbnailers",
+      "version": "1.1.0",
+      "filename": "gst-thumbnailers-1.1.0-vendored.tar.xz",
+      "sha512": "8645e766e45ba51d43ab9700647dea94605a942c23c7dd312ef75dca883a125b225ed7935433a935a7631796cff180082700689e14e849ea4f0c02a4bb891114",
+      "generate": {
+        "script": "tools/generated_sources.py",
+        "input": "https://download.gnome.org/sources/gst-thumbnailers/1.1/gst-thumbnailers-1.1.0.tar.xz (sha512-pinned) and every crates.io crate its Cargo.lock pins (sha256-pinned by Cargo.lock)",
+        "method": "add vendor/<crate>-<version> for each Cargo.lock crate with .cargo-checksum.json, as cargo vendor --versioned-dirs lays it out, and repack deterministically as gst-thumbnailers-1.1.0-vendored.tar.xz"
+      },
+      "stage": 0
+    },
+    {
       "name": "gstreamer1",
       "version": "1.28.6",
       "url": "https://gstreamer.freedesktop.org/src/gstreamer/gstreamer-1.28.6.tar.xz",

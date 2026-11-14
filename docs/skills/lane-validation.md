@@ -43,8 +43,12 @@ gh workflow run canary.yml -R projectbluefin/utah-packages --ref <branch> \
 - Common failure shapes and where they point:
   - `nothing provides libicuuc.so.77`-class conflicts → the dependency needs
     a factory build against the current ICU, not the Fedora-linked one.
-  - `nothing provides crate(...)` → the Rust crate stack has no provider;
-    needs a vendoring-vs-packaging decision, not a retry.
+  - `nothing provides crate(...)` → the Rust crate stack has no provider.
+    Hummingbird ships no crate RPMs, and the ruling on #527 is to vendor per
+    recipe, not package crates: `%bcond bundled_rust_deps 1` with Fedora's
+    lookaside vendor tarball, or, when Fedora has none, a `vendor/` tree that
+    `tools/generated_sources.py` adds from the release's own Cargo.lock
+    (prefixdevname, gst-thumbnailers). Never a retry.
   - `Bad file` on dist-git extras (PPDs, scripts) → Fedora `.gitignore`
     patterns (`*.gz`, bare script names) left them untracked at import;
     force-add and re-run.

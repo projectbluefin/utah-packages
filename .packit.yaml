@@ -1024,6 +1024,12 @@ packages:
     downstream_package_name: gst-editing-services
     paths:
       - packages/gst-editing-services
+  gst-thumbnailers:
+    specfile_path: gst-thumbnailers.spec
+    upstream_package_name: gst-thumbnailers
+    downstream_package_name: gst-thumbnailers
+    paths:
+      - packages/gst-thumbnailers
   gstreamer1:
     specfile_path: gstreamer1.spec
     upstream_package_name: gstreamer1
