@@ -6300,6 +6300,13 @@
       ]
     },
     {
+      "name": "syncthing",
+      "version": "2.1.7",
+      "url": "https://github.com/syncthing/syncthing/archive/v2.1.7/syncthing-2.1.7.tar.gz",
+      "filename": "syncthing-2.1.7.tar.gz",
+      "sha512": "82a89471f8cfab73b90a06a1420344b8722a8ff39d6648cb371651607d87a480fdccca6fdf8c9c931acc2ac860e295c0db700e876cf46943ac96802839c86e56"
+    },
+    {
       "name": "sysstat",
       "version": "12.8.0",
       "url": "https://github.com/sysstat/sysstat/archive/v12.8.0.tar.gz",
