@@ -10,12 +10,15 @@ numbers; it solves them. This does the same:
    (`rpmspec -q --buildrequires`, `--provides`, and the subpackage names) and
    leaves one directory per package: `br`, `provides`, `names`, `rc`, `err`.
    `provides` also carries `pkgconfig(X)` for every `X.pc` path a `%files`
-   section lists, so a provider imported alongside its consumer orders
-   before it without having been published first.
+   section lists, and `python3dist(<dist>)` for every `python-<dist>` recipe,
+   so a provider imported alongside its consumer orders before it without
+   having been published first. Both are generated provides rpmspec cannot
+   report, so they are read out rather than asked for.
 2. `graph()` maps each BuildRequires capability to the factory source
    packages that provide it -- from the spec's own subpackage names and
-   explicit Provides, and from the published repository's primary.xml, which
-   carries the generated ones (sonames, pkgconfig(), python3dist()).
+   explicit Provides, from the two generated provides read out above, and
+   from the published repository's primary.xml, which carries the rest of
+   the generated ones (sonames).
 3. `waves()` orders a build set by longest path over those edges. Only edges
    inside the set matter: anything else comes from the published factory.
 
@@ -113,6 +116,14 @@ def graph(
     for recipe in recipes.values():
         for capability in recipe.provides:
             providers.setdefault(capability, set()).add(recipe.name)
+        # python-<dist> recipes generate python3dist(<dist>) at build time;
+        # rpmspec does not list it, so derive it here -- exactly as pkgconfig()
+        # is read from %files -- so a consumer imported alongside this package
+        # orders before it publishes instead of failing its hermetic lock.
+        if recipe.name.startswith("python-"):
+            dist = recipe.name[len("python-"):]
+            if dist:
+                providers.setdefault(f"python3dist({dist})", set()).add(recipe.name)
     for source, provided in (published or {}).items():
         if source not in recipes:
             continue

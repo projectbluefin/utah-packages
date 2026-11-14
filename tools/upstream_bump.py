@@ -39,6 +39,27 @@ this tool's.
 GNOME publishes an authoritative release index per module at
 sources/<module>/cache.json, so the candidate list needs no scraping.
 
+Following GNOME's stable release
+--------------------------------
+Utah is a rolling release: a GNOME package tracks GNOME's newest stable
+release on its own and never stays on an old or development series. Fedora
+supplies the recipe and the build root, never the version decision. cache.json
+lists versions but cannot say which series is stable (see cycle_final), so the
+series comes from GNOME's own release definition, GNOME/gnome-build-meta: its
+highest plain `<major>.<minor>` tag (51.1, never 52.alpha/52.beta/52.rc) is
+GNOME's newest stable release, and the element a lock maps to names the
+version that release ships. Its release_cycle() is the lock's target series.
+A lock behind that series moves to the newest final cache.json lists in it
+(kind "stable", applied like "final"); a lock on it keeps the in-cycle rule;
+a lock ahead of it gets a note and still takes point releases of its own
+series, never a newer series GNOME does not ship. App-scheme modules (major 40
+and up, prereleases spelled with markers) that gnome-build-meta does not map
+move to their newest final across majors. Library-scheme modules it does not
+map, and every forge feed, still only report a cross-cycle or cross-major
+release for review. gjs sat on the development release 1.89.2 after 1.90.1
+shipped, and gtk4 on 4.23.4 after 4.24.1, because the old rule never crossed
+a cycle. --cycle N remains the manual override, and skips gnome-build-meta.
+
 A lock still on the Fedora lookaside can be relocked with an explicit
 --package run: to its GNOME module (the explicit feed's, else one named like
 the package), or to the git forge its explicit feed names. The tool proposes
@@ -66,7 +87,9 @@ import hashlib
 import json
 import os
 import re
+import subprocess
 import sys
+import tempfile
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -74,6 +97,17 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+import yaml
+
+from tools.audit_gnome_build_meta import (
+    Loader,
+    _aliases,
+    _gbm_gnome_modules,
+    _gbm_module,
+    _gbm_version,
+    load_pin,
+    resolve_element,
+)
 from tools.bootstrap_upstream_sources import FEDORA_HOSTS
 from tools.bump_gate import HOLDS, REVIEW_ONLY, dump_holds, load_holds, load_review_only
 from tools.package_inventory import (
@@ -156,11 +190,9 @@ def newest_stable(versions: list[str], prerelease=is_prerelease) -> str | None:
 def cycle_final(versions: list[str], cycle: str) -> str | None:
     """The highest release within one cycle, ignoring prereleases.
 
-    A bump is only ever proposed for application automatically when it stays
-    inside the cycle the lock already names -- 51.beta to 51.0. Crossing a
-    cycle cannot be decided from the number alone, because GNOME's numbering
-    encodes development series that no arithmetic rule separates from stable
-    ones. pango is the proof: its releases run
+    Which cycle is the caller's decision, and the number alone cannot make
+    it: GNOME's numbering encodes development series that no arithmetic rule
+    separates from stable ones. pango is the proof: its releases run
 
         1.56.4, 1.57.0, 1.57.1, 1.58.0, 1.58.2, 1.90.0
 
@@ -170,7 +202,14 @@ def cycle_final(versions: list[str], cycle: str) -> str | None:
     picks the right answer. An earlier draft of this tool proposed
     1.58.2 -> 1.90.0 for exactly that reason.
 
-    So cross-cycle candidates are reported for a human and never applied.
+    So the cycle comes from GNOME itself: plan() asks gnome-build-meta at
+    GNOME's newest stable tag which version that release ships (pango
+    1.58.2, gjs 1.90.1) and passes its release_cycle() here. The lock's own
+    cycle is used only when gnome-build-meta maps no element to the lock, when
+    the lock already sits on GNOME's series, and for --cycle, the manual
+    override. Keeping a lock inside its own cycle unconditionally, as this
+    tool once did, left gjs on the development release 1.89.2 after 1.90.1
+    shipped and gtk4 on 4.23.4 after 4.24.1 (#565).
     """
     inside = [
         v
@@ -418,6 +457,131 @@ def releases(module: str, opener=urllib.request.urlopen) -> list[str]:
     with opener(request, timeout=60) as response:
         document = json.loads(response.read())
     return list(document[2].get(module, []))
+
+
+# GNOME's own release definition: gnome-build-meta (BuildStream). A stable
+# release is a plain <major>.<minor> tag (51.0, 51.1); development tags carry
+# a marker (52.alpha, 52.beta, 52.rc, 49.alpha.1) and branch points a suffix
+# (49-branchpoint). download.gnome.org stopped publishing core/<NN>/versions
+# after 47, so this is the one place left that says what a release ships.
+GBM_PIN = "config/gnome-build-meta.json"
+GBM_STABLE_TAG = re.compile(r"\d+\.\d+")
+
+
+def newest_gbm_tag(tags) -> str | None:
+    """GNOME's newest stable release among gnome-build-meta's tag names."""
+    stable = [tag for tag in tags if GBM_STABLE_TAG.fullmatch(tag)]
+    return max(stable, key=version_key) if stable else None
+
+
+def _git(*args: str, run=subprocess.run) -> str:
+    """stdout of one git command; a failure raises ValueError with git's words."""
+    try:
+        return run(["git", *args], capture_output=True, text=True, check=True, timeout=600).stdout
+    except subprocess.CalledProcessError as error:
+        detail = (error.stderr or "").strip() or f"exit {error.returncode}"
+        raise ValueError(f"git {args[0]}: {detail}") from error
+    except subprocess.TimeoutExpired as error:
+        raise ValueError(f"git {args[0]}: timed out") from error
+
+
+def gbm_tags(url: str, run=subprocess.run) -> list[str]:
+    """Every tag gnome-build-meta publishes, from one `git ls-remote`."""
+    listing = _git("ls-remote", "--tags", "--refs", url, run=run)
+    return [line.split("\trefs/tags/", 1)[1] for line in listing.splitlines()
+            if "\trefs/tags/" in line]
+
+
+def checkout_release(tree: Path, run=subprocess.run) -> str:
+    """The release an existing gnome-build-meta tree is at.
+
+    A git checkout must sit exactly on a stable tag: one at 52.beta would make
+    a development series the target of every GNOME lock. A tree that is not
+    a checkout of its own, or not at a tag at all (an exported snapshot, a
+    test fixture), is named after its directory and trusted as given.
+    """
+    if not (tree / ".git").exists():
+        return tree.name
+    try:
+        tag = _git("-C", str(tree), "describe", "--tags", "--exact-match", "HEAD", run=run).strip()
+    except (ValueError, OSError):
+        return tree.name
+    if not GBM_STABLE_TAG.fullmatch(tag):
+        raise ValueError(f"{tree} is at {tag}, not a stable GNOME release tag")
+    return tag
+
+
+class GnomeStable:
+    """What GNOME's newest stable release ships, read from gnome-build-meta.
+
+    Elements are found the way tools/audit_gnome_build_meta.py finds them:
+    config/gnome-build-meta.json's mapping (RPM name -> element, through
+    factory_alias), then the element whose own source is on a GNOME host and
+    whose stem is the lock's module (_gbm_gnome_modules). Either way the
+    element's primary source must belong to that module, and its version is
+    read by the audit's _gbm_version.
+    """
+
+    def __init__(self, tree: Path, release: str, pin: dict):
+        elements = pin["element_path"]["root"]
+        if not (tree / elements).is_dir():
+            raise ValueError(f"{tree} has no {elements}/: not a gnome-build-meta tree")
+        self.release = release
+        self.pin = pin
+        self.loader = Loader(tree)
+        self.aliases = _aliases(self.loader)
+        self._stems: dict[str, str] | None = None
+
+    def elements(self, name: str, module: str) -> list[str]:
+        """Repository-relative element paths that may describe this lock."""
+        root = self.pin["element_path"]["root"]
+        alias = self.pin.get("factory_alias") or {}
+        found = [f"{root}/{path}" for rpm, path in self.pin["mapping"].items()
+                 if alias.get(rpm, rpm) == name]
+        if self._stems is None:
+            self._stems = _gbm_gnome_modules(self.loader, self.pin, self.aliases)
+        if module.lower() in self._stems:
+            found.append(self._stems[module.lower()])
+        return [path for path in dict.fromkeys(found) if (self.loader.root / path).is_file()]
+
+    def version(self, name: str, module: str) -> str | None:
+        """The version of `module` this release ships, or None if it maps none."""
+        for path in self.elements(name, module):
+            try:
+                element = resolve_element(self.loader, self.aliases, path)
+            except (OSError, ValueError, AttributeError, TypeError, yaml.YAMLError):
+                continue
+            primary = element.primary_source
+            if not primary or _gbm_module(primary) not in (None, module):
+                continue
+            version = _gbm_version(primary)
+            if version:
+                return version
+        return None
+
+
+def load_gnome_stable(root: Path, tree: Path | None, scratch: Path,
+                      run=subprocess.run) -> GnomeStable:
+    """GNOME's newest stable release, from a given tree or a shallow clone.
+
+    A `tree` that already holds files is used as it is, so tests and a
+    workflow that runs the tool twice can supply one. Otherwise the highest
+    stable tag is read with one `git ls-remote` and cloned at depth 1 into
+    `tree` (kept) or `scratch` (the caller's temporary directory).
+    """
+    pin = load_pin(root / GBM_PIN)
+    if tree is not None and tree.is_dir() and any(tree.iterdir()):
+        release = checkout_release(tree, run=run)
+    else:
+        url = pin["source"]["url"]
+        release = newest_gbm_tag(gbm_tags(url, run=run))
+        if release is None:
+            raise ValueError(f"{url} publishes no stable release tag")
+        tree = tree or scratch / "gnome-build-meta"
+        _git("-c", "advice.detachedHead=false", "clone", "--quiet", "--depth", "1",
+             "--branch", release, url, str(tree), run=run)
+    print(f"GNOME stable release: gnome-build-meta {release} ({tree})")
+    return GnomeStable(tree, release, pin)
 
 
 def sha512_of(url: str, opener=urllib.request.urlopen) -> str:
@@ -827,34 +991,100 @@ def forge_proposal(name: str, entry: dict, feed: dict, opener=urllib.request.url
     }
 
 
+def is_app_scheme(version: str) -> bool:
+    """Whether a GNOME version uses the app scheme: major 40 and up.
+
+    Its leading number is the GNOME release (nautilus 51.1, ptyxis 50.1) and
+    its prereleases carry a marker (52.beta), so every marker-free release is
+    a final of some cycle. The library scheme (pango 1.58.2, gjs 1.89.2) keeps
+    development series under plain numbers, which is why only gnome-build-meta
+    can say which of its series is stable.
+    """
+    lead = major(tarball_version(version))
+    return lead.isdigit() and int(lead) >= 40
+
+
+def stable_series(stable: GnomeStable, name: str, module: str, current: str) -> str | None:
+    """The series GNOME's stable release ships this lock's module in.
+
+    None when gnome-build-meta maps no element to the lock, or the element is
+    another API of the module: gbm builds gcr 4.x while the gcr3 lock is 3.41,
+    and gtksourceview 5.x while gtksourceview4 is 4.8. A library-scheme
+    element on another major is therefore treated as unmapped, which keeps a
+    major move (usually a new soname) a human decision.
+    """
+    shipped = stable.version(name, module)
+    if shipped is None:
+        return None
+    shipped = tarball_version(shipped)
+    if is_app_scheme(current):
+        if not is_app_scheme(shipped):
+            return None
+    elif major(shipped) != major(current):
+        return None
+    return release_cycle(shipped)
+
+
 def plan(
     root: Path,
     only: str | None,
     opener=urllib.request.urlopen,
     cycle: str | None = None,
+    gnome_stable=None,
 ) -> list[dict]:
     """What would change, without changing anything.
 
+    `gnome_stable` is a callable returning the GnomeStable to follow. It is
+    called once, on the first GNOME lock that needs it, so a run that touches
+    no GNOME lock never fetches gnome-build-meta. If it raises, the failure is
+    reported like an unreachable feed and every GNOME lock falls back to its
+    own cycle, where a cross-cycle release is only reported. Without it (or
+    with `cycle`), that fallback is the whole rule.
+
     `cycle` names the release cycle to move within (GNOME 52 work runs with
-    --cycle 52 on a next branch). Without it each lock stays in the cycle it
-    already names, so a scheduled run never jumps GNOME majors on its own --
-    and a cycle whose final has not shipped yet proposes nothing, so even an
-    explicit --cycle cannot land on an alpha.
+    --cycle 52 on a next branch); it is the manual override and ignores
+    gnome-build-meta. A cycle whose final has not shipped yet proposes
+    nothing, so no run can land on an alpha.
 
     Each proposal carries a `kind`:
 
-      "final"  -- the lock names a prerelease and the same cycle has since
-                  produced a release. Safe to apply: the cycle is already the
-                  maintainers' choice, and only the prerelease suffix moves.
-      "review" -- a newer release exists in a later cycle. Reported so a human
-                  sees it, never applied; see cycle_final for why the number
-                  cannot decide this.
+      "final"  -- a newer release in the cycle the lock already names, such as
+                  51.beta -> 51.0 or 51.0 -> 51.1. Applied.
+      "stable" -- the lock's series is older than the one GNOME's newest
+                  stable release ships (gjs 1.89.2 while GNOME 51.1 ships
+                  1.90.x): the newest final of GNOME's series. Also an
+                  app-scheme module gnome-build-meta does not map, moving to
+                  its newest final across majors. Applied like "final".
+      "review" -- a newer release no rule here may pick: a later cycle of a
+                  library-scheme module gnome-build-meta does not map, a new
+                  major of one it does, or anything when gnome-build-meta is
+                  unavailable. Reported so a human sees it, never applied.
+      "note"   -- informational, never applied: the lock is ahead of GNOME's
+                  series (it still takes its own point releases as "final"),
+                  or a newer series exists that GNOME does not ship
+                  (pango 1.90.0, the development line toward 2.0).
 
     A module whose index cannot be read is reported and skipped rather than
     failing the run: one unreachable module must not stop the other sixteen.
     """
     locks = source_locks(root)
     proposals = []
+    loaded: dict = {}
+
+    def stable_release() -> GnomeStable | None:
+        if cycle is not None or gnome_stable is None:
+            return None
+        if "stable" not in loaded:
+            loaded["stable"] = None
+            try:
+                loaded["stable"] = gnome_stable()
+            except (OSError, ValueError, KeyError, yaml.YAMLError) as error:
+                proposals.append({
+                    "name": "gnome-build-meta",
+                    "error": f"{error}; GNOME locks keep their own cycle this run",
+                })
+        return loaded["stable"]
+
     for name, entry, feed in candidates(locks, only):
         if feed["forge"] != "gnome":
             proposal = forge_proposal(name, entry, feed, opener=opener)
@@ -892,7 +1122,8 @@ def plan(
             proposals.append({"name": name, "error": f"{module}: {error}"})
             continue
         current = tarball_version(entry["version"])
-        target = cycle or release_cycle(current)
+        own = release_cycle(current)
+        target = cycle or own
 
         # A lock whose primary is still the Fedora lookaside moves its bytes
         # to GNOME as well as forward in version: a relock, not just a bump.
@@ -910,33 +1141,65 @@ def plan(
                 "reason": "the release feed is tracked through the lock's explicit "
                 "feed; relock it with --package to move the primary to GNOME"
             }
+        base = {"name": name, "module": module, "current": entry["version"]}
+        across = "stable" if kind == "final" else kind
+
+        stable = stable_release()
+        series = stable_series(stable, name, module, current) if stable else None
+        ahead = series is not None and version_key(series) < version_key(own)
+        if ahead:
+            # Ahead of GNOME: a human chose this series (--cycle). It still
+            # takes its own point releases below, so it is never frozen, but
+            # no unattended run moves it to a series GNOME does not ship, or
+            # back to GNOME's.
+            proposals.append({
+                **base, "kind": "note", "latest": None,
+                "reason": f"ahead of GNOME {stable.release}, which ships the "
+                f"{series} series; only point releases of {own} are taken",
+            })
+        if series is not None and version_key(series) > version_key(own):
+            latest = cycle_final(available, series)
+            if latest is not None:
+                proposals.append({
+                    **base, "kind": across, "latest": latest,
+                    "reason": f"GNOME {stable.release} ships the {series} series",
+                    **extra,
+                })
+                continue
+        if series is None and stable is not None and is_app_scheme(current):
+            # The app scheme marks every prerelease, so its newest marker-free
+            # release is a final; without a gnome-build-meta element there is
+            # no series to wait for.
+            newest = newest_stable(available, prerelease=is_gnome_prerelease)
+            if (
+                newest is not None
+                and version_key(newest) > version_key(current)
+                and release_cycle(newest) != own
+            ):
+                proposals.append({
+                    **base, "kind": across, "latest": newest,
+                    "reason": "newest final of an app-scheme module "
+                    "gnome-build-meta does not map",
+                    **extra,
+                })
+                continue
+
         within = cycle_final(available, target)
         if (is_prerelease(entry["version"]) and within is not None) or (
             within is not None and version_key(within) > version_key(current)
         ):
-            proposals.append(
-                {
-                    "kind": kind,
-                    "name": name,
-                    "module": module,
-                    "current": entry["version"],
-                    "latest": within,
-                    **extra,
-                }
-            )
+            proposals.append({**base, "kind": kind, "latest": within, **extra})
             continue
 
         newest = newest_stable(available, prerelease=is_gnome_prerelease)
-        if newest is not None and version_key(newest) > version_key(current):
-            proposals.append(
-                {
-                    "kind": "review",
-                    "name": name,
-                    "module": module,
-                    "current": entry["version"],
-                    "latest": newest,
-                }
-            )
+        if not ahead and newest is not None and version_key(newest) > version_key(current):
+            if series is not None:
+                proposals.append({
+                    **base, "kind": "note", "latest": newest,
+                    "reason": f"GNOME {stable.release} ships the {series} series",
+                })
+            else:
+                proposals.append({**base, "kind": "review", "latest": newest})
     return proposals
 
 
@@ -1039,9 +1302,17 @@ def main() -> int:
     parser.add_argument("--package", help="consider only this package")
     parser.add_argument(
         "--cycle",
-        help="move within this release cycle instead of each lock's own "
-        "(GNOME 52 work runs with --cycle 52 on a next branch; a cycle "
-        "with no final shipped proposes nothing)",
+        help="manual override: move within this release cycle instead of the "
+        "series GNOME's newest stable release names (GNOME 52 work runs with "
+        "--cycle 52 on a next branch; a cycle with no final shipped proposes "
+        "nothing). Skips gnome-build-meta.",
+    )
+    parser.add_argument(
+        "--gbm-dir",
+        type=Path,
+        help="gnome-build-meta tree to read GNOME's stable release from. Used as "
+        "is when it holds files; otherwise the newest stable tag is cloned "
+        "into it at depth 1 and kept (default: a temporary clone)",
     )
     parser.add_argument(
         "--apply",
@@ -1053,15 +1324,21 @@ def main() -> int:
     # lets a CI log name the package a failure belongs to.
     sys.stdout.reconfigure(line_buffering=True)
 
-    proposals = plan(args.root, args.package, cycle=args.cycle)
+    with tempfile.TemporaryDirectory(prefix="gnome-build-meta-") as scratch:
+        proposals = plan(
+            args.root, args.package, cycle=args.cycle,
+            gnome_stable=lambda: load_gnome_stable(args.root, args.gbm_dir, Path(scratch)),
+        )
     failures = [p for p in proposals if "error" in p]
-    # "final" is the GNOME in-cycle move, "update" the forge same-major one,
-    # "relock" a GNOME in-cycle move that also shifts the primary off the
-    # Fedora lookaside. All three are safe to write; all are reported alike.
+    # "final" is the GNOME in-cycle move, "stable" the GNOME move onto the
+    # series GNOME's newest stable release ships, "update" the forge
+    # same-major one, "relock" a GNOME move that also shifts the primary off
+    # the Fedora lookaside. All are safe to write; all are reported alike.
     # A relock only ever arises from an explicit --package run, never from a
     # full scan, so no unattended run moves a primary on its own.
-    finals = [p for p in proposals if p.get("kind") in ("final", "update", "relock")]
+    finals = [p for p in proposals if p.get("kind") in ("final", "stable", "update", "relock")]
     review = [p for p in proposals if p.get("kind") == "review"]
+    notes = [p for p in proposals if p.get("kind") == "note"]
 
     # A bump pins whatever bytes the forge serves, and the gate merges it with
     # no one looking. Packages the review-only list names -- root daemons, the
@@ -1090,7 +1367,8 @@ def main() -> int:
 
     applied = 0
     for bump in finals:
-        print(f"{bump['name']}: {bump['current']} -> {bump['latest']}")
+        why = f" ({bump['reason']})" if bump["kind"] == "stable" and bump.get("reason") else ""
+        print(f"{bump['name']}: {bump['current']} -> {bump['latest']}{why}")
         if args.apply:
             # One release whose bytes cannot be fetched is reported and
             # skipped, the same rule plan() applies to an unreachable feed: it
@@ -1106,8 +1384,8 @@ def main() -> int:
 
     for item in review:
         # Deliberately not applied, and deliberately not silent: a later cycle
-        # may be a development series (pango 1.90 toward 2.0), which no rule
-        # here can tell from a stable one.
+        # of a module gnome-build-meta does not map may be a development
+        # series, which no rule here can tell from a stable one.
         detail = item.get("reason", "crosses a release cycle or a major")
         print(
             f"needs review  {item['name']}: {item['current']} -> {item['latest']} "
@@ -1115,11 +1393,16 @@ def main() -> int:
             file=sys.stderr,
         )
 
+    for item in notes:
+        newer = f" -> {item['latest']}" if item.get("latest") else ""
+        print(f"note  {item['name']}: {item['current']}{newer} ({item['reason']})",
+              file=sys.stderr)
+
     if retired:
         (args.root / HOLDS).write_text(dump_holds(holds))
 
     if not finals:
-        print("no in-cycle release is newer than what the inventory locks")
+        print("no lock is behind the newest release it may move to")
     elif args.apply and not applied:
         print("every proposed bump failed to apply", file=sys.stderr)
         return 1

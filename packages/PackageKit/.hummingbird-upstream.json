@@ -2,7 +2,7 @@
   "package": "PackageKit",
   "branch": "rawhide",
   "remote": "https://src.fedoraproject.org/rpms/PackageKit.git",
-  "commit": "bed0ec77a8f20167c8c11ac8812c99b62dbc6e8c",
-  "tree": "e41e71b8af97952c1827a70d7faa9ed395c6db11",
-  "imported_at": "2026-11-06T19:51:31.585356+00:00"
+  "commit": "4292ab2d2c98c885ea2f6aa96e3f088b89249f7a",
+  "tree": "4b1cf5a7fdaa48c592c0e68b9315aa8d6cedca9c",
+  "imported_at": "2026-11-12T05:19:29.650244+00:00"
 }

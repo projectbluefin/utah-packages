@@ -18,6 +18,11 @@ BuildArch:      noarch
 
 BuildRequires:  python3-devel
 
+# Declared statically: the runtime requirements are only generated at build
+# time, so the build-order graph cannot see them otherwise.
+BuildRequires:  python3dist(botocore)
+BuildRequires:  python3dist(s3transfer)
+
 # Save space by hardlinking duplicate JSON resource files
 BuildRequires:  hardlink
 

@@ -1,0 +1,3 @@
+PURPOSE of /CoreOS/qrencode/Sanity/smoke
+Description: Check sanity of qrencode
+Author: Petr Splichal <psplicha@redhat.com>

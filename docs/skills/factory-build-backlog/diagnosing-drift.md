@@ -11,6 +11,10 @@
   If the catalog conflict is two independent additions to `[resolved]`, keep
   both sets of records; neither supersedes the other. Preserve unrelated skill
   sections added on `main` when the reconciliation guidance conflicts too.
+  If an older commit edits the former monolithic skill, retain the split
+  index from `main` and move only the incoming guidance to its owning file.
+  Check the pre-rebase PR diff for documentation moved by earlier merge
+  resolutions: a linear rebase does not replay those merge commits.
 - A `pending` count that grows means a name was added to the catalog
   without a recipe; run `just factory-build-backlog` for the per-area
   summary, or add `--output <path>` to `python3 tools/factory_build_backlog.py`
@@ -34,7 +38,10 @@
   prematurely can prevent the entire parent package from building.
   `packages/ffmpeg/`
   declares its `libav*` subpackages under `%if ! %{with freeworld_lavc}`,
-  which is true by default, so those are `already_recipe`. Conditions the
+  which is true by default, so those are `already_recipe`. An
+  `already_recipe` name still listed under an area is not done until a batch
+  moves it to `[resolved]` with the recipe's PR (ffmpeg's split `libav*` and
+  `libsw*` rows cite `pr = 70`). Conditions the
   auditor cannot decide without a build target (`%ifarch`, `0%{?fedora}`)
   are treated as not taken — an extra `pending` name is visible work, a
   false `already_recipe` hides a gap. A `%bcond` declared inside such a
@@ -123,6 +130,14 @@ first layer (`fetch_image` in the same tool returns it). An import PR that
 left its name `already_recipe` pending evidence (`tslib`, #643) moves to
 `[resolved]` in a later reconciliation PR once that image carries the binary;
 cite the original import PR and merge commit rather than the reconciliation.
+
+The same image's `org.projectbluefin.factory.state` label names the sources
+whose latest attempt failed at their current input digest (`failed`); their
+published RPMs are older retained builds. Check every source you cite against
+it and compare each binary's primary `buildtime`. In the #488 reconciliation
+`mtr`, `ntfs-3g-system-compression` and `open-vm-tools` were in `failed`, so
+the catalog comment records that their publication evidence is a retained
+build, not current build health.
 ### X11 resource library imports
 
 The audited `libXres` binary is the main output of source recipe `libXres`;
