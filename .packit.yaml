@@ -4012,6 +4012,12 @@ packages:
     downstream_package_name: symlinks
     paths:
       - packages/symlinks
+  syncthing:
+    specfile_path: syncthing.spec
+    upstream_package_name: syncthing
+    downstream_package_name: syncthing
+    paths:
+      - packages/syncthing
   sysstat:
     specfile_path: sysstat.spec
     upstream_package_name: sysstat
