@@ -312,6 +312,21 @@ the first archive member ending in `Cargo.lock`. For `prefixdevname`, both
 dependency downloads and repacking use `prefixdevname-<version>/Cargo.lock`;
 an example or nested workspace lock must not select a different crate set.
 
+A Rust recipe Fedora vendors nowhere needs no Rust toolchain to vendor:
+`_cargo_vendored_generate` reproduces `cargo vendor --versioned-dirs` from the
+Cargo.lock in pure Python, checking each `.crate` against its lock checksum,
+so it runs anywhere `generated_sources.py` does. gst-thumbnailers (#527) is
+the second user after prefixdevname; its input is a GNOME `.tar.xz`, so the
+shared transform opens the release with `r:*`. Vendor the lock as released.
+A Fedora patch that moves a crate version (gst-thumbnailers' 0003 bumped
+libglycin-rebind for Rawhide's crate RPMs) would need a new lock, and only
+cargo can resolve one; drop such a patch when the released version still
+works against the factory's libraries, and say so in a `# Utah:` comment.
+A patch that only removes dependencies (0002 drops criterion) is fine: cargo
+prunes the lock offline. To move the version, add the new release's SHA-512
+to the recipe's `*_INPUT_SHA512` table, bump the spec, regenerate, and pin the
+new digest in both `sources` and the lock.
+
 ## A hand-repacked zstd source: generate xz, rename the Source
 
 When Fedora's repack script writes `.tar.zst` (7zip's
