@@ -210,6 +210,14 @@ the recipe names an HTTP download: for example, `xmlrpc-c` 1.60.04 uses the
 `Xmlrpc-c Super Stable/1.60.04` release directory. Verify the downloaded
 bytes, not just the project and version in the URL.
 
+When the recipe's own release URL is gone, try the project's other official
+distribution point before giving up: `graphene` 1.10.8's GitHub release asset
+returns 404, but `download.gnome.org` serves the locked bytes. A git-snapshot
+recipe such as `aribb24` can use the forge's archive of the full commit hash.
+An upstream URL already in `fallback_urls` is not proof either: `srt` 1.5.7's
+GitHub archive fallback does not match its lock, so hash it like any other
+candidate before promoting it.
+
 Stream each candidate primary directly through SHA-512 without using the
 pipeline's fallback path. Promote only exact matches to the existing lock;
 leave mismatches and unavailable archives on the ratchet for separate
