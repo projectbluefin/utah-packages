@@ -9,12 +9,12 @@ of being regenerated at build time.
 ## Source10 — `criu-rpc_pb2.py` (single file)
 
 ```sh
-# From a checkout of criu 4.3 with protobuf-3.19.x on PATH. The pycriu images
-# Makefile generates from images/*.proto with -I=images, so mirror that: the
-input proto path is images/rpc.proto and protoc writes the result directly into
-the --python_out directory.
-cd lib/pycriu/images
-protoc -I=images --python_out=/tmp/rpc images/rpc.proto
+# From a checkout of criu 4.3 with protobuf-3.19.x on PATH. protoc strips the
+# -I include dir from the input path before writing, so pass the full input
+# path (lib/pycriu/images/rpc.proto) with -I=lib/pycriu/images: the output lands
+# at --python_out/rpc_pb2.py. protoc does not create --python_out, so mkdir it.
+mkdir -p /tmp/rpc
+protoc -I=lib/pycriu/images --python_out=/tmp/rpc lib/pycriu/images/rpc.proto
 cp /tmp/rpc/rpc_pb2.py packages/criu/criu-rpc_pb2.py
 ```
 
@@ -24,16 +24,18 @@ Patched into `lib/pycriu/Makefile` (Patch100) so the build copies
 ## Source11 — `criu-pycriu-images.tar` (75 image bindings)
 
 ```sh
-# Same environment as above. Generate every image binding except rpc_pb2.py into
-# a criu-pycriu-images/ directory so the tarball carries that exact prefix
-(the spec extracts it with --strip-components=1).
+# Same environment. Generate every image binding except rpc_pb2.py into a
+# criu-pycriu-images/ directory (the prefix the spec extracts with
+# --strip-components=1). protoc strips the -I include dir from each input path,
+# so with -I=lib/pycriu/images every file lands at
+# --python_out/<name>_pb2.py: target criu-pycriu-images/ directly.
 mkdir -p /tmp/images/criu-pycriu-images
-cd lib/pycriu/images
-protoc -I=images --python_out=/tmp/images/criu-pycriu-images images/*.proto
-# rpc_pb2.py is handled separately (Source10), so drop it from the image set:
+protoc -I=lib/pycriu/images --python_out=/tmp/images/criu-pycriu-images \
+    lib/pycriu/images/*.proto
+# rpc_pb2.py is shipped separately (Source10), so drop it from the image set:
 rm -f /tmp/images/criu-pycriu-images/rpc_pb2.py
 # Archive exactly criu-pycriu-images/ so --strip-components=1 lands the 75
-# bindings at criu-pycriu-images/<name>_pb2.py in the build dir:
+# bindings directly in %{_builddir}/criu-pycriu-images:
 tar cf packages/criu/criu-pycriu-images.tar -C /tmp/images criu-pycriu-images
 ```
 
