@@ -607,7 +607,7 @@ packages = [
     { name = "gnome-epub-thumbnailer", pr = 523, published_run = 40151594832, published_nevra = "gnome-epub-thumbnailer-0:1.8-6.hum1.bfin.x86_64" },
     { name = "libspelling", pr = 523, published_run = 40569848351, published_nevra = "libspelling-0:0.4.10-1.hum1.bfin.x86_64" },
     # gst-thumbnailers returns with its Rust crates vendored per recipe (#527).
-    { name = "gst-thumbnailers", pr = 0 },
+    { name = "gst-thumbnailers", pr = 995 },
     # Printing/scanning core wave (landing PR #525). hplip-common,
     # hplip-libs and libsane-hpaio are %package subpackages of hplip.spec;
     # system-config-printer-libs and -udev are %package subpackages of
