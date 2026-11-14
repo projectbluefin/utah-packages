@@ -1,0 +1,8 @@
+{
+  "package": "bindfs",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/bindfs.git",
+  "commit": "ccb85eddc74160c39f77eaa6c84d00c528b0b61d",
+  "tree": "9d7f1bc307179c5707bd34d4657b4314b3140cf6",
+  "imported_at": "2026-11-14T20:27:55.383432+00:00"
+}
