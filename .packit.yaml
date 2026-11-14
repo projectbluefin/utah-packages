@@ -1858,6 +1858,12 @@ packages:
     downstream_package_name: libepoxy
     paths:
       - packages/libepoxy
+  liberation-fonts:
+    specfile_path: liberation-fonts.spec
+    upstream_package_name: liberation-fonts
+    downstream_package_name: liberation-fonts
+    paths:
+      - packages/liberation-fonts
   libev:
     specfile_path: libev.spec
     upstream_package_name: libev
@@ -2866,6 +2872,12 @@ packages:
     downstream_package_name: net-snmp
     paths:
       - packages/net-snmp
+  nethogs:
+    specfile_path: nethogs.spec
+    upstream_package_name: nethogs
+    downstream_package_name: nethogs
+    paths:
+      - packages/nethogs
   nfs-utils:
     specfile_path: nfs-utils.spec
     upstream_package_name: nfs-utils
@@ -4126,6 +4138,12 @@ packages:
     downstream_package_name: tpm2-tools
     paths:
       - packages/tpm2-tools
+  trace-cmd:
+    specfile_path: trace-cmd.spec
+    upstream_package_name: trace-cmd
+    downstream_package_name: trace-cmd
+    paths:
+      - packages/trace-cmd
   traceroute:
     specfile_path: traceroute.spec
     upstream_package_name: traceroute
