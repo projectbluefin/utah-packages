@@ -1,0 +1,8 @@
+{
+  "package": "bpftop",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/bpftop.git",
+  "commit": "0ee3bb7644ee796e7375419902694d51b45ebfe7",
+  "tree": "ba051d57c08882a0ef3c7d1d2f3fd27201aa757e",
+  "imported_at": "2026-11-14T20:27:53.688676+00:00"
+}
