@@ -11,8 +11,10 @@ workflow still succeeds and the wrong sentence is what a maintainer reads.
 ``summary`` had no test at all, ``render_report`` was exercised for two of its
 four publication outcomes, and ``main``'s ``report``/``marker``/``pattern``
 dispatch was never driven. These cases cover the rendering decisions and the
-command line the workflow calls, using no RPMs and no rpm(8): every function
-here is pure apart from the files ``report`` writes.
+command line the workflow calls. The ``report`` subcommand reads SOURCERPM from
+the merged ``rpm-s<N>`` RPMs with ``rpm(8)``, so these tests drop a placeholder
+RPM per built source and mock that one call to return the source name -- no
+real RPMs, no real ``rpm(8)``.
 """
 
 from __future__ import annotations
@@ -20,9 +22,11 @@ from __future__ import annotations
 import io
 import json
 import tempfile
+import types
 import unittest
 from contextlib import redirect_stdout
 from pathlib import Path
+from unittest import mock
 
 from tools.publish_gate import (
     Assembly,
@@ -208,10 +212,10 @@ class ArtifactPatternTests(unittest.TestCase):
         self.assertEqual(artifact_pattern("", "utah-"), "utah-rpm-*")
 
     def test_wave_zero_is_spelled_out_because_brace_alternation_needs_two(self) -> None:
-        self.assertEqual(artifact_pattern("0", ""), "rpm-s0-*")
+        self.assertEqual(artifact_pattern("0", ""), "rpm-s0")
 
     def test_a_later_wave_expands_to_every_wave_up_to_and_including_it(self) -> None:
-        self.assertEqual(artifact_pattern("3", ""), "rpm-s{0,1,2,3}-*")
+        self.assertEqual(artifact_pattern("3", ""), "rpm-s{0,1,2,3}")
 
 
 class CommandLineTests(unittest.TestCase):
@@ -221,7 +225,7 @@ class CommandLineTests(unittest.TestCase):
         out = io.StringIO()
         with redirect_stdout(out):
             self.assertEqual(main(["pattern", "--wave", "2", "--prefix", "utah-"]), 0)
-        self.assertEqual(out.getvalue(), "pattern=utah-rpm-s{0,1,2}-*\n")
+        self.assertEqual(out.getvalue(), "pattern=utah-rpm-s{0,1,2}\n")
 
     def test_marker_prints_the_failed_list_as_compact_json(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -241,46 +245,36 @@ class CommandLineTests(unittest.TestCase):
                 self.assertEqual(main(["marker", str(body)]), 0)
         self.assertEqual(out.getvalue(), "null\n")
 
-    def test_failures_prints_the_selected_packages_with_no_rpm_artifact(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            artifacts = Path(tmp) / "artifacts.json"
-            artifacts.write_text(json.dumps(["utah-rpm-s0-fish", "utah-log-s0-gtk4"]))
-            out = io.StringIO()
-            with redirect_stdout(out):
-                self.assertEqual(
-                    main([
-                        "failures",
-                        "--build-list", json.dumps(["fish", "gtk4"]),
-                        "--artifacts", str(artifacts),
-                        "--prefix", "utah-",
-                    ]),
-                    0,
-                )
-        self.assertEqual(json.loads(out.getvalue()), ["gtk4"])
+    def _patch_rpm(self, rpm_paths: dict[str, str]):
+        """Mock ``rpm -qp`` so ``source_names`` reads SOURCERPM from a table.
 
-    def test_failures_counts_a_precedence_loser_that_did_upload_an_artifact(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            artifacts = Path(tmp) / "artifacts.json"
-            artifacts.write_text(json.dumps(["rpm-s0-fish", "rpm-s0-wayland"]))
-            out = io.StringIO()
-            with redirect_stdout(out):
-                main([
-                    "failures",
-                    "--build-list", json.dumps(["fish", "wayland"]),
-                    "--artifacts", str(artifacts),
-                    "--losers", json.dumps(["wayland"]),
-                ])
-        self.assertEqual(json.loads(out.getvalue()), ["wayland"])
+        ``report --built-dir`` learns what this run built by reading the SOURCERPM
+        header of each merged RPM with ``rpm(8)``. CI has no ``rpm(8)``, so the
+        mock returns the source name for each RPM path from ``rpm_paths``.
+        """
+
+        def fake_run(cmd, check=True, capture_output=True, text=True):
+            paths = cmd[cmd.index("--qf") + 2:]
+            out = "".join(rpm_paths.get(path, "") + "\n" for path in paths)
+            return types.SimpleNamespace(stdout=out)
+
+        return mock.patch("tools.publish_gate.subprocess.run", fake_run)
 
     def run_report(self, tmp: Path, **overrides) -> tuple[str, list[str]]:
-        artifacts = tmp / "artifacts.json"
-        artifacts.write_text(json.dumps(overrides.pop("artifacts", ["rpm-s0-fish"])))
+        built_dir = tmp / "built"
+        built_dir.mkdir()
+        built_sources = overrides.pop("built_sources", ["fish"])
+        rpm_paths = {}
+        for source in built_sources:
+            rpm_path = built_dir / f"{source}-1.0-1.noarch.rpm"
+            rpm_path.write_bytes(b"fake-rpm")
+            rpm_paths[str(rpm_path)] = f"{source}-1.0-1.src.rpm"
         output = tmp / "report.md"
         failed_output = tmp / "failed.json"
         argv = [
             "report",
             "--build-list", json.dumps(overrides.pop("build_list", ["fish", "gtk4"])),
-            "--artifacts", str(artifacts),
+            "--built-dir", str(built_dir),
             "--output", str(output),
             "--failed-output", str(failed_output),
             "--run-url", "https://example.invalid/run/9",
@@ -288,7 +282,8 @@ class CommandLineTests(unittest.TestCase):
         for flag, value in overrides.items():
             argv += [f"--{flag.replace('_', '-')}", value]
         with redirect_stdout(io.StringIO()):
-            self.assertEqual(main(argv), 0)
+            with self._patch_rpm(rpm_paths):
+                self.assertEqual(main(argv), 0)
         return output.read_text(), json.loads(failed_output.read_text())
 
     def test_report_writes_the_issue_body_and_the_failed_list(self) -> None:
@@ -316,7 +311,7 @@ class CommandLineTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             body, failed = self.run_report(
                 Path(tmp),
-                artifacts=["rpm-s0-fish", "rpm-s0-gtk4"],
+                built_sources=["fish", "gtk4"],
                 publish_result="success",
                 digest="sha256:" + "e" * 64,
             )

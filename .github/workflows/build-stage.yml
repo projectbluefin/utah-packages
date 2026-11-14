@@ -205,8 +205,8 @@ jobs:
           else
             stages="{$(seq -s, 0 $((STAGE - 1)))}"
           fi
-          echo "pattern=${PREFIX}rpm-s${stages}-*" >> "$GITHUB_OUTPUT"
-          echo "earlier stages: ${PREFIX}rpm-s${stages}-*"
+          echo "pattern=${PREFIX}rpm-s${stages}" >> "$GITHUB_OUTPUT"
+          echo "earlier stages: ${PREFIX}rpm-s${stages}"
       - name: Collect RPMs built by earlier stages
         if: inputs.stage != '0'
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
@@ -593,3 +593,61 @@ jobs:
             !work/result/**/*-debuginfo-common-*.rpm
             work/reports/*.json
           if-no-files-found: error
+
+  merge:
+    # Merge each wave's per-package artifacts into one rpm-s<N> and one
+    # lock-s<N> artifact. A full rebuild uploads one artifact per package per
+    # wave (~1500 total); actions/download-artifact lists artifacts with no
+    # pagination and returns at most 1000 (oldest first), so anything past
+    # 1000 was silently skipped and finished packages never reached the
+    # published collection. Merging to one artifact per wave (14 rpm + 14
+    # lock) keeps every download well under that cap. See bluefin/utah#970.
+    name: merge-${{ matrix.wave }}
+    needs: build
+    if: always()
+    permissions:
+      contents: read
+      actions: read
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        wave: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
+    env:
+      PREFIX: ${{ inputs.artifact_prefix }}
+    steps:
+      - name: Count this wave's per-package artifacts
+        id: count
+        env:
+          WAVE: ${{ matrix.wave }}
+          REPO: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          prefix="${PREFIX}"
+          list() {
+            # Count the current run's artifacts whose name starts with $1.
+            gh api "repos/$REPO/actions/runs/$RUN_ID/artifacts?per_page=100" \
+              --paginate \
+              --jq '[.artifacts[].name | select(startswith("'"$1""))] | length' \
+              2>/dev/null || echo 0
+          }
+          echo "rpm_count=$(list "${prefix}rpm-s${WAVE}-")" >> "$GITHUB_OUTPUT"
+          echo "lock_count=$(list "${prefix}lock-s${WAVE}-")" >> "$GITHUB_OUTPUT"
+      - name: Merge this wave's RPM artifacts
+        if: always() && steps.count.outputs.rpm_count != '0'
+        uses: actions/upload-artifact/merge@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: ${{ inputs.artifact_prefix }}rpm-s${{ matrix.wave }}
+          pattern: ${{ inputs.artifact_prefix }}rpm-s${{ matrix.wave }}-*
+          delete-merged: true
+          retention-days: 30
+      - name: Merge this wave's lock artifacts
+        if: always() && steps.count.outputs.lock_count != '0'
+        uses: actions/upload-artifact/merge@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: ${{ inputs.artifact_prefix }}lock-s${{ matrix.wave }}
+          pattern: ${{ inputs.artifact_prefix }}lock-s${{ matrix.wave }}-*
+          delete-merged: true
+          retention-days: 30

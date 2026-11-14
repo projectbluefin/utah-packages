@@ -59,10 +59,6 @@ STAGES = tuple(f"rebuild{stage}" for stage in range(14))
 
 STAGE_JOB = re.compile(r"^rebuild(\d+)$")
 
-# The artifact build-stage.yml uploads for one successful package build,
-# optionally behind the canary's per-pass prefix.
-RPM_ARTIFACT = re.compile(r"^rpm-s(?P<stage>\d+)-(?P<package>.+)$")
-
 
 def rebuild_stages(workflow: dict) -> tuple[str, ...]:
     """The rebuild waves ``rebuild-rpms.yml`` actually declares, in wave order."""
@@ -182,23 +178,13 @@ def publishable(built: dict[str, str]) -> dict[str, str]:
             if not BOOTSTRAP_RPM.search(Path(path).name)}
 
 
-def failures_from_artifacts(
-    build_list: list[str], artifact_names: list[str], prefix: str, losers: set[str]
-) -> list[str]:
-    """Selected packages with no uploaded RPM artifact, plus precedence losers.
+def failures_from_sources(build_list, built_sources, losers):
+    """Selected packages this run did not build, plus precedence losers.
 
-    build-stage.yml uploads ``rpm-s<stage>-<package>`` only after a build (or
-    a cache restore) produced RPMs, so the artifact list alone says which
-    packages built. This is how the report job names failures even when the
-    publish job never ran.
+    ``built_sources`` is the set of source packages that produced at least one
+    RPM this run, read from the merged ``rpm-s<N>`` artifacts' SOURCERPM.
     """
-    built = set()
-    for name in artifact_names:
-        if not name.startswith(prefix):
-            continue
-        match = RPM_ARTIFACT.match(name[len(prefix):])
-        if match:
-            built.add(match["package"])
+    built = set(built_sources)
     return sorted((set(build_list) - built) | (losers & set(build_list)))
 
 
@@ -543,18 +529,32 @@ def _cli_assemble(args: argparse.Namespace) -> int:
     return 0
 
 
-def _cli_failures(args: argparse.Namespace) -> int:
+def _cli_budget(args: argparse.Namespace) -> int:
+    """Fail loudly if the artifact listing looks truncated.
+
+    actions/download-artifact lists artifacts with no pagination and returns at
+    most its budget (1000 by default), oldest first. A rebuild that still
+    uploads one artifact per package (~1500) would have its tail silently
+    skipped here; better to fail than to record finished builds as failed.
+    """
     names = json.loads(args.artifacts.read_text())
-    print(json.dumps(failures_from_artifacts(
-        json.loads(args.build_list), names, args.prefix, set(json.loads(args.losers or "[]")),
-    )))
+    matches = [n for n in names if _fnmatch(n, f"{args.prefix}rpm-*")]
+    if len(matches) > args.budget:
+        raise SystemExit(
+            f"artifact listing looks truncated: {len(matches)} {args.prefix}rpm-* "
+            f"artifacts exceed the download budget of {args.budget}. Merge each "
+            f"wave's per-package artifacts into one rpm-s<N> artifact before "
+            f"publishing (build-stage.yml, the merge job)."
+        )
     return 0
 
 
 def _cli_report(args: argparse.Namespace) -> int:
-    names = json.loads(args.artifacts.read_text())
+    built = source_names(list(args.built_dir.rglob("*.rpm")))
     losers = set(json.loads(args.losers or "[]"))
-    failed = failures_from_artifacts(json.loads(args.build_list), names, args.prefix, losers)
+    failed = failures_from_sources(
+        json.loads(args.build_list), set(built.values()), losers,
+    )
     publish_report = json.loads(args.publish_report) if args.publish_report else None
     body = render_report(
         failed=failed,
@@ -572,14 +572,17 @@ def _cli_report(args: argparse.Namespace) -> int:
 def artifact_pattern(wave: str, prefix: str) -> str:
     """download-artifact pattern for the RPMs of waves 0..wave (all if empty).
 
-    Brace alternation needs two members to expand, so wave 0 is spelled out.
+    Each wave's per-package artifacts are merged into a single ``rpm-s0``,
+    ``rpm-s1`` ... artifact (see build-stage.yml), so the pattern names the
+    merged artifact, not the per-package ``rpm-s0-libfoo`` ones. Brace
+    alternation needs two members to expand, so wave 0 is spelled out.
     """
     if wave == "":
         return f"{prefix}rpm-*"
     last = int(wave)
     if last == 0:
-        return f"{prefix}rpm-s0-*"
-    return f"{prefix}rpm-s{{{','.join(str(n) for n in range(last + 1))}}}-*"
+        return f"{prefix}rpm-s0"
+    return f"{prefix}rpm-s{{{','.join(str(n) for n in range(last + 1))}}}"
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -598,7 +601,7 @@ def main(argv: list[str] | None = None) -> int:
     failures_cmd.add_argument("--losers", default="[]")
     report_cmd = commands.add_parser("report")
     report_cmd.add_argument("--build-list", required=True)
-    report_cmd.add_argument("--artifacts", type=Path, required=True)
+    report_cmd.add_argument("--built-dir", type=Path, required=True)
     report_cmd.add_argument("--prefix", default="")
     report_cmd.add_argument("--losers", default="[]")
     report_cmd.add_argument("--publish-result", default="")
@@ -623,8 +626,8 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if args.command == "assemble":
         return _cli_assemble(args)
-    if args.command == "failures":
-        return _cli_failures(args)
+    if args.command == "budget":
+        return _cli_budget(args)
     assert_gate_enforced(load_workflow(), load_workflow(PUBLISH_WORKFLOW))
     print("publish gate enforced: every wave finishes, a failed package keeps its "
           "previous build, precedence runs, and the Hummingbird-only transaction "
