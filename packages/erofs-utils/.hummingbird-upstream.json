@@ -1,0 +1,8 @@
+{
+  "package": "erofs-utils",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/erofs-utils.git",
+  "commit": "2ea44f92c6b93013ec9c1d6518b2f1bedca614dc",
+  "tree": "00e2fad603e961007e1957df73ffab7b4d57ef71",
+  "imported_at": "2026-11-14T20:28:02.386269+00:00"
+}

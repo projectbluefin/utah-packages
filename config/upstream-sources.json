@@ -741,6 +741,13 @@
       "sha512": "0aebd255d589637d0947f8832a194457f561e6000fbfdcff57e487f85203b5ddc77458d1eaad84fd8765052264ff2d9b1dbaf5fbce0ca194aa097f4944b302db"
     },
     {
+      "name": "erofs-utils",
+      "version": "1.9.4",
+      "url": "https://git.kernel.org/pub/scm/linux/kernel/git/xiang/erofs-utils.git/snapshot/erofs-utils-1.9.4.tar.gz",
+      "filename": "erofs-utils-1.9.4.tar.gz",
+      "sha512": "c78fb83a206fa1a313eae3c54134f892a6eafc6839ee689457c5d4b1f5a7d399f9475a160a9c9173221944e8823e665eecfc0d72b2b2a1563250646d091a9176"
+    },
+    {
       "name": "espeak-ng",
       "version": "1.52.0",
       "url": "https://github.com/espeak-ng/espeak-ng/archive/1.52.0/espeak-ng-1.52.0.tar.gz",
@@ -4599,6 +4606,13 @@
       "filename": "noopenh264-2.6.0.tar.gz",
       "feed": "https://release-monitoring.org/project/386644",
       "sha512": "2945eeeb0da7c1689a068c55a07ab8fce48bf30b65beca8b1dbee101747836e1d7f9f50a69ac5feb44603443a375338e95473efe18e38c10c7c77125283d9090"
+    },
+    {
+      "name": "nss-mdns",
+      "version": "0.15.1",
+      "url": "https://github.com/avahi/nss-mdns/releases/download/v0.15.1/nss-mdns-0.15.1.tar.gz",
+      "filename": "nss-mdns-0.15.1.tar.gz",
+      "sha512": "11a82ae9f209326b4501c7e6d33c9932b370c4dcacb64d6783140e25688ad6391bbd113e51ee470fd8be12669124eac331593cfd02a040383b4f964ed6ec6154"
     },
     {
       "name": "ntfs-3g",
