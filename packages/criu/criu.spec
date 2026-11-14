@@ -178,6 +178,11 @@ make docs V=1
 # rebuild the pycriu library) receive PYCRIU_IMAGES_PB2 instead of expanding
 # the source to "/*" (utah-packages#985, hive finding).
 export PYCRIU_IMAGES_PB2=%{_builddir}/criu-pycriu-images
+# Export the shipped rpc_pb2.py location too. The per-target install makes set
+# RPC_PB2_PY on their make command line, but only PYCRIU_IMAGES_PB2 was exported
+# here; re-running %install with only PYCRIU_IMAGES_PB2 left RPC_PB2_PY empty,
+# so "cp: cannot stat ''" failed the build (utah-packages#986, castrojo finding).
+export RPC_PB2_PY=%{SOURCE10}
 sed -e "s,--upgrade --ignore-installed,--no-index --no-deps -v --no-build-isolation,g" -i lib/Makefile -i crit/Makefile
 make install-criu LD=%{_builddir}/bin/ld DESTDIR=$RPM_BUILD_ROOT PREFIX=%{_prefix} LIBDIR=%{_libdir} BINDIR=%{_bindir} SBINDIR=%{_sbindir}
 make install-lib LD=%{_builddir}/bin/ld DESTDIR=$RPM_BUILD_ROOT PREFIX=%{_prefix} LIBDIR=%{_libdir} PYTHON=%{py_binary} PIPFLAGS="--no-build-isolation --no-index --no-deps --progress-bar off --upgrade --ignore-installed"
