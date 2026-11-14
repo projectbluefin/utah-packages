@@ -372,6 +372,13 @@
       "sha512": "1303e334b32dd62847918920777ca47eec072974859f612d054fc516fdab56eea588d34ae2f71e9c0757486769dd5ba057d5c6bb05294f40ff52a8b41f7e5801"
     },
     {
+      "name": "bpftop",
+      "version": "0.9.1",
+      "url": "https://github.com/jfernandez/bpftop/archive/v0.9.1/bpftop-0.9.1.tar.gz",
+      "filename": "bpftop-0.9.1.tar.gz",
+      "sha512": "5c179efb723d5188a72bc7aae621a28137cc1156f698bf52740652594245a76cc7391d3593688bc5d6677154e32047aace9dd53b44b24125646416c15c03eeb3"
+    },
+    {
       "name": "braille-printer-app",
       "version": "2.0~b0^386eea385f",
       "url": "https://github.com/OpenPrinting/braille-printer-app/archive/386eea385f4d672dded45abd602282a94e06e22c/braille-printer-app-386eea385f4d672dded45abd602282a94e06e22c.tar.gz",
@@ -2947,6 +2954,13 @@
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/libepoxy/libepoxy-1.5.10.tar.xz/sha512/d7b53bb34188412d93fd4c46a353038a6883fbaa9942f30df119d0e6de85cd93e0c0366fa40cbd75ffce64ac2cc509e65f94aefd710c4ff8a42324e235eabc44/libepoxy-1.5.10.tar.xz"
       ]
+    },
+    {
+      "name": "liberation-fonts",
+      "version": "2.1.5",
+      "url": "https://github.com/liberationfonts/liberation-fonts/files/7261482/liberation-fonts-ttf-2.1.5.tar.gz",
+      "filename": "liberation-fonts-ttf-2.1.5.tar.gz",
+      "sha512": "b9f178fae43c9214ba6de36c6da613fcf59bd98084058afaaa9151d00f2406942bc360430be0a8f35ea6b5529146eef371c7cf75bdd7910403d449254f943fed"
     },
     {
       "name": "libev",
@@ -6222,6 +6236,13 @@
       "sha512": "ea1246acdb50dafd9ced9914ec3c8f0d499c0ca3cfd447b43a444c768a6e9ea7135e5c42d9ca0089354698ac235bd86d42f12c70a3a17c9c79f998c07461f7ab"
     },
     {
+      "name": "steam-devices",
+      "version": "1.0.0.101^git20260625.22ec85e",
+      "url": "https://github.com/ValveSoftware/steam-devices//archive/22ec85e5ff5ea2e15c56d71a41bcbef46356cd60/steam-devices-1.0.0.101^git20260625.22ec85e.tar.gz",
+      "filename": "steam-devices-1.0.0.101^git20260625.22ec85e.tar.gz",
+      "sha512": "7c9ce6d8fcbac28872ba83b45e672faef77e23328f76f1bf653261bbd1408a2882c9c60bc2a746dd970eca4d38c62cd1bc9125015ab75afe364e1e42878054af"
+    },
+    {
       "name": "stix-fonts",
       "version": "2.13b171",
       "url": "https://github.com/stipub/stixfonts/archive/v2.13b171/stixfonts-2.13b171.tar.gz",
@@ -6439,6 +6460,13 @@
       "url": "https://github.com/tpm2-software/tpm2-tools/releases/download/5.8/tpm2-tools-5.8.tar.gz",
       "filename": "tpm2-tools-5.8.tar.gz",
       "sha512": "0bea68505a773f75476a1e0ea2abd8336a16f0b8900006512a81019708f04b50dbb7960922b37821278825305d33e042f82da2125e7409dacbd139cd52474e82"
+    },
+    {
+      "name": "trace-cmd",
+      "version": "3.4",
+      "url": "https://git.kernel.org/pub/scm/utils/trace-cmd/trace-cmd.git/snapshot/trace-cmd-v3.4.tar.gz",
+      "filename": "trace-cmd-v3.4.tar.gz",
+      "sha512": "b237a5e60e71a882b7fd559d130cbf6e076c51f548292f3226d30a50591c5306de60ac5f664268b7d8f9f104353bc509b5bd4d7903a5db2e020570674b7712e7"
     },
     {
       "name": "traceroute",
