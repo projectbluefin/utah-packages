@@ -1,0 +1,8 @@
+prepare:
+    how: install
+    package:
+      - trace-cmd
+discover:
+    how: fmf
+execute:
+    how: tmt
