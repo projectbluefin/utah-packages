@@ -30,7 +30,7 @@ from tools.publish_gate import (
     assemble,
     assert_gate_enforced,
     failed_marker,
-    failures_from_artifacts,
+    failures_from_sources,
     PUBLISH_WORKFLOW,
     load_workflow,
     publish_allowed,
@@ -182,13 +182,16 @@ class ArtifactPatternTests(unittest.TestCase):
 
         from tools.publish_gate import artifact_pattern
 
+        # Empty wave: a publication that never started downloads nothing.
         self.assertEqual(artifact_pattern("", "p1-"), "p1-rpm-*")
-        self.assertEqual(artifact_pattern("0", ""), "rpm-s0-*")
-        self.assertEqual(artifact_pattern("2", ""), "rpm-s{0,1,2}-*")
+        # A merged artifact carries no package, so the pattern stops at the
+        # stage number -- rpm-s<N>, not rpm-s<N>-*, which never existed.
+        self.assertEqual(artifact_pattern("0", ""), "rpm-s0")
+        self.assertEqual(artifact_pattern("2", ""), "rpm-s{0,1,2}")
         # download-artifact expands the braces; check the expansion by hand.
-        expanded = ["rpm-s0-*", "rpm-s1-*", "rpm-s2-*"]
-        for name, covered in (("rpm-s1-libass", True), ("rpm-s10-gtk4", False),
-                              ("rpm-s3-webkitgtk", False)):
+        expanded = ["rpm-s0", "rpm-s1", "rpm-s2"]
+        for name, covered in (("rpm-s1", True), ("rpm-s10", False),
+                              ("rpm-s3", False)):
             self.assertEqual(any(fnmatch(name, p) for p in expanded), covered, name)
 
 
@@ -207,24 +210,26 @@ class BootstrapTests(unittest.TestCase):
 
 
 class FailureReportTests(unittest.TestCase):
-    def test_failures_come_from_the_artifact_list(self):
-        names = ["rpm-s0-mutter", "rpm-s0-libfoo", "check-s0-fish", "buildroot-image",
-                 "preflight-buildrequires"]
+    def test_failures_come_from_the_built_sources(self):
+        # The merged rpm-s<N> artifacts carry no package, so source_names reads
+        # SOURCERPM from the RPMs; the report then learns what this run built.
         self.assertEqual(
-            failures_from_artifacts(["mutter", "fish", "libfoo"], names, "", set()),
+            failures_from_sources(["mutter", "fish", "libfoo"], {"mutter", "libfoo"}, set()),
             ["fish"],
         )
 
     def test_a_canary_prefix_is_honoured(self):
-        names = ["p1-rpm-s0-libical", "p2-rpm-s0-libical", "p2-rpm-s4-vulkan-loader"]
+        # source_names is scoped to the canary's merged artifacts, so `built`
+        # carries only what p1 uploaded; a source p2 built but p1 did not is
+        # still a failure for p1.
         self.assertEqual(
-            failures_from_artifacts(["libical", "vulkan-loader"], names, "p1-", set()),
+            failures_from_sources(["libical", "vulkan-loader"], {"libical"}, set()),
             ["vulkan-loader"],
         )
 
     def test_a_precedence_loser_is_a_failure(self):
         self.assertEqual(
-            failures_from_artifacts(["gtk4"], ["rpm-s4-gtk4"], "", {"gtk4"}), ["gtk4"]
+            failures_from_sources(["gtk4"], {"gtk4"}, {"gtk4"}), ["gtk4"]
         )
 
     def test_the_report_names_every_failure_and_what_consumers_get(self):
