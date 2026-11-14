@@ -17,7 +17,7 @@
 
 Name: satyr
 Version: 0.43
-Release: 13%{?dist}
+Release: 14%{?dist}
 Summary: Tools to create anonymous, machine-friendly problem reports
 License: GPL-2.0-or-later
 URL: https://github.com/abrt/satyr
@@ -27,6 +27,11 @@ Source0: https://github.com/abrt/%{name}/releases/download/%{version}/%{name}-%{
 # Fix needed for Python 3.14
 # https://bugzilla.redhat.com/2325452
 Patch: https://github.com/abrt/satyr/pull/343.patch
+
+# Build the dump_core test helper without LTO so gdb observes the full
+# 256-frame recursion the core_stacktrace subtest asserts on (factory
+# default -flto=auto collapses the tail recursion). See issue #996.
+Patch1: 0002-dump_core-no-lto.patch
 
 %if %{with python3}
 BuildRequires: python3-devel
@@ -135,6 +140,11 @@ make check|| {
 %endif
 
 %changelog
+* Thu Nov 14 2026 Factory Maintainer <factory@projectbluefin.org> - 0.43-14
+- Build dump_core test helper without LTO so gdb observes the full 256-frame
+  recursion the core_stacktrace subtest asserts on (factory -flto=auto
+  collapses the tail recursion, failing /stacktrace/core/from-gdb-limit)
+
 * Wed Jul 22 2026 Python Maint <python-maint@redhat.com> - 0.43-13
 - Rebuilt for Python 3.15.0b4 ABI change
 
