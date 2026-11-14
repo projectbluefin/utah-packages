@@ -1,0 +1,28 @@
+From: Simone Caronni <negativo17@gmail.com>
+Date: Sun, 9 Aug 2026 00:00:00 +0200
+Subject: [PATCH] Use SSE1 intrinsics in sse_mem_clear
+
+ojph_codestream_sse.cpp is compiled with -msse only, but sse_mem_clear()
+uses the SSE2 integer intrinsics _mm_setzero_si128()/_mm_storeu_si128().
+On targets where SSE2 is not part of the baseline (i686, e.g. the mingw32
+build) this fails with "inlining failed in call to always_inline ...:
+target specific option mismatch".
+
+Restore the float based SSE1 implementation used up to 0.29.0.
+
+--- a/src/core/codestream/ojph_codestream_sse.cpp
++++ b/src/core/codestream/ojph_codestream_sse.cpp
+@@ -47,9 +47,10 @@ namespace ojph {
+     //////////////////////////////////////////////////////////////////////////
+     void sse_mem_clear(void* addr, size_t count)
+     {
+-      __m128i zero = _mm_setzero_si128();
+-      for (size_t i = 0; i < count; i += 16, addr = (char*)addr + 16)
+-        _mm_storeu_si128((__m128i*)addr, zero);
++      float* p = (float*)addr;
++      __m128 zero = _mm_setzero_ps();
++      for (size_t i = 0; i < count; i += 16, p += 4)
++        _mm_storeu_ps(p, zero);
+     }
+   }
+ }

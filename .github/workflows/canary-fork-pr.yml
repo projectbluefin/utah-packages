@@ -25,6 +25,13 @@
 # packages: write, which is why a maintainer's review of the diff comes first and
 # why head_sha is mandatory.
 #
+# The proof survives a later head only when every commit after the proven one
+# is a clean merge of main that git makes by itself, the pull request's own
+# diff is unchanged, and what came in from main touches no pipeline path
+# (tools/fork_canary.py carry_problem): a branch kept up to date with main's
+# recipes and docs needs no new run (#862). Any other commit, a resolved
+# conflict, an edited merge, or a pipeline change on main needs a new run.
+#
 # Pull requests that change .github/ are refused: a push with GITHUB_TOKEN may
 # not carry workflow changes, and those workflows hold this repository's
 # credentials, so a maintainer must push those by hand.
@@ -121,7 +128,7 @@ jobs:
           REPOSITORY: ${{ github.repository }}
         run: |
           set -euo pipefail
-          gh pr comment "$PR" -R "$REPOSITORY" --body "Canary was run on this pull request at \`${HEAD_SHA}\` by @${ACTOR} after review, from the in-repository copy \`canary/pr-${PR}\`: https://github.com/${REPOSITORY}/actions/workflows/canary.yml?query=branch%3Acanary%2Fpr-${PR}. When that run passes, this pull request's own \`Canary\` check is re-run and turns green by itself. A new push to the pull request needs a new review and a new run."
+          gh pr comment "$PR" -R "$REPOSITORY" --body "Canary was run on this pull request at \`${HEAD_SHA}\` by @${ACTOR} after review, from the in-repository copy \`canary/pr-${PR}\`: https://github.com/${REPOSITORY}/actions/workflows/canary.yml?query=branch%3Acanary%2Fpr-${PR}. When that run passes, this pull request's own \`Canary\` check is re-run and turns green by itself. Merging \`main\` into the branch keeps the proof while the merge is clean, the pull request's own diff stays the same, and \`main\` changed no pipeline path; anything else needs a new review and a new run."
       # The copies are only needed while their pull request is open.
       - name: Delete copies of closed pull requests
         env:
@@ -208,10 +215,26 @@ jobs:
         run: |
           set -euo pipefail
           gh api "repos/$REPOSITORY/pulls/$PR" > pr.json
-          # Only the exact commit that was proven, on a pull request still open:
-          # a moved head needs its own review and run.
-          if [ "$(jq -r .state pr.json)" != open ] || [ "$(jq -r .head.sha pr.json)" != "$HEAD_SHA" ]; then
-            echo "::notice title=fork canary::pull request $PR is closed or its head moved since this run; nothing to refresh"
+          if [ "$(jq -r .state pr.json)" != open ]; then
+            echo "::notice title=fork canary::pull request $PR is closed; nothing to refresh"
+            exit 0
+          fi
+          moved=$(jq -r .head.sha pr.json)
+          if [ "$moved" != "$HEAD_SHA" ]; then
+            # The proof also covers a later head that only merged main into this
+            # one without changing the pull request's own diff (#862); that
+            # head's own Canary decides (tools/fork_canary.py carry_problem). If
+            # it failed before this proof existed, re-run it once, quietly.
+            # Nobody reviewed that head, so never reopen or approve for it.
+            [[ "$moved" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::unexpected head ${moved}"; exit 1; }
+            read -r id status conclusion <<<"$(gh api "repos/$REPOSITORY/actions/workflows/canary.yml/runs?event=pull_request&head_sha=${moved}&per_page=20" \
+              --jq '[.workflow_runs[]] | sort_by(.created_at) | last // empty | "\(.id) \(.status) \(.conclusion // "none")"')"
+            if [ "$status" = completed ] && [ "$conclusion" = failure ]; then
+              gh run rerun "$id" -R "$REPOSITORY" --failed
+              echo "::notice title=fork canary::head moved to $moved; re-ran its Canary (run $id), which passes only if this proof carries over"
+            else
+              echo "::notice title=fork canary::head moved to $moved; its Canary is ${status:-absent} ${conclusion:-}, nothing to refresh"
+            fi
             exit 0
           fi
 

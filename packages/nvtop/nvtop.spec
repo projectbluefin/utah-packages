@@ -3,7 +3,7 @@
 %global appstream_id io.github.syllo.nvtop
 
 Name:           nvtop
-Version:        3.3.2
+Version:        3.4.0
 Release:        %autorelease
 Summary:        GPU process monitoring for various devices
 

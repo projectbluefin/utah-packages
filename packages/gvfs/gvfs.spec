@@ -19,7 +19,7 @@
 %global udisks2_version 1.97
 
 Name:    gvfs
-Version: 1.61.91
+Version: 1.62.0
 Release: %autorelease
 Summary: Backends for the gio framework in GLib
 
