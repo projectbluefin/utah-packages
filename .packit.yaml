@@ -1846,6 +1846,12 @@ packages:
     downstream_package_name: libepoxy
     paths:
       - packages/libepoxy
+  liberation-fonts:
+    specfile_path: liberation-fonts.spec
+    upstream_package_name: liberation-fonts
+    downstream_package_name: liberation-fonts
+    paths:
+      - packages/liberation-fonts
   libev:
     specfile_path: libev.spec
     upstream_package_name: libev
