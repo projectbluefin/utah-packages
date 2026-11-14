@@ -1,0 +1,89 @@
+[archive]
+pre_commands = [
+    # Remove unused modernc sqlite3 backend
+    ["rm", "internal/db/sqlite/db_open_nocgo.go"],
+    ["sed", "-i", '/modernc.org\/sqlite/d', "go.mod"],
+]
+
+[licensing]
+detector = "askalono"
+
+[[licensing.licenses]]
+path = "gui/default/vendor/angular/angular.js.LICENSE"
+sha256sum = "437ec3967fa345a09f6ce1aba460f75615c673176f2ebaa1d55567985d5ab396"
+expression = "MIT"
+
+[[licensing.licenses]]
+path = "gui/default/vendor/angular/angular-dirPagination.js.LICENSE"
+sha256sum = "96dcdcf4bf781efbb07a1912e9364d144f02ad57d7cb7a07ed351d1f56c402ef"
+expression = "MIT"
+
+[[licensing.licenses]]
+path = "gui/default/vendor/angular/angular-sanitize.js.LICENSE"
+sha256sum = "437ec3967fa345a09f6ce1aba460f75615c673176f2ebaa1d55567985d5ab396"
+expression = "MIT"
+
+[[licensing.licenses]]
+path = "gui/default/vendor/angular/angular-translate.js.LICENSE"
+sha256sum = "3da1d32ec770167a2f1ad71081f9ceff378e772abb1e95a98457d47d5663c3bc"
+expression = "MIT"
+
+[[licensing.licenses]]
+path = "gui/default/vendor/angular/angular-translate-loader-static-files.js.LICENSE"
+sha256sum = "3da1d32ec770167a2f1ad71081f9ceff378e772abb1e95a98457d47d5663c3bc"
+expression = "MIT"
+
+[[licensing.licenses]]
+path = "gui/default/vendor/bootstrap/LICENSE"
+sha256sum = "8a68c27ad022244b78dc5c9adb4cc5a4c92a994e3e11d356b291f227b2b04eaf"
+expression = "MIT"
+
+[[licensing.licenses]]
+path = "gui/default/vendor/daterangepicker/LICENSE"
+sha256sum = "27579d0338d6518d037e68fcdf425c47d85622d7fe1a2db419e4f7d1ab68e778"
+expression = "MIT"
+
+[[licensing.licenses]]
+path = "gui/default/vendor/fancytree/LICENSE.txt"
+sha256sum = "103a2968d5ae066aa86ba2a48ba8c2fc56d3a6f4b0552d5bf864b123edfdfaff"
+expression = "MIT"
+
+[[licensing.licenses]]
+path = "gui/default/vendor/jquery/LICENSE"
+sha256sum = "1492c0e73c53aebf5ba8b3126d8465fae606ffb1f7dc81c7873ad7db7204bbd1"
+expression = "MIT"
+
+[[licensing.licenses]]
+path = "gui/default/vendor/moment/LICENSE"
+sha256sum = "8f38f320bbf5eb84c08e08676f7ee1d2204ebe5797f6a090d077329cf212fca3"
+expression = "MIT"
+
+[[licensing.licenses]]
+path = "gui/default/vendor/HumanizeDuration.js/LICENSE.txt"
+sha256sum = "cfc340be21de2b0080963aefc20c97af153b2feb6787f28354bc95e0e20b9d75"
+expression = "MIT OR Unlicense"
+
+[[licensing.licenses]]
+path = "gui/default/vendor/fork-awesome/fonts/LICENSE.txt"
+sha256sum = "6767c1877c329e3bced581e36fe29ab9735f5924e4832015a5370d88c961632a"
+expression = "OFL-1.1"
+
+[[licensing.licenses]]
+path = "vendor/github.com/maxmind/geoipupdate/v6/LICENSE-APACHE"
+sha256sum = "aac73b3148f6d1d7111dbca32099f68d26c644c6813ae1e4f05f6579aa2663fe"
+expression = "Apache-2.0 OR MIT"
+
+[[licensing.licenses]]
+path = "vendor/github.com/maxmind/geoipupdate/v6/LICENSE-MIT"
+sha256sum = "91276db973f25602d1aa43491f59cbc84cb88e6f151e1d0cc82a755563ce0195"
+expression = "Apache-2.0 OR MIT"
+
+[[licensing.licenses]]
+path = "vendor/github.com/shirou/gopsutil/v4/LICENSE"
+sha256sum = "ad1e64b82c04fb2ee6bfe521bff01266971ffaa70500024d4ac767c6033aafb9"
+expression = "BSD-3-Clause"
+
+[[licensing.licenses]]
+path = "vendor/go.yaml.in/yaml/v3/LICENSE"
+sha256sum = "d18f6323b71b0b768bb5e9616e36da390fbd39369a81807cca352de4e4e6aa0b"
+expression = "MIT AND (MIT AND Apache-2.0)"

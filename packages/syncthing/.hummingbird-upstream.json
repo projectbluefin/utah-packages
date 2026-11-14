@@ -1,0 +1,8 @@
+{
+  "package": "syncthing",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/syncthing.git",
+  "commit": "d2721ac9469c5d248b6ef9889c358494264dd7ac",
+  "tree": "d815036c5df8a191609a88eb63cf02a31a351daf",
+  "imported_at": "2026-11-14T20:27:16.577334+00:00"
+}
