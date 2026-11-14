@@ -4548,6 +4548,13 @@
       "sha512": "c320c90e01377651fdff3aa9c373b9013f142fab23810d821174e546716ef2fa6499a805728710c67ca7fe238679111df392754c24ea4e01768faa5535ac7db2"
     },
     {
+      "name": "nethogs",
+      "version": "0.9.0",
+      "url": "https://github.com/raboof/nethogs/archive/v0.9.0/nethogs-0.9.0.tar.gz",
+      "filename": "nethogs-0.9.0.tar.gz",
+      "sha512": "33b75e41dcc21126ca46835d086e2848ac5daf8ab2b3291e2c9496c2460a43897f980c6b7ad8bca55bb9882e98492af7aafd7f456bee12b0e460cdc2c06e18e0"
+    },
+    {
       "name": "nfs-utils",
       "version": "2.9.2",
       "url": "https://www.kernel.org/pub/linux/utils/nfs-utils/2.9.2/nfs-utils-2.9.2.tar.xz",

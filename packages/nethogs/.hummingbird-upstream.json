@@ -1,0 +1,8 @@
+{
+  "package": "nethogs",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/nethogs.git",
+  "commit": "528396d12ed7336f7520e513ea5d2a4870623b46",
+  "tree": "2ccbd69ec1246cfc26be55f9b6971dcd41fdbfa4",
+  "imported_at": "2026-11-14T20:27:22.488015+00:00"
+}
