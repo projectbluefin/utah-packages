@@ -4608,6 +4608,13 @@
       "sha512": "2945eeeb0da7c1689a068c55a07ab8fce48bf30b65beca8b1dbee101747836e1d7f9f50a69ac5feb44603443a375338e95473efe18e38c10c7c77125283d9090"
     },
     {
+      "name": "nss-mdns",
+      "version": "0.15.1",
+      "url": "https://github.com/avahi/nss-mdns/releases/download/v0.15.1/nss-mdns-0.15.1.tar.gz",
+      "filename": "nss-mdns-0.15.1.tar.gz",
+      "sha512": "11a82ae9f209326b4501c7e6d33c9932b370c4dcacb64d6783140e25688ad6391bbd113e51ee470fd8be12669124eac331593cfd02a040383b4f964ed6ec6154"
+    },
+    {
       "name": "ntfs-3g",
       "version": "2026.7.7",
       "url": "https://tuxera.com/opensource/ntfs-3g_ntfsprogs-2026.7.7.tgz",
