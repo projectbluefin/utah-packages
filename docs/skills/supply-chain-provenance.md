@@ -357,6 +357,33 @@ A checksum is not a signature. `tools/factory_manifest.py` counts each kind and
 names the packages in the checksum-only classes under `source_verification`, so
 the exceptions are a list to shorten rather than a property to grep for.
 
+### Unavailable is not accepted
+
+A report's `result` is `accepted`, `rejected`, or `unavailable`. `unavailable`
+means the primary source's host never answered: every URL in the lock
+(including `fallback_urls`) failed with a DNS, connect, timeout, reset or
+408/429/5xx error, or a generator exited `EXIT_UPSTREAM_UNREACHABLE` (75)
+because its git fetch or pinned-input download hit the same kind of outage
+(utah-packages#875). Nothing was verified for that package, and nothing was
+staged.
+
+In a full-inventory run an unavailable package does not fail the run, so one
+dead host cannot stop the rest of the audit. The run is still incomplete: the
+pipeline writes `unavailable.json` beside the per-package reports (an empty
+list means every source was checked), prints an `audit incomplete` line and,
+on Actions, lists the packages in the job summary. Re-run once the host is
+back, or add a verified mirror to `fallback_urls`. A named-package run (a
+build) fails on `unavailable`, because the build cannot proceed without the
+source.
+
+Everything else stays `rejected` and fails the run: a digest mismatch, a moved
+tag, a pinned input archive mismatch, a 404/410, a certificate failure, an
+unknown generator or git error, and an unfetchable signature, SHA-256
+manifest or bundled source. An anti-bot HTML page served for an archive URL
+(`ChallengePage`, #889) is not an outage either: the host answered, so the
+next configured URL is tried, and if none serves the file the package is
+`rejected`; add a verified mirror to `fallback_urls`.
+
 ## The scheduled verification run is never cancelled
 
 `.github/workflows/source-pipeline.yml` runs every two hours over every lock;

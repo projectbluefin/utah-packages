@@ -93,7 +93,10 @@ therefore follows Hummingbird's direct-source model for **every RPM it builds**:
 2. `source_pipeline.py` fetches each configured release archive or signed git
    tag directly from its upstream URL. It records SHA-512, verifies a configured
    checksum/signature, writes a report, and fails closed before the source is
-   allowed into a build.
+   allowed into a build. An upstream whose host never answers is reported
+   `unavailable` rather than accepted; the full audit records it and carries
+   on, while a build of that package fails (see
+   [`docs/skills/supply-chain-provenance.md`](docs/skills/supply-chain-provenance.md#unavailable-is-not-accepted)).
 3. A package lacking a direct-source policy is not eligible for builds or
    publication. Fedora Rawhide is retained solely as a compatibility build root
    while the factory becomes self-hosting.

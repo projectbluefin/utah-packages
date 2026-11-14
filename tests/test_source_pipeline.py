@@ -7,6 +7,8 @@ import io
 import json
 import os
 from pathlib import Path
+import socket
+import ssl
 import subprocess
 import sys
 import tempfile
@@ -14,10 +16,12 @@ import unittest
 import urllib.error
 from unittest.mock import patch
 
+from tools.generated_sources import EXIT_UPSTREAM_UNREACHABLE
 from tools.source_pipeline import (
     FETCH_ATTEMPTS,
     LOOKASIDE,
     ChallengePage,
+    UnavailableSource,
     bundled_sources,
     digest,
     fetch,
@@ -358,7 +362,7 @@ class FetchRetryTests(unittest.TestCase):
             destination = Path(directory) / "source"
             with patch(
                 "tools.source_pipeline.urllib.request.urlopen",
-                side_effect=urllib.error.URLError("connection reset"),
+                side_effect=urllib.error.URLError(ConnectionResetError("connection reset")),
             ) as urlopen, patch("tools.source_pipeline.time.sleep"):
                 with self.assertRaisesRegex(RuntimeError, "failed to fetch"):
                     fetch("https://upstream.example/source", destination)
@@ -398,6 +402,22 @@ class FetchRetryTests(unittest.TestCase):
                 )
             self.assertEqual(chosen, "https://mirror.example/demo-1.0.tar.xz")
             self.assertEqual(destination.read_bytes(), b"archive bytes")
+
+    def test_a_challenge_page_is_not_an_outage(self) -> None:
+        """The host answered, so a challenge is fatal and actionable, never ``unavailable``."""
+        with tempfile.TemporaryDirectory() as directory:
+            destination = Path(directory) / "source"
+            page = self.typed_response(b"<html>challenge</html>", "text/html")
+            dead = urllib.error.URLError(socket.gaierror(-2, "Name or service not known"))
+            with patch("tools.source_pipeline.urllib.request.urlopen", side_effect=[page] + [dead] * FETCH_ATTEMPTS), \
+                    patch("tools.source_pipeline.time.sleep"):
+                with self.assertRaises(RuntimeError) as raised:
+                    fetch_with_fallbacks(
+                        ["https://upstream.example/demo-1.0.tar.xz", "https://mirror.example/demo-1.0.tar.xz"],
+                        destination,
+                    )
+            self.assertNotIsInstance(raised.exception, UnavailableSource)
+            self.assertIn("returned an HTML page", str(raised.exception))
 
     def test_html_is_accepted_when_the_url_names_an_html_file(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -443,6 +463,451 @@ class FetchRetryTests(unittest.TestCase):
             self.assertEqual(result.returncode, 1, result.stdout)
             self.assertIn("SHA-512 mismatch", result.stdout)
             self.assertFalse((root / "sources" / "demo" / "demo.tar.gz").exists())
+
+
+class UnavailableSourceTests(unittest.TestCase):
+    """An upstream that never answered is tracked, not fatal.
+
+    The daily job verifies rtmpdump from git.ffmpeg.org, which drops the
+    connection and times out. That is a transient outage: the job must record
+    it and keep going for the rest of inventory, so an unreachable upstream is
+    reported as ``unavailable`` while a digest mismatch stays fatal.
+    """
+
+    @staticmethod
+    def _run(root: Path, packages: list[dict], package: str | None = None) -> tuple[int, str]:
+        """Run the pipeline in-process so urlopen/subprocess mocks apply.
+
+        The subprocess runner used elsewhere cannot be mocked, and an
+        unavailable upstream must be simulated, not contacted for real.
+        """
+        config = root / "sources.json"
+        config.write_text(json.dumps({"packages": packages}))
+        previous_cwd = Path.cwd()
+        previous_argv = sys.argv
+        captured = io.StringIO()
+        invocation = ["source_pipeline.py"]
+        if package is not None:
+            invocation.append(package)
+        invocation += ["--config", str(config),
+                       "--output", str(root / "sources"),
+                       "--report-dir", str(root / "reports")]
+        try:
+            os.chdir(root)
+            sys.argv = invocation
+            with contextlib.redirect_stdout(captured):
+                code = main()
+            return code, captured.getvalue()
+        finally:
+            os.chdir(previous_cwd)
+            sys.argv = previous_argv
+
+    def test_fetch_reports_unavailable_not_a_generic_error(self) -> None:
+        """A transport failure that exhausts retries is an UnavailableSource."""
+        with tempfile.TemporaryDirectory() as directory:
+            destination = Path(directory) / "source"
+            with self._dead_upstream(), patch("tools.source_pipeline.time.sleep"):
+                with self.assertRaises(UnavailableSource):
+                    fetch("https://dead.example/source", destination)
+
+    def test_fetch_with_fallbacks_tries_every_url_before_unavailable(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            destination = Path(directory) / "source"
+            with self._dead_upstream() as urlopen, patch("tools.source_pipeline.time.sleep"):
+                with self.assertRaises(UnavailableSource) as raised:
+                    fetch_with_fallbacks(
+                        ["https://a.example/x", "https://b.example/y"], destination
+                    )
+            self.assertEqual(
+                [call.args[0].full_url for call in urlopen.call_args_list],
+                ["https://a.example/x"] * FETCH_ATTEMPTS + ["https://b.example/y"] * FETCH_ATTEMPTS,
+            )
+            self.assertIn("https://a.example/x", str(raised.exception))
+            self.assertIn("https://b.example/y", str(raised.exception))
+
+    def test_mirror_serves_the_locked_bytes_when_the_primary_is_down(self) -> None:
+        """The real fetch path: a dead primary falls back to a reachable mirror."""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            payload = b"mirror bytes"
+
+            def fake_urlopen(request, timeout=None):
+                if "dead" in request.full_url:
+                    raise urllib.error.URLError(socket.gaierror(-2, "Name or service not known"))
+                return io.BytesIO(payload)
+
+            with patch("tools.source_pipeline.urllib.request.urlopen", side_effect=fake_urlopen), \
+                    patch("tools.source_pipeline.time.sleep"):
+                code, output = self._run(root, [{
+                    "name": "demo",
+                    "url": "https://dead.example/demo.tar.gz",
+                    "fallback_urls": ["https://mirror.example/demo.tar.gz"],
+                    "filename": "demo.tar.gz",
+                    "sha512": hashlib.sha512(payload).hexdigest(),
+                }])
+            self.assertEqual(code, 0, output)
+            report = json.loads((root / "reports" / "demo.json").read_text())
+            self.assertEqual(report["result"], "accepted")
+            self.assertEqual(report["resolved_url"], "https://mirror.example/demo.tar.gz")
+            self.assertEqual(json.loads((root / "reports" / "unavailable.json").read_text()), [])
+
+    def test_a_permanent_404_is_not_unavailable_and_is_not_retried(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            destination = Path(directory) / "source"
+            gone = urllib.error.HTTPError("https://gone.example/x", 404, "Not Found", {}, None)
+            with patch("tools.source_pipeline.urllib.request.urlopen", side_effect=gone) as urlopen, \
+                    patch("tools.source_pipeline.time.sleep"):
+                with self.assertRaisesRegex(RuntimeError, "404") as raised:
+                    fetch("https://gone.example/x", destination)
+            self.assertNotIsInstance(raised.exception, UnavailableSource)
+            self.assertEqual(urlopen.call_count, 1)
+
+    def test_a_server_error_is_retried_and_unavailable(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            destination = Path(directory) / "source"
+            busy = urllib.error.HTTPError("https://busy.example/x", 503, "Unavailable", {}, None)
+            with patch("tools.source_pipeline.urllib.request.urlopen", side_effect=busy) as urlopen, \
+                    patch("tools.source_pipeline.time.sleep"):
+                with self.assertRaises(UnavailableSource):
+                    fetch("https://busy.example/x", destination)
+            self.assertEqual(urlopen.call_count, FETCH_ATTEMPTS)
+
+    def test_a_certificate_failure_is_fatal_not_unavailable(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            destination = Path(directory) / "source"
+            bad_cert = urllib.error.URLError(ssl.SSLCertVerificationError("certificate verify failed"))
+            with patch("tools.source_pipeline.urllib.request.urlopen", side_effect=bad_cert), \
+                    patch("tools.source_pipeline.time.sleep"):
+                with self.assertRaises(RuntimeError) as raised:
+                    fetch("https://mitm.example/x", destination)
+            self.assertNotIsInstance(raised.exception, UnavailableSource)
+
+    def test_a_missing_primary_with_a_dead_mirror_fails_the_run(self) -> None:
+        """A 404 is actionable even if the mirror is also down."""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+
+            def fake_urlopen(request, timeout=None):
+                if "gone" in request.full_url:
+                    raise urllib.error.HTTPError(request.full_url, 404, "Not Found", {}, None)
+                raise urllib.error.URLError(ConnectionRefusedError("connection refused"))
+
+            with patch("tools.source_pipeline.urllib.request.urlopen", side_effect=fake_urlopen), \
+                    patch("tools.source_pipeline.time.sleep"):
+                code, output = self._run(root, [{
+                    "name": "demo",
+                    "url": "https://gone.example/demo.tar.gz",
+                    "fallback_urls": ["https://dead.example/demo.tar.gz"],
+                    "filename": "demo.tar.gz",
+                    "sha512": "0" * 128,
+                }])
+            self.assertEqual(code, 1, output)
+            report = json.loads((root / "reports" / "demo.json").read_text())
+            self.assertEqual(report["result"], "rejected")
+
+    @staticmethod
+    def _dead_upstream():
+        return patch(
+            "tools.source_pipeline.urllib.request.urlopen",
+            side_effect=urllib.error.URLError(ConnectionRefusedError("connection refused")),
+        )
+
+    def test_unavailable_upstream_is_tracked_and_not_fatal(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            entry = {
+                "name": "demo",
+                "url": "https://dead.example/demo.tar.gz",
+                "filename": "demo.tar.gz",
+                "sha512": "0" * 128,
+            }
+            with self._dead_upstream(), patch("tools.source_pipeline.time.sleep"):
+                code, output = self._run(root, [entry])
+            self.assertEqual(code, 0, output)
+            self.assertIn("unavailable", output)
+            self.assertNotIn("rejected", output)
+            report = json.loads((root / "reports" / "demo.json").read_text())
+            self.assertEqual(report["result"], "unavailable")
+            self.assertFalse((root / "sources" / "demo" / "demo.tar.gz").exists())
+            self.assertFalse((root / "sources" / "demo" / "demo.tar.gz.candidate").exists())
+            durable = json.loads((root / "reports" / "unavailable.json").read_text())
+            self.assertEqual([item["package"] for item in durable], ["demo"])
+            self.assertEqual(durable[0]["url"], "https://dead.example/demo.tar.gz")
+
+    def test_unavailable_is_written_to_the_job_summary(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            summary = root / "summary.md"
+            entry = {
+                "name": "demo",
+                "url": "https://dead.example/demo.tar.gz",
+                "filename": "demo.tar.gz",
+                "sha512": "0" * 128,
+            }
+            with self._dead_upstream(), patch("tools.source_pipeline.time.sleep"), \
+                    patch.dict(os.environ, {"GITHUB_STEP_SUMMARY": str(summary)}):
+                code, output = self._run(root, [entry])
+            self.assertEqual(code, 0, output)
+            self.assertIn("audit incomplete", output)
+            self.assertIn("`demo`", summary.read_text())
+
+    def test_a_named_package_whose_upstream_is_down_fails(self) -> None:
+        """A build fetching one package cannot proceed without its source."""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            entry = {
+                "name": "demo",
+                "url": "https://dead.example/demo.tar.gz",
+                "filename": "demo.tar.gz",
+                "sha512": "0" * 128,
+            }
+            with self._dead_upstream(), patch("tools.source_pipeline.time.sleep"):
+                code, output = self._run(root, [entry], package="demo")
+            self.assertEqual(code, 1, output)
+            report = json.loads((root / "reports" / "demo.json").read_text())
+            self.assertEqual(report["result"], "unavailable")
+
+    def test_unreachable_verification_inputs_are_fatal(self) -> None:
+        """A signature or checksum manifest that cannot be fetched is not 'unavailable'."""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            payload = b"real bytes"
+
+            def fake_urlopen(request, timeout=None):
+                if "SHA256SUMS" in request.full_url:
+                    raise urllib.error.URLError(ConnectionRefusedError("connection refused"))
+                return io.BytesIO(payload)
+
+            with patch("tools.source_pipeline.urllib.request.urlopen", side_effect=fake_urlopen), \
+                    patch("tools.source_pipeline.time.sleep"):
+                code, output = self._run(root, [{
+                    "name": "demo",
+                    "url": "https://good.example/demo.tar.gz",
+                    "sha256_url": "https://good.example/SHA256SUMS",
+                    "filename": "demo.tar.gz",
+                    "sha512": hashlib.sha512(payload).hexdigest(),
+                }])
+            self.assertEqual(code, 1, output)
+            report = json.loads((root / "reports" / "demo.json").read_text())
+            self.assertEqual(report["result"], "rejected")
+            self.assertIn("SHA-256 manifest could not be fetched", report["error"])
+            self.assertFalse((root / "sources" / "demo" / "demo.tar.gz").exists())
+
+    def test_unreachable_bundled_source_is_fatal_and_leaves_no_final_source0(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            payload = b"real bytes"
+            (root / "packages" / "demo").mkdir(parents=True)
+            (root / "packages" / "demo" / "sources").write_text(
+                f"SHA512 (extra.tar.gz) = {'1' * 128}\n"
+            )
+
+            def fake_urlopen(request, timeout=None):
+                if "src.fedoraproject.org" in request.full_url:
+                    raise urllib.error.URLError(ConnectionRefusedError("connection refused"))
+                return io.BytesIO(payload)
+
+            with patch("tools.source_pipeline.urllib.request.urlopen", side_effect=fake_urlopen), \
+                    patch("tools.source_pipeline.time.sleep"):
+                code, output = self._run(root, [{
+                    "name": "demo",
+                    "url": "https://good.example/demo.tar.gz",
+                    "filename": "demo.tar.gz",
+                    "sha512": hashlib.sha512(payload).hexdigest(),
+                }])
+            self.assertEqual(code, 1, output)
+            report = json.loads((root / "reports" / "demo.json").read_text())
+            self.assertEqual(report["result"], "rejected")
+            self.assertIn("bundled source extra.tar.gz could not be fetched", report["error"])
+            self.assertFalse((root / "sources" / "demo" / "demo.tar.gz").exists())
+
+    def test_unavailable_does_not_block_accepted_packages(self) -> None:
+        """One dead upstream does not fail a run that also has good sources."""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            good_payload = b"real bytes"
+
+            def fake_urlopen(request, timeout=None):
+                url = getattr(request, "full_url", str(request))
+                if "dead" in url:
+                    raise urllib.error.URLError(ConnectionRefusedError("connection refused"))
+                return io.BytesIO(good_payload)
+
+            # demo is unavailable; good is accepted, in the same run.
+            with patch("tools.source_pipeline.urllib.request.urlopen", side_effect=fake_urlopen), \
+                    patch("tools.source_pipeline.time.sleep"):
+                code, output = self._run(root, [
+                    {
+                        "name": "demo",
+                        "url": "https://dead.example/demo.tar.gz",
+                        "filename": "demo.tar.gz",
+                        "sha512": "0" * 128,
+                    },
+                    {
+                        "name": "good",
+                        "url": "https://good.example/good.tar.gz",
+                        "filename": "good.tar.gz",
+                        "sha512": hashlib.sha512(good_payload).hexdigest(),
+                    },
+                ])
+            self.assertEqual(code, 0, output)
+            demo = json.loads((root / "reports" / "demo.json").read_text())
+            good = json.loads((root / "reports" / "good.json").read_text())
+            self.assertEqual(demo["result"], "unavailable")
+            self.assertEqual(good["result"], "accepted")
+
+    def test_integrity_failure_fails_the_run_even_with_an_unavailable_sibling(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            good_payload = b"real bytes"
+
+            def fake_urlopen(request, timeout=None):
+                url = getattr(request, "full_url", str(request))
+                if "dead" in url:
+                    raise urllib.error.URLError(ConnectionRefusedError("connection refused"))
+                return io.BytesIO(good_payload)
+
+            with patch("tools.source_pipeline.urllib.request.urlopen", side_effect=fake_urlopen), \
+                    patch("tools.source_pipeline.time.sleep"):
+                code, output = self._run(root, [
+                    {
+                        "name": "demo",
+                        "url": "https://dead.example/demo.tar.gz",
+                        "filename": "demo.tar.gz",
+                        "sha512": "0" * 128,
+                    },
+                    {
+                        "name": "bad",
+                        "url": "https://bad.example/bad.tar.gz",
+                        "filename": "bad.tar.gz",
+                        "sha512": "ab" * 64,  # does not match good_payload
+                    },
+                ])
+            # The integrity failure is fatal even though demo is only unavailable.
+            self.assertEqual(code, 1, output)
+            demo = json.loads((root / "reports" / "demo.json").read_text())
+            bad = json.loads((root / "reports" / "bad.json").read_text())
+            self.assertEqual(demo["result"], "unavailable")
+            self.assertEqual(bad["result"], "rejected")
+
+    def test_generate_timeout_is_fatal(self) -> None:
+        """A wedged generator is not proven to be an outage, so it fails.
+
+        The generator bounds its own network calls and reports an unreachable
+        host with its dedicated exit; the outer timeout is only a backstop.
+        """
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            script = root / "gen.py"
+            script.write_text("#!/usr/bin/env python3\n")
+            package_dir = root / "packages" / "demo"
+            package_dir.mkdir(parents=True)
+            entry = {
+                "name": "demo",
+                "generate": {"script": str(script)},
+                "filename": "demo.tar.gz",
+                "sha512": "0" * 128,
+            }
+            with patch(
+                "tools.source_pipeline.subprocess.run",
+                side_effect=subprocess.TimeoutExpired(str(script), 600),
+            ), patch("tools.source_pipeline.time.sleep"):
+                code, output = self._run(root, [entry])
+            self.assertEqual(code, 1, output)
+            report = json.loads((root / "reports" / "demo.json").read_text())
+            self.assertEqual(report["result"], "rejected")
+            self.assertIn("did not finish", report["error"])
+
+    def test_generator_unreachable_exit_is_unavailable(self) -> None:
+        """Only the generator's dedicated exit maps to unavailable.
+
+        This is the rtmpdump failure: git.ffmpeg.org is unreachable, the
+        generator classifies git's transport error and exits
+        EXIT_UPSTREAM_UNREACHABLE. The daily job must track this, not abort.
+        """
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            script = root / "gen.py"
+            script.write_text("#!/usr/bin/env python3\n")
+            package_dir = root / "packages" / "demo"
+            package_dir.mkdir(parents=True)
+            entry = {
+                "name": "demo",
+                "generate": {"script": str(script)},
+                "filename": "demo.tar.gz",
+                "sha512": "0" * 128,
+            }
+            with patch(
+                "tools.source_pipeline.subprocess.run",
+                side_effect=subprocess.CalledProcessError(EXIT_UPSTREAM_UNREACHABLE, [str(script)]),
+            ), patch("tools.source_pipeline.time.sleep"):
+                code, output = self._run(root, [entry])
+            self.assertEqual(code, 0, output)
+            report = json.loads((root / "reports" / "demo.json").read_text())
+            self.assertEqual(report["result"], "unavailable")
+            self.assertIn("could not reach its upstream", report["error"])
+
+    def test_any_other_generator_exit_is_rejected(self) -> None:
+        """A moved tag or input mismatch exits 1 from the generator; it stays fatal."""
+        for returncode in (1, 128):
+            with self.subTest(returncode=returncode), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                script = root / "gen.py"
+                script.write_text("#!/usr/bin/env python3\n")
+                (root / "packages" / "demo").mkdir(parents=True)
+                entry = {
+                    "name": "demo",
+                    "generate": {"script": str(script)},
+                    "filename": "demo.tar.gz",
+                    "sha512": "0" * 128,
+                }
+                with patch(
+                    "tools.source_pipeline.subprocess.run",
+                    side_effect=subprocess.CalledProcessError(returncode, [str(script)]),
+                ):
+                    code, output = self._run(root, [entry])
+                self.assertEqual(code, 1, output)
+                report = json.loads((root / "reports" / "demo.json").read_text())
+                self.assertEqual(report["result"], "rejected")
+
+    def test_real_generator_integrity_failure_is_rejected(self) -> None:
+        """End to end: a generator raising 'tag ... moved' fails the run."""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            script = root / "gen.py"
+            script.write_text(
+                "raise RuntimeError('tag v1 moved: expected aaaa, got bbbb')\n"
+            )
+            (root / "packages" / "demo").mkdir(parents=True)
+            entry = {
+                "name": "demo",
+                "generate": {"script": str(script)},
+                "filename": "demo.tar.gz",
+                "sha512": "0" * 128,
+            }
+            code, output = self._run(root, [entry])
+            self.assertEqual(code, 1, output)
+            report = json.loads((root / "reports" / "demo.json").read_text())
+            self.assertEqual(report["result"], "rejected")
+            self.assertNotIn("demo", [item["package"] for item in json.loads((root / "reports" / "unavailable.json").read_text())])
+
+    def test_real_generator_unreachable_exit_is_unavailable(self) -> None:
+        """End to end: the generator's dedicated exit code is honoured."""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            script = root / "gen.py"
+            script.write_text(f"raise SystemExit({EXIT_UPSTREAM_UNREACHABLE})\n")
+            (root / "packages" / "demo").mkdir(parents=True)
+            entry = {
+                "name": "demo",
+                "generate": {"script": str(script)},
+                "filename": "demo.tar.gz",
+                "sha512": "0" * 128,
+            }
+            code, output = self._run(root, [entry])
+            self.assertEqual(code, 0, output)
+            report = json.loads((root / "reports" / "demo.json").read_text())
+            self.assertEqual(report["result"], "unavailable")
 
 
 class SignatureConfigurationTests(unittest.TestCase):
