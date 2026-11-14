@@ -1022,8 +1022,10 @@ jobs:
   # ran: in the job summary on every run, and on main in one tracking issue
   # that is opened, updated as the failing set changes, and closed by the
   # first run with no failures. Failures are read from the run's own artifact
-  # list -- build-stage.yml uploads rpm-s<stage>-<package> only for a package
-  # that produced RPMs -- so a publish that never started still gets a report.
+  # listing -- build-stage.yml merges each wave's per-package artifacts into
+  # one rpm-s<N> artifact, so this reads SOURCERPM from those merged RPMs to
+  # learn which sources this run built -- a publish that never started still
+  # gets a report.
   #
   # `!cancelled()`, not `always()`: a run someone cancelled by hand has no
   # verdict. Its waves stopped before uploading, so every selected package
@@ -1042,6 +1044,12 @@ jobs:
       failed: ${{ steps.name.outputs.failed }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Download the merged RPM artifacts
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          path: built
+          pattern: "${{ inputs.artifact_prefix }}rpm-s*"
+          merge-multiple: true
       - name: Name every package that did not publish
         id: name
         env:
@@ -1057,10 +1065,18 @@ jobs:
           DIGEST: ${{ needs.publish.outputs.digest }}
         run: |
           set -euo pipefail
+          # Complete artifact listing (paginated). The guard below fails
+          # loudly if it still holds one artifact per package (~1500), which
+          # actions/download-artifact would silently truncate at 1000.
           gh api --paginate "repos/$REPOSITORY/actions/runs/$RUN_ID/artifacts?per_page=100" \
             --jq '.artifacts[].name' | jq -R . | jq -s . > artifacts.json
+          # Fail loudly if the rebuild still uploads one artifact per package.
+          python3 tools/publish_gate.py budget \
+            --artifacts artifacts.json --prefix "$PREFIX"
+          # The merged rpm-s<N> names carry no package, so report reads
+          # SOURCERPM from the downloaded RPMs to learn what built.
           python3 tools/publish_gate.py report \
-            --build-list "$BUILD_LIST" --artifacts artifacts.json --prefix "$PREFIX" \
+            --build-list "$BUILD_LIST" --built-dir built --prefix "$PREFIX" \
             --losers "$LOSERS" --publish-result "$PUBLISH_RESULT" \
             --publish-report "$PUBLISH_REPORT" --digest "$DIGEST" --run-url "$RUN_URL" \
             --output report.md --failed-output failed.json > /dev/null
