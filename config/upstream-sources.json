@@ -6236,6 +6236,13 @@
       "sha512": "ea1246acdb50dafd9ced9914ec3c8f0d499c0ca3cfd447b43a444c768a6e9ea7135e5c42d9ca0089354698ac235bd86d42f12c70a3a17c9c79f998c07461f7ab"
     },
     {
+      "name": "steam-devices",
+      "version": "1.0.0.101^git20260625.22ec85e",
+      "url": "https://github.com/ValveSoftware/steam-devices//archive/22ec85e5ff5ea2e15c56d71a41bcbef46356cd60/steam-devices-1.0.0.101^git20260625.22ec85e.tar.gz",
+      "filename": "steam-devices-1.0.0.101^git20260625.22ec85e.tar.gz",
+      "sha512": "7c9ce6d8fcbac28872ba83b45e672faef77e23328f76f1bf653261bbd1408a2882c9c60bc2a746dd970eca4d38c62cd1bc9125015ab75afe364e1e42878054af"
+    },
+    {
       "name": "stix-fonts",
       "version": "2.13b171",
       "url": "https://github.com/stipub/stixfonts/archive/v2.13b171/stixfonts-2.13b171.tar.gz",

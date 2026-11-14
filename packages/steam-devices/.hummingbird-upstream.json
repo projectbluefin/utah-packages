@@ -1,0 +1,8 @@
+{
+  "package": "steam-devices",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/steam-devices.git",
+  "commit": "d8c9b9f8f58d3ee52dfc39adb8b398cd5f05442d",
+  "tree": "c376dcb42e985a4e4ec99cead7a4b761e3e5a2ac",
+  "imported_at": "2026-11-14T20:28:11.092973+00:00"
+}
