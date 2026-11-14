@@ -39,6 +39,9 @@ that no upstream publishes verbatim:
   `vendor/` tree of every crates.io crate its Cargo.lock pins, laid out as
   `cargo vendor --versioned-dirs` does. Upstream publishes no release asset,
   and the recipe builds offline from vendored crates
+- gst-thumbnailers: the upstream GNOME release (SHA-512-pinned) with the same
+  `vendor/` tree added. Hummingbird ships no Rust crate RPMs, so the recipe
+  bundles its gtk-rs, clap and libglycin-rebind dependencies (#527)
 
 For these, the source lock names this script and records the SHA-512 of the
 bytes the transformation produces. Verification re-runs the transformation
@@ -1091,21 +1094,23 @@ PREFIXDEVNAME_INPUT_SHA512 = {
 }
 # Fixed mtime stamped on every output member so the bundle is byte-reproducible
 # regardless of the source archive's own mtimes.
-PREFIXDEVNAME_MTIME = 0
+CARGO_VENDORED_MTIME = 0
+PREFIXDEVNAME_MTIME = CARGO_VENDORED_MTIME
 
 
-def _prefixdevname_transform(source: bytes, version: str, crates: dict) -> bytes:
-    """Add a vendor/ tree to the release tarball, deterministically.
+def _cargo_vendored_transform(source: bytes, top: str, crates: dict, mtime: int) -> bytes:
+    """Add a vendor/ tree to a release tarball, deterministically.
 
-    The archive already lays out the source under prefixdevname-<version>/.
-    vendor/<crate>-<version>/ is appended for each Cargo.lock crate with its
-    .cargo-checksum.json, exactly as `cargo vendor --versioned-dirs` lays it
-    out. Every member is stamped with a fixed mtime and zero ownership, so the
-    same inputs always produce the same bytes.
+    The archive already lays out the source under <top>/. Its compression is
+    detected, so a .tar.gz and a .tar.xz release both work.
+    vendor/<crate>-<version>/ is appended for each crate the release root's
+    Cargo.lock pins, with its .cargo-checksum.json, exactly as
+    `cargo vendor --versioned-dirs` lays it out. Every member is stamped with
+    a fixed mtime and zero ownership, so the same inputs always produce the
+    same bytes.
     """
-    top = f"prefixdevname-{version}"
     raw = io.BytesIO()
-    with tarfile.open(fileobj=io.BytesIO(source), mode="r:gz") as src, \
+    with tarfile.open(fileobj=io.BytesIO(source), mode="r:*") as src, \
             tarfile.open(fileobj=raw, mode="w", format=tarfile.PAX_FORMAT) as result:
         members = sorted(src.getmembers(), key=lambda m: m.name.rstrip("/"))
         lock_member = src.getmember(f"{top}/Cargo.lock")
@@ -1116,20 +1121,50 @@ def _prefixdevname_transform(source: bytes, version: str, crates: dict) -> bytes
             member.uid = member.gid = 0
             member.uname = member.gname = ""
             member.pax_headers = {}
-            member.mtime = PREFIXDEVNAME_MTIME
+            member.mtime = mtime
             result.addfile(member, src.extractfile(member) if member.isreg() else None)
         vendor = tarfile.TarInfo(f"{top}/vendor")
         vendor.type = tarfile.DIRTYPE
         vendor.mode = 0o755
-        vendor.mtime = PREFIXDEVNAME_MTIME
+        vendor.mtime = mtime
         result.addfile(vendor)
         for crate in cargo_lock_packages(lock_text):
             payload = crates[(crate["name"], crate["version"])]
-            for info, data in _vendored_crate_members(crate, payload, f"{top}/vendor", PREFIXDEVNAME_MTIME):
+            for info, data in _vendored_crate_members(crate, payload, f"{top}/vendor", mtime):
                 result.addfile(info, io.BytesIO(data) if data is not None else None)
     out = io.BytesIO()
     _xz_compress_stream(iter([raw.getvalue()]), out)
     return out.getvalue()
+
+
+def _cargo_vendored_generate(name: str, version: str, url: str, pin: str | None, out_dir: Path) -> Path:
+    """Fetch a pinned release, then every crate its root Cargo.lock pins, and vendor them.
+
+    The release is checked against its SHA-512 pin before any crate is
+    downloaded, and each crate against its Cargo.lock SHA-256, so nothing
+    reaches the output that was not pinned. Nothing is written on a mismatch.
+    """
+    if pin is None:
+        raise RuntimeError(f"no pinned input SHA-512 for {name} {version}")
+    archive = _fetch(url)
+    actual = hashlib.sha512(archive).hexdigest()
+    if actual != pin:
+        raise RuntimeError(f"input archive mismatch for {url}: expected {pin}, got {actual}")
+    top = f"{name}-{version}"
+    with tarfile.open(fileobj=io.BytesIO(archive), mode="r:*") as source:
+        lock_member = source.getmember(f"{top}/Cargo.lock")
+        lock_text = source.extractfile(lock_member).read().decode()
+    crates = {
+        (crate["name"], crate["version"]): _fetch(CRATE_URL.format(**crate))
+        for crate in cargo_lock_packages(lock_text)
+    }
+    target = out_dir / f"{top}-vendored.tar.xz"
+    target.write_bytes(_cargo_vendored_transform(archive, top, crates, CARGO_VENDORED_MTIME))
+    return target
+
+
+def _prefixdevname_transform(source: bytes, version: str, crates: dict) -> bytes:
+    return _cargo_vendored_transform(source, f"prefixdevname-{version}", crates, PREFIXDEVNAME_MTIME)
 
 
 def _prefixdevname_metadata(package_dir: Path) -> dict:
@@ -1148,24 +1183,58 @@ def _prefixdevname_metadata(package_dir: Path) -> dict:
 
 def _prefixdevname_generate(package_dir: Path, out_dir: Path) -> Path:
     version = spec_version(package_dir, "prefixdevname.spec")
-    pin = PREFIXDEVNAME_INPUT_SHA512.get(version)
-    if pin is None:
-        raise RuntimeError(f"no pinned input SHA-512 for prefixdevname {version}")
-    url = PREFIXDEVNAME_UPSTREAM_URL.format(version=version)
-    archive = _fetch(url)
-    actual = hashlib.sha512(archive).hexdigest()
-    if actual != pin:
-        raise RuntimeError(f"input archive mismatch for {url}: expected {pin}, got {actual}")
-    with tarfile.open(fileobj=io.BytesIO(archive), mode="r:gz") as source:
-        lock_member = source.getmember(f"prefixdevname-{version}/Cargo.lock")
-        lock_text = source.extractfile(lock_member).read().decode()
-    crates = {
-        (crate["name"], crate["version"]): _fetch(CRATE_URL.format(**crate))
-        for crate in cargo_lock_packages(lock_text)
+    return _cargo_vendored_generate(
+        "prefixdevname",
+        version,
+        PREFIXDEVNAME_UPSTREAM_URL.format(version=version),
+        PREFIXDEVNAME_INPUT_SHA512.get(version),
+        out_dir,
+    )
+
+
+# --- gst-thumbnailers ----------------------------------------------------------
+
+# Hummingbird ships no Rust crate RPMs, so the recipe cannot resolve gtk-rs,
+# clap or libglycin-rebind from the buildroot (#527). The GNOME release already
+# carries a Cargo.lock that pins every dependency to a crates.io checksum, so
+# the factory vendors exactly that set beside the release, as prefixdevname
+# does. The release itself is pinned here so a re-rolled tarball fails closed.
+GST_THUMBNAILERS_UPSTREAM_URL = (
+    "https://download.gnome.org/sources/gst-thumbnailers/{major_minor}/gst-thumbnailers-{version}.tar.xz"
+)
+GST_THUMBNAILERS_INPUT_SHA512 = {
+    "1.1.0": "6498ba5824c771359b7b18d1a522459c9b899b7f64fcd99575a94d79810aa9122e158130fc5422b77c2439119af5d6767ec27b01a89e892d21143ca7748a2030",
+}
+
+
+def _gst_thumbnailers_url(version: str) -> str:
+    major_minor = ".".join(version.split(".")[:2])
+    return GST_THUMBNAILERS_UPSTREAM_URL.format(major_minor=major_minor, version=version)
+
+
+def _gst_thumbnailers_metadata(package_dir: Path) -> dict:
+    version = spec_version(package_dir, "gst-thumbnailers.spec")
+    return {
+        "name": "gst-thumbnailers",
+        "version": version,
+        "filename": f"gst-thumbnailers-{version}-vendored.tar.xz",
+        "generate": {
+            "script": SCRIPT_PATH,
+            "input": f"{_gst_thumbnailers_url(version)} (sha512-pinned) and every crates.io crate its Cargo.lock pins (sha256-pinned by Cargo.lock)",
+            "method": f"add vendor/<crate>-<version> for each Cargo.lock crate with .cargo-checksum.json, as cargo vendor --versioned-dirs lays it out, and repack deterministically as gst-thumbnailers-{version}-vendored.tar.xz",
+        },
     }
-    target = out_dir / f"prefixdevname-{version}-vendored.tar.xz"
-    target.write_bytes(_prefixdevname_transform(archive, version, crates))
-    return target
+
+
+def _gst_thumbnailers_generate(package_dir: Path, out_dir: Path) -> Path:
+    version = spec_version(package_dir, "gst-thumbnailers.spec")
+    return _cargo_vendored_generate(
+        "gst-thumbnailers",
+        version,
+        _gst_thumbnailers_url(version),
+        GST_THUMBNAILERS_INPUT_SHA512.get(version),
+        out_dir,
+    )
 
 
 # --- git-archive tag sources -----------------------------------------------------
@@ -1266,6 +1335,7 @@ METADATA = {
     "hplip": _hplip_metadata,
     "openal-soft": _openal_soft_metadata,
     "prefixdevname": _prefixdevname_metadata,
+    "gst-thumbnailers": _gst_thumbnailers_metadata,
     "freerdp": _freerdp_metadata,
     "fpaste": _fpaste_metadata,
     "7zip": _sevenzip_metadata,
@@ -1281,6 +1351,7 @@ GENERATORS = {
     "gpm": _gpm_generate,
     "openal-soft": _openal_soft_generate,
     "prefixdevname": _prefixdevname_generate,
+    "gst-thumbnailers": _gst_thumbnailers_generate,
     "freerdp": _freerdp_generate,
     "fpaste": _fpaste_generate,
     "7zip": _sevenzip_generate,

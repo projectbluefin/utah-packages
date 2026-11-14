@@ -1,0 +1,26 @@
+From 2796339b77d5758705a566ef4ba10c0a9645856a Mon Sep 17 00:00:00 2001
+From: Fabio Valentini <decathorpe@gmail.com>
+Date: Wed, 11 Mar 2026 19:54:19 +0100
+Subject: [PATCH 2/3] cargo: drop benchmarks and benchmark-only dependencies
+
+---
+ Cargo.toml | 6 ------
+ 1 file changed, 6 deletions(-)
+
+diff --git a/Cargo.toml b/Cargo.toml
+index f336668..7c66722 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -24,9 +24,3 @@ clap = { version = "4.5.51", default-features = false, features = [
+ gly = { version = "0.1.0", package = "libglycin-rebind" }
+ image = { version = "0.25.8", default-features = false }
+ 
+-[dev-dependencies]
+-criterion = "0.8.0"
+-
+-[[bench]]
+-name = "benchmark"
+-harness = false
+-- 
+2.55.0
+

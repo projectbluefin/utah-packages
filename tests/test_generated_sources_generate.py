@@ -599,6 +599,91 @@ class PrefixdevnameGenerateTests(PackageDirMixin, unittest.TestCase):
         self.assertEqual(list(self.out_dir.iterdir()), [])
 
 
+
+def tarxz(members: dict[str, bytes]) -> bytes:
+    raw = io.BytesIO()
+    with tarfile.open(fileobj=raw, mode="w:xz") as archive:
+        for name, data in members.items():
+            info = tarfile.TarInfo(name)
+            info.size = len(data)
+            info.mtime = 1700000000
+            archive.addfile(info, io.BytesIO(data))
+    return raw.getvalue()
+
+
+class GstThumbnailersGenerateTests(PackageDirMixin, unittest.TestCase):
+    """The GNOME release is a .tar.xz under a major.minor directory (#527)."""
+
+    VERSION = "1.1.0"
+    TOP = f"gst-thumbnailers-{VERSION}"
+    ARCHIVE_URL = f"https://download.gnome.org/sources/gst-thumbnailers/1.1/{TOP}.tar.xz"
+
+    def setUp(self):
+        super().setUp()
+        self.write_spec("gst-thumbnailers.spec", self.VERSION)
+        self.crate = targz({"tinycrate-1.0.0/src/lib.rs": b"//"})
+        lock = (
+            f'[[package]]\nname = "gst-thumbnailers"\nversion = "{self.VERSION}"\n\n'
+            f'[[package]]\nname = "tinycrate"\nversion = "1.0.0"\nsource = "{CRATES_IO}"\n'
+            f'checksum = "{hashlib.sha256(self.crate).hexdigest()}"\n'
+        )
+        self.archive = tarxz({f"{self.TOP}/Cargo.lock": lock.encode(), f"{self.TOP}/meson.build": b"project()"})
+        self.crate_url = "https://static.crates.io/crates/tinycrate/tinycrate-1.0.0.crate"
+
+    def test_metadata_names_the_generated_vendored_archive(self):
+        entry = generated_sources.metadata_for("gst-thumbnailers", self.package_dir)
+        self.assertEqual(entry["filename"], f"{self.TOP}-vendored.tar.xz")
+        self.assertEqual(entry["generate"]["script"], generated_sources.SCRIPT_PATH)
+        self.assertIn(self.ARCHIVE_URL, entry["generate"]["input"])
+
+    def test_an_unpinned_version_fails_before_any_download(self):
+        self.write_spec("gst-thumbnailers.spec", "0.0.1")
+        with patch.object(generated_sources, "_fetch") as fetch:
+            with self.assertRaisesRegex(RuntimeError, "no pinned input SHA-512 for gst-thumbnailers 0.0.1"):
+                generated_sources.generate("gst-thumbnailers", self.package_dir, self.out_dir)
+        fetch.assert_not_called()
+
+    def test_a_rerolled_release_fails_closed_before_any_crate_download(self):
+        fetch = UrlopenRecorder({self.ARCHIVE_URL: self.archive})
+        with patch.object(generated_sources.urllib.request, "urlopen", fetch):
+            with self.assertRaisesRegex(RuntimeError, f"input archive mismatch for {self.ARCHIVE_URL}"):
+                generated_sources.generate("gst-thumbnailers", self.package_dir, self.out_dir)
+        self.assertEqual([url for url, _, _ in fetch.requests], [self.ARCHIVE_URL])
+        self.assertEqual(list(self.out_dir.iterdir()), [])
+
+    def test_the_pinned_release_and_its_locked_crates_are_vendored(self):
+        fetch = UrlopenRecorder({self.ARCHIVE_URL: self.archive, self.crate_url: self.crate})
+        with patch.object(generated_sources.urllib.request, "urlopen", fetch), \
+                patch.dict(generated_sources.GST_THUMBNAILERS_INPUT_SHA512, {self.VERSION: sha512(self.archive)}):
+            target = generated_sources.generate("gst-thumbnailers", self.package_dir, self.out_dir)
+        self.assertEqual(target.name, f"{self.TOP}-vendored.tar.xz")
+        self.assertEqual([url for url, _, _ in fetch.requests], [self.ARCHIVE_URL, self.crate_url])
+        with tarfile.open(fileobj=io.BytesIO(lzma.decompress(target.read_bytes()))) as archive:
+            names = archive.getnames()
+            self.assertIn(f"{self.TOP}/meson.build", names)
+            self.assertIn(f"{self.TOP}/vendor/tinycrate-1.0.0/src/lib.rs", names)
+            self.assertIn(f"{self.TOP}/vendor/tinycrate-1.0.0/.cargo-checksum.json", names)
+            self.assertEqual({m.mtime for m in archive.getmembers()}, {generated_sources.CARGO_VENDORED_MTIME})
+
+    def test_generation_is_byte_reproducible(self):
+        outputs = []
+        for run in range(2):
+            fetch = UrlopenRecorder({self.ARCHIVE_URL: self.archive, self.crate_url: self.crate})
+            with patch.object(generated_sources.urllib.request, "urlopen", fetch), \
+                    patch.dict(generated_sources.GST_THUMBNAILERS_INPUT_SHA512, {self.VERSION: sha512(self.archive)}):
+                target = generated_sources.generate("gst-thumbnailers", self.package_dir, self.out_dir / str(run))
+            outputs.append(target.read_bytes())
+        self.assertEqual(outputs[0], outputs[1])
+
+    def test_a_substituted_crate_download_fails_closed(self):
+        fetch = UrlopenRecorder({self.ARCHIVE_URL: self.archive, self.crate_url: targz({"tinycrate-1.0.0/x": b"evil"})})
+        with patch.object(generated_sources.urllib.request, "urlopen", fetch), \
+                patch.dict(generated_sources.GST_THUMBNAILERS_INPUT_SHA512, {self.VERSION: sha512(self.archive)}):
+            with self.assertRaisesRegex(RuntimeError, "crate tinycrate 1.0.0: expected sha256"):
+                generated_sources.generate("gst-thumbnailers", self.package_dir, self.out_dir)
+        self.assertEqual(list(self.out_dir.iterdir()), [])
+
+
 class CliTests(unittest.TestCase):
     def run_main(self, argv):
         stdout, stderr = io.StringIO(), io.StringIO()
