@@ -320,6 +320,13 @@
       "sha512": "4ccbef47255bf3644a50242a79951b1f3720e71a55eb1e07dc6b8486df0245da99a77bba751b50197d489b4c5d738e5284aabc014c2f7f44816ddf6a1bb807ca"
     },
     {
+      "name": "bindfs",
+      "version": "1.18.4",
+      "url": "https://bindfs.org/downloads/bindfs-1.18.4.tar.gz",
+      "filename": "bindfs-1.18.4.tar.gz",
+      "sha512": "1fedfcd082980180ccdd684478cc5308f4ea3fa541af12b5aef0b75fb0ec5b285009c4b783fc3cd5550505a83baf015e243f88eb322540d0f82e1952babc799a"
+    },
+    {
       "name": "bison",
       "version": "3.8.2",
       "url": "https://ftp.gnu.org/gnu/bison/bison-3.8.2.tar.xz",
@@ -4555,6 +4562,13 @@
       "sha512": "c320c90e01377651fdff3aa9c373b9013f142fab23810d821174e546716ef2fa6499a805728710c67ca7fe238679111df392754c24ea4e01768faa5535ac7db2"
     },
     {
+      "name": "nethogs",
+      "version": "0.9.0",
+      "url": "https://github.com/raboof/nethogs/archive/v0.9.0/nethogs-0.9.0.tar.gz",
+      "filename": "nethogs-0.9.0.tar.gz",
+      "sha512": "33b75e41dcc21126ca46835d086e2848ac5daf8ab2b3291e2c9496c2460a43897f980c6b7ad8bca55bb9882e98492af7aafd7f456bee12b0e460cdc2c06e18e0"
+    },
+    {
       "name": "nfs-utils",
       "version": "2.9.2",
       "url": "https://www.kernel.org/pub/linux/utils/nfs-utils/2.9.2/nfs-utils-2.9.2.tar.xz",
@@ -6425,6 +6439,13 @@
       "url": "https://github.com/tpm2-software/tpm2-tools/releases/download/5.8/tpm2-tools-5.8.tar.gz",
       "filename": "tpm2-tools-5.8.tar.gz",
       "sha512": "0bea68505a773f75476a1e0ea2abd8336a16f0b8900006512a81019708f04b50dbb7960922b37821278825305d33e042f82da2125e7409dacbd139cd52474e82"
+    },
+    {
+      "name": "trace-cmd",
+      "version": "3.4",
+      "url": "https://git.kernel.org/pub/scm/utils/trace-cmd/trace-cmd.git/snapshot/trace-cmd-v3.4.tar.gz",
+      "filename": "trace-cmd-v3.4.tar.gz",
+      "sha512": "b237a5e60e71a882b7fd559d130cbf6e076c51f548292f3226d30a50591c5306de60ac5f664268b7d8f9f104353bc509b5bd4d7903a5db2e020570674b7712e7"
     },
     {
       "name": "traceroute",
