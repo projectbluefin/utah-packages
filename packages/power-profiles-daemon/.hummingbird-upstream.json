@@ -1,0 +1,8 @@
+{
+  "package": "power-profiles-daemon",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/power-profiles-daemon.git",
+  "commit": "2d2ba14c709bddbf97448a0031217af18cdfc49d",
+  "tree": "ff00a8169d6cf4966ff5b3d6aabff3e4ff4f5315",
+  "imported_at": "2026-11-14T19:03:36.149278+00:00"
+}

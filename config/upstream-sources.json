@@ -5051,6 +5051,13 @@
       "sha512": "7e347a174109b661a685bcd617cc8fe00929c6fbf28f142fd7709a8ddbb9b5ed6e805be6647a44b4b9441b79e3474561de6f8e351b4ffc024952ed3e0e27ac1c"
     },
     {
+      "name": "power-profiles-daemon",
+      "version": "0.30",
+      "url": "https://gitlab.freedesktop.org/upower/power-profiles-daemon/-/archive/0.30/power-profiles-daemon-0.30.tar.bz2",
+      "filename": "power-profiles-daemon-0.30.tar.bz2",
+      "sha512": "91ff790aa7f9fb0004d112f9c2f28de55f9985d5fbed15ebf1d15722ff0c007ebc89407ba38e88016745162b0ca7058540ed276b372efbefdd6b2e23408c89dc"
+    },
+    {
       "name": "powerstat",
       "version": "0.04.05",
       "url": "https://github.com/ColinIanKing/powerstat/archive/V0.04.05/powerstat-V0.04.05.tar.gz",
