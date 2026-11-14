@@ -1,0 +1,38 @@
+* Fri Jun 19 2026 Simone Caronni <negativo17@gmail.com> - 1.0.0.101^git20260611.bbf6cf0-9
+- Update to latest snapshot.
+
+* Sat May 09 2026 Simone Caronni <negativo17@gmail.com> - 1.0.0.101^git20260123.39e7bd0-8
+- Update to latest snapshot.
+
+* Tue Feb 17 2026 Simone Caronni <negativo17@gmail.com> - 1.0.0.101^git20260123.e0ab314-7
+- Update to latest snapshot.
+
+* Fri Jan 16 2026 Simone Caronni <negativo17@gmail.com> - 1.0.0.101^git20251216.daf01bc-6
+- Update to latest snapshot.
+
+* Wed Nov 26 2025 Simone Caronni <negativo17@gmail.com> - 1.0.0.101^git20251018.4d7e6c1-5
+- Update to latest snapshot.
+
+* Fri Oct 17 2025 Simone Caronni <negativo17@gmail.com> - 1.0.0.101^git20250927.d3f7cd6-4
+- Update to latest snapshot.
+
+* Fri Jul 25 2025 Fedora Release Engineering <releng@fedoraproject.org> - 1.0.0.101^git20240522.e2971e4-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_43_Mass_Rebuild
+
+* Tue Mar 18 2025 Shawn W. Dunn <sfalken@cloverleaf-linux.org> - 1.0.0.101^git20240522.e2971e4-2
+- Added Conditional to fix FTBFS on epel8 and epel9
+
+* Mon Mar 17 2025 Shawn W. Dunn <sfalken@cloverleaf-linux.org> - 1.0.0.101^git20240522.e2971e4-1
+- Update to 1.0.0.101^git20240522.e2971e4-1
+
+* Mon Mar 17 2025 Simone Caronni <negativo17@gmail.com> - 1.0.0.100^git20240522.e2971e4-4
+- Small cosmetic changes.
+
+* Mon Mar 17 2025 Simone Caronni <negativo17@gmail.com> - 1.0.0.100^git20240522.0.e2971e4-3
+- Temporarily provide/obsolete RPMFusion's equivalent i686 package.
+
+* Sat Mar 15 2025 Shawn W. Dunn <sfalken@cloverleaf-linux.org> - 1.0.0.100^git20240522.0.e2971e4-2
+- Updated description to remove outdated information
+
+* Fri Mar 7 2025 Shawn W. Dunn <sfalken@cloverleaf-linux.org> 1.0.0.100^git20240522.0.e2971e4-1
+- new package

@@ -256,6 +256,12 @@ packages:
     downstream_package_name: borgbackup
     paths:
       - packages/borgbackup
+  bpftop:
+    specfile_path: bpftop.spec
+    upstream_package_name: bpftop
+    downstream_package_name: bpftop
+    paths:
+      - packages/bpftop
   braille-printer-app:
     specfile_path: braille-printer-app.spec
     upstream_package_name: braille-printer-app
@@ -3994,6 +4000,12 @@ packages:
     downstream_package_name: startup-notification
     paths:
       - packages/startup-notification
+  steam-devices:
+    specfile_path: steam-devices.spec
+    upstream_package_name: steam-devices
+    downstream_package_name: steam-devices
+    paths:
+      - packages/steam-devices
   stix-fonts:
     specfile_path: stix-fonts.spec
     upstream_package_name: stix-fonts
