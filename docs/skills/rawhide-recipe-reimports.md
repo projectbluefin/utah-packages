@@ -18,6 +18,11 @@ metadata:
 dispatch-based gate needs, because a `GITHUB_TOKEN` pull request triggers no
 `pull_request` runs of its own.
 
+The no-queue landing workflow updates a behind daily branch only with the
+previously built head as its expected SHA, then dispatches a new gate. The
+merge commit needs its own package build verdict; the old verdict cannot
+authorize it.
+
 ## What counts as a move
 
 Koji, not dist-git. For every recipe whose `.hummingbird-upstream.json` says

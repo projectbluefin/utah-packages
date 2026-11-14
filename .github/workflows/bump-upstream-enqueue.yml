@@ -94,6 +94,7 @@ jobs:
           repositories: ${{ github.event.repository.name }}
           permission-contents: write
           permission-pull-requests: write
+          permission-actions: write
       - name: Enqueue the built head or merge it once when no queue exists
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
@@ -109,7 +110,7 @@ jobs:
             repository(owner: $owner, name: $name) {
               mergeQueue(branch: "main") { id }
               pullRequest(number: $pr) {
-                id state baseRefName headRefOid isCrossRepository
+                id state baseRefName headRefName headRefOid isCrossRepository mergeStateStatus
               }
             }
           }
@@ -139,6 +140,28 @@ jobs:
             jq -e '((.errors // []) | length == 0) and
               (.data.enqueuePullRequest.mergeQueueEntry.id | type == "string" and length > 0)' enqueued.json > /dev/null
           else
+            if jq -e '.data.repository.pullRequest.mergeStateStatus == "BEHIND"' landing.json > /dev/null; then
+              branch=$(jq -r .data.repository.pullRequest.headRefName landing.json)
+              case "$branch" in bump/upstream-sources|bump/rawhide-imports) ;; *) exit 1 ;; esac
+              # GitHub checks the old head atomically. Never reuse its build
+              # verdict for the merge commit created by update-branch.
+              gh api --method PUT "repos/$REPOSITORY/pulls/$PR/update-branch" \
+                -f expected_head_sha="$SHA" > updated.json
+              for _ in $(seq 1 30); do
+                gh pr view "$PR" -R "$REPOSITORY" \
+                  --json state,headRefName,headRefOid,isCrossRepository > current.json
+                jq -e --arg branch "$branch" '.state == "OPEN" and .headRefName == $branch
+                  and (.isCrossRepository | not)' current.json > /dev/null
+                head=$(jq -r .headRefOid current.json)
+                if [ "$head" != "$SHA" ]; then
+                  gh workflow run bump-upstream-gate.yml -R "$REPOSITORY" --ref "$branch" -f pr="$PR"
+                  exit 0
+                fi
+                sleep 2
+              done
+              echo "::error::update-branch did not produce a new head" >&2
+              exit 1
+            fi
             gh pr checks "$PR" -R "$REPOSITORY" --required --watch
             # A single SHA-pinned merge, never durable auto-merge: tomorrow's
             # daily branch head must earn its own named-package build verdict.

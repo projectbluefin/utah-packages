@@ -608,8 +608,10 @@ class EnqueueBehaviorTests(unittest.TestCase):
             "    f.write(json.dumps({'args': args, 'token': os.environ.get('GH_TOKEN')}) + '\\n')\n"
             "if args[:2] == ['pr', 'checks']:\n"
             "    sys.exit(int(os.environ.get('CHECKS_EXIT', '0')))\n"
+            "if args[:2] == ['workflow', 'run']:\n"
+            "    sys.exit(0)\n"
             "if args[:2] == ['pr', 'view']:\n"
-            "    print(os.environ['CURRENT_HEAD'])\n"
+            "    print(os.environ.get('CURRENT_PR', os.environ.get('CURRENT_HEAD', '')))\n"
             "    sys.exit(0)\n"
             "if any(arg.endswith('/dispatches') for arg in args):\n"
             "    (root / 'dispatch.json').write_text(sys.stdin.read())\n"
@@ -627,6 +629,11 @@ class EnqueueBehaviorTests(unittest.TestCase):
             "        if os.environ.get('DISCOVERY_EXIT'):\n"
             "            sys.exit(int(os.environ['DISCOVERY_EXIT']))\n"
             "        name = 'landing.json'\n"
+            "elif any(arg.endswith('/update-branch') for arg in args):\n"
+            "    if os.environ.get('UPDATE_EXIT'):\n"
+            "        sys.exit(int(os.environ['UPDATE_EXIT']))\n"
+            "    print('{}')\n"
+            "    sys.exit(0)\n"
             "elif any(arg.endswith('/merge') for arg in args):\n"
             "    name = 'merged.json'\n"
             "elif args[0] == 'api':\n"
@@ -766,6 +773,28 @@ class EnqueueBehaviorTests(unittest.TestCase):
                          ["api", "--method", "PUT", "repos/projectbluefin/utah-packages/pulls/42/merge",
                           "-f", f"sha={self.sha}", "-f", "merge_method=squash"])
         self.assertFalse(any("--auto" in call["args"] for call in calls))
+
+    def test_behind_head_is_updated_and_regated_not_merged(self) -> None:
+        self.landing["data"]["repository"]["mergeQueue"] = None
+        self.landing["data"]["repository"]["pullRequest"].update(
+            mergeStateStatus="BEHIND", headRefName="bump/upstream-sources")
+        self.env["CURRENT_PR"] = json.dumps({"state": "OPEN", "headRefName": "bump/upstream-sources",
+                                             "headRefOid": "f" * 40, "isCrossRepository": False})
+        result = self.run_landing()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        calls = self.calls()
+        self.assertTrue(any(f"expected_head_sha={self.sha}" in call["args"] for call in calls))
+        self.assertEqual(calls[-1]["args"][:3], ["workflow", "run", "bump-upstream-gate.yml"])
+        self.assertFalse(any("/merge" in arg for call in calls for arg in call["args"]))
+
+    def test_update_race_does_not_dispatch_or_merge(self) -> None:
+        self.landing["data"]["repository"]["mergeQueue"] = None
+        self.landing["data"]["repository"]["pullRequest"].update(
+            mergeStateStatus="BEHIND", headRefName="bump/upstream-sources")
+        self.env["UPDATE_EXIT"] = "1"
+        result = self.run_landing()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertFalse(any(call["args"][:2] == ["workflow", "run"] for call in self.calls()))
 
     def test_queue_discovery_error_never_falls_back_to_direct_merge(self) -> None:
         self.env["DISCOVERY_EXIT"] = "1"
