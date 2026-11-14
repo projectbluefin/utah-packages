@@ -372,6 +372,13 @@
       "sha512": "1303e334b32dd62847918920777ca47eec072974859f612d054fc516fdab56eea588d34ae2f71e9c0757486769dd5ba057d5c6bb05294f40ff52a8b41f7e5801"
     },
     {
+      "name": "bpftop",
+      "version": "0.9.1",
+      "url": "https://github.com/jfernandez/bpftop/archive/v0.9.1/bpftop-0.9.1.tar.gz",
+      "filename": "bpftop-0.9.1.tar.gz",
+      "sha512": "5c179efb723d5188a72bc7aae621a28137cc1156f698bf52740652594245a76cc7391d3593688bc5d6677154e32047aace9dd53b44b24125646416c15c03eeb3"
+    },
+    {
       "name": "braille-printer-app",
       "version": "2.0~b0^386eea385f",
       "url": "https://github.com/OpenPrinting/braille-printer-app/archive/386eea385f4d672dded45abd602282a94e06e22c/braille-printer-app-386eea385f4d672dded45abd602282a94e06e22c.tar.gz",
