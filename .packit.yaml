@@ -394,6 +394,12 @@ packages:
     downstream_package_name: cups-pk-helper
     paths:
       - packages/cups-pk-helper
+  dakota-config:
+    specfile_path: dakota-config.spec
+    upstream_package_name: dakota-config
+    downstream_package_name: dakota-config
+    paths:
+      - packages/dakota-config
   davfs2:
     specfile_path: davfs2.spec
     upstream_package_name: davfs2
@@ -898,6 +904,12 @@ packages:
     downstream_package_name: gnome-online-accounts
     paths:
       - packages/gnome-online-accounts
+  gnome-os-config:
+    specfile_path: gnome-os-config.spec
+    upstream_package_name: gnome-os-config
+    downstream_package_name: gnome-os-config
+    paths:
+      - packages/gnome-os-config
   gnome-ponytail-daemon:
     specfile_path: gnome-ponytail-daemon.spec
     upstream_package_name: gnome-ponytail-daemon
