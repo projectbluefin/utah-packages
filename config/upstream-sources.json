@@ -320,6 +320,13 @@
       "sha512": "4ccbef47255bf3644a50242a79951b1f3720e71a55eb1e07dc6b8486df0245da99a77bba751b50197d489b4c5d738e5284aabc014c2f7f44816ddf6a1bb807ca"
     },
     {
+      "name": "bindfs",
+      "version": "1.18.4",
+      "url": "https://bindfs.org/downloads/bindfs-1.18.4.tar.gz",
+      "filename": "bindfs-1.18.4.tar.gz",
+      "sha512": "1fedfcd082980180ccdd684478cc5308f4ea3fa541af12b5aef0b75fb0ec5b285009c4b783fc3cd5550505a83baf015e243f88eb322540d0f82e1952babc799a"
+    },
+    {
       "name": "bison",
       "version": "3.8.2",
       "url": "https://ftp.gnu.org/gnu/bison/bison-3.8.2.tar.xz",
