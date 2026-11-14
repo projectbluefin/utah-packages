@@ -1,0 +1,8 @@
+{
+  "package": "tiptop",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/tiptop.git",
+  "commit": "39d3d44672469adef67f5151eb054242daa2b486",
+  "tree": "e6a2f03c3eedef7296d4f9565554350e09acc9d1",
+  "imported_at": "2026-11-14T20:27:29.375803+00:00"
+}
