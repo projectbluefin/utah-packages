@@ -7199,6 +7199,13 @@
       ]
     },
     {
+      "name": "ydotool",
+      "version": "1.0.4",
+      "url": "https://github.com/ReimuNotMoe/ydotool/archive/v1.0.4/ydotool-1.0.4.tar.gz",
+      "filename": "ydotool-1.0.4.tar.gz",
+      "sha512": "bbf66d752aa1dce9173c930e3a71bc277b330763b1aa0e38f9fec1976c282c64330251ba5abe222a991f4bcafbabf1312a940eb4b40a34bf99f628c2a41bc4a2"
+    },
+    {
       "name": "yelp",
       "version": "49.2",
       "url": "https://download.gnome.org/sources/yelp/49/yelp-49.2.tar.xz",
