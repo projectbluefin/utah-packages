@@ -1,0 +1,8 @@
+{
+  "package": "nss-mdns",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/nss-mdns.git",
+  "commit": "d228810eb1891be7547f28ce245d6fe999c004f6",
+  "tree": "53af62c3cd754feb663a8e37fc368b78f22f8e39",
+  "imported_at": "2026-11-14T20:28:19.204078+00:00"
+}
