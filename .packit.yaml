@@ -4006,6 +4006,12 @@ packages:
     downstream_package_name: startup-notification
     paths:
       - packages/startup-notification
+  steam-devices:
+    specfile_path: steam-devices.spec
+    upstream_package_name: steam-devices
+    downstream_package_name: steam-devices
+    paths:
+      - packages/steam-devices
   stix-fonts:
     specfile_path: stix-fonts.spec
     upstream_package_name: stix-fonts
