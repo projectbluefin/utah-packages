@@ -741,6 +741,13 @@
       "sha512": "0aebd255d589637d0947f8832a194457f561e6000fbfdcff57e487f85203b5ddc77458d1eaad84fd8765052264ff2d9b1dbaf5fbce0ca194aa097f4944b302db"
     },
     {
+      "name": "erofs-utils",
+      "version": "1.9.4",
+      "url": "https://git.kernel.org/pub/scm/linux/kernel/git/xiang/erofs-utils.git/snapshot/erofs-utils-1.9.4.tar.gz",
+      "filename": "erofs-utils-1.9.4.tar.gz",
+      "sha512": "c78fb83a206fa1a313eae3c54134f892a6eafc6839ee689457c5d4b1f5a7d399f9475a160a9c9173221944e8823e665eecfc0d72b2b2a1563250646d091a9176"
+    },
+    {
       "name": "espeak-ng",
       "version": "1.52.0",
       "url": "https://github.com/espeak-ng/espeak-ng/archive/1.52.0/espeak-ng-1.52.0.tar.gz",
@@ -6307,6 +6314,13 @@
       ]
     },
     {
+      "name": "syncthing",
+      "version": "2.1.7",
+      "url": "https://github.com/syncthing/syncthing/archive/v2.1.7/syncthing-2.1.7.tar.gz",
+      "filename": "syncthing-2.1.7.tar.gz",
+      "sha512": "82a89471f8cfab73b90a06a1420344b8722a8ff39d6648cb371651607d87a480fdccca6fdf8c9c931acc2ac860e295c0db700e876cf46943ac96802839c86e56"
+    },
+    {
       "name": "sysstat",
       "version": "12.8.0",
       "url": "https://github.com/sysstat/sysstat/archive/v12.8.0.tar.gz",
@@ -7197,6 +7211,13 @@
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/xvidcore/xvidcore-1.3.7.tar.bz2/sha512/e2b22e7a7e103af7adcc999d95484f991a0a33df02b912fe042b2e23d2af07381c737d23158dbf0fad770ee680572f86fbe04ab2ef33c81e2e0180ead2acc8ed/xvidcore-1.3.7.tar.bz2"
       ]
+    },
+    {
+      "name": "ydotool",
+      "version": "1.0.4",
+      "url": "https://github.com/ReimuNotMoe/ydotool/archive/v1.0.4/ydotool-1.0.4.tar.gz",
+      "filename": "ydotool-1.0.4.tar.gz",
+      "sha512": "bbf66d752aa1dce9173c930e3a71bc277b330763b1aa0e38f9fec1976c282c64330251ba5abe222a991f4bcafbabf1312a940eb4b40a34bf99f628c2a41bc4a2"
     },
     {
       "name": "yelp",

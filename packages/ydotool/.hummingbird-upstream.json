@@ -1,0 +1,8 @@
+{
+  "package": "ydotool",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/ydotool.git",
+  "commit": "b1be0070d91055525dd8bed48161ddcb90c1b847",
+  "tree": "051e065fd92ba9b94a6327e8214aec61510ca8b6",
+  "imported_at": "2026-11-14T20:27:14.378385+00:00"
+}

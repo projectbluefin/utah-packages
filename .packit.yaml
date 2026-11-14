@@ -502,6 +502,12 @@ packages:
     downstream_package_name: enchant2
     paths:
       - packages/enchant2
+  erofs-utils:
+    specfile_path: erofs-utils.spec
+    upstream_package_name: erofs-utils
+    downstream_package_name: erofs-utils
+    paths:
+      - packages/erofs-utils
   espeak-ng:
     specfile_path: espeak-ng.spec
     upstream_package_name: espeak-ng
@@ -4048,6 +4054,12 @@ packages:
     downstream_package_name: symlinks
     paths:
       - packages/symlinks
+  syncthing:
+    specfile_path: syncthing.spec
+    upstream_package_name: syncthing
+    downstream_package_name: syncthing
+    paths:
+      - packages/syncthing
   sysstat:
     specfile_path: sysstat.spec
     upstream_package_name: sysstat
@@ -4618,6 +4630,12 @@ packages:
     downstream_package_name: xvidcore
     paths:
       - packages/xvidcore
+  ydotool:
+    specfile_path: ydotool.spec
+    upstream_package_name: ydotool
+    downstream_package_name: ydotool
+    paths:
+      - packages/ydotool
   yelp:
     specfile_path: yelp.spec
     upstream_package_name: yelp
