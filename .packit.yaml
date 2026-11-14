@@ -4084,6 +4084,12 @@ packages:
     downstream_package_name: tinyxml2
     paths:
       - packages/tinyxml2
+  tiptop:
+    specfile_path: tiptop.spec
+    upstream_package_name: tiptop
+    downstream_package_name: tiptop
+    paths:
+      - packages/tiptop
   tmux:
     specfile_path: tmux.spec
     upstream_package_name: tmux
