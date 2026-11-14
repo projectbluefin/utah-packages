@@ -886,6 +886,13 @@
       ]
     },
     {
+      "name": "flatpak-builder",
+      "version": "1.4.12",
+      "url": "https://github.com/flatpak/flatpak-builder/releases/download/1.4.12/flatpak-builder-1.4.12.tar.xz",
+      "filename": "flatpak-builder-1.4.12.tar.xz",
+      "sha512": "3fe6bb774c7a25ef0779ca16a61753ee2d1763cc145a2f1284edfddbea686f2932f66b3dc7e60bff9af1528d60adf1004227659d2753c78cdf972b84ac90bcc2"
+    },
+    {
       "name": "flatpak-xdg-utils",
       "version": "1.0.6",
       "url": "https://github.com/flatpak/flatpak-xdg-utils/releases/download/1.0.6/flatpak-xdg-utils-1.0.6.tar.xz",
