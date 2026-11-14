@@ -3184,6 +3184,12 @@ packages:
     downstream_package_name: portaudio
     paths:
       - packages/portaudio
+  power-profiles-daemon:
+    specfile_path: power-profiles-daemon.spec
+    upstream_package_name: power-profiles-daemon
+    downstream_package_name: power-profiles-daemon
+    paths:
+      - packages/power-profiles-daemon
   powerstat:
     specfile_path: powerstat.spec
     upstream_package_name: powerstat
