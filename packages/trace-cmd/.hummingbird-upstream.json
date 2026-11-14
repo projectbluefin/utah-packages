@@ -1,0 +1,8 @@
+{
+  "package": "trace-cmd",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/trace-cmd.git",
+  "commit": "50829e5378c160545f1dcc881f84d4bbd507e60d",
+  "tree": "79f6fab64a909ab52c39fb70e34237b4f1c073ed",
+  "imported_at": "2026-11-14T20:27:42.060325+00:00"
+}
