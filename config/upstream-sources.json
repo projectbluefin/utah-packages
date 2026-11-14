@@ -2949,6 +2949,13 @@
       ]
     },
     {
+      "name": "liberation-fonts",
+      "version": "2.1.5",
+      "url": "https://github.com/liberationfonts/liberation-fonts/files/7261482/liberation-fonts-ttf-2.1.5.tar.gz",
+      "filename": "liberation-fonts-ttf-2.1.5.tar.gz",
+      "sha512": "b9f178fae43c9214ba6de36c6da613fcf59bd98084058afaaa9151d00f2406942bc360430be0a8f35ea6b5529146eef371c7cf75bdd7910403d449254f943fed"
+    },
+    {
       "name": "libev",
       "version": "4.33",
       "url": "https://dist.schmorp.de/libev/Attic/libev-4.33.tar.gz",
@@ -4553,6 +4560,13 @@
       "url": "https://downloads.sourceforge.net/project/net-snmp/net-snmp/5.9.5.2/net-snmp-5.9.5.2.tar.gz",
       "filename": "net-snmp-5.9.5.2.tar.gz",
       "sha512": "c320c90e01377651fdff3aa9c373b9013f142fab23810d821174e546716ef2fa6499a805728710c67ca7fe238679111df392754c24ea4e01768faa5535ac7db2"
+    },
+    {
+      "name": "nethogs",
+      "version": "0.9.0",
+      "url": "https://github.com/raboof/nethogs/archive/v0.9.0/nethogs-0.9.0.tar.gz",
+      "filename": "nethogs-0.9.0.tar.gz",
+      "sha512": "33b75e41dcc21126ca46835d086e2848ac5daf8ab2b3291e2c9496c2460a43897f980c6b7ad8bca55bb9882e98492af7aafd7f456bee12b0e460cdc2c06e18e0"
     },
     {
       "name": "nfs-utils",
@@ -6425,6 +6439,13 @@
       "url": "https://github.com/tpm2-software/tpm2-tools/releases/download/5.8/tpm2-tools-5.8.tar.gz",
       "filename": "tpm2-tools-5.8.tar.gz",
       "sha512": "0bea68505a773f75476a1e0ea2abd8336a16f0b8900006512a81019708f04b50dbb7960922b37821278825305d33e042f82da2125e7409dacbd139cd52474e82"
+    },
+    {
+      "name": "trace-cmd",
+      "version": "3.4",
+      "url": "https://git.kernel.org/pub/scm/utils/trace-cmd/trace-cmd.git/snapshot/trace-cmd-v3.4.tar.gz",
+      "filename": "trace-cmd-v3.4.tar.gz",
+      "sha512": "b237a5e60e71a882b7fd559d130cbf6e076c51f548292f3226d30a50591c5306de60ac5f664268b7d8f9f104353bc509b5bd4d7903a5db2e020570674b7712e7"
     },
     {
       "name": "traceroute",
