@@ -6434,6 +6434,13 @@
       "sha512": "0bea68505a773f75476a1e0ea2abd8336a16f0b8900006512a81019708f04b50dbb7960922b37821278825305d33e042f82da2125e7409dacbd139cd52474e82"
     },
     {
+      "name": "trace-cmd",
+      "version": "3.4",
+      "url": "https://git.kernel.org/pub/scm/utils/trace-cmd/trace-cmd.git/snapshot/trace-cmd-v3.4.tar.gz",
+      "filename": "trace-cmd-v3.4.tar.gz",
+      "sha512": "b237a5e60e71a882b7fd559d130cbf6e076c51f548292f3226d30a50591c5306de60ac5f664268b7d8f9f104353bc509b5bd4d7903a5db2e020570674b7712e7"
+    },
+    {
       "name": "traceroute",
       "version": "2.1.6",
       "url": "https://downloads.sourceforge.net/project/traceroute/traceroute/traceroute-2.1.6/traceroute-2.1.6.tar.gz",

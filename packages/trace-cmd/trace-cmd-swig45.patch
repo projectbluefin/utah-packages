@@ -1,0 +1,12 @@
+diff -up trace-cmd-v3.3.1/python/ctracecmd.i.swig45 trace-cmd-v3.3.1/python/ctracecmd.i
+--- trace-cmd-v3.3.1/python/ctracecmd.i.swig45	2026-07-28 10:30:15.183770171 +0200
++++ trace-cmd-v3.3.1/python/ctracecmd.i	2026-07-28 10:30:15.188043290 +0200
+@@ -218,7 +218,7 @@ static int python_callback(struct trace_
+ 	result = PyObject_Call(context, arglist, NULL);
+ 	Py_XDECREF(arglist);
+ 	if (result && result != Py_None) {
+-		if (!PyInt_Check(result)) {
++		if (!PyLong_Check(result)) {
+ 			PyErr_SetString(PyExc_TypeError,
+ 					"callback must return int");
+ 			PyErr_Print();

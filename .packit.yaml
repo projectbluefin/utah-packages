@@ -4126,6 +4126,12 @@ packages:
     downstream_package_name: tpm2-tools
     paths:
       - packages/tpm2-tools
+  trace-cmd:
+    specfile_path: trace-cmd.spec
+    upstream_package_name: trace-cmd
+    downstream_package_name: trace-cmd
+    paths:
+      - packages/trace-cmd
   traceroute:
     specfile_path: traceroute.spec
     upstream_package_name: traceroute
