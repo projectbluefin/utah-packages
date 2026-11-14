@@ -6371,6 +6371,13 @@
       ]
     },
     {
+      "name": "tiptop",
+      "version": "2.3.2",
+      "url": "https://files.inria.fr/pacap/tiptop/tiptop-2.3.2.tar.gz",
+      "filename": "tiptop-2.3.2.tar.gz",
+      "sha512": "98d69edbf7bcdee6bbf6dd2b21f1429b6417767187a8fb1553ba45659705815010362fb091e4166beab247439ee227df5feab5c49c8194ed9a7d29003b0c1ff0"
+    },
+    {
       "name": "tmux",
       "version": "3.8",
       "url": "https://github.com/tmux/tmux/archive/refs/tags/3.8.tar.gz",
