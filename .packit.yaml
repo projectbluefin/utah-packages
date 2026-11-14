@@ -220,6 +220,12 @@ packages:
     downstream_package_name: bcache-tools
     paths:
       - packages/bcache-tools
+  bindfs:
+    specfile_path: bindfs.spec
+    upstream_package_name: bindfs
+    downstream_package_name: bindfs
+    paths:
+      - packages/bindfs
   bison:
     specfile_path: bison.spec
     upstream_package_name: bison
