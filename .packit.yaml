@@ -4042,6 +4042,12 @@ packages:
     downstream_package_name: symlinks
     paths:
       - packages/symlinks
+  syncthing:
+    specfile_path: syncthing.spec
+    upstream_package_name: syncthing
+    downstream_package_name: syncthing
+    paths:
+      - packages/syncthing
   sysstat:
     specfile_path: sysstat.spec
     upstream_package_name: sysstat
@@ -4612,6 +4618,12 @@ packages:
     downstream_package_name: xvidcore
     paths:
       - packages/xvidcore
+  ydotool:
+    specfile_path: ydotool.spec
+    upstream_package_name: ydotool
+    downstream_package_name: ydotool
+    paths:
+      - packages/ydotool
   yelp:
     specfile_path: yelp.spec
     upstream_package_name: yelp
