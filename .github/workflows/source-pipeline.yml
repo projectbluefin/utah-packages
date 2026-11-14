@@ -7,16 +7,15 @@ on:
         description: Direct-upstream package name; leave empty for all configured packages
         required: false
   schedule:
-    - cron: '13,43 * * * *'
+    - cron: '13 */2 * * *'
 
 permissions:
   contents: read
 
-# Every run checks the same thing, so a newer run brings nothing an older one
-# lacks; cancelling only throws away a nearly finished check. When upstreams
-# are slow a run outlasts the 30-minute cron and, with cancellation, no run
-# ever finished (#445). GitHub keeps at most one pending run per group, so
-# letting the running one finish cannot pile runs up.
+# The periodic full-lock audit is a two-hour backstop; build and source-bump
+# workflows also verify their inputs before use. Let slow upstream checks finish
+# rather than cancel them on a newer invocation (#445). GitHub keeps at most one
+# pending run per group, so letting the running one finish cannot pile runs up.
 concurrency:
   group: source-pipeline
   cancel-in-progress: false

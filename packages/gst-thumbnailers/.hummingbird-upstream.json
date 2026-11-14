@@ -1,0 +1,8 @@
+{
+  "package": "gst-thumbnailers",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/gst-thumbnailers.git",
+  "commit": "82da00d0df47ff4209d4137e23ebbc27de4c8ac5",
+  "tree": "4e60fef9331641a244fe0984653956b7c428a7a4",
+  "imported_at": "2026-10-18T08:54:12.489969+00:00"
+}

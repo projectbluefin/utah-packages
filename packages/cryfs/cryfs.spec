@@ -2,8 +2,8 @@
 %global _cmake_shared_libs %{nil}
 
 Name:           cryfs
-Version:        0.11.4
-Release:        1%{?dist}
+Version:        0.11.3
+Release:        20%{?dist}
 Summary:        Cryptographic filesystem for the cloud
 # Automatically converted from old format: LGPLv3 - review is highly recommended.
 License:        LGPL-3.0-only
@@ -76,9 +76,6 @@ sed -i vendor/cryptopp/vendor_cryptopp/CMakeLists.txt \
 %{_mandir}/man1/%{name}.1.*
 
 %changelog
-* Sun Nov 08 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 0.11.4-1
-- Update to 0.11.4
-
 * Mon Aug 03 2026 Nicolas Chauvet <kwizart@gmail.com> - 0.11.3-20
 - Rebuilt for cryptopp-modern
 

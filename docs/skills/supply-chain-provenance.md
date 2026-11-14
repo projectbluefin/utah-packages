@@ -312,6 +312,21 @@ the first archive member ending in `Cargo.lock`. For `prefixdevname`, both
 dependency downloads and repacking use `prefixdevname-<version>/Cargo.lock`;
 an example or nested workspace lock must not select a different crate set.
 
+A Rust recipe Fedora vendors nowhere needs no Rust toolchain to vendor:
+`_cargo_vendored_generate` reproduces `cargo vendor --versioned-dirs` from the
+Cargo.lock in pure Python, checking each `.crate` against its lock checksum,
+so it runs anywhere `generated_sources.py` does. gst-thumbnailers (#527) is
+the second user after prefixdevname; its input is a GNOME `.tar.xz`, so the
+shared transform opens the release with `r:*`. Vendor the lock as released.
+A Fedora patch that moves a crate version (gst-thumbnailers' 0003 bumped
+libglycin-rebind for Rawhide's crate RPMs) would need a new lock, and only
+cargo can resolve one; drop such a patch when the released version still
+works against the factory's libraries, and say so in a `# Utah:` comment.
+A patch that only removes dependencies (0002 drops criterion) is fine: cargo
+prunes the lock offline. To move the version, add the new release's SHA-512
+to the recipe's `*_INPUT_SHA512` table, bump the spec, regenerate, and pin the
+new digest in both `sources` and the lock.
+
 ## A hand-repacked zstd source: generate xz, rename the Source
 
 When Fedora's repack script writes `.tar.zst` (7zip's
@@ -344,12 +359,14 @@ the exceptions are a list to shorten rather than a property to grep for.
 
 ## The scheduled verification run is never cancelled
 
-`.github/workflows/source-pipeline.yml` runs every 30 minutes over every
-lock. Keep `cancel-in-progress: false` and the job's `timeout-minutes`: with
-cancellation on, a slow-upstream day made each run outlast the cron tick and
-be cancelled by the next, so for hours no run reported a mismatch at all
-(#445). A newer run checks nothing an older one does not, and GitHub keeps
-only one pending run per group, so nothing piles up.
+`.github/workflows/source-pipeline.yml` runs every two hours over every lock;
+build and source-bump workflows also verify the sources they use. The periodic
+full-lock audit drops from 336 to 84 scheduled runs per week without changing
+package selection, digest/signature checks, or rejected-source reporting.
+Keep `cancel-in-progress: false` and the job's `timeout-minutes`: with
+cancellation on, a slow-upstream day made each run outlast the old 30-minute
+cron tick and be cancelled by the next, so for hours no run reported a mismatch
+at all (#445). GitHub keeps only one pending run per group, so nothing piles up.
 
 ## FIPS-mode OpenSSL refuses `hashlib.new('md5')`
 
