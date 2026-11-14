@@ -2908,6 +2908,12 @@ packages:
     downstream_package_name: noopenh264
     paths:
       - packages/noopenh264
+  nss-mdns:
+    specfile_path: nss-mdns.spec
+    upstream_package_name: nss-mdns
+    downstream_package_name: nss-mdns
+    paths:
+      - packages/nss-mdns
   ntfs-3g:
     specfile_path: ntfs-3g.spec
     upstream_package_name: ntfs-3g
