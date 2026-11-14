@@ -320,6 +320,13 @@
       "sha512": "4ccbef47255bf3644a50242a79951b1f3720e71a55eb1e07dc6b8486df0245da99a77bba751b50197d489b4c5d738e5284aabc014c2f7f44816ddf6a1bb807ca"
     },
     {
+      "name": "bindfs",
+      "version": "1.18.4",
+      "url": "https://bindfs.org/downloads/bindfs-1.18.4.tar.gz",
+      "filename": "bindfs-1.18.4.tar.gz",
+      "sha512": "1fedfcd082980180ccdd684478cc5308f4ea3fa541af12b5aef0b75fb0ec5b285009c4b783fc3cd5550505a83baf015e243f88eb322540d0f82e1952babc799a"
+    },
+    {
       "name": "bison",
       "version": "3.8.2",
       "url": "https://ftp.gnu.org/gnu/bison/bison-3.8.2.tar.xz",
@@ -6362,6 +6369,13 @@
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/tinyxml2/tinyxml2-11.0.0.tar.gz/sha512/8a6ddd48c96bc4287437d5b5ca62c131c4416c57310b664c9088ca9c1ac9f4d43d16c1bad03f82dc5588d9486752f510d631609a3930f1d4243f12184ad1c5f9/tinyxml2-11.0.0.tar.gz"
       ]
+    },
+    {
+      "name": "tiptop",
+      "version": "2.3.2",
+      "url": "https://files.inria.fr/pacap/tiptop/tiptop-2.3.2.tar.gz",
+      "filename": "tiptop-2.3.2.tar.gz",
+      "sha512": "98d69edbf7bcdee6bbf6dd2b21f1429b6417767187a8fb1553ba45659705815010362fb091e4166beab247439ee227df5feab5c49c8194ed9a7d29003b0c1ff0"
     },
     {
       "name": "tmux",
