@@ -17,7 +17,7 @@
 
 Name: satyr
 Version: 0.43
-Release: 14%{?dist}
+Release: 15%{?dist}
 Summary: Tools to create anonymous, machine-friendly problem reports
 License: GPL-2.0-or-later
 URL: https://github.com/abrt/satyr
