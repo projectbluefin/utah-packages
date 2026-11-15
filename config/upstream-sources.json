@@ -320,6 +320,13 @@
       "sha512": "4ccbef47255bf3644a50242a79951b1f3720e71a55eb1e07dc6b8486df0245da99a77bba751b50197d489b4c5d738e5284aabc014c2f7f44816ddf6a1bb807ca"
     },
     {
+      "name": "bindfs",
+      "version": "1.18.4",
+      "url": "https://bindfs.org/downloads/bindfs-1.18.4.tar.gz",
+      "filename": "bindfs-1.18.4.tar.gz",
+      "sha512": "1fedfcd082980180ccdd684478cc5308f4ea3fa541af12b5aef0b75fb0ec5b285009c4b783fc3cd5550505a83baf015e243f88eb322540d0f82e1952babc799a"
+    },
+    {
       "name": "bison",
       "version": "3.8.2",
       "url": "https://ftp.gnu.org/gnu/bison/bison-3.8.2.tar.xz",
@@ -363,6 +370,13 @@
       "url": "https://github.com/borgbackup/borg/releases/download/1.4.5/borgbackup-1.4.5.tar.gz",
       "filename": "borgbackup-1.4.5.tar.gz",
       "sha512": "1303e334b32dd62847918920777ca47eec072974859f612d054fc516fdab56eea588d34ae2f71e9c0757486769dd5ba057d5c6bb05294f40ff52a8b41f7e5801"
+    },
+    {
+      "name": "bpftop",
+      "version": "0.9.1",
+      "url": "https://github.com/jfernandez/bpftop/archive/v0.9.1/bpftop-0.9.1.tar.gz",
+      "filename": "bpftop-0.9.1.tar.gz",
+      "sha512": "5c179efb723d5188a72bc7aae621a28137cc1156f698bf52740652594245a76cc7391d3593688bc5d6677154e32047aace9dd53b44b24125646416c15c03eeb3"
     },
     {
       "name": "braille-printer-app",
@@ -727,6 +741,13 @@
       "sha512": "0aebd255d589637d0947f8832a194457f561e6000fbfdcff57e487f85203b5ddc77458d1eaad84fd8765052264ff2d9b1dbaf5fbce0ca194aa097f4944b302db"
     },
     {
+      "name": "erofs-utils",
+      "version": "1.9.4",
+      "url": "https://git.kernel.org/pub/scm/linux/kernel/git/xiang/erofs-utils.git/snapshot/erofs-utils-1.9.4.tar.gz",
+      "filename": "erofs-utils-1.9.4.tar.gz",
+      "sha512": "c78fb83a206fa1a313eae3c54134f892a6eafc6839ee689457c5d4b1f5a7d399f9475a160a9c9173221944e8823e665eecfc0d72b2b2a1563250646d091a9176"
+    },
+    {
       "name": "espeak-ng",
       "version": "1.52.0",
       "url": "https://github.com/espeak-ng/espeak-ng/archive/1.52.0/espeak-ng-1.52.0.tar.gz",
@@ -884,6 +905,13 @@
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/flatpak/flatpak-1.19.0.tar.xz/sha512/686b6152705e6168d74093d44370d308093fa98d6c4e693f00804e540ee8f135b5994efa72f783a081b98d9c1b41ecdb4664f4fe05c78418cb5c6fbc5691f501/flatpak-1.19.0.tar.xz"
       ]
+    },
+    {
+      "name": "flatpak-builder",
+      "version": "1.4.12",
+      "url": "https://github.com/flatpak/flatpak-builder/releases/download/1.4.12/flatpak-builder-1.4.12.tar.xz",
+      "filename": "flatpak-builder-1.4.12.tar.xz",
+      "sha512": "3fe6bb774c7a25ef0779ca16a61753ee2d1763cc145a2f1284edfddbea686f2932f66b3dc7e60bff9af1528d60adf1004227659d2753c78cdf972b84ac90bcc2"
     },
     {
       "name": "flatpak-xdg-utils",
@@ -2942,6 +2970,13 @@
       ]
     },
     {
+      "name": "liberation-fonts",
+      "version": "2.1.5",
+      "url": "https://github.com/liberationfonts/liberation-fonts/files/7261482/liberation-fonts-ttf-2.1.5.tar.gz",
+      "filename": "liberation-fonts-ttf-2.1.5.tar.gz",
+      "sha512": "b9f178fae43c9214ba6de36c6da613fcf59bd98084058afaaa9151d00f2406942bc360430be0a8f35ea6b5529146eef371c7cf75bdd7910403d449254f943fed"
+    },
+    {
       "name": "libev",
       "version": "4.33",
       "url": "https://dist.schmorp.de/libev/Attic/libev-4.33.tar.gz",
@@ -4548,6 +4583,13 @@
       "sha512": "c320c90e01377651fdff3aa9c373b9013f142fab23810d821174e546716ef2fa6499a805728710c67ca7fe238679111df392754c24ea4e01768faa5535ac7db2"
     },
     {
+      "name": "nethogs",
+      "version": "0.9.0",
+      "url": "https://github.com/raboof/nethogs/archive/v0.9.0/nethogs-0.9.0.tar.gz",
+      "filename": "nethogs-0.9.0.tar.gz",
+      "sha512": "33b75e41dcc21126ca46835d086e2848ac5daf8ab2b3291e2c9496c2460a43897f980c6b7ad8bca55bb9882e98492af7aafd7f456bee12b0e460cdc2c06e18e0"
+    },
+    {
       "name": "nfs-utils",
       "version": "2.9.2",
       "url": "https://www.kernel.org/pub/linux/utils/nfs-utils/2.9.2/nfs-utils-2.9.2.tar.xz",
@@ -4571,6 +4613,13 @@
       "filename": "noopenh264-2.6.0.tar.gz",
       "feed": "https://release-monitoring.org/project/386644",
       "sha512": "2945eeeb0da7c1689a068c55a07ab8fce48bf30b65beca8b1dbee101747836e1d7f9f50a69ac5feb44603443a375338e95473efe18e38c10c7c77125283d9090"
+    },
+    {
+      "name": "nss-mdns",
+      "version": "0.15.1",
+      "url": "https://github.com/avahi/nss-mdns/releases/download/v0.15.1/nss-mdns-0.15.1.tar.gz",
+      "filename": "nss-mdns-0.15.1.tar.gz",
+      "sha512": "11a82ae9f209326b4501c7e6d33c9932b370c4dcacb64d6783140e25688ad6391bbd113e51ee470fd8be12669124eac331593cfd02a040383b4f964ed6ec6154"
     },
     {
       "name": "ntfs-3g",
@@ -6208,6 +6257,13 @@
       "sha512": "ea1246acdb50dafd9ced9914ec3c8f0d499c0ca3cfd447b43a444c768a6e9ea7135e5c42d9ca0089354698ac235bd86d42f12c70a3a17c9c79f998c07461f7ab"
     },
     {
+      "name": "steam-devices",
+      "version": "1.0.0.101^git20260625.22ec85e",
+      "url": "https://github.com/ValveSoftware/steam-devices//archive/22ec85e5ff5ea2e15c56d71a41bcbef46356cd60/steam-devices-1.0.0.101^git20260625.22ec85e.tar.gz",
+      "filename": "steam-devices-1.0.0.101^git20260625.22ec85e.tar.gz",
+      "sha512": "7c9ce6d8fcbac28872ba83b45e672faef77e23328f76f1bf653261bbd1408a2882c9c60bc2a746dd970eca4d38c62cd1bc9125015ab75afe364e1e42878054af"
+    },
+    {
       "name": "stix-fonts",
       "version": "2.13b171",
       "url": "https://github.com/stipub/stixfonts/archive/v2.13b171/stixfonts-2.13b171.tar.gz",
@@ -6263,6 +6319,13 @@
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/symlinks/symlinks-1.7.tar.gz/sha512/4a60440fc10f74256639086b28de52fdda8cad41d0935bd49729b0e4c787b40f6a75dc0fbc8b775c7a860d2929a808b1a165c05aa5b885e3c1eb0f05ab49cc5e/symlinks-1.7.tar.gz"
       ]
+    },
+    {
+      "name": "syncthing",
+      "version": "2.1.7",
+      "url": "https://github.com/syncthing/syncthing/archive/v2.1.7/syncthing-2.1.7.tar.gz",
+      "filename": "syncthing-2.1.7.tar.gz",
+      "sha512": "82a89471f8cfab73b90a06a1420344b8722a8ff39d6648cb371651607d87a480fdccca6fdf8c9c931acc2ac860e295c0db700e876cf46943ac96802839c86e56"
     },
     {
       "name": "sysstat",
@@ -6364,6 +6427,13 @@
       ]
     },
     {
+      "name": "tiptop",
+      "version": "2.3.2",
+      "url": "https://files.inria.fr/pacap/tiptop/tiptop-2.3.2.tar.gz",
+      "filename": "tiptop-2.3.2.tar.gz",
+      "sha512": "98d69edbf7bcdee6bbf6dd2b21f1429b6417767187a8fb1553ba45659705815010362fb091e4166beab247439ee227df5feab5c49c8194ed9a7d29003b0c1ff0"
+    },
+    {
       "name": "tmux",
       "version": "3.8",
       "url": "https://github.com/tmux/tmux/archive/refs/tags/3.8.tar.gz",
@@ -6411,6 +6481,13 @@
       "url": "https://github.com/tpm2-software/tpm2-tools/releases/download/5.8/tpm2-tools-5.8.tar.gz",
       "filename": "tpm2-tools-5.8.tar.gz",
       "sha512": "0bea68505a773f75476a1e0ea2abd8336a16f0b8900006512a81019708f04b50dbb7960922b37821278825305d33e042f82da2125e7409dacbd139cd52474e82"
+    },
+    {
+      "name": "trace-cmd",
+      "version": "3.4",
+      "url": "https://git.kernel.org/pub/scm/utils/trace-cmd/trace-cmd.git/snapshot/trace-cmd-v3.4.tar.gz",
+      "filename": "trace-cmd-v3.4.tar.gz",
+      "sha512": "b237a5e60e71a882b7fd559d130cbf6e076c51f548292f3226d30a50591c5306de60ac5f664268b7d8f9f104353bc509b5bd4d7903a5db2e020570674b7712e7"
     },
     {
       "name": "traceroute",
@@ -7141,6 +7218,13 @@
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/xvidcore/xvidcore-1.3.7.tar.bz2/sha512/e2b22e7a7e103af7adcc999d95484f991a0a33df02b912fe042b2e23d2af07381c737d23158dbf0fad770ee680572f86fbe04ab2ef33c81e2e0180ead2acc8ed/xvidcore-1.3.7.tar.bz2"
       ]
+    },
+    {
+      "name": "ydotool",
+      "version": "1.0.4",
+      "url": "https://github.com/ReimuNotMoe/ydotool/archive/v1.0.4/ydotool-1.0.4.tar.gz",
+      "filename": "ydotool-1.0.4.tar.gz",
+      "sha512": "bbf66d752aa1dce9173c930e3a71bc277b330763b1aa0e38f9fec1976c282c64330251ba5abe222a991f4bcafbabf1312a940eb4b40a34bf99f628c2a41bc4a2"
     },
     {
       "name": "yelp",

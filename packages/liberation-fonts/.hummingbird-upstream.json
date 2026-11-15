@@ -1,0 +1,8 @@
+{
+  "package": "liberation-fonts",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/liberation-fonts.git",
+  "commit": "99e2a2241f7ed6c75a25bb28b6106f7bf9badd84",
+  "tree": "0e78e9c44b8be5c3823e56edf14ff7c208ccf574",
+  "imported_at": "2026-11-14T20:28:47.250447+00:00"
+}
