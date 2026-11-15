@@ -6,7 +6,7 @@
 
 Name:     ydotool
 Version:  1.0.4
-Release:  9%{?dist}
+Release:  10%{?dist}
 Summary:  Generic command-line automation tool (no X!)
 # Automatically converted from old format: AGPLv3
 License:  AGPL-3.0-only
@@ -34,9 +34,11 @@ N.B. it is strongly recommended to start the ydotoold daemon with:
 %setup -q
 
 %build
-%cmake -DBUILD_SHARED_LIBS:BOOL=OFF
+# Utah: CMake 4 refuses upstream's cmake_minimum_required(VERSION 3.4), and the
+# build root's %%cmake generates Ninja files, so a bare make finds no Makefile.
+%cmake -DBUILD_SHARED_LIBS:BOOL=OFF -DCMAKE_POLICY_VERSION_MINIMUM=3.5
 
-make -C %{_vpath_builddir} -j `nproc`
+%cmake_build
 
 %install
 mkdir -p %{buildroot}/%{_bindir}
@@ -69,6 +71,11 @@ scdoc < manpage/%{name}d.8.scd > %{buildroot}/%{_mandir}/man8/%{name}d.8
 %{_mandir}/man8/%{name}d.8.*
 
 %changelog
+* Sun Nov 15 2026 Factory Maintainer <factory@projectbluefin.org> - 1.0.4-10
+- Configure with CMAKE_POLICY_VERSION_MINIMUM=3.5 so CMake 4 accepts
+  upstream's 3.4 minimum, and build with %%cmake_build, which follows the
+  Ninja generator %%cmake selects.
+
 * Fri Jul 17 2026 Fedora Release Engineering <releng@fedoraproject.org> - 1.0.4-9
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_45_Mass_Rebuild
 
