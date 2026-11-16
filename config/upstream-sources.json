@@ -6167,6 +6167,13 @@
       "sha512": "41b5f37b48db5cb8c5a0f6437a4a8266d2627a5b7c1088de8549fe0bf0bb3105b7df8024fe207eef194096e0726ea73e2b53e0a4293d8db8e133baa0f8a3bad3"
     },
     {
+      "name": "spice",
+      "version": "0.16.0",
+      "url": "https://www.spice-space.org/download/releases/spice-0.16.0.tar.bz2",
+      "filename": "spice-0.16.0.tar.bz2",
+      "sha512": "21fb8cc3cc4b3c185a1d3735dfda5df054e9244eeec9f3e2e2cf6f67acce70b213766502e55ac7c7e3b69872895cb28b79a39b4d428b63e030eaa157b6c48731"
+    },
+    {
       "name": "spice-protocol",
       "version": "0.14.5",
       "url": "https://www.spice-space.org/download/releases/spice-protocol-0.14.5.tar.xz",
