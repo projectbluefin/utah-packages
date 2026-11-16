@@ -1155,6 +1155,13 @@
       ]
     },
     {
+      "name": "gflags",
+      "version": "2.2.2",
+      "url": "https://github.com/gflags/gflags/archive/v2.2.2/gflags-2.2.2.tar.gz",
+      "filename": "gflags-2.2.2.tar.gz",
+      "sha512": "98c4703aab24e81fe551f7831ab797fb73d0f7dfc516addb34b9ff6d0914e5fd398207889b1ae555bac039537b1d4677067dae403b64903577078d99c1bdb447"
+    },
+    {
       "name": "ghostscript",
       "version": "10.08.0",
       "url": "https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs10080/ghostscript-10.08.0.tar.xz",
