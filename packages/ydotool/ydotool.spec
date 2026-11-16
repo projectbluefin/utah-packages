@@ -6,13 +6,19 @@
 
 Name:     ydotool
 Version:  1.0.4
-Release:  10%{?dist}
+Release:  11%{?dist}
 Summary:  Generic command-line automation tool (no X!)
 # Automatically converted from old format: AGPLv3
 License:  AGPL-3.0-only
 URL:      https://github.com/ReimuNotMoe/%{name}
 
 Source0:  %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
+# Utah: Project Bluefin Dakota's bluefin/ydotool.bst (projectbluefin/dakota
+# bf271777) writes these two files inline; they are its heredoc and printf
+# output verbatim. The rule hands /dev/uinput to the input group (kanata's
+# DynamicUser unit and ydotool both need it); the drop-in loads uinput at boot.
+Source1:  80-ydotool.rules
+Source2:  ydotool.conf
 
 BuildRequires: cmake
 BuildRequires: gcc
@@ -25,10 +31,9 @@ BuildRequires: systemd-rpm-macros
 Performs some of the functions of xdotool(1) without requiring X11 -
 however, it generally requires root permission (to open /dev/uinput)
 
-N.B. it is strongly recommended to start the ydotoold daemon with:
+N.B. start the ydotoold daemon in your user session with:
 
-- systemctl enable ydotool
-- systemctl start ydotool
+- systemctl --user enable --now ydotool
 
 %prep
 %setup -q
@@ -46,24 +51,33 @@ strip */%{name}
 strip */%{name}d
 install -p -m 0755 */%{name} %{buildroot}/%{_bindir}
 install -p -m 0755 */%{name}d %{buildroot}/%{_bindir}
-mkdir -p %{buildroot}/%{_unitdir}
-install -p -m 0644 */%{name}.service %{buildroot}/%{_unitdir}
+# Utah: upstream and Dakota install the daemon as a user unit (upstream's
+# CMake uses systemd's systemduserunitdir), and Dakota adds the ydotoold.service
+# alias; Fedora's recipe installed it as a system unit instead.
+mkdir -p %{buildroot}/%{_userunitdir}
+install -p -m 0644 */%{name}.service %{buildroot}/%{_userunitdir}
+ln -s %{name}.service %{buildroot}/%{_userunitdir}/%{name}d.service
+install -Dpm 0644 %{SOURCE1} %{buildroot}/%{_udevrulesdir}/80-ydotool.rules
+install -Dpm 0644 %{SOURCE2} %{buildroot}/%{_modulesloaddir}/ydotool.conf
 mkdir -p %{buildroot}/%{_mandir}/man1
 mkdir -p %{buildroot}/%{_mandir}/man8
 scdoc < manpage/%{name}.1.scd > %{buildroot}/%{_mandir}/man1/%{name}.1
 scdoc < manpage/%{name}d.8.scd > %{buildroot}/%{_mandir}/man8/%{name}d.8
 
 %post
-%systemd_post %{name}.service
+%systemd_user_post %{name}.service
 
 %preun
-%systemd_preun %{name}.service
+%systemd_user_preun %{name}.service
 
 %postun
-%systemd_postun_with_restart %{name}.service
+%systemd_user_postun_with_restart %{name}.service
 
 %files
-%{_unitdir}/%{name}.service
+%{_userunitdir}/%{name}.service
+%{_userunitdir}/%{name}d.service
+%{_udevrulesdir}/80-ydotool.rules
+%{_modulesloaddir}/ydotool.conf
 %{_bindir}/%{name}*
 %license LICENSE
 %doc README.md
@@ -71,6 +85,11 @@ scdoc < manpage/%{name}d.8.scd > %{buildroot}/%{_mandir}/man8/%{name}d.8
 %{_mandir}/man8/%{name}d.8.*
 
 %changelog
+* Mon Nov 16 2026 Utah Packages <packages@projectbluefin.io> - 1.0.4-11
+- Align with Project Bluefin Dakota's bluefin/ydotool.bst: ship the daemon as
+  a user unit with the ydotoold.service alias, the 80-ydotool.rules uinput
+  rule and the uinput modules-load drop-in (projectbluefin/utah#1222).
+
 * Sun Nov 15 2026 Factory Maintainer <factory@projectbluefin.org> - 1.0.4-10
 - Configure with CMAKE_POLICY_VERSION_MINIMUM=3.5 so CMake 4 accepts
   upstream's 3.4 minimum, and build with %%cmake_build, which follows the
