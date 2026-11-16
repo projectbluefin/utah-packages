@@ -78,13 +78,17 @@ BuildRequires:  pkgconfig(pangocairo)
 BuildRequires:  pkgconfig(pangoft2)
 BuildRequires:  vala
 BuildRequires:  /usr/bin/rst2man
-%if 0%{?bundled_rust_deps}
+# rust-toolset is RHEL's package; the Fedora build root has cargo-rpm-macros
+# on both paths (as glycin does).
+%if 0%{?rhel}
 BuildRequires:  rust-toolset
+%else
+BuildRequires:  cargo-rpm-macros
+%endif
+%if 0%{?bundled_rust_deps}
 # The vendored dav1d-sys links the system libdav1d (the crate RPMs pull it in
 # on the unbundled path). AVIF stays on, as gnome-build-meta links dav1d.
 BuildRequires:  pkgconfig(dav1d) >= 1.3.0
-%else
-BuildRequires:  cargo-rpm-macros
 %endif
 
 Requires:       cairo%{?_isa} >= %{cairo_version}

@@ -121,6 +121,10 @@ leaves `%rhel` undefined, so it built against Fedora 44's crate RPMs. The
 instead. On that path `%autosetup -N` applies none of Fedora's crate patches
 (they only adapt to system crates) and the crate RPMs no longer pull in
 `pkgconfig(dav1d)` for the AVIF feature, so the recipe BuildRequires it.
+Fedora ties its bundled branch to `BuildRequires: rust-toolset`, a RHEL-only
+package: the build root has none, and the lock resolve fails with `No match
+for argument: rust-toolset` (run 43803193911). Key that line on `%{?rhel}`
+and keep `cargo-rpm-macros` otherwise, as glycin does.
 
 ## When a bumped recipe fails
 
