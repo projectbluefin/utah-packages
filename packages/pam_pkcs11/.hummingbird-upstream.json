@@ -1,0 +1,8 @@
+{
+  "package": "pam_pkcs11",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/pam_pkcs11.git",
+  "commit": "98bc6e435a0d634ddccf8919f549e2901b946ead",
+  "tree": "1364bb61886498852c78ad02392738d2575fbbd9",
+  "imported_at": "2026-11-16T04:20:23.235875+00:00"
+}

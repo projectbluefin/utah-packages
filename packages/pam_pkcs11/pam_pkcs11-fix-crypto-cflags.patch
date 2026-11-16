@@ -1,0 +1,12 @@
+diff -up pam_pkcs11-1cbb55e3d4154715de191a44df76ae92810c8598/configure.ac.fix_crypto_cflags pam_pkcs11-1cbb55e3d4154715de191a44df76ae92810c8598/configure.ac
+--- pam_pkcs11-1cbb55e3d4154715de191a44df76ae92810c8598/configure.ac.fix_crypto_cflags	2016-02-05 13:01:17.996106535 -0500
++++ pam_pkcs11-1cbb55e3d4154715de191a44df76ae92810c8598/configure.ac	2016-02-05 13:01:27.371901228 -0500
+@@ -157,7 +157,7 @@ fi
+ AM_CONDITIONAL(HAVE_NSS, test x$with_nss = xyes)
+ if test "$with_nss" = "yes"
+ then
+-    CRYPTO_CFLAGS="${NSS_CFLAGS}-DHAVE_NSS"
++    CRYPTO_CFLAGS="${NSS_CFLAGS} -DHAVE_NSS"
+     CRYPTO_LIBS=${NSS_LIBS}
+ else
+     CRYPTO_CFLAGS=${OPENSSL_CFLAGS}

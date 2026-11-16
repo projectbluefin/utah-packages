@@ -1,0 +1,12 @@
+diff -up ./src/tools/card_eventmgr.c.pcsc-lite ./src/tools/card_eventmgr.c
+--- ./src/tools/card_eventmgr.c.pcsc-lite	2009-09-02 05:32:55.000000000 -0700
++++ ./src/tools/card_eventmgr.c	2010-09-09 09:43:29.178974000 -0700
+@@ -311,7 +311,7 @@ static void signal_trap(int sig)
+ int main(int argc, char *argv[]) {
+     int current_reader;
+     LONG rv;
+-    SCARD_READERSTATE_A *rgReaderStates_t = NULL;
++    SCARD_READERSTATE *rgReaderStates_t = NULL;
+     DWORD dwReaders, dwReadersOld;
+     LPSTR mszReaders = NULL;
+     char *ptr, **readers = NULL;
