@@ -3784,6 +3784,12 @@ packages:
     downstream_package_name: rust-gst-plugin-dav1d
     paths:
       - packages/rust-gst-plugin-dav1d
+  rust-gst-plugin-gtk4:
+    specfile_path: rust-gst-plugin-gtk4.spec
+    upstream_package_name: rust-gst-plugin-gtk4
+    downstream_package_name: rust-gst-plugin-gtk4
+    paths:
+      - packages/rust-gst-plugin-gtk4
   rust-just:
     specfile_path: rust-just.spec
     upstream_package_name: rust-just

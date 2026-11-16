@@ -5896,6 +5896,13 @@
       "sha512": "9326a569da4ad762f743107577d4817bb28724cfb036b35eaf7d57acfb25d0b52239df86d778e519788651d867200e4c0c2a3cacf438fc3d3f3e2016e02f5cc8"
     },
     {
+      "name": "rust-gst-plugin-gtk4",
+      "version": "0.15.2",
+      "url": "https://crates.io/api/v1/crates/gst-plugin-gtk4/0.15.2/download#/gst-plugin-gtk4-0.15.2.crate",
+      "filename": "gst-plugin-gtk4-0.15.2.crate",
+      "sha512": "afaee32875a37506cb2478f5a59296e44137e0df944fc1ba088fc9bad76cb853693b54f73feb64be7fca0bce4bc22f59caf73999dac9c4c5e2fd27927ea1cc4f"
+    },
+    {
       "name": "rust-just",
       "version": "1.57.0",
       "url": "https://crates.io/api/v1/crates/just/1.57.0/download#/just-1.57.0.crate",
