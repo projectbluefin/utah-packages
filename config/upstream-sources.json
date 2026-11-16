@@ -2237,6 +2237,13 @@
       ]
     },
     {
+      "name": "iscsi-initiator-utils",
+      "version": "6.2.1.13",
+      "url": "https://github.com/open-iscsi/open-iscsi/archive/40f6b2944f8a8553ad57975d1f2bb512cc23d7d1.tar.gz#/open-iscsi-40f6b29.tar.gz",
+      "filename": "open-iscsi-40f6b29.tar.gz",
+      "sha512": "dbb1ba500614a5f3f8c6a809806caf65e58746c710682d8e69deaef114186f91fc6a6c74c752661249d6770ef870a8ea78e6bde4c8e7f676e3d2f73704cf97b0"
+    },
+    {
       "name": "iso-codes",
       "version": "4.20.1",
       "url": "https://salsa.debian.org/iso-codes-team/iso-codes/-/archive/v4.20.1/iso-codes-v4.20.1.tar.gz",
