@@ -1,0 +1,14 @@
+--- a/lib/pycriu/Makefile
++++ b/lib/pycriu/Makefile
+@@ -9,7 +9,10 @@
+ .PHONY: libpy-images
+ 
+ rpc_pb2.py:
+-	$(Q) protoc -I=images/ --python_out=$(obj) images/$(@:_pb2.py=.proto)
++	# protobuf 3.19.6 is the factory runtime (utah-packages#983). The 6.x
++	# protoc regenerates code the pinned runtime cannot import, so ship the
++	# 3.19.x-generated file and copy it instead of regenerating.
++	$(Q) cp "$(RPC_PB2_PY)" $(obj)/rpc_pb2.py
+ 
+ version.py:
+ 	$(Q) echo "__version__ = '${CRIU_VERSION}'" > $(obj)/$@
