@@ -1,0 +1,108 @@
+From b4cd1fd5597a0d8e13403456ed85b4bacf7bb71c Mon Sep 17 00:00:00 2001
+From: Fabio Valentini <decathorpe@gmail.com>
+Date: Mon, 17 Aug 2026 19:43:06 +0200
+Subject: [PATCH 2/4] default to OpenSSL crypto instead of RustCrypto backend
+
+---
+ cargo-credential/Cargo.toml | 2 +-
+ cli/Cargo.toml              | 2 +-
+ client/Cargo.toml           | 2 +-
+ git-credential/Cargo.toml   | 2 +-
+ kwallet/cli/Cargo.toml      | 2 +-
+ portal/Cargo.toml           | 2 +-
+ server/Cargo.toml           | 2 +-
+ 7 files changed, 7 insertions(+), 7 deletions(-)
+
+diff --git a/cargo-credential/Cargo.toml b/cargo-credential/Cargo.toml
+index 9269f6d..8b26f00 100644
+--- a/cargo-credential/Cargo.toml
++++ b/cargo-credential/Cargo.toml
+@@ -18,7 +18,7 @@ oo7 = {workspace = true, features = ["tokio"]}
+ tokio = {workspace = true, features = ["rt-multi-thread"]}
+ 
+ [features]
+-default = ["native_crypto"]
++default = ["openssl_crypto"]
+ native_crypto = [
+     "oo7/native_crypto"
+ ]
+diff --git a/cli/Cargo.toml b/cli/Cargo.toml
+index 29c2127..f3b087a 100644
+--- a/cli/Cargo.toml
++++ b/cli/Cargo.toml
+@@ -28,7 +28,7 @@ tracing-subscriber.workspace = true
+ zbus.workspace = true
+ 
+ [features]
+-default = ["native_crypto", "kwallet_migration"]
++default = ["openssl_crypto", "kwallet_migration"]
+ native_crypto = [
+     "oo7/native_crypto"
+ ]
+diff --git a/client/Cargo.toml b/client/Cargo.toml
+index 092614d..4edd70e 100644
+--- a/client/Cargo.toml
++++ b/client/Cargo.toml
+@@ -53,7 +53,7 @@ tokio = { workspace = true, features = ["macros", "rt-multi-thread", "time"] }
+ tracing-subscriber = { workspace = true, features = ["env-filter", "fmt"] }
+ 
+ [features]
+-default = ["tokio", "native_crypto"]
++default = ["tokio", "openssl_crypto"]
+ # Enables unstable low-level API
+ unstable = []
+ async-std = [
+diff --git a/git-credential/Cargo.toml b/git-credential/Cargo.toml
+index 733615a..1403d97 100644
+--- a/git-credential/Cargo.toml
++++ b/git-credential/Cargo.toml
+@@ -17,6 +17,6 @@ oo7 = { workspace = true, features = ["tokio", "schema"] }
+ tokio = { workspace = true, features = ["macros", "rt"] }
+ 
+ [features]
+-default = ["native_crypto"]
++default = ["openssl_crypto"]
+ native_crypto = ["oo7/native_crypto"]
+ openssl_crypto = ["oo7/openssl_crypto"]
+diff --git a/kwallet/cli/Cargo.toml b/kwallet/cli/Cargo.toml
+index 9306d54..1363ea5 100644
+--- a/kwallet/cli/Cargo.toml
++++ b/kwallet/cli/Cargo.toml
+@@ -12,7 +12,7 @@ rust-version.workspace = true
+ [dependencies]
+ clap.workspace = true
+ kwallet-parser = { version = "0.7.0-alpha", path = "../parser" }
+-oo7 = { workspace = true, features = ["tokio", "native_crypto"] }
++oo7 = { workspace = true, features = ["tokio", "openssl_crypto"] }
+ rpassword.workspace = true
+ serde.workspace = true
+ serde_json.workspace = true
+diff --git a/portal/Cargo.toml b/portal/Cargo.toml
+index e599a5b..6aca318 100644
+--- a/portal/Cargo.toml
++++ b/portal/Cargo.toml
+@@ -22,7 +22,7 @@ tracing-subscriber.workspace = true
+ zeroize.workspace = true
+ 
+ [features]
+-default = ["native_crypto"]
++default = ["openssl_crypto"]
+ native_crypto = [
+     "oo7/native_crypto"
+ ]
+diff --git a/server/Cargo.toml b/server/Cargo.toml
+index ecd56e9..c91efcd 100644
+--- a/server/Cargo.toml
++++ b/server/Cargo.toml
+@@ -52,7 +52,7 @@ zeroize.workspace = true
+ 
+ [features]
+ test-util = ["dep:tempfile"]
+-default = ["native_crypto", "kwallet_migration"]
++default = ["openssl_crypto", "kwallet_migration"]
+ native_crypto = ["gnome_native_crypto", "plasma_native_crypto"]
+ openssl_crypto = ["gnome_openssl_crypto", "plasma_openssl_crypto"]
+ kwallet_migration = ["dep:kwallet-parser"]
+-- 
+2.55.0
+

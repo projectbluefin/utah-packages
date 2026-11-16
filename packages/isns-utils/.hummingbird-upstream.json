@@ -1,0 +1,8 @@
+{
+  "package": "isns-utils",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/isns-utils.git",
+  "commit": "9939d99242ecece582e98e37bf6ceb30fc69e338",
+  "tree": "bdf90c6dc4953bc816df649cd9a4495861954118",
+  "imported_at": "2026-11-16T04:06:30.346398+00:00"
+}

@@ -1,0 +1,8 @@
+{
+  "package": "sudo-rs",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/sudo-rs.git",
+  "commit": "de701f572924e769d30341d97c20dcf91fed89d0",
+  "tree": "f35470762165c6f25719915790a90454146abe33",
+  "imported_at": "2026-11-16T04:09:34.136379+00:00"
+}

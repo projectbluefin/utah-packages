@@ -1,0 +1,8 @@
+{
+  "package": "gnome-shell-extension-dash-to-dock",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/gnome-shell-extension-dash-to-dock.git",
+  "commit": "f6029022db6d48170e87251e6cdc3b893434c9b2",
+  "tree": "c3238f41b2898a1352bceb4a21adad2e80efd3ea",
+  "imported_at": "2026-11-16T04:07:37.922441+00:00"
+}
