@@ -133,6 +133,7 @@ issues are projectbluefin/utah.
 | `gnomeos-deps/hidraw-udev` | `gnome-os-config-hidraw-udev` | `/usr/lib/udev/rules.d/70-gnomeos-hidraw.rules`, `/usr/lib/udev/hwdb.d/80-solaar.hwdb` |
 | `gnomeos-deps/journald-config` | `gnome-os-config-journald-config` | `/usr/lib/systemd/journald.conf.d/90-persistent-journal.conf` |
 | `gnomeos-deps/modprobe-config` | `gnome-os-config-modprobe-config` | `/usr/lib/modprobe.d/soc-button-array.conf` |
+| `core-deps/systemd-base` (`fallback-dns-servers` variable, a meson option, not a file) | `gnome-os-config-resolved-fallback-dns` | `/usr/lib/systemd/resolved.conf.d/50-gnome-os-fallback-dns.conf`, generated at build time from the pinned element so the server list stays GNOME OS's verbatim |
 | `core/systemd-presets` | `gnome-os-config-systemd-presets` | system `80-gnome`, `80-network`; user `80-dbus`, `80-pipewire`, `80-speechd`, `80-xdg` (not user `99-default-disable`, which Hummingbird's image already carries with the same content) |
 | `gnomeos-deps/uinput` | `gnome-os-config-uinput` | `/usr/lib/modules-load.d/uinput.conf` |
 | `gnomeos-deps/wpa-supplicant-config` | `gnome-os-config-wpa-supplicant-config` | `/usr/lib/systemd/system-preset/wpa-supplicant.preset` |

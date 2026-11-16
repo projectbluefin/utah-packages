@@ -39,6 +39,7 @@ Requires:       %{name}-firewalld = %{version}-%{release}
 Requires:       %{name}-hidraw-udev = %{version}-%{release}
 Requires:       %{name}-journald-config = %{version}-%{release}
 Requires:       %{name}-modprobe-config = %{version}-%{release}
+Requires:       %{name}-resolved-fallback-dns = %{version}-%{release}
 Requires:       %{name}-systemd-presets = %{version}-%{release}
 Requires:       %{name}-uinput = %{version}-%{release}
 Requires:       %{name}-wpa-supplicant-config = %{version}-%{release}
@@ -87,6 +88,17 @@ Summary:        soc_button_array load order (gnome-build-meta gnomeos-deps/modpr
 Loads pinctrl_tigerlake before soc_button_array, which tablet mode on the
 Framework 12 needs.
 
+%package resolved-fallback-dns
+Summary:        GNOME OS fallback DNS servers (gnome-build-meta core-deps/systemd-base.bst)
+
+%description resolved-fallback-dns
+GNOME OS compiles fallback DNS servers into systemd-resolved
+(-Ddns-servers= from the fallback-dns-servers variable of
+core-deps/systemd-base.bst). Fedora's systemd builds with none, so this
+subpackage carries the same list as a resolved.conf.d drop-in, generated
+from the pinned element at build time. resolved uses it only when no link
+and no global DNS server is configured.
+
 %package systemd-presets
 Summary:        GNOME OS systemd presets (gnome-build-meta core/systemd-presets.bst)
 
@@ -133,6 +145,22 @@ install -Dpm 0644 files/journald/90-persistent-journal.conf \
 install -Dpm 0644 files/modprobe-config/soc-button-array.conf \
   %{buildroot}%{_modprobedir}/soc-button-array.conf
 
+# core-deps/systemd-base.bst: -Ddns-servers="%{fallback-dns-servers}". The
+# folded YAML scalar is read from the element itself, so the list is GNOME
+# OS's verbatim; the build fails if the variable moves or empties.
+dns=$(awk '
+  /^  fallback-dns-servers: >-$/ { grab = 1; next }
+  grab && /^    [^ ]/ { sub(/^ +/, ""); printf "%s%s", sep, $0; sep = " "; next }
+  grab { exit }
+' elements/core-deps/systemd-base.bst)
+test -n "$dns"
+install -d %{buildroot}%{_prefix}/lib/systemd/resolved.conf.d
+printf '%s\n' \
+  '# Generated from gnome-build-meta core-deps/systemd-base.bst (fallback-dns-servers).' \
+  '[Resolve]' \
+  "FallbackDNS=$dns" \
+  > %{buildroot}%{_prefix}/lib/systemd/resolved.conf.d/50-gnome-os-fallback-dns.conf
+
 # core/systemd-presets.bst imports files/systemd-presets into /usr/lib/systemd.
 install -Dpm 0644 -t %{buildroot}%{_presetdir} files/systemd-presets/system-preset/*.preset
 install -Dpm 0644 -t %{buildroot}%{_userpresetdir} files/systemd-presets/user-preset/*.preset
@@ -166,6 +194,10 @@ install -Dpm 0644 files/gnomeos/wpa-supplicant-config/wpa-supplicant.preset \
 %license LICENSE
 %{_modprobedir}/soc-button-array.conf
 
+%files resolved-fallback-dns
+%license LICENSE
+%{_prefix}/lib/systemd/resolved.conf.d/50-gnome-os-fallback-dns.conf
+
 %files systemd-presets
 %license LICENSE
 %{_presetdir}/80-gnome.preset
@@ -186,3 +218,4 @@ install -Dpm 0644 files/gnomeos/wpa-supplicant-config/wpa-supplicant.preset \
 %changelog
 * Sat Nov 14 2026 Utah Packages <packages@projectbluefin.io> - 51.1^20261027git8a89846-1
 - Initial package: GNOME OS configuration from GNOME/gnome-build-meta@8a89846
+- Add resolved-fallback-dns from core-deps/systemd-base.bst
