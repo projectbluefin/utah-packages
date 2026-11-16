@@ -1,0 +1,59 @@
+* Wed Jan 24 2024 Fedora Release Engineering <releng@fedoraproject.org> - 50-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_40_Mass_Rebuild
+
+* Fri Jan 19 2024 Fedora Release Engineering <releng@fedoraproject.org> - 50-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_40_Mass_Rebuild
+
+* Sun Sep 24 2023 Jeremy Newton <alexjnewt at hotmail dot com> - 50-1
+- Update to v50
+
+* Sun Sep 24 2023 Jeremy Newton <alexjnewt at hotmail dot com> - 49-1
+- Update to v49
+
+* Wed Jul 19 2023 Fedora Release Engineering <releng@fedoraproject.org> - 48-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_39_Mass_Rebuild
+
+* Fri May 05 2023 Jeremy Newton <alexjnewt at hotmail dot com> - 48-1
+- Update to v48
+
+* Fri Apr 21 2023 Jeremy Newton <alexjnewt at hotmail dot com> - 47-1
+- Update to v47
+
+* Fri Mar 17 2023 Davide Cavalca <dcavalca@fedoraproject.org> - 46-1
+- Update to v46
+
+* Wed Feb 08 2023 Jeremy Newton <alexjnewt at hotmail dot com> - 44-1
+- Update to v44
+
+* Mon Jan 30 2023 Jeremy Newton <alexjnewt at hotmail dot com> - 43-1
+- Update to v43
+
+* Thu Jan 19 2023 Fedora Release Engineering <releng@fedoraproject.org> - 42-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_38_Mass_Rebuild
+
+* Sat Oct 15 2022 Jeremy Newton <alexjnewt at hotmail dot com> - 42-1
+- Update to v42
+
+* Thu Jul 21 2022 Fedora Release Engineering <releng@fedoraproject.org> - 39-4.20220331.git2394e7f
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_37_Mass_Rebuild
+
+* Thu Mar 31 2022 Jeremy Newton <alexjnewt at hotmail dot com> - 39-3.20220331.git2394e7f
+- Update to git snapshot to fix f36
+
+* Thu Jan 20 2022 Fedora Release Engineering <releng@fedoraproject.org> - 39-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_36_Mass_Rebuild
+
+* Sat Oct 30 2021 Davide Cavalca <dcavalca@fedoraproject.org> - 39-1
+- Update to v39
+
+* Thu Jul 22 2021 Fedora Release Engineering <releng@fedoraproject.org> - 38-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_35_Mass_Rebuild
+
+* Thu May 20 2021 Jeremy Newton <alexjnewt at hotmail dot com> - 38-1
+- Update to v38
+
+* Tue Jan 26 2021 Fedora Release Engineering <releng@fedoraproject.org> - 37-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_34_Mass_Rebuild
+
+* Sun Jan 10 2021 Jeremy Newton <alexjnewt at hotmail dot com> - 37-1
+- Initial package

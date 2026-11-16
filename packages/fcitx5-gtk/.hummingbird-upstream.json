@@ -1,0 +1,8 @@
+{
+  "package": "fcitx5-gtk",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/fcitx5-gtk.git",
+  "commit": "0f68f6c85d09db9695b99d2c476ff77819dfa8db",
+  "tree": "5956c8d984f405a456c3ec6e1eab760353675177",
+  "imported_at": "2026-11-16T04:05:33.436426+00:00"
+}

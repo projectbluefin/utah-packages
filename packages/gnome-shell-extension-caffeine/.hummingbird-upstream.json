@@ -1,0 +1,8 @@
+{
+  "package": "gnome-shell-extension-caffeine",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/gnome-shell-extension-caffeine.git",
+  "commit": "326581b3408ba46430b5e73028fd82a91ba23f87",
+  "tree": "3ec2c25bea99500bf9871502a7838fa01d1b1fb9",
+  "imported_at": "2026-11-16T04:07:37.193545+00:00"
+}
