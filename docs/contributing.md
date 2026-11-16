@@ -141,6 +141,25 @@ adding a broader package-name `Requires:`. Static extension compatibility
 checks do not establish that a native library builds or loads against the
 pinned Hummingbird root; verify that with the factory build.
 
+### Packages Fedora retired
+
+A retired package's rawhide branch ends in a commit that deletes the recipe
+and adds `dead.package`, which states the reason. Resurrect the commit just
+before it, which is still on rawhide:
+
+```sh
+dead=$(git -C <dist-git clone> log -1 --format=%H rawhide -- dead.package)
+python3 tools/import_rawhide.py <name> --ref "$(git -C <dist-git clone> rev-parse "$dead^")"
+```
+
+The provenance then records a real rawhide commit and tree, and the Fedora
+lookaside still serves that commit's `sources`, so it can be a fallback URL.
+Read `dead.package` before you import. "Orphaned" (python-blessings) only
+means nobody maintained it. A security retirement is different:
+NetworkManager-vpnc was retired for an unfixed root escalation and stays
+`[wontfix]` (#1045). Nightly re-imports never touch a retired recipe, because
+Koji builds nothing new for it.
+
 ## Updating a carried package from Rawhide
 
 You usually do not. `detect-rawhide-updates.yml` re-imports, once a day on
