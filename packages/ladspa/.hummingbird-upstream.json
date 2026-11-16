@@ -1,0 +1,8 @@
+{
+  "package": "ladspa",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/ladspa.git",
+  "commit": "29eb151d7a7a184004bbd10c6b548116b738387c",
+  "tree": "b2e3415b0281ad4457358acfbd9acb6fc9da5e11",
+  "imported_at": "2026-11-16T04:14:25.174102+00:00"
+}

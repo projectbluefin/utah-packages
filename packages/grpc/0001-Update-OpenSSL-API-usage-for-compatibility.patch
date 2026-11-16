@@ -1,0 +1,203 @@
+From: Simo Sorce <simo@redhat.com>
+Subject: [PATCH] Update OpenSSL API usage for compatibility
+
+Replaced direct access to ASN1_STRING struct members with standard OpenSSL
+accessors and added the necessary const qualifiers to X509_NAME,
+X509_NAME_ENTRY, ASN1_STRING and ASN1_OCTET_STRING pointers. This ensures
+compatibility with newer OpenSSL versions where these structures are opaque
+and the corresponding getters return const pointers.
+
+TLSv1_2_{client,server}_method() are gone in OpenSSL 4; use the version
+flexible TLS_{client,server}_method() in the tests instead.
+
+This is the 1.75.1 equivalent of the upstream changes, which have landed in
+grpc master (the pull request shows as closed because gRPC merges through
+copybara rather than through GitHub):
+
+  [OpenSSL] Add support for OpenSSL 4
+  https://github.com/grpc/grpc/pull/41932
+
+  [export] [OpenSSL] Fix handshake tests for OpenSSL < 1.1.0
+  https://github.com/grpc/grpc/pull/43358
+  https://github.com/grpc/grpc/commit/87f70cec62c0c675d4069af3e20d07c0f95871d9
+
+Upstream tracking issue: https://github.com/grpc/grpc/issues/42020
+
+Upstream spells the const-correctness fixes with auto* plus const_cast at the
+few call sites that still take non-const pointers, and keeps OpenSSL 1.0.2
+compatibility guards; neither is needed here, so this patch uses explicit
+const types instead.
+
+Co-authored-by: Gemini <gemini@google.com>
+Signed-off-by: Simo Sorce <simo@redhat.com>
+---
+diff --git a/src/core/credentials/transport/tls/grpc_tls_crl_provider.cc b/src/core/credentials/transport/tls/grpc_tls_crl_provider.cc
+index a882cf39..c460d93e 100644
+--- a/src/core/credentials/transport/tls/grpc_tls_crl_provider.cc
++++ b/src/core/credentials/transport/tls/grpc_tls_crl_provider.cc
+@@ -56,7 +56,7 @@ absl::StatusOr<std::string> IssuerFromCrl(X509_CRL* crl) {
+   if (crl == nullptr) {
+     return absl::InvalidArgumentError("crl cannot be null");
+   }
+-  X509_NAME* issuer = X509_CRL_get_issuer(crl);
++  const X509_NAME* issuer = X509_CRL_get_issuer(crl);
+   if (issuer == nullptr) {
+     return absl::InvalidArgumentError("crl cannot have null issuer");
+   }
+diff --git a/src/core/tsi/ssl_transport_security.cc b/src/core/tsi/ssl_transport_security.cc
+index 88da01a9..5204e4e7 100644
+--- a/src/core/tsi/ssl_transport_security.cc
++++ b/src/core/tsi/ssl_transport_security.cc
+@@ -408,9 +408,9 @@ static int looks_like_ip_address(absl::string_view name) {
+ static tsi_result ssl_get_x509_common_name(X509* cert, unsigned char** utf8,
+                                            size_t* utf8_size) {
+   int common_name_index = -1;
+-  X509_NAME_ENTRY* common_name_entry = nullptr;
+-  ASN1_STRING* common_name_asn1 = nullptr;
+-  X509_NAME* subject_name = X509_get_subject_name(cert);
++  const X509_NAME_ENTRY* common_name_entry = nullptr;
++  const ASN1_STRING* common_name_asn1 = nullptr;
++  const X509_NAME* subject_name = X509_get_subject_name(cert);
+   int utf8_returned_size = 0;
+   if (subject_name == nullptr) {
+     VLOG(2) << "Could not get subject name from certificate.";
+@@ -468,7 +468,7 @@ static tsi_result peer_property_from_x509_common_name(
+ static tsi_result peer_property_from_x509_subject(X509* cert,
+                                                   tsi_peer_property* property,
+                                                   bool is_verified_root_cert) {
+-  X509_NAME* subject_name = X509_get_subject_name(cert);
++  const X509_NAME* subject_name = X509_get_subject_name(cert);
+   if (subject_name == nullptr) {
+     GRPC_TRACE_LOG(tsi, INFO) << "Could not get subject name from certificate.";
+     return TSI_NOT_FOUND;
+@@ -564,17 +564,18 @@ static tsi_result add_subject_alt_names_properties_to_peer(
+       char ntop_buf[INET6_ADDRSTRLEN];
+       int af;
+ 
+-      if (subject_alt_name->d.iPAddress->length == 4) {
++      if (ASN1_STRING_length(subject_alt_name->d.iPAddress) == 4) {
+         af = AF_INET;
+-      } else if (subject_alt_name->d.iPAddress->length == 16) {
++      } else if (ASN1_STRING_length(subject_alt_name->d.iPAddress) == 16) {
+         af = AF_INET6;
+       } else {
+         LOG(ERROR) << "SAN IP Address contained invalid IP";
+         result = TSI_INTERNAL_ERROR;
+         break;
+       }
+-      const char* name = inet_ntop(af, subject_alt_name->d.iPAddress->data,
+-                                   ntop_buf, INET6_ADDRSTRLEN);
++      const char* name =
++          inet_ntop(af, ASN1_STRING_get0_data(subject_alt_name->d.iPAddress),
++                    ntop_buf, INET6_ADDRSTRLEN);
+       if (name == nullptr) {
+         LOG(ERROR) << "Could not get IP string from asn1 octet.";
+         result = TSI_INTERNAL_ERROR;
+@@ -839,7 +840,8 @@ static tsi_result x509_store_load_certs(X509_STORE* cert_store,
+   tsi_result result = TSI_OK;
+   size_t num_roots = 0;
+   X509* root = nullptr;
+-  X509_NAME* root_name = nullptr;
++  const X509_NAME* root_name = nullptr;
++  X509_NAME* root_name_dup = nullptr;
+   BIO* pem;
+   CHECK_LE(pem_roots_size, static_cast<size_t>(INT_MAX));
+   pem = BIO_new_mem_buf(pem_roots, static_cast<int>(pem_roots_size));
+@@ -863,13 +865,13 @@ static tsi_result x509_store_load_certs(X509_STORE* cert_store,
+         result = TSI_INVALID_ARGUMENT;
+         break;
+       }
+-      root_name = X509_NAME_dup(root_name);
+-      if (root_name == nullptr) {
++      root_name_dup = X509_NAME_dup(root_name);
++      if (root_name_dup == nullptr) {
+         result = TSI_OUT_OF_RESOURCES;
+         break;
+       }
+-      sk_X509_NAME_push(*root_names, root_name);
+-      root_name = nullptr;
++      sk_X509_NAME_push(*root_names, root_name_dup);
++      root_name_dup = nullptr;
+     }
+     ERR_clear_error();
+     if (!X509_STORE_add_cert(cert_store, root)) {
+@@ -894,7 +896,7 @@ static tsi_result x509_store_load_certs(X509_STORE* cert_store,
+     if (root_names != nullptr) {
+       sk_X509_NAME_pop_free(*root_names, X509_NAME_free);
+       *root_names = nullptr;
+-      if (root_name != nullptr) X509_NAME_free(root_name);
++      if (root_name_dup != nullptr) X509_NAME_free(root_name_dup);
+     }
+   }
+   BIO_free(pem);
+diff --git a/src/core/tsi/ssl_transport_security_utils.cc b/src/core/tsi/ssl_transport_security_utils.cc
+index 65301cfe..9dd8f2e2 100644
+--- a/src/core/tsi/ssl_transport_security_utils.cc
++++ b/src/core/tsi/ssl_transport_security_utils.cc
+@@ -281,11 +281,11 @@ bool VerifyCrlCertIssuerNamesMatch(X509_CRL* crl, X509* cert) {
+   if (cert == nullptr || crl == nullptr) {
+     return false;
+   }
+-  X509_NAME* cert_issuer_name = X509_get_issuer_name(cert);
++  const X509_NAME* cert_issuer_name = X509_get_issuer_name(cert);
+   if (cert == nullptr) {
+     return false;
+   }
+-  X509_NAME* crl_issuer_name = X509_CRL_get_issuer(crl);
++  const X509_NAME* crl_issuer_name = X509_CRL_get_issuer(crl);
+   if (crl_issuer_name == nullptr) {
+     return false;
+   }
+@@ -316,7 +316,7 @@ absl::StatusOr<std::string> IssuerFromCert(X509* cert) {
+   if (cert == nullptr) {
+     return absl::InvalidArgumentError("cert cannot be null");
+   }
+-  X509_NAME* issuer = X509_get_issuer_name(cert);
++  const X509_NAME* issuer = X509_get_issuer_name(cert);
+   unsigned char* buf = nullptr;
+   int len = i2d_X509_NAME(issuer, &buf);
+   if (len < 0 || buf == nullptr) {
+@@ -331,7 +331,7 @@ absl::StatusOr<std::string> AkidFromCertificate(X509* cert) {
+   if (cert == nullptr) {
+     return absl::InvalidArgumentError("cert cannot be null.");
+   }
+-  ASN1_OCTET_STRING* akid = nullptr;
++  const ASN1_OCTET_STRING* akid = nullptr;
+   int j = X509_get_ext_by_NID(cert, NID_authority_key_identifier, -1);
+   // Can't have multiple occurrences
+   if (j >= 0) {
+@@ -356,7 +356,7 @@ absl::StatusOr<std::string> AkidFromCrl(X509_CRL* crl) {
+   if (crl == nullptr) {
+     return absl::InvalidArgumentError("Could not get AKID from crl.");
+   }
+-  ASN1_OCTET_STRING* akid = nullptr;
++  const ASN1_OCTET_STRING* akid = nullptr;
+   int j = X509_CRL_get_ext_by_NID(crl, NID_authority_key_identifier, -1);
+   // Can't have multiple occurrences
+   if (j >= 0) {
+diff --git a/test/core/handshake/client_ssl.cc b/test/core/handshake/client_ssl.cc
+index 4b45b161..33ef4865 100644
+--- a/test/core/handshake/client_ssl.cc
++++ b/test/core/handshake/client_ssl.cc
+@@ -197,7 +197,7 @@ static void server_thread(void* arg) {
+   OpenSSL_add_ssl_algorithms();
+   args->ssl_library_info->Notify();
+ 
+-  const SSL_METHOD* method = TLSv1_2_server_method();
++  const SSL_METHOD* method = TLS_server_method();
+   SSL_CTX* ctx = SSL_CTX_new(method);
+   if (!ctx) {
+     perror("Unable to create SSL context");
+diff --git a/test/core/handshake/server_ssl_common.cc b/test/core/handshake/server_ssl_common.cc
+index d1a98036..38f691cb 100644
+--- a/test/core/handshake/server_ssl_common.cc
++++ b/test/core/handshake/server_ssl_common.cc
+@@ -187,7 +187,7 @@ bool server_ssl_test(const char* alpn_list[], unsigned int alpn_list_len,
+   // server port.
+   s.Await();
+ 
+-  const SSL_METHOD* method = TLSv1_2_client_method();
++  const SSL_METHOD* method = TLS_client_method();
+   SSL_CTX* ctx = SSL_CTX_new(method);
+   if (!ctx) {
+     perror("Unable to create SSL context");

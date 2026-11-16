@@ -1,0 +1,8 @@
+{
+  "package": "glog",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/glog.git",
+  "commit": "74df59ab3fb731ab9dc28f80824a7013b402471c",
+  "tree": "792d14d7d0024d5c2945cf00eacbaa559a65b2f1",
+  "imported_at": "2026-11-16T04:09:07.423130+00:00"
+}
