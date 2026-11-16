@@ -6662,6 +6662,13 @@
       "sha512": "892b0732516fe2639f93b250bbed342da8134deeaa6f0ccb429ff8451df727f971c7ee284fef93eaa431c5c54a8b8789ffc853d8b45ae93433ba17007989bbae"
     },
     {
+      "name": "uwelcome",
+      "version": "0.4.1",
+      "url": "https://github.com/projectbluefin/uwelcome/releases/download/v0.4.1/uwelcome_0.4.1_linux_amd64",
+      "filename": "uwelcome-0.4.1-x86_64",
+      "sha512": "f262cf688b15b7b6af10ec93a32329066ab646b044c9182371e6498c7077befbffcdc4856248a4618d20efcd72befa593780a07f2105f983b5619f00905fb76d"
+    },
+    {
       "name": "v4l-utils",
       "version": "1.32.0",
       "url": "https://www.linuxtv.org/downloads/v4l-utils//v4l-utils-1.32.0.tar.xz",
