@@ -2345,6 +2345,13 @@
       "sha512": "fa467fa737f3af4abf2dd3fc4fc40fbf8de79ffa9150cd88c694ce98916ef34d69163ac36f6048c074aa560a35ebc66d6b606daab5d8b74e6132f44781f3716c"
     },
     {
+      "name": "kmscon",
+      "version": "10.1.1",
+      "url": "https://github.com/kmscon/kmscon//archive/v10.1.1/kmscon-10.1.1.tar.gz",
+      "filename": "kmscon-10.1.1.tar.gz",
+      "sha512": "8c64e711d0ff4d32e1ebfc2c3bb3a6d9d8c3fbbe616e35c6cb0b66416449e35cbc225d5bb5547a00f0de6ccc3ec5034f8c3bb8bc89eee83ce61c0618ce09e199"
+    },
+    {
       "name": "kvazaar",
       "version": "2.3.2",
       "url": "https://github.com/ultravideo/kvazaar/archive/v2.3.2.tar.gz",
