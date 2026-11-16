@@ -988,6 +988,12 @@ packages:
     downstream_package_name: gobject-introspection
     paths:
       - packages/gobject-introspection
+  google-crosextra-caladea-fonts:
+    specfile_path: google-crosextra-caladea-fonts.spec
+    upstream_package_name: google-crosextra-caladea-fonts
+    downstream_package_name: google-crosextra-caladea-fonts
+    paths:
+      - packages/google-crosextra-caladea-fonts
   google-noto-color-emoji-fonts:
     specfile_path: google-noto-color-emoji-fonts.spec
     upstream_package_name: google-noto-color-emoji-fonts
