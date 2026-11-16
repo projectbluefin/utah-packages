@@ -1,0 +1,8 @@
+{
+  "package": "rust-gst-plugin-gtk4",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/rust-gst-plugin-gtk4.git",
+  "commit": "42b134fa027b71969dbde432d1dab25d9c79ac9e",
+  "tree": "7dcb15db3228d9b57d080ef8c289e64d1fee870b",
+  "imported_at": "2026-11-16T04:07:23.411119+00:00"
+}
