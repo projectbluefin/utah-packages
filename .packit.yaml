@@ -4690,6 +4690,12 @@ packages:
     downstream_package_name: uvg266
     paths:
       - packages/uvg266
+  uwelcome:
+    specfile_path: uwelcome.spec
+    upstream_package_name: uwelcome
+    downstream_package_name: uwelcome
+    paths:
+      - packages/uwelcome
   v4l-utils:
     specfile_path: v4l-utils.spec
     upstream_package_name: v4l-utils
