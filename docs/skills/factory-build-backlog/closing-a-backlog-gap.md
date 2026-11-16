@@ -83,8 +83,10 @@ not establish a build, publication, or runtime dependency closure.
 Before importing an audit name, read Utah's current `baselines/triage.toml` and
 pin the decision's commit when reconciling an existing `waived` entry into
 `[wontfix]`. The audit can include deliberately absent X11 client utilities
-(`xrandr`, `xset`, `xdriinfo`) or an updater installed directly from a pinned
-release (`uupd`); their absence is not permission to reverse those decisions.
+(`xrandr`, `xset`, `xdriinfo`); their absence is not permission to reverse
+those decisions. Only a recorded consumer decision reverses one: `uupd` moved
+from `[wontfix]` to `[resolved]` when Utah adopted Dakota's uupd RPM in place
+of its pinned release download (utah-packages#1031, utah#1236).
 Do not extend a client-tool waiver to an X11 library such as `xcb-util-cursor`:
 Wayland sessions still run applications through Xwayland. Check each exact
 binary name, not a shared prefix.
