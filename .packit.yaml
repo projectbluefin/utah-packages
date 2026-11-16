@@ -274,6 +274,12 @@ packages:
     downstream_package_name: bluefin-artwork-logos
     paths:
       - packages/bluefin-artwork-logos
+  bluefin-docs:
+    specfile_path: bluefin-docs.spec
+    upstream_package_name: bluefin-docs
+    downstream_package_name: bluefin-docs
+    paths:
+      - packages/bluefin-docs
   bluez:
     specfile_path: bluez.spec
     upstream_package_name: bluez
