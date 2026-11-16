@@ -3478,6 +3478,12 @@ packages:
     downstream_package_name: pam-u2f
     paths:
       - packages/pam-u2f
+  pam_pkcs11:
+    specfile_path: pam_pkcs11.spec
+    upstream_package_name: pam_pkcs11
+    downstream_package_name: pam_pkcs11
+    paths:
+      - packages/pam_pkcs11
   pam_yubico:
     specfile_path: pam_yubico.spec
     upstream_package_name: pam_yubico
