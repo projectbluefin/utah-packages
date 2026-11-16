@@ -172,6 +172,12 @@ packages:
     downstream_package_name: alsa-utils
     paths:
       - packages/alsa-utils
+  android-udev-rules:
+    specfile_path: android-udev-rules.spec
+    upstream_package_name: android-udev-rules
+    downstream_package_name: android-udev-rules
+    paths:
+      - packages/android-udev-rules
   anthy-unicode:
     specfile_path: anthy-unicode.spec
     upstream_package_name: anthy-unicode
