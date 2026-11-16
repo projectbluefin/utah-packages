@@ -25,6 +25,14 @@ and verify with `just factory-build-backlog`. A deliberate individual
 font addition needs its own proposal. This does not remove existing recipes
 or claim their binaries are published.
 
+Dakota parity is such a proposal when the owner adopts it. Symbols Nerd Font
+(`nerd-fonts-symbols`) was adopted for projectbluefin/utah#1240. The
+`nerd-fonts` `[wontfix]` entry still covers the bulk Nerd Fonts family from
+Bluefin classic and is not a reason to drop it. If a Dakota font element pulls
+several loose files from the repository, such as a fontconfig rule or a
+license, the factory still locks only one upstream file per recipe. Use the
+copies inside the release archive and record in the spec how they differ.
+
 Do not extend that font decision to character mappings or input-method data.
 In particular, `adobe-mappings-*`, `anthy-unicode`, and
 `cldr-emoji-annotation*` remain separate functionality work; the maintainer
