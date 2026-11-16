@@ -1,0 +1,8 @@
+{
+  "package": "libtsm",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libtsm.git",
+  "commit": "5cd527cfb790915917ecfff5b9a1adfd27daeece",
+  "tree": "64a4263cbe22c9dc837b6764b9ac7ed73284b005",
+  "imported_at": "2026-11-16T05:36:05.511359+00:00"
+}
