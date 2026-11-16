@@ -88,7 +88,7 @@ mv doc/atm-linux-howto.txt.1 doc/atm-linux-howto.txt
 %build
 # The SourceForge 2.5.2 release omits the autotools bootstrap script that
 # upstream ships in its source; regenerate from the patched Makefile.am.
-# %autosetup drops zntune and ilmidiag from it, but the pre-generated
+# The prep patches drop zntune and ilmidiag from it, but the pre-generated
 # Makefile.in still lists them, and zntune.c uses the ZATM ioctls removed in
 # kernel 5.19, so a stale configure would fail to compile.
 autoreconf -fi
