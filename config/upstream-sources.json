@@ -3970,6 +3970,13 @@
       "sha512": "78fc02a2341fedf84e5d539745cbae5410ce799ca9522dfe0be9133d13cd4373d79d6fc83d422e5f92e7f8db96e55feddd2cb8f03d9a9ac8c4ea7ac4697ec741"
     },
     {
+      "name": "libssc",
+      "version": "0.4.4",
+      "url": "https://codeberg.org/DylanVanAssche/libssc/archive/v0.4.4.tar.gz",
+      "filename": "libssc-0.4.4.tar.gz",
+      "sha512": "9240970f6a70f4900ef2d8fad337dac815ea2602b3b395943326fb086f59d24dcf59b76bdbc6014ebd3c450eaad5393465ca038c165845ffe99bf8e282a5c170"
+    },
+    {
       "name": "libtalloc",
       "version": "2.5.0",
       "url": "https://www.samba.org/ftp/talloc/talloc-2.5.0.tar.gz",
