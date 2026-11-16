@@ -19,6 +19,9 @@ cups-browsed
 cups-filters
 fprintd
 gdm
+# The bootloader: a bad release, or replaced bytes, can leave a machine
+# unbootable. Its release-monitoring.org feed makes every 2.x a same-major update.
+grub2
 libblockdev
 libfprint
 # gvfs is linked to the libcdio 2.3 ABI; upgrades require a consumer rebuild.
