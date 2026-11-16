@@ -243,6 +243,13 @@
       ]
     },
     {
+      "name": "android-udev-rules",
+      "version": "20260423",
+      "url": "https://github.com/M0Rf30/android-udev-rules/archive/refs/tags/20260423.tar.gz",
+      "filename": "android-udev-rules-20260423.tar.gz",
+      "sha512": "97966f1c02a9f85825a217384c94cfa8b9f721173e543c324b866ee7823b09ca67ec7ba1b012ce10de9d56ae7e4157d4cec8364c8e325001664cf6383778a5fe"
+    },
+    {
       "name": "anthy-unicode",
       "version": "1.0.0.20260213",
       "url": "https://github.com/fujiwarat/anthy-unicode/releases/download/1.0.0.20260213/anthy-unicode-1.0.0.20260213.tar.xz",
@@ -378,6 +385,13 @@
         "input": "https://raw.githubusercontent.com/projectbluefin/artwork/9ab493bf1fb3ae41594b6bb0a2c5f2350d81de01/LICENSE, https://raw.githubusercontent.com/projectbluefin/artwork/9ab493bf1fb3ae41594b6bb0a2c5f2350d81de01/assets/vector/logos/bluefin/bluefin-logo-dark.svg, https://raw.githubusercontent.com/projectbluefin/artwork/9ab493bf1fb3ae41594b6bb0a2c5f2350d81de01/assets/vector/logos/bluefin/bluefin-logo-light.svg (each sha512-pinned)",
         "method": "fetch each file from projectbluefin/artwork at 9ab493bf1fb3ae41594b6bb0a2c5f2350d81de01 and pack them flat and deterministically as bluefin-artwork-logos-9ab493b.tar.xz"
       }
+    },
+    {
+      "name": "bluefin-docs",
+      "version": "26.11.1",
+      "url": "https://github.com/projectbluefin/documentation/releases/download/26.11.1/bluefin.pdf",
+      "filename": "bluefin-docs-26.11.1.pdf",
+      "sha512": "c94c38564e2090f0a9e7e745f62cfb4436417d6370b5b9cb43b7aa29fc1e33aad0d9f3acef7912735f123fefdfb21678ec564fe49d606585047a00892bdfe9b9"
     },
     {
       "name": "bluez",
