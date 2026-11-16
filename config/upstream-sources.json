@@ -398,6 +398,13 @@
       }
     },
     {
+      "name": "bluefin-docs",
+      "version": "26.11.1",
+      "url": "https://github.com/projectbluefin/documentation/releases/download/26.11.1/bluefin.pdf",
+      "filename": "bluefin-docs-26.11.1.pdf",
+      "sha512": "c94c38564e2090f0a9e7e745f62cfb4436417d6370b5b9cb43b7aa29fc1e33aad0d9f3acef7912735f123fefdfb21678ec564fe49d606585047a00892bdfe9b9"
+    },
+    {
       "name": "bluez",
       "version": "5.87",
       "url": "https://www.kernel.org/pub/linux/bluetooth/bluez-5.87.tar.xz",
