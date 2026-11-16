@@ -6911,6 +6911,17 @@
       ]
     },
     {
+      "name": "tealdeer",
+      "version": "1.8.1",
+      "filename": "tealdeer-1.8.1-vendored.tar.xz",
+      "sha512": "a9e63492207c2541bcef855c603f2925a4bacf35eb8979fe79b48f03e36bfe3269eb2b246328ccc3b4fdbcd0b3d8a5b3571b20b46ffd105dda26272ed7f4e911",
+      "generate": {
+        "script": "tools/generated_sources.py",
+        "input": "https://github.com/tealdeer-rs/tealdeer/archive/refs/tags/v1.8.1.tar.gz (sha512-pinned) and every crates.io crate its Cargo.lock pins (sha256-pinned by Cargo.lock)",
+        "method": "add vendor/<crate>-<version> for each Cargo.lock crate with .cargo-checksum.json, as cargo vendor --versioned-dirs lays it out, and repack deterministically as tealdeer-1.8.1-vendored.tar.xz"
+      }
+    },
+    {
       "name": "tecla",
       "stage": 4,
       "version": "51.0",
