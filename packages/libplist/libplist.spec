@@ -51,6 +51,7 @@ make check
 %files
 %license COPYING.LESSER
 %doc AUTHORS README.md
+%{_bindir}/plist2json
 %{_bindir}/plistutil
 %{_libdir}/libplist-2.0.so.12*
 %{_libdir}/libplist++-2.0.so.12*
