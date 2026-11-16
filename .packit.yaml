@@ -982,6 +982,12 @@ packages:
     downstream_package_name: gnome-user-share
     paths:
       - packages/gnome-user-share
+  gnu-efi:
+    specfile_path: gnu-efi.spec
+    upstream_package_name: gnu-efi
+    downstream_package_name: gnu-efi
+    paths:
+      - packages/gnu-efi
   gobject-introspection:
     specfile_path: gobject-introspection.spec
     upstream_package_name: gobject-introspection

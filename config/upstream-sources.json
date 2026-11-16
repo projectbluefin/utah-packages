@@ -1500,6 +1500,13 @@
       "sha512": "21fcac0d49d1a1ec0d30c68e3cc0ba6bc88cefef7114adacaf65cf4fb3b52c89e4f71ea2d7a7685b44bd7a0573f56e44c0a4516389245969f472f71097a6bf00"
     },
     {
+      "name": "gnu-efi",
+      "version": "3.0.18",
+      "url": "https://sourceforge.net/projects/gnu-efi/files/gnu-efi-3.0.18.tar.bz2",
+      "filename": "gnu-efi-3.0.18.tar.bz2",
+      "sha512": "39f9fa14b880441a94a04400ff8850efdd9474929e5501dfd05af06e7747b4d0f7cb742ac811c7026cf52d00508efb73018be4d61d63a1211de0cd931cbc473d"
+    },
+    {
       "name": "gobject-introspection",
       "version": "1.86.0",
       "url": "https://download.gnome.org/sources/gobject-introspection/1.86/gobject-introspection-1.86.0.tar.xz",
