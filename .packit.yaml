@@ -574,6 +574,12 @@ packages:
     downstream_package_name: fastfetch
     paths:
       - packages/fastfetch
+  fcitx5-gtk:
+    specfile_path: fcitx5-gtk.spec
+    upstream_package_name: fcitx5-gtk
+    downstream_package_name: fcitx5-gtk
+    paths:
+      - packages/fcitx5-gtk
   fdk-aac-free:
     specfile_path: fdk-aac-free.spec
     upstream_package_name: fdk-aac-free

@@ -843,6 +843,13 @@
       ]
     },
     {
+      "name": "fcitx5-gtk",
+      "version": "5.1.7",
+      "url": "https://download.fcitx-im.org/fcitx5/fcitx5-gtk/fcitx5-gtk-5.1.7.tar.zst",
+      "filename": "fcitx5-gtk-5.1.7.tar.zst",
+      "sha512": "0f6c1f00faab0898577969027ea88533e89123ebfe90c1076a4e6a900c4d992dcb34f8ccf20261b2565f3d8c53eed9780a5e9aca5add9487a7b291487e8b1d98"
+    },
+    {
       "name": "fdk-aac-free",
       "version": "2.0.3",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/fdk-aac-free/fdk-aac-free-2.0.3.tar.gz/sha512/d5dcb11d95acd3671fe0d92f5a4954b3f25faf0937d7f94a02bec9d7e556b321f4e3205b91fe40b3475f04ee9f879609c6419a6c699f5d854658c9a6f8b524f1/fdk-aac-free-2.0.3.tar.gz",
