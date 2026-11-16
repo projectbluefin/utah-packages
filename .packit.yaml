@@ -2380,6 +2380,12 @@ packages:
     downstream_package_name: libreport
     paths:
       - packages/libreport
+  librime:
+    specfile_path: librime.spec
+    upstream_package_name: librime
+    downstream_package_name: librime
+    paths:
+      - packages/librime
   librist:
     specfile_path: librist.spec
     upstream_package_name: librist

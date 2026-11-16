@@ -3761,6 +3761,13 @@
       ]
     },
     {
+      "name": "librime",
+      "version": "1.16.1",
+      "url": "https://github.com/rime/librime/archive/1.16.1.tar.gz#/librime-1.16.1.tar.gz",
+      "filename": "librime-1.16.1.tar.gz",
+      "sha512": "ff48cd3d8a6b39c998735522160e1e213a978bc15e439412a417023042e9c623f0b98ec98c70bd21f0bb204d5197cdc6660cef202da4032ea6a3e4ec99570369"
+    },
+    {
       "name": "librist",
       "version": "0.2.11",
       "url": "https://code.videolan.org/rist/librist/-/archive/v0.2.11/librist-v0.2.11.tar.gz",

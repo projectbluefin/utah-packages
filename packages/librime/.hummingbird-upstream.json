@@ -1,0 +1,8 @@
+{
+  "package": "librime",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/librime.git",
+  "commit": "0e10c7abb4fa8abc94dfc95c5bd5a09b259d8a82",
+  "tree": "45c2d7c02779f6cbabc6813f8b57a52425122440",
+  "imported_at": "2026-11-16T04:05:20.078902+00:00"
+}
