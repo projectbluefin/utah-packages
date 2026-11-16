@@ -19,6 +19,9 @@ cups-browsed
 cups-filters
 fprintd
 gdm
+# The bootloader: a bad release, or replaced bytes, can leave a machine
+# unbootable. Its release-monitoring.org feed makes every 2.x a same-major update.
+grub2
 libblockdev
 libfprint
 # libjwt 1.18 moves the soname to libjwt.so.2 (sso-mib-tool links .so.1);
