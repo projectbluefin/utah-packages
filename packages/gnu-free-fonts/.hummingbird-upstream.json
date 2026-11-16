@@ -1,0 +1,8 @@
+{
+  "package": "gnu-free-fonts",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/gnu-free-fonts.git",
+  "commit": "d1dd91bb5b69b35bfe5a0cb271f17825faf51831",
+  "tree": "5f84e25e1c2f974cf5d0dc27bb3d95a07f18bdd9",
+  "imported_at": "2026-11-16T04:11:44.062325+00:00"
+}

@@ -1,0 +1,8 @@
+{
+  "package": "iscsi-initiator-utils",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/iscsi-initiator-utils.git",
+  "commit": "e82c040d3a8bea63ccc1febae5ae5633620b2233",
+  "tree": "e045a54b6a932f2c19309d26903a48a3f9a48863",
+  "imported_at": "2026-11-16T04:06:25.808245+00:00"
+}

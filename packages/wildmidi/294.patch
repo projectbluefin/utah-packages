@@ -1,0 +1,305 @@
+From bbff48133b0f0a17ec1297c7fe142ec15a239c4c Mon Sep 17 00:00:00 2001
+From: glitchfox <glitchfox@benjaminali.com>
+Date: Thu, 30 Jul 2026 07:35:28 +0000
+Subject: [PATCH 1/4] Bound variable-length shift and clamp float->uint casts
+ in the parsers
+
+Two more UndefinedBehaviorSanitizer findings from AFL++ fuzzing, both on the
+untrusted-input parse paths:
+
+f_hmp.c -- the HMP variable-length delta decoders accumulate 7 bits per byte via
+`(*p & 0x7F) << var_len_shift`, bumping var_len_shift by 7 with no upper bound.
+A long run of continuation bytes drives the shift past 31, which is undefined
+(UBSan: "shift exponent is too large" and, at shift 28, "left shift of N cannot
+be represented in type 'int'"). Accumulate only while var_len_shift < 32 and
+shift as unsigned; bytes are still consumed so the parse stays aligned. Applies
+to both var-len loops.
+
+f_midi.c -- `sample_count = (uint32_t) sample_count_f;` casts a float that a
+crafted tempo/delta can push above UINT32_MAX, an undefined float-to-integer
+conversion. Clamp to [0, UINT32_MAX] before the cast. Three sites.
+
+Value-preserving for well-formed input; only malformed input (which was already
+UB) is affected. Found with AFL++ + UBSan. Independent of #293 (different lines).
+
+Signed-off-by: glitchfox <glitchfox@benjaminali.com>
+---
+ src/f_hmp.c  | 21 +++++++++++++++++----
+ src/f_midi.c |  6 +++---
+ 2 files changed, 20 insertions(+), 7 deletions(-)
+
+diff --git a/src/f_hmp.c b/src/f_hmp.c
+index 93ae8247..2b3fbf46 100644
+--- a/src/f_hmp.c
++++ b/src/f_hmp.c
+@@ -242,13 +242,21 @@ _WM_ParseNewHmp(const uint8_t *hmp_data, uint32_t hmp_size) {
+         var_len_shift = 0;
+         if (*hmp_data < 0x80) {
+             do {
+-                chunk_delta[i] = chunk_delta[i] | ((*hmp_data++ & 0x7F) << var_len_shift);
++                /* var_len_shift is unbounded on malformed input; only accumulate
++                 * while the shift is in range for the 32-bit chunk_delta, and
++                 * shift as unsigned. Bytes are still consumed so parsing stays
++                 * aligned. */
++                if (var_len_shift < 32)
++                    chunk_delta[i] |= ((uint32_t)(*hmp_data & 0x7F) << var_len_shift);
++                hmp_data++;
+                 var_len_shift += 7;
+                 chunk_ofs[i]++;
+             } while (hmp_data < data_end && *hmp_data < 0x80);
+         }
+         if (hmp_data == data_end) goto tooshort;
+-        chunk_delta[i] = chunk_delta[i] | ((*hmp_data++ & 0x7F) << var_len_shift);
++        if (var_len_shift < 32)
++            chunk_delta[i] |= ((uint32_t)(*hmp_data & 0x7F) << var_len_shift);
++        hmp_data++;
+         chunk_ofs[i]++;
+ 
+         if (chunk_delta[i] < smallest_delta) {
+@@ -343,7 +351,11 @@ _WM_ParseNewHmp(const uint8_t *hmp_data, uint32_t hmp_size) {
+                 if (chunk_length[i] && *hmp_chunk[i] < 0x80) {
+                     do {
+                         if (! chunk_length[i]) break;
+-                        chunk_delta[i] = chunk_delta[i] + ((*hmp_chunk[i] & 0x7F) << var_len_shift);
++                        /* Bound the shift (see the other var-len loop above): a
++                         * long run of continuation bytes would otherwise drive
++                         * var_len_shift past 31 -> undefined shift. */
++                        if (var_len_shift < 32)
++                            chunk_delta[i] += ((uint32_t)(*hmp_chunk[i] & 0x7F) << var_len_shift);
+                         var_len_shift += 7;
+                         hmp_chunk[i]++;
+                         chunk_length[i]--;
+@@ -353,7 +365,8 @@ _WM_ParseNewHmp(const uint8_t *hmp_data, uint32_t hmp_size) {
+                     _WM_GLOBAL_ERROR(WM_ERR_NOT_HMP, "file too short", 0);
+                     goto _hmp_end;
+                 }
+-                chunk_delta[i] = chunk_delta[i] + ((*hmp_chunk[i] & 0x7F) << var_len_shift);
++                if (var_len_shift < 32)
++                    chunk_delta[i] += ((uint32_t)(*hmp_chunk[i] & 0x7F) << var_len_shift);
+                 hmp_chunk[i]++;
+                 chunk_length[i]--;
+             } while (!chunk_delta[i]);
+diff --git a/src/f_midi.c b/src/f_midi.c
+index 4963d4f4..21cd3161 100644
+--- a/src/f_midi.c
++++ b/src/f_midi.c
+@@ -247,7 +247,7 @@ _WM_ParseNewMidi(const uint8_t *midi_data, uint32_t midi_size) {
+ 
+     subtract_delta = smallest_delta;
+     sample_count_f = (((float) smallest_delta * samples_per_delta_f) + sample_remainder);
+-    sample_count = (uint32_t) sample_count_f;
++    sample_count = (sample_count_f >= 4294967296.0f) ? 0xFFFFFFFFu : (sample_count_f > 0.0f) ? (uint32_t) sample_count_f : 0u;
+     sample_remainder = sample_count_f - (float) sample_count;
+ 
+     mdi->events[mdi->event_count - 1].samples_to_next += sample_count;
+@@ -345,7 +345,7 @@ _WM_ParseNewMidi(const uint8_t *midi_data, uint32_t midi_size) {
+             subtract_delta = smallest_delta;
+             sample_count_f = (((float) smallest_delta * samples_per_delta_f)
+                               + sample_remainder);
+-            sample_count = (uint32_t) sample_count_f;
++            sample_count = (sample_count_f >= 4294967296.0f) ? 0xFFFFFFFFu : (sample_count_f > 0.0f) ? (uint32_t) sample_count_f : 0u;
+             sample_remainder = sample_count_f - (float) sample_count;
+ 
+             mdi->events[mdi->event_count - 1].samples_to_next += sample_count;
+@@ -418,7 +418,7 @@ _WM_ParseNewMidi(const uint8_t *midi_data, uint32_t midi_size) {
+                 }
+                 sample_count_f = (((float) track_delta[i] * samples_per_delta_f)
+                                   + sample_remainder);
+-                sample_count = (uint32_t) sample_count_f;
++                sample_count = (sample_count_f >= 4294967296.0f) ? 0xFFFFFFFFu : (sample_count_f > 0.0f) ? (uint32_t) sample_count_f : 0u;
+                 sample_remainder = sample_count_f - (float) sample_count;
+                 mdi->events[mdi->event_count - 1].samples_to_next += sample_count;
+                 mdi->extra_info.approx_total_samples += sample_count;
+
+From 6fd1b39ba5a585840e9b998be2f98cbbe32152f5 Mon Sep 17 00:00:00 2001
+From: glitchfox <glitchfox@benjaminali.com>
+Date: Thu, 30 Jul 2026 10:09:28 +0000
+Subject: [PATCH 2/4] f_hmp: fail on over-long var-length quantity instead of
+ capping
+
+Per review (@sezero): a var-length quantity that needs var_len_shift >= 32
+cannot fit the 32-bit chunk_delta and only occurs on malformed input, so reject
+it as WM_ERR_CORUPT (goto _hmp_end) rather than silently skipping the shift.
+Applies to both var-len loops. A valid 32-bit delta only reaches shift 28, so
+no well-formed file is rejected.
+
+Signed-off-by: glitchfox <glitchfox@benjaminali.com>
+---
+ src/f_hmp.c | 41 ++++++++++++++++++++++++++---------------
+ 1 file changed, 26 insertions(+), 15 deletions(-)
+
+diff --git a/src/f_hmp.c b/src/f_hmp.c
+index 2b3fbf46..5dfc38d7 100644
+--- a/src/f_hmp.c
++++ b/src/f_hmp.c
+@@ -242,20 +242,25 @@ _WM_ParseNewHmp(const uint8_t *hmp_data, uint32_t hmp_size) {
+         var_len_shift = 0;
+         if (*hmp_data < 0x80) {
+             do {
+-                /* var_len_shift is unbounded on malformed input; only accumulate
+-                 * while the shift is in range for the 32-bit chunk_delta, and
+-                 * shift as unsigned. Bytes are still consumed so parsing stays
+-                 * aligned. */
+-                if (var_len_shift < 32)
+-                    chunk_delta[i] |= ((uint32_t)(*hmp_data & 0x7F) << var_len_shift);
++                /* A var-length quantity that needs a shift of 32+ cannot fit the
++                 * 32-bit chunk_delta -- reject it as corrupt rather than perform
++                 * an out-of-range (undefined) shift. */
++                if (var_len_shift >= 32) {
++                    _WM_GLOBAL_ERROR(WM_ERR_CORUPT, "var-length quantity too large", 0);
++                    goto _hmp_end;
++                }
++                chunk_delta[i] |= ((uint32_t)(*hmp_data & 0x7F) << var_len_shift);
+                 hmp_data++;
+                 var_len_shift += 7;
+                 chunk_ofs[i]++;
+             } while (hmp_data < data_end && *hmp_data < 0x80);
+         }
+         if (hmp_data == data_end) goto tooshort;
+-        if (var_len_shift < 32)
+-            chunk_delta[i] |= ((uint32_t)(*hmp_data & 0x7F) << var_len_shift);
++        if (var_len_shift >= 32) {
++            _WM_GLOBAL_ERROR(WM_ERR_CORUPT, "var-length quantity too large", 0);
++            goto _hmp_end;
++        }
++        chunk_delta[i] |= ((uint32_t)(*hmp_data & 0x7F) << var_len_shift);
+         hmp_data++;
+         chunk_ofs[i]++;
+ 
+@@ -351,11 +356,14 @@ _WM_ParseNewHmp(const uint8_t *hmp_data, uint32_t hmp_size) {
+                 if (chunk_length[i] && *hmp_chunk[i] < 0x80) {
+                     do {
+                         if (! chunk_length[i]) break;
+-                        /* Bound the shift (see the other var-len loop above): a
+-                         * long run of continuation bytes would otherwise drive
+-                         * var_len_shift past 31 -> undefined shift. */
+-                        if (var_len_shift < 32)
+-                            chunk_delta[i] += ((uint32_t)(*hmp_chunk[i] & 0x7F) << var_len_shift);
++                        /* See the other var-len loop above: a shift of 32+ cannot
++                         * fit chunk_delta, so fail closed rather than perform an
++                         * out-of-range (undefined) shift. */
++                        if (var_len_shift >= 32) {
++                            _WM_GLOBAL_ERROR(WM_ERR_CORUPT, "var-length quantity too large", 0);
++                            goto _hmp_end;
++                        }
++                        chunk_delta[i] += ((uint32_t)(*hmp_chunk[i] & 0x7F) << var_len_shift);
+                         var_len_shift += 7;
+                         hmp_chunk[i]++;
+                         chunk_length[i]--;
+@@ -365,8 +373,11 @@ _WM_ParseNewHmp(const uint8_t *hmp_data, uint32_t hmp_size) {
+                     _WM_GLOBAL_ERROR(WM_ERR_NOT_HMP, "file too short", 0);
+                     goto _hmp_end;
+                 }
+-                if (var_len_shift < 32)
+-                    chunk_delta[i] += ((uint32_t)(*hmp_chunk[i] & 0x7F) << var_len_shift);
++                if (var_len_shift >= 32) {
++                    _WM_GLOBAL_ERROR(WM_ERR_CORUPT, "var-length quantity too large", 0);
++                    goto _hmp_end;
++                }
++                chunk_delta[i] += ((uint32_t)(*hmp_chunk[i] & 0x7F) << var_len_shift);
+                 hmp_chunk[i]++;
+                 chunk_length[i]--;
+             } while (!chunk_delta[i]);
+
+From 0a3afe4082054508b1956d67489b01c1915f935d Mon Sep 17 00:00:00 2001
+From: glitchfox <glitchfox@benjaminali.com>
+Date: Thu, 30 Jul 2026 10:27:56 +0000
+Subject: [PATCH 3/4] f_midi: fail on out-of-range sample count instead of
+ clamping
+
+Per review (@sezero): treat an out-of-range sample_count_f as WM_ERR_CORUPT
+(goto _end) rather than clamping to UINT32_MAX, matching the f_hmp change.
+Three sites in _WM_ParseNewMidi; well-formed files stay in range.
+
+Signed-off-by: glitchfox <glitchfox@benjaminali.com>
+---
+ src/f_midi.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/src/f_midi.c b/src/f_midi.c
+index 21cd3161..0ccf4ae8 100644
+--- a/src/f_midi.c
++++ b/src/f_midi.c
+@@ -247,7 +247,7 @@ _WM_ParseNewMidi(const uint8_t *midi_data, uint32_t midi_size) {
+ 
+     subtract_delta = smallest_delta;
+     sample_count_f = (((float) smallest_delta * samples_per_delta_f) + sample_remainder);
+-    sample_count = (sample_count_f >= 4294967296.0f) ? 0xFFFFFFFFu : (sample_count_f > 0.0f) ? (uint32_t) sample_count_f : 0u;
++    if (sample_count_f < 0.0f || sample_count_f >= 4294967296.0f) { _WM_GLOBAL_ERROR(WM_ERR_CORUPT, "sample count out of range", 0); goto _end; } sample_count = (uint32_t) sample_count_f;
+     sample_remainder = sample_count_f - (float) sample_count;
+ 
+     mdi->events[mdi->event_count - 1].samples_to_next += sample_count;
+@@ -345,7 +345,7 @@ _WM_ParseNewMidi(const uint8_t *midi_data, uint32_t midi_size) {
+             subtract_delta = smallest_delta;
+             sample_count_f = (((float) smallest_delta * samples_per_delta_f)
+                               + sample_remainder);
+-            sample_count = (sample_count_f >= 4294967296.0f) ? 0xFFFFFFFFu : (sample_count_f > 0.0f) ? (uint32_t) sample_count_f : 0u;
++            if (sample_count_f < 0.0f || sample_count_f >= 4294967296.0f) { _WM_GLOBAL_ERROR(WM_ERR_CORUPT, "sample count out of range", 0); goto _end; } sample_count = (uint32_t) sample_count_f;
+             sample_remainder = sample_count_f - (float) sample_count;
+ 
+             mdi->events[mdi->event_count - 1].samples_to_next += sample_count;
+@@ -418,7 +418,7 @@ _WM_ParseNewMidi(const uint8_t *midi_data, uint32_t midi_size) {
+                 }
+                 sample_count_f = (((float) track_delta[i] * samples_per_delta_f)
+                                   + sample_remainder);
+-                sample_count = (sample_count_f >= 4294967296.0f) ? 0xFFFFFFFFu : (sample_count_f > 0.0f) ? (uint32_t) sample_count_f : 0u;
++                if (sample_count_f < 0.0f || sample_count_f >= 4294967296.0f) { _WM_GLOBAL_ERROR(WM_ERR_CORUPT, "sample count out of range", 0); goto _end; } sample_count = (uint32_t) sample_count_f;
+                 sample_remainder = sample_count_f - (float) sample_count;
+                 mdi->events[mdi->event_count - 1].samples_to_next += sample_count;
+                 mdi->extra_info.approx_total_samples += sample_count;
+
+From 76d8d334fc04646efb9b9f88581ae4618e079a2c Mon Sep 17 00:00:00 2001
+From: glitchfox <glitchfox@benjaminali.com>
+Date: Thu, 30 Jul 2026 11:48:06 +0000
+Subject: [PATCH 4/4] f_midi: name the 2^32 bound (WM_TWO_TO_32_F) instead of a
+ magic float
+
+Per review (@psi29a): replace the bare 4294967296.0f literal used to bound
+sample_count_f before the float->uint32 conversion with a named define.
+
+Signed-off-by: glitchfox <glitchfox@benjaminali.com>
+---
+ src/f_midi.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/src/f_midi.c b/src/f_midi.c
+index 0ccf4ae8..0e69b947 100644
+--- a/src/f_midi.c
++++ b/src/f_midi.c
+@@ -36,6 +36,9 @@
+ #include "reverb.h"
+ #include "sample.h"
+ 
++/* Smallest float that does NOT fit in a uint32_t (2^32); used to reject an
++ * out-of-range sample count before the float->uint32 conversion. */
++#define WM_TWO_TO_32_F 4294967296.0f
+ 
+ struct _mdi *
+ _WM_ParseNewMidi(const uint8_t *midi_data, uint32_t midi_size) {
+@@ -247,7 +250,7 @@ _WM_ParseNewMidi(const uint8_t *midi_data, uint32_t midi_size) {
+ 
+     subtract_delta = smallest_delta;
+     sample_count_f = (((float) smallest_delta * samples_per_delta_f) + sample_remainder);
+-    if (sample_count_f < 0.0f || sample_count_f >= 4294967296.0f) { _WM_GLOBAL_ERROR(WM_ERR_CORUPT, "sample count out of range", 0); goto _end; } sample_count = (uint32_t) sample_count_f;
++    if (sample_count_f < 0.0f || sample_count_f >= WM_TWO_TO_32_F) { _WM_GLOBAL_ERROR(WM_ERR_CORUPT, "sample count out of range", 0); goto _end; } sample_count = (uint32_t) sample_count_f;
+     sample_remainder = sample_count_f - (float) sample_count;
+ 
+     mdi->events[mdi->event_count - 1].samples_to_next += sample_count;
+@@ -345,7 +348,7 @@ _WM_ParseNewMidi(const uint8_t *midi_data, uint32_t midi_size) {
+             subtract_delta = smallest_delta;
+             sample_count_f = (((float) smallest_delta * samples_per_delta_f)
+                               + sample_remainder);
+-            if (sample_count_f < 0.0f || sample_count_f >= 4294967296.0f) { _WM_GLOBAL_ERROR(WM_ERR_CORUPT, "sample count out of range", 0); goto _end; } sample_count = (uint32_t) sample_count_f;
++            if (sample_count_f < 0.0f || sample_count_f >= WM_TWO_TO_32_F) { _WM_GLOBAL_ERROR(WM_ERR_CORUPT, "sample count out of range", 0); goto _end; } sample_count = (uint32_t) sample_count_f;
+             sample_remainder = sample_count_f - (float) sample_count;
+ 
+             mdi->events[mdi->event_count - 1].samples_to_next += sample_count;
+@@ -418,7 +421,7 @@ _WM_ParseNewMidi(const uint8_t *midi_data, uint32_t midi_size) {
+                 }
+                 sample_count_f = (((float) track_delta[i] * samples_per_delta_f)
+                                   + sample_remainder);
+-                if (sample_count_f < 0.0f || sample_count_f >= 4294967296.0f) { _WM_GLOBAL_ERROR(WM_ERR_CORUPT, "sample count out of range", 0); goto _end; } sample_count = (uint32_t) sample_count_f;
++                if (sample_count_f < 0.0f || sample_count_f >= WM_TWO_TO_32_F) { _WM_GLOBAL_ERROR(WM_ERR_CORUPT, "sample count out of range", 0); goto _end; } sample_count = (uint32_t) sample_count_f;
+                 sample_remainder = sample_count_f - (float) sample_count;
+                 mdi->events[mdi->event_count - 1].samples_to_next += sample_count;
+                 mdi->extra_info.approx_total_samples += sample_count;

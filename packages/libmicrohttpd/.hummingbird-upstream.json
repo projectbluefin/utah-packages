@@ -1,0 +1,8 @@
+{
+  "package": "libmicrohttpd",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libmicrohttpd.git",
+  "commit": "c6d7f1a23d462a2ba3535b6dfd776300c46838ed",
+  "tree": "bc86e4a246ffc70dda8aaa4bba19895d207b4f67",
+  "imported_at": "2026-11-16T04:08:48.541443+00:00"
+}
