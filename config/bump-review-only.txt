@@ -17,7 +17,13 @@
 accountsservice
 cups-browsed
 cups-filters
+# thin_check/thin_repair run as root on block devices, and the vendored crate
+# tarball (dmpd133-vendor.tar.gz) does not carry the version, so a bump would
+# build the new release against the old vendor tree.
+device-mapper-persistent-data
 fprintd
+# Ships fusermount setuid root.
+fuse
 gdm
 # The bootloader: a bad release, or replaced bytes, can leave a machine
 # unbootable. Its release-monitoring.org feed makes every 2.x a same-major update.
