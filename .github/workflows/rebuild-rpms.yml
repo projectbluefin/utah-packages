@@ -522,6 +522,11 @@ jobs:
               # with the Fedora package: mock installs docs into a build root, and
               # this container was not. Restore that.
               sed -i "/^tsflags=nodocs/d" /etc/dnf/dnf.conf
+              # The Hummingbird CDN stalls for minutes at a time, and dnf gives up
+              # on a transfer below 1000 B/s for 30 s. Same settings as
+              # tools/build_container.sh: retry harder, wait longer (#1169).
+              printf "retries=10\ntimeout=120\nminrate=1000\nmax_parallel_downloads=4\n" \
+                >> /etc/dnf/dnf.conf
               cp /repos/hummingbird.repo /etc/yum.repos.d/
               if [ -n "${FACTORY_REPO:-}" ]; then
                 printf "[factory]\nname=factory\nbaseurl=%s\nenabled=1\ngpgcheck=0\npriority=5\n" \

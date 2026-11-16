@@ -301,6 +301,9 @@ jobs:
             utah-buildroot:run bash -exc '
               disable=--disablerepo=fedora-cisco-openh264
               sed -i "/^tsflags=nodocs/d" /etc/dnf/dnf.conf
+              # Ride out a stalled Hummingbird CDN; see tools/build_container.sh (#1169).
+              printf "retries=10\ntimeout=120\nminrate=1000\nmax_parallel_downloads=4\n" \
+                >> /etc/dnf/dnf.conf
               cp /repos/hummingbird.repo /etc/yum.repos.d/
               if [ -n "$(find /work/prior -name "*.rpm" -print -quit 2>/dev/null)" ]; then
                 dnf -y $disable install createrepo_c
