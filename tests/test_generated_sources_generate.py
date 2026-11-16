@@ -10,6 +10,7 @@ downloads.
 """
 
 import contextlib
+import difflib
 import gzip
 import hashlib
 import io
@@ -691,6 +692,106 @@ class GstThumbnailersGenerateTests(PackageDirMixin, unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "crate tinycrate 1.0.0: expected sha256"):
                 generated_sources.generate("gst-thumbnailers", self.package_dir, self.out_dir)
         self.assertEqual(list(self.out_dir.iterdir()), [])
+
+
+def unified_diff(path: str, old: str, new: str) -> str:
+    return "".join(difflib.unified_diff(old.splitlines(True), new.splitlines(True), f"a/{path}", f"b/{path}"))
+
+
+class GstreamerPluginsRsGenerateTests(PackageDirMixin, unittest.TestCase):
+    """A git tag whose Cargo.lock the recipe's patches change before vendoring (#1040)."""
+
+    VERSION = "1.0"
+    TOP = f"gst-plugins-rs-{VERSION}"
+    git = GitArchiveGenerateTests.git
+
+    def setUp(self):
+        super().setUp()
+        self.crate = targz({"tinycrate-1.0.0/src/lib.rs": b"//"})
+        self.crate_url = "https://static.crates.io/crates/tinycrate/tinycrate-1.0.0.crate"
+        workspace = '[[package]]\nname = "gst-plugin-x"\nversion = "1.0"\n'
+        self.released_lock = (
+            f'{workspace}\n[[package]]\nname = "gitcrate"\nversion = "0.1.0"\n'
+            'source = "git+https://example.com/gitcrate#0123"\n'
+        )
+        patched_lock = (
+            f'{workspace}\n[[package]]\nname = "tinycrate"\nversion = "1.0.0"\nsource = "{CRATES_IO}"\n'
+            f'checksum = "{hashlib.sha256(self.crate).hexdigest()}"\n'
+        )
+        self.repo = self.tmp / "upstream"
+        self.repo.mkdir()
+        self.git("init", "-q")
+        (self.repo / "Cargo.lock").write_text(self.released_lock)
+        (self.repo / "Cargo.toml").write_text("[workspace]\n")
+        self.git("add", "Cargo.lock", "Cargo.toml")
+        self.git("commit", "-q", "-m", "release")
+        self.git("tag", "-a", self.VERSION, "-m", "release")
+        self.commit = self.git("rev-parse", "HEAD")
+        (self.package_dir / "0001-lock.patch").write_text(unified_diff("Cargo.lock", self.released_lock, patched_lock))
+        # Only Cargo.lock hunks reach the lock; this one must not be applied there.
+        (self.package_dir / "0002-toml.patch").write_text(
+            unified_diff("Cargo.toml", "[workspace]\n", '[workspace]\nmembers = ["x"]\n')
+        )
+        self.write_recipe("Patch:          0001-lock.patch\nPatch1: 0002-toml.patch\n")
+
+    def write_recipe(self, patches: str, version: str = VERSION) -> None:
+        (self.package_dir / "gstreamer-plugins-rs.spec").write_text(
+            f"Name: gstreamer-plugins-rs\nVersion:        {version}\nRelease: 1\n{patches}"
+        )
+
+    def pinned(self):
+        return patch.multiple(
+            generated_sources,
+            GSTREAMER_PLUGINS_RS_REMOTE=str(self.repo),
+            GSTREAMER_PLUGINS_RS_COMMITS={self.VERSION: self.commit},
+        )
+
+    def test_metadata_pins_the_carried_recipe_commit(self):
+        entry = generated_sources.metadata_for("gstreamer-plugins-rs", ROOT / "packages" / "gstreamer-plugins-rs")
+        self.assertEqual(entry["filename"], "gst-plugins-rs-0.15.4-vendored.tar.xz")
+        self.assertIn("gst-plugins-rs.git tag 0.15.4 (commit 1afff3711855238433862c0ce3bf34918e500386)",
+                      entry["generate"]["input"])
+
+    def test_the_carried_recipe_names_its_patch_files(self):
+        package_dir = ROOT / "packages" / "gstreamer-plugins-rs"
+        patches = generated_sources.recipe_patches(package_dir, "gstreamer-plugins-rs.spec")
+        self.assertEqual([p.name for p in patches], [
+            "0001-Update-Cargo.lock-for-non-git-dependencies.patch",
+            "0002-Limit-the-workspace-to-the-plugins-this-recipe-builds.patch",
+        ])
+        self.assertTrue(all(p.is_file() for p in patches))
+
+    def test_an_unpinned_version_fails_before_running_git(self):
+        self.write_recipe("", version="9.9")
+        with patch.object(generated_sources.subprocess, "run") as run:
+            with self.assertRaisesRegex(RuntimeError, "no pinned commit for gstreamer-plugins-rs 9.9"):
+                generated_sources.generate("gstreamer-plugins-rs", self.package_dir, self.out_dir)
+        run.assert_not_called()
+
+    def test_a_patch_named_by_macro_is_refused(self):
+        self.write_recipe("Patch: %{name}-fix.patch\n")
+        with self.assertRaisesRegex(ValueError, "uses a macro"):
+            generated_sources.recipe_patches(self.package_dir, "gstreamer-plugins-rs.spec")
+
+    def test_the_patched_lock_decides_the_vendored_crates(self):
+        fetch = UrlopenRecorder({self.crate_url: self.crate})
+        with self.pinned(), patch.object(generated_sources.urllib.request, "urlopen", fetch):
+            target = generated_sources.generate("gstreamer-plugins-rs", self.package_dir, self.out_dir)
+        self.assertEqual(target.name, f"{self.TOP}-vendored.tar.xz")
+        self.assertEqual([url for url, _, _ in fetch.requests], [self.crate_url])
+        with tarfile.open(fileobj=io.BytesIO(lzma.decompress(target.read_bytes()))) as archive:
+            self.assertIn(f"{self.TOP}/vendor/tinycrate-1.0.0/src/lib.rs", archive.getnames())
+            # The tree stays as released; %prep applies the patches.
+            self.assertEqual(archive.extractfile(f"{self.TOP}/Cargo.lock").read().decode(), self.released_lock)
+            self.assertEqual(archive.extractfile(f"{self.TOP}/Cargo.toml").read(), b"[workspace]\n")
+        self.assertEqual([path.name for path in self.out_dir.iterdir()], [target.name])
+
+    def test_without_the_lock_patch_the_git_crate_is_refused(self):
+        self.write_recipe("")
+        with self.pinned(), patch.object(generated_sources, "_fetch") as fetch:
+            with self.assertRaisesRegex(RuntimeError, "gitcrate 0.1.0 comes from git"):
+                generated_sources.generate("gstreamer-plugins-rs", self.package_dir, self.out_dir)
+        fetch.assert_not_called()
 
 
 class CliTests(unittest.TestCase):

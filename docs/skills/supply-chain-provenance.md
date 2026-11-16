@@ -327,6 +327,24 @@ prunes the lock offline. To move the version, add the new release's SHA-512
 to the recipe's `*_INPUT_SHA512` table, bump the spec, regenerate, and pin the
 new digest in both `sources` and the lock.
 
+When the recipe's own patches move crate versions, the released lock is the
+wrong crate set. gstreamer-plugins-rs (#1040) carries freedesktop-sdk's patch
+that moves gtk-rs from git branches to crates.io, so its generator applies
+every spec `Patch:` to Cargo.lock (`git apply --include=Cargo.lock` in a
+scratch repository) and vendors what that lock pins; the archived tree stays
+as released and `%prep` applies the same patches. Name patch files literally:
+the generator reads them from the package directory and refuses a macro. A
+workspace member whose dependency comes from git (gst-plugins-rs' ffv1 and
+flavors) cannot be vendored, and cargo resolves every member even when it
+builds one, so cut the workspace to what the recipe builds: drop the members
+from `Cargo.toml`, run `cargo metadata` once so cargo prunes Cargo.lock
+without moving any version, and carry the result as a patch. For
+gst-plugins-rs that cut 1116 crates to 485. A version bump redoes both: pin
+the new tag's commit in `GSTREAMER_PLUGINS_RS_COMMITS`, rebase the patches,
+regenerate, and pin the digest in `sources` and the lock. The project
+publishes no release file, so the input is `git archive` of the pinned
+commit, sharing `_git_tag_tar` with `GIT_ARCHIVE_SOURCES`.
+
 ## A hand-repacked zstd source: generate xz, rename the Source
 
 When Fedora's repack script writes `.tar.zst` (7zip's

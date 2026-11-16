@@ -1906,6 +1906,17 @@
       "stage": 0
     },
     {
+      "name": "gstreamer-plugins-rs",
+      "version": "0.15.4",
+      "filename": "gst-plugins-rs-0.15.4-vendored.tar.xz",
+      "sha512": "3637efe0bf161f4eefe456edf933e49fef664042d0a7507e52c7fa31bf53a0936a04f3b76838556d2261ad4e5f49d43cb26fea456a74059dc14c02e456fb122f",
+      "generate": {
+        "script": "tools/generated_sources.py",
+        "input": "https://gitlab.freedesktop.org/gstreamer/gst-plugins-rs.git tag 0.15.4 (commit 1afff3711855238433862c0ce3bf34918e500386) and every crates.io crate its Cargo.lock pins after the recipe's patches (sha256-pinned by that Cargo.lock)",
+        "method": "git archive --format=tar --prefix=gst-plugins-rs-0.15.4/ of the pinned commit, add vendor/<crate>-<version> for each patched Cargo.lock crate with .cargo-checksum.json, as cargo vendor --versioned-dirs lays it out, and repack deterministically as gst-plugins-rs-0.15.4-vendored.tar.xz"
+      }
+    },
+    {
       "name": "gstreamer1",
       "version": "1.28.6",
       "url": "https://gstreamer.freedesktop.org/src/gstreamer/gstreamer-1.28.6.tar.xz",
@@ -6366,13 +6377,6 @@
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/runc/runc-1.5.1.tar.gz/sha512/4a96870af3146203a001e08d9a0330f6234f8f0b2efe62e123a4f9b131b73967482954f658d53258e19444630c18981b5d7ef805ab736ca16a69f783f39db182/runc-1.5.1.tar.gz"
       ]
-    },
-    {
-      "name": "rust-gst-plugin-dav1d",
-      "version": "0.15.0",
-      "url": "https://crates.io/api/v1/crates/gst-plugin-dav1d/0.15.0/download#/gst-plugin-dav1d-0.15.0.crate",
-      "filename": "gst-plugin-dav1d-0.15.0.crate",
-      "sha512": "9326a569da4ad762f743107577d4817bb28724cfb036b35eaf7d57acfb25d0b52239df86d778e519788651d867200e4c0c2a3cacf438fc3d3f3e2016e02f5cc8"
     },
     {
       "name": "rust-gst-plugin-gtk4",
