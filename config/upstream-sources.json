@@ -6305,6 +6305,13 @@
       ]
     },
     {
+      "name": "sudo-rs",
+      "version": "0.2.15",
+      "url": "https://github.com/trifectatechfoundation/sudo-rs/archive/v0.2.15/sudo-rs-0.2.15.tar.gz",
+      "filename": "sudo-rs-0.2.15.tar.gz",
+      "sha512": "18a2c8bc44fa2c0cea75379764c445e50e2a6ab086d10b7cb8135952dfc5fedcfc3069d57b03f5f74d8a31248aa0705bef7bbc13b3aab43ee90bf3dc2fae6801"
+    },
+    {
       "name": "svt-vp9",
       "version": "0.3.0",
       "url": "https://github.com/OpenVisualCloud/SVT-VP9/archive/v0.3.0/svt-vp9-0.3.0.tar.gz",

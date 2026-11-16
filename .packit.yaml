@@ -4054,6 +4054,12 @@ packages:
     downstream_package_name: strace
     paths:
       - packages/strace
+  sudo-rs:
+    specfile_path: sudo-rs.spec
+    upstream_package_name: sudo-rs
+    downstream_package_name: sudo-rs
+    paths:
+      - packages/sudo-rs
   svt-vp9:
     specfile_path: svt-vp9.spec
     upstream_package_name: svt-vp9
