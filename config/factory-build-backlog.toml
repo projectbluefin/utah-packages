@@ -913,6 +913,9 @@ packages = [
     { name = "realmd", pr = 903 },
     { name = "restic", pr = 903 },
     { name = "rpm-ostree-libs", pr = 903 },
+    # Dakota parity (#1031): Utah adopts Dakota's uupd RPM in place of its pinned
+    # release download (projectbluefin/utah#1236), reversing the #263 waiver.
+    { name = "uupd", pr = 1073 },
 ]
 
 [wontfix]
@@ -930,7 +933,6 @@ packages = [
     { name = "xdriinfo", reason = "Utah waives this X11 client tool because it ships a Wayland-only session (projectbluefin/utah#263; pinned triage above)." },
     { name = "xrandr", reason = "Utah waives this X11 client tool because it ships a Wayland-only session (projectbluefin/utah#263; pinned triage above)." },
     { name = "xset", reason = "Utah waives this X11 client tool because it ships a Wayland-only session (projectbluefin/utah#263; pinned triage above)." },
-    { name = "uupd", reason = "Utah installs a pinned upstream release; its triage waives the RPM difference (projectbluefin/utah#263; pinned triage above)." },
     { name = "adobe-source-code-pro-fonts", reason = "Bulk font parity rejected; individual additions need a separate proposal (https://github.com/projectbluefin/utah/issues/393#issuecomment-5920428811)." },
     { name = "gdouros-symbola-fonts", reason = "Bulk font parity rejected; individual additions need a separate proposal (https://github.com/projectbluefin/utah/issues/393#issuecomment-5920428811)." },
     { name = "google-droid-sans-fonts", reason = "Bulk font parity rejected; individual additions need a separate proposal (https://github.com/projectbluefin/utah/issues/393#issuecomment-5920428811)." },
