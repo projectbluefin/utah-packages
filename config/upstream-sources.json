@@ -7157,6 +7157,13 @@
       ]
     },
     {
+      "name": "xorg-x11-font-utils",
+      "version": "7.5",
+      "url": "https://www.x.org/pub/individual/font/font-util-1.4.1.tar.xz",
+      "filename": "font-util-1.4.1.tar.xz",
+      "sha512": "cec7fc38ba64ca9c81c59a8395da94d71c75e14f19faf6457da0a1a8c3c1cf51bcaab227834f6f5a6d274ba2557555e542dbe2bd88e527c45ea196318bbc38d0"
+    },
+    {
       "name": "xorg-x11-server-Xwayland",
       "stage": 5,
       "version": "26.0.99.901",

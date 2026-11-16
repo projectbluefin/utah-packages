@@ -4606,6 +4606,12 @@ packages:
     downstream_package_name: xmodmap
     paths:
       - packages/xmodmap
+  xorg-x11-font-utils:
+    specfile_path: xorg-x11-font-utils.spec
+    upstream_package_name: xorg-x11-font-utils
+    downstream_package_name: xorg-x11-font-utils
+    paths:
+      - packages/xorg-x11-font-utils
   xorg-x11-server-Xwayland:
     specfile_path: xorg-x11-server-Xwayland.spec
     upstream_package_name: xorg-x11-server-Xwayland
