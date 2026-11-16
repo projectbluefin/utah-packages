@@ -4243,11 +4243,11 @@
     },
     {
       "name": "linux-firmware",
-      "version": "20260810",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/linux-firmware/linux-firmware-20260810.tar.xz/sha512/2ef755194eb022e539aa677474ca5c6c8c3616b3302ebc14e1698c62ccb6ba6f8149e507b46c2a0563297c53502defb892ce4d37eb02646d99d955ae899eebe7/linux-firmware-20260810.tar.xz",
-      "filename": "linux-firmware-20260810.tar.xz",
+      "version": "20261019",
+      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/linux-firmware/linux-firmware-20261019.tar.xz/sha512/725bfcc57def709e43dcd89683e1a663c2d221e3d34da58ffcbf8af3b9c6da2b763739ec8fe0c2ece2620c71b2556b97f93e784c2d3f7c320b98bf35338e6aed/linux-firmware-20261019.tar.xz",
+      "filename": "linux-firmware-20261019.tar.xz",
       "feed": "https://release-monitoring.org/project/141464",
-      "sha512": "2ef755194eb022e539aa677474ca5c6c8c3616b3302ebc14e1698c62ccb6ba6f8149e507b46c2a0563297c53502defb892ce4d37eb02646d99d955ae899eebe7"
+      "sha512": "725bfcc57def709e43dcd89683e1a663c2d221e3d34da58ffcbf8af3b9c6da2b763739ec8fe0c2ece2620c71b2556b97f93e784c2d3f7c320b98bf35338e6aed"
     },
     {
       "name": "livesys-scripts",
