@@ -2962,6 +2962,12 @@ packages:
     downstream_package_name: oddjob
     paths:
       - packages/oddjob
+  oo7:
+    specfile_path: oo7.spec
+    upstream_package_name: oo7
+    downstream_package_name: oo7
+    paths:
+      - packages/oo7
   open-vm-tools:
     specfile_path: open-vm-tools.spec
     upstream_package_name: open-vm-tools

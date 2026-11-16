@@ -4690,6 +4690,13 @@
       ]
     },
     {
+      "name": "oo7",
+      "version": "0.7.0~beta^1.e91b98a",
+      "url": "https://github.com/linux-credentials/oo7/archive/e91b98a7235a4971c6cbb7f0533034afc8a8f618/oo7-e91b98a.tar.gz",
+      "filename": "oo7-e91b98a.tar.gz",
+      "sha512": "4ebce6b36406ad1d53421269a8788226a047a4475b2e69a6d84388c6d0569fddd91357c5c38d1b1a906dc3fb51d50068930ed6ce1ad9ace51025350b6c9dbc79"
+    },
+    {
       "name": "open-vm-tools",
       "version": "13.1.0",
       "url": "https://github.com/vmware/open-vm-tools/releases/download/stable-13.1.0/open-vm-tools-13.1.0-25218885.tar.gz",
