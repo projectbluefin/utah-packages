@@ -97,6 +97,13 @@
       ]
     },
     {
+      "name": "SDL3_image",
+      "version": "3.4.8",
+      "url": "https://github.com/libsdl-org/SDL_image/releases/download/release-3.4.8/SDL3_image-3.4.8.tar.gz",
+      "filename": "SDL3_image-3.4.8.tar.gz",
+      "sha512": "45f04c178a39ca05e033303cc650a6cbdab2ae41c68eb9d28f2f113f12bcb75c8001a1f45a17c4f1a8f5d46511a4f0dab7437dd07be8b5658e3992ddcbeb720f"
+    },
+    {
       "name": "a52dec",
       "version": "0.7.4",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/a52dec/a52dec-0.7.4.tar.gz/sha512/4b26fe9492f218b775fb190b76ecf06edaeb656adfe6dcbd24d0a0f86871c3ba917edb88a398eb12dccedaa1605b6f0a0be06b09f9fddd9a46e457b7dd244848/a52dec-0.7.4.tar.gz",
