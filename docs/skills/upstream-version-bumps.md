@@ -402,7 +402,8 @@ Constraints that shaped it, so they are not rediscovered:
   build proved nothing, and a held version is never proposed again: run
   43825333649 held 16 good bumps while the Hummingbird package server was
   down (#1179). When a lane's online step (hermetic `online`, container
-  `with_backoff`) runs out of retries with a download error in its output,
+  `with_backoff` in `tools/dnf_backoff.sh`) runs out of retries with a
+  download error in its output,
   it writes `work/reports/infra-failure`; `build-stage.yml` uploads it as
   `infra-s<stage>-<package>`, `publish_gate.py report
   --infra-failed-output` names those packages, and `rebuild-rpms.yml`

@@ -26,6 +26,8 @@ fi
 # codec, never a build requirement, and Fedora own noopenh264 provides
 # the same libopenh264.so.8 soname, so disabling the repo resolves.
 disable=--disablerepo=fedora-cisco-openh264
+# with_backoff: wait out a refused Hummingbird download; see the file.
+. /tools/dnf_backoff.sh
 # The Fedora container images set tsflags=nodocs, so every %doc file is
 # dropped at install time. rand_core ships its crate docs that way and
 # its lib.rs does #![doc = include_str!("../README.md")], so rust-just
@@ -252,50 +254,13 @@ export USER="${USER:-root}"
 export LOGNAME="${LOGNAME:-$USER}"
 spec=$(find "/packages/$PACKAGE" -maxdepth 1 -name "*.spec" -print -quit)
 test -n "$spec"
-# The Hummingbird repository is one host with no mirrors, so a bad
-# minute there is a failed build. retries=10 and timeout=120 in
-# dnf.conf cover a slow transfer, which is what Curl error 28 was,
-# but not a refusal: snowball died on the S3 backend answering
-#
-#   Status code: 503 for .../python3-setuptools-83.0.0-2.1.hum1.rpm
-#   No more mirrors to try - All mirrors were already tried
-#
-# after four attempts inside one second. librepo retries with no
-# backoff, so all four hit the same bad moment. Waiting between
-# attempts is the part that was missing. This retries resolution
-# only, never the build, and an unsatisfiable graph still fails
-# every attempt and then fails the job.
 builddep_attempt() {
   dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
     ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} \
     ${HB_REPO_EXCLUDE:+--setopt=public-hummingbird-x86_64-rpms.excludepkgs="$HB_REPO_EXCLUDE"} \
     builddep -D "_sourcedir /packages/$PACKAGE" "$1"
 }
-# A last attempt that failed on a download leaves /work/reports/infra-failure,
-# so the bump gate does not hold a version that never got a build (#1179).
-with_backoff() {
-  delay=5
-  mkdir -p /work/reports
-  for attempt in 1 2 3 4; do
-    status=0
-    ( set -o pipefail; builddep_attempt "$1" 2>&1 | tee /work/reports/builddep.log ) || status=$?
-    if [ "$status" -eq 0 ]; then
-      return 0
-    fi
-    if [ "$attempt" -eq 4 ]; then
-      echo "builddep failed after 4 attempts" >&2
-      if grep -qE 'All mirrors were tried|No more mirrors to try|Curl error|Cannot download|Status code: 5[0-9][0-9]' \
-          /work/reports/builddep.log; then
-        echo builddep > /work/reports/infra-failure
-      fi
-      return "$status"
-    fi
-    echo "::warning title=builddep retry::attempt $attempt failed, waiting ${delay}s" >&2
-    sleep "$delay"
-    delay=$((delay * 3))
-  done
-}
-with_backoff "$spec"
+with_backoff builddep_attempt "$spec"
 # An imported spec keeps its dist-git PatchN and auxiliary SourceN
 # files next to itself, while the verified upstream archive lands in
 # /work/sources. rpmbuild takes a single _sourcedir, so stage both:
