@@ -13,11 +13,13 @@ URL:            http://www.theora.org
 Source0:        http://downloads.xiph.org/releases/theora/%{name}-%{version}.tar.xz
 # Utah: 1.2.0 (Dakota's freedesktop-sdk components/libtheora.bst) carries the
 # three 1.1.1 patches upstream (each reverse-applies cleanly), and nothing
-# patches the build system any more, so the shipped configure is used as is.
+# patches the build system any more, so the shipped configure is used as is
+# (gcc is now a BuildRequires of its own; libtool used to pull it in).
 # 1.2.0 bumps the sonames: libtheora.so.0 -> .so.1, libtheoradec.so.1 -> .so.2,
 # libtheoraenc.so.1 -> .so.2.
 
 BuildRequires: make
+BuildRequires:  gcc
 BuildRequires:  libogg-devel >= 2:1.1
 BuildRequires:  libvorbis-devel
 BuildRequires:  SDL-devel libpng-devel

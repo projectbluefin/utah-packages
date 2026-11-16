@@ -168,7 +168,10 @@ the reference when Fedora has one. Seen so far:
   all three libtool `-version-info` triples (`libtheora.so.0` -> `.so.1`,
   `libtheoradec.so.1` -> `.so.2`, `libtheoraenc.so.1` -> `.so.2`). Compare
   `current - age` in `configure.ac` between the two tarballs, then follow
-  "Soname-coupled bumps" below.
+  "Soname-coupled bumps" below. Its merged patches also took `./autogen.sh`
+  and the `autoconf automake libtool` BuildRequires with them, and those
+  were the only thing pulling in `gcc`: `configure` died with "C compiler
+  cannot create executables" until the recipe BuildRequired `gcc` itself.
 - Fedora's dist-git can be ahead of Koji. wpa_supplicant's rawhide branch
   carried 2.12 (`ca343e8`) for three months with no Koji build at all.
   `getLatestBuilds` alone says Rawhide has not moved; `git log` on the
