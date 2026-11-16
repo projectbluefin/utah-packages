@@ -43,9 +43,12 @@ BuildOption:   -DENABLE_PORTABLE_TARGET:BOOL=ON
 BuildRequires: cmake(check)
 BuildRequires: gcc
 BuildRequires: pkgconfig(yaml-0.1)
-BuildRequires: python3-sphinx
-BuildRequires: python3dist(linuxdoc)
-BuildRequires: python3dist(sphinx-markdown-builder)
+# Utah: no python3-sphinx, python3dist(linuxdoc) or
+# python3dist(sphinx-markdown-builder). Fedora 44's linuxdoc imports
+# pkg_resources, which Hummingbird's setuptools 83 no longer ships, so the
+# Sphinx man page build fails in %%install. Without sphinx-build, CMake installs
+# upstream's pre-built doc/canned-man pages instead (freedesktop-sdk builds
+# without Sphinx too); the man3 pages are installed below.
 #BuildRequires: xxhash-devel
 # Needed to update macro
 BuildRequires: sed
@@ -86,6 +89,10 @@ Header files and libraries for libfyaml
 %build -p
 cp %{SOURCE1} .
 cp %{SOURCE2} .
+
+%install -a
+# Utah: the canned man3 pages CMake installs only when Sphinx builds them.
+install -Dpm 0644 -t %{buildroot}%{_mandir}/man3 doc/canned-man/libfyaml*.3
 
 
 %files
