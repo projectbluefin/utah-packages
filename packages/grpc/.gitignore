@@ -1,0 +1,6 @@
+/grpc-*.tar.gz
+/data-plane-api-*.tar.gz
+/googleapis-*.tar.gz
+/opencensus-proto-*.tar.gz
+/xds-*.tar.gz
+/protoc-gen-validate-*.tar.gz

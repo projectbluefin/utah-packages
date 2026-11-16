@@ -1,0 +1,8 @@
+{
+  "package": "gnome-shell-extension-blur-my-shell",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/gnome-shell-extension-blur-my-shell.git",
+  "commit": "01c06698be7f81cc5c3dfe0f60016e4770b45d78",
+  "tree": "eb4a4617ed5bae02418906beda6ff6ac17061293",
+  "imported_at": "2026-11-16T04:07:34.272743+00:00"
+}
