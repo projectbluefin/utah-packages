@@ -6497,6 +6497,13 @@
       "sha512": "d5e3461d262e300ebf21abc39d19471a6aabed442eab8fdee772368a02c4fe0d2e5738701e31b2d0777989778c9db0169a57ea89537266bc66d2228fb96ea63e"
     },
     {
+      "name": "tex-gyre-fonts",
+      "version": "2.501",
+      "url": "https://mirrors.ctan.org/fonts/tex-gyre.zip",
+      "filename": "tex-gyre-fonts-2.501.zip",
+      "sha512": "1135fd8cd8c308d1deff5ed31dbb96e88d074dff1b0f99eb0fd295397805d2dab0a43ed2727750be0d7ea013b1eda390bbaba42e8410379e5665ec80cdcee9e6"
+    },
+    {
       "name": "thermald",
       "version": "2.5.13",
       "url": "https://github.com/intel/thermal_daemon/archive/v2.5.13/thermald-2.5.13.tar.gz",
