@@ -4992,6 +4992,13 @@
       "sha512": "3d3e369b91f2aad336c682f5cc47ec25726409c29bf85ff407ae5ad3a81300fd227df82877efc2a6d461301dafcd3a40ee3556ce803e5e766b18b5dca2d35500"
     },
     {
+      "name": "nerd-fonts-symbols",
+      "version": "3.5.1",
+      "url": "https://github.com/ryanoasis/nerd-fonts/releases/download/v3.5.1/NerdFontsSymbolsOnly.tar.xz",
+      "filename": "nerd-fonts-symbols-3.5.1.tar.xz",
+      "sha512": "983fa63bc543a6b63d1d76186b7f1152b3c8f2b01cafa7db92adadc8aacc04147d36fcd03fd4ac8f95296f072c74c3c1f55a4c939ede6906e3e9e1840c657b53"
+    },
+    {
       "name": "net-snmp",
       "version": "5.9.5.2",
       "url": "https://downloads.sourceforge.net/project/net-snmp/net-snmp/5.9.5.2/net-snmp-5.9.5.2.tar.gz",
