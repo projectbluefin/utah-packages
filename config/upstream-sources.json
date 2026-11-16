@@ -5404,6 +5404,16 @@
       ]
     },
     {
+      "name": "python-blessings",
+      "version": "1.7",
+      "url": "https://files.pythonhosted.org/packages/source/b/blessings/blessings-1.7.tar.gz",
+      "filename": "blessings-1.7.tar.gz",
+      "sha512": "66a8e7af6a8807c8be68f4d71db25ca6c26f46ddfa9a7e4792a2f73033df81d8392633ff75e6fa131039d9136030844ed93b11316b9f7e2e6ea77675f2f3e528",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/python-blessings/blessings-1.7.tar.gz/sha512/66a8e7af6a8807c8be68f4d71db25ca6c26f46ddfa9a7e4792a2f73033df81d8392633ff75e6fa131039d9136030844ed93b11316b9f7e2e6ea77675f2f3e528/blessings-1.7.tar.gz"
+      ]
+    },
+    {
       "name": "python-boto3",
       "version": "1.43.125",
       "url": "https://github.com/boto/boto3/archive/1.43.125/boto3-1.43.125.tar.gz",
