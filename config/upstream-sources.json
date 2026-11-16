@@ -2622,6 +2622,17 @@
       ]
     },
     {
+      "name": "kanata",
+      "version": "1.12.0",
+      "filename": "kanata-1.12.0-vendored.tar.xz",
+      "sha512": "04cfa10f75ae1bb93bac8a6ea237d0be0c5cd71db79a55c3d9d9f560385878ccd01397d01ae30ce88afb093ce05c9eccd356a578eb409834078a4e00c335bfa6",
+      "generate": {
+        "script": "tools/generated_sources.py",
+        "input": "https://github.com/jtroo/kanata/archive/refs/tags/v1.12.0.tar.gz (sha512-pinned) and every crates.io crate its Cargo.lock pins (sha256-pinned by Cargo.lock)",
+        "method": "add vendor/<crate>-<version> for each Cargo.lock crate with .cargo-checksum.json, as cargo vendor --versioned-dirs lays it out, and repack deterministically as kanata-1.12.0-vendored.tar.xz"
+      }
+    },
+    {
       "name": "kde-filesystem",
       "version": "5",
       "url": "https://src.fedoraproject.org/rpms/kde-filesystem/raw/4f395f604e7ed4011226d72aa27bff0bb7b2aee2/f/teamnames",

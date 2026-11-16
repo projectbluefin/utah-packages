@@ -1726,6 +1726,12 @@ packages:
     downstream_package_name: json-glib
     paths:
       - packages/json-glib
+  kanata:
+    specfile_path: kanata.spec
+    upstream_package_name: kanata
+    downstream_package_name: kanata
+    paths:
+      - packages/kanata
   kde-filesystem:
     specfile_path: kde-filesystem.spec
     upstream_package_name: kde-filesystem
