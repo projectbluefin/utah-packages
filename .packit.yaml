@@ -724,6 +724,12 @@ packages:
     downstream_package_name: gamemode
     paths:
       - packages/gamemode
+  gcab:
+    specfile_path: gcab.spec
+    upstream_package_name: gcab
+    downstream_package_name: gcab
+    paths:
+      - packages/gcab
   gcr:
     specfile_path: gcr.spec
     upstream_package_name: gcr

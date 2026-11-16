@@ -1080,6 +1080,13 @@
       "sha512": "d35b11b7911a0ef4d19119ee68e781b1f6c90eb9baa2c365416164b4f1fcb277c43026e844bfa86727bab82c5f3d6bd5b8adee2cd481e1e067be6a0e23c06b5b"
     },
     {
+      "name": "gcab",
+      "version": "1.6",
+      "url": "https://download.gnome.org/sources/gcab/1.6/gcab-1.6.tar.xz",
+      "filename": "gcab-1.6.tar.xz",
+      "sha512": "26b8dcf47ba98e7cc073a551d1c965c13a72d298c8a4e124823bdbb20fe314c8f687232df9ae824a54d81f96fe7d9ac1a40aed24e51f8706595079cec2c61fc9"
+    },
+    {
       "name": "gcr",
       "version": "4.4.1",
       "url": "https://download.gnome.org/sources/gcr/4.4/gcr-4.4.1.tar.xz",
