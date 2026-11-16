@@ -298,6 +298,12 @@ packages:
     downstream_package_name: cdparanoia
     paths:
       - packages/cdparanoia
+  chairlift:
+    specfile_path: chairlift.spec
+    upstream_package_name: chairlift
+    downstream_package_name: chairlift
+    paths:
+      - packages/chairlift
   chromaprint:
     specfile_path: chromaprint.spec
     upstream_package_name: chromaprint
@@ -2518,6 +2524,12 @@ packages:
     downstream_package_name: libsrtp
     paths:
       - packages/libsrtp
+  libssc:
+    specfile_path: libssc.spec
+    upstream_package_name: libssc
+    downstream_package_name: libssc
+    paths:
+      - packages/libssc
   libtalloc:
     specfile_path: libtalloc.spec
     upstream_package_name: libtalloc
