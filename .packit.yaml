@@ -4702,6 +4702,12 @@ packages:
     downstream_package_name: zenity
     paths:
       - packages/zenity
+  zig:
+    specfile_path: zig.spec
+    upstream_package_name: zig
+    downstream_package_name: zig
+    paths:
+      - packages/zig
   zimg:
     specfile_path: zimg.spec
     upstream_package_name: zimg
