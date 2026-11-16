@@ -2992,6 +2992,12 @@ packages:
     downstream_package_name: nilfs-utils
     paths:
       - packages/nilfs-utils
+  noise-suppression-for-voice:
+    specfile_path: noise-suppression-for-voice.spec
+    upstream_package_name: noise-suppression-for-voice
+    downstream_package_name: noise-suppression-for-voice
+    paths:
+      - packages/noise-suppression-for-voice
   noopenh264:
     specfile_path: noopenh264.spec
     upstream_package_name: noopenh264
