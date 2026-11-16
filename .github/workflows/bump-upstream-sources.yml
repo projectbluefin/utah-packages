@@ -17,12 +17,16 @@ name: Bump upstream source locks
 # Every explicit feed was derived from the spec's Source0 and checked to list
 # the locked version (issue #134).
 #
-# A lock whose primary is still the lookaside only ever yields a review-only
-# proposal on the scheduled run: the new bytes are not in the lookaside until
-# Fedora uploads them, and no unattended run moves a primary. Dispatching
-# this workflow with `package` set relocks one such package onto the GNOME
-# module or forge its explicit feed names (Anitya names no download, so never
-# for those), retiring it from config/fedora-primary-sources.txt.
+# A same-major release read from an explicit feed is applied by swapping the
+# version into the lock's own primary when that primary is the project's
+# download (mesa, gstreamer, X.org); the bytes at the derived URL are SHA-512
+# locked like any bump. A lock whose primary is still the lookaside only ever
+# yields a review-only proposal on the scheduled run: the new bytes are not in
+# the lookaside until Fedora uploads them, and no unattended run moves a
+# primary off it. Dispatching this workflow with `package` set relocks one
+# such package onto the GNOME module or forge its explicit feed names (Anitya
+# names no download, so never for those), retiring it from
+# config/fedora-primary-sources.txt.
 #
 # The remaining 20 have no usable feed: git snapshots, Fedora-only or
 # repacked sources, compat pins, and tag streams whose versions do not match
