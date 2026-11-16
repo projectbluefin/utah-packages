@@ -292,6 +292,13 @@
       ]
     },
     {
+      "name": "baobab",
+      "version": "50.0",
+      "url": "https://download.gnome.org/sources/baobab/50/baobab-50.0.tar.xz",
+      "filename": "baobab-50.0.tar.xz",
+      "sha512": "0318c2fc68aa54502f1500b35f44a6378341af189afda3b82e5231f67e079e6c7bd6dcb820254042d69cf211cbcd5db3ce694d61246a2d315dcc500ffa33c4f0"
+    },
+    {
       "name": "bash-color-prompt",
       "version": "0.96.2",
       "url": "https://github.com/juhp/bash-color-prompt/archive/refs/tags/v0.96.2.tar.gz",
