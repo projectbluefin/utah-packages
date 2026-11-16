@@ -1,0 +1,8 @@
+{
+  "package": "gnome-shell-extension-appindicator",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/gnome-shell-extension-appindicator.git",
+  "commit": "2a49decfbb1a9106b539cf66913b39f2ece0ea61",
+  "tree": "740a597b095d7cef303b898334bfc8f5a0e9dffc",
+  "imported_at": "2026-11-16T04:07:28.261881+00:00"
+}

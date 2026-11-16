@@ -1,0 +1,8 @@
+{
+  "package": "libvirt",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libvirt.git",
+  "commit": "bb89906018d7a3a3ae07c3e0ae3cac3d2afb61eb",
+  "tree": "c02c8db3c4fe6301a4ff565785be4140d4a57774",
+  "imported_at": "2026-11-16T04:06:36.327646+00:00"
+}

@@ -1,0 +1,88 @@
+#!/bin/sh
+#
+# open-isns isnsd init script
+# # Copyright (C) 2007 Albert Pauw
+#
+# chkconfig: - 39 35
+#
+### BEGIN INIT INFO
+# Provides:          isnsd
+# Required-Start:    $network
+# Short-Description: Starts and stops the generic iSNS daemon
+# Description: isnsd provides a iSNS daemon and iSNS management tools.
+### END INIT INFO
+#
+#
+# pidfile: /var/run/isns.pid
+
+# Source function library.
+. /etc/init.d/functions
+
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+RETVAL=0
+
+start()
+{
+	[ `id -u` = 0 ] || exit 4
+
+	echo -n "Starting iSNS Server:"
+	daemon isnsd
+	echo
+	RETVAL=$?
+	if [ $RETVAL -eq "0" ]; then
+		touch /var/lock/subsys/isnsd
+	fi
+}
+
+stop()
+{
+	[ `id -u` = 0 ] || exit 4
+
+	echo -n "Stopping iSNS Server: "
+	if [ ! -f /var/lock/subsys/isnsd ]; then
+		echo
+		success
+		return
+	fi
+
+	killproc isnsd
+	echo
+	RETVAL=$?
+	[ $RETVAL -eq 0 ] && rm -f /var/lock/subsys/isnsd
+}
+
+restart()
+{
+	stop
+	start
+}
+
+case "$1" in
+	start)
+		start
+		;;
+	stop)
+		stop
+		;;
+	reload)
+		exit 3
+		;;
+	force-reload)
+		restart
+		;;
+	restart)
+		restart
+		;;
+	status)
+		status isnsd
+		RETVAL=$?
+		;;
+	condrestart|try-restart)
+		[ -f /var/lock/subsys/isnsd ] && restart
+		;;
+	*)
+		echo $"Usage: $0 {start|stop|restart|status|force-reload|condrestart|try-restart}"
+		exit 2
+esac
+
+exit $RETVAL

@@ -1,0 +1,46 @@
+Add missing standard library includes.
+
+These headers used to be pulled in transitively by libstdc++, which is no
+longer the case with GCC 16.
+
+Backport of the relevant hunks of the upstream commit "[build] add missing
+includes":
+
+  https://github.com/grpc/grpc/pull/41351
+  https://github.com/grpc/grpc/commit/d54219b508423f0a2ff6a0b98c16fb6dafd44b84
+
+diff --git a/include/grpc/event_engine/memory_request.h b/include/grpc/event_engine/memory_request.h
+--- a/include/grpc/event_engine/memory_request.h
++++ b/include/grpc/event_engine/memory_request.h
+@@ -17,6 +17,8 @@
+ #include <grpc/support/port_platform.h>
+ #include <stddef.h>
+ 
++#include <string>
++
+ #include "absl/strings/string_view.h"
+ 
+ namespace grpc_event_engine {
+diff --git a/src/core/channelz/v2tov1/property_list.cc b/src/core/channelz/v2tov1/property_list.cc
+--- a/src/core/channelz/v2tov1/property_list.cc
++++ b/src/core/channelz/v2tov1/property_list.cc
+@@ -15,6 +15,7 @@
+ #include "src/core/channelz/v2tov1/property_list.h"
+ 
+ #include <cstdint>
++#include <limits>
+ #include <optional>
+ #include <string>
+ 
+diff --git a/src/core/util/glob.cc b/src/core/util/glob.cc
+--- a/src/core/util/glob.cc
++++ b/src/core/util/glob.cc
+@@ -12,6 +12,8 @@
+ // See the License for the specific language governing permissions and
+ // limitations under the License.
+ 
++#include <algorithm>
++
+ #include "absl/strings/string_view.h"
+ 
+ namespace grpc_core {
