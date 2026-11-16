@@ -1449,6 +1449,13 @@
       ]
     },
     {
+      "name": "gnome-shell-extension-dash-to-dock",
+      "version": "110",
+      "url": "https://github.com/micheleg/dash-to-dock/archive/extensions.gnome.org-v110.tar.gz#/gnome-shell-extension-dash-to-dock-110.tar.gz",
+      "filename": "gnome-shell-extension-dash-to-dock-110.tar.gz",
+      "sha512": "5f45f84a6f23961d61e41d14aa55236b586dd510f0bc20fb4b310dd43f6d6d87b391d618c0fb58a52cfc6e95b3ce777775580a105b9c488761ea59e1cc017919"
+    },
+    {
       "name": "gnome-shell-extension-gsconnect",
       "version": "72",
       "url": "https://github.com/GSConnect/gnome-shell-extension-gsconnect/archive/v72/gnome-shell-extension-gsconnect-72.tar.gz",

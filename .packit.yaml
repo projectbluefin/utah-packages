@@ -946,6 +946,12 @@ packages:
     downstream_package_name: gnome-shell
     paths:
       - packages/gnome-shell
+  gnome-shell-extension-dash-to-dock:
+    specfile_path: gnome-shell-extension-dash-to-dock.spec
+    upstream_package_name: gnome-shell-extension-dash-to-dock
+    downstream_package_name: gnome-shell-extension-dash-to-dock
+    paths:
+      - packages/gnome-shell-extension-dash-to-dock
   gnome-shell-extension-gsconnect:
     specfile_path: gnome-shell-extension-gsconnect.spec
     upstream_package_name: gnome-shell-extension-gsconnect
