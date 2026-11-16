@@ -585,6 +585,13 @@
       ]
     },
     {
+      "name": "dakota-config",
+      "version": "0^20261113gitbf27177",
+      "url": "https://github.com/projectbluefin/dakota/archive/bf271777da1808627f775f1d8816db2a89a931ea/dakota-bf27177.tar.gz",
+      "filename": "dakota-bf27177.tar.gz",
+      "sha512": "aceebc970b817cb91960e11b485444ba7e4e8a9ba2c5185975b2bfacc6dd499b426794df3ad7a3262a2f8c646098fe721eb998b19311271cb95687239657e7c7"
+    },
+    {
       "name": "davfs2",
       "version": "1.7.3",
       "url": "https://download.savannah.gnu.org/releases/davfs2/davfs2-1.7.3.tar.gz",
@@ -1370,6 +1377,13 @@
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/gnome-online-accounts/gnome-online-accounts-3.58.1.tar.xz/sha512/4d466a14086ec199b5693727c29e8c159e85eef9949c2b30f5680c25b791653b1c468aedfd3176662dc934927d35df5f1e0c2ae8d6ec37d7d9515bbb8ca2ea15/gnome-online-accounts-3.58.1.tar.xz"
       ]
+    },
+    {
+      "name": "gnome-os-config",
+      "version": "51.1^20261027git8a89846",
+      "url": "https://gitlab.gnome.org/GNOME/gnome-build-meta/-/archive/8a89846df11e86cee57c728a86a247e61d604b84/gnome-build-meta-8a89846df11e86cee57c728a86a247e61d604b84.tar.gz",
+      "filename": "gnome-build-meta-8a89846df11e86cee57c728a86a247e61d604b84.tar.gz",
+      "sha512": "44bd650a63d2d28719724c1b7add3dd4507c921a6463cc2e2e00cb11c522e30c3c47656720de042fd0bfa04d03fd5d54d3aaccdbd632fede1f49395516433e6b"
     },
     {
       "name": "gnome-ponytail-daemon",
