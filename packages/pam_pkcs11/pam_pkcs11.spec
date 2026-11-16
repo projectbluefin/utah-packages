@@ -1,36 +1,40 @@
-%global nss_version 3.10
-%global nspr_version 4.6
-%global with_curl	1
-%global with_ldap	1
-
-# commit for 0.6.8
-%global commit 1cbb55e3d4154715de191a44df76ae92810c8598
-%global shortcommit %(c=%{commit}; echo ${c:0:7})
+# Resurrected from Fedora: Fedora blocked pam_pkcs11 in Koji from Fedora 25
+# on (dist-git dead.package, f88c608e). This recipe starts from the commit
+# before that, 98bc6e43 (0.6.8, recorded in .hummingbird-upstream.json), and
+# is aligned to GNOME OS's gnomeos-deps/pam-pkcs11.bst (gnome-build-meta
+# 8a89846d), which Project Bluefin Dakota bf271777 ships:
+#
+# - 0.6.14 from the pam_pkcs11-0.6.14 tag, built with configure's defaults as
+#   the element does: OpenSSL rather than NSS, pcsc-lite tools, no cURL, and
+#   no LDAP mapper (the element has no OpenLDAP, so configure leaves it out).
+#   Fedora's CRYPTO_CFLAGS patch is upstream; its NSS configuration files
+#   (rh_*.conf) do not fit an OpenSSL build and are dropped. As in GNOME OS,
+#   no /etc/pam_pkcs11 configuration is installed; the upstream examples are
+#   documentation, and the module does nothing until an administrator
+#   configures it.
+# - The pkcs11-eventmgr.service unit upstream installs is disabled by GNOME
+#   OS's files/pam-pkcs11/pam-pkcs11.preset, carried verbatim as Source1.
+# - The PAM module lives in %%{_libdir}/security; Fedora's old move to
+#   /%%{_lib} predates the /usr merge.
 
 Name:           pam_pkcs11
-Version:        0.6.8
-Release:        8%{?dist}
-Summary:        PKCS #11/NSS PAM login module
-License:        LGPLv2+
-URL:            https://github.com/OpenSC/pam_pkcs11/
-Source0: 	https://github.com/OpenSC/pam_pkcs11/archive/%{commit}/%{name}-%{version}-%{shortcommit}.tar.gz
-Source1:	rh_pam_pkcs11.conf
-Source2:	rh_pkcs11_eventmgr.conf
-Patch0:		pam_pkcs11-fix-crypto-cflags.patch
+Version:        0.6.14
+Release:        1%{?dist}
+Summary:        PKCS #11 PAM login module
+License:        LGPL-2.1-or-later
+URL:            https://github.com/OpenSC/pam_pkcs11
+Source0:        %{url}/archive/refs/tags/%{name}-%{version}.tar.gz
+Source1:        80-pam-pkcs11.preset
 
+BuildRequires: gcc
+BuildRequires: make
 BuildRequires: pam-devel
-%{?with_ldap:BuildRequires: openldap-devel}
-%{?with_curl:BuildRequires: curl-devel}
 BuildRequires: openssl-devel
-BuildRequires: libxslt 
-BuildRequires: docbook-style-xsl 
-BuildRequires: nss-devel >= %{nss_version} 
-BuildRequires: nspr-devel
 BuildRequires: pcsc-lite-devel
 BuildRequires: pkgconfig
-BuildRequires: intltool
-BuildRequires: gettext
+BuildRequires: gettext-devel
 BuildRequires: autoconf, automake, libtool
+BuildRequires: systemd-rpm-macros
 
 %description
 This Linux-PAM login module allows a X.509 certificate based user
@@ -38,100 +42,81 @@ authentication. The certificate and its dedicated private key are thereby
 accessed by means of an appropriate PKCS #11 module. For the
 verification of the users' certificates, locally stored CA
 certificates as well as either online or locally accessible CRLs and
-OCSP are used. This version uses NSS to validate the Certificates and manage
-the PKCS #11 smartCards.
+OCSP are used.
 Additional included pam_pkcs11 related tools
 - pkcs11_eventmgr: Generate actions on card insert/removal/timeout events
+- card_eventmgr: Generate actions on pcsc-lite card insert/removal events
 - pklogin_finder: Get the loginname that maps to a certificate
 - pkcs11_inspect: Inspect the contents of a certificate
+- pkcs11_listcerts: List the certificates on a token
+- pkcs11_setup: Configure the PKCS #11 module to use
 
 %prep
-%setup -q -n %{name}-%{commit}
-%patch0 -p1 -b .fix-crypto-cflags
-autoreconf -ifv
+%autosetup -n %{name}-%{name}-%{version}
+./bootstrap
 
 %build
-
-%if %{with_curl}
-%global curl_flags --with-curl=yes
-%else
-%global curl_flags --with-curl=no
-%endif
-
-%if %{with_ldap}
-%global ldap_flags --with-ldap=yes
-%else
-%global ldap_flags --with-ldap=no
-%endif
-%configure  \
-    --with-nss \
-    --with-debug  \
-    --disable-dependency-tracking  \
-    %{curl_flags} %{ldap_flags} 
-make CFLAGS="$RPM_OPT_FLAGS -ggdb3"  V=1
+%configure \
+    --disable-dependency-tracking \
+    --with-curl=no \
+    --with-ldap=no \
+    --without-docbook
+%make_build
 
 %install
-make install DESTDIR=$RPM_BUILD_ROOT
-rm -f $RPM_BUILD_ROOT/%{_libdir}/%{name}/*.*a
-#
-# pam security directory is in /%{_lib} not %{_libdir}
-#
-mkdir -p $RPM_BUILD_ROOT/%{_lib}/security
-install -m 755 $RPM_BUILD_ROOT/%{_libdir}/security/%{name}.so $RPM_BUILD_ROOT/%{_lib}/security
-rm -rf $RPM_BUILD_ROOT/%{_libdir}/security
-#
-# set up config files
-#
-install -dm 755 $RPM_BUILD_ROOT/%{_sysconfdir}/%{name}
-install -m 644 %{SOURCE1} $RPM_BUILD_ROOT/%{_sysconfdir}/%{name}/%{name}.conf
-install -m 644 %{SOURCE2} $RPM_BUILD_ROOT/%{_sysconfdir}/%{name}/pkcs11_eventmgr.conf
-#
-# clean up those files that aren't part of this package
-# (makefile should install them if --without-pcsclite is supplied
-#
-#rm -f $RPM_BUILD_ROOT/%{_bindir}/card_eventmgr
-#rm -f $RPM_BUILD_ROOT/%{_mandir}/man1/card_eventmgr.1
-#rm -f $RPM_BUILD_ROOT/%{_datadir}/doc/%{name}/card_eventmgr.conf.example
-
-# nss version does not need this script
-rm -f $RPM_BUILD_ROOT/%{_bindir}/make_hash_link.sh
-rm -f $RPM_BUILD_ROOT/%{_mandir}/man1/pkcs11_make_hash_link.1
-
-# package the examples in the doc directory directly.
-rm -rf $RPM_BUILD_ROOT/%{_docdir}/%{name}
+%make_install
+rm -f %{buildroot}%{_libdir}/security/*.la %{buildroot}%{_libdir}/%{name}/*.la
+install -Dpm 0644 %{SOURCE1} %{buildroot}%{_presetdir}/80-pam-pkcs11.preset
+# The examples are packaged with %%doc from the source tree.
+rm -rf %{buildroot}%{_docdir}/%{name}
 
 %find_lang %{name}
 
+%check
+test -x %{buildroot}%{_libdir}/security/%{name}.so
+grep -qx 'disable pkcs11-eventmgr.service' %{buildroot}%{_presetdir}/80-pam-pkcs11.preset
+
+%post
+%systemd_post pkcs11-eventmgr.service
+
+%preun
+%systemd_preun pkcs11-eventmgr.service
+
+%postun
+%systemd_postun_with_restart pkcs11-eventmgr.service
+
 %files -f %{name}.lang
 %license COPYING
-%doc AUTHORS README TODO ChangeLog NEWS 
-%doc doc/pam_pkcs11.html
-%doc doc/mappers_api.html
-%doc doc/README.autologin
-%doc doc/README.mappers
+%doc AUTHORS README.md NEWS
+%doc doc/README.autologin doc/README.eventmgr doc/README.mappers
 %doc etc/*.example
-%dir %{_sysconfdir}/%{name}/
-%config(noreplace) %{_sysconfdir}/%{name}/%{name}.conf
-%config(noreplace) %{_sysconfdir}/%{name}/pkcs11_eventmgr.conf
-%{_bindir}/pkcs11_make_hash_link
-%{_bindir}/pkcs11_eventmgr
-%{_bindir}/pklogin_finder
-%{_bindir}/pkcs11_inspect
-%{_bindir}/pkcs11_setup
 %{_bindir}/card_eventmgr
+%{_bindir}/pkcs11_eventmgr
+%{_bindir}/pkcs11_inspect
 %{_bindir}/pkcs11_listcerts
+%{_bindir}/pkcs11_make_hash_link
+%{_bindir}/pkcs11_setup
+%{_bindir}/pklogin_finder
 %dir %{_libdir}/%{name}
 %{_libdir}/%{name}/*.so
-/%{_lib}/security/%{name}.so
-%{_mandir}/man8/%{name}.8.gz
-%{_mandir}/man1/pkcs11_eventmgr.1.gz
-%{_mandir}/man1/pkcs11_inspect.1.gz
-%{_mandir}/man1/pkcs11_listcerts.1.gz
-%{_mandir}/man1/pkcs11_setup.1.gz
-%{_mandir}/man1/pklogin_finder.1.gz
-%{_mandir}/man1/card_eventmgr.1.gz
+%{_libdir}/security/%{name}.so
+%{_unitdir}/pkcs11-eventmgr.service
+%{_presetdir}/80-pam-pkcs11.preset
+%{_mandir}/man8/%{name}.8*
+%{_mandir}/man1/card_eventmgr.1*
+%{_mandir}/man1/pkcs11_eventmgr.1*
+%{_mandir}/man1/pkcs11_inspect.1*
+%{_mandir}/man1/pkcs11_listcerts.1*
+%{_mandir}/man1/pkcs11_make_hash_link.1*
+%{_mandir}/man1/pkcs11_setup.1*
+%{_mandir}/man1/pklogin_finder.1*
 
 %changelog
+* Mon Nov 16 2026 Utah Packages <packages@projectbluefin.io> - 0.6.14-1
+- Resurrect the retired Fedora recipe and align it to GNOME OS
+  gnomeos-deps/pam-pkcs11.bst: 0.6.14, OpenSSL, no LDAP or cURL, and the
+  preset that disables pkcs11-eventmgr.service
+
 * Fri Feb  5 2016 Tom Callaway <spot@fedoraproject.org> - 0.6.8-8
 - fix CRYPTO_CFLAGS
 
