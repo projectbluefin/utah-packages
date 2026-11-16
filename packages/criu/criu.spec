@@ -13,7 +13,7 @@
 
 Name: criu
 Version: 4.3
-Release: 1%{?dist}
+Release: 3%{?dist}
 Summary: Tool for Checkpoint/Restore in User-space
 License: GPL-2.0-only AND LGPL-2.1-only AND MIT
 URL: http://criu.org/
@@ -23,6 +23,25 @@ Source0: https://github.com/checkpoint-restore/criu/archive/v%{version}/criu-%{v
 # We use this patch because the protobuf-c package name
 # in RPM and DEB is different.
 Patch99: criu.pc.patch
+
+# Generated protobuf-3.19.x rpc_pb2.py, shipped so the pycriu build copies a
+# file the pinned protobuf 3.19.6 runtime can import instead of regenerating
+# one with the factory's protoc 6.x (utah-packages#983).
+Source10: criu-rpc_pb2.py
+
+# Patch the pycriu Makefile so rpc_pb2.py copies the shipped file instead of
+# running protoc. See Source10 above.
+Patch100: criu-rpc_pb2.patch
+
+# The same fix for the 75 image bindings (rpc_pb2.py is not one of them): shipped
+# protobuf-3.19.x files, including opts_pb2.py which some image bindings import,
+# so the pycriu build copies files the pinned protobuf 3.19.6 runtime can import
+# instead of regenerating them with the factory's protoc 6.x (utah-packages#985).
+Source11: criu-pycriu-images.tar
+
+# Patch the pycriu images Makefile so it copies the shipped image bindings
+# (Source11) instead of running protoc. See Source11 above.
+Patch101: criu-images-pb2.patch
 
 Source5: criu-tmpfiles.conf
 
@@ -117,6 +136,14 @@ This script can help to workaround the so called "PID mismatch" problem.
 %prep
 %setup -q
 %patch -P 99 -p1
+%patch -P 100 -p1
+%patch -P 101 -p1
+# Extract the shipped protobuf-3.19.x image bindings so the pycriu build copies
+# them instead of regenerating with the factory's protoc 6.x (utah-packages#985).
+mkdir -p %{_builddir}/criu-pycriu-images
+# SOURCE11 entries are already rooted at criu-pycriu-images/, so strip the
+# prefix to avoid a nested directory (utah-packages#985, hive finding).
+tar xf %{SOURCE11} --strip-components=1 -C %{_builddir}/criu-pycriu-images
 
 %build
 # This package calls LD directly without specifying the LTO plugins.  Until
@@ -141,12 +168,21 @@ LDWRAPPER
 chmod +x %{_builddir}/bin/ld
 
 # %{?_smp_mflags} does not work
-CFLAGS+="%{optflags}" make V=1 WERROR=0 LD=%{_builddir}/bin/ld PREFIX=%{_prefix} RUNDIR=/run/criu PYTHON=%{py_binary} PLUGINDIR=%{_libdir}/criu NETWORK_LOCK_DEFAULT=NETWORK_LOCK_NFTABLES
+CFLAGS+="%{optflags}" make V=1 WERROR=0 LD=%{_builddir}/bin/ld PREFIX=%{_prefix} RUNDIR=/run/criu PYTHON=%{py_binary} PLUGINDIR=%{_libdir}/criu NETWORK_LOCK_DEFAULT=NETWORK_LOCK_NFTABLES RPC_PB2_PY=%{SOURCE10} PYCRIU_IMAGES_PB2=%{_builddir}/criu-pycriu-images
 make V=1 WERROR=0 PREFIX=%{_prefix} PLUGINDIR=%{_libdir}/criu amdgpu_plugin
 make docs V=1
 
 
 %install
+# Export the image-bindings location so the per-target install makes (which
+# rebuild the pycriu library) receive PYCRIU_IMAGES_PB2 instead of expanding
+# the source to "/*" (utah-packages#985, hive finding).
+export PYCRIU_IMAGES_PB2=%{_builddir}/criu-pycriu-images
+# Export the shipped rpc_pb2.py location too. The per-target install makes set
+# RPC_PB2_PY on their make command line, but only PYCRIU_IMAGES_PB2 was exported
+# here; re-running %install with only PYCRIU_IMAGES_PB2 left RPC_PB2_PY empty,
+# so "cp: cannot stat ''" failed the build (utah-packages#986, castrojo finding).
+export RPC_PB2_PY=%{SOURCE10}
 sed -e "s,--upgrade --ignore-installed,--no-index --no-deps -v --no-build-isolation,g" -i lib/Makefile -i crit/Makefile
 make install-criu LD=%{_builddir}/bin/ld DESTDIR=$RPM_BUILD_ROOT PREFIX=%{_prefix} LIBDIR=%{_libdir} BINDIR=%{_bindir} SBINDIR=%{_sbindir}
 make install-lib LD=%{_builddir}/bin/ld DESTDIR=$RPM_BUILD_ROOT PREFIX=%{_prefix} LIBDIR=%{_libdir} PYTHON=%{py_binary} PIPFLAGS="--no-build-isolation --no-index --no-deps --progress-bar off --upgrade --ignore-installed"
@@ -204,6 +240,16 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/libcriu.a
 %tmpfiles_create %{name}.conf
 
 %changelog
+* Wed Nov 11 2026 scanner <scanner@hive.local> - 4.3-3
+- Ship the protobuf-3.19.x image bindings too, not just rpc_pb2.py, and copy
+  them in the pycriu build instead of regenerating with protoc 6.x, fixing the
+  ImportError of google.protobuf.runtime_version under the factory's pinned
+  protobuf 3.19.6 (utah-packages#985).
+* Wed Nov 11 2026 scanner <scanner@hive.local> - 4.3-2
+- Ship a protobuf-3.19.x-compatible rpc_pb2.py and copy it in the pycriu
+  build instead of regenerating with protoc 6.x, fixing the ImportError of
+  google.protobuf.runtime_version under the factory's pinned protobuf 3.19.6
+  (utah-packages#983).
 * Tue Oct 20 2026 Radostin Stoyanov <rstoyanov@fedoraproject.org> - 4.3-1
 - Update to 4.3
 - Enable LZ4 compression support
