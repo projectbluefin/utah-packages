@@ -3046,6 +3046,12 @@ packages:
     downstream_package_name: opus
     paths:
       - packages/opus
+  opusfile:
+    specfile_path: opusfile.spec
+    upstream_package_name: opusfile
+    downstream_package_name: opusfile
+    paths:
+      - packages/opusfile
   orc:
     specfile_path: orc.spec
     upstream_package_name: orc
