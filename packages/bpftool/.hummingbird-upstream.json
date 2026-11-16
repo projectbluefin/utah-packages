@@ -1,0 +1,8 @@
+{
+  "package": "bpftool",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/bpftool.git",
+  "commit": "27ea948bbbfaa684483e160e7640c9c9cc29900d",
+  "tree": "2cc79f6192ec82ee2989d76d687fe6df33be5824",
+  "imported_at": "2026-11-16T04:07:58.186297+00:00"
+}

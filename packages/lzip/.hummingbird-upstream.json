@@ -1,0 +1,8 @@
+{
+  "package": "lzip",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/lzip.git",
+  "commit": "513a673e4dc0fbd958128320c40470b267eb05df",
+  "tree": "0033ab86a9318cbaf380a6d0290983802f9d8ab8",
+  "imported_at": "2026-11-16T04:17:07.224965+00:00"
+}

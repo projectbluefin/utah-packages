@@ -1,0 +1,8 @@
+{
+  "package": "gflags",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/gflags.git",
+  "commit": "60cc7b2489605b5937a7e9a75615104a7ef448c8",
+  "tree": "32619928fedbb92525fa8d091614b981d9b04ffa",
+  "imported_at": "2026-11-16T04:09:01.936191+00:00"
+}

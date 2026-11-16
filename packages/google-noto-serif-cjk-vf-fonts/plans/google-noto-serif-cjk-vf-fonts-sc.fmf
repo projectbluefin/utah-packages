@@ -1,0 +1,17 @@
+summary: Fonts related tests
+discover:
+  how: fmf
+  url: https://src.fedoraproject.org/tests/fonts
+prepare:
+  name: tmt
+  how: install
+  package: google-noto-serif-cjk-vf-fonts
+execute:
+  how: tmt
+environment:
+  PACKAGE: google-noto-serif-cjk-vf-fonts
+  FONT_ALIAS: serif
+  FONT_FAMILY: Noto Serif CJK SC
+  FONT_LANG: zh-cn,zh-sg
+  DEFAULT_SERIF: 1
+  FONT_VALIDATE_INDEXES: 2,131074,196610,262146,327682,393218,458754

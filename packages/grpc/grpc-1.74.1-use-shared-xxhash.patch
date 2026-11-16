@@ -1,0 +1,73 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 3eba8adbb1..b59523ed7b 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -267,6 +267,9 @@ set(gRPC_ABSL_USED_TARGETS
+ set(gRPC_GTEST_PROVIDER "module" CACHE STRING "Provider of gtest library")
+ set_property(CACHE gRPC_GTEST_PROVIDER PROPERTY STRINGS "module" "package")
+ 
++set(gRPC_XXHASH_PROVIDER "module" CACHE STRING "Provider of xxhash library")
++set_property(CACHE gRPC_XXHASH_PROVIDER PROPERTY STRINGS "module" "package")
++
+ # The OpenTelemetry plugin supports "package" build only at present.
+ set(gRPC_OPENTELEMETRY_PROVIDER "package")
+ #  set(gRPC_OPENTELEMETRY_PROVIDER "module" CACHE STRING "Provider of opentelemetry library")
+@@ -394,6 +397,7 @@ include(cmake/re2.cmake)
+ include(cmake/ssl.cmake)
+ include(cmake/upb.cmake)
+ include(cmake/xxhash.cmake)
++set(_gRPC_ALLTARGETS_LIBRARIES ${_gRPC_ALLTARGETS_LIBRARIES} ${_gRPC_XXHASH_LIBRARIES})
+ include(cmake/zlib.cmake)
+ include(cmake/download_archive.cmake)
+ 
+diff --git a/cmake/xxhash.cmake b/cmake/xxhash.cmake
+index 268ecef2a1..7aa3c38ad0 100644
+--- a/cmake/xxhash.cmake
++++ b/cmake/xxhash.cmake
+@@ -12,4 +12,11 @@
+ # See the License for the specific language governing permissions and
+ # limitations under the License.
+ 
++if(gRPC_XXHASH_PROVIDER STREQUAL "module")
+ set(_gRPC_XXHASH_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/xxhash")
++else()
++find_package(PkgConfig REQUIRED)
++pkg_check_modules(xxhash REQUIRED)
++set(_gRPC_XXHASH_INCLUDE_DIR ${xxhash_INCLUDE_DIRS})
++set(_gRPC_XXHASH_LIBRARIES ${xxhash_LIBRARIES})
++endif()
+diff --git a/setup.py b/setup.py
+index 3fd6979f6e..8521da9438 100644
+--- a/setup.py
++++ b/setup.py
+@@ -181,6 +181,11 @@ BUILD_WITH_SYSTEM_UTF8_RANGE = _env_bool_value(
+     "GRPC_PYTHON_BUILD_SYSTEM_UTF8_RANGE", "False"
+ )
+ 
++# Export this variable to use the system installation of xxhash. You need to
++# have the header files installed (in /usr/include/) and during
++# runtime, the shared library must be installed
++BUILD_WITH_SYSTEM_XXHASH = _env_bool_value("GRPC_PYTHON_BUILD_SYSTEM_XXHASH", "False")
++
+ # Export this variable to force building the python extension with a statically linked libstdc++.
+ # At least on linux, this is normally not needed as we can build manylinux-compatible wheels on linux just fine
+ # without statically linking libstdc++ (which leads to a slight increase in the wheel size).
+@@ -362,6 +367,9 @@ if BUILD_WITH_SYSTEM_UTF8_RANGE:
+     )
+     UTF8_RANGE_INCLUDE = (os.path.join("/usr", "include"),)
+ 
++if BUILD_WITH_SYSTEM_XXHASH:
++    XXHASH_INCLUDE = (os.path.join("/usr", "include"),)
++
+ EXTENSION_INCLUDE_DIRECTORIES = (
+     (PYTHON_STEM,)
+     + CORE_INCLUDE
+@@ -410,6 +418,8 @@ if BUILD_WITH_SYSTEM_UPB:
+     EXTENSION_LIBRARIES += ("upb",)
+ if BUILD_WITH_SYSTEM_UTF8_RANGE:
+     EXTENSION_LIBRARIES += ("utf8_range",)
++if BUILD_WITH_SYSTEM_XXHASH:
++    EXTENSION_LIBRARIES += ("xxhash",)
+ 
+ DEFINE_MACROS = (("_WIN32_WINNT", 0x600),)
+ asm_files = []

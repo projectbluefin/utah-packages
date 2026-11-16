@@ -1,0 +1,13 @@
+.build*
+/noarch
+/x86_64
+/libmicrohttpd-0.9.34*
+/libmicrohttpd-0.9.*.tar.gz
+/libmicrohttpd-1.0.0.tar.gz
+/libmicrohttpd-1.0.1.tar.gz
+/libmicrohttpd-1.0.2.tar.gz
+/libmicrohttpd-1.0.3.tar.gz
+/libmicrohttpd-1.0.4.tar.gz
+/libmicrohttpd-1.0.5.tar.gz
+/libmicrohttpd-1.0.6.tar.gz
+/libmicrohttpd-1.0.10.tar.gz
