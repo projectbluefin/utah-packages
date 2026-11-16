@@ -6852,6 +6852,13 @@
       ]
     },
     {
+      "name": "wildmidi",
+      "version": "0.5.0",
+      "url": "https://github.com/Mindwerks/wildmidi/archive/wildmidi-0.5.0.tar.gz",
+      "filename": "wildmidi-0.5.0.tar.gz",
+      "sha512": "0c5faa8ff054ed7b5851570fb4cca542c39189e10d4c73121dff6fcfc8366ad043fc54c155f70b4b622b269b76341a4800607ecc317a7873381112abadd4c308"
+    },
+    {
       "name": "wireguard-tools",
       "version": "1.0.20260223",
       "url": "https://git.zx2c4.com/wireguard-tools/snapshot/wireguard-tools-1.0.20260223.tar.xz",
