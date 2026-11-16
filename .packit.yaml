@@ -4294,6 +4294,12 @@ packages:
     downstream_package_name: usermode
     paths:
       - packages/usermode
+  uutils-coreutils:
+    specfile_path: uutils-coreutils.spec
+    upstream_package_name: uutils-coreutils
+    downstream_package_name: uutils-coreutils
+    paths:
+      - packages/uutils-coreutils
   uvg266:
     specfile_path: uvg266.spec
     upstream_package_name: uvg266

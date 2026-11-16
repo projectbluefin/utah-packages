@@ -6655,6 +6655,13 @@
       "sha512": "703eb218704c7a11cdce25a71f4fc91bf4f042a8b185f79f3954699081c0db8a6234ad6f11738d8b2fe6a492a03d029cbe01762a47869edc473e4fbaa6e0ee32"
     },
     {
+      "name": "uutils-coreutils",
+      "version": "0.7.0",
+      "url": "https://github.com/uutils/coreutils/archive/0.7.0/uutils-coreutils-0.7.0.tar.gz",
+      "filename": "uutils-coreutils-0.7.0.tar.gz",
+      "sha512": "e6d01d9320050efaa64ac261d86fddbb79895a0768c388248b412be571989ec4fc78c094e9606d56154abab06b3f66bd4784c55dbf8129db183e78df4bd7c43c"
+    },
+    {
       "name": "uvg266",
       "version": "0.8.1",
       "url": "https://github.com/ultravideo/uvg266/archive/v0.8.1/uvg266-0.8.1.tar.gz",
