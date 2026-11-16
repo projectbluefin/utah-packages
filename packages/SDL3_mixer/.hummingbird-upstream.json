@@ -1,0 +1,8 @@
+{
+  "package": "SDL3_mixer",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/SDL3_mixer.git",
+  "commit": "05e5a143723c734b004fb1a570afcd48a776ae9f",
+  "tree": "b1f88194925ba22046dcc03850444c5a796c2c83",
+  "imported_at": "2026-11-16T04:06:44.606875+00:00"
+}

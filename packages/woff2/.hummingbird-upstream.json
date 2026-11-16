@@ -1,0 +1,8 @@
+{
+  "package": "woff2",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/woff2.git",
+  "commit": "feae4efade655b2b44f1aba7c545d77e47c81949",
+  "tree": "d38aababa19732d654fcff0e27cfd86f146c6912",
+  "imported_at": "2026-11-16T04:09:28.144069+00:00"
+}

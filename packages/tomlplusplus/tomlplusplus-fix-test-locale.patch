@@ -1,0 +1,19 @@
+diff --git a/tests/meson.build b/tests/meson.build
+index 4132978..66cb564 100644
+--- a/tests/meson.build
++++ b/tests/meson.build
+@@ -74,14 +74,6 @@ test_exe = executable(
+ 
+ test_locales = [
+ 	'C',
+-	'en_US.utf8',
+-	'ja_JP.utf8',
+-	'it_IT.utf8',
+-	'tr_TR.utf8',
+-	'fi_FI.utf8',
+-	'fr_FR.utf8',
+-	'zh_CN.utf8',
+-	'de_DE.utf8'
+ ]
+ 
+ foreach locale : test_locales

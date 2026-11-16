@@ -1,0 +1,8 @@
+{
+  "package": "gnu-efi",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/gnu-efi.git",
+  "commit": "9d1140911ff44ccd00592cfcb588dd11df19b06a",
+  "tree": "279a2d41c347708481a8d4317dc65f467c97c64a",
+  "imported_at": "2026-11-16T04:08:41.338405+00:00"
+}

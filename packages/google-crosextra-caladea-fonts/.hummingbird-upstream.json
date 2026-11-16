@@ -1,0 +1,8 @@
+{
+  "package": "google-crosextra-caladea-fonts",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/google-crosextra-caladea-fonts.git",
+  "commit": "d658f19c2d1dd9eed1f8515d7e0a5bc0a67f262a",
+  "tree": "7daecff08e6ecc1b10bd7970e10c2fcd910ffe7b",
+  "imported_at": "2026-11-16T04:16:06.242867+00:00"
+}

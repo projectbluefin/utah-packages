@@ -1,0 +1,8 @@
+{
+  "package": "ocl-icd",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/ocl-icd.git",
+  "commit": "b5daa7828ec06154317b44259da1214efbce25cc",
+  "tree": "3e07ad1bf6c1adf3c1afd5b0925491a0eb6bded5",
+  "imported_at": "2026-11-16T04:08:23.864773+00:00"
+}

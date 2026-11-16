@@ -1,0 +1,74 @@
+From a49616f3777b5076c922af50cdf09113ecd7910a Mon Sep 17 00:00:00 2001
+From: Zephyr Lykos <git@mochaa.ws>
+Date: Wed, 1 Oct 2025 07:55:13 +0800
+Subject: [PATCH] Skip installing otel plugin pkgconfig if not enabled
+
+Signed-off-by: Zephyr Lykos <git@mochaa.ws>
+---
+ CMakeLists.txt                    | 22 ++++++++++++----------
+ templates/CMakeLists.txt.template | 22 ++++++++++++----------
+ 2 files changed, 24 insertions(+), 20 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index ca6170beec..0c7a6daad6 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -48223,13 +48223,15 @@ generate_pkgconfig(
+   "-laddress_sorting"
+   "grpc++_unsecure.pc")
+ 
+-# grpcpp_otel_plugin .pc file
+-generate_pkgconfig(
+-  "gRPC++ OpenTelemetry Plugin"
+-  "OpenTelemetry Plugin for gRPC C++"
+-  "${gRPC_CPP_VERSION}"
+-  "absl_absl_check absl_absl_log absl_algorithm_container absl_any_invocable absl_base absl_bind_front absl_bits absl_btree absl_check absl_cleanup absl_config absl_cord absl_core_headers absl_dynamic_annotations absl_flags absl_flags_marshalling absl_flat_hash_map absl_flat_hash_set absl_function_ref absl_hash absl_inlined_vector absl_layout absl_log absl_log_globals absl_log_severity absl_memory absl_no_destructor absl_optional absl_prefetch absl_random_bit_gen_ref absl_random_distributions absl_random_random absl_span absl_status absl_statusor absl_str_format absl_string_view absl_strings absl_strings_internal absl_synchronization absl_time absl_type_traits absl_utility gpr grpc grpc++ opentelemetry_api"
+-  "libcares openssl re2 zlib upb"
+-  "-lgrpcpp_otel_plugin"
+-  "-laddress_sorting"
+-  "grpcpp_otel_plugin.pc")
++if(gRPC_BUILD_GRPCPP_OTEL_PLUGIN)
++  # grpcpp_otel_plugin .pc file
++  generate_pkgconfig(
++    "gRPC++ OpenTelemetry Plugin"
++    "OpenTelemetry Plugin for gRPC C++"
++    "${gRPC_CPP_VERSION}"
++    "absl_absl_check absl_absl_log absl_algorithm_container absl_any_invocable absl_base absl_bind_front absl_bits absl_btree absl_check absl_cleanup absl_config absl_cord absl_core_headers absl_dynamic_annotations absl_flags absl_flags_marshalling absl_flat_hash_map absl_flat_hash_set absl_function_ref absl_hash absl_inlined_vector absl_layout absl_log absl_log_globals absl_log_severity absl_memory absl_no_destructor absl_optional absl_prefetch absl_random_bit_gen_ref absl_random_distributions absl_random_random absl_span absl_status absl_statusor absl_str_format absl_string_view absl_strings absl_strings_internal absl_synchronization absl_time absl_type_traits absl_utility gpr grpc grpc++ opentelemetry_api"
++    "libcares openssl re2 zlib upb"
++    "-lgrpcpp_otel_plugin"
++    "-laddress_sorting"
++    "grpcpp_otel_plugin.pc")
++endif()
+diff --git a/templates/CMakeLists.txt.template b/templates/CMakeLists.txt.template
+index 760ff8bcf7..f45659a401 100644
+--- a/templates/CMakeLists.txt.template
++++ b/templates/CMakeLists.txt.template
+@@ -1160,13 +1160,15 @@
+     "${" ".join(get_pkgconfig_libs_private("grpc++_unsecure"))}"
+     "grpc++_unsecure.pc")
+ 
+-  # grpcpp_otel_plugin .pc file
+-  generate_pkgconfig(
+-    "gRPC++ OpenTelemetry Plugin"
+-    "OpenTelemetry Plugin for gRPC C++"
+-    "<%text>${gRPC_CPP_VERSION}</%text>"
+-    "${" ".join(get_pkgconfig_requires("grpcpp_otel_plugin"))}"
+-    "${" ".join(get_pkgconfig_requires_private("grpcpp_otel_plugin"))}"
+-    "${" ".join(get_pkgconfig_libs("grpcpp_otel_plugin"))}"
+-    "${" ".join(get_pkgconfig_libs_private("grpcpp_otel_plugin"))}"
+-    "grpcpp_otel_plugin.pc")
++  if(gRPC_BUILD_GRPCPP_OTEL_PLUGIN)
++    # grpcpp_otel_plugin .pc file
++    generate_pkgconfig(
++      "gRPC++ OpenTelemetry Plugin"
++      "OpenTelemetry Plugin for gRPC C++"
++      "<%text>${gRPC_CPP_VERSION}</%text>"
++      "${" ".join(get_pkgconfig_requires("grpcpp_otel_plugin"))}"
++      "${" ".join(get_pkgconfig_requires_private("grpcpp_otel_plugin"))}"
++      "${" ".join(get_pkgconfig_libs("grpcpp_otel_plugin"))}"
++      "${" ".join(get_pkgconfig_libs_private("grpcpp_otel_plugin"))}"
++      "grpcpp_otel_plugin.pc")
++  endif()
+-- 
+2.51.0
+
