@@ -3034,6 +3034,12 @@ packages:
     downstream_package_name: opensc
     paths:
       - packages/opensc
+  openssl-pkcs11:
+    specfile_path: openssl-pkcs11.spec
+    upstream_package_name: openssl-pkcs11
+    downstream_package_name: openssl-pkcs11
+    paths:
+      - packages/openssl-pkcs11
   openvpn:
     specfile_path: openvpn.spec
     upstream_package_name: openvpn
