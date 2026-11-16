@@ -3426,6 +3426,13 @@
       "sha512": "8eef2b1214d2b512c8d4483f4a8a967cd05f065cb7dd0ec9ac09b2989a2bce0f60a897a7b154e90f2d6f9e3b53ac8bebe7e9c577dfe2afdb37686c027b3a97a7"
     },
     {
+      "name": "libmicrohttpd",
+      "version": "1.0.10",
+      "url": "https://ftp.gnu.org/gnu/libmicrohttpd/libmicrohttpd-1.0.10.tar.gz",
+      "filename": "libmicrohttpd-1.0.10.tar.gz",
+      "sha512": "b67458fad556fa0b73edf728efbc30a2304c544d98409b9efbdda5ebfb6668b31c1c96620eac33994ade1255f8170cd4628f0a61b57a9cef255d4980110b362f"
+    },
+    {
       "name": "libmodplug",
       "version": "0.8.9.0",
       "url": "https://downloads.sourceforge.net/modplug-xmms/libmodplug-0.8.9.0.tar.gz",

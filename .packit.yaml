@@ -2170,6 +2170,12 @@ packages:
     downstream_package_name: libmediainfo
     paths:
       - packages/libmediainfo
+  libmicrohttpd:
+    specfile_path: libmicrohttpd.spec
+    upstream_package_name: libmicrohttpd
+    downstream_package_name: libmicrohttpd
+    paths:
+      - packages/libmicrohttpd
   libmodplug:
     specfile_path: libmodplug.spec
     upstream_package_name: libmodplug
