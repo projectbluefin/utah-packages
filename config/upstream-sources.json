@@ -182,6 +182,17 @@
       ]
     },
     {
+      "name": "alsa-plugins",
+      "version": "1.2.12",
+      "url": "https://www.alsa-project.org/files/pub/plugins/alsa-plugins-1.2.12.tar.bz2",
+      "filename": "alsa-plugins-1.2.12.tar.bz2",
+      "feed": "https://release-monitoring.org/project/41",
+      "sha512": "b2064eb32662662f422f6e7c71f503d82c68d7a7059c8197bdd61ee08735b3ee104c6a5f9e3451e81124634514b91fc89d05d33041d9c2bb0f55b3c2ac3271b1",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/alsa-plugins/alsa-plugins-1.2.12.tar.bz2/sha512/b2064eb32662662f422f6e7c71f503d82c68d7a7059c8197bdd61ee08735b3ee104c6a5f9e3451e81124634514b91fc89d05d33041d9c2bb0f55b3c2ac3271b1/alsa-plugins-1.2.12.tar.bz2"
+      ]
+    },
+    {
       "name": "alsa-sof-firmware",
       "version": "2025.12.2",
       "url": "https://github.com/thesofproject/sof-bin/releases/download/v2025.12.2/sof-bin-2025.12.2.tar.gz",
@@ -4609,6 +4620,17 @@
       "url": "https://www.kernel.org/pub/linux/utils/nfs-utils/2.9.2/nfs-utils-2.9.2.tar.xz",
       "filename": "nfs-utils-2.9.2.tar.xz",
       "sha512": "3752a2841d45ba7bd9360328d00731c1c0f7d1a011c76ed3751cf03d5da757369c6e57ec26f695147deff8aa670cafdaf18abd8fe66b323513005942683d020c"
+    },
+    {
+      "name": "nicstat",
+      "version": "1.95",
+      "url": "https://downloads.sourceforge.net/nicstat/nicstat-1.95.tar.gz",
+      "filename": "nicstat-1.95.tar.gz",
+      "feed": "https://release-monitoring.org/project/10373",
+      "sha512": "54f9136200412d41e2c21137a246221ff624f84374db67f6617296a1c3aa73a25125fab09e4ff230f64545ba026fce4806ccece196ac770c8dcf380c0571d505",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/nicstat/nicstat-1.95.tar.gz/md5/9a0b87bbc670c1e738e5b40c7afd184d/nicstat-1.95.tar.gz"
+      ]
     },
     {
       "name": "nilfs-utils",

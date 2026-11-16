@@ -124,6 +124,12 @@ packages:
     downstream_package_name: alsa-firmware
     paths:
       - packages/alsa-firmware
+  alsa-plugins:
+    specfile_path: alsa-plugins.spec
+    upstream_package_name: alsa-plugins
+    downstream_package_name: alsa-plugins
+    paths:
+      - packages/alsa-plugins
   alsa-sof-firmware:
     specfile_path: alsa-sof-firmware.spec
     upstream_package_name: alsa-sof-firmware
@@ -2908,6 +2914,12 @@ packages:
     downstream_package_name: nfs-utils
     paths:
       - packages/nfs-utils
+  nicstat:
+    specfile_path: nicstat.spec
+    upstream_package_name: nicstat
+    downstream_package_name: nicstat
+    paths:
+      - packages/nicstat
   nilfs-utils:
     specfile_path: nilfs-utils.spec
     upstream_package_name: nilfs-utils
