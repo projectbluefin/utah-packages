@@ -2761,6 +2761,13 @@
       ]
     },
     {
+      "name": "libcacard",
+      "version": "2.8.2",
+      "url": "https://www.spice-space.org/download/libcacard/libcacard-2.8.2.tar.xz",
+      "filename": "libcacard-2.8.2.tar.xz",
+      "sha512": "535d1fbdfac8ca14261486c192ecb74cd31a6e7d0ef843d2a1a6a56960538107b346f632103478c17081752a6994decfed5fca835d84c08e7c01a8aeefd27075"
+    },
+    {
       "name": "libcamera",
       "version": "0.7.2",
       "url": "https://gitlab.freedesktop.org/camera/libcamera/-/archive/v0.7.2/libcamera-v0.7.2.tar.bz2",

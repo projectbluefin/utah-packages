@@ -1744,6 +1744,12 @@ packages:
     downstream_package_name: libcaca
     paths:
       - packages/libcaca
+  libcacard:
+    specfile_path: libcacard.spec
+    upstream_package_name: libcacard
+    downstream_package_name: libcacard
+    paths:
+      - packages/libcacard
   libcamera:
     specfile_path: libcamera.spec
     upstream_package_name: libcamera
