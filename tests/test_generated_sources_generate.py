@@ -608,6 +608,51 @@ class PrefixdevnameGenerateTests(PackageDirMixin, unittest.TestCase):
         self.assertEqual(list(self.out_dir.iterdir()), [])
 
 
+class KanataGenerateTests(PackageDirMixin, unittest.TestCase):
+    """Dakota's keyboard remapper, vendored from its GitHub tag archive (utah#1222)."""
+
+    VERSION = "1.12.0"
+    TOP = f"kanata-{VERSION}"
+    ARCHIVE_URL = f"https://github.com/jtroo/kanata/archive/refs/tags/v{VERSION}.tar.gz"
+
+    def setUp(self):
+        super().setUp()
+        self.write_spec("kanata.spec", self.VERSION)
+        self.crate = targz({"tinycrate-1.0.0/src/lib.rs": b"//"})
+        # Workspace members are path sources: no `source`, nothing to fetch.
+        lock = (
+            f'[[package]]\nname = "kanata"\nversion = "{self.VERSION}"\n\n'
+            '[[package]]\nname = "kanata-parser"\nversion = "0.1.0"\n\n'
+            f'[[package]]\nname = "tinycrate"\nversion = "1.0.0"\nsource = "{CRATES_IO}"\n'
+            f'checksum = "{hashlib.sha256(self.crate).hexdigest()}"\n'
+        )
+        self.archive = targz({f"{self.TOP}/Cargo.lock": lock.encode(), f"{self.TOP}/parser/Cargo.toml": b"[x]"})
+        self.crate_url = "https://static.crates.io/crates/tinycrate/tinycrate-1.0.0.crate"
+
+    def test_metadata_names_the_generated_vendored_archive(self):
+        entry = generated_sources.metadata_for("kanata", self.package_dir)
+        self.assertEqual(entry["filename"], f"{self.TOP}-vendored.tar.xz")
+        self.assertIn(self.ARCHIVE_URL, entry["generate"]["input"])
+
+    def test_an_unpinned_version_fails_before_any_download(self):
+        self.write_spec("kanata.spec", "0.0.1")
+        with patch.object(generated_sources, "_fetch") as fetch:
+            with self.assertRaisesRegex(RuntimeError, "no pinned input SHA-512 for kanata 0.0.1"):
+                generated_sources.generate("kanata", self.package_dir, self.out_dir)
+        fetch.assert_not_called()
+
+    def test_registry_crates_are_vendored_and_workspace_members_are_not_fetched(self):
+        fetch = UrlopenRecorder({self.ARCHIVE_URL: self.archive, self.crate_url: self.crate})
+        with patch.object(generated_sources.urllib.request, "urlopen", fetch), \
+                patch.dict(generated_sources.KANATA_INPUT_SHA512, {self.VERSION: sha512(self.archive)}):
+            target = generated_sources.generate("kanata", self.package_dir, self.out_dir)
+        self.assertEqual([url for url, _, _ in fetch.requests], [self.ARCHIVE_URL, self.crate_url])
+        with tarfile.open(fileobj=io.BytesIO(lzma.decompress(target.read_bytes()))) as archive:
+            names = archive.getnames()
+        self.assertIn(f"{self.TOP}/parser/Cargo.toml", names)
+        self.assertIn(f"{self.TOP}/vendor/tinycrate-1.0.0/src/lib.rs", names)
+
+
 
 def tarxz(members: dict[str, bytes]) -> bytes:
     raw = io.BytesIO()
