@@ -39,6 +39,8 @@ that no upstream publishes verbatim:
   `vendor/` tree of every crates.io crate its Cargo.lock pins, laid out as
   `cargo vendor --versioned-dirs` does. Upstream publishes no release asset,
   and the recipe builds offline from vendored crates
+- kanata: the upstream GitHub tag archive (SHA-512-pinned) with the same
+  `vendor/` tree added, for Dakota's keyboard remapper (projectbluefin/utah#1222)
 - gst-thumbnailers: the upstream GNOME release (SHA-512-pinned) with the same
   `vendor/` tree added. Hummingbird ships no Rust crate RPMs, so the recipe
   bundles its gtk-rs, clap and libglycin-rebind dependencies (#527)
@@ -1280,6 +1282,44 @@ def _prefixdevname_generate(package_dir: Path, out_dir: Path) -> Path:
     )
 
 
+# --- kanata --------------------------------------------------------------------
+
+# Project Bluefin Dakota builds kanata from its tag with cargo (bluefin/kanata.bst).
+# Fedora has no recipe and Hummingbird ships no Rust crate RPMs, so the tag
+# archive's Cargo.lock is vendored beside it, as prefixdevname does. The
+# workspace's own members (parser, keyberon, tcp_protocol) are path sources
+# inside the archive and need no download.
+KANATA_UPSTREAM_URL = "https://github.com/jtroo/kanata/archive/refs/tags/v{version}.tar.gz"
+KANATA_INPUT_SHA512 = {
+    "1.12.0": "c7473224d0077d1558da062b8787db650937f4125e19b4e4bd66e75a80db5f38ab8ccf0fcd93c20625035b93f309d92b7a182d214478c37e615805baaec6396d",
+}
+
+
+def _kanata_metadata(package_dir: Path) -> dict:
+    version = spec_version(package_dir, "kanata.spec")
+    return {
+        "name": "kanata",
+        "version": version,
+        "filename": f"kanata-{version}-vendored.tar.xz",
+        "generate": {
+            "script": SCRIPT_PATH,
+            "input": f"{KANATA_UPSTREAM_URL.format(version=version)} (sha512-pinned) and every crates.io crate its Cargo.lock pins (sha256-pinned by Cargo.lock)",
+            "method": f"add vendor/<crate>-<version> for each Cargo.lock crate with .cargo-checksum.json, as cargo vendor --versioned-dirs lays it out, and repack deterministically as kanata-{version}-vendored.tar.xz",
+        },
+    }
+
+
+def _kanata_generate(package_dir: Path, out_dir: Path) -> Path:
+    version = spec_version(package_dir, "kanata.spec")
+    return _cargo_vendored_generate(
+        "kanata",
+        version,
+        KANATA_UPSTREAM_URL.format(version=version),
+        KANATA_INPUT_SHA512.get(version),
+        out_dir,
+    )
+
+
 # --- gst-thumbnailers ----------------------------------------------------------
 
 # Hummingbird ships no Rust crate RPMs, so the recipe cannot resolve gtk-rs,
@@ -1431,6 +1471,7 @@ METADATA = {
     "hplip": _hplip_metadata,
     "openal-soft": _openal_soft_metadata,
     "prefixdevname": _prefixdevname_metadata,
+    "kanata": _kanata_metadata,
     "gst-thumbnailers": _gst_thumbnailers_metadata,
     "freerdp": _freerdp_metadata,
     "fpaste": _fpaste_metadata,
@@ -1447,6 +1488,7 @@ GENERATORS = {
     "gpm": _gpm_generate,
     "openal-soft": _openal_soft_generate,
     "prefixdevname": _prefixdevname_generate,
+    "kanata": _kanata_generate,
     "gst-thumbnailers": _gst_thumbnailers_generate,
     "freerdp": _freerdp_generate,
     "fpaste": _fpaste_generate,
