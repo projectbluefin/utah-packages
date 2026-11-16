@@ -1,0 +1,52 @@
+From 125981259d2045f47fc7dde2b6f0f71fed0f1d85 Mon Sep 17 00:00:00 2001
+From: Dan Callaghan <dcallagh@redhat.com>
+Date: Fri, 30 Nov 2012 14:05:04 +1000
+Subject: [PATCH] fix tests when run without a tty (fixes #25)
+
+---
+ blessings/tests.py | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/blessings/tests.py b/blessings/tests.py
+index a03eb8d..da1a71b 100644
+--- a/blessings/tests.py
++++ b/blessings/tests.py
+@@ -43,6 +43,8 @@ def test_capability():
+ 
+     """
+     t = TestTerminal()
++    if not t.is_a_tty:
++        raise SkipTest
+     sc = unicode_cap('sc')
+     eq_(t.save, sc)
+     eq_(t.save, sc)  # Make sure caching doesn't screw it up.
+@@ -64,7 +66,7 @@ def test_capability_with_forced_tty():
+ 
+ def test_parametrization():
+     """Test parametrizing a capability."""
+-    eq_(TestTerminal().cup(3, 4), unicode_parm('cup', 3, 4))
++    eq_(TestTerminal(force_styling=True).cup(3, 4), unicode_parm('cup', 3, 4))
+ 
+ 
+ def test_height_and_width():
+@@ -144,7 +146,7 @@ def test_mnemonic_colors():
+ 
+     # Avoid testing red, blue, yellow, and cyan, since they might someday
+     # change depending on terminal type.
+-    t = TestTerminal()
++    t = TestTerminal(force_styling=True)
+     eq_(t.white, color(7))
+     eq_(t.green, color(2))  # Make sure it's different than white.
+     eq_(t.on_black, on_color(0))
+@@ -250,7 +252,7 @@ def test_nice_formatting_errors():
+ def test_init_descriptor_always_initted():
+     """We should be able to get a height and width even on no-tty Terminals."""
+     t = Terminal(stream=StringIO())
+-    eq_(type(t.height), int)
++    assert isinstance(t.height, int) or t.height is None
+ 
+ 
+ def test_force_styling_none():
+-- 
+2.50.1
+
