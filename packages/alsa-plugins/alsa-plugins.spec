@@ -1,23 +1,22 @@
-%if 0%{?rhel}
+# Utah: aligned with freedesktop-sdk's components/alsa-plugins.bst, which
+# Dakota ships: --disable-jack --enable-pulseaudio --disable-samplerate
+# --disable-libav --with-speex=no, no AVTP, no Maemo plugin.
 %bcond_with avtp
 %bcond_with jack
 %bcond_with ffmpeg
-%else
-%bcond_without avtp
-%bcond_without jack
-%bcond_without ffmpeg
-%endif
+%bcond_with samplerate
+%bcond_with speex
+%bcond_with maemo
 
 Name:           alsa-plugins
 Version:        1.2.12
-Release:        11%{?dist}
+Release:        12%{?dist}
 Summary:        The Advanced Linux Sound Architecture (ALSA) Plugins
 # All packages are LGPL-2.1-or-later with the exception of samplerate
 # which is GPL-2.0-or-later, pph plugin is BSD-3-Clause licensed
 License:        GPL-2.0-or-later and LGPL-2.1-or-later and BSD-3-Clause
 URL:            http://www.alsa-project.org/
 Source0:        ftp://ftp.alsa-project.org/pub/plugins/%{name}-%{version}.tar.bz2
-Patch0:         alsa-git.patch
 
 BuildRequires:  autoconf automake libtool
 BuildRequires:  make
@@ -65,6 +64,7 @@ sound daemon. In other words, native ALSA applications can play and record
 sound across a network. There are two plugins in the suite, one for PCM and
 one for mixer control.
 
+%if %{with samplerate}
 %package samplerate
 BuildRequires:  libsamplerate-devel
 Summary:        External rate converter plugin for ALSA
@@ -73,6 +73,7 @@ License:        GPL-2.0-or-later
 %description samplerate
 This plugin is an external rate converter using libsamplerate by Erik de
 Castro Lopo.
+%endif
 
 %package upmix
 BuildRequires:  libsamplerate-devel
@@ -111,6 +112,7 @@ License:        LGPL-2.1-or-later
 This plugin exposes the controls for an Arcam AV amplifier
 (see: http://www.arcam.co.uk/) as an ALSA mixer device.
 
+%if %{with speex}
 %package speex
 Requires:       speex speexdsp
 BuildRequires:  speex-devel speexdsp-devel
@@ -121,7 +123,9 @@ License:        LGPL-2.1-or-later
 The rate plugin is an external rate converter using the Speex resampler
 (aka Public Parrot Hack) by Jean-Marc Valin. The pcm plugin provides
 pre-processing of a mono stream like denoise using libspeex DSP API.
+%endif
 
+%if %{with maemo}
 %package maemo
 BuildRequires:  dbus-devel
 Summary:        Maemo plugin for ALSA
@@ -130,6 +134,7 @@ License:        LGPL-2.1-or-later
 %description maemo
 This plugin converts the ALSA API over PCM task nodes protocol. In this way,
 ALSA native applications can run over DSP Gateway and use DSP PCM task nodes.
+%endif
 
 %if %{with avtp}
 %package avtp
@@ -170,9 +175,22 @@ The plugin uses ffmpeg audio resample library to convert audio rates.
 %build
 autoreconf -vif
 %configure --disable-static \
+           --enable-pulseaudio \
+           %{!?with_jack:--disable-jack} \
+           %{!?with_samplerate:--disable-samplerate} \
+           %{!?with_ffmpeg:--disable-libav} \
+           %{!?with_avtp:--disable-aaf} \
+%if %{with speex}
            --with-speex=lib \
+%else
+           --with-speex=no \
+%endif
+%if %{with maemo}
            --enable-maemo-plugin \
            --enable-maemo-resource-manager
+%else
+           --disable-maemo-plugin
+%endif
 %make_build
 
 %install
@@ -223,6 +241,7 @@ find %{buildroot} -name "*.la" -delete
 %dir %{_datadir}/alsa/alsa.conf.d
 %{_datadir}/alsa/alsa.conf.d/50-pulseaudio.conf
 
+%if %{with samplerate}
 %files samplerate
 %license COPYING COPYING.GPL
 %doc doc/samplerate.txt
@@ -237,6 +256,7 @@ find %{buildroot} -name "*.la" -delete
 %{_libdir}/alsa-lib/libasound_module_rate_samplerate_linear.so
 %{_libdir}/alsa-lib/libasound_module_rate_samplerate_medium.so
 %{_libdir}/alsa-lib/libasound_module_rate_samplerate_order.so
+%endif
 
 %files upmix
 %license COPYING COPYING.GPL
@@ -281,6 +301,7 @@ find %{buildroot} -name "*.la" -delete
 %dir %{_libdir}/alsa-lib
 %{_libdir}/alsa-lib/libasound_module_ctl_arcam_av.so
 
+%if %{with speex}
 %files speex
 %license COPYING COPYING.GPL
 %doc doc/speexdsp.txt doc/speexrate.txt
@@ -296,7 +317,9 @@ find %{buildroot} -name "*.la" -delete
 %{_libdir}/alsa-lib/libasound_module_rate_speexrate.so
 %{_libdir}/alsa-lib/libasound_module_rate_speexrate_best.so
 %{_libdir}/alsa-lib/libasound_module_rate_speexrate_medium.so
+%endif
 
+%if %{with maemo}
 %files maemo
 %license COPYING COPYING.GPL
 %doc doc/README-maemo
@@ -308,6 +331,7 @@ find %{buildroot} -name "*.la" -delete
 %dir %{_libdir}/alsa-lib
 %{_libdir}/alsa-lib/libasound_module_ctl_dsp_ctl.so
 %{_libdir}/alsa-lib/libasound_module_pcm_alsa_dsp.so
+%endif
 
 %if %{with avtp}
 %files avtp
@@ -344,6 +368,11 @@ find %{buildroot} -name "*.la" -delete
 %endif
 
 %changelog
+* Mon Nov 16 2026 Utah package factory <noreply@projectbluefin.io> - 1.2.12-12
+- Align with freedesktop-sdk's alsa-plugins.bst (Dakota): no JACK,
+  libsamplerate, libavcodec (a52, lavrate), Speex, AVTP or Maemo plugins
+- Drop alsa-git.patch: it only touches the a52 plugin, which is not built
+
 * Thu Sep 03 2026 Dominik Mierzejewski <dominik@greysector.net> - 1.2.12-11
 - Rebuilt for FFmpeg 9
 
