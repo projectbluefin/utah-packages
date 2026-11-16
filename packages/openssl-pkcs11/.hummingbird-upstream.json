@@ -1,0 +1,8 @@
+{
+  "package": "openssl-pkcs11",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/openssl-pkcs11.git",
+  "commit": "c319e878a172a7250adbded551dc68cfd00fc6eb",
+  "tree": "2df1ce8060882052f72cc670223867347221e305",
+  "imported_at": "2026-11-16T04:08:47.713964+00:00"
+}

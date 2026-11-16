@@ -1,0 +1,8 @@
+{
+  "package": "virtiofsd",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/virtiofsd.git",
+  "commit": "5fb1c61c1c9d71a743dd5a5275f7997ac9ad730c",
+  "tree": "b3d89998e680ff4bafa21f95b6622d6562bdb969",
+  "imported_at": "2026-11-16T04:06:21.899934+00:00"
+}
