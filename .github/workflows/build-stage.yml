@@ -643,15 +643,16 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          prefix="${PREFIX}"
-          list() {
-            # Count the current run's artifacts whose name starts with $1.
-            gh api "repos/$REPO/actions/runs/$RUN_ID/artifacts?per_page=100" \
-              --paginate \
-              --jq '[.artifacts[].name | select(startswith("'"$1""))] | length' \
-              2>/dev/null || echo 0
-          }
-          echo "rpm_count=$(list "${prefix}rpm-s${STAGE}-")" >> "$GITHUB_OUTPUT"
+          # Count the current run's artifacts named ${PREFIX}rpm-s<stage>-*.
+          # --paginate applies --jq to each page separately, so a filter that
+          # counts would print one number per page; list the names and count
+          # once. A failed listing fails this step and leaves rpm_count unset,
+          # so the merge below still runs rather than skipping a stage.
+          want="${PREFIX}rpm-s${STAGE}-"
+          count=$(gh api "repos/$REPO/actions/runs/$RUN_ID/artifacts?per_page=100" \
+              --paginate --jq '.artifacts[].name' \
+            | awk -v want="$want" 'index($0, want) == 1 { n++ } END { print n + 0 }')
+          echo "rpm_count=$count" >> "$GITHUB_OUTPUT"
       - name: Merge this stage's RPM artifacts
         if: always() && steps.count.outputs.rpm_count != '0'
         uses: actions/upload-artifact/merge@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
