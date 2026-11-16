@@ -1,0 +1,8 @@
+{
+  "package": "grpc",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/grpc.git",
+  "commit": "bc92db7a441580c5c947e9fba196e15534d6b848",
+  "tree": "9182a83d8312784c1af36ef63d702b3de3bdbb89",
+  "imported_at": "2026-11-16T04:09:08.975305+00:00"
+}
