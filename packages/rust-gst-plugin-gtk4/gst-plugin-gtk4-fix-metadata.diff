@@ -1,0 +1,12 @@
+--- gst-plugin-gtk4-0.15.2/Cargo.toml	2006-07-24T01:21:28+00:00
++++ gst-plugin-gtk4-0.15.2/Cargo.toml	2026-06-18T21:06:59.435322+00:00
+@@ -87,9 +87,6 @@
+     "gdk-wayland",
+     "gst-gl-wayland",
+ ]
+-winegl = [
+-    "gst-gl-egl",
+-]
+ x11egl = [
+     "gdk-x11",
+     "gst-gl-egl",

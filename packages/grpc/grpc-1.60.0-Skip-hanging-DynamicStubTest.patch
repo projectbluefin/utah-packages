@@ -1,0 +1,21 @@
+From b362db140235c65ef7ac7a6e70899cc68a9e1fab Mon Sep 17 00:00:00 2001
+From: "Benjamin A. Beasley" <code@musicinmybrain.net>
+Date: Fri, 14 Jul 2023 01:33:09 -0400
+Subject: [PATCH] Skip hanging DynamicStubTest
+
+---
+ src/python/grpcio_tests/tests/unit/_dynamic_stubs_test.py | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/python/grpcio_tests/tests/unit/_dynamic_stubs_test.py b/src/python/grpcio_tests/tests/unit/_dynamic_stubs_test.py
+index 7f95188b91..723940bf67 100644
+--- a/src/python/grpcio_tests/tests/unit/_dynamic_stubs_test.py
++++ b/src/python/grpcio_tests/tests/unit/_dynamic_stubs_test.py
+@@ -136,6 +136,7 @@ def _test_grpc_tools_unimportable():
+     os.name == "nt" or "darwin" in sys.platform,
+     "Windows and MacOS multiprocessing unsupported",
+ )
++@unittest.skip("Tests hang; possibly related to upstream issue #25368?")
+ class DynamicStubTest(unittest.TestCase):
+     def test_sunny_day(self):
+         _run_in_subprocess(_test_sunny_day)

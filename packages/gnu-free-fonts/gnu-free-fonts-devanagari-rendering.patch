@@ -1,0 +1,40 @@
+--- freefont-20120503/sfd/FreeSansBold.sfd	2012-05-03 18:53:49.000000000 +0530
++++ freefont-20120503/sfd/FreeSansBold.sfd	2013-05-16 12:39:06.399829387 +0530
+@@ -59117,6 +59117,7 @@ Substitution2: "Substitute rakaar.blf fo
+ Ligature2: "Substitute rakaar for virama-ra in Devanagari-subtable" virama radeva
+ LCarets2: 1 0 
+ Ligature2: "'blwf' Below Base Forms in Devanagari subtable" radeva virama
++Ligature2: "'blwf' Below Base Forms in Devanagari subtable" virama radeva
+ EndChar
+ 
+ StartChar: dev_ha_rrvocalic.blws
+--- freefont-20120503/sfd/FreeSans.sfd	2012-05-03 18:53:49.000000000 +0530
++++ freefont-20120503/sfd/FreeSans.sfd	2013-05-16 12:42:00.215227977 +0530
+@@ -83796,6 +83796,7 @@ EndSplineSet
+ Validated: 3073
+ LCarets2: 1 0 
+ Ligature2: "'blwf' Below Base Forms in Devanagari subtable" radeva virama
++Ligature2: "'blwf' Below Base Forms in Devanagari subtable" virama radeva
+ EndChar
+ 
+ StartChar: dev_ra_anusvara.rphf
+--- freefont-20120503/sfd/FreeSerifBold.sfd	2012-05-03 18:53:49.000000000 +0530
++++ freefont-20120503/sfd/FreeSerifBold.sfd	2013-05-16 13:37:31.159274925 +0530
+@@ -112581,6 +112581,7 @@ EndSplineSet
+ Validated: 3073
+ LCarets2: 1 0 
+ Ligature2: "'blwf' Below Base Forms in Devanagari subtable" radeva virama
++Ligature2: "'blwf' Below Base Forms in Devanagari subtable" virama radeva
+ Ligature2: "Substitute rakaar for virama-ra in Devanagari-subtable" virama radeva
+ Substitution2: "Substitute rakaar.blf for rakaar in Devanagari" dev_rakaar.blwf
+ EndChar
+--- freefont-20120503/sfd/FreeSerif.sfd	2012-05-03 18:53:49.000000000 +0530
++++ freefont-20120503/sfd/FreeSerif.sfd	2013-05-16 13:36:04.382132354 +0530
+@@ -328421,6 +328421,7 @@ Validated: 1
+ LCarets2: 1 0 
+ Ligature2: "Substitute rakaar for virama-ra in Devanagari-subtable" virama radeva
+ Ligature2: "'blwf' Below Base Forms in Devanagari subtable" radeva virama
++Ligature2: "'blwf' Below Base Forms in Devanagari subtable" virama radeva
+ Substitution2: "Substitute rakaar.blf for rakaar in Devanagari" dev_rakaar.blwf
+ EndChar
+ 
