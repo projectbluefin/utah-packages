@@ -4198,6 +4198,12 @@ packages:
     downstream_package_name: tesseract-tessdata
     paths:
       - packages/tesseract-tessdata
+  tex-gyre-fonts:
+    specfile_path: tex-gyre-fonts.spec
+    upstream_package_name: tex-gyre-fonts
+    downstream_package_name: tex-gyre-fonts
+    paths:
+      - packages/tex-gyre-fonts
   thermald:
     specfile_path: thermald.spec
     upstream_package_name: thermald
@@ -4372,6 +4378,12 @@ packages:
     downstream_package_name: uvg266
     paths:
       - packages/uvg266
+  uwelcome:
+    specfile_path: uwelcome.spec
+    upstream_package_name: uwelcome
+    downstream_package_name: uwelcome
+    paths:
+      - packages/uwelcome
   v4l-utils:
     specfile_path: v4l-utils.spec
     upstream_package_name: v4l-utils

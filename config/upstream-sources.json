@@ -6498,6 +6498,13 @@
       "sha512": "d5e3461d262e300ebf21abc39d19471a6aabed442eab8fdee772368a02c4fe0d2e5738701e31b2d0777989778c9db0169a57ea89537266bc66d2228fb96ea63e"
     },
     {
+      "name": "tex-gyre-fonts",
+      "version": "2.501",
+      "url": "https://mirrors.ctan.org/fonts/tex-gyre.zip",
+      "filename": "tex-gyre-fonts-2.501.zip",
+      "sha512": "1135fd8cd8c308d1deff5ed31dbb96e88d074dff1b0f99eb0fd295397805d2dab0a43ed2727750be0d7ea013b1eda390bbaba42e8410379e5665ec80cdcee9e6"
+    },
+    {
       "name": "thermald",
       "version": "2.5.13",
       "url": "https://github.com/intel/thermal_daemon/archive/v2.5.13/thermald-2.5.13.tar.gz",
@@ -6744,6 +6751,13 @@
       "url": "https://github.com/ultravideo/uvg266/archive/v0.8.1/uvg266-0.8.1.tar.gz",
       "filename": "uvg266-0.8.1.tar.gz",
       "sha512": "892b0732516fe2639f93b250bbed342da8134deeaa6f0ccb429ff8451df727f971c7ee284fef93eaa431c5c54a8b8789ffc853d8b45ae93433ba17007989bbae"
+    },
+    {
+      "name": "uwelcome",
+      "version": "0.4.1",
+      "url": "https://github.com/projectbluefin/uwelcome/releases/download/v0.4.1/uwelcome_0.4.1_linux_amd64",
+      "filename": "uwelcome-0.4.1-x86_64",
+      "sha512": "f262cf688b15b7b6af10ec93a32329066ab646b044c9182371e6498c7077befbffcdc4856248a4618d20efcd72befa593780a07f2105f983b5619f00905fb76d"
     },
     {
       "name": "v4l-utils",
