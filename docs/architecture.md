@@ -219,7 +219,9 @@ one-line fix to a wave-0 library publishes when wave 0 finishes, not when the
 slowest package in the same run does.
 
 A second, advisory check follows it: what Utah actually installs. The gate's
-contract is about 78 packages; Utah installs about 120 -- Bluefin's
+contract is about 78 packages; Utah installs about 120 -- its base
+manifest's (`packages/base.toml`, `packages/bluefin.toml` before
+projectbluefin/utah#1253; the fetch falls back to the old name on a 404)
 `[fedora]` and `[fedora_v44]` plus Utah's `[gnome]`, `[parity]`, `[hardware]`,
 `[services]` and `[build]`, minus `[unavailable]`. `tools/utah_install_set.py`
 computes that set with Utah's own `scripts/install-packages.py`, fetched from
