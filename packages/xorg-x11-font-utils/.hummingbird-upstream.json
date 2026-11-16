@@ -1,0 +1,8 @@
+{
+  "package": "xorg-x11-font-utils",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/xorg-x11-font-utils.git",
+  "commit": "6830230b569a00a881f63bd59946f540e5da8777",
+  "tree": "7cbcb608672bc905330b038a5cc1257ca2a384a6",
+  "imported_at": "2026-11-16T04:14:34.561248+00:00"
+}

@@ -1,0 +1,8 @@
+{
+  "package": "wildmidi",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/wildmidi.git",
+  "commit": "ae1509e2486e1f389debc2c4064c6e7c0eb6c569",
+  "tree": "c5a2d0741516d574513c077e9d0b838d1e59b94a",
+  "imported_at": "2026-11-16T04:06:55.461511+00:00"
+}

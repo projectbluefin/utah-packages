@@ -1,0 +1,288 @@
+From 9622015bd0c44b6e2a2c923bd70b711d3f54d6d1 Mon Sep 17 00:00:00 2001
+From: glitchfox <glitchfox@benjaminali.com>
+Date: Thu, 30 Jul 2026 06:49:53 +0000
+Subject: [PATCH 1/2] Fix signed-integer-overflow UB in big-endian 32-bit reads
+ (parsers)
+
+The format parsers assemble 32-bit big-endian values a byte at a time, e.g.
+`tmp_val = *midi_data++ << 24;`. The uint8_t operand promotes to int, so when
+the top byte's high bit is set, `value << 24` shifts into/past the int sign
+bit -- undefined behavior (UBSan: "left shift of 255 by 24 places cannot be
+represented in type 'int'"). This fires on the normal MIDI/XMI/MUS/HMP/HMI
+loading paths and when reading GUS patch headers; found with AFL++ + UBSan.
+
+Cast the shifted byte to uint32_t so the shift is well-defined unsigned
+arithmetic. The computed value is unchanged on two's-complement targets; only
+the `<< 24` term can overflow (`<< 16` / `<< 8` on a byte stay within int), so
+those are left as-is. 25 sites across f_midi, f_xmidi, f_hmi, f_hmp, gus_pat,
+and mus2mid.
+
+Signed-off-by: glitchfox <glitchfox@benjaminali.com>
+---
+ src/f_hmi.c   |  4 ++--
+ src/f_hmp.c   | 16 ++++++++--------
+ src/f_midi.c  |  4 ++--
+ src/f_xmidi.c | 12 ++++++------
+ src/gus_pat.c | 12 ++++++------
+ src/mus2mid.c |  2 +-
+ 6 files changed, 25 insertions(+), 25 deletions(-)
+
+diff --git a/src/f_hmi.c b/src/f_hmi.c
+index 14ca8c51..85833a88 100644
+--- a/src/f_hmi.c
++++ b/src/f_hmi.c
+@@ -143,7 +143,7 @@ _WM_ParseNewHmi(const uint8_t *hmi_data, uint32_t hmi_size) {
+         hmi_track_offset[i] = *hmi_data++;
+         hmi_track_offset[i] += (*hmi_data++ << 8);
+         hmi_track_offset[i] += (*hmi_data++ << 16);
+-        hmi_track_offset[i] += (*hmi_data++ << 24);
++        hmi_track_offset[i] += ((uint32_t)*hmi_data++ << 24);
+ 
+         if (hmi_size < (hmi_track_offset[i] + 0x5a + 4)) {
+             _WM_GLOBAL_ERROR(WM_ERR_NOT_HMI, "file too short", 0);
+@@ -160,7 +160,7 @@ _WM_ParseNewHmi(const uint8_t *hmi_data, uint32_t hmi_size) {
+         hmi_track_header_length[i] = hmi_addr[0x57];
+         hmi_track_header_length[i] += (hmi_addr[0x58] << 8);
+         hmi_track_header_length[i] += (hmi_addr[0x59] << 16);
+-        hmi_track_header_length[i] += (hmi_addr[0x5a] << 24);
++        hmi_track_header_length[i] += ((uint32_t)hmi_addr[0x5a] << 24);
+ 
+         /* GHSA-f2xg-2rq9-xvhm: header length is file-controlled; bound it
+          * against the remaining buffer so the pointer advance below cannot
+diff --git a/src/f_hmp.c b/src/f_hmp.c
+index 93ae8247..dd020ac0 100644
+--- a/src/f_hmp.c
++++ b/src/f_hmp.c
+@@ -111,7 +111,7 @@ _WM_ParseNewHmp(const uint8_t *hmp_data, uint32_t hmp_size) {
+     hmp_file_length = *hmp_data++;
+     hmp_file_length += (*hmp_data++ << 8);
+     hmp_file_length += (*hmp_data++ << 16);
+-    hmp_file_length += (*hmp_data++ << 24);
++    hmp_file_length += ((uint32_t)*hmp_data++ << 24);
+     hmp_size -= 4;
+ 
+     WMIDI_UNUSED(hmp_file_length);
+@@ -123,7 +123,7 @@ _WM_ParseNewHmp(const uint8_t *hmp_data, uint32_t hmp_size) {
+     hmp_chunks = *hmp_data++;
+     hmp_chunks += (*hmp_data++ << 8);
+     hmp_chunks += (*hmp_data++ << 16);
+-    hmp_chunks += (*hmp_data++ << 24);
++    hmp_chunks += ((uint32_t)*hmp_data++ << 24);
+     hmp_size -= 4;
+ 
+     if (!hmp_chunks) {
+@@ -135,7 +135,7 @@ _WM_ParseNewHmp(const uint8_t *hmp_data, uint32_t hmp_size) {
+     hmp_unknown = *hmp_data++;
+     hmp_unknown += (*hmp_data++ << 8);
+     hmp_unknown += (*hmp_data++ << 16);
+-    hmp_unknown += (*hmp_data++ << 24);
++    hmp_unknown += ((uint32_t)*hmp_data++ << 24);
+     hmp_size -= 4;
+ 
+     WMIDI_UNUSED(hmp_unknown);
+@@ -147,7 +147,7 @@ _WM_ParseNewHmp(const uint8_t *hmp_data, uint32_t hmp_size) {
+     hmp_bpm = *hmp_data++;
+     hmp_bpm += (*hmp_data++ << 8);
+     hmp_bpm += (*hmp_data++ << 16);
+-    hmp_bpm += (*hmp_data++ << 24);
++    hmp_bpm += ((uint32_t)*hmp_data++ << 24);
+     hmp_size -= 4;
+ 
+     if (!hmp_bpm) {
+@@ -171,7 +171,7 @@ _WM_ParseNewHmp(const uint8_t *hmp_data, uint32_t hmp_size) {
+     hmp_song_time = *hmp_data++;
+     hmp_song_time += (*hmp_data++ << 8);
+     hmp_song_time += (*hmp_data++ << 16);
+-    hmp_song_time += (*hmp_data++ << 24);
++    hmp_song_time += ((uint32_t)*hmp_data++ << 24);
+     hmp_size -= 4;
+ 
+     /* DEBUG */
+@@ -211,7 +211,7 @@ _WM_ParseNewHmp(const uint8_t *hmp_data, uint32_t hmp_size) {
+         chunk_num = *hmp_data++;
+         chunk_num += (*hmp_data++ << 8);
+         chunk_num += (*hmp_data++ << 16);
+-        chunk_num += (*hmp_data++ << 24);
++        chunk_num += ((uint32_t)*hmp_data++ << 24);
+         chunk_ofs[i] += 4;
+ 
+         WMIDI_UNUSED(chunk_num);
+@@ -219,7 +219,7 @@ _WM_ParseNewHmp(const uint8_t *hmp_data, uint32_t hmp_size) {
+         chunk_length[i] = *hmp_data++;
+         chunk_length[i] += (*hmp_data++ << 8);
+         chunk_length[i] += (*hmp_data++ << 16);
+-        chunk_length[i] += (*hmp_data++ << 24);
++        chunk_length[i] += ((uint32_t)*hmp_data++ << 24);
+         chunk_ofs[i] += 4;
+ 
+         if (chunk_length[i] > hmp_size) {
+@@ -232,7 +232,7 @@ _WM_ParseNewHmp(const uint8_t *hmp_data, uint32_t hmp_size) {
+         hmp_track = *hmp_data++;
+         hmp_track += (*hmp_data++ << 8);
+         hmp_track += (*hmp_data++ << 16);
+-        hmp_track += (*hmp_data++ << 24);
++        hmp_track += ((uint32_t)*hmp_data++ << 24);
+         chunk_ofs[i] += 4;
+ 
+         WMIDI_UNUSED(hmp_track);
+diff --git a/src/f_midi.c b/src/f_midi.c
+index 4963d4f4..f302606c 100644
+--- a/src/f_midi.c
++++ b/src/f_midi.c
+@@ -88,7 +88,7 @@ _WM_ParseNewMidi(const uint8_t *midi_data, uint32_t midi_size) {
+     /*
+      * Get Midi Header Size - must always be 6
+      */
+-    tmp_val = *midi_data++ << 24;
++    tmp_val = (uint32_t)*midi_data++ << 24;
+     tmp_val |= *midi_data++ << 16;
+     tmp_val |= *midi_data++ << 8;
+     tmp_val |= *midi_data++;
+@@ -166,7 +166,7 @@ _WM_ParseNewMidi(const uint8_t *midi_data, uint32_t midi_size) {
+         midi_size -= 4;
+ 
+         /* track size */
+-        tmp_val = *midi_data++ << 24;
++        tmp_val = (uint32_t)*midi_data++ << 24;
+         tmp_val |= *midi_data++ << 16;
+         tmp_val |= *midi_data++ << 8;
+         tmp_val |= *midi_data++;
+diff --git a/src/f_xmidi.c b/src/f_xmidi.c
+index 6e4af3a3..73657d0d 100644
+--- a/src/f_xmidi.c
++++ b/src/f_xmidi.c
+@@ -73,7 +73,7 @@ struct _mdi *_WM_ParseNewXmi(const uint8_t *xmi_data, uint32_t xmi_size) {
+     xmi_size -= 4;
+ 
+     /* bytes until next entry */
+-    xmi_tmpdata = *xmi_data++ << 24;
++    xmi_tmpdata = (uint32_t)*xmi_data++ << 24;
+     xmi_tmpdata |= *xmi_data++ << 16;
+     xmi_tmpdata |= *xmi_data++ << 8;
+     xmi_tmpdata |= *xmi_data++;
+@@ -125,7 +125,7 @@ struct _mdi *_WM_ParseNewXmi(const uint8_t *xmi_data, uint32_t xmi_size) {
+     xmi_data += 4;
+     xmi_size -= 4;
+ 
+-    xmi_catlen = *xmi_data++ << 24;
++    xmi_catlen = (uint32_t)*xmi_data++ << 24;
+     xmi_catlen |= *xmi_data++ << 16;
+     xmi_catlen |= *xmi_data++ << 8;
+     xmi_catlen |= *xmi_data++;
+@@ -164,7 +164,7 @@ struct _mdi *_WM_ParseNewXmi(const uint8_t *xmi_data, uint32_t xmi_size) {
+         xmi_data += 4;
+         xmi_size -= 4;
+ 
+-        xmi_subformlen = *xmi_data++ << 24;
++        xmi_subformlen = (uint32_t)*xmi_data++ << 24;
+         xmi_subformlen |= *xmi_data++ << 16;
+         xmi_subformlen |= *xmi_data++ << 8;
+         xmi_subformlen |= *xmi_data++;
+@@ -196,7 +196,7 @@ struct _mdi *_WM_ParseNewXmi(const uint8_t *xmi_data, uint32_t xmi_size) {
+                 /*        hold patch events */
+                 xmi_data += 4;
+ 
+-                xmi_tmpdata = *xmi_data++ << 24;
++                xmi_tmpdata = (uint32_t)*xmi_data++ << 24;
+                 xmi_tmpdata |= *xmi_data++ << 16;
+                 xmi_tmpdata |= *xmi_data++ << 8;
+                 xmi_tmpdata |= *xmi_data++;
+@@ -216,7 +216,7 @@ struct _mdi *_WM_ParseNewXmi(const uint8_t *xmi_data, uint32_t xmi_size) {
+                 /* FIXME: May not be needed for playback */
+                 xmi_data += 4;
+ 
+-                xmi_tmpdata = *xmi_data++ << 24;
++                xmi_tmpdata = (uint32_t)*xmi_data++ << 24;
+                 xmi_tmpdata |= *xmi_data++ << 16;
+                 xmi_tmpdata |= *xmi_data++ << 8;
+                 xmi_tmpdata |= *xmi_data++;
+@@ -234,7 +234,7 @@ struct _mdi *_WM_ParseNewXmi(const uint8_t *xmi_data, uint32_t xmi_size) {
+ 
+                 xmi_evnt_cnt++;
+ 
+-                xmi_evntlen = *xmi_data++ << 24;
++                xmi_evntlen = (uint32_t)*xmi_data++ << 24;
+                 xmi_evntlen |= *xmi_data++ << 16;
+                 xmi_evntlen |= *xmi_data++ << 8;
+                 xmi_evntlen |= *xmi_data++;
+diff --git a/src/gus_pat.c b/src/gus_pat.c
+index 697c31f2..a34a9c8c 100644
+--- a/src/gus_pat.c
++++ b/src/gus_pat.c
+@@ -784,29 +784,29 @@ struct _sample * _WM_load_gus_pat(const char *filename, int fix_release) {
+         }
+ 
+         gus_sample->loop_fraction = gus_patch[gus_ptr + 7];
+-        gus_sample->data_length = (gus_patch[gus_ptr + 11] << 24)
++        gus_sample->data_length = ((uint32_t)gus_patch[gus_ptr + 11] << 24)
+                                 | (gus_patch[gus_ptr + 10] << 16)
+                                 | (gus_patch[gus_ptr + 9]  <<  8)
+                                 |  gus_patch[gus_ptr + 8];
+-        gus_sample->loop_start  = (gus_patch[gus_ptr + 15] << 24)
++        gus_sample->loop_start  = ((uint32_t)gus_patch[gus_ptr + 15] << 24)
+                                 | (gus_patch[gus_ptr + 14] << 16)
+                                 | (gus_patch[gus_ptr + 13] <<  8)
+                                 |  gus_patch[gus_ptr + 12];
+-        gus_sample->loop_end    = (gus_patch[gus_ptr + 19] << 24)
++        gus_sample->loop_end    = ((uint32_t)gus_patch[gus_ptr + 19] << 24)
+                                 | (gus_patch[gus_ptr + 18] << 16)
+                                 | (gus_patch[gus_ptr + 17] <<  8)
+                                 |  gus_patch[gus_ptr + 16];
+         gus_sample->rate        = (gus_patch[gus_ptr + 21] << 8)
+                                 |  gus_patch[gus_ptr + 20];
+-        gus_sample->freq_low    = (gus_patch[gus_ptr + 25] << 24)
++        gus_sample->freq_low    = ((uint32_t)gus_patch[gus_ptr + 25] << 24)
+                                 | (gus_patch[gus_ptr + 24] << 16)
+                                 | (gus_patch[gus_ptr + 23] <<  8)
+                                 |  gus_patch[gus_ptr + 22];
+-        gus_sample->freq_high   = (gus_patch[gus_ptr + 29] << 24)
++        gus_sample->freq_high   = ((uint32_t)gus_patch[gus_ptr + 29] << 24)
+                                 | (gus_patch[gus_ptr + 28] << 16)
+                                 | (gus_patch[gus_ptr + 27] <<  8)
+                                 |  gus_patch[gus_ptr + 26];
+-        gus_sample->freq_root   = (gus_patch[gus_ptr + 33] << 24)
++        gus_sample->freq_root   = ((uint32_t)gus_patch[gus_ptr + 33] << 24)
+                                 | (gus_patch[gus_ptr + 32] << 16)
+                                 | (gus_patch[gus_ptr + 31] <<  8)
+                                 |  gus_patch[gus_ptr + 30];
+diff --git a/src/mus2mid.c b/src/mus2mid.c
+index 86cfffd8..d7ab212b 100644
+--- a/src/mus2mid.c
++++ b/src/mus2mid.c
+@@ -211,7 +211,7 @@ static int32_t writevarlen(int32_t value, uint8_t *out)
+ }
+ 
+ #define READ_INT16(b) ((b)[0] | ((b)[1] << 8))
+-#define READ_INT32(b) ((b)[0] | ((b)[1] << 8) | ((b)[2] << 16) | ((b)[3] << 24))
++#define READ_INT32(b) ((b)[0] | ((b)[1] << 8) | ((b)[2] << 16) | ((uint32_t)(b)[3] << 24))
+ 
+ int _WM_mus2midi(const uint8_t *in, uint32_t insize,
+                  uint8_t **out, uint32_t *outsize,
+
+From ea903841963bafbcc064657c6c5ac958514de0d2 Mon Sep 17 00:00:00 2001
+From: glitchfox <glitchfox@benjaminali.com>
+Date: Thu, 30 Jul 2026 10:46:36 +0000
+Subject: [PATCH 2/2] mus2mid: cast all READ_INT32 operands to uint32_t
+ (consistency)
+
+Per review (@sezero): match hmi2mid.c's macro style by casting every byte
+rather than only the <<24 term. No behavioural change.
+
+Signed-off-by: glitchfox <glitchfox@benjaminali.com>
+---
+ src/mus2mid.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/mus2mid.c b/src/mus2mid.c
+index d7ab212b..fcce478e 100644
+--- a/src/mus2mid.c
++++ b/src/mus2mid.c
+@@ -211,7 +211,7 @@ static int32_t writevarlen(int32_t value, uint8_t *out)
+ }
+ 
+ #define READ_INT16(b) ((b)[0] | ((b)[1] << 8))
+-#define READ_INT32(b) ((b)[0] | ((b)[1] << 8) | ((b)[2] << 16) | ((uint32_t)(b)[3] << 24))
++#define READ_INT32(b) ((uint32_t)(b)[0] | ((uint32_t)(b)[1] << 8) | ((uint32_t)(b)[2] << 16) | ((uint32_t)(b)[3] << 24))
+ 
+ int _WM_mus2midi(const uint8_t *in, uint32_t insize,
+                  uint8_t **out, uint32_t *outsize,

@@ -1,0 +1,8 @@
+{
+  "package": "gtk4-layer-shell",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/gtk4-layer-shell.git",
+  "commit": "caa1607097d7bd03605b5c8ece17e2b239e79f44",
+  "tree": "ebff1133fd69e2aaf5fe9666722077167a9623dc",
+  "imported_at": "2026-11-16T04:08:51.500907+00:00"
+}

@@ -1,0 +1,8 @@
+{
+  "package": "leveldb",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/leveldb.git",
+  "commit": "85537f6cb6eb2f706479c246f0ddfd09a14bcc61",
+  "tree": "8d16f5261bedd3d2b77b20530a2e9deea880087c",
+  "imported_at": "2026-11-16T04:17:08.308532+00:00"
+}
