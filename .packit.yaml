@@ -166,6 +166,12 @@ packages:
     downstream_package_name: alsa-utils
     paths:
       - packages/alsa-utils
+  android-udev-rules:
+    specfile_path: android-udev-rules.spec
+    upstream_package_name: android-udev-rules
+    downstream_package_name: android-udev-rules
+    paths:
+      - packages/android-udev-rules
   anthy-unicode:
     specfile_path: anthy-unicode.spec
     upstream_package_name: anthy-unicode
@@ -268,6 +274,12 @@ packages:
     downstream_package_name: bluefin-artwork-logos
     paths:
       - packages/bluefin-artwork-logos
+  bluefin-docs:
+    specfile_path: bluefin-docs.spec
+    upstream_package_name: bluefin-docs
+    downstream_package_name: bluefin-docs
+    paths:
+      - packages/bluefin-docs
   bluez:
     specfile_path: bluez.spec
     upstream_package_name: bluez
