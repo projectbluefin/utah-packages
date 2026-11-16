@@ -1,0 +1,143 @@
+--- freefont-20120503.old/sfd/FreeSans.sfd	2023-05-11 13:54:34.003872193 +0530
++++ freefont-20120503.old/sfd/FreeSans.sfd	2023-05-18 12:13:57.320957919 +0530
+@@ -193447,8 +193448,8 @@
+ Validated: 32769
+ EndChar
+ 
+-StartChar: uni2e2a
+-Encoding: 11818 11818 6215
++StartChar: uni2e2c
++Encoding: 11818 11820 6215
+ Width: 660
+ Flags: HMW
+ LayerCount: 2
+@@ -193460,8 +193461,8 @@
+ Validated: 32769
+ EndChar
+ 
+-StartChar: uni2e2b
+-Encoding: 11819 11819 6216
++StartChar: uni2e2a
++Encoding: 11819 11818 6216
+ Width: 623
+ Flags: HMW
+ LayerCount: 2
+@@ -193470,8 +193471,8 @@
+ Validated: 32769
+ EndChar
+ 
+-StartChar: uni2e2c
+-Encoding: 11820 11820 6217
++StartChar: uni2e2b
++Encoding: 11820 11819 6217
+ Width: 623
+ Flags: HMW
+ LayerCount: 2
+ 
+--- freefont-20120503.old/sfd/FreeSansBold.sfd	2023-05-27 11:49:31.972472859 +0530
++++ freefont-20120503/sfd/FreeSansBold.sfd	2023-05-27 12:01:21.108967266 +0530
+@@ -52288,8 +52289,8 @@
+ Validated: 32769
+ EndChar
+ 
+-StartChar: uni2e2a
+-Encoding: 11818 11818 2645
++StartChar: uni2e2c
++Encoding: 11818 11820 2645
+ Width: 660
+ Flags: HW
+ LayerCount: 2
+@@ -52301,8 +52302,8 @@
+ Validated: 32769
+ EndChar
+ 
+-StartChar: uni2e2b
+-Encoding: 11819 11819 2646
++StartChar: uni2e2a
++Encoding: 11819 11818 2646
+ Width: 623
+ Flags: HW
+ LayerCount: 2
+@@ -52311,8 +52312,8 @@
+ Validated: 32769
+ EndChar
+ 
+-StartChar: uni2e2c
+-Encoding: 11820 11820 2647
++StartChar: uni2e2b
++Encoding: 11820 11819 2647
+ Width: 623
+ Flags: HW
+ LayerCount: 2
+
+--- freefont-20120503.old/sfd/FreeSansBoldOblique.sfd	2012-05-03 18:53:49.000000000 +0530
++++ freefont-20120503/sfd/FreeSansBoldOblique.sfd	2023-05-27 11:59:28.625015029 +0530
+@@ -46080,8 +46081,8 @@
+ Validated: 32769
+ EndChar
+ 
+-StartChar: uni2e2a
+-Encoding: 11818 11818 2392
++StartChar: uni2e2c
++Encoding: 11818 11820 2392
+ Width: 660
+ Flags: HW
+ LayerCount: 2
+@@ -46093,8 +46094,8 @@
+ Validated: 32769
+ EndChar
+ 
+-StartChar: uni2e2b
+-Encoding: 11819 11819 2393
++StartChar: uni2e2a
++Encoding: 11819 11818 2393
+ Width: 660
+ Flags: HW
+ LayerCount: 2
+@@ -46105,8 +46106,8 @@
+ Validated: 32769
+ EndChar
+ 
+-StartChar: uni2e2c
+-Encoding: 11820 11820 2394
++StartChar: uni2e2b
++Encoding: 11820 11819 2394
+ Width: 660
+ Flags: HW
+ LayerCount: 2
+
+--- freefont-20120503.old/sfd/FreeSansOblique.sfd	2012-05-03 18:53:49.000000000 +0530
++++ freefont-20120503/sfd/FreeSansOblique.sfd	2023-05-27 11:57:01.703453459 +0530
+@@ -76021,8 +76022,8 @@
+ Validated: 32769
+ EndChar
+ 
+-StartChar: uni2e2a
+-Encoding: 11818 11818 3026
++StartChar: uni2e2c
++Encoding: 11818 11820 3026
+ Width: 660
+ Flags: HW
+ LayerCount: 2
+@@ -76034,8 +76035,8 @@
+ Validated: 32769
+ EndChar
+ 
+-StartChar: uni2e2b
+-Encoding: 11819 11819 3027
++StartChar: uni2e2a
++Encoding: 11819 11818 3027
+ Width: 623
+ Flags: HW
+ LayerCount: 2
+@@ -76046,8 +76047,8 @@
+ Validated: 32769
+ EndChar
+ 
+-StartChar: uni2e2c
+-Encoding: 11820 11820 3028
++StartChar: uni2e2b
++Encoding: 11820 11819 3028
+ Width: 623
+ Flags: HW
+ LayerCount: 2

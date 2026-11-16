@@ -1,0 +1,5 @@
+test: ./runtest.sh
+duration: 50m
+framework: beakerlib
+require:
+  - opencc-tools

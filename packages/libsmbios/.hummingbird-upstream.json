@@ -1,0 +1,8 @@
+{
+  "package": "libsmbios",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libsmbios.git",
+  "commit": "b840131ca0f700bfc824f76992e36229ac22869b",
+  "tree": "f5aad5d4ba0938da29acb4a8daab8eecfa4f2cb3",
+  "imported_at": "2026-11-16T04:08:23.948130+00:00"
+}

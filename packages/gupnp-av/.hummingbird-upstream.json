@@ -1,0 +1,8 @@
+{
+  "package": "gupnp-av",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/gupnp-av.git",
+  "commit": "920980dc718aa709b527a63d7eebdee984041150",
+  "tree": "3777f81586d9286382642933e44082dc29a76b7f",
+  "imported_at": "2026-11-16T04:07:24.817780+00:00"
+}
