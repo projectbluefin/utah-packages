@@ -1,5 +1,5 @@
 Name:           python-email-validator
-Version:        2.3.0
+Version:        2.4.0
 Release:        %autorelease
 Summary:        A robust email syntax and deliverability validation library
 

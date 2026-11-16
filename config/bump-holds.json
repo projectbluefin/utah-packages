@@ -12,14 +12,6 @@
       "version": "2.71.0",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/43358822069"
     },
-    "ffmpegthumbnailer": {
-      "version": "2.4.1",
-      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/43358822069"
-    },
-    "flex": {
-      "version": "2.6.11",
-      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/43384286878"
-    },
     "fribidi": {
       "version": "1.0.18",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/43358822069"
@@ -111,10 +103,6 @@
     "python-pydantic": {
       "version": "2.14.3",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/43358822069"
-    },
-    "simdutf": {
-      "version": "9.3.3",
-      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/40833963568"
     },
     "snowball": {
       "version": "3.2.0",

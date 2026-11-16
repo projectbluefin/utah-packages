@@ -14,7 +14,7 @@
 %global __strip /bin/true
 
 Name:           uupd
-Version:        1.5.5
+Version:        1.5.7
 Release:        1%{?dist}
 Summary:        Universal Blue unattended system, Flatpak, Homebrew and distrobox updater
 
@@ -51,5 +51,8 @@ test "$(./uupd --version)" = "uupd version %{version}"
 %{_bindir}/uupd
 
 %changelog
+* Mon Nov 16 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 1.5.7-1
+- Update to 1.5.7
+
 * Mon Nov 16 2026 Utah Packages <packages@projectbluefin.io> - 1.5.5-1
 - Initial recipe: Dakota's uupd release binary (bluefin/uupd.bst)

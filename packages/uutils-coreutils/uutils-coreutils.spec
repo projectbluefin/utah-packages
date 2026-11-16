@@ -22,7 +22,7 @@
 %global _smp_tasksize_proc 8192
 
 Name:           uutils-coreutils
-Version:        0.7.0
+Version:        0.12.0
 # bump release number to 9 temporarily
 # upgrade path for rust-coreutils-0.7.0-8
 Release:        %autorelease -b 9
