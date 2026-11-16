@@ -195,6 +195,50 @@ class ArtifactPatternTests(unittest.TestCase):
             self.assertEqual(any(fnmatch(name, p) for p in expanded), covered, name)
 
 
+class ReusablePermissionTests(unittest.TestCase):
+    """A called workflow's job never asks for more than its caller holds.
+
+    GitHub refuses such a run at startup (startup_failure, no job logs): the
+    #970 merge job's actions: read failed every rebuild that way until
+    rebuild-rpms.yml granted it.
+    """
+
+    LEVEL = {"none": 0, "read": 1, "write": 2}
+
+    def scopes(self, permissions):
+        if permissions in ("read-all", "write-all"):
+            return {"*": permissions.split("-")[0]}
+        return dict(permissions or {})
+
+    def level(self, granted, scope):
+        return self.LEVEL[granted.get(scope, granted.get("*", "none"))]
+
+    def test_every_reusable_call_covers_the_called_jobs(self):
+        import yaml
+
+        workflows = Path(__file__).resolve().parent.parent / ".github" / "workflows"
+        checked = 0
+        for path in sorted(workflows.glob("*.yml")):
+            workflow = yaml.safe_load(path.read_text())
+            for name, job in workflow.get("jobs", {}).items():
+                uses = job.get("uses", "")
+                if not uses.startswith("./.github/workflows/"):
+                    continue
+                caller = job.get("permissions", workflow.get("permissions"))
+                if caller is None:
+                    continue  # the repository default token; nothing to compare
+                granted = self.scopes(caller)
+                called = yaml.safe_load((workflows.parent.parent / uses).read_text())
+                for inner, inner_job in called["jobs"].items():
+                    asked = self.scopes(inner_job.get("permissions", called.get("permissions")))
+                    for scope, value in asked.items():
+                        with self.subTest(caller=f"{path.name}:{name}", called=f"{uses}:{inner}",
+                                          scope=scope):
+                            self.assertLessEqual(self.LEVEL[value], self.level(granted, scope))
+                    checked += 1
+        self.assertGreater(checked, 0)
+
+
 class MergeCountTests(unittest.TestCase):
     """build-stage.yml's merge job counts its stage's RPM artifacts (#970)."""
 
