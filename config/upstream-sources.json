@@ -1956,10 +1956,14 @@
     },
     {
       "name": "hyperv-daemons",
-      "version": "6.10",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/hyperv-daemons/tools-hv-6ba59ff42279.tar.gz/sha512/215525e937522ef8f019e9f43dd8a057c116eb6e42d2097d81c24f4c6730c3c461df93a520f09761def9ea1866ee270537629430ec177088bbc5397e82e3ef93/tools-hv-6ba59ff42279.tar.gz",
-      "filename": "tools-hv-6ba59ff42279.tar.gz",
-      "sha512": "215525e937522ef8f019e9f43dd8a057c116eb6e42d2097d81c24f4c6730c3c461df93a520f09761def9ea1866ee270537629430ec177088bbc5397e82e3ef93"
+      "version": "7.3.1",
+      "filename": "tools-hv-7.3.1.tar.xz",
+      "sha512": "b630c405903b71cd297dc7101aa8a29fc34a55a45b056dca72132e90ed17627ead374e159ec085488a8a926316af9adb4b1b12fd8ce840f467ce532d0d647f27",
+      "generate": {
+        "script": "tools/generated_sources.py",
+        "input": "https://cdn.kernel.org/pub/linux/kernel/v7.x/linux-7.3.1.tar.xz (sha512-pinned)",
+        "method": "cut tools/hv and the tools/build and tools/scripts makefiles it includes from the stable kernel release and repack deterministically as tools-hv-7.3.1.tar.xz"
+      }
     },
     {
       "name": "hyphen",
