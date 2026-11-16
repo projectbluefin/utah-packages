@@ -946,6 +946,12 @@ packages:
     downstream_package_name: gnome-shell
     paths:
       - packages/gnome-shell
+  gnome-shell-extension-blur-my-shell:
+    specfile_path: gnome-shell-extension-blur-my-shell.spec
+    upstream_package_name: gnome-shell-extension-blur-my-shell
+    downstream_package_name: gnome-shell-extension-blur-my-shell
+    paths:
+      - packages/gnome-shell-extension-blur-my-shell
   gnome-shell-extension-gsconnect:
     specfile_path: gnome-shell-extension-gsconnect.spec
     upstream_package_name: gnome-shell-extension-gsconnect

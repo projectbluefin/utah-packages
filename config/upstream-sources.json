@@ -1449,6 +1449,13 @@
       ]
     },
     {
+      "name": "gnome-shell-extension-blur-my-shell",
+      "version": "75",
+      "url": "https://github.com/aunetx/blur-my-shell/archive/v75/blur-my-shell-75.tar.gz",
+      "filename": "blur-my-shell-75.tar.gz",
+      "sha512": "c25b7986a8f6764577b5238e78c5488be0b3a42a57d66726c887c7e7fc8a036afc3fcc7e72159df1170da984f13e1d3c0eb24a22779f2e7bc28ff11b162d4e53"
+    },
+    {
       "name": "gnome-shell-extension-gsconnect",
       "version": "72",
       "url": "https://github.com/GSConnect/gnome-shell-extension-gsconnect/archive/v72/gnome-shell-extension-gsconnect-72.tar.gz",
