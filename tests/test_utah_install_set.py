@@ -37,12 +37,12 @@ class InstallSetTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             (root / "install-packages.py").write_text(INSTALLER)
-            (root / "bluefin.toml").write_text(
+            (root / "base.toml").write_text(
                 '[fedora]\npackages = ["fish", "libgphoto2"]\n[fedora_v44]\npackages = ["ptyxis"]\n')
             (root / "utah.toml").write_text(
                 '[gnome]\npackages = ["gnome-shell"]\n[parity]\npackages = ["fish"]\n'
                 '[unavailable]\npackages = ["ptyxis"]\n[build]\npackages = ["meson"]\n')
-            packages = uis.install_set(root / "install-packages.py", root / "bluefin.toml",
+            packages = uis.install_set(root / "install-packages.py", root / "base.toml",
                                        root / "utah.toml")
         self.assertEqual(packages, ["fish", "libgphoto2", "gnome-shell", "meson"])
 
@@ -253,6 +253,52 @@ class FetchTests(unittest.TestCase):
             with self.assertRaises(OSError):
                 uis.fetch("main", Path(directory))
 
+    @staticmethod
+    def missing(paths):
+        def urlopen(url, timeout):
+            if any(url.endswith("/" + path) for path in paths):
+                raise uis.urllib.error.HTTPError(url, 404, "Not Found", {}, None)
+            return contextlib.nullcontext(io.BytesIO(url.encode()))
+        return urlopen
+
+    def test_a_ref_before_the_rename_fetches_bluefin_toml(self) -> None:
+        with tempfile.TemporaryDirectory() as directory, \
+                mock.patch.object(uis.urllib.request, "urlopen",
+                                  side_effect=self.missing(["packages/base.toml"])):
+            paths = uis.fetch("old", Path(directory))
+            self.assertEqual(paths["manifest"], Path(directory) / "bluefin.toml")
+            self.assertTrue(paths["manifest"].read_text().endswith("/old/packages/bluefin.toml"))
+            self.assertFalse((Path(directory) / "base.toml").exists())
+
+    def test_base_toml_wins_when_both_exist(self) -> None:
+        with tempfile.TemporaryDirectory() as directory, \
+                mock.patch.object(uis.urllib.request, "urlopen", side_effect=self.missing([])):
+            paths = uis.fetch("new", Path(directory))
+            self.assertEqual(paths["manifest"], Path(directory) / "base.toml")
+            self.assertFalse((Path(directory) / "bluefin.toml").exists())
+
+    def test_a_missing_manifest_under_both_names_fails(self) -> None:
+        missing = self.missing(["packages/base.toml", "packages/bluefin.toml"])
+        with tempfile.TemporaryDirectory() as directory, \
+                mock.patch.object(uis.urllib.request, "urlopen", side_effect=missing):
+            with self.assertRaises(uis.urllib.error.HTTPError):
+                uis.fetch("main", Path(directory))
+
+    def test_only_a_404_on_the_manifest_falls_back(self) -> None:
+        def urlopen(url, timeout):
+            if url.endswith("/packages/base.toml"):
+                raise uis.urllib.error.HTTPError(url, 500, "Server Error", {}, None)
+            return contextlib.nullcontext(io.BytesIO(url.encode()))
+        with tempfile.TemporaryDirectory() as directory, \
+                mock.patch.object(uis.urllib.request, "urlopen", side_effect=urlopen):
+            with self.assertRaises(uis.urllib.error.HTTPError):
+                uis.fetch("main", Path(directory))
+        missing = self.missing(["packages/utah.toml"])
+        with tempfile.TemporaryDirectory() as directory, \
+                mock.patch.object(uis.urllib.request, "urlopen", side_effect=missing):
+            with self.assertRaises(uis.urllib.error.HTTPError):
+                uis.fetch("main", Path(directory))
+
     def test_resolve_reads_the_names_fetch_writes(self) -> None:
         # main(resolve) opens the installer and key by these names, inside the
         # base image, from what fetch wrote on the host.
@@ -279,13 +325,13 @@ class MainTests(unittest.TestCase):
             def fetch(ref, target):
                 self.assertEqual(ref, "feature")
                 (target / "install-packages.py").write_text(INSTALLER)
-                (target / "bluefin.toml").write_text(
+                (target / "base.toml").write_text(
                     '[fedora]\npackages = ["fish"]\n[fedora_v44]\npackages = ["ptyxis"]\n')
                 (target / "utah.toml").write_text(
                     '[gnome]\npackages = ["fish", "gnome-shell"]\n[build]\npackages = ["meson"]\n')
                 (target / "Containerfile").write_text(f"ARG BASE_IMAGE={self.PINNED}\n")
                 return {"installer": target / "install-packages.py",
-                        "manifest": target / "bluefin.toml", "overlay": target / "utah.toml",
+                        "manifest": target / "base.toml", "overlay": target / "utah.toml",
                         "containerfile": target / "Containerfile"}
 
             with mock.patch.object(uis, "fetch", side_effect=fetch):
@@ -302,11 +348,11 @@ class MainTests(unittest.TestCase):
 
             def fetch(ref, target):
                 (target / "install-packages.py").write_text(INSTALLER)
-                for name in ("bluefin.toml", "utah.toml"):
+                for name in ("base.toml", "utah.toml"):
                     (target / name).write_text("")
                 (target / "Containerfile").write_text("ARG BASE_IMAGE=quay.io/x/y:latest\n")
                 return {"installer": target / "install-packages.py",
-                        "manifest": target / "bluefin.toml", "overlay": target / "utah.toml",
+                        "manifest": target / "base.toml", "overlay": target / "utah.toml",
                         "containerfile": target / "Containerfile"}
 
             with mock.patch.object(uis, "fetch", side_effect=fetch), \
