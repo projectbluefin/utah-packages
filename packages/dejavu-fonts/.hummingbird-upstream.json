@@ -1,0 +1,8 @@
+{
+  "package": "dejavu-fonts",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/dejavu-fonts.git",
+  "commit": "510ec3e339e9e31e0ad41b9cfce806a7f6010d2b",
+  "tree": "f93f966dfb51801335ebfad1f89589921d8811de",
+  "imported_at": "2026-11-16T04:05:42.127045+00:00"
+}

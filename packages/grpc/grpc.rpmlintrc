@@ -1,0 +1,33 @@
+# These are not real spelling errors…
+addFilter(r' spelling-error .*[ \(]en_US\)? (microservices|auth|gRPC|'
+          r'channelz|proto(buf)?|unary|rpc|grpcio|csds|localhost|'
+          r'grpc(debug)?|servicers|[Dx]DS|programatically) ')
+# Maybe some of these are supposed to be CRNL-terminated:
+addFilter(r' wrong-file-end-of-line-encoding '
+          r'/usr/share/doc/grpc/examples/csharp/')
+# Many subpackages do not have their own documentation!
+addFilter(r' no-documentation')
+# We believe we have patched all calls to SSL_CTX_set_cipher_list with
+# hard-coded values to use "PROFILE=SYSTEM" instead, thereby complying with the
+# system policy.
+addFilter(r' crypto-policy-non-compliance-openssl .* SSL_CTX_set_cipher_list')
+# These will not dangle after the ca-certificates dependency is installed:
+addFilter(r' dangling-relative-symlink .*\.pem$')
+# We do not really have a way to work around this. It should be okay in
+# practice. Hopefully the grpc_cli executable will become disentangled from the
+# test libraries upstream and this will go away.
+addFilter(r' shared-lib-without-dependency-information '
+          r'/.*libgrpc.._error_details\.so')
+# There is nothing to document for these; they do not have --help output and
+# are intended for program use.
+addFilter(r' no-manual-page-for-binary grpc_.*_plugin$')
+# There is really no version information available.
+addFilter(r' unversioned-explicit-provides bundled\((upb|utf8_range)\)')
+# There is no replacement for these.
+addFilter(r' obsolete-not-provided python3-grpcio-(admin|csds)$')
+# Every RPM has this…
+addFilter(r' strange-permission grpc\.spec 600$')
+# This is OK; it just doesn’t link libc
+addFilter(r' shared-library-without-dependency-information /.*/libgrpc\+\+_error_details\.so\.')
+# It is reasonable for trivial __init__.py files to be duplicates.
+addFilter(r' files-duplicate .*__init__\.py')
