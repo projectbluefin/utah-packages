@@ -369,6 +369,82 @@ class TailscaleGenerateTests(PackageDirMixin, unittest.TestCase):
         self.assertFalse((self.out_dir / f"tailscale-{self.VERSION}-vendored.tar.xz").exists())
 
 
+class BrewTarballGenerateTests(PackageDirMixin, unittest.TestCase):
+    """The Homebrew archive is copied out of a digest-pinned image (#1039)."""
+
+    VERSION = "7.0.11"
+    REGISTRY = "https://ghcr.io"
+    TOKEN_URL = f"{REGISTRY}/token?scope=repository:ublue-os/brew:pull"
+    MEMBER = "system_files/usr/share/homebrew.tar.zst"
+
+    def setUp(self):
+        super().setUp()
+        self.write_spec("brew-tarball.spec", self.VERSION)
+        self.archive = b"zstd homebrew prefix"
+        self.files_layer = targz({"system_files/etc/profile.d/brew.sh": b"#!/bin/sh"})
+        self.tarball_layer = targz({self.MEMBER: self.archive})
+        self.layer_digests = [
+            "sha256:" + hashlib.sha256(layer).hexdigest() for layer in (self.files_layer, self.tarball_layer)
+        ]
+        self.manifest = json.dumps({"layers": [{"digest": digest} for digest in self.layer_digests]}).encode()
+        self.manifest_digest = "sha256:" + hashlib.sha256(self.manifest).hexdigest()
+
+    def payloads(self, tarball_layer: bytes | None = None) -> dict[str, bytes]:
+        base = f"{self.REGISTRY}/v2/ublue-os/brew"
+        return {
+            self.TOKEN_URL: b'{"token": "anonymous"}',
+            f"{base}/manifests/{self.manifest_digest}": self.manifest,
+            f"{base}/blobs/{self.layer_digests[0]}": self.files_layer,
+            f"{base}/blobs/{self.layer_digests[1]}": tarball_layer or self.tarball_layer,
+        }
+
+    def test_metadata_names_the_archive_and_the_pinned_manifest(self):
+        entry = generated_sources.metadata_for("brew-tarball", self.package_dir)
+        self.assertEqual(entry["filename"], f"homebrew-{self.VERSION}.tar.zst")
+        self.assertIn(
+            f"ghcr.io/ublue-os/brew@{generated_sources.BREW_TARBALL_MANIFESTS[self.VERSION]}",
+            entry["generate"]["input"],
+        )
+
+    def test_an_unpinned_version_fails_before_any_download(self):
+        self.write_spec("brew-tarball.spec", "0.0.1")
+        with patch.object(generated_sources.urllib.request, "urlopen") as urlopen:
+            with self.assertRaisesRegex(RuntimeError, "no pinned image manifest for brew-tarball 0.0.1"):
+                generated_sources.generate("brew-tarball", self.package_dir, self.out_dir)
+        urlopen.assert_not_called()
+
+    def test_the_member_is_copied_unchanged_from_the_topmost_layer(self):
+        fetch = UrlopenRecorder(self.payloads())
+        with patch.object(generated_sources.urllib.request, "urlopen", fetch), \
+                patch.dict(generated_sources.BREW_TARBALL_MANIFESTS, {self.VERSION: self.manifest_digest}):
+            target = generated_sources.generate("brew-tarball", self.package_dir, self.out_dir)
+        self.assertEqual(target.name, f"homebrew-{self.VERSION}.tar.zst")
+        self.assertEqual(target.read_bytes(), self.archive)
+        # The topmost layer carries the member, so the lower one is never fetched.
+        self.assertNotIn(
+            f"{self.REGISTRY}/v2/ublue-os/brew/blobs/{self.layer_digests[0]}",
+            [url for url, _, _ in fetch.requests],
+        )
+
+    def test_a_moved_manifest_fails_closed(self):
+        fetch = UrlopenRecorder(self.payloads())
+        pinned = "sha256:" + "0" * 64
+        fetch.payloads[f"{self.REGISTRY}/v2/ublue-os/brew/manifests/{pinned}"] = self.manifest
+        with patch.object(generated_sources.urllib.request, "urlopen", fetch), \
+                patch.dict(generated_sources.BREW_TARBALL_MANIFESTS, {self.VERSION: pinned}):
+            with self.assertRaisesRegex(RuntimeError, f"image manifest: expected {pinned}"):
+                generated_sources.generate("brew-tarball", self.package_dir, self.out_dir)
+        self.assertFalse(self.out_dir.exists() and any(self.out_dir.iterdir()))
+
+    def test_a_substituted_layer_fails_closed(self):
+        fetch = UrlopenRecorder(self.payloads(tarball_layer=targz({self.MEMBER: b"evil"})))
+        with patch.object(generated_sources.urllib.request, "urlopen", fetch), \
+                patch.dict(generated_sources.BREW_TARBALL_MANIFESTS, {self.VERSION: self.manifest_digest}):
+            with self.assertRaisesRegex(RuntimeError, f"layer {self.layer_digests[1]}: expected"):
+                generated_sources.generate("brew-tarball", self.package_dir, self.out_dir)
+        self.assertFalse(self.out_dir.exists() and any(self.out_dir.iterdir()))
+
+
 class GitArchiveGenerateTests(PackageDirMixin, unittest.TestCase):
     """libslirp and rtmpdump, generated from a local repository carrying the tag."""
 
