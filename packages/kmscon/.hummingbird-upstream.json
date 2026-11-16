@@ -1,0 +1,8 @@
+{
+  "package": "kmscon",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/kmscon.git",
+  "commit": "8792fc1de1a2432e67dfaaa9ade5d78b82dcd119",
+  "tree": "620e4ebae07bc4c17aa7fdffd9ac9ff13913cad5",
+  "imported_at": "2026-11-16T04:09:43.469487+00:00"
+}

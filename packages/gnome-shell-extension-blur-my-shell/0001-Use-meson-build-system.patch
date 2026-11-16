@@ -1,0 +1,90 @@
+From 9a4e8752fe6e15b438eb0ef266e79324fcff3c66 Mon Sep 17 00:00:00 2001
+From: Carl George <carlwgeorge@gmail.com>
+Date: Tue, 23 Jul 2024 16:12:45 -0500
+Subject: [PATCH] Use meson build system
+
+This standardizes a system-wide installation, which is useful for
+distros who create native system packages of this extension.
+---
+ meson.build           | 17 +++++++++++++++++
+ po/meson.build        |  1 +
+ resources/meson.build |  2 ++
+ schemas/meson.build   |  6 ++++++
+ src/meson.build       | 14 ++++++++++++++
+ 5 files changed, 40 insertions(+)
+ create mode 100644 meson.build
+ create mode 100644 po/meson.build
+ create mode 100644 resources/meson.build
+ create mode 100644 schemas/meson.build
+ create mode 100644 src/meson.build
+
+diff --git a/meson.build b/meson.build
+new file mode 100644
+index 0000000..0931672
+--- /dev/null
++++ b/meson.build
+@@ -0,0 +1,17 @@
++project('blur-my-shell')
++
++gnome = import('gnome')
++i18n = import('i18n')
++
++uuid = 'blur-my-shell@aunetx'
++rdnn = 'org.gnome.shell.extensions.blur-my-shell'
++
++datadir = get_option('datadir')
++extension_dir = datadir / 'gnome-shell' / 'extensions' / uuid
++
++subdir('src')
++subdir('resources')
++subdir('schemas')
++subdir('po')
++
++install_data('metadata.json', install_dir : extension_dir)
+diff --git a/po/meson.build b/po/meson.build
+new file mode 100644
+index 0000000..7e3bbbe
+--- /dev/null
++++ b/po/meson.build
+@@ -0,0 +1 @@
++i18n.gettext(uuid, preset : 'glib')
+diff --git a/resources/meson.build b/resources/meson.build
+new file mode 100644
+index 0000000..e0b4a44
+--- /dev/null
++++ b/resources/meson.build
+@@ -0,0 +1,2 @@
++install_subdir('icons', install_dir : extension_dir)
++install_subdir('ui', install_dir : extension_dir)
+diff --git a/schemas/meson.build b/schemas/meson.build
+new file mode 100644
+index 0000000..ae9efc2
+--- /dev/null
++++ b/schemas/meson.build
+@@ -0,0 +1,6 @@
++schema = rdnn + '.gschema.xml'
++schema_dir = datadir / 'glib-2.0' / 'schemas'
++
++install_data(schema, install_dir : schema_dir)
++
++gnome.post_install(glib_compile_schemas : true)
+diff --git a/src/meson.build b/src/meson.build
+new file mode 100644
+index 0000000..3b8d173
+--- /dev/null
++++ b/src/meson.build
+@@ -0,0 +1,14 @@
++install_data(
++  [
++    'extension.js',
++    'prefs.js',
++    'stylesheet.css',
++  ],
++  install_dir : extension_dir,
++)
++
++install_subdir('components', install_dir : extension_dir)
++install_subdir('conveniences', install_dir : extension_dir)
++install_subdir('dbus', install_dir : extension_dir)
++install_subdir('effects', install_dir : extension_dir)
++install_subdir('preferences', install_dir : extension_dir)

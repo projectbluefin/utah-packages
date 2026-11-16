@@ -1,0 +1,13 @@
+diff --git a/test/cpp/end2end/spiffe_bundle_map_end2end_test.cc b/test/cpp/end2end/spiffe_bundle_map_end2end_test.cc
+index 30e87dbb11..690931c6fb 100644
+--- a/test/cpp/end2end/spiffe_bundle_map_end2end_test.cc
++++ b/test/cpp/end2end/spiffe_bundle_map_end2end_test.cc
+@@ -111,7 +111,7 @@ std::string MakeTlsHandshakeFailureRegex(absl::string_view prefix) {
+       "(Failed to connect to remote host: )?"
+       // Tls handshake failure
+       "Tls handshake failed \\(TSI_PROTOCOL_FAILURE\\): SSL_ERROR_SSL: "
+-      "error:1000007d:SSL routines:OPENSSL_internal:CERTIFICATE_VERIFY_FAILED"
++      "error:0A000086:SSL routines::certificate verify failed"
+       // Detailed reason for certificate verify failure
+       "(: .*)?");
+ }
