@@ -4699,6 +4699,13 @@
       ]
     },
     {
+      "name": "noise-suppression-for-voice",
+      "version": "1.21",
+      "url": "https://github.com/werman/noise-suppression-for-voice/archive/refs/tags/v1.21.tar.gz",
+      "filename": "noise-suppression-for-voice-1.21.tar.gz",
+      "sha512": "0944df787ba313f008ff5310568204e47b779668a9cdead0c3d19027c0c0cc427e3c491e1aa92ada9a9d9664d424fc531fa39ceb6ab9886dc1888a49a12488d8"
+    },
+    {
       "name": "noopenh264",
       "version": "2.7.0",
       "url": "https://codeberg.org/distro-openh264/noopenh264/archive/v2.7.0.tar.gz",
