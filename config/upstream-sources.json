@@ -2359,6 +2359,13 @@
       "sha512": "9fe0a92c9a76db5ce06ef4d5a551c05930f2a9c065ab695b030fdaf45692bfe88d91f1b75791f50d0772c699567744cd74f3ef407172874d4bba467989d54328"
     },
     {
+      "name": "ladspa",
+      "version": "1.17",
+      "url": "https://www.ladspa.org/download/ladspa_sdk_1.17.tgz",
+      "filename": "ladspa_sdk_1.17.tgz",
+      "sha512": "c096e70d245c50ffad379f2c9aab2735c205dfe7c27b5710cad6e43b39f8accc7b8bd2cd7ebbea2c399ad76018b3d4c701ed271de552d098b12ab218a58f0497"
+    },
+    {
       "name": "lame",
       "version": "4.0",
       "url": "https://downloads.sourceforge.net/lame/lame-4.0.tar.gz",

@@ -1510,6 +1510,12 @@ packages:
     downstream_package_name: kyotocabinet
     paths:
       - packages/kyotocabinet
+  ladspa:
+    specfile_path: ladspa.spec
+    upstream_package_name: ladspa
+    downstream_package_name: ladspa
+    paths:
+      - packages/ladspa
   lame:
     specfile_path: lame.spec
     upstream_package_name: lame
