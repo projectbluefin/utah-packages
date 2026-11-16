@@ -1,0 +1,205 @@
+commit 345c9a50ab07018f1b4439776bad78a0d40778ec
+Author: frankslin <frankslin@users.noreply.github.com>
+Date:   Mon Jan 12 16:51:38 2026 -0800
+
+    Fix two out-of-bounds read issues when handling truncated UTF-8 input (#1005)
+    
+    Two independent out-of-bounds read issues were identified in OpenCC's UTF-8
+    processing logic when handling malformed or truncated UTF-8 sequences.
+    
+    1) MaxMatchSegmentation:
+       NextCharLength() could return a value larger than the remaining input size.
+       The previous logic subtracted this value from a size_t length counter,
+       potentially causing underflow and subsequent out-of-bounds reads.
+    
+    2) Conversion:
+       Similar length handling could allow reads past the end of the input buffer
+       during dictionary matching, potentially propagating unintended bytes to the
+       conversion output.
+    
+    This patch fixes both issues by:
+    - Explicitly tracking the end of the input buffer
+    - Recomputing remaining length on each iteration
+    - Clamping matched character and key lengths to the remaining buffer size
+    - Preventing reads past the null terminator
+    
+    The changes preserve existing behavior for valid UTF-8 input and add test
+    coverage for truncated UTF-8 sequences.
+    
+    These issues may have security implications when processing untrusted input
+    and are classified as heap out-of-bounds reads (CWE-125).
+    
+    Co-authored-by: Claude <noreply@anthropic.com>
+
+diff --git a/src/Conversion.cpp b/src/Conversion.cpp
+index 87a5135..d5737a1 100644
+--- a/src/Conversion.cpp
++++ b/src/Conversion.cpp
+@@ -23,14 +23,30 @@ using namespace opencc;
+ 
+ std::string Conversion::Convert(const char* phrase) const {
+   std::ostringstream buffer;
++  // Calculate string end to prevent reading beyond null terminator
++  const char* phraseEnd = phrase;
++  while (*phraseEnd != '\0') {
++    phraseEnd++;
++  }
++
+   for (const char* pstr = phrase; *pstr != '\0';) {
+-    Optional<const DictEntry*> matched = dict->MatchPrefix(pstr);
++    size_t remainingLength = phraseEnd - pstr;
++    Optional<const DictEntry*> matched = dict->MatchPrefix(pstr, remainingLength);
+     size_t matchedLength;
+     if (matched.IsNull()) {
+       matchedLength = UTF8Util::NextCharLength(pstr);
++      // Ensure we don't read beyond the null terminator
++      if (matchedLength > remainingLength) {
++        matchedLength = remainingLength;
++      }
+       buffer << UTF8Util::FromSubstr(pstr, matchedLength);
+     } else {
+       matchedLength = matched.Get()->KeyLength();
++      // Defensive: ensure dictionary key length does not exceed remaining input
++      // (MatchPrefix should already guarantee this, but defense in depth)
++      if (matchedLength > remainingLength) {
++        matchedLength = remainingLength;
++      }
+       buffer << matched.Get()->GetDefault();
+     }
+     pstr += matchedLength;
+diff --git a/src/ConversionTest.cpp b/src/ConversionTest.cpp
+index 04a80a7..fb7731c 100644
+--- a/src/ConversionTest.cpp
++++ b/src/ConversionTest.cpp
+@@ -47,4 +47,44 @@ TEST_F(ConversionTest, ConvertCString) {
+   EXPECT_EQ(expected, converted);
+ }
+ 
++TEST_F(ConversionTest, TruncatedUtf8Sequence) {
++  // This test specifically triggers the information disclosure vulnerability
++  // in the old code. The bug occurs when a string ends with an incomplete
++  // UTF-8 sequence.
++  //
++  // Background: UTF8Util::NextCharLength() examines only the first byte to
++  // determine the expected character length (1-6 bytes), but doesn't verify
++  // that enough bytes actually remain before the null terminator.
++  //
++  // Trigger condition: When the expected UTF-8 character length exceeds
++  // the actual remaining bytes before null, the old code would:
++  // 1. Call FromSubstr with a length crossing the null terminator
++  // 2. Advance pstr beyond the null terminator
++  // 3. Continue reading heap memory on next iteration
++  // 4. Output leaked heap data to conversion result (INFORMATION DISCLOSURE)
++
++  // Construct a string ending with a truncated 3-byte UTF-8 sequence:
++  // - Normal text: "干" (valid 3-byte UTF-8: 0xE5 0xB9 0xB2)
++  // - Followed by: 0xE5 0xB9 (incomplete 3-byte sequence - missing last byte)
++  std::string malformed;
++  malformed += utf8("干");   // Valid character
++  malformed += '\xE5';       // Start of 3-byte UTF-8 (NextCharLength returns 3)
++  malformed += '\xB9';       // Second byte
++  // Missing third byte - only 2 bytes remain but NextCharLength expects 3
++  // Old code would jump over null, read heap memory, and leak it in output
++
++  // The fixed code should handle this gracefully without information disclosure
++  EXPECT_NO_THROW({
++    const std::string converted = conversion->Convert(malformed);
++    // Should convert "干" to "幹" (first candidate in dict) and preserve incomplete sequence
++    std::string expected;
++    expected += utf8("幹");  // Converted from "干" (dict has ["幹", "乾", "干"])
++    expected += '\xE5';      // Incomplete sequence preserved as-is
++    expected += '\xB9';
++    EXPECT_EQ(expected, converted);
++    // Should NOT contain garbage heap data beyond the input
++    // (ASan would catch any out-of-bounds reads during conversion)
++  });
++}
++
+ } // namespace opencc
+diff --git a/src/MaxMatchSegmentation.cpp b/src/MaxMatchSegmentation.cpp
+index 5cdd79f..ff24e0a 100644
+--- a/src/MaxMatchSegmentation.cpp
++++ b/src/MaxMatchSegmentation.cpp
+@@ -30,12 +30,17 @@ SegmentsPtr MaxMatchSegmentation::Segment(const std::string& text) const {
+       segLength = 0;
+     }
+   };
+-  size_t length = text.length();
++  const char* textEnd = text.c_str() + text.length();
+   for (const char* pstr = text.c_str(); *pstr != '\0';) {
+-    const Optional<const DictEntry*>& matched = dict->MatchPrefix(pstr, length);
++    size_t remainingLength = textEnd - pstr;
++    const Optional<const DictEntry*>& matched = dict->MatchPrefix(pstr, remainingLength);
+     size_t matchedLength;
+     if (matched.IsNull()) {
+       matchedLength = UTF8Util::NextCharLength(pstr);
++      // Ensure we don't advance beyond the string boundary
++      if (matchedLength > remainingLength) {
++        matchedLength = remainingLength;
++      }
+       segLength += matchedLength;
+     } else {
+       clearBuffer();
+@@ -44,7 +49,6 @@ SegmentsPtr MaxMatchSegmentation::Segment(const std::string& text) const {
+       segStart = pstr + matchedLength;
+     }
+     pstr += matchedLength;
+-    length -= matchedLength;
+   }
+   clearBuffer();
+   return segments;
+diff --git a/src/MaxMatchSegmentationTest.cpp b/src/MaxMatchSegmentationTest.cpp
+index 775c7ef..c1c9e35 100644
+--- a/src/MaxMatchSegmentationTest.cpp
++++ b/src/MaxMatchSegmentationTest.cpp
+@@ -43,4 +43,50 @@ TEST_F(MaxMatchSegmentationTest, Segment) {
+   EXPECT_EQ(utf8("干燥"), std::string(segments->At(3)));
+ }
+ 
++TEST_F(MaxMatchSegmentationTest, EmptyString) {
++  const auto& segments = segmenter->Segment("");
++  EXPECT_EQ(0, segments->Length());
++}
++
++TEST_F(MaxMatchSegmentationTest, SingleCharacter) {
++  const auto& segments = segmenter->Segment(utf8("一"));
++  EXPECT_EQ(1, segments->Length());
++  EXPECT_EQ(utf8("一"), std::string(segments->At(0)));
++}
++
++TEST_F(MaxMatchSegmentationTest, TruncatedUtf8Sequence) {
++  // This test specifically triggers the buffer overflow bug in the old code.
++  // The bug occurs when a string ends with an incomplete UTF-8 sequence.
++  //
++  // Background: UTF8Util::NextCharLength() examines only the first byte to
++  // determine the expected character length (1-6 bytes), but doesn't verify
++  // that enough bytes actually remain in the buffer.
++  //
++  // Trigger condition: When the expected UTF-8 character length exceeds
++  // the actual remaining bytes, the old code's "length -= matchedLength"
++  // causes integer underflow (size_t wraps around to a huge value), leading
++  // to out-of-bounds reads in the next MatchPrefix() call.
++
++  // Construct a string ending with a truncated 3-byte UTF-8 sequence:
++  // - Normal text: "一" (valid 3-byte UTF-8: 0xE4 0xB8 0x80)
++  // - Followed by: 0xE4 0xB8 (incomplete 3-byte sequence - missing last byte)
++  std::string malformed;
++  malformed += utf8("一");  // Valid character
++  malformed += '\xE4';      // Start of 3-byte UTF-8 (NextCharLength returns 3)
++  malformed += '\xB8';      // Second byte
++  // Missing third byte - only 2 bytes remain but NextCharLength expects 3
++  // Old code: length=2, matchedLength=3 → length = 2-3 = SIZE_MAX (underflow)
++
++  // The fixed code should handle this gracefully without buffer overflow
++  EXPECT_NO_THROW({
++    const auto& segments = segmenter->Segment(malformed);
++    // The valid character "一" plus the incomplete sequence form a single segment
++    // (incomplete sequence doesn't match dictionary, gets accumulated with previous)
++    EXPECT_EQ(1, segments->Length());
++    // Output should preserve all input bytes (including incomplete sequence)
++    // This is correct behavior - we don't discard data, we preserve it
++    EXPECT_EQ(malformed, std::string(segments->At(0)));
++  });
++}
++
+ } // namespace opencc
