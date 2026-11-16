@@ -1,7 +1,7 @@
-From 51b1ef70f184f036b45c207948f70963e99fbb5c Mon Sep 17 00:00:00 2001
+From aff05aad0545bd4f96cef6c8a26ab01456136842 Mon Sep 17 00:00:00 2001
 From: Fabio Valentini <decathorpe@gmail.com>
-Date: Thu, 12 Mar 2026 20:12:39 +0100
-Subject: [PATCH 2/3] Fedora: Drop dependencies and references to mutation
+Date: Tue, 15 Sep 2026 20:08:21 +0200
+Subject: [PATCH 2/5] Fedora: Drop dependencies and references to mutation
  testing code
 
 Drop mutants that is only required for mutation testing, which we
@@ -14,19 +14,19 @@ don't do during package builds.
  4 files changed, 2 insertions(+), 4 deletions(-)
 
 diff --git a/Cargo.toml b/Cargo.toml
-index e5b7769..c30a3d6 100644
+index 9c1a125..276ab8b 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -67,7 +67,6 @@ locale_config = "0.3.0"                                   # not "*" as per the d
- lopdf = "0.38"
- markup5ever = "0.35.0"
+@@ -68,7 +68,6 @@ locale_config = "0.3.0"                                   # not "*" as per the d
+ lopdf = "0.44"
+ markup5ever = "0.39.0"
  matches = "0.1"
--mutants = "0.0.3"
- nalgebra = "0.34.0"
+-mutants = "0.0.4"
+ nalgebra = "0.35.0"
  num-traits = "0.2"
  pango = "0.22.0"
 diff --git a/rsvg/Cargo.toml b/rsvg/Cargo.toml
-index 52adb9c..6926fc2 100644
+index 03a95d5..7bfb953 100644
 --- a/rsvg/Cargo.toml
 +++ b/rsvg/Cargo.toml
 @@ -63,7 +63,6 @@ language-tags.workspace = true
@@ -51,10 +51,10 @@ index cfdf08a..342984e 100644
          match self {
              Self::NoElements => write!(f, "no language tags in list"),
 diff --git a/rsvg/src/path_parser.rs b/rsvg/src/path_parser.rs
-index e522ec0..82d96ed 100644
+index 8aa3215..6829565 100644
 --- a/rsvg/src/path_parser.rs
 +++ b/rsvg/src/path_parser.rs
-@@ -855,7 +855,7 @@ use crate::path_parser::ErrorKind::*;
+@@ -858,7 +858,7 @@ use crate::path_parser::ErrorKind::*;
  impl fmt::Display for ParseError {
      // Skipped for mutation testing; this is just an error formatter.  These errors are just
      // surfaced as log messages.
@@ -64,5 +64,5 @@ index e522ec0..82d96ed 100644
          let description = match self.kind {
              UnexpectedToken(_t) => "unexpected token",
 -- 
-2.53.0
+2.55.0
 
