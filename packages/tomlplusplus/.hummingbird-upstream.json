@@ -1,0 +1,8 @@
+{
+  "package": "tomlplusplus",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/tomlplusplus.git",
+  "commit": "8de1565676c45144b9d2e6b496a9965c3f8783ca",
+  "tree": "d822269e98c8444b4a47a30877e1b1fad8de2682",
+  "imported_at": "2026-11-16T04:09:24.307550+00:00"
+}

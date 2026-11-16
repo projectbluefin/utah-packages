@@ -1,0 +1,13 @@
+summary: Creates iSCSI target/initiator, and logs it in locally
+description: ''
+contact: Andy Walsh <awalsh@redhat.com>
+component:
+  - iscsi-initiator-utils 
+test: ./runtest.sh
+framework: beakerlib
+recommend:
+  - test_beakertask
+duration: 5m
+extra-summary: /beaker_nvr_test
+extra-task: /beaker_nvr_test
+tier: 0

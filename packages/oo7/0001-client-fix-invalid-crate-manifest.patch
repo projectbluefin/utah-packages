@@ -1,0 +1,28 @@
+From 44c04b879f1f5c9c87268c2ef13c0d3a81686dc7 Mon Sep 17 00:00:00 2001
+From: Fabio Valentini <decathorpe@gmail.com>
+Date: Thu, 6 Aug 2026 16:08:33 +0200
+Subject: [PATCH 1/4] client: fix invalid crate manifest
+
+---
+ client/Cargo.toml | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/client/Cargo.toml b/client/Cargo.toml
+index 52bb9e0..092614d 100644
+--- a/client/Cargo.toml
++++ b/client/Cargo.toml
+@@ -74,11 +74,9 @@ native_crypto = [
+     "dep:pbkdf2",
+     "dep:sha2",
+     "dep:subtle",
+-    "oo7-daemon/native_crypto",
+ ]
+ openssl_crypto = [
+     "dep:openssl",
+-    "oo7-daemon/openssl_crypto",
+ ]
+ tracing = ["dep:tracing", "ashpd/tracing"]
+ schema = ["dep:oo7-macros"]
+-- 
+2.55.0
+
