@@ -5324,6 +5324,13 @@
       "sha512": "6ee4c5538a3b290748fae3b8c285b20a784fe2c0fdeff3a0bf250ec9b03659c6ddda4ea2d668c93d606f810e4f68cf3fc4130584a8532db9c9833a684d78f51f"
     },
     {
+      "name": "pam_pkcs11",
+      "version": "0.6.14",
+      "url": "https://github.com/OpenSC/pam_pkcs11/archive/refs/tags/pam_pkcs11-0.6.14.tar.gz",
+      "filename": "pam_pkcs11-0.6.14.tar.gz",
+      "sha512": "f169b6397229a8fd7985cbb64b1db957e42768636d747dd90c6597cebc3a1be5dc84af74c28cef7780a939950b2b907470d730517afa806b40cce063ef23ea10"
+    },
+    {
       "name": "pam_yubico",
       "version": "2.27",
       "url": "https://developers.yubico.com/yubico-pam/Releases/pam_yubico-2.27.tar.gz",
