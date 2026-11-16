@@ -31,7 +31,13 @@ naming the project's real upstream feed, derived from the spec's Source0 and
 verified against the forge; see issue #134. An explicit feed may name a git
 forge, a GNOME module (download.gnome.org/sources/<module>/), or a
 release-monitoring.org (Anitya) project for upstreams that publish only a
-directory listing. detect-rawhide-updates.yml takes Fedora's recipe changes
+directory listing. A same-major release read from such a feed is applied
+like any forge update: the version is swapped into the lock's own primary
+(mesa-26.2.1.tar.xz on archive.mesa3d.org becomes mesa-26.2.6.tar.xz), the
+fallbacks are rebuilt, and the bytes at the derived URL are SHA-512 locked.
+Only a primary on Fedora's lookaside, or one that does not carry its
+version, is reported instead, each with its own reason (primary_blocker).
+detect-rawhide-updates.yml takes Fedora's recipe changes
 but never a version or a lookaside source, on the stated policy that "Fedora
 is a compatibility build root, not a source-update feed" -- version moves are
 this tool's.
@@ -307,10 +313,9 @@ def forge_feed(entry: dict) -> dict | None:
 def primary_tracks_forge(entry: dict) -> bool:
     """Whether the lock's primary URL names a git-forge feed.
 
-    When only a fallback does, the new release's bytes are not where the
-    primary points -- the lookaside carries only what Fedora uploaded, and a
-    bare listing has no version to substitute -- so a proposal from that feed
-    is reported for a human and never applied.
+    When it does not, the release was read from an explicit feed or a
+    fallback mirror, and plan() applies it only if primary_blocker() finds
+    nothing in the way of deriving the new primary from the current one.
     """
     url = entry.get("url", "")
     return bool(
@@ -628,45 +633,90 @@ def planned_entry(entry: dict, release: str, digest: str, module: str | None = N
     return updated
 
 
-def substituted(value, replacements: list[tuple[str, str]]):
-    """A string, or list of strings, with every replacement applied in turn."""
+def version_pattern(version: str) -> re.Pattern:
+    """A version as a whole number in a URL: not inside a longer one.
+
+    A plain replace("238", "239") also rewrites a hex digest or commit that
+    happens to contain 238, and replace("1.0", "1.1") turns 1.0.1 into 1.1.1.
+    So the version may not follow a hex digit or a version component, nor run
+    on into another component; a letter may follow (firefox-140.13.0esr).
+    """
+    return re.compile(rf"(?<![0-9A-Fa-f])(?<!\d\.){re.escape(version)}(?!\.?\d)")
+
+
+def swap_version(value, current: str, release: str):
+    """A string, or list of strings, with every whole `current` made `release`."""
     if isinstance(value, list):
-        return [substituted(item, replacements) for item in value]
-    for old, new in replacements:
-        value = value.replace(old, new)
-    return value
+        return [swap_version(item, current, release) for item in value]
+    return version_pattern(current).sub(lambda _: release, value)
+
+
+def carries_version(url: str, version: str) -> bool:
+    """Whether a URL names `version` where swap_version() can replace it."""
+    return version_pattern(version).search(url) is not None
+
+
+# Fedora's lookaside files a source as <file>/<algo>/<hash>/<file>, or in the
+# legacy form <file>/<md5>/<file> with no algorithm segment.
+LOOKASIDE_URL = re.compile(
+    rf"^{re.escape(LOOKASIDE)}/(?P<package>[^/]+)/(?P<file>[^/]+)/(?:[^/]+/)?[^/]+/(?P=file)$"
+)
+
+# A path segment that is a bare digest (PyPI's /packages/38/61/<blake2b>/).
+CONTENT_HASH_SEGMENT = re.compile(r"/[0-9a-f]{32,}/")
+
+
+def rebuilt_fallback(url: str, current: str, release: str, digest: str) -> str:
+    """One fallback URL rewritten for a new release.
+
+    A Fedora lookaside URL is content-addressed: it is rebuilt in the SHA-512
+    form planned_entry() writes, from the new file name and the new digest,
+    whatever algorithm the old one used -- including the legacy four-segment
+    <file>/<md5>/<file> pins (libatasmart, startup-notification), whose old
+    hash no substitution can update. It resolves once Fedora uploads the same
+    bytes. Any other mirror only has its version swapped.
+    """
+    match = LOOKASIDE_URL.match(url)
+    if match is None:
+        return swap_version(url, current, release)
+    name = swap_version(match.group("file"), current, release)
+    return f"{LOOKASIDE}/{match.group('package')}/{name}/sha512/{digest}/{name}"
 
 
 def forge_planned_entry(entry: dict, release: str, digest: str) -> dict:
-    """A forge-hosted entry rewritten for a new release.
+    """An entry with no GNOME template rewritten for a new release.
 
-    GNOME entries are rebuilt from a known template; a forge URL has no
-    template this tool can own, because projects choose their own tag and
-    asset names. So every URL-bearing field is rewritten by substituting the
-    old version for the new one and the old digest for the new one. That
-    reaches the places a field-by-field rebuild forgets -- fallback_urls
-    embeds both the filename and the SHA-512, and sha256_url embeds the tag.
+    GNOME entries are rebuilt from a known template; a forge or project URL
+    has no template this tool can own, because projects choose their own tag
+    and asset names. So the old version is swapped for the new one in the
+    primary url, filename, sha256_url and signature_url, and every fallback
+    is rebuilt by rebuilt_fallback(): a lookaside fallback embeds the
+    filename and the digest, which is exactly what a field-by-field rewrite
+    leaves pointing at the old tarball. A signature_url left behind would
+    make source_pipeline.py verify the new tarball against the old
+    release's signature and reject the bump (cryptopp's .sig).
 
-    Substituting the bare version also fixes a v-prefixed tag in the same
-    pass, since "v2.2.1" contains "2.2.1".
+    Swapping the bare version also fixes a v-prefixed tag in the same pass,
+    since "v2.2.1" contains "2.2.1".
 
     The old version must appear in the URL or this raises rather than writing
     a half-substituted entry: a project whose URL does not carry its version
     cannot be bumped by substitution, and guessing would corrupt the lock.
     """
     current = entry["version"]
-    if current not in entry.get("url", ""):
+    if not carries_version(entry.get("url", ""), current):
         raise ValueError(
             f"{entry['name']}: version {current} does not appear in its url, "
             "so it cannot be bumped by substitution"
         )
-    swaps = [(current, release)]
-    if entry.get("sha512"):
-        swaps.append((entry["sha512"], digest))
     updated = dict(entry)
-    for field in ("url", "filename", "sha256_url", "fallback_urls"):
+    for field in ("url", "filename", "sha256_url", "signature_url"):
         if field in entry:
-            updated[field] = substituted(entry[field], swaps)
+            updated[field] = swap_version(entry[field], current, release)
+    if "fallback_urls" in entry:
+        updated["fallback_urls"] = [
+            rebuilt_fallback(url, current, release, digest) for url in entry["fallback_urls"]
+        ]
     updated["version"] = release
     updated["sha512"] = digest
     return updated
@@ -890,13 +940,15 @@ def candidates(locks: dict[str, dict], only: str | None = None) -> list[tuple[st
             found.append((name, entry, feed))
             continue
         # An explicit `feed` names the project's real release feed when the
-        # lock's own URLs cannot reveal one (a lookaside primary with no
-        # forge mirror). The primary still points at the lookaside, so in a
-        # full run every proposal from it stays review-only -- the new bytes
-        # are not where the lock points. A human naming the package with
-        # --package may relock it instead: a GNOME or forge feed names where
-        # the new bytes live. An Anitya feed never does; it lists versions,
-        # not downloads, so it stays review-only even then.
+        # lock's own URLs cannot reveal one: a project download such as
+        # archive.mesa3d.org or a SourceForge path, or a lookaside primary
+        # with no forge mirror. A same-major release is applied by swapping
+        # its version into the primary (primary_blocker); a lookaside primary
+        # stays review-only in a full run, because the new bytes are not
+        # where the lock points. A human naming the package with --package
+        # may relock it instead: a GNOME or forge feed names where the new
+        # bytes live. An Anitya feed never does; it lists versions, not
+        # downloads, so a lookaside lock with one stays review-only even then.
         explicit = entry.get("feed")
         if explicit:
             feed = parse_explicit_feed(explicit)
@@ -989,6 +1041,47 @@ def forge_proposal(name: str, entry: dict, feed: dict, opener=urllib.request.url
         "current": current,
         "latest": newest,
     }
+
+
+def primary_blocker(name: str, entry: dict, feed: dict, latest: str) -> str | None:
+    """Why a release read from a feed other than the primary cannot be applied.
+
+    None when it can: apply() swaps the version in the lock's own primary
+    (mesa's archive.mesa3d.org/mesa-26.2.1.tar.xz becomes mesa-26.2.6),
+    rebuilds the fallbacks, and pins the SHA-512 of the bytes that URL serves,
+    like any other bump. Three primaries cannot be derived from, and each gets
+    its own reason so it can be fixed per package:
+
+    - Fedora's lookaside, which carries only what Fedora uploaded. A primary
+      is never pointed at Fedora; the lock has to be relocked onto upstream
+      first (--package does it for an explicit forge or GNOME feed).
+    - A primary that does not carry the locked version as a whole number,
+      so there is nothing to swap.
+    - A primary filed under a content hash
+      (files.pythonhosted.org/packages/38/61/<blake2b>/argcomplete-3.6.3.tar.gz):
+      the next release lives under a hash nobody can predict.
+
+    A derived URL the project does not serve is caught when apply() fetches
+    it, and main() names that URL when it skips the bump.
+    """
+    url = entry.get("url", "")
+    label = forge_label(feed)
+    if is_fedora_url(url):
+        if "feed" not in entry:
+            return (f"the primary is Fedora's lookaside; point it at the {label} "
+                    "mirror by hand before it can move")
+        if feed["forge"] == "anitya":
+            return ("the primary is Fedora's lookaside and release-monitoring.org "
+                    "names no download; give the lock its upstream primary by hand")
+        return (f"the primary is Fedora's lookaside; `--package {name}` relocks it "
+                f"onto its explicit feed {label}")
+    if not carries_version(url, entry["version"]):
+        return (f"the primary {url} does not carry the version {entry['version']}, "
+                f"so no {latest} download can be derived from it")
+    if CONTENT_HASH_SEGMENT.search(urllib.parse.urlparse(url).path):
+        return (f"the primary {url} is filed under a content hash, so no {latest} "
+                "download can be derived from it; re-pin it by hand")
+    return None
 
 
 def is_app_scheme(version: str) -> bool:
@@ -1095,24 +1188,13 @@ def plan(
                     # where the lock will point.
                     proposals.append({**proposal, "kind": "relock"})
                     continue
-                # The feed came from a mirror or an explicit `feed`, so the
-                # primary points at the lookaside or a bare listing: apply()
-                # would fetch the digest from an address that does not carry
-                # the new release, or substitute a version into a URL that has
-                # none. Report it so a human sees the release; main() only
-                # applies final/update/relock.
-                if "feed" in entry:
-                    where = "the lock's explicit feed"
-                else:
-                    where = "a fallback mirror"
-                proposal = {
-                    **proposal,
-                    "kind": "review",
-                    "reason": (
-                        f"the release feed is tracked through {where}; "
-                        "the new bytes must be ingested through the primary first"
-                    ),
-                }
+                # The release was read from an explicit `feed` (Anitya, a
+                # forge) or a fallback mirror, not from the primary. It stays
+                # an "update" when the new primary can be derived from the
+                # current one; otherwise the reason says what is missing.
+                blocker = primary_blocker(name, entry, feed, proposal["latest"])
+                if blocker:
+                    proposal = {**proposal, "kind": "review", "reason": blocker}
             proposals.append(proposal)
             continue
         module = feed["module"]
@@ -1232,7 +1314,7 @@ def apply(root: Path, proposal: dict, opener=urllib.request.urlopen) -> dict:
             "url": entry["feed"],
             "fallback_urls": [entry["url"], *entry.get("fallback_urls", [])],
         }
-        url = substituted(entry["feed"], [(entry["version"], release)])
+        url = swap_version(entry["feed"], entry["version"], release)
         digest = sha512_of(url, opener=opener)
         updated = forge_planned_entry(base, release, digest)
     elif module:
@@ -1244,11 +1326,18 @@ def apply(root: Path, proposal: dict, opener=urllib.request.urlopen) -> dict:
             entry = {**entry, "fallback_urls": [entry["url"]]}
         updated = planned_entry(entry, release, digest, module=module)
     else:
-        # The new URL comes from substituting into the old one, so the digest
-        # is fetched from the same address the lock will carry -- not from a
-        # template this tool guessed.
-        url = substituted(entry["url"], [(entry["version"], release)])
-        digest = sha512_of(url, opener=opener)
+        # The new URL comes from swapping the version in the old one -- the
+        # project's own download, whether its feed is a forge, Anitya or a
+        # mirror -- so the digest is fetched from the address the lock will
+        # carry, not from a template this tool guessed. A primary on Fedora is
+        # never derived: the lookaside carries only what Fedora uploaded.
+        if is_fedora_url(entry.get("url", "")):
+            raise ValueError(f"{name}: the primary is Fedora's lookaside; relock it first")
+        url = swap_version(entry["url"], entry["version"], release)
+        try:
+            digest = sha512_of(url, opener=opener)
+        except (urllib.error.URLError, OSError) as error:
+            raise ValueError(f"derived download {url}: {error}") from error
         updated = forge_planned_entry(entry, release, digest)
     # The counter belongs to the old version even if both releases are 1.
     if rpm_version(entry["version"]) != rpm_version(updated["version"]):
@@ -1284,8 +1373,7 @@ def retire_fedora_primary(root: Path, name: str, url: str) -> None:
     relock that left the list alone produced a lock no workflow could
     validate.
     """
-    host = urllib.parse.urlparse(url).hostname or ""
-    if host in FEDORA_HOSTS or host.endswith(".fedoraproject.org"):
+    if is_fedora_url(url):
         return
     baseline = root / "config" / "fedora-primary-sources.txt"
     if not baseline.is_file():
@@ -1294,6 +1382,12 @@ def retire_fedora_primary(root: Path, name: str, url: str) -> None:
     kept = [line for line in lines if line.split("#", 1)[0].strip() != name]
     if kept != lines:
         baseline.write_text("".join(kept))
+
+
+def is_fedora_url(url: str) -> bool:
+    """Whether a URL is served by Fedora (the lookaside, dist-git, Koji)."""
+    host = urllib.parse.urlparse(url).hostname or ""
+    return host in FEDORA_HOSTS or host.endswith(".fedoraproject.org")
 
 
 def main() -> int:
