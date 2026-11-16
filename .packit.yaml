@@ -2254,6 +2254,12 @@ packages:
     downstream_package_name: libgsf
     paths:
       - packages/libgsf
+  libgsystemservice:
+    specfile_path: libgsystemservice.spec
+    upstream_package_name: libgsystemservice
+    downstream_package_name: libgsystemservice
+    paths:
+      - packages/libgsystemservice
   libgtop2:
     specfile_path: libgtop2.spec
     upstream_package_name: libgtop2
