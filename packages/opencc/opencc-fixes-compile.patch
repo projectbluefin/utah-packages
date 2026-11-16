@@ -1,0 +1,13 @@
+Index: OpenCC-ver.1.1.9/src/SerializedValues.hpp
+===================================================================
+--- OpenCC-ver.1.1.9.orig/src/SerializedValues.hpp
++++ OpenCC-ver.1.1.9/src/SerializedValues.hpp
+@@ -18,6 +18,8 @@
+ 
+ #pragma once
+ 
++#include <cstdint>
++
+ #include "Common.hpp"
+ #include "SerializableDict.hpp"
+ 
