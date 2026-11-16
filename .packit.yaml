@@ -988,6 +988,12 @@ packages:
     downstream_package_name: gobject-introspection
     paths:
       - packages/gobject-introspection
+  google-carlito-fonts:
+    specfile_path: google-carlito-fonts.spec
+    upstream_package_name: google-carlito-fonts
+    downstream_package_name: google-carlito-fonts
+    paths:
+      - packages/google-carlito-fonts
   google-noto-color-emoji-fonts:
     specfile_path: google-noto-color-emoji-fonts.spec
     upstream_package_name: google-noto-color-emoji-fonts
