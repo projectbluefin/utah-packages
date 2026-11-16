@@ -728,5 +728,109 @@ class PrefixdevnameVendorTests(unittest.TestCase):
                     f"{self.TOP}/vendor/tinycrate-1.0.0/src/lib.rs").read(), b"//")
 
 
+class GhosttyZigVendorTests(unittest.TestCase):
+    VERSION = "9.9.9"
+    TOP = f"ghostty-{VERSION}"
+    RELEASE_URL = f"https://release.files.ghostty.org/{VERSION}/ghostty-{VERSION}.tar.gz"
+    DEP_URL = "https://deps.files.ghostty.org/tinydep-1.0.tar.gz"
+    GIT_URL = "https://github.com/example/zigdep/archive/" + "a" * 40 + ".tar.gz"
+
+    def fixture(self):
+        graph = {
+            "N-V-tiny": {"name": "tinydep", "url": self.DEP_URL, "hash": "N-V-tiny"},
+            "zigdep-0.1.0-x": {"name": "zigdep", "url": "git+https://github.com/example/zigdep#" + "a" * 40,
+                               "hash": "zigdep-0.1.0-x"},
+        }
+        release = _targz({
+            f"{self.TOP}/build.zig": b"// build",
+            f"{self.TOP}/build.zig.zon.json": json.dumps(graph).encode(),
+        })
+        downloads = {
+            self.RELEASE_URL: release,
+            self.DEP_URL: _targz({"tinydep/build.zig": b"tiny"}),
+            self.GIT_URL: _targz({"zigdep-aaaa/build.zig": b"zig"}),
+        }
+        return downloads
+
+    def pins(self, downloads):
+        import hashlib
+
+        return {self.VERSION: {
+            "release": hashlib.sha512(downloads[self.RELEASE_URL]).hexdigest(),
+            "deps": {
+                "N-V-tiny": hashlib.sha512(downloads[self.DEP_URL]).hexdigest(),
+                "zigdep-0.1.0-x": hashlib.sha512(downloads[self.GIT_URL]).hexdigest(),
+            },
+        }}
+
+    def generate(self, downloads, pins):
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as directory:
+            package = Path(directory)
+            (package / "ghostty.spec").write_text(f"Version: {self.VERSION}\n")
+            with patch.dict(generated_sources.GHOSTTY_INPUT_SHA512, pins, clear=True), \
+                    patch.object(generated_sources, "_fetch", side_effect=downloads.__getitem__):
+                output = generated_sources._ghostty_generate(package, package)
+            return output.name, output.read_bytes()
+
+    def test_dependency_archives_are_added_byte_for_byte_under_zig_deps(self):
+        downloads = self.fixture()
+        name, payload = self.generate(downloads, self.pins(downloads))
+        self.assertEqual(name, f"ghostty-{self.VERSION}-zig-vendored.tar.xz")
+        with tarfile.open(fileobj=io.BytesIO(lzma.decompress(payload))) as result:
+            self.assertEqual(result.getnames(), [
+                f"{self.TOP}/build.zig",
+                f"{self.TOP}/build.zig.zon.json",
+                f"{self.TOP}/zig-deps",
+                f"{self.TOP}/zig-deps/{'a' * 40}.tar.gz",
+                f"{self.TOP}/zig-deps/tinydep-1.0.tar.gz",
+            ])
+            self.assertEqual(result.extractfile(f"{self.TOP}/zig-deps/tinydep-1.0.tar.gz").read(),
+                             downloads[self.DEP_URL])
+            self.assertEqual({m.mtime for m in result.getmembers()}, {generated_sources.GHOSTTY_MTIME})
+            self.assertEqual({(m.uid, m.gid, m.uname, m.gname) for m in result.getmembers()}, {(0, 0, "", "")})
+
+    def test_generation_is_byte_reproducible(self):
+        downloads = self.fixture()
+        pins = self.pins(downloads)
+        self.assertEqual(self.generate(downloads, pins), self.generate(downloads, pins))
+
+    def test_an_unpinned_version_fails_before_any_download(self):
+        with patch.object(generated_sources, "_fetch") as fetch, \
+                self.assertRaisesRegex(RuntimeError, "no pinned input SHA-512 for ghostty 9.9.9"):
+            self.generate({}, {})
+        fetch.assert_not_called()
+
+    def test_a_substituted_dependency_fails_closed(self):
+        downloads = self.fixture()
+        pins = self.pins(downloads)
+        downloads[self.DEP_URL] = _targz({"tinydep/build.zig": b"evil"})
+        with self.assertRaisesRegex(RuntimeError, "input archive mismatch for .*tinydep-1.0.tar.gz"):
+            self.generate(downloads, pins)
+
+    def test_a_graph_naming_an_unpinned_package_fails_closed(self):
+        downloads = self.fixture()
+        pins = self.pins(downloads)
+        del pins[self.VERSION]["deps"]["N-V-tiny"]
+        with self.assertRaisesRegex(RuntimeError, r"unpinned \['N-V-tiny'\]"):
+            self.generate(downloads, pins)
+
+    def test_a_git_dependency_on_an_unknown_forge_is_refused(self):
+        with self.assertRaisesRegex(RuntimeError, "unsupported git dependency"):
+            generated_sources.ghostty_dependencies({"x": {"url": "git+https://example.org/a/b#" + "a" * 40}})
+
+    def test_a_member_outside_the_release_directory_is_refused(self):
+        release = _targz({f"{self.TOP}/build.zig": b"", "elsewhere/evil": b"x"})
+        with self.assertRaisesRegex(RuntimeError, "archive member outside ghostty-9.9.9: elsewhere/evil"):
+            generated_sources._ghostty_transform(release, self.VERSION, {})
+
+    def test_metadata_names_the_recipe_source_and_pinned_inputs(self):
+        metadata = generated_sources.metadata_for("ghostty", ROOT / "packages" / "ghostty")
+        self.assertEqual(metadata["filename"], "ghostty-1.4.0-zig-vendored.tar.xz")
+        self.assertIn("release.files.ghostty.org/1.4.0/ghostty-1.4.0.tar.gz", metadata["generate"]["input"])
+        self.assertIn("1.4.0", generated_sources.GHOSTTY_INPUT_SHA512)
+
+
 if __name__ == "__main__":
     unittest.main()

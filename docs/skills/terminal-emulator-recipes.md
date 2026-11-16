@@ -116,3 +116,39 @@ the library at `%{_prefix}/lib/zig`, the path Zig searches beside
 move it by hand together with Ghostty, to the newest patch release of the
 series Ghostty's `minimum_zig_version` names. Utah never installs it; it is a
 BuildRequires only.
+
+## Ghostty's Zig packages are one generated Source0
+
+`zig build` downloads every package in Ghostty's dependency graph (37 for
+1.4.0), and the hermetic build is offline. Only `Source0` comes from upstream
+(`tools/source_pipeline.py` fetches any other `sources` entry from Fedora's
+lookaside), so the archives cannot be separate `SourceN` lines. Instead
+`tools/generated_sources.py` (`_ghostty_generate`) reads the graph Ghostty
+publishes for packagers, `build.zig.zon.json` in the release tarball, fetches
+each archive (a `git+` URL becomes its forge's commit archive), and adds them
+byte for byte under `ghostty-<version>/zig-deps/`, as Dakota's generated
+`ghostty.bst` block does. `GHOSTTY_INPUT_SHA512` pins the release and every
+archive by Zig package hash; a graph that names a package the pins do not, or
+any byte change, fails closed. For 1.4.0 every archive's SHA-256 matched
+Dakota's pin.
+
+The recipe then seeds Zig's cache offline: unpack each archive, strip a lone
+top-level directory as Zig's own fetcher does, and `zig fetch` the directory
+(`zig fetch <archive>` keeps the top directory and fails the package hash).
+At build time Zig checks every package against the hash `build.zig.zon`
+names, a second integrity check independent of the pins.
+
+Build options follow Dakota: `-Doptimize=ReleaseFast -Dcpu=baseline -Dpie=true
+-Demit-docs=false`, and `--libc` pointing at the system glibc. Ghostty
+defaults `gtk4-layer-shell` to the system library, so the recipe
+BuildRequires `gtk4-layer-shell-devel`; the other C libraries build from the
+bundled archives, as in Dakota. Add `--build-id=sha1`: Zig emits no build-id
+by default, and RPM fails the build without one. Ghostty sets
+`TERM=xterm-ghostty` and always installs its compiled terminfo
+(`-Demit-terminfo` only adds the source). Hummingbird's `ncurses-term` 6.6
+ships the `g/ghostty` alias but not `x/xterm-ghostty`, so the recipe deletes
+its own `g/ghostty` (a file conflict otherwise) and keeps `x/xterm-ghostty`.
+The tarball ships the compiled GTK resources, so no `blueprint-compiler` is
+needed.
+Dakota's light/dark theme patch changes the `/etc/skel` config from
+projectbluefin/common, not the package, so it ships with Utah's configuration.

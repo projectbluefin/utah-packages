@@ -1271,6 +1271,17 @@
       ]
     },
     {
+      "name": "ghostty",
+      "version": "1.4.0",
+      "filename": "ghostty-1.4.0-zig-vendored.tar.xz",
+      "sha512": "26bddd83f654d052ad465a2b50ea201010be99af027be5b0559541f06be849084f1cff604276e60a165f035fc390d714467cfe5f74e2de25d7da40dcfa8b13d3",
+      "generate": {
+        "script": "tools/generated_sources.py",
+        "input": "https://release.files.ghostty.org/1.4.0/ghostty-1.4.0.tar.gz (sha512-pinned) and every Zig package archive its build.zig.zon.json lists (sha512-pinned)",
+        "method": "add zig-deps/<archive> for each build.zig.zon.json dependency, as served upstream, and repack deterministically as ghostty-1.4.0-zig-vendored.tar.xz"
+      }
+    },
+    {
       "name": "giflib",
       "version": "6.1.3",
       "url": "https://downloads.sourceforge.net/giflib/giflib-6.1.3.tar.gz",

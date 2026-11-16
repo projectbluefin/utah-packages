@@ -42,6 +42,10 @@ that no upstream publishes verbatim:
 - gst-thumbnailers: the upstream GNOME release (SHA-512-pinned) with the same
   `vendor/` tree added. Hummingbird ships no Rust crate RPMs, so the recipe
   bundles its gtk-rs, clap and libglycin-rebind dependencies (#527)
+- ghostty: the upstream release (SHA-512-pinned) with a `zig-deps/` directory
+  of every Zig package archive its build.zig.zon.json lists, each
+  SHA-512-pinned. `zig build` fetches them from the network otherwise, and
+  the recipe seeds Zig's package cache from them offline, as Dakota does
 
 For these, the source lock names this script and records the SHA-512 of the
 bytes the transformation produces. Verification re-runs the transformation
@@ -1325,6 +1329,218 @@ def _gst_thumbnailers_generate(package_dir: Path, out_dir: Path) -> Path:
     )
 
 
+# --- ghostty -------------------------------------------------------------------
+
+# Ghostty builds with `zig build`, which downloads every package in its Zig
+# dependency graph; the hermetic build is offline. The release tarball carries
+# that graph for packagers as build.zig.zon.json (Zig package hash -> name and
+# URL), so the factory adds each archive to the release tree under zig-deps/,
+# byte for byte as upstream serves it, and the recipe seeds Zig's package cache
+# from them before building, as Dakota's elements/bluefin/ghostty.bst does
+# (its generated block pins the same archives by SHA-256). The release and
+# every archive are SHA-512-pinned below; at build time Zig also checks each
+# unpacked package against the hash build.zig.zon names.
+GHOSTTY_UPSTREAM_URL = "https://release.files.ghostty.org/{version}/ghostty-{version}.tar.gz"
+GHOSTTY_MTIME = 0
+# A git+ dependency is pinned to a commit: fetch that commit's forge archive.
+# Zig hashes the unpacked tree, so the archive yields the same package.
+GHOSTTY_GIT_ARCHIVES = {
+    "github.com": "https://github.com/{repo}/archive/{commit}.tar.gz",
+    "codeberg.org": "https://codeberg.org/{repo}/archive/{commit}.tar.gz",
+}
+# Version -> SHA-512 of the release, and of each dependency archive keyed by
+# the Zig package hash build.zig.zon.json lists it under.
+GHOSTTY_INPUT_SHA512 = {
+    "1.4.0": {
+        "release": "cbe2bebdfe786313050498f128e11b5d3cb1d5083e54ac5f52f7a54f04fa0888c1aea751dfca0fee802714e0cea5bc07640328483bd510b0ea5620ae985c0536",
+        "deps": {
+            # aro
+            "aro-0.0.0-JSD1QtuBNwCASyBtNF3pqTl_W3oAJQGEVyFAtrBSE_Pa": "10c69b46450c36ad16a6541b09a2164bc0327901d6fb0ecbb9a24f680713e0dbbdc71888168a1991433880cd6b83fc431d64a97176158b3118c8533a9252d0c9",
+            # bindings
+            "N-V-__8AANT61wB--nJ95Gj_ctmzAtcjloZ__hRqNw5lC1Kr": "809986b89a8b452272eeb8b0a7d72c97600b03eaad208aa6ca823722adf645979a4bf03f5c5766ec907988953fdcd036db507305b1e2b79b923c29c1866b17a4",
+            # breakpad
+            "N-V-__8AALw2uwF_03u4JRkZwRLc3Y9hakkYV7NKRR9-RIZJ": "740b70daaf150a7619839f467eea6dc6d5dcd599861a977b1638c308b7902cb2de5d3927081143c2314e9b0c46c07d646ecec0e9e8d5097ddaa958766c07074d",
+            # fontconfig
+            "N-V-__8AAOgqbADacob-q2_DMQlmgaG4xKHRuW-6PJ4oJzMZ": "c3e769f74dc21093ada48084bddaca1ab525b1c4f04c5c11f067b69346fab153cad95de8b8238b20b02e8b9679c314bf2e0e9c4218511d8fe0f1826e4c4c6a24",
+            # freetype
+            "N-V-__8AAKLKpwC4H27Ps_0iL3bPkQb-z6ZVSrB-x_3EEkub": "9d7600af7e981227e37585dca71fbd7bc78b367a54d7705fe03e0f5549ce49e420548fa09b21c6bb137830f779a0a0b965611f50b163297b79fdc5903b4dc11d",
+            # gettext
+            "N-V-__8AADcZkgn4cMhTUpIz6mShCKyqqB-NBtf_S2bHaTC-": "9e9913fec1d3eeff65e023ee00c5da456baceabd49ce0c0d21f19b9911a60b67546f4ee5716f6f5b7a160b4c13c47604da8762854eba6f17f9bf3fd1c6056828",
+            # glslang
+            "N-V-__8AABzkUgISeKGgXAzgtutgJsZc0-kkeqBBscJgMkvy": "570d2ff15116f48e195c73d9be1517b05e7c37541af10f6c05779a001e2d0295725349c1f4dd0bcca6f0c7e7e48c5162a60726c3e76cf04619c8e14bd0636ab6",
+            # gobject
+            "gobject-0.3.2-Skun7LuIogBbEh-6WrLeEzMaRCnOMB3eOf__RaPYSMCZ": "37a080facdc223a9c52f2c47d0a07e5c7b630bb26844c2bd8164cb314fa3799f3e1da357ea81e9bd7a67cc407f541971e8808693da902a5224169d0d858ec77b",
+            # gtk4_layer_shell
+            "N-V-__8AALiNBAA-_0gprYr92CjrMj1I5bqNu0TSJOnjFNSr": "3b0728daea61d75dafa5dfacf47f6a6b3dd4c7e6d476917850cfd360d3cd2e48aa8e1210cf37f13738fdba37b1aca04b7c642b3204c9655da83e3ee24b3a26cf",
+            # harfbuzz
+            "N-V-__8AAG02ugUcWec-Ndp-i7JTsJ0dgF8nnJRUInkGLG7G": "1184b9b56c4b9f28cac03a6746d699d522c4194818e2b3fe4c286400c249bad209260137dc5c2aacc640ddd0a44db8999006e137dcabf8493b890a9fcf359170",
+            # highway
+            "N-V-__8AAGmZhABbsPJLfbqrh6JTHsXhY6qCaLAQyx25e0XE": "96f7ffcba67e6009b974169b2ce4106879018c541d9c2a7280489a00a666f2ceead80d1e2561c4c7fe12a3cbccc6dadc42d3fde5acaea9bb8b379598c44beb5b",
+            # imgui
+            "N-V-__8AAEbOfQBnvcFcCX2W5z7tDaN8vaNZGamEQtNOe0UI": "4618b8bd6e65ac27cd7cecb3469d135622279d83f8a580c028231578f7023c4465911c5878ee7e40c2f6dda606aef86f27c3cecfb7bc9a6022bd1d89eed17c29",
+            # iterm2_themes
+            "N-V-__8AAJ3vBQAq1fLMh5J8uWLkeDLS6WAdR2x5KcrmEyz6": "2594f50531f271c2847bedebeb5484996c9e3adc31af187a1cc0f12e0b6a510fdd743108971f53eb217970296e610565e72f5c6add7486d9c00a1dcd69228c1c",
+            # jetbrains_mono
+            "N-V-__8AAIC5lwAVPJJzxnCAahSvZTIlG-HhtOvnM1uh-66x": "546c4306a3523a676f7c335387b680ae57fb869aa18c52a0034bef7969e75810f43112e8be0e1a6e9738770fe5ba908bd2b6105f0362619bf1f5e30ea09786bc",
+            # libpng
+            "N-V-__8AAJrvXQCqAT8Mg9o_tk6m0yf5Fz-gCNEOKLyTSerD": "3bb2a7b73113be42b09c2116e6c6f5a7ddb4e2ab06e0b13e10b7314acdccc4bb624ff602e16140c0484f6cde80efa190296226be3da195c6926819f07c723c12",
+            # libxev
+            "libxev-0.0.0-86vtc8QQFACz0sVc7U-VDiDIgH-XfBuEY5JpABLjHNpn": "093f6e1829837f1601b9fb03bdce950ab3204d00f15655a60cc855f94db56d2d6b9a5861ea10032e8db6eb1851319c99cec260484838c5e78fc225cc27faf720",
+            # libxml2
+            "N-V-__8AAG3RoQEyRC2Vw7Qoro5SYBf62IHn3HjqtNVY6aWK": "303528ead0f020c8e172beca54d00bb1281f4080885c9f44b979158516b585d71bbcb024999a5712a850e48647b19b1f634a1428ea29f39a48e8e6cbf7c71936",
+            # nerd_fonts_symbols_only
+            "N-V-__8AAMVLTABmYkLqhZPLXnMl-KyN38R8UVYqGrxqO26s": "60ace3377f04c2c53fa067dde1a082fc3109b534a87ddf9c0a73fa65a82a3e15793351a39434ad4e0fe452cf60f019de27989ac90b74420bb92954efeb4962bc",
+            # oniguruma
+            "N-V-__8AAHjwMQDBXnLq3Q2QhaivE0kE2aD138vtX2Bq1g7c": "7c89247d8504c635687dc61b39b39b5afefa4851b24409a8eab31273f1cbc88f3db89095ae4b135bd034147d2616c2e18fc74887300b89532eedeab75677f437",
+            # pixels
+            "N-V-__8AADYiAAB_80AWnH1AxXC0tql9thT-R-DYO1gBqTLc": "ca66e3092481e678033cb4522e984444d2123fedf5fed039a5af58b51d22c3869c9e00246f261d50ea5d11bd1d4b6b61bf32aa9bad13a4f131fd115c3feb484d",
+            # plasma_wayland_protocols
+            "N-V-__8AAKYZBAB-CFHBKs3u4JkeiT4BMvyHu3Y5aaWF3Bbs": "909432de8881e063bfddd41d83758effc3dee43818d04126ccf6bd06a0ba1d4afd9ecdb49c86c584cad01607f625367b642e5d529d149c3e1732b2136a6b3bb3",
+            # sentry
+            "N-V-__8AAPlZGwBEa-gxrcypGBZ2R8Bse4JYSfo_ul8i2jlG": "28612a4358b5ec33e1e6ac434d04013dac746f8183c861afa9b6cf24e21db5f7531d8792442de83bffe56f33f7b56c5393a519b69a787501c06cdd60ece836e0",
+            # spirv_cross
+            "N-V-__8AANb6pwD7O1WG6L5nvD_rNMvnSc9Cpg1ijSlTYywv": "45e951822e2bf630190a33f863b8e05e9f12f57047736bbf973840fd06c583ab0516096c51a041934ca162bc63cf3e48e64220ed4af7c602ca1cb18bd5fe74e9",
+            # translate_c
+            "translate_c-2.0.0-Q_BUWltOBwBYABF84EUL208pIFeUIwbBs29FmVBaafN5": "09b7779c43072546d4b12b1e97915d78fd7cd1aa69c828aab31864e95ddd22203354c51ef926bc9f269f07694729135cd363d6976ccfe0c824d59dc50479d26b",
+            # uucode
+            "uucode-0.2.0-ZZjBPoGFVgCiflJNFc6Io8xzC67B6PA5bUkk4LT0kCxg": "803eb3c6e57ce611ca9d08bac60b33249af679231680c1da26ff1d26ada59a84a6ce878186479d4cc00bd1c7d19dd2bc177dee41c460c589008b344f4736d1a2",
+            # vaxis
+            "vaxis-0.6.0-BWNV_MafDAAEzkVUvrW9NFUqnnMUoeHqrs2mecnD6D7w": "5d015a51a6ecf685f90dd388f6c9ab3595a65c56764647a3a8a0643b3a26cef3e996ccea64055ab43913af4e5f4c0871b628a90ea972295b4400a5075b791ace",
+            # wayland
+            "N-V-__8AAKrHGAAs2shYq8UkE6bGcR1QJtLTyOE_lcosMn6t": "1a90c26e08280567c1ba2b023f04e14bbf0722eb8606d331cd60c420eca4ab6bb2cddc8cbfcf0c0bf00b00488a77e84eb4e95255f72a6600ade8a841e4d29671",
+            # wayland_protocols
+            "N-V-__8AAFdWDwA0ktbNUi9pFBHCRN4weXIgIfCrVjfGxqgA": "38359ac00179d052aee54c694dfacac508a7d16096891ee764c692482b582755d6f5747d4e87790e15228abda2c02a781ef796facb600145d37466620fb510f4",
+            # wayland_protocols
+            "N-V-__8AAKw-DAAaV8bOAAGqA0-oD7o-HNIlPFYKRXSPT03S": "ed642352a88eb9b42ba36c5847dd2023c7b5cdf638e57a2212dba64239017cae597de33e7a4f3530fcc0aac4633a8bd0178138b7e72cb1d42414b87c23b831c4",
+            # wuffs
+            "N-V-__8AAP5JWgCGP_AD0teWpa4krRvE9VPZzvviGdbmN4jI": "af1bf6d094165b03fd85d838357eae9a11696ea074741ca8a4e29afc2ccf2137fb6dd52b7d9e8c9e88eb660cbf1c53ae9bc6b7fa6085330873dc78397d5fed4e",
+            # z2d
+            "z2d-0.13.0-j5P_HgsRFABzZDH54gI35P0OSrg7HFyJwS2bXX5uBdU4": "38777dfcd531e0b598ffd3431b8846347e6fbdc098ff1b9e7c43052e8548cfd252c00866385b1314f488335a72da306c59d946eaf5646738bfd09f91bcc23108",
+            # zf
+            "zf-0.11.0-OIRy8XCRAAB6FiMwIrtD6FqlagnFwpI6YyOu7bXeYH5J": "0ad0901ca1a321195ba314c1964a87320cdaae99fadd74c69a84d67243e6161b0e0959ab4993b28ed27a72646b8fc78abeb469f968147192985179e4bd54c5db",
+            # zig_js
+            "zig_js-0.0.0-rjCAV7-GAADvMTBL7lPMuvDk7xgS9PCMIZWiOUXLZSlj": "e9795eef44e857f102a801fe1109f0a7b013e513d7cc9cdac6906e0d69eb46f14d2c7fabded14f90dfc3ed607595d3344b24cb267cfa269da4fb8bd5a8e26021",
+            # zig_objc
+            "zig_objc-0.0.0-Ir_Sp_4tAQDXtPi51nW_jD9LOEzBvU9lofwO9Pzi6IB4": "1fb3170d46be2d995baf49fbfcbe6bf85dff4d4787c5639162c3dd1ba3ba356b270173b51ff7e9c607d8b11a098a8fc0bd3698085bfabe75f43aeac1c6f7e7f1",
+            # zig_wayland
+            "wayland-0.7.0-dev-lQa1klz9AQB87V0pMKMdm8JvyOx32XR9FxcWnw9wh6XZ": "858816940953809f82a9520024abb627f3d873fa11706f57496a9293a8ad681df2c3091e0b1d0d78b6b2f02b02456b0d362edde96632b0496b3b6f4c23560401",
+            # zigimg
+            "zigimg-0.1.0-8_eo2ri_FwBqF5UYiggLz4IGjHJO_n9-B6gT9Ayqg8G4": "b630438c48aced233c062fb8efb8b6d491229570da21d8fa64b0709a9e2ba185d3807ca8355c60e62f89ffea4ef7760e6ef87f25e34859e64aa2ffc778ade766",
+            # zlib
+            "N-V-__8AAB0eQwD-0MdOEBmz7intriBReIsIDNlukNVoNu6o": "8c9642495bafd6fad4ab9fb67f09b268c69ff9af0f4f20cf15dfc18852ff1f312bd8ca41de761b3f8d8e90e77d79f2ccacd3d4c5b19e475ecf09d021fdfe9088",
+        },
+    },
+}
+
+
+def _ghostty_archive_url(url: str) -> str:
+    """The download for a build.zig.zon.json URL: git+ deps become forge archives."""
+    if not url.startswith("git+"):
+        return url
+    match = re.fullmatch(r"git\+https://([^/]+)/([^?#]+?)(?:\.git)?(?:\?[^#]*)?#([0-9a-f]{40})", url)
+    if not match or match[1] not in GHOSTTY_GIT_ARCHIVES:
+        raise RuntimeError(f"unsupported git dependency (need a pinned commit on a known forge): {url}")
+    return GHOSTTY_GIT_ARCHIVES[match[1]].format(repo=match[2], commit=match[3])
+
+
+def ghostty_dependencies(graph: dict) -> dict[str, str]:
+    """Zig package hash -> archive URL, from a release's build.zig.zon.json."""
+    return {zig_hash: _ghostty_archive_url(dep["url"]) for zig_hash, dep in graph.items()}
+
+
+def _ghostty_transform(release: bytes, version: str, deps: dict[str, bytes]) -> bytes:
+    """Repack the release tree and add zig-deps/<archive name> for each dependency.
+
+    deps maps an archive's file name to its bytes. Members are sorted and
+    stamped with a fixed mtime and zero ownership, so the same inputs always
+    produce the same bytes.
+    """
+    top = f"ghostty-{version}"
+    raw = io.BytesIO()
+    with tarfile.open(fileobj=io.BytesIO(release), mode="r:*") as src, \
+            tarfile.open(fileobj=raw, mode="w", format=tarfile.PAX_FORMAT) as result:
+        for member in sorted(src.getmembers(), key=lambda m: m.name.rstrip("/")):
+            if not (member.name.rstrip("/") == top or member.name.startswith(top + "/")):
+                raise RuntimeError(f"archive member outside {top}: {member.name}")
+            if member.name.startswith(f"{top}/zig-deps/") or member.name.rstrip("/") == f"{top}/zig-deps":
+                raise RuntimeError(f"release already carries {top}/zig-deps")
+            member.uid = member.gid = 0
+            member.uname = member.gname = ""
+            member.pax_headers = {}
+            member.mtime = GHOSTTY_MTIME
+            result.addfile(member, src.extractfile(member) if member.isreg() else None)
+        directory = tarfile.TarInfo(f"{top}/zig-deps")
+        directory.type = tarfile.DIRTYPE
+        directory.mode = 0o755
+        directory.mtime = GHOSTTY_MTIME
+        result.addfile(directory)
+        for name in sorted(deps):
+            info = tarfile.TarInfo(f"{top}/zig-deps/{name}")
+            info.size = len(deps[name])
+            info.mode = 0o644
+            info.mtime = GHOSTTY_MTIME
+            result.addfile(info, io.BytesIO(deps[name]))
+    out = io.BytesIO()
+    _xz_compress_stream(iter([raw.getvalue()]), out)
+    return out.getvalue()
+
+
+def _ghostty_metadata(package_dir: Path) -> dict:
+    version = spec_version(package_dir, "ghostty.spec")
+    return {
+        "name": "ghostty",
+        "version": version,
+        "filename": f"ghostty-{version}-zig-vendored.tar.xz",
+        "generate": {
+            "script": SCRIPT_PATH,
+            "input": f"{GHOSTTY_UPSTREAM_URL.format(version=version)} (sha512-pinned) and every Zig package archive its build.zig.zon.json lists (sha512-pinned)",
+            "method": f"add zig-deps/<archive> for each build.zig.zon.json dependency, as served upstream, and repack deterministically as ghostty-{version}-zig-vendored.tar.xz",
+        },
+    }
+
+
+def _ghostty_generate(package_dir: Path, out_dir: Path) -> Path:
+    """Fetch the pinned release, then every dependency archive its graph lists.
+
+    The release is checked before any dependency is downloaded. The graph must
+    name exactly the pinned packages, and each archive must match its pin;
+    nothing is written on a mismatch.
+    """
+    version = spec_version(package_dir, "ghostty.spec")
+    pins = GHOSTTY_INPUT_SHA512.get(version)
+    if pins is None:
+        raise RuntimeError(f"no pinned input SHA-512 for ghostty {version}")
+    url = GHOSTTY_UPSTREAM_URL.format(version=version)
+    release = _fetch(url)
+    actual = hashlib.sha512(release).hexdigest()
+    if actual != pins["release"]:
+        raise RuntimeError(f"input archive mismatch for {url}: expected {pins['release']}, got {actual}")
+    with tarfile.open(fileobj=io.BytesIO(release), mode="r:*") as source:
+        graph = json.load(source.extractfile(f"ghostty-{version}/build.zig.zon.json"))
+    urls = ghostty_dependencies(graph)
+    if set(urls) != set(pins["deps"]):
+        raise RuntimeError(
+            f"ghostty {version} build.zig.zon.json does not name the pinned packages: "
+            f"unpinned {sorted(set(urls) - set(pins['deps']))}, "
+            f"missing {sorted(set(pins['deps']) - set(urls))}"
+        )
+    deps: dict[str, bytes] = {}
+    for zig_hash, dep_url in sorted(urls.items()):
+        name = dep_url.rsplit("/", 1)[1]
+        if name in deps:
+            raise RuntimeError(f"two ghostty dependencies share the archive name {name}")
+        payload = _fetch(dep_url)
+        actual = hashlib.sha512(payload).hexdigest()
+        if actual != pins["deps"][zig_hash]:
+            raise RuntimeError(
+                f"input archive mismatch for {dep_url}: expected {pins['deps'][zig_hash]}, got {actual}"
+            )
+        deps[name] = payload
+    target = out_dir / f"ghostty-{version}-zig-vendored.tar.xz"
+    target.write_bytes(_ghostty_transform(release, version, deps))
+    return target
+
+
 # --- git-archive tag sources -----------------------------------------------------
 
 # Recipes whose Source0 is `git archive` of an upstream tag: the project
@@ -1432,6 +1648,7 @@ METADATA = {
     "openal-soft": _openal_soft_metadata,
     "prefixdevname": _prefixdevname_metadata,
     "gst-thumbnailers": _gst_thumbnailers_metadata,
+    "ghostty": _ghostty_metadata,
     "freerdp": _freerdp_metadata,
     "fpaste": _fpaste_metadata,
     "7zip": _sevenzip_metadata,
@@ -1448,6 +1665,7 @@ GENERATORS = {
     "openal-soft": _openal_soft_generate,
     "prefixdevname": _prefixdevname_generate,
     "gst-thumbnailers": _gst_thumbnailers_generate,
+    "ghostty": _ghostty_generate,
     "freerdp": _freerdp_generate,
     "fpaste": _fpaste_generate,
     "7zip": _sevenzip_generate,
