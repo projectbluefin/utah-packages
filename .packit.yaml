@@ -1012,6 +1012,12 @@ packages:
     downstream_package_name: graphene
     paths:
       - packages/graphene
+  grpc:
+    specfile_path: grpc.spec
+    upstream_package_name: grpc
+    downstream_package_name: grpc
+    paths:
+      - packages/grpc
   grub2:
     specfile_path: grub2.spec
     upstream_package_name: grub2

@@ -1550,6 +1550,13 @@
       "sha512": "c56dab6712cf58387d0512a213cd0cd456679e46a495ee5cfd9bc25440cda2d72d56974af4e462f3c863869a1e2e506b702f468933045609d35fdf006212c67d"
     },
     {
+      "name": "grpc",
+      "version": "1.75.1",
+      "url": "https://github.com/grpc/grpc/archive/v1.75.1/grpc-1.75.1.tar.gz",
+      "filename": "grpc-1.75.1.tar.gz",
+      "sha512": "ffc3fde817f60e151cb2d2c0980485faf15270c12f2ec5f1228ef595d019ddf3c5e977f974cb8d5911010e0083652edddade1e999155a2fa2e72c3fd3a1aefb2"
+    },
+    {
       "name": "grub2",
       "version": "2.12",
       "url": "https://ftp.gnu.org/gnu/grub/grub-2.12.tar.xz",
