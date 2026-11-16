@@ -388,10 +388,10 @@
     },
     {
       "name": "bluefin-docs",
-      "version": "26.11.3",
-      "url": "https://github.com/projectbluefin/documentation/releases/download/26.11.3/bluefin.pdf",
-      "filename": "bluefin-docs-26.11.3.pdf",
-      "sha512": "5ba1a61538986c809e9ee5600c04f17be4270572f4a02fce46b4e328e25bd2ea6257a4ff38a37482431452b765ffb8529c57d1db530767e4a252a6dfc99e1e9c"
+      "version": "26.11.1",
+      "url": "https://github.com/projectbluefin/documentation/releases/download/26.11.1/bluefin.pdf",
+      "filename": "bluefin-docs-26.11.1.pdf",
+      "sha512": "c94c38564e2090f0a9e7e745f62cfb4436417d6370b5b9cb43b7aa29fc1e33aad0d9f3acef7912735f123fefdfb21678ec564fe49d606585047a00892bdfe9b9"
     },
     {
       "name": "bluez",
@@ -489,10 +489,10 @@
     },
     {
       "name": "chairlift",
-      "version": "26.11.7",
-      "url": "https://github.com/projectbluefin/chairlift/releases/download/v26.11.7/chairlift_26.11.7_linux_amd64.tar.gz",
-      "filename": "chairlift-26.11.7-x86_64.tar.gz",
-      "sha512": "836f786674bff2c3beeca59ddbd0708671060b3e26c7400ef22bbb3d70513f516aa232962d0285ac60f9c077ee712750fb32ca1aab17ab0837150a606770abd1"
+      "version": "26.11.2",
+      "url": "https://github.com/projectbluefin/chairlift/releases/download/v26.11.2/chairlift_26.11.2_linux_amd64.tar.gz",
+      "filename": "chairlift-26.11.2-x86_64.tar.gz",
+      "sha512": "c94581103d32f1d03e56a39cc2d9fcbec0dbe07919ba4a39088dbb7c0feedd9590b9a01061e4cdf38e3ea0b45e63d8761bb96cc218d8765a794c39910bd02c75"
     },
     {
       "name": "chromaprint",
@@ -959,10 +959,10 @@
     {
       "name": "ffmpegthumbnailer",
       "stage": 4,
-      "version": "2.4.2",
-      "url": "https://github.com/dirkvdb/ffmpegthumbnailer/archive/v2.4.2/ffmpegthumbnailer-2.4.2.tar.gz",
-      "filename": "ffmpegthumbnailer-2.4.2.tar.gz",
-      "sha512": "c63fbd080f97f2b53b8233784e799c4447b33e8fd3c16832540f248a6b4cd36bf5ed34296c3935fcfe0c4013001d844c1642e6198f4a969770b76fc00f80c9fd"
+      "version": "2.3.1",
+      "url": "https://github.com/dirkvdb/ffmpegthumbnailer/archive/v2.3.1/ffmpegthumbnailer-2.3.1.tar.gz",
+      "filename": "ffmpegthumbnailer-2.3.1.tar.gz",
+      "sha512": "11e0ce46cfbf34b04097841343a64b86719d61b25c062023c866939c4b21e59bab55572b35e4d48f125796f660703979dbe5b98f52004fea4ac4507b6bac3098"
     },
     {
       "name": "fish",
@@ -1016,12 +1016,12 @@
     },
     {
       "name": "flex",
-      "version": "2.6.15",
-      "url": "https://github.com/westes/flex/releases/download/v2.6.15/flex-2.6.15.tar.gz",
-      "filename": "flex-2.6.15.tar.gz",
-      "sha512": "830ae8eae7065ea420bff18f07dce9399b5d178b23ff306d8d8a35cdd4129cec397a5e5ad611141ab041a8d0163a3fd5c1080ff6eff5859cbe1ef7d4907f0fde",
+      "version": "2.6.4",
+      "url": "https://github.com/westes/flex/releases/download/v2.6.4/flex-2.6.4.tar.gz",
+      "filename": "flex-2.6.4.tar.gz",
+      "sha512": "e9785f3d620a204b7d20222888917dc065c2036cae28667065bf7862dfa1b25235095a12fd04efdbd09bfd17d3452e6b9ef953a8c1137862ff671c97132a082e",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/flex/flex-2.6.15.tar.gz/sha512/830ae8eae7065ea420bff18f07dce9399b5d178b23ff306d8d8a35cdd4129cec397a5e5ad611141ab041a8d0163a3fd5c1080ff6eff5859cbe1ef7d4907f0fde/flex-2.6.15.tar.gz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/flex/flex-2.6.4.tar.gz/sha512/e9785f3d620a204b7d20222888917dc065c2036cae28667065bf7862dfa1b25235095a12fd04efdbd09bfd17d3452e6b9ef953a8c1137862ff671c97132a082e/flex-2.6.4.tar.gz"
       ]
     },
     {
@@ -1254,10 +1254,10 @@
     },
     {
       "name": "gflags",
-      "version": "2.3.1",
-      "url": "https://github.com/gflags/gflags/archive/v2.3.1/gflags-2.3.1.tar.gz",
-      "filename": "gflags-2.3.1.tar.gz",
-      "sha512": "fb8d90848ff846d0e67d3b8381699c9f0a0ea88ab77f1bd84beffc1c23639a676238cbdb27542cbe91e30dfd7e1624556a49386eac25bd5a0ef5317ed662019e"
+      "version": "2.2.2",
+      "url": "https://github.com/gflags/gflags/archive/v2.2.2/gflags-2.2.2.tar.gz",
+      "filename": "gflags-2.2.2.tar.gz",
+      "sha512": "98c4703aab24e81fe551f7831ab797fb73d0f7dfc516addb34b9ff6d0914e5fd398207889b1ae555bac039537b1d4677067dae403b64903577078d99c1bdb447"
     },
     {
       "name": "ghostscript",
@@ -1803,10 +1803,10 @@
     },
     {
       "name": "grpc",
-      "version": "1.85.2",
-      "url": "https://github.com/grpc/grpc/archive/v1.85.2/grpc-1.85.2.tar.gz",
-      "filename": "grpc-1.85.2.tar.gz",
-      "sha512": "27df5ee8eefc9e8cd4714b97ceb87f483b4481ac8f27fd0d0a619db2703557d04acbf1ede87e2a72662cff7a09c38ba7a574c0791ad79f6cf6fb21dcc0719086"
+      "version": "1.75.1",
+      "url": "https://github.com/grpc/grpc/archive/v1.75.1/grpc-1.75.1.tar.gz",
+      "filename": "grpc-1.75.1.tar.gz",
+      "sha512": "ffc3fde817f60e151cb2d2c0980485faf15270c12f2ec5f1228ef595d019ddf3c5e977f974cb8d5911010e0083652edddade1e999155a2fa2e72c3fd3a1aefb2"
     },
     {
       "name": "grub2",
@@ -2142,13 +2142,13 @@
     },
     {
       "name": "hidapi",
-      "version": "0.16.0",
-      "url": "https://github.com/libusb/hidapi/archive/hidapi-0.16.0.tar.gz",
-      "filename": "hidapi-0.16.0.tar.gz",
+      "version": "0.15.0",
+      "url": "https://github.com/libusb/hidapi/archive/hidapi-0.15.0.tar.gz",
+      "filename": "hidapi-0.15.0.tar.gz",
       "feed": "https://github.com/libusb/hidapi/archive/hidapi-0.15.0.tar.gz",
-      "sha512": "071d00eab861a18a05664e5a2e81beb332df06fb40feeba72b64e3f70c1e0772e2556f8ae5677e2340a5417fc6109ef450bcb67e74f5529d3984d4a7c10b433e",
+      "sha512": "a4ddd13a80a84956872fa52aa861b40e4959f301d8d91afe0feaf9dbd87394561e1fdd20cbf8cf47200845f80a8db8a934bc2e3025fe6f16435e37c17621e7b6",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/hidapi/hidapi-0.16.0.tar.gz/sha512/071d00eab861a18a05664e5a2e81beb332df06fb40feeba72b64e3f70c1e0772e2556f8ae5677e2340a5417fc6109ef450bcb67e74f5529d3984d4a7c10b433e/hidapi-0.16.0.tar.gz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/hidapi/hidapi-0.15.0.tar.gz/sha512/a4ddd13a80a84956872fa52aa861b40e4959f301d8d91afe0feaf9dbd87394561e1fdd20cbf8cf47200845f80a8db8a934bc2e3025fe6f16435e37c17621e7b6/hidapi-0.15.0.tar.gz"
       ]
     },
     {
@@ -4765,10 +4765,10 @@
     },
     {
       "name": "marisa",
-      "version": "0.3.1",
-      "url": "https://github.com/s-yata/marisa-trie/archive/refs/tags/v0.3.1.tar.gz#/marisa-0.3.1.tar.gz",
-      "filename": "marisa-0.3.1.tar.gz",
-      "sha512": "60757e354e4f0ff47662930af5c32a762c5f348c60019abb2d502c6c21ec220731edd9be8ea36e3ec68df90a6584eb311fe1e3d4258b3392609a87b0ef427121"
+      "version": "0.3.0",
+      "url": "https://github.com/s-yata/marisa-trie/archive/refs/tags/v0.3.0.tar.gz#/marisa-0.3.0.tar.gz",
+      "filename": "marisa-0.3.0.tar.gz",
+      "sha512": "6d72b13daec877c9c42e2c93e591e3a5e9c738bb130c5d90d6adfde81d5b500684ca176439b7502d9243b6417f34c7b39750ff3fb3a5c52d8d06cb9bc5f14c22"
     },
     {
       "name": "mdadm",
@@ -5812,10 +5812,10 @@
     },
     {
       "name": "python-email-validator",
-      "version": "2.4.0",
-      "url": "https://github.com/JoshData/python-email-validator/archive/v2.4.0/python-email-validator-2.4.0.tar.gz",
-      "filename": "python-email-validator-2.4.0.tar.gz",
-      "sha512": "24dd68e0f4342ffa216244a0670f3f517c138f7c808f85e70e1ca60300d69987c3911a8988241846aaa1b824986ec14362fe389a50dc86a6e01b70975941ccfe"
+      "version": "2.3.0",
+      "url": "https://github.com/JoshData/python-email-validator/archive/v2.3.0/python-email-validator-2.3.0.tar.gz",
+      "filename": "python-email-validator-2.3.0.tar.gz",
+      "sha512": "bb5f33d14f69bfdf51b967778471fc261eabfd9187981e9488db7918dafc18a3e0f0528d6c394720f8222150f9ff8d2f6cc968caca9804f220dfdb7199fa15ce"
     },
     {
       "name": "python-enchant",
@@ -6269,10 +6269,10 @@
     },
     {
       "name": "rpcsvc-proto",
-      "version": "1.4.4",
-      "url": "https://github.com/thkukuk/rpcsvc-proto/releases/download/v1.4.4/rpcsvc-proto-1.4.4.tar.xz",
-      "filename": "rpcsvc-proto-1.4.4.tar.xz",
-      "sha512": "0138ac8fb2d8de3cb56f661bd1b6435fa0a35d3bd12c5cb7081c9ae1701e3620f47fe3dd002263db456655b61316749768e9a1a44325a1a6a542beae364a0393"
+      "version": "1.4",
+      "url": "https://github.com/thkukuk/rpcsvc-proto/releases/download/v1.4/rpcsvc-proto-1.4.tar.xz",
+      "filename": "rpcsvc-proto-1.4.tar.xz",
+      "sha512": "c3011d7d7ef97a4a751f6921df1a23e1dd8ac50fb0690c759d37010ed7be27968a2130e3b8872cb48d5914216f9d539096a424f1ec38a75f7ed899748151c6f4"
     },
     {
       "name": "rpm-ostree",
@@ -6489,12 +6489,12 @@
     },
     {
       "name": "simdutf",
-      "version": "9.4.0",
-      "url": "https://github.com/simdutf/simdutf/archive/v9.4.0/simdutf-9.4.0.tar.gz",
-      "filename": "simdutf-9.4.0.tar.gz",
-      "sha512": "5e86ee1664ec9d6116ced0d896d0f9a7579e7ddafd98db11ace23d98f3d761b116203f512df160e6b0a7696d015a4a92e04183f01d4bb55915c2c217685db254",
+      "version": "9.0.0",
+      "url": "https://github.com/simdutf/simdutf/archive/v9.0.0/simdutf-9.0.0.tar.gz",
+      "filename": "simdutf-9.0.0.tar.gz",
+      "sha512": "0c74226247cbe95368efa87ab84f5217485f16bcdf7a9def8741c6086cb86e6c378f0c437030d2be0934726e3ea9c28b5df2e593d0c654c78291c455a8d1e103",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/simdutf/simdutf-9.4.0.tar.gz/sha512/5e86ee1664ec9d6116ced0d896d0f9a7579e7ddafd98db11ace23d98f3d761b116203f512df160e6b0a7696d015a4a92e04183f01d4bb55915c2c217685db254/simdutf-9.4.0.tar.gz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/simdutf/simdutf-9.0.0.tar.gz/sha512/0c74226247cbe95368efa87ab84f5217485f16bcdf7a9def8741c6086cb86e6c378f0c437030d2be0934726e3ea9c28b5df2e593d0c654c78291c455a8d1e103/simdutf-9.0.0.tar.gz"
       ]
     },
     {
@@ -6829,10 +6829,14 @@
     },
     {
       "name": "sysstat",
-      "version": "12.8.1",
-      "url": "https://github.com/sysstat/sysstat/archive/v12.8.1.tar.gz",
-      "filename": "v12.8.1.tar.gz",
-      "sha512": "d85f4c2fb20dd9560062fc9f56883c812f551c27efb5fc2c6bc5a568f38db4858c1344013ccd1b33f5de757f79a5dfb3547442a85040439f0e44c3ccfebb2714"
+      "version": "12.8.0",
+      "url": "https://github.com/sysstat/sysstat/archive/v12.8.0.tar.gz",
+      "filename": "v12.8.0.tar.gz",
+      "sha512": "42ddf7131b690be8927ceacdc35c23d6f1295f52446db68ecc2ea619e0e7ec955157b146216474e271bd0db242b3348e8ba4c8ebc03e518ac69b2564eec71857",
+      "dist_bump": {
+        "count": 1,
+        "baseline": "1"
+      }
     },
     {
       "name": "system-config-printer",
@@ -7072,10 +7076,10 @@
     },
     {
       "name": "umotd",
-      "version": "0.4.1",
-      "url": "https://github.com/projectbluefin/umotd/releases/download/v0.4.1/umotd_0.4.1_linux_amd64",
-      "filename": "umotd-0.4.1-x86_64",
-      "sha512": "0841ed1f48a8db5c217c0c3490c39248e85754db601d29d75cd82fda7482f4a580ee1ec60c24fd4269c493fd7e59d4d566fcd970eb6cbe4b7411e6532ccec936"
+      "version": "0.3.3",
+      "url": "https://github.com/projectbluefin/umotd/releases/download/v0.3.3/umotd_0.3.3_linux_amd64",
+      "filename": "umotd-0.3.3-x86_64",
+      "sha512": "07befebcd08d90904faff7d8e26f0a0ea015a41bc6280df023c295326f4898c8ce368e012f63e02bd4ff0bba9529872ec6b7ef38e5d52fdf0c93211c4c0fff03"
     },
     {
       "name": "unicode-ucd",
@@ -7166,17 +7170,17 @@
     },
     {
       "name": "uupd",
-      "version": "1.5.7",
-      "url": "https://github.com/ublue-os/uupd/releases/download/v1.5.7/uupd_Linux_x86_64.tar.gz",
-      "filename": "uupd-1.5.7-x86_64.tar.gz",
-      "sha512": "cc3e529c032a09fa117b6b69b9e80cb81948b7f4e3ce8983f847efd6e6f1880562832aadcd665573e786ade53828263cd26ac4bc4e00c4cddae2576ba138a7bf"
+      "version": "1.5.5",
+      "url": "https://github.com/ublue-os/uupd/releases/download/v1.5.5/uupd_Linux_x86_64.tar.gz",
+      "filename": "uupd-1.5.5-x86_64.tar.gz",
+      "sha512": "275e88fc755beebe7af79b51025ed3ea1329f52d0d9dc8496cd0054d31d3d34b456364648bc83daab8a9b1702850762d3f35aad6ffb39e865fe180f6c6dc8386"
     },
     {
       "name": "uutils-coreutils",
-      "version": "0.12.0",
-      "url": "https://github.com/uutils/coreutils/archive/0.12.0/uutils-coreutils-0.12.0.tar.gz",
-      "filename": "uutils-coreutils-0.12.0.tar.gz",
-      "sha512": "535bbc0c25c057908e2738aca9ad7869f8795a166bcc9de0980b9ded09c64de580f0b079b4ee20ad930ba6bac8abeb9db1af10635161dbba54e5409361c70e4d"
+      "version": "0.7.0",
+      "url": "https://github.com/uutils/coreutils/archive/0.7.0/uutils-coreutils-0.7.0.tar.gz",
+      "filename": "uutils-coreutils-0.7.0.tar.gz",
+      "sha512": "e6d01d9320050efaa64ac261d86fddbb79895a0768c388248b412be571989ec4fc78c094e9606d56154abab06b3f66bd4784c55dbf8129db183e78df4bd7c43c"
     },
     {
       "name": "uvg266",
@@ -7187,10 +7191,10 @@
     },
     {
       "name": "uwelcome",
-      "version": "0.5.1",
-      "url": "https://github.com/projectbluefin/uwelcome/releases/download/v0.5.1/uwelcome_0.5.1_linux_amd64",
-      "filename": "uwelcome-0.5.1-x86_64",
-      "sha512": "c3f94d92617246201bbbbe35b84ce1c4d883847a4bfdcd00eb7ef9977e5ae72c39e458888df0e6fa7ac72ab9c81abfb47dbcfef9462ea65282dcace613661456"
+      "version": "0.4.1",
+      "url": "https://github.com/projectbluefin/uwelcome/releases/download/v0.4.1/uwelcome_0.4.1_linux_amd64",
+      "filename": "uwelcome-0.4.1-x86_64",
+      "sha512": "f262cf688b15b7b6af10ec93a32329066ab646b044c9182371e6498c7077befbffcdc4856248a4618d20efcd72befa593780a07f2105f983b5619f00905fb76d"
     },
     {
       "name": "v4l-utils",
