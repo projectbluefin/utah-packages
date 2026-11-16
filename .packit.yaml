@@ -4648,6 +4648,12 @@ packages:
     downstream_package_name: xvidcore
     paths:
       - packages/xvidcore
+  yaml-cpp:
+    specfile_path: yaml-cpp.spec
+    upstream_package_name: yaml-cpp
+    downstream_package_name: yaml-cpp
+    paths:
+      - packages/yaml-cpp
   ydotool:
     specfile_path: ydotool.spec
     upstream_package_name: ydotool
