@@ -5097,10 +5097,10 @@
     },
     {
       "name": "nvme-cli",
-      "version": "2.16",
-      "url": "https://github.com/linux-nvme/nvme-cli/archive/v2.16/nvme-cli-2.16.tar.gz",
-      "filename": "nvme-cli-2.16.tar.gz",
-      "sha512": "507018ff41832574bef5b88ea6a17336b9792c54f8e5c619d041bce23124e1d6d5e5e824407f46d4f1b4d6899125885eb14289f3399e61c7e7a59a603f1635e2"
+      "version": "3.1",
+      "url": "https://github.com/linux-nvme/nvme-cli/archive/v3.1/nvme-cli-3.1.tar.gz",
+      "filename": "nvme-cli-3.1.tar.gz",
+      "sha512": "980a806125c75313aefe6f24aef13b850d69893407fc5ccf549b74829b1622efdb8f28f794dff6f7b258bb2a8dcd16c7fcf457a427a04eaa558ff38c954ed2e5"
     },
     {
       "name": "nvtop",
