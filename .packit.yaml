@@ -274,6 +274,12 @@ packages:
     downstream_package_name: bluefin-artwork-logos
     paths:
       - packages/bluefin-artwork-logos
+  bluefin-docs:
+    specfile_path: bluefin-docs.spec
+    upstream_package_name: bluefin-docs
+    downstream_package_name: bluefin-docs
+    paths:
+      - packages/bluefin-docs
   bluez:
     specfile_path: bluez.spec
     upstream_package_name: bluez
@@ -2248,6 +2254,12 @@ packages:
     downstream_package_name: libgsf
     paths:
       - packages/libgsf
+  libgsystemservice:
+    specfile_path: libgsystemservice.spec
+    upstream_package_name: libgsystemservice
+    downstream_package_name: libgsystemservice
+    paths:
+      - packages/libgsystemservice
   libgtop2:
     specfile_path: libgtop2.spec
     upstream_package_name: libgtop2
@@ -2800,6 +2812,12 @@ packages:
     downstream_package_name: libtracefs
     paths:
       - packages/libtracefs
+  libtsm:
+    specfile_path: libtsm.spec
+    upstream_package_name: libtsm
+    downstream_package_name: libtsm
+    paths:
+      - packages/libtsm
   libudfread:
     specfile_path: libudfread.spec
     upstream_package_name: libudfread
