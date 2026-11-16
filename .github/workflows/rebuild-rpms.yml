@@ -527,7 +527,16 @@ jobs:
                 printf "[factory]\nname=factory\nbaseurl=%s\nenabled=1\ngpgcheck=0\npriority=5\n" \
                   "$FACTORY_REPO" > /etc/yum.repos.d/factory.repo
               fi
-              dnf -y $disable install dnf-plugins-core rpm-build @buildsys-build
+              # packages.redhat.com drops downloads mid-transaction often
+              # enough that this one install failed preflight on ten open PRs
+              # at once (#1170), each run naming a different RPM ("Cannot
+              # download ... All mirrors were tried"). The drops are brief, so
+              # retry the install with a back-off before giving up.
+              for attempt in 1 2 3; do
+                dnf -y $disable install dnf-plugins-core rpm-build @buildsys-build && break
+                test "$attempt" -lt 3 || exit 1
+                sleep $((attempt * 30))
+              done
               rpm -q --qf "buildroot openssl: %{VERSION}-%{RELEASE}\n" openssl-libs || true
               : > /work/reports/preflight.txt
               # Only resolve BuildRequires for packages this run will actually
