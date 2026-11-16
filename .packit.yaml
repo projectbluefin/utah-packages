@@ -1000,6 +1000,12 @@ packages:
     downstream_package_name: google-noto-sans-cjk-vf-fonts
     paths:
       - packages/google-noto-sans-cjk-vf-fonts
+  google-noto-serif-cjk-vf-fonts:
+    specfile_path: google-noto-serif-cjk-vf-fonts.spec
+    upstream_package_name: google-noto-serif-cjk-vf-fonts
+    downstream_package_name: google-noto-serif-cjk-vf-fonts
+    paths:
+      - packages/google-noto-serif-cjk-vf-fonts
   gpm:
     specfile_path: gpm.spec
     upstream_package_name: gpm
