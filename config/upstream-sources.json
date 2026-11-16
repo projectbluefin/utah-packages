@@ -3466,6 +3466,13 @@
       "sha512": "cf750d84a15daa5450d61d800d2283d88627be98382997cfa417c0cdbcbdf0f40cdd0397b7100a5c6bdc2346cb860b6bde9237c56514aaa532ac86a9e33a5b26"
     },
     {
+      "name": "libgsystemservice",
+      "version": "0.3.0",
+      "url": "https://gitlab.gnome.org/pwithnall/libgsystemservice/-/archive/0.3.0/libgsystemservice-0.3.0.tar.gz",
+      "filename": "libgsystemservice-0.3.0.tar.gz",
+      "sha512": "ad422be588a223ac966dba9e745042581a695923c3368ee45435f91150cd0b624de99e6a2ad567ffb7c0601aa1eb1e4ae2dbcd7d2f5385d4b98c3d7941fa22a1"
+    },
+    {
       "name": "libgtop2",
       "version": "2.41.3",
       "url": "https://download.gnome.org/sources/libgtop/2.41/libgtop-2.41.3.tar.xz",
@@ -4334,6 +4341,13 @@
       "url": "https://git.kernel.org/pub/scm/libs/libtrace/libtracefs.git/snapshot/libtracefs-1.8.3.tar.gz",
       "filename": "libtracefs-1.8.3.tar.gz",
       "sha512": "4b24bf2b0543c16781be798387cfe5227f150c37304971ac5bd11c2715df22ba03e5909b05c97422b69102113279b3b4a606d0babe4b97000120e458755f9b7c"
+    },
+    {
+      "name": "libtsm",
+      "version": "4.8.0",
+      "url": "https://github.com/kmscon/libtsm/archive/v4.8.0/libtsm-4.8.0.tar.gz",
+      "filename": "libtsm-4.8.0.tar.gz",
+      "sha512": "cd40679eb25ade1505dbf7eca8d032ae5dc57b92be4f3a7ea4be79b68d2988bb6f8ba202d0bdf4b4dc76b7c743bc54ecc315b24e29b055cbfed9aefb29a653f6"
     },
     {
       "name": "libudfread",
