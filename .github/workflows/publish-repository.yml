@@ -536,7 +536,8 @@ jobs:
             fi
           } >> "$GITHUB_STEP_SUMMARY"
           exit "$status"
-      # Utah's install inputs: its installer, manifests, repository files and
+      # Utah's install inputs: its installer, manifests (packages/base.toml,
+      # or packages/bluefin.toml on a ref before utah#1253), repository files and
       # the base image its Containerfile pins. The transaction below resolves
       # in that base, because that is where the published repository has to
       # install (#272 found the factory's own base disagreeing with Utah's).
