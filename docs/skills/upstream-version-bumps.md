@@ -504,7 +504,7 @@ primary derivable from the current one:
   `planned_entry()` writes, from the new file name and digest. That covers
   both `<file>/<algo>/<hash>/<file>` and the legacy `<file>/<md5>/<file>`
   form with no algorithm segment (libatasmart, sound-theme-freedesktop,
-  startup-notification, hfsplus-tools). Before 2026-11-07 the legacy form
+  startup-notification). Before 2026-11-07 the legacy form
   missed the pattern and kept its old md5 under the new file name, a URL
   that never resolves. Md5 pins (hyphen, libao, libtheora) cannot be updated
   by substitution. Other mirrors only get the version swapped.
