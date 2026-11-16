@@ -1,0 +1,8 @@
+{
+  "package": "dtc",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/dtc.git",
+  "commit": "d908f3125944683722baad98981e0f36d66c6d77",
+  "tree": "01201a804345226c2a250f174d7ba34c3b99c0ff",
+  "imported_at": "2026-11-16T04:08:40.506885+00:00"
+}

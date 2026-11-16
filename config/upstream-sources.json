@@ -726,6 +726,13 @@
       ]
     },
     {
+      "name": "dtc",
+      "version": "1.8.1",
+      "url": "https://www.kernel.org/pub/software/utils/dtc/dtc-1.8.1.tar.xz",
+      "filename": "dtc-1.8.1.tar.xz",
+      "sha512": "9a2987aab1e3be91b71a72e5aea7a4e3f88e66521e68fea25345f5e1f86189c0ed82668e31d4ce7869cb0e0277289ffa3b62bc2a002f2d18849be84aa4fab757"
+    },
+    {
       "name": "dymo-cups-drivers",
       "version": "1.4.0.5",
       "url": "https://download.dymo.com/dymo/Software/Download%20Drivers/Linux/Download/dymo-cups-drivers-1.4.0.tar.gz",
