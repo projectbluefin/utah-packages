@@ -195,6 +195,51 @@ class ArtifactPatternTests(unittest.TestCase):
             self.assertEqual(any(fnmatch(name, p) for p in expanded), covered, name)
 
 
+class MergeCountTests(unittest.TestCase):
+    """build-stage.yml's merge job counts its stage's RPM artifacts (#970)."""
+
+    def count(self, pages, prefix="", stage="1", gh_exit=0):
+        import os
+        import subprocess
+
+        import yaml
+
+        workflow = yaml.safe_load(
+            (Path(__file__).resolve().parent.parent / ".github" / "workflows"
+             / "build-stage.yml").read_text())
+        step = next(s for s in workflow["jobs"]["merge"]["steps"] if s.get("id") == "count")
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            # gh api --paginate --jq prints the filter's output page by page.
+            (root / "names").write_text("".join(f"{n}\n" for page in pages for n in page))
+            gh = root / "gh"
+            gh.write_text(f'#!/bin/sh\ncat "{root}/names"\nexit {gh_exit}\n')
+            gh.chmod(0o755)
+            output = root / "output"
+            output.touch()
+            env = dict(os.environ, PATH=f"{root}:{os.environ['PATH']}", PREFIX=prefix,
+                       STAGE=stage, REPO="o/r", RUN_ID="1", GITHUB_OUTPUT=str(output))
+            result = subprocess.run(["bash", "-c", step["run"]], env=env,
+                                    capture_output=True, text=True)
+            return result.returncode, output.read_text()
+
+    def test_names_across_pages_count_once(self):
+        pages = [[f"rpm-s1-p{i}" for i in range(100)], ["rpm-s1-last", "rpm-s10-x", "lock-s1-a"]]
+        self.assertEqual(self.count(pages), (0, "rpm_count=101\n"))
+
+    def test_only_this_prefix_and_stage_count(self):
+        pages = [["p1-rpm-s2-a", "rpm-s2-b", "p1-rpm-s20-c", "p1-lock-s2-a"]]
+        self.assertEqual(self.count(pages, prefix="p1-", stage="2"), (0, "rpm_count=1\n"))
+
+    def test_no_artifacts_is_zero(self):
+        self.assertEqual(self.count([["rpm-s0-a"]]), (0, "rpm_count=0\n"))
+
+    def test_a_failed_listing_fails_the_step_without_a_count(self):
+        code, output = self.count([["rpm-s1-a"]], gh_exit=1)
+        self.assertNotEqual(code, 0)
+        self.assertEqual(output, "")
+
+
 class BootstrapTests(unittest.TestCase):
     def test_a_bootstrap_build_never_replaces_the_real_package(self):
         from tools.publish_gate import publishable
