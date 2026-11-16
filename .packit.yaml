@@ -4408,6 +4408,12 @@ packages:
     downstream_package_name: usermode
     paths:
       - packages/usermode
+  uupd:
+    specfile_path: uupd.spec
+    upstream_package_name: uupd
+    downstream_package_name: uupd
+    paths:
+      - packages/uupd
   uvg266:
     specfile_path: uvg266.spec
     upstream_package_name: uvg266
