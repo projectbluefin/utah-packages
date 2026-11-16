@@ -1,14 +1,14 @@
+# Build documentation by default (use `rpmbuild --without docs` to override it).
+# This is used by Coverity. Coverity injects custom compiler warnings, but
+# any warning during WebKit docs build is fatal!
+%bcond_without docs
+
 ## NOTE: Lots of files in various subdirectories have the same name (such as
 ## "LICENSE") so this short macro allows us to distinguish them by using their
 ## directory names (from the source tree) as prefixes for the files.
 %global add_to_license_files() \
         mkdir -p _license_files ; \
         cp -p %1 _license_files/$(echo '%1' | sed -e 's!/!.!g')
-
-# Build documentation by default (use `rpmbuild --without docs` to override it).
-# This is used by Coverity. Coverity injects custom compiler warnings, but
-# any warning during WebKit docs build is fatal!
-%bcond_without docs
 
 # Clang is preferred: https://skia.org/docs/user/build/#supported-and-preferred-compilers
 %global toolchain clang
@@ -18,8 +18,38 @@
 %global _lto_cflags %{nil}
 %endif
 
+# Filter out provides for private libraries
+%global __provides_exclude_from ^(%{_libdir}/webkit2gtk-4\\.1/.*\\.so|%{_libdir}/webkitgtk-6\\.0/.*\\.so)$
+
+# Increase the DIE limit so our debuginfo packages can be size-optimized.
+# This previously decreased the size for x86_64 from ~5G to ~1.1G, but as of
+# 2022 it's more like 850 MB -> 675 MB. This requires lots of RAM on the
+# builders, so only do this for x86_64 and aarch64 to avoid overwhelming
+# builders with less RAM.
+# https://bugzilla.redhat.com/show_bug.cgi?id=1456261
+%global _dwz_max_die_limit_x86_64 250000000
+%global _dwz_max_die_limit_aarch64 250000000
+
+# Require 32 GB of RAM per vCPU for debuginfo processing. 16 GB is not enough.
+%global _find_debuginfo_opts %limit_build -m 32768
+
+# Reduce debuginfo verbosity 32-bit builds to reduce memory consumption even more.
+# https://bugs.webkit.org/show_bug.cgi?id=140176
+# https://lists.fedoraproject.org/archives/list/devel@lists.fedoraproject.org/thread/I6IVNA52TXTBRQLKW45CJ5K4RA4WNGMI/
+%ifarch %{ix86}
+%global optflags %(echo %{optflags} | sed 's/-g /-g1 /')
+%endif
+
+# JIT is broken on ARM systems with new ARMv8.5 BTI extension at the moment
+# Cf. https://bugzilla.redhat.com/show_bug.cgi?id=2130009
+# Cf. https://bugs.webkit.org/show_bug.cgi?id=245697
+# Disable BTI until this is fixed upstream.
+%ifarch aarch64
+%global optflags %(echo %{optflags} | sed 's/-mbranch-protection=standard /-mbranch-protection=pac-ret /')
+%endif
+
 Name:           webkitgtk
-Version:        2.53.91
+Version:        2.54.2
 Release:        %autorelease
 Summary:        GTK web content engine library
 
@@ -36,6 +66,7 @@ Summary:        GTK web content engine library
 # Source/ThirdParty/ANGLE/include/CL/cl_d3d10.h is Apache-2.0
 # Source/ThirdParty/ANGLE/include/GLES/gl.h is MIT-Khronos (not on list see https://github.com/spdx/license-list-XML/issues/2017)
 # Source/ThirdParty/ANGLE/src/compiler/preprocessor/preprocessor_tab_autogen.cpp is GPL-3.0-or-later WITH Bison-exception-2.2
+# Source/ThirdParty/ANGLE/tools/flex-bison/third_party/m4sugar/m4sugar.m4 is GPL-3.0-or-later WITH Autoconf-exception-3.0
 # Source/ThirdParty/pdfjs/web/images/annotation-paperclip.svg is MPL-2.0i
 # Source/ThirdParty/pdfjs/web/standard_fonts/LICENSE_LIBERATION is OFL-1.1
 # Source/ThirdParty/xdgmime/ is AFL-2.0 OR GPL-2.0-or-later
@@ -44,16 +75,21 @@ Summary:        GTK web content engine library
 # Source/WebKit/UIProcess/Launcher/glib/BubblewrapLauncher.cpp is LGPL-2.1-or-later
 # Source/WTF/LICENSE-libc++.txt is NCSA OR MIT
 # Source/WTF/LICENSE-LLVM.txt is Apache-2.0 WITH LLVM-exception
+# Source/WTF/icu/LICENSE is ICU
 # Source/WTF/wtf/Markable.h is BSL-1.0
 # The license tag and above comment is up to date as of WebKitGTK 2.42.2.
-License:        LGPL-2.1-only AND BSD-2-Clause AND BSD-3-Clause AND ISC AND bzip2-1.0.6 AND NCSA AND MIT AND GPL-2.0-only AND MPL-1.1 AND SunPro AND Apache-2.0 AND GPL-3.0-or-later WITH Bison-exception-2.2 AND MPL-2.0 AND OFL-1.1 AND (AFL-2.0 OR GPL-2.0-or-later) AND BSD-Source-Code AND BSD-2-Clause-Views AND LGPL-2.1-or-later AND (NCSA OR MIT) AND Apache-2.0 WITH LLVM-exception AND BSL-1.0
+License:        LGPL-2.1-only AND BSD-2-Clause AND BSD-3-Clause AND ISC AND bzip2-1.0.6 AND NCSA AND MIT AND GPL-2.0-only AND MPL-1.1 AND SunPro AND Apache-2.0 AND GPL-3.0-or-later WITH Bison-exception-2.2 AND GPL-3.0-or-later WITH Autoconf-exception-3.0 AND MPL-2.0 AND OFL-1.1 AND (AFL-2.0 OR GPL-2.0-or-later) AND BSD-Source-Code AND BSD-2-Clause-Views AND LGPL-2.1-or-later AND (NCSA OR MIT) AND Apache-2.0 WITH LLVM-exception AND ICU AND BSL-1.0
 URL:            https://www.webkitgtk.org/
 Source0:        https://webkitgtk.org/releases/webkitgtk-%{version}.tar.xz
 Source1:        https://webkitgtk.org/releases/webkitgtk-%{version}.tar.xz.asc
 # Use the keys from https://webkitgtk.org/verifying.html
-# $ gpg --import aperez.key carlosgc.key
-# $ gpg --export --export-options export-minimal 013A0127AC9C65B34FFA62526C1009B693975393 5AA3BC334FD7E3369E7C77B291C559DBE4C9123B > webkitgtk-keys.gpg
+# Refreshed from keyservers (same keys, newer signatures):
+#   sq --home=none network keyserver search 013A0127AC9C65B34FFA62526C1009B693975393 5AA3BC334FD7E3369E7C77B291C559DBE4C9123B --output webkitgtk-keys.gpg --overwrite
 Source2:        webkitgtk-keys.gpg
+
+# CMake: add missing ordering information to fix a potential race condition that
+#   can lead to build failures due to unresolvable #include's  
+Patch:          0001-cmake-resolve-race-condition-between-source-generati.patch
 
 # https://bugs.webkit.org/show_bug.cgi?id=312677
 Patch:          skia-s390x.patch
@@ -67,7 +103,7 @@ BuildRequires:  flite-devel
 BuildRequires:  gettext
 BuildRequires:  gi-docgen
 BuildRequires:  git
-BuildRequires:  gnupg2
+BuildRequires:  openpgpverify
 BuildRequires:  gperf
 BuildRequires:  hyphen-devel
 BuildRequires:  libatomic
@@ -128,9 +164,6 @@ BuildRequires:  pkgconfig(wayland-egl)
 BuildRequires:  pkgconfig(wayland-protocols)
 BuildRequires:  pkgconfig(wayland-server)
 BuildRequires:  pkgconfig(xt)
-
-# Filter out provides for private libraries
-%global __provides_exclude_from ^(%{_libdir}/webkit2gtk-4\\.1/.*\\.so|%{_libdir}/webkitgtk-6\\.0/.*\\.so)$
 
 %description
 WebKitGTK is the port of the WebKit web rendering engine to the
@@ -272,37 +305,10 @@ The javascriptcoregtk4.1-devel package contains libraries, build data, and heade
 files for developing applications that use JavaScript engine from webkit2gtk-4.1.
 
 %prep
-%{gpgverify} --keyring='%{SOURCE2}' --signature='%{SOURCE1}' --data='%{SOURCE0}'
+%{openpgpverify} --keyring='%{SOURCE2}' --signature='%{SOURCE1}' --data='%{SOURCE0}'
 %autosetup -p1 -n webkitgtk-%{version}
 
 %build
-# Increase the DIE limit so our debuginfo packages can be size-optimized.
-# This previously decreased the size for x86_64 from ~5G to ~1.1G, but as of
-# 2022 it's more like 850 MB -> 675 MB. This requires lots of RAM on the
-# builders, so only do this for x86_64 and aarch64 to avoid overwhelming
-# builders with less RAM.
-# https://bugzilla.redhat.com/show_bug.cgi?id=1456261
-%global _dwz_max_die_limit_x86_64 250000000
-%global _dwz_max_die_limit_aarch64 250000000
-
-# Require 32 GB of RAM per vCPU for debuginfo processing. 16 GB is not enough.
-%global _find_debuginfo_opts %limit_build -m 32768
-
-# Reduce debuginfo verbosity 32-bit builds to reduce memory consumption even more.
-# https://bugs.webkit.org/show_bug.cgi?id=140176
-# https://lists.fedoraproject.org/archives/list/devel@lists.fedoraproject.org/thread/I6IVNA52TXTBRQLKW45CJ5K4RA4WNGMI/
-%ifarch %{ix86}
-%global optflags %(echo %{optflags} | sed 's/-g /-g1 /')
-%endif
-
-# JIT is broken on ARM systems with new ARMv8.5 BTI extension at the moment
-# Cf. https://bugzilla.redhat.com/show_bug.cgi?id=2130009
-# Cf. https://bugs.webkit.org/show_bug.cgi?id=245697
-# Disable BTI until this is fixed upstream.
-%ifarch aarch64
-%global optflags %(echo %{optflags} | sed 's/-mbranch-protection=standard /-mbranch-protection=pac-ret /')
-%endif
-
 mkdir webkitgtk-6.0
 pushd webkitgtk-6.0
 %cmake -S .. \

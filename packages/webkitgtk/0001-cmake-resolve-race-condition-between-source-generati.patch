@@ -1,0 +1,25 @@
+From 08ae94640ac4f63c360bf708ef8354eca722aab6 Mon Sep 17 00:00:00 2001
+From: Fabio Valentini <decathorpe@gmail.com>
+Date: Tue, 27 Oct 2026 22:57:40 +0100
+Subject: [PATCH] cmake: resolve race condition between source generation and
+ usage
+
+---
+ Source/WebKit/PlatformGTK.cmake | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/Source/WebKit/PlatformGTK.cmake b/Source/WebKit/PlatformGTK.cmake
+index 8bb1e4be..16e6f593 100644
+--- a/Source/WebKit/PlatformGTK.cmake
++++ b/Source/WebKit/PlatformGTK.cmake
+@@ -88,6 +88,7 @@ list(APPEND WebKit_DERIVED_SOURCES
+     ${WebKitGTK_DERIVED_SOURCES_DIR}/InspectorGResourceBundle.c
+     ${WebKitGTK_DERIVED_SOURCES_DIR}/ModernMediaControlsGResourceBundle.c
+     ${WebKitGTK_DERIVED_SOURCES_DIR}/WebKitDirectoryInputStreamData.cpp
++    ${WebKitGTK_DERIVED_SOURCES_DIR}/WebKitDirectoryInputStreamData.h
+     ${WebKitGTK_DERIVED_SOURCES_DIR}/WebKitResourcesGResourceBundle.c
+ 
+     ${WebKitGTK_DERIVED_SOURCES_DIR}/webkit/WebKitEnumTypes.cpp
+-- 
+2.56.0
+
