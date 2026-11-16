@@ -197,6 +197,20 @@ echo "attempts=$(cat {counter}) cleanups=$cleanups"
             self.assertEqual(outage.returncode, 1, outage.stdout + outage.stderr)
             self.assertEqual((reports / "infra-failure").read_text().strip(), "probe")
             counter.unlink()
+            (reports / "infra-failure").unlink()
+            silent = "flaky() { echo 'ERROR: Command failed: # /usr/bin/dnf5 repoquery -q --location' >&2;"
+            dropped = subprocess.run(["bash", "-c", probe.replace("flaky() {", silent)],
+                                     env={"PASS_ON": "9", "PATH": "/usr/bin:/bin"}, capture_output=True, text=True)
+            self.assertEqual(dropped.returncode, 1, dropped.stdout + dropped.stderr)
+            self.assertEqual((reports / "infra-failure").read_text().strip(), "probe")
+            (reports / "infra-failure").unlink()
+            counter.unlink()
+            unsatisfiable = subprocess.run(
+                ["bash", "-c", probe.replace("flaky() {", silent + " echo 'No match for argument: libfoo' >&2;")],
+                env={"PASS_ON": "9", "PATH": "/usr/bin:/bin"}, capture_output=True, text=True)
+            self.assertEqual(unsatisfiable.returncode, 1, unsatisfiable.stdout + unsatisfiable.stderr)
+            self.assertFalse((reports / "infra-failure").exists())
+            counter.unlink()
             capped = subprocess.run(["bash", "-c", probe],
                                     env={"PASS_ON": "9", "HERMETIC_NET_ATTEMPTS": "1", "PATH": "/usr/bin:/bin"},
                                     capture_output=True, text=True)

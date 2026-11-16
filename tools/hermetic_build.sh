@@ -45,10 +45,18 @@ NET_RETRY_PAUSE=15
 # <command...>`. cleanup runs before every retry so a half-fetched result
 # never counts as a whole one. When the last attempt fails on a download,
 # /work/reports/infra-failure records it: the build never ran, so the bump
-# gate must not hold the package's version as broken (#1179). An
-# unsatisfiable graph fails every attempt too, but with no download error,
-# and stays an ordinary failure.
+# gate must not hold the package's version as broken (#1179). A lock resolve
+# that loses the repository mid-query ends `Command failed: ... repoquery`
+# with no dnf error text (#287), so that counts too unless dnf named a
+# dependency problem. An unsatisfiable graph fails every attempt too, but
+# with no download error, and stays an ordinary failure.
 NET_ERRORS='All mirrors were tried|No more mirrors to try|Curl error|Cannot download|Status code: 5[0-9][0-9]|IncompleteRead|Connection reset|ConnectionResetError|Connection aborted|RemoteDisconnected|Read timed out|MaxRetryError'
+SILENT_RESOLVE='Command failed: .*repoquery'
+DEP_ERRORS='No match for argument|Failed to resolve the transaction|nothing provides|Problem: |conflicting requests|none of the providers can be installed'
+infra_failed() {
+  grep -qE "$NET_ERRORS" "$1" && return 0
+  grep -qE "$SILENT_RESOLVE" "$1" && ! grep -qE "$DEP_ERRORS" "$1"
+}
 REPORT_DIR=${REPORT_DIR:-/work/reports}
 online() {
   label=$1 cleanup=$2
@@ -64,7 +72,7 @@ online() {
     fi
     if [ "$attempt" -ge "$NET_ATTEMPTS" ]; then
       echo "::error title=$label failed::$PACKAGE: $label failed $attempt times (last exit $status)"
-      if grep -qE "$NET_ERRORS" "$log"; then
+      if infra_failed "$log"; then
         echo "$label" > "$REPORT_DIR/infra-failure"
       fi
       return "$status"
