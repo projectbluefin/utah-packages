@@ -1,0 +1,8 @@
+{
+  "package": "python-blessings",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/python-blessings.git",
+  "commit": "b8be734415e7b0c0dcec87bb05ae03cdc8908b36",
+  "tree": "85e5a380bfe2911fef311d17aa578220460544a0",
+  "imported_at": "2026-11-16T04:17:23.494709+00:00"
+}
