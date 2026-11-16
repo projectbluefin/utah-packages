@@ -6708,6 +6708,13 @@
       ]
     },
     {
+      "name": "umotd",
+      "version": "0.3.3",
+      "url": "https://github.com/projectbluefin/umotd/releases/download/v0.3.3/umotd_0.3.3_linux_amd64",
+      "filename": "umotd-0.3.3-x86_64",
+      "sha512": "07befebcd08d90904faff7d8e26f0a0ea015a41bc6280df023c295326f4898c8ce368e012f63e02bd4ff0bba9529872ec6b7ef38e5d52fdf0c93211c4c0fff03"
+    },
+    {
       "name": "unicode-ucd",
       "version": "18.0.0",
       "url": "https://www.unicode.org/Public/18.0.0/ucd/UCD.zip",
