@@ -882,12 +882,14 @@
     },
     {
       "name": "fish",
-      "version": "4.6.0",
-      "url": "https://github.com/fish-shell/fish-shell/releases/download/4.6.0/fish-4.6.0.tar.xz",
-      "filename": "fish-4.6.0.tar.xz",
-      "sha512": "2acc6453f102b570f0f2765739a020f63051b7ee2a7f49d086459287c9e5a8658294b0081904b4897315195c6510a7e53794da9937f6f64aa53c65eb448d68b5",
+      "version": "4.9.3",
+      "url": "https://github.com/fish-shell/fish-shell/releases/download/4.9.3/fish-4.9.3.tar.xz",
+      "filename": "fish-4.9.3.tar.xz",
+      "sha512": "df4655c14a3757a429fd0b9e252b376d7b9995e26264263e375a3bc3ad3d851315760511c9fd55a0e2b4668fad99ef7e9e8adfcf1bbe8c31c3992e1768a1776a",
+      "signature_url": "https://github.com/fish-shell/fish-shell/releases/download/4.9.3/fish-4.9.3.tar.xz.asc",
+      "gpg_key": "packages/fish/krobelus.gpg",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/fish/fish-4.6.0.tar.xz/sha512/2acc6453f102b570f0f2765739a020f63051b7ee2a7f49d086459287c9e5a8658294b0081904b4897315195c6510a7e53794da9937f6f64aa53c65eb448d68b5/fish-4.6.0.tar.xz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/fish/fish-4.9.3.tar.xz/sha512/df4655c14a3757a429fd0b9e252b376d7b9995e26264263e375a3bc3ad3d851315760511c9fd55a0e2b4668fad99ef7e9e8adfcf1bbe8c31c3992e1768a1776a/fish-4.9.3.tar.xz"
       ]
     },
     {
