@@ -2734,6 +2734,12 @@ packages:
     downstream_package_name: lv2
     paths:
       - packages/lv2
+  lzip:
+    specfile_path: lzip.spec
+    upstream_package_name: lzip
+    downstream_package_name: lzip
+    paths:
+      - packages/lzip
   m17n-db:
     specfile_path: m17n-db.spec
     upstream_package_name: m17n-db
