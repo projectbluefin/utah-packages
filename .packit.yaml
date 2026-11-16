@@ -1300,6 +1300,12 @@ packages:
     downstream_package_name: ibus-m17n
     paths:
       - packages/ibus-m17n
+  ibus-rime:
+    specfile_path: ibus-rime.spec
+    upstream_package_name: ibus-rime
+    downstream_package_name: ibus-rime
+    paths:
+      - packages/ibus-rime
   ibus-typing-booster:
     specfile_path: ibus-typing-booster.spec
     upstream_package_name: ibus-typing-booster

@@ -2044,6 +2044,13 @@
       ]
     },
     {
+      "name": "ibus-rime",
+      "version": "1.6.0",
+      "url": "https://github.com/rime/ibus-rime/archive/1.6.0.tar.gz#/ibus-rime-1.6.0.tar.gz",
+      "filename": "ibus-rime-1.6.0.tar.gz",
+      "sha512": "a22347558b5ca75f04e74a2441ecd7cd41e4f3866501a3130cdd3731306ab316136c1647fd9a8e651259df7b05d5756f2b9e56cd377462cdd08cb19499faced2"
+    },
+    {
       "name": "ibus-typing-booster",
       "version": "2.31.4",
       "url": "https://github.com/mike-fabian/ibus-typing-booster/releases/download/2.31.4/ibus-typing-booster-2.31.4.tar.gz",
