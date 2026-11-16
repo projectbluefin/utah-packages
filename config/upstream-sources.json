@@ -4978,6 +4978,13 @@
       ]
     },
     {
+      "name": "noise-suppression-for-voice",
+      "version": "1.21",
+      "url": "https://github.com/werman/noise-suppression-for-voice/archive/refs/tags/v1.21.tar.gz",
+      "filename": "noise-suppression-for-voice-1.21.tar.gz",
+      "sha512": "0944df787ba313f008ff5310568204e47b779668a9cdead0c3d19027c0c0cc427e3c491e1aa92ada9a9d9664d424fc531fa39ceb6ab9886dc1888a49a12488d8"
+    },
+    {
       "name": "noopenh264",
       "version": "2.6.0",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/noopenh264/noopenh264-2.6.0.tar.gz/sha512/2945eeeb0da7c1689a068c55a07ab8fce48bf30b65beca8b1dbee101747836e1d7f9f50a69ac5feb44603443a375338e95473efe18e38c10c7c77125283d9090/noopenh264-2.6.0.tar.gz",
