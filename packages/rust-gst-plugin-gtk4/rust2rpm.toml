@@ -1,0 +1,28 @@
+[package]
+bin-package-name = "gstreamer1-plugin-gtk4"
+cargo-toml-patch-comments = ["drop Windows-specific \"winegl\" feature"]
+extra-files = ["%{_libdir}/gstreamer-1.0/libgstgtk4.so"]
+suppress-cdylib-install-fixme = true
+bin-package-extra = """\
+# additionally provide the upstream name
+Provides:       %{crate} = %{version}-%{release}
+"""
+
+[requires]
+build = ["cargo-c >= 0.9.21"]
+
+[features]
+enable = ["dmabuf", "gtk_v4_20", "v1_28", "waylandegl", "x11egl", "x11glx"]
+
+[scripts]
+build.post = [
+    "%cargo_cbuild -f dmabuf,gtk_v4_20,v1_28,waylandegl,x11egl,x11glx",
+]
+install.post = [
+    "%cargo_cinstall -f dmabuf,gtk_v4_20,v1_28,waylandegl,x11egl,x11glx",
+    "# remove statically linked library",
+    "rm -v %{buildroot}/%{_libdir}/gstreamer-1.0/libgstgtk4.a",
+    "# remove unnecessary pkgconfig file",
+    "rm -v %{buildroot}/%{_libdir}/pkgconfig/gstgtk4.pc",
+]
+

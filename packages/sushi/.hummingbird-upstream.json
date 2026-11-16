@@ -1,0 +1,8 @@
+{
+  "package": "sushi",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/sushi.git",
+  "commit": "3881bba175cfd372a998ffdd029d957dfaaa2704",
+  "tree": "dc8ddf4bcbefa854e2383e26ca75dfdad8911530",
+  "imported_at": "2026-11-16T04:07:58.239854+00:00"
+}

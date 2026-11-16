@@ -1,0 +1,8 @@
+{
+  "package": "usbredir",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/usbredir.git",
+  "commit": "77168fda4dc20773b556fbf4bfd76f37ab4fb1af",
+  "tree": "25fb96819f472e156e9736df4fc6f5b81e7f907d",
+  "imported_at": "2026-11-16T04:14:05.965439+00:00"
+}
