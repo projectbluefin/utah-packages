@@ -2566,6 +2566,12 @@ packages:
     downstream_package_name: libvdpau
     paths:
       - packages/libvdpau
+  libvirt:
+    specfile_path: libvirt.spec
+    upstream_package_name: libvirt
+    downstream_package_name: libvirt
+    paths:
+      - packages/libvirt
   libvisual:
     specfile_path: libvisual.spec
     upstream_package_name: libvisual

@@ -4069,6 +4069,13 @@
       ]
     },
     {
+      "name": "libvirt",
+      "version": "12.9.0",
+      "url": "https://download.libvirt.org/libvirt-12.9.0.tar.xz",
+      "filename": "libvirt-12.9.0.tar.xz",
+      "sha512": "7401081ac40a31908dc700b62cf046bb5a35c7a4544adb41b68aecfca5a878bfefa4ef9b9e2768a5f4333299ec7e54b1ddbfb12a31d058742c005daebbfb4f84"
+    },
+    {
       "name": "libvisual",
       "version": "0.4.2",
       "url": "https://github.com/Libvisual/libvisual/releases/download/libvisual-0.4.2/libvisual-0.4.2.tar.bz2",
