@@ -2254,6 +2254,12 @@ packages:
     downstream_package_name: libgsf
     paths:
       - packages/libgsf
+  libgsystemservice:
+    specfile_path: libgsystemservice.spec
+    upstream_package_name: libgsystemservice
+    downstream_package_name: libgsystemservice
+    paths:
+      - packages/libgsystemservice
   libgtop2:
     specfile_path: libgtop2.spec
     upstream_package_name: libgtop2
@@ -2806,6 +2812,12 @@ packages:
     downstream_package_name: libtracefs
     paths:
       - packages/libtracefs
+  libtsm:
+    specfile_path: libtsm.spec
+    upstream_package_name: libtsm
+    downstream_package_name: libtsm
+    paths:
+      - packages/libtsm
   libudfread:
     specfile_path: libudfread.spec
     upstream_package_name: libudfread
