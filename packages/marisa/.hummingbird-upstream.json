@@ -1,0 +1,8 @@
+{
+  "package": "marisa",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/marisa.git",
+  "commit": "ead4c2215c94e0f82570b43b55c2bd9f81f4d005",
+  "tree": "44227aa72bba735258e6dd22686239008e143ccb",
+  "imported_at": "2026-11-16T04:05:37.816909+00:00"
+}
