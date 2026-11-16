@@ -150,7 +150,7 @@ issues are projectbluefin/utah.
 | `bluefin/just-overrides` | Dakota's ujust recipe set (utah#1231) |
 | `bluefin/qemu-guest-agent`, `bluefin/hyperv-daemons`/`open-vm-tools` presets, gbm `core-deps/libvirt` preset | Virtualization and guest agents (utah#1232); Fedora packages carry their own units |
 | `bluefin/sysstat`, `bluefin/lm-sensors`, `bluefin/nfs-utils` presets; gbm `gnomeos-deps/disable-iscsi` | Each contradicts `85-utah-desktop.preset` or Hummingbird's `90-default.preset` and would win by sort order (utah#1233) |
-| `bluefin/kanata` preset | kanata instead of input-remapper (utah#1222) |
+| `bluefin/kanata` preset | A component element: the `kanata` recipe ships its `80-kanata.preset` with the binary and unit (utah#1222) |
 | `bluefin/syncthing`, `bluefin/nethogs` presets; gbm `gnomeos-deps/pam-pkcs11` preset | Component not in Utah |
 | `bluefin/shell-extensions/disable-ext-validator`, `bluefin/gnome-shell-extensions` | GNOME Shell extension set (utah#1235); Utah ships its own `zz3-bluefin-unsupported-stuff.gschema.override` |
 | `bluefin/networkmanager-polkit` | `NetworkManager` owns the path, with the same rule |
