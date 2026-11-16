@@ -3718,6 +3718,12 @@ packages:
     downstream_package_name: python-argcomplete
     paths:
       - packages/python-argcomplete
+  python-blessings:
+    specfile_path: python-blessings.spec
+    upstream_package_name: python-blessings
+    downstream_package_name: python-blessings
+    paths:
+      - packages/python-blessings
   python-boto3:
     specfile_path: python-boto3.spec
     upstream_package_name: python-boto3
