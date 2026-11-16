@@ -418,7 +418,7 @@ class HttpRetryTests(unittest.TestCase):
 
         with patch.object(qw.urllib.request, "urlopen", side_effect=_urlopen), \
              patch.object(qw.time, "sleep") as sleep:
-            result = (func or (lambda: qw._http_get_json("url", "tok")))()
+            result = (func or (lambda: qw._http_get_json("https://api.github.com/x", "tok")))()
         return result, len(calls), sleep
 
     def _error(self, code, headers=None):
@@ -445,7 +445,7 @@ class HttpRetryTests(unittest.TestCase):
         with patch.object(qw.urllib.request, "urlopen", side_effect=_urlopen), \
              patch.object(qw.time, "sleep") as sleep, \
              self.assertRaises(urllib.error.HTTPError) as ctx:
-            qw._http_get_json("url", "tok")
+            qw._http_get_json("https://api.github.com/x", "tok")
         self.assertEqual(len(calls), 4)
         self.assertEqual([c.args[0] for c in sleep.call_args_list], [2, 4, 8])
         self.assertEqual(
@@ -459,7 +459,7 @@ class HttpRetryTests(unittest.TestCase):
                 with patch.object(qw.urllib.request, "urlopen", side_effect=[error]) as urlopen, \
                      patch.object(qw.time, "sleep") as sleep, \
                      self.assertRaises(urllib.error.HTTPError):
-                    qw._http_get_json("url", "tok")
+                    qw._http_get_json("https://api.github.com/x", "tok")
                 self.assertEqual(urlopen.call_count, 1)
                 sleep.assert_not_called()
 
