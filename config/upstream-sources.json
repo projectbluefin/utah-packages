@@ -6704,6 +6704,13 @@
       ]
     },
     {
+      "name": "umotd",
+      "version": "0.3.3",
+      "url": "https://github.com/projectbluefin/umotd/releases/download/v0.3.3/umotd_0.3.3_linux_amd64",
+      "filename": "umotd-0.3.3-x86_64",
+      "sha512": "07befebcd08d90904faff7d8e26f0a0ea015a41bc6280df023c295326f4898c8ce368e012f63e02bd4ff0bba9529872ec6b7ef38e5d52fdf0c93211c4c0fff03"
+    },
+    {
       "name": "unicode-ucd",
       "version": "18.0.0",
       "url": "https://www.unicode.org/Public/18.0.0/ucd/UCD.zip",
@@ -6782,6 +6789,13 @@
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/usermode/usermode-1.114.tar.xz/sha512/703eb218704c7a11cdce25a71f4fc91bf4f042a8b185f79f3954699081c0db8a6234ad6f11738d8b2fe6a492a03d029cbe01762a47869edc473e4fbaa6e0ee32/usermode-1.114.tar.xz",
       "filename": "usermode-1.114.tar.xz",
       "sha512": "703eb218704c7a11cdce25a71f4fc91bf4f042a8b185f79f3954699081c0db8a6234ad6f11738d8b2fe6a492a03d029cbe01762a47869edc473e4fbaa6e0ee32"
+    },
+    {
+      "name": "uupd",
+      "version": "1.5.5",
+      "url": "https://github.com/ublue-os/uupd/releases/download/v1.5.5/uupd_Linux_x86_64.tar.gz",
+      "filename": "uupd-1.5.5-x86_64.tar.gz",
+      "sha512": "275e88fc755beebe7af79b51025ed3ea1329f52d0d9dc8496cd0054d31d3d34b456364648bc83daab8a9b1702850762d3f35aad6ffb39e865fe180f6c6dc8386"
     },
     {
       "name": "uvg266",

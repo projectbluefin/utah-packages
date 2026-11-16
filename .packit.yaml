@@ -4348,6 +4348,12 @@ packages:
     downstream_package_name: udisks2
     paths:
       - packages/udisks2
+  umotd:
+    specfile_path: umotd.spec
+    upstream_package_name: umotd
+    downstream_package_name: umotd
+    paths:
+      - packages/umotd
   unicode-ucd:
     specfile_path: unicode-ucd.spec
     upstream_package_name: unicode-ucd
@@ -4402,6 +4408,12 @@ packages:
     downstream_package_name: usermode
     paths:
       - packages/usermode
+  uupd:
+    specfile_path: uupd.spec
+    upstream_package_name: uupd
+    downstream_package_name: uupd
+    paths:
+      - packages/uupd
   uvg266:
     specfile_path: uvg266.spec
     upstream_package_name: uvg266
