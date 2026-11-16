@@ -301,6 +301,10 @@ jobs:
             utah-buildroot:run bash -exc '
               disable=--disablerepo=fedora-cisco-openh264
               sed -i "/^tsflags=nodocs/d" /etc/dnf/dnf.conf
+              # Same download tuning as tools/build_container.sh: this step resolves
+              # the full build root from the Hummingbird repository, which times out
+              # under load (#1165), and dnf gives up too readily on it.
+              printf "retries=10\ntimeout=120\nminrate=1000\nmax_parallel_downloads=4\n" >> /etc/dnf/dnf.conf
               cp /repos/hummingbird.repo /etc/yum.repos.d/
               if [ -n "$(find /work/prior -name "*.rpm" -print -quit 2>/dev/null)" ]; then
                 dnf -y $disable install createrepo_c
