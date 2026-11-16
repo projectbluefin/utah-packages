@@ -2764,6 +2764,12 @@ packages:
     downstream_package_name: man-pages
     paths:
       - packages/man-pages
+  marisa:
+    specfile_path: marisa.spec
+    upstream_package_name: marisa
+    downstream_package_name: marisa
+    paths:
+      - packages/marisa
   mdadm:
     specfile_path: mdadm.spec
     upstream_package_name: mdadm

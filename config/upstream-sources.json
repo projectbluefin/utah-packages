@@ -4393,6 +4393,13 @@
       ]
     },
     {
+      "name": "marisa",
+      "version": "0.3.0",
+      "url": "https://github.com/s-yata/marisa-trie/archive/refs/tags/v0.3.0.tar.gz#/marisa-0.3.0.tar.gz",
+      "filename": "marisa-0.3.0.tar.gz",
+      "sha512": "6d72b13daec877c9c42e2c93e591e3a5e9c738bb130c5d90d6adfde81d5b500684ca176439b7502d9243b6417f34c7b39750ff3fb3a5c52d8d06cb9bc5f14c22"
+    },
+    {
       "name": "mdadm",
       "version": "4.6",
       "url": "https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git/snapshot/mdadm-4.6.tar.gz",
