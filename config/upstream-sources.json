@@ -6305,6 +6305,13 @@
       ]
     },
     {
+      "name": "sushi",
+      "version": "51.2",
+      "url": "https://download.gnome.org/sources/sushi/51/sushi-51.2.tar.xz",
+      "filename": "sushi-51.2.tar.xz",
+      "sha512": "00fcc24e94a402db0bcfa12748cab58fa6297d6dc9f57bd6c89b9805b9c14d7f4249fdce0652fac5c866bc2c19882c9531d5655284f11a9be56fb44366598764"
+    },
+    {
       "name": "svt-vp9",
       "version": "0.3.0",
       "url": "https://github.com/OpenVisualCloud/SVT-VP9/archive/v0.3.0/svt-vp9-0.3.0.tar.gz",

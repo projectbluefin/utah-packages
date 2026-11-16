@@ -4054,6 +4054,12 @@ packages:
     downstream_package_name: strace
     paths:
       - packages/strace
+  sushi:
+    specfile_path: sushi.spec
+    upstream_package_name: sushi
+    downstream_package_name: sushi
+    paths:
+      - packages/sushi
   svt-vp9:
     specfile_path: svt-vp9.spec
     upstream_package_name: svt-vp9
