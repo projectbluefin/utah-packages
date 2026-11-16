@@ -49,6 +49,12 @@ gh workflow run canary.yml -R projectbluefin/utah-packages --ref <branch> \
     lookaside vendor tarball, or, when Fedora has none, a `vendor/` tree that
     `tools/generated_sources.py` adds from the release's own Cargo.lock
     (prefixdevname, gst-thumbnailers). Never a retry.
+  - A Rust `%check` that never finishes, with idle `cargo build --release
+    --bin <name>` children → integration tests that build their own binary
+    (escargot or `assert_cmd`'s `cargo_bin`) waiting on the build-directory
+    lock `cargo test` holds. Scope the run to what can execute in the build,
+    `%cargo_test -- --bins` (tealdeer), and say why in the spec; it is not
+    `tests_nonfatal`, which stays banned.
   - `Bad file` on dist-git extras (PPDs, scripts) → Fedora `.gitignore`
     patterns (`*.gz`, bare script names) left them untracked at import;
     force-add and re-run.
