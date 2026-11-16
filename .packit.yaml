@@ -2272,6 +2272,12 @@ packages:
     downstream_package_name: libotf
     paths:
       - packages/libotf
+  libpanel:
+    specfile_path: libpanel.spec
+    upstream_package_name: libpanel
+    downstream_package_name: libpanel
+    paths:
+      - packages/libpanel
   libpaper:
     specfile_path: libpaper.spec
     upstream_package_name: libpaper

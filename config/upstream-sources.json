@@ -3589,6 +3589,13 @@
       "sha512": "0f68c45c1224f02dc0f1a8e9915dd9c1c70d71259b4e2f7bbd4fbec6426e58d4a26e4cbf28dbb8ed051ba6f532f99fc4e74b4ddf97a93ec947fa6260c875d0b4"
     },
     {
+      "name": "libpanel",
+      "version": "1.10.4",
+      "url": "https://download.gnome.org/sources/libpanel/1.10/libpanel-1.10.4.tar.xz",
+      "filename": "libpanel-1.10.4.tar.xz",
+      "sha512": "27c428f306deb6e662b912b5fa1e195de115b511685ef51e068fe18174b92959cb5353f2500298d271d21f99fa96e879c39e3c839a6b5934e12d380e9c73cd73"
+    },
+    {
       "name": "libpaper",
       "version": "2.3.0",
       "url": "https://github.com/rrthomas/libpaper/archive/v2.3.0/libpaper-2.3.0.tar.gz",
