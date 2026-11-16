@@ -4156,6 +4156,12 @@ packages:
     downstream_package_name: tmux
     paths:
       - packages/tmux
+  tomlplusplus:
+    specfile_path: tomlplusplus.spec
+    upstream_package_name: tomlplusplus
+    downstream_package_name: tomlplusplus
+    paths:
+      - packages/tomlplusplus
   toolbox:
     specfile_path: toolbox.spec
     upstream_package_name: toolbox
