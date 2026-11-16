@@ -1,0 +1,8 @@
+{
+  "package": "spice",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/spice.git",
+  "commit": "3298e4e9e3737f70d877a1b2f3f8576d98074363",
+  "tree": "1fecda7af456a01cef97802b3f152debf6d0eed0",
+  "imported_at": "2026-11-16T04:13:37.320832+00:00"
+}
