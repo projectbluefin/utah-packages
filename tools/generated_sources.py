@@ -7,7 +7,6 @@ that no upstream publishes verbatim:
 
 - intel-media-driver-free: the upstream tag archive with non-free kernel
   files removed (packages/intel-media-driver-free/strip.py)
-- tailscale: a go-vendored bundle (packages/tailscale/create-vendor-tarball.sh)
 - gpm: the upstream release with doc/specs removed, because those PDFs carry
   unclear licensing (the recipe's own comment above its Source line)
 - hplip: the upstream release with `locatedriver` removed (a license-related
@@ -48,10 +47,9 @@ bytes the transformation produces. Verification re-runs the transformation
 from the pinned first-party input and fails closed on any drift; no payload
 is fetched from Fedora's lookaside.
 
-Everything runs on the Python standard library plus the git CLI (and, for
-tailscale, a Go toolchain), so it works in the digest-pinned
-ghcr.io/projectbluefin/lab-runner FSDK image and on GitHub-hosted runners
-without installing anything at runtime.
+Everything runs on the Python standard library plus the git CLI, so it works
+in the digest-pinned ghcr.io/projectbluefin/lab-runner FSDK image and on
+GitHub-hosted runners without installing anything at runtime.
 """
 
 from __future__ import annotations
@@ -64,10 +62,8 @@ import hashlib
 import io
 import json
 import lzma
-import os
 from pathlib import Path
 import re
-import shutil
 import socket
 import ssl
 import subprocess
@@ -189,11 +185,7 @@ def _git_network(command: list[str], remote: str) -> None:
 # artifact fails closed instead of silently changing the generated output.
 INTEL_MEDIA_INPUT_SHA512 = {
     "26.2.4": "6e01092c06a100279b40ff46afa0c592483edc30e426fe802a79c2fa53b5ba16f952bdb445dfbfbfb7f50ef952727536f08c7eb0b3d06db25521fb9149887494",
-}
-
-# The annotated tag is mutable; the commit it resolves to is not. Pin it.
-TAILSCALE_COMMITS = {
-    "1.98.8": "05a91829316e055517a1e84f7b00016846ef4107",
+    "26.3.5": "29d1032a1fe46e2102e337a826980bf9395cac161b60fee9b07ed9e784da01cdf5c3db2ac0e95300ce8900108bec2f66686058122ad75067639fcb2e4f66712a",
 }
 
 GPM_INPUT_SHA512 = {
@@ -361,98 +353,6 @@ def _imd_generate(package_dir: Path, out_dir: Path) -> Path:
     target = out_dir / f"intel-media-{version}-free.tar.gz"
     target.write_bytes(_imd_transform(payload, version))
     return target
-
-
-# --- tailscale ---------------------------------------------------------------
-
-
-def _tailscale_metadata(package_dir: Path) -> dict:
-    version = spec_version(package_dir, "tailscale.spec")
-    commit = TAILSCALE_COMMITS.get(version, "<unpinned>")
-    return {
-        "name": "tailscale",
-        "version": version,
-        "filename": f"tailscale-{version}-vendored.tar.xz",
-        "generate": {
-            "script": SCRIPT_PATH,
-            "input": f"https://github.com/tailscale/tailscale tag v{version} (commit {commit})",
-            "method": "go mod tidy && go mod vendor with GOTOOLCHAIN pinned from go.mod, drop unused cmd trees/k8s-operator/tstest, deterministic tar | xz -9e single-stream",
-        },
-    }
-
-
-def _tailscale_generate(package_dir: Path, out_dir: Path) -> Path:
-    version = spec_version(package_dir, "tailscale.spec")
-    commit = TAILSCALE_COMMITS.get(version)
-    if commit is None:
-        raise RuntimeError(f"no pinned commit for tailscale {version}")
-    if shutil.which("go") is None:
-        raise RuntimeError(
-            "tailscale Source0 generation requires a Go toolchain, and the FSDK "
-            "catalog has no Go-capable image; add one to projectbluefin/fsdk-containers"
-        )
-    with tempfile.TemporaryDirectory(prefix="tailscale-vendor-", dir=out_dir) as tmp:
-        tree = Path(tmp) / f"tailscale-{version}"
-        remote = "https://github.com/tailscale/tailscale.git"
-        _git_network(
-            ["git", "clone", "-q", "--branch", f"v{version}", "--depth", "1", remote, str(tree)],
-            remote,
-        )
-        head = subprocess.check_output(["git", "-C", str(tree), "rev-parse", "HEAD"], text=True).strip()
-        if head != commit:
-            raise RuntimeError(f"tag v{version} moved: expected {commit}, got {head}")
-        epoch = subprocess.check_output(["git", "-C", str(tree), "log", "-1", "--format=%ct"], text=True).strip()
-        go_version = re.search(r"^go\s+(\S+)", (tree / "go.mod").read_text(), flags=re.MULTILINE).group(1)
-        env = {
-            **os.environ,
-            "GOPROXY": "https://proxy.golang.org,direct",
-            "GOTOOLCHAIN": f"go{go_version}",
-            "GOMODCACHE": str(Path(tmp) / "gomodcache"),
-            "GOCACHE": str(Path(tmp) / "gocache"),
-            "GOPATH": str(Path(tmp) / "gopath"),
-        }
-        subprocess.run(["go", "mod", "tidy"], check=True, cwd=tree, env=env)
-        subprocess.run(["go", "mod", "vendor"], check=True, cwd=tree, env=env)
-        for subdir in (tree / "cmd").iterdir():
-            if subdir.is_dir() and not subdir.name.startswith("tailscale"):
-                shutil.rmtree(subdir)
-        shutil.rmtree(tree / "k8s-operator", ignore_errors=True)
-        shutil.rmtree(tree / "tstest", ignore_errors=True)
-
-        target = out_dir / f"tailscale-{version}-vendored.tar.xz"
-        entries = sorted(
-            (path for path in tree.rglob("*") if ".git" not in path.relative_to(tree).parts),
-            key=lambda path: path.relative_to(tree).as_posix(),
-        )
-        with target.open("wb") as sink:
-            def members():
-                base = tarfile.TarInfo(tree.name)
-                base.type = tarfile.DIRTYPE
-                yield base, None
-                for path in entries:
-                    arcname = f"{tree.name}/{path.relative_to(tree).as_posix()}"
-                    info = tarfile.TarInfo(arcname)
-                    if path.is_symlink():
-                        info.type = tarfile.SYMTYPE
-                        info.linkname = os.readlink(path)
-                    elif path.is_dir():
-                        info.type = tarfile.DIRTYPE
-                    else:
-                        info.type = tarfile.REGTYPE
-                        info.size = path.stat().st_size
-                    yield info, path
-
-            # Buffer the deterministic tar stream, then xz-compress in one pass.
-            raw = io.BytesIO()
-            with tarfile.open(fileobj=raw, mode="w", format=tarfile.PAX_FORMAT) as result:
-                for info, path in members():
-                    info.uid = info.gid = 0
-                    info.uname = info.gname = ""
-                    info.mtime = int(epoch)
-                    info.mode = 0o755 if (info.isdir() or (path and os.access(path, os.X_OK))) else 0o644
-                    result.addfile(info, path.open("rb") if path and info.isreg() else None)
-            _xz_compress_stream(iter([raw.getvalue()]), sink)
-        return target
 
 
 # --- gpm ---------------------------------------------------------------------
@@ -1425,7 +1325,6 @@ def _git_archive_generate(name: str, package_dir: Path, out_dir: Path) -> Path:
 METADATA = {
     **{name: functools.partial(_git_archive_metadata, name) for name in GIT_ARCHIVE_SOURCES},
     "intel-media-driver-free": _imd_metadata,
-    "tailscale": _tailscale_metadata,
     "python-pydantic-core": _pydantic_core_metadata,
     "gpm": _gpm_metadata,
     "hplip": _hplip_metadata,
@@ -1441,7 +1340,6 @@ METADATA = {
 GENERATORS = {
     **{name: functools.partial(_git_archive_generate, name) for name in GIT_ARCHIVE_SOURCES},
     "intel-media-driver-free": _imd_generate,
-    "tailscale": _tailscale_generate,
     "python-pydantic-core": _pydantic_core_generate,
     "hplip": _hplip_generate,
     "gpm": _gpm_generate,

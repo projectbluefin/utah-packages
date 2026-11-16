@@ -1,6 +1,9 @@
+# Enable tests
+%bcond ctest 1
+
 Name:           libfyaml
-Version:        0.8
-Release:        10%{?dist}
+Version:        0.9.6
+Release:        1%{?dist}
 Summary:        Complete YAML parser and emitter
 
 # All files MIT except
@@ -11,20 +14,38 @@ Summary:        Complete YAML parser and emitter
 # src/xxhash/xxhash.h
 License:        MIT and GPL-2.0-only and BSD-2-Clause
 URL:            https://github.com/pantoniou/libfyaml
-Source0:        %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
+Source0:        %{url}/releases/download/v%{version}/%{name}-%{version}.tar.gz
 Source1:        LICENSE-GPL-2.0
 Source2:        LICENSE-BSD-2-Clause
-Patch0:         obsolete-macros-update.patch
 
-BuildRequires: autoconf
-BuildRequires: automake
-BuildRequires: check
+# Backports from upstream
+Patch0001:      0001-utf8-Guard-against-NULL-pointer-in-fy_utf8_split_pos.patch
+Patch0002:      0002-parse-Fix-UB-in-treaming_alias_collection_state.patch
+Patch0003:      0003-test-Add-fuzzing-test-for-treaming_alias_collection_.patch
+Patch0005:      0005-Fix-32-bit-build-by-removing-stray-parameter-to-fy_s.patch
+Patch0006:      0006-Fix-C11-atomics-detection-and-buggy-macros-for-C-com.patch
+Patch0007:      0007-fix-folded-scalars-emit-spurious-trailing-blank-line.patch
+Patch0009:      0009-test-gate-fuzz_parser_streaming_alias_collection_sta.patch
+Patch0010:      0010-vlsize-Handle-decoding-when-size_t-sizeof-uint64_t.patch
+
+# Fixed in master already
+# Submitted to stable: https://github.com/pantoniou/libfyaml/pull/507
+Patch0101:      libfyaml-0.9.6-fix-manpage-install.patch
+
+BuildSystem:   cmake
+
+# Disables tests that require networking to function
+BuildOption:   -DENABLE_NETWORK:BOOL=OFF
+# Disable semi-broken handwritten per-architecture acceleration assembler code
+# which also inadvertently raises the CPU baseline
+BuildOption:   -DENABLE_PORTABLE_TARGET:BOOL=ON
+
+BuildRequires: cmake(check)
 BuildRequires: gcc
-BuildRequires: libtool
-BuildRequires: libtool-ltdl-devel
-BuildRequires: libyaml-devel
-BuildRequires: make
+BuildRequires: pkgconfig(yaml-0.1)
 BuildRequires: python3-sphinx
+BuildRequires: python3dist(linuxdoc)
+BuildRequires: python3dist(sphinx-markdown-builder)
 #BuildRequires: xxhash-devel
 # Needed to update macro
 BuildRequires: sed
@@ -59,23 +80,13 @@ Requires: %{name}%{?_isa} = %{version}-%{release}
 Header files and libraries for libfyaml
 
 %prep
-%autosetup
+%autosetup -C -p1
 
-%build
+
+%build -p
 cp %{SOURCE1} .
 cp %{SOURCE2} .
 
-autoreconf -fi
-%configure --disable-static
-sed -i -e 's! -shared ! -Wl,--as-needed\0!g' libtool
-%make_build
-
-%install
-%make_install
-
-%check
-# Run basic tests
-make check
 
 %files
 %license LICENSE
@@ -84,7 +95,7 @@ make check
 %doc README.md
 %doc AUTHORS
 %{_libdir}/libfyaml.so.0
-%{_libdir}/libfyaml.so.0.0.0
+%{_libdir}/libfyaml.so.%{version}
 
 %files -n fyaml-utils
 %{_bindir}/fy-compose
@@ -94,20 +105,24 @@ make check
 %{_bindir}/fy-testsuite
 %{_bindir}/fy-tool
 %{_bindir}/fy-ypath
-%{_mandir}/man1/fy-compose.1.gz
-%{_mandir}/man1/fy-dump.1.gz
-%{_mandir}/man1/fy-filter.1.gz
-%{_mandir}/man1/fy-join.1.gz
-%{_mandir}/man1/fy-testsuite.1.gz
-%{_mandir}/man1/fy-tool.1.gz
-%{_mandir}/man1/fy-ypath.1.gz
+%{_mandir}/man?/fy-*
 
 %files devel
 %{_includedir}/libfyaml.h
-%{_libdir}/libfyaml.so
+%{_includedir}/libfyaml/
+%{_libdir}/cmake/libfyaml/
 %{_libdir}/pkgconfig/libfyaml.pc
+%{_libdir}/libfyaml.so
+%{_mandir}/man3/libfyaml*
+
 
 %changelog
+* Thu Nov 12 2026 Neal Gompa <ngompa@fedoraproject.org> - 0.9.6-1
+- Rebase to 0.9.6
+- Modernize spec file
+- Backport various fixes from upstream
+- Use new location for source tarball
+
 * Thu Jul 16 2026 Fedora Release Engineering <releng@fedoraproject.org> - 0.8-10
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_45_Mass_Rebuild
 
