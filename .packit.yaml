@@ -4282,6 +4282,12 @@ packages:
     downstream_package_name: usbmuxd
     paths:
       - packages/usbmuxd
+  usbredir:
+    specfile_path: usbredir.spec
+    upstream_package_name: usbredir
+    downstream_package_name: usbredir
+    paths:
+      - packages/usbredir
   usbutils:
     specfile_path: usbutils.spec
     upstream_package_name: usbutils

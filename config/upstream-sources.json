@@ -6641,6 +6641,13 @@
       ]
     },
     {
+      "name": "usbredir",
+      "version": "0.15.0",
+      "url": "https://www.spice-space.org/download/usbredir/usbredir-0.15.0.tar.xz",
+      "filename": "usbredir-0.15.0.tar.xz",
+      "sha512": "21e99fa419f35fabf7eb3f066a36d5b43a81fef818ceda42dc637566ff1c53ef02f9a81ad8ab32af3039e248c82eb708ae5de80f18b662d156d53221fc1d63fc"
+    },
+    {
       "name": "usbutils",
       "version": "019",
       "url": "https://www.kernel.org/pub/linux/utils/usb/usbutils/usbutils-019.tar.xz",
