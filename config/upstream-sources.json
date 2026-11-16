@@ -4719,6 +4719,13 @@
       ]
     },
     {
+      "name": "opencc",
+      "version": "1.2.0",
+      "url": "https://github.com/BYVoid/OpenCC/archive/ver.1.2.0.tar.gz#/OpenCC-ver.1.2.0.tar.gz",
+      "filename": "OpenCC-ver.1.2.0.tar.gz",
+      "sha512": "63af2486d7bb2e058243e7edb4793b198472edf052f0909e6ff5819770cfbe1d3d01a4c45916f8e9350537e4d1648d494d7d976e969764c1b51816b492fff0b7"
+    },
+    {
       "name": "openconnect",
       "version": "9.21",
       "url": "https://www.infradead.org/openconnect//download/openconnect-9.21.tar.gz",

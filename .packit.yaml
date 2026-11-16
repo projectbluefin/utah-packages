@@ -2980,6 +2980,12 @@ packages:
     downstream_package_name: openapv
     paths:
       - packages/openapv
+  opencc:
+    specfile_path: opencc.spec
+    upstream_package_name: opencc
+    downstream_package_name: opencc
+    paths:
+      - packages/opencc
   openconnect:
     specfile_path: openconnect.spec
     upstream_package_name: openconnect
