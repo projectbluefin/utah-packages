@@ -631,6 +631,13 @@
       "factory_version": "0.413",
       "dakota_version": "0.412"
     },
+    "freedesktop-sdk.bst:components/protobuf.bst": {
+      "verdict": "tracked",
+      "reason": "Hummingbird already ships protobuf 36.2; the factory's 33.6 recipe is pinned by libphonenumber (libprotobuf.so.33.6.0) and coupled to abseil-cpp and criu: retire the recipe or rebuild it at 36.2",
+      "issue": "#1136",
+      "factory_version": "33.6",
+      "dakota_version": "36.2"
+    },
     "freedesktop-sdk.bst:components/python3-pil.bst": {
       "verdict": "factory-ahead",
       "reason": "Fedora Rawhide ships 13.0.0; Dakota pins 12.3.0",
