@@ -1449,6 +1449,13 @@
       ]
     },
     {
+      "name": "gnome-shell-extension-caffeine",
+      "version": "61",
+      "url": "https://github.com/eonpatapon/gnome-shell-extension-caffeine/archive/v61.tar.gz#/gnome-shell-extension-caffeine-v61.tar.gz",
+      "filename": "gnome-shell-extension-caffeine-v61.tar.gz",
+      "sha512": "7e1deed0f0325487fc1ad26a0a768b6e70ebc90fc3fbc91cb124cec25836cdb51234cabf8780ceed4e33855c91aecc6318486283dde1a558efbffba9f181fc3e"
+    },
+    {
       "name": "gnome-shell-extension-gsconnect",
       "version": "72",
       "url": "https://github.com/GSConnect/gnome-shell-extension-gsconnect/archive/v72/gnome-shell-extension-gsconnect-72.tar.gz",

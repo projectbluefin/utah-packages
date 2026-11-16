@@ -946,6 +946,12 @@ packages:
     downstream_package_name: gnome-shell
     paths:
       - packages/gnome-shell
+  gnome-shell-extension-caffeine:
+    specfile_path: gnome-shell-extension-caffeine.spec
+    upstream_package_name: gnome-shell-extension-caffeine
+    downstream_package_name: gnome-shell-extension-caffeine
+    paths:
+      - packages/gnome-shell-extension-caffeine
   gnome-shell-extension-gsconnect:
     specfile_path: gnome-shell-extension-gsconnect.spec
     upstream_package_name: gnome-shell-extension-gsconnect
