@@ -1,7 +1,7 @@
 %global forgeurl https://github.com/libimobiledevice/libplist
 
 Name:     libplist
-Version:  2.7.0
+Version:  2.8.1
 Release:  %autorelease
 Summary:  Library for manipulating Apple Binary and XML Property Lists
 
@@ -52,8 +52,8 @@ make check
 %license COPYING.LESSER
 %doc AUTHORS README.md
 %{_bindir}/plistutil
-%{_libdir}/libplist-2.0.so.4*
-%{_libdir}/libplist++-2.0.so.4*
+%{_libdir}/libplist-2.0.so.12*
+%{_libdir}/libplist++-2.0.so.12*
 %{_mandir}/man1/plistutil.1*
 
 %files devel

@@ -1701,6 +1701,26 @@ class ForgeEntryRewriteTests(unittest.TestCase):
         self.assertNotIn("old" * 10, fallback)
         self.assertIn("new" * 10, fallback)
 
+    def test_the_signature_url_moves_with_the_tarball(self):
+        # The source pipeline verifies the new tarball against signature_url;
+        # left at the old release it fails every bumped fetch.
+        base = "https://gitlab.freedesktop.org/emersion/libdisplay-info/-/releases"
+        entry = {
+            "name": "libdisplay-info",
+            "version": "0.4.0",
+            "url": f"{base}/0.4.0/downloads/libdisplay-info-0.4.0.tar.xz",
+            "filename": "libdisplay-info-0.4.0.tar.xz",
+            "sha512": "old" * 10,
+            "signature_url": f"{base}/0.4.0/downloads/libdisplay-info-0.4.0.tar.xz.sig",
+            "gpg_key": "packages/libdisplay-info/gpgkey-0FDE7BE0E88F5E48.gpg",
+        }
+        updated = forge_planned_entry(entry, "0.4.1", "new" * 10)
+        self.assertEqual(
+            updated["signature_url"],
+            f"{base}/0.4.1/downloads/libdisplay-info-0.4.1.tar.xz.sig",
+        )
+        self.assertEqual(updated["gpg_key"], entry["gpg_key"])
+
     def test_a_version_absent_from_the_url_refuses_to_substitute(self):
         # Substituting nothing would write a new version beside an old tarball.
         entry = {

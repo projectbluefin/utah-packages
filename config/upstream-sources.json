@@ -1880,13 +1880,13 @@
     },
     {
       "name": "highway",
-      "version": "1.3.0",
-      "url": "https://github.com/google/highway/archive/1.3.0/highway-1.3.0.tar.gz",
-      "filename": "highway-1.3.0.tar.gz",
+      "version": "1.4.0",
+      "url": "https://github.com/google/highway/archive/1.4.0/highway-1.4.0.tar.gz",
+      "filename": "highway-1.4.0.tar.gz",
       "feed": "https://github.com/google/highway/archive/1.3.0/highway-1.3.0.tar.gz",
-      "sha512": "8b9f4fdc4fa60b6817417959853f5b55bf86aec9d35fc6664dda15179cc55e0a9940f3a46011a84b95263ba342dc47ca1cb93b04481ff4b63d724cce1815d7c6",
+      "sha512": "819422857d6a74e3a936c402698e078db5b7b88fb43767e62429ec7bd954fe93b017e75029a4df4a1a97ef3a2486107eef5247da751eb487640dea409f3f2fa2",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/highway/highway-1.3.0.tar.gz/sha512/8b9f4fdc4fa60b6817417959853f5b55bf86aec9d35fc6664dda15179cc55e0a9940f3a46011a84b95263ba342dc47ca1cb93b04481ff4b63d724cce1815d7c6/highway-1.3.0.tar.gz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/highway/highway-1.4.0.tar.gz/sha512/819422857d6a74e3a936c402698e078db5b7b88fb43767e62429ec7bd954fe93b017e75029a4df4a1a97ef3a2486107eef5247da751eb487640dea409f3f2fa2/highway-1.4.0.tar.gz"
       ]
     },
     {
@@ -2701,12 +2701,12 @@
     },
     {
       "name": "libbluray",
-      "version": "1.4.0",
-      "url": "https://download.videolan.org/pub/videolan/libbluray/1.4.0/libbluray-1.4.0.tar.xz",
-      "filename": "libbluray-1.4.0.tar.xz",
-      "sha512": "7284169b32624e5ca4fd71b260a4cc2921efafb1f63143a562568be45e373bfcbfeac63895d5659ccdcb11d7dbd0236cc46ccb15c12eff855703010e46991f27",
+      "version": "1.5.1",
+      "url": "https://code.videolan.org/videolan/libbluray/-/archive/1.5.1/libbluray-1.5.1.tar.bz2",
+      "filename": "libbluray-1.5.1.tar.bz2",
+      "sha512": "50805dd22099d57448d349a09ee3e043c66ed3792e7208ca88bac1e695c337cdb6b96c18c5e7a0c27e360f716755176d2f82d6b962fb46d956516e5a556b1844",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/libbluray/libbluray-1.4.0.tar.xz/sha512/7284169b32624e5ca4fd71b260a4cc2921efafb1f63143a562568be45e373bfcbfeac63895d5659ccdcb11d7dbd0236cc46ccb15c12eff855703010e46991f27/libbluray-1.4.0.tar.xz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libbluray/libbluray-1.5.1.tar.bz2/sha512/50805dd22099d57448d349a09ee3e043c66ed3792e7208ca88bac1e695c337cdb6b96c18c5e7a0c27e360f716755176d2f82d6b962fb46d956516e5a556b1844/libbluray-1.5.1.tar.bz2"
       ]
     },
     {
@@ -2903,13 +2903,15 @@
     },
     {
       "name": "libdisplay-info",
-      "version": "0.3.0",
-      "url": "https://gitlab.freedesktop.org/emersion/libdisplay-info/-/releases/0.3.0/downloads/libdisplay-info-0.3.0.tar.xz",
-      "filename": "libdisplay-info-0.3.0.tar.xz",
-      "feed": "https://gitlab.freedesktop.org/emersion/libdisplay-info/-/releases/0.3.0/downloads/libdisplay-info-0.3.0.tar.xz",
-      "sha512": "3266633d75ccd345dda5a8aad75f310e55a77654b48f17a247b35e18060b6db1047a69083cd286b43ec893125a36c4c43659af8f74a04da3278eea9fdd91efe9",
+      "version": "0.4.0",
+      "url": "https://gitlab.freedesktop.org/emersion/libdisplay-info/-/releases/0.4.0/downloads/libdisplay-info-0.4.0.tar.xz",
+      "filename": "libdisplay-info-0.4.0.tar.xz",
+      "feed": "https://gitlab.freedesktop.org/emersion/libdisplay-info/-/releases/0.4.0/downloads/libdisplay-info-0.4.0.tar.xz",
+      "sha512": "3f237788b1b2c6154f81e7a905eae778e21fa1e94e6a2e025ad6ad4971146cf312e2e663aae46f4808a180c77e650d9ab627abee0e352c327dc7d6798887af24",
+      "signature_url": "https://gitlab.freedesktop.org/emersion/libdisplay-info/-/releases/0.4.0/downloads/libdisplay-info-0.4.0.tar.xz.sig",
+      "gpg_key": "packages/libdisplay-info/gpgkey-0FDE7BE0E88F5E48.gpg",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/libdisplay-info/libdisplay-info-0.3.0.tar.xz/sha512/3266633d75ccd345dda5a8aad75f310e55a77654b48f17a247b35e18060b6db1047a69083cd286b43ec893125a36c4c43659af8f74a04da3278eea9fdd91efe9/libdisplay-info-0.3.0.tar.xz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libdisplay-info/libdisplay-info-0.4.0.tar.xz/sha512/3f237788b1b2c6154f81e7a905eae778e21fa1e94e6a2e025ad6ad4971146cf312e2e663aae46f4808a180c77e650d9ab627abee0e352c327dc7d6798887af24/libdisplay-info-0.4.0.tar.xz"
       ]
     },
     {
@@ -3658,13 +3660,13 @@
     },
     {
       "name": "libplist",
-      "version": "2.7.0",
-      "url": "https://github.com/libimobiledevice/libplist/releases/download/2.7.0/libplist-2.7.0.tar.bz2",
-      "filename": "libplist-2.7.0.tar.bz2",
+      "version": "2.8.1",
+      "url": "https://github.com/libimobiledevice/libplist/releases/download/2.8.1/libplist-2.8.1.tar.bz2",
+      "filename": "libplist-2.8.1.tar.bz2",
       "feed": "https://github.com/libimobiledevice/libplist/releases/download/2.7.0/libplist-2.7.0.tar.bz2",
-      "sha512": "83d0398b75ea9e610e49b4b96a7675b854c7551d4faf3e82e74c5c45cf04bbd95478cc40688f0995742e6a50601744d2a36641d0673aa7cc413f5ce2ec42f2d4",
+      "sha512": "5fac7f1a947b73053f41c6765e3225e822cf64a1defe73ffcadeec21c3af2b048de5a3981ccae44ef617932fe56778a470159d09b85ef0d196da160c70b2470f",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/libplist/libplist-2.7.0.tar.bz2/sha512/83d0398b75ea9e610e49b4b96a7675b854c7551d4faf3e82e74c5c45cf04bbd95478cc40688f0995742e6a50601744d2a36641d0673aa7cc413f5ce2ec42f2d4/libplist-2.7.0.tar.bz2"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libplist/libplist-2.8.1.tar.bz2/sha512/5fac7f1a947b73053f41c6765e3225e822cf64a1defe73ffcadeec21c3af2b048de5a3981ccae44ef617932fe56778a470159d09b85ef0d196da160c70b2470f/libplist-2.8.1.tar.bz2"
       ]
     },
     {
@@ -4698,13 +4700,13 @@
     },
     {
       "name": "openal-soft",
-      "version": "1.24.2",
-      "filename": "openal-soft-1.24.2-clean.tar.xz",
-      "sha512": "7d55e607b9218017dd47c3394de508f79487146c4933158abd81fe64a4601f786b4163f5379e4680489e9db8485d821130141050f2773f8bb01bf0432484c8c4",
+      "version": "1.25.2",
+      "filename": "openal-soft-1.25.2-clean.tar.xz",
+      "sha512": "5b4e5b632fc5509f83566311658bd9d65bc00d6ad414b672210d495c3e0dbe4bc98fb1303e2952795ca929cc51befafe29b046d334a505b8824c9fa4ea7c5ed7",
       "generate": {
         "script": "tools/generated_sources.py",
-        "input": "https://openal-soft.org/openal-releases/openal-soft-1.24.2.tar.bz2 (sha512-pinned)",
-        "method": "remove the bundled fmt-*/ tree and utils/*.def datasets (non-free, per make_tarball.sh) from the upstream release and repack deterministically as openal-soft-1.24.2-clean.tar.xz"
+        "input": "https://openal-soft.org/openal-releases/openal-soft-1.25.2.tar.bz2 (sha512-pinned)",
+        "method": "remove the bundled fmt-*/ tree and utils/*.def datasets (non-free, per make_tarball.sh) from the upstream release and repack deterministically as openal-soft-1.25.2-clean.tar.xz"
       }
     },
     {
@@ -5307,10 +5309,10 @@
     },
     {
       "name": "python-click",
-      "version": "8.4.2",
-      "url": "https://github.com/pallets/click/archive/8.4.2/click-8.4.2.tar.gz",
-      "filename": "click-8.4.2.tar.gz",
-      "sha512": "2731993c89d7386a8bfd4f51131384a2a67c4ee33e54f92a055b685ba4cf74c854fb5aca0c92e3a24d04bf7725e169edf457d1f18a660b5361aabbbcdd550657"
+      "version": "8.5.1",
+      "url": "https://github.com/pallets/click/archive/8.5.1/click-8.5.1.tar.gz",
+      "filename": "click-8.5.1.tar.gz",
+      "sha512": "b9f2f3e17981893f5a1895dd97b6965cafafb2bc8a2865393eb772179c88ddc268237bf144179ccb9508b9b9b71419e217ba3befd4dec043f34a2bb2da8d8c58"
     },
     {
       "name": "python-cups",
@@ -6031,12 +6033,12 @@
     },
     {
       "name": "simdutf",
-      "version": "9.0.0",
-      "url": "https://github.com/simdutf/simdutf/archive/v9.0.0/simdutf-9.0.0.tar.gz",
-      "filename": "simdutf-9.0.0.tar.gz",
-      "sha512": "0c74226247cbe95368efa87ab84f5217485f16bcdf7a9def8741c6086cb86e6c378f0c437030d2be0934726e3ea9c28b5df2e593d0c654c78291c455a8d1e103",
+      "version": "9.3.3",
+      "url": "https://github.com/simdutf/simdutf/archive/v9.3.3/simdutf-9.3.3.tar.gz",
+      "filename": "simdutf-9.3.3.tar.gz",
+      "sha512": "3639f51386f14178fa6681d5c305fb21acb57a45c3dc95c78bfc27e796f714ea8f1d1bba84fd1027f7763e4fe53735bdfb68cd04ae8c2e34fa512dd1bc4e7318",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/simdutf/simdutf-9.0.0.tar.gz/sha512/0c74226247cbe95368efa87ab84f5217485f16bcdf7a9def8741c6086cb86e6c378f0c437030d2be0934726e3ea9c28b5df2e593d0c654c78291c455a8d1e103/simdutf-9.0.0.tar.gz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/simdutf/simdutf-9.3.3.tar.gz/sha512/3639f51386f14178fa6681d5c305fb21acb57a45c3dc95c78bfc27e796f714ea8f1d1bba84fd1027f7763e4fe53735bdfb68cd04ae8c2e34fa512dd1bc4e7318/simdutf-9.3.3.tar.gz"
       ]
     },
     {
@@ -6909,13 +6911,13 @@
     },
     {
       "name": "wsdd",
-      "version": "0.8",
-      "url": "https://github.com/christgau/wsdd/archive/v0.8/wsdd-0.8.tar.gz",
-      "filename": "wsdd-0.8.tar.gz",
+      "version": "0.9",
+      "url": "https://github.com/christgau/wsdd/archive/v0.9/wsdd-0.9.tar.gz",
+      "filename": "wsdd-0.9.tar.gz",
       "feed": "https://github.com/christgau/wsdd/archive/v0.8/wsdd-0.8.tar.gz",
-      "sha512": "e3e5164f9ebe39c979456169bf1b0c6c4cd974792f08fa4dfab9c313fba88ae1208a8112db09c3655719b4e26bfc2616f844f17d2a245132c2f5b22e978e3c20",
+      "sha512": "245845c8d0f52a18e47411c8adfc5f9ef63a65f2caa04dd76ac033852b3d517000d88202b50be781ff0a4c7da344589dd79cdc1e0a88dbbd1f149d0dfe8db47f",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/wsdd/wsdd-0.8.tar.gz/sha512/e3e5164f9ebe39c979456169bf1b0c6c4cd974792f08fa4dfab9c313fba88ae1208a8112db09c3655719b4e26bfc2616f844f17d2a245132c2f5b22e978e3c20/wsdd-0.8.tar.gz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/wsdd/wsdd-0.9.tar.gz/sha512/245845c8d0f52a18e47411c8adfc5f9ef63a65f2caa04dd76ac033852b3d517000d88202b50be781ff0a4c7da344589dd79cdc1e0a88dbbd1f149d0dfe8db47f/wsdd-0.9.tar.gz"
       ]
     },
     {

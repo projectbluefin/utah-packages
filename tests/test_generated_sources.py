@@ -227,9 +227,9 @@ class OpenALSoftTransformTests(unittest.TestCase):
 
     def test_metadata_names_the_recipe_source_and_pinned_input(self):
         metadata = generated_sources.metadata_for("openal-soft", ROOT / "packages" / "openal-soft")
-        self.assertEqual(metadata["filename"], "openal-soft-1.24.2-clean.tar.xz")
-        self.assertIn("openal-soft-1.24.2.tar.bz2", metadata["generate"]["input"])
-        self.assertIn("1.24.2", generated_sources.OPENAL_SOFT_INPUT_SHA512)
+        self.assertEqual(metadata["filename"], "openal-soft-1.25.2-clean.tar.xz")
+        self.assertIn("openal-soft-1.25.2.tar.bz2", metadata["generate"]["input"])
+        self.assertIn("1.25.2", generated_sources.OPENAL_SOFT_INPUT_SHA512)
 
 
 def build_sevenzip_archive(version: str) -> bytes:

@@ -645,7 +645,8 @@ def forge_planned_entry(entry: dict, release: str, digest: str) -> dict:
     asset names. So every URL-bearing field is rewritten by substituting the
     old version for the new one and the old digest for the new one. That
     reaches the places a field-by-field rebuild forgets -- fallback_urls
-    embeds both the filename and the SHA-512, and sha256_url embeds the tag.
+    embeds both the filename and the SHA-512, sha256_url embeds the tag, and
+    signature_url names the detached signature of the new tarball.
 
     Substituting the bare version also fixes a v-prefixed tag in the same
     pass, since "v2.2.1" contains "2.2.1".
@@ -664,7 +665,7 @@ def forge_planned_entry(entry: dict, release: str, digest: str) -> dict:
     if entry.get("sha512"):
         swaps.append((entry["sha512"], digest))
     updated = dict(entry)
-    for field in ("url", "filename", "sha256_url", "fallback_urls"):
+    for field in ("url", "filename", "sha256_url", "signature_url", "fallback_urls"):
         if field in entry:
             updated[field] = substituted(entry[field], swaps)
     updated["version"] = release
