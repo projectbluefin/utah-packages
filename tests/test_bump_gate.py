@@ -182,6 +182,28 @@ class HoldableTests(unittest.TestCase):
             holdable('["glib2","gtk4"]', '["glib2","gtk4","pango"]', '["gtk4","pango"]', "failure"), []
         )
 
+    def test_a_failure_on_the_network_holds_nothing(self) -> None:
+        # Run 43825333649 held 16 bumps that never built: the package server
+        # was down (#1179). A version nothing built proved nothing.
+        self.assertEqual(
+            holdable('["glib2","gtk4"]', '["glib2","gtk4"]', '["gtk4"]', "failure", '["gtk4"]'), []
+        )
+
+    def test_a_mixed_run_holds_nothing(self) -> None:
+        self.assertEqual(
+            holdable('["fish","glib2","gtk4"]', '["fish","glib2","gtk4"]', '["fish","gtk4"]',
+                     "failure", '["fish"]'),
+            [],
+        )
+
+    def test_a_real_build_failure_is_still_held(self) -> None:
+        self.assertEqual(
+            holdable('["glib2","gtk4"]', '["glib2","gtk4"]', '["gtk4"]', "failure", "[]"), ["gtk4"]
+        )
+
+    def test_an_unreported_network_list_holds_nothing(self) -> None:
+        self.assertEqual(holdable('["glib2","gtk4"]', '["glib2","gtk4"]', '["gtk4"]', "failure", ""), [])
+
 
 class HoldsFileTests(unittest.TestCase):
     def test_missing_or_empty_is_no_holds(self) -> None:
@@ -423,6 +445,28 @@ class CommandLineTests(unittest.TestCase):
         self.assertEqual(code, 0)
         code, _ = self.decide("--bumped", "[]", "--holds-only", "--result", "success")
         self.assertEqual(code, 1)
+
+    def test_decide_names_an_outage_and_holds_nothing(self) -> None:
+        code, _ = self.decide("--bumped", '["glib2","gtk4"]', "--build-list", '["glib2","gtk4"]',
+                              "--failed", '["gtk4"]', "--infra-failed", '["gtk4"]',
+                              "--result", "failure")
+        self.assertEqual(code, 1)
+        self.assertEqual(json.loads((self.tmp / "h.json").read_text()), [])
+        text = (self.tmp / "c.md").read_text()
+        self.assertIn("package-server outage", text)
+        self.assertIn("held", text)
+        self.assertNotIn("bumped packages failed to build", text)
+
+    def test_decide_names_both_lists_for_a_mixed_run(self) -> None:
+        code, _ = self.decide("--bumped", '["fish","glib2","gtk4"]',
+                              "--build-list", '["fish","glib2","gtk4"]',
+                              "--failed", '["fish","gtk4"]', "--infra-failed", '["fish"]',
+                              "--result", "failure")
+        self.assertEqual(code, 1)
+        self.assertEqual(json.loads((self.tmp / "h.json").read_text()), [])
+        text = (self.tmp / "c.md").read_text()
+        self.assertIn("package-server outage, not a recipe failure: `fish`", text)
+        self.assertIn("bumped packages failed to build: `gtk4`", text)
 
     def trim(self, head: str, hold: str) -> tuple[int, str, str]:
         out, err = io.StringIO(), io.StringIO()

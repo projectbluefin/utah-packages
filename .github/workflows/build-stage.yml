@@ -576,6 +576,17 @@ jobs:
           path: work/reports/check/**
           if-no-files-found: ignore
           retention-days: 7
+      # The lane's online step ran out of retries on a download: the build
+      # never ran. publish_gate.py report reads this name to keep a
+      # package-server outage from being held as a broken version (#1179).
+      - name: Record a failure on the network
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: ${{ inputs.artifact_prefix }}infra-s${{ inputs.stage }}-${{ matrix.package }}
+          path: work/reports/infra-failure
+          if-no-files-found: ignore
+          retention-days: 7
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:

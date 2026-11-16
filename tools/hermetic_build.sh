@@ -43,19 +43,28 @@ NET_RETRY_PAUSE=15
 
 # Run one online step up to NET_ATTEMPTS times: `online <label> <cleanup>
 # <command...>`. cleanup runs before every retry so a half-fetched result
-# never counts as a whole one.
+# never counts as a whole one. When the last attempt fails on a download,
+# /work/reports/infra-failure records it: the build never ran, so the bump
+# gate must not hold the package's version as broken (#1179). An
+# unsatisfiable graph fails every attempt too, but with no download error,
+# and stays an ordinary failure.
+NET_ERRORS='All mirrors were tried|No more mirrors to try|Curl error|Cannot download|Status code: 5[0-9][0-9]'
 online() {
   label=$1 cleanup=$2
   shift 2
   attempt=1
+  log=/work/reports/online.log
   while true; do
     status=0
-    "$@" || status=$?
+    "$@" 2>&1 | tee "$log" || status=$?
     if [ "$status" -eq 0 ]; then
       return 0
     fi
     if [ "$attempt" -ge "$NET_ATTEMPTS" ]; then
       echo "::error title=$label failed::$PACKAGE: $label failed $attempt times (last exit $status)"
+      if grep -qE "$NET_ERRORS" "$log"; then
+        echo "$label" > /work/reports/infra-failure
+      fi
       return "$status"
     fi
     echo "::warning title=$label retry::$PACKAGE: $label failed (exit $status); attempt $((attempt + 1)) of $NET_ATTEMPTS in ${NET_RETRY_PAUSE}s"

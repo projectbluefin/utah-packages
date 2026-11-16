@@ -62,6 +62,10 @@ STAGE_JOB = re.compile(r"^rebuild(\d+)$")
 # The artifact build-stage.yml uploads for one successful package build,
 # optionally behind the canary's per-pass prefix.
 RPM_ARTIFACT = re.compile(r"^rpm-s(?P<stage>\d+)-(?P<package>.+)$")
+# The marker build-stage.yml uploads when a package's build root could not
+# be downloaded after every retry: no build ran, so its failure says nothing
+# about the recipe.
+INFRA_ARTIFACT = re.compile(r"^infra-s(?P<stage>\d+)-(?P<package>.+)$")
 
 
 def rebuild_stages(workflow: dict) -> tuple[str, ...]:
@@ -200,6 +204,25 @@ def failures_from_artifacts(
         if match:
             built.add(match["package"])
     return sorted((set(build_list) - built) | (losers & set(build_list)))
+
+
+def infra_failures_from_artifacts(
+    failed: list[str], artifact_names: list[str], prefix: str
+) -> list[str]:
+    """The failed packages that never reached their build: a network step ran out.
+
+    A package-server outage and a compile error both leave no RPM artifact,
+    so ``failed`` alone cannot tell them apart (#1179). The build lanes upload
+    ``infra-s<stage>-<package>`` when an online step exhausts its retries.
+    """
+    infra = set()
+    for name in artifact_names:
+        if not name.startswith(prefix):
+            continue
+        match = INFRA_ARTIFACT.match(name[len(prefix):])
+        if match:
+            infra.add(match["package"])
+    return sorted(infra & set(failed))
 
 
 def source_names(paths: list[Path]) -> dict[str, str]:
@@ -565,6 +588,9 @@ def _cli_report(args: argparse.Namespace) -> int:
     )
     args.output.write_text(body)
     args.failed_output.write_text(json.dumps(failed) + "\n")
+    if args.infra_failed_output:
+        infra = infra_failures_from_artifacts(failed, names, args.prefix)
+        args.infra_failed_output.write_text(json.dumps(infra) + "\n")
     print(body)
     return 0
 
@@ -607,6 +633,7 @@ def main(argv: list[str] | None = None) -> int:
     report_cmd.add_argument("--run-url", default="")
     report_cmd.add_argument("--output", type=Path, required=True)
     report_cmd.add_argument("--failed-output", type=Path, required=True)
+    report_cmd.add_argument("--infra-failed-output", type=Path)
     marker_cmd = commands.add_parser("marker")
     marker_cmd.add_argument("body", type=Path)
     pattern_cmd = commands.add_parser("pattern")

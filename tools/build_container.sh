@@ -271,16 +271,23 @@ builddep_attempt() {
     ${HB_REPO_EXCLUDE:+--setopt=public-hummingbird-x86_64-rpms.excludepkgs="$HB_REPO_EXCLUDE"} \
     builddep -D "_sourcedir /packages/$PACKAGE" "$1"
 }
+# A last attempt that failed on a download leaves /work/reports/infra-failure,
+# so the bump gate does not hold a version that never got a build (#1179).
 with_backoff() {
   delay=5
+  mkdir -p /work/reports
   for attempt in 1 2 3 4; do
     status=0
-    builddep_attempt "$1" || status=$?
+    ( set -o pipefail; builddep_attempt "$1" 2>&1 | tee /work/reports/builddep.log ) || status=$?
     if [ "$status" -eq 0 ]; then
       return 0
     fi
     if [ "$attempt" -eq 4 ]; then
       echo "builddep failed after 4 attempts" >&2
+      if grep -qE 'All mirrors were tried|No more mirrors to try|Curl error|Cannot download|Status code: 5[0-9][0-9]' \
+          /work/reports/builddep.log; then
+        echo builddep > /work/reports/infra-failure
+      fi
       return "$status"
     fi
     echo "::warning title=builddep retry::attempt $attempt failed, waiting ${delay}s" >&2
