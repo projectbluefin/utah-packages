@@ -1540,6 +1540,12 @@ packages:
     downstream_package_name: leptonica
     paths:
       - packages/leptonica
+  leveldb:
+    specfile_path: leveldb.spec
+    upstream_package_name: leveldb
+    downstream_package_name: leveldb
+    paths:
+      - packages/leveldb
   libICE:
     specfile_path: libICE.spec
     upstream_package_name: libICE

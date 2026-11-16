@@ -2402,6 +2402,13 @@
       "sha512": "2a1953dd0c962a05dac9bb30eac311896f414c658d976008b0c2d1b3b85ec25c5fd811be3f98a37f2131ded134799ea609a667fb1eaacf42d1aca9cc5cf1bd92"
     },
     {
+      "name": "leveldb",
+      "version": "1.23",
+      "url": "https://github.com/google/leveldb/archive/1.23/leveldb-1.23.tar.gz",
+      "filename": "leveldb-1.23.tar.gz",
+      "sha512": "ac15eac29387b9f702a901b6567d47a9f8c17cf5c7d8700a77ec771da25158c83b04959c33f3d4de7a3f033ef08f545d14ba823a8d527e21889c4b78065b0f84"
+    },
+    {
       "name": "libICE",
       "version": "1.1.2",
       "url": "https://xorg.freedesktop.org/archive/individual/lib/libICE-1.1.2.tar.xz",
