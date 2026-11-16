@@ -21,8 +21,6 @@ fprintd
 gdm
 libblockdev
 libfprint
-# gvfs is linked to the libcdio 2.3 ABI; upgrades require a consumer rebuild.
-libcdio
 # libjwt 1.18 moves the soname to libjwt.so.2 (sso-mib-tool links .so.1);
 # Fedora Rawhide stays on 1.12.1. Move it by hand with its consumers.
 libjwt
