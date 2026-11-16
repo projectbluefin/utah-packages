@@ -27,6 +27,7 @@ from tools.audit_dakota import (
     NEW_SPEC,
     NOT_APPLICABLE,
     NOT_COMPARED,
+    REVIEWED,
     STRUCTURAL,
     ElementRecord,
     FedoraIndex,
@@ -35,6 +36,7 @@ from tools.audit_dakota import (
     candidate_names,
     classify_element,
     contract_problems,
+    element_version,
     gnome_build_meta_aliases,
     image_ownership,
     load_pin,
@@ -47,6 +49,7 @@ from tools.audit_dakota import (
     sbom_version,
     scan_image_layout,
     spec_subpackages,
+    url_version,
     validate_pin,
     version_drift,
     write_snapshot,
@@ -125,6 +128,29 @@ class SbomVersionTests(unittest.TestCase):
         self.assertIsNone(sbom_version("34f60d698e4042d4057b979d9ab3680385496f6c4d714a8455a11f74ecf26f2a/84"))
         self.assertIsNone(sbom_version(""))
         self.assertIsNone(sbom_version("main"))
+
+
+class UrlVersionTests(unittest.TestCase):
+    def test_archive_names_carry_the_release(self) -> None:
+        base = "https://example.org/pub/"
+        self.assertEqual(url_version(base + "nfs-utils/3.1.1/nfs-utils-3.1.1.tar.xz"), "3.1.1")
+        self.assertEqual(url_version(base + "release-78.3/icu4c-78.3-sources.tgz"), "78.3")
+        self.assertEqual(url_version(base + "libcdio-paranoia-10.2+2.0.2.tar.gz"), "10.2+2.0.2")
+        self.assertEqual(url_version(base + "20240407/mobile-broadband-provider-info-20240407.tar.xz"),
+                         "20240407")
+        self.assertEqual(url_version(base + "aspell6-en-2020.12.07-0.tar.bz2"), "2020.12.07")
+
+    def test_repositories_and_bare_files_carry_none(self) -> None:
+        self.assertIsNone(url_version("https://github.com/lm-sensors/lm-sensors.git"))
+        self.assertIsNone(url_version("https://example.org/files/hyperv/kvp.sh"))
+        self.assertIsNone(url_version("https://example.org/snapshot-abcdef.tar.gz"))
+        self.assertIsNone(url_version(""))
+
+    def test_the_sbom_version_wins_over_the_url(self) -> None:
+        sha = "7dbc05eb8b32828b322872b759a62cb3979cb4118f344dd8616813d1390e84e0"
+        url = "https://www.kernel.org/pub/linux/utils/nfs-utils/3.1.1/nfs-utils-3.1.1.tar.xz"
+        self.assertEqual(element_version(record("bluefin/nfs-utils.bst", version=sha, url=url)), "3.1.1")
+        self.assertEqual(element_version(record("a.bst", version="2.54.1", url=url)), "2.54.1")
 
 
 class VersionDriftTests(unittest.TestCase):
@@ -310,6 +336,26 @@ class PinValidationTests(unittest.TestCase):
         self.assert_rejected(lambda p: p.update(
             {"config_subpackages": {"bluefin/rpcbind.bst": ["rpcbind-preset"]}}))
 
+    def test_drift_review_needs_a_verdict_a_reason_and_the_versions_it_judged(self) -> None:
+        good = {"verdict": "factory-ahead", "reason": "Rawhide moved first",
+                "factory_version": "2.0", "dakota_version": "1.0"}
+        pin = copy.deepcopy(PIN)
+        pin["drift_reviews"] = {"a.bst": good}
+        validate_pin(pin)
+        for broken in ({"verdict": "aligned"}, {"reason": " "}, {"factory_version": ""}):
+            self.assert_rejected(lambda p, b=broken: p.update(
+                {"drift_reviews": {"a.bst": {**good, **b}}}))
+        self.assert_rejected(lambda p: p.update({"drift_reviews": {"a.bst": {
+            k: v for k, v in good.items() if k != "dakota_version"}}}))
+
+    def test_tracked_drift_needs_an_issue(self) -> None:
+        tracked = {"verdict": "tracked", "reason": "soname move",
+                   "factory_version": "1.0", "dakota_version": "2.0"}
+        self.assert_rejected(lambda p: p.update({"drift_reviews": {"a.bst": tracked}}))
+        pin = copy.deepcopy(PIN)
+        pin["drift_reviews"] = {"a.bst": {**tracked, "issue": "projectbluefin/utah-packages#1051"}}
+        validate_pin(pin)
+
     def test_committed_pin_is_valid_and_maps_every_snapshot_element(self) -> None:
         pin = load_pin(REPO / "config" / "dakota.json")
         records = read_snapshot(REPO / "config" / "dakota-elements.tsv")
@@ -381,6 +427,52 @@ class ReportTests(unittest.TestCase):
                         "## Config packages", "## Stale mappings"):
             self.assertIn(heading, text)
         self.assertIn("| apps | baobab | 50.0 |", text)
+
+
+class DriftReviewTests(unittest.TestCase):
+    ELEMENT = "freedesktop-sdk.bst:components/hwdata.bst"
+
+    def report(self, review: dict | None, factory: str = "0.413", dakota: str = "0.412") -> dict:
+        pin = copy.deepcopy(PIN)
+        pin["elements"] = {self.ELEMENT: {"disposition": FEDORA_IMPORTABLE, "fedora": "hwdata",
+                                          "hummingbird": False}}
+        if review is not None:
+            pin["drift_reviews"] = {self.ELEMENT: review}
+        records = [record(self.ELEMENT, sources=("git_repo",), version=f"v{dakota}")]
+        return build_report(pin, records, {"hwdata": {"name": "hwdata", "version": factory}})
+
+    REVIEW = {"verdict": "factory-ahead", "reason": "Rawhide ships 0.413",
+              "factory_version": "0.413", "dakota_version": "0.412"}
+
+    def test_a_review_marks_the_row_it_judged(self) -> None:
+        report = self.report(self.REVIEW)
+        (drift,) = report["drift"]
+        self.assertEqual(drift["classification"], REVIEWED)
+        self.assertEqual(drift["review"], {"verdict": "factory-ahead", "reason": "Rawhide ships 0.413"})
+        self.assertIn("is ahead of", drift["reason"])
+        self.assertEqual(report["stale_drift_reviews"], [])
+        text = render_markdown(report)
+        self.assertIn("| hwdata | 0.413 | 0.412 | factory-ahead | Rawhide ships 0.413 |", text)
+
+    def test_a_moved_version_reopens_the_row(self) -> None:
+        report = self.report(self.REVIEW, factory="0.414")
+        (drift,) = report["drift"]
+        self.assertEqual(drift["classification"], NEEDS_REVIEW)
+        (stale,) = report["stale_drift_reviews"]
+        self.assertEqual(stale["judged"], ["0.413", "0.412"])
+        self.assertIn("0.414", stale["now"])
+
+    def test_a_review_of_an_aligned_or_missing_row_is_stale(self) -> None:
+        aligned = {**self.REVIEW, "factory_version": "0.412"}
+        report = self.report(aligned, factory="0.412")
+        self.assertEqual(report["drift"][0]["classification"], ALIGNED)
+        self.assertEqual(len(report["stale_drift_reviews"]), 1)
+        pin_report = self.report(None)
+        self.assertEqual(pin_report["stale_drift_reviews"], [])
+        pin = copy.deepcopy(PIN)
+        pin["drift_reviews"] = {"gone.bst": self.REVIEW}
+        report = build_report(pin, [], {})
+        self.assertEqual(report["stale_drift_reviews"][0]["element"], "gone.bst")
 
 
 class ConfigGapTests(unittest.TestCase):

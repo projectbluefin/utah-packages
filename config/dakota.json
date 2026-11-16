@@ -558,6 +558,176 @@
       "reason": "Dakota's os-release; Utah's image writes its own"
     }
   },
+  "drift_reviews": {
+    "bluefin/brlaser.bst": {
+      "verdict": "factory-ahead",
+      "reason": "Dakota builds pdewacht/brlaser tag v6 (23117fe, 2019); Fedora and the factory build the maintained Owl-Maintain fork, v6.2.8, which continues it",
+      "factory_version": "6.2.8",
+      "dakota_version": null
+    },
+    "bluefin/fastfetch.bst": {
+      "verdict": "factory-ahead",
+      "reason": "Fedora Rawhide ships 2.70.0; Dakota pins 2.67.1",
+      "factory_version": "2.70.0",
+      "dakota_version": "2.67.1"
+    },
+    "bluefin/rpcbind.bst": {
+      "verdict": "factory-ahead",
+      "reason": "Fedora Rawhide ships 1.3.1; Dakota's anitya source pins 1.2.7",
+      "factory_version": "1.3.1",
+      "dakota_version": "1.2.7"
+    },
+    "bluefin/tiptop.bst": {
+      "verdict": "same-version",
+      "reason": "Dakota follows master at e91f7d6: the 2.3.2 release plus one upstream commit that shrinks an over-sized realloc in src/process.c (sizeof(struct process) to sizeof(struct process*)); no behaviour change",
+      "factory_version": "2.3.2",
+      "dakota_version": null
+    },
+    "freedesktop-sdk.bst:components/dictionaries.bst": {
+      "verdict": "false-positive",
+      "reason": "another upstream: Fedora's hunspell-en builds the en-wl/wordlist (SCOWL) release 2026.02.25; Dakota's dictionaries.bst builds LibreOffice's dictionaries repository at libreoffice-26.8.2.2",
+      "factory_version": "0.20260225",
+      "dakota_version": "26.8.2"
+    },
+    "freedesktop-sdk.bst:components/ffmpeg.bst": {
+      "verdict": "factory-ahead",
+      "reason": "Fedora Rawhide ships the 9.0 series (9.0.2); freedesktop-sdk 26.08 tracks n8.*",
+      "factory_version": "9.0.1",
+      "dakota_version": "8.1.3"
+    },
+    "freedesktop-sdk.bst:components/foomatic-db.bst": {
+      "verdict": "false-positive",
+      "reason": "another version scheme: Fedora versions the database 4.0 and carries the snapshot date in the tarball (foomatic-db-4.0-20260511), newer than Dakota's master at 20240504 plus 10 commits",
+      "factory_version": "4.0",
+      "dakota_version": "20240504"
+    },
+    "freedesktop-sdk.bst:components/geoclue-libs.bst": {
+      "verdict": "same-version",
+      "reason": "a filter of _private/geoclue-base.bst, which pins tag 2.8.2",
+      "factory_version": "2.8.2",
+      "dakota_version": null
+    },
+    "freedesktop-sdk.bst:components/geoclue.bst": {
+      "verdict": "same-version",
+      "reason": "a filter of _private/geoclue-base.bst, which pins tag 2.8.2",
+      "factory_version": "2.8.2",
+      "dakota_version": null
+    },
+    "freedesktop-sdk.bst:components/glslang.bst": {
+      "verdict": "same-version",
+      "reason": "glslang tag 16.4.0 and vulkan-sdk-1.4.357.0 are the same commit (168d452); the factory's Source0 is that SDK tag, and the SBOM reads the SDK version",
+      "factory_version": "16.4.0",
+      "dakota_version": "1.4.357"
+    },
+    "freedesktop-sdk.bst:components/hicolor-icon-theme.bst": {
+      "verdict": "factory-ahead",
+      "reason": "Fedora Rawhide ships 0.18; Dakota pins 0.17",
+      "factory_version": "0.18",
+      "dakota_version": "0.17"
+    },
+    "freedesktop-sdk.bst:components/hwdata.bst": {
+      "verdict": "factory-ahead",
+      "reason": "Fedora Rawhide ships 0.413; Dakota pins 0.412",
+      "factory_version": "0.413",
+      "dakota_version": "0.412"
+    },
+    "freedesktop-sdk.bst:components/python3-pil.bst": {
+      "verdict": "factory-ahead",
+      "reason": "Fedora Rawhide ships 13.0.0; Dakota pins 12.3.0",
+      "factory_version": "13.0.0",
+      "dakota_version": "12.3.0"
+    },
+    "freedesktop-sdk.bst:components/squashfs-tools.bst": {
+      "verdict": "factory-ahead",
+      "reason": "the factory carries 4.7.5 (Fedora Rawhide 4.7.4); Dakota pins 4.6.1",
+      "factory_version": "4.7.5",
+      "dakota_version": "4.6.1"
+    },
+    "freedesktop-sdk.bst:components/wayland-protocols.bst": {
+      "verdict": "factory-ahead",
+      "reason": "Fedora Rawhide ships 1.50; Dakota pins 1.49",
+      "factory_version": "1.50",
+      "dakota_version": "1.49"
+    },
+    "freedesktop-sdk.bst:components/wget2.bst": {
+      "verdict": "factory-ahead",
+      "reason": "Fedora Rawhide ships 2.3.0; Dakota pins 2.2.1",
+      "factory_version": "2.3.0",
+      "dakota_version": "2.2.1"
+    },
+    "freedesktop-sdk.bst:components/wireless-regdb-bin.bst": {
+      "verdict": "false-positive",
+      "reason": "Dakota's tag master-2023-09-01 reads as 2023.0.9; the factory's 2026.09.03 (Fedora Rawhide's) is three years newer",
+      "factory_version": "2026.09.03",
+      "dakota_version": "2023.0.9"
+    },
+    "freedesktop-sdk.bst:components/xwayland.bst": {
+      "verdict": "factory-ahead",
+      "reason": "Fedora Rawhide ships the 26.1 release candidates (26.0.99.904); freedesktop-sdk 26.08 pins 24.1.14",
+      "factory_version": "26.0.99.901",
+      "dakota_version": "24.1.14"
+    },
+    "gnome-build-meta.bst:core-deps/flatpak.bst": {
+      "verdict": "factory-ahead",
+      "reason": "Fedora Rawhide ships the 1.19 series (1.19.2); gnome-build-meta pins the 1.18 stable series",
+      "factory_version": "1.19.0",
+      "dakota_version": "1.18.4"
+    },
+    "gnome-build-meta.bst:core-deps/fwupd-efi.bst": {
+      "verdict": "factory-ahead",
+      "reason": "Fedora Rawhide ships 1.9; gnome-build-meta pins 1.8",
+      "factory_version": "1.9",
+      "dakota_version": "1.8"
+    },
+    "gnome-build-meta.bst:core-deps/libtatsu.bst": {
+      "verdict": "factory-ahead",
+      "reason": "the factory carries 1.1.1 (Fedora Rawhide 1.0.5); gnome-build-meta pins 1.0.5",
+      "factory_version": "1.1.1",
+      "dakota_version": "1.0.5"
+    },
+    "gnome-build-meta.bst:core-deps/slirp-helper.bst": {
+      "verdict": "false-positive",
+      "reason": "slirp-helper builds the libslirp Rust crate 4.3.2 (bindings plus the helper binary), not the C library; freedesktop-sdk's libslirp.bst, the C library, is 4.9.6 like the factory",
+      "factory_version": "4.9.6",
+      "dakota_version": "4.3.2"
+    },
+    "gnome-build-meta.bst:core-deps/startup-notification.bst": {
+      "verdict": "same-version",
+      "reason": "the element pins tag STARTUP_NOTIFICATION_0_12",
+      "factory_version": "0.12",
+      "dakota_version": null
+    },
+    "gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/just.bst": {
+      "verdict": "factory-ahead",
+      "reason": "the factory carries 1.57.0 (Fedora Rawhide 1.59.0); freedesktop-sdk-extra pins 1.52.0",
+      "factory_version": "1.57.0",
+      "dakota_version": "1.52.0"
+    },
+    "gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/words.bst": {
+      "verdict": "false-positive",
+      "reason": "another upstream: Fedora's words is the mwords list 3.0 (/usr/share/dict/words); Dakota's words.bst builds it from aspell dictionaries (aspell6-en 2020.12.07 and others)",
+      "factory_version": "3.0",
+      "dakota_version": "2020.12.07"
+    },
+    "gnome-build-meta.bst:gnomeos-deps/m17n-lib.bst": {
+      "verdict": "same-version",
+      "reason": "the element pins tag REL-1-8-7",
+      "factory_version": "1.8.7",
+      "dakota_version": null
+    },
+    "gnome-build-meta.bst:gnomeos-deps/thermald.bst": {
+      "verdict": "false-positive",
+      "reason": "gnome-build-meta's ref reads v2.15.10, but its commit 88369b4 is intel/thermal_daemon tag v2.5.10; the factory's 2.5.13 (Fedora Rawhide's) is newer",
+      "factory_version": "2.5.13",
+      "dakota_version": "2.15.10"
+    },
+    "gnome-build-meta.bst:gnomeos-deps/vpnc.bst": {
+      "verdict": "factory-ahead",
+      "reason": "Dakota's commit d0fd23d (2024-02-26) is an ancestor of the factory's snapshot 11e15a1 (2024-11-13, Fedora Rawhide's)",
+      "factory_version": "0.5.3^20241114.git11e15a1",
+      "dakota_version": null
+    }
+  },
   "config_subpackages": {
     "bluefin/rpcbind.bst": [
       "dakota-config-rpcbind-preset"

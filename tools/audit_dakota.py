@@ -14,8 +14,9 @@ that measurement explicit, evidence-backed and reproducible:
   measured, not guessed. ``--import-sbom`` rewrites it.
 - ``config/dakota.json`` pins the Dakota revision, the SBOM's publish run and
   the image digest, carries the reviewer decisions (``overrides``,
-  ``aliases``) and the generated element -> RPM source-package mapping with a
-  disposition per element. ``--refresh`` regenerates the mapping online
+  ``aliases``, ``drift_reviews``) and the generated element -> RPM
+  source-package mapping with a disposition per element. ``--refresh``
+  regenerates the mapping online
   (Fedora Rawhide repodata, Fedora dist-git, Hummingbird repodata); the audit
   itself is offline.
 - ``reports/audit-dakota.json`` / ``.md`` hold the disposition counts, the
@@ -57,6 +58,7 @@ import subprocess
 import sys
 import tarfile
 import urllib.error
+import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ElementTree
 from dataclasses import dataclass
@@ -99,6 +101,21 @@ STRUCTURAL_ISSUES = range(1222, 1237)
 # audit's vocabulary; ``not_compared`` says out loud that one side has no
 # version (a bare commit, a checksum), instead of reading as aligned.
 NOT_COMPARED = "not_compared"
+# A reviewer's verdict on a drift row, recorded in ``drift_reviews`` against
+# the exact pair of versions it judged. Any change on either side reopens it.
+REVIEWED = "reviewed"
+DRIFT_VERDICTS = (
+    # The element pins the same release; its SBOM entry just does not say so.
+    "same-version",
+    # The two versions are not comparable: another version scheme, another
+    # upstream, or a mislabelled tag in the element.
+    "false-positive",
+    # The factory is newer than Dakota (Fedora Rawhide moved first); kept.
+    "factory-ahead",
+    # Behind, and an issue tracks the move.
+    "tracked",
+)
+_DRIFT_ORDER = {NEEDS_REVIEW: 0, NOT_COMPARED: 1, REVIEWED: 2, ALIGNED: 3}
 
 # Import-queue ordering: what a user sees first.
 VISIBILITY_GROUPS = ("apps", "daemons", "commands", "libraries-and-data")
@@ -392,6 +409,32 @@ def sbom_version(value: str) -> str | None:
     return value.replace("_", ".")
 
 
+# A release in an archive file name: dotted (``1.2.80``, ``10.2+2.0.2``) or a
+# date (``20240407``), standing on its own between separators.
+_URL_VERSION = re.compile(r"(?<![0-9A-Za-z])v?(\d{8}|\d+(?:[.+]\d+)+)(?![0-9A-Za-z.+])")
+
+
+def url_version(url: str) -> str | None:
+    """The release an archive URL names, if any.
+
+    BuildStream ``tar`` and ``anitya`` sources record the archive checksum as
+    the SBOM ``versionInfo`` (nfs-utils, kyotocabinet, icu), so the version is
+    only in the file name (``nfs-utils-3.1.1.tar.xz``). A repository URL
+    (``.git``) or a bare file names none.
+    """
+    name = PurePosixPath(urllib.parse.urlsplit(url or "").path).name
+    stem = _ARCHIVE_SUFFIX.sub("", name)
+    if stem == name or stem.endswith(".git") or name.endswith(".git"):
+        return None
+    found = _URL_VERSION.findall(stem)
+    return found[-1] if found else None
+
+
+def element_version(record: ElementRecord) -> str | None:
+    """Dakota's version of an element: its SBOM version, else its archive URL's."""
+    return sbom_version(record.version) or url_version(record.url)
+
+
 def _version_key(version: str) -> tuple[int, ...]:
     return tuple(int(part) for part in numeric_components(version))
 
@@ -677,6 +720,19 @@ def validate_pin(pin: dict) -> None:
         for sub in subpackages:
             if not sub.startswith(prefixes):
                 raise ValueError(f"config_subpackages {element}: {sub} is not a config package")
+    for element, review in (pin.get("drift_reviews") or {}).items():
+        if review.get("verdict") not in DRIFT_VERDICTS:
+            raise ValueError(f"drift_reviews {element}: verdict {review.get('verdict')!r} "
+                             f"is not one of {', '.join(DRIFT_VERDICTS)}")
+        if not (review.get("reason") or "").strip():
+            raise ValueError(f"drift_reviews {element}: needs a reason")
+        if not review.get("factory_version") or "dakota_version" not in review:
+            raise ValueError(f"drift_reviews {element}: needs the factory_version and "
+                             "dakota_version it judged")
+        issue = review.get("issue")
+        if review["verdict"] == "tracked" and not re.fullmatch(
+                r"(?:[\w.-]+/[\w.-]+)?#\d+|https://github\.com/\S+", issue or ""):
+            raise ValueError(f"drift_reviews {element}: tracked needs an issue")
 
 
 # --- Report -------------------------------------------------------------------
@@ -744,7 +800,7 @@ def build_report(pin: dict, records: list[ElementRecord], factory_locks: dict,
             "name": record.name,
             "in_image": record.in_image,
             "visibility": record.visibility if record.in_image else None,
-            "dakota_version": sbom_version(record.version),
+            "dakota_version": element_version(record),
             **decision,
         })
         extras = (pin.get("config_subpackages") or {}).get(record.element)
@@ -773,6 +829,8 @@ def build_report(pin: dict, records: list[ElementRecord], factory_locks: dict,
             "reason": reason if via is None else f"{reason} (Dakota version from {via})",
         }
 
+    stale_reviews = apply_drift_reviews(pin.get("drift_reviews") or {}, entries)
+
     counts = {d: 0 for d in DISPOSITIONS}
     for entry in entries:
         counts[entry["disposition"]] += 1
@@ -797,9 +855,9 @@ def build_report(pin: dict, records: list[ElementRecord], factory_locks: dict,
         "drift": sorted(
             ({"element": e["element"], "rpm": e["rpm"], **e["drift"]}
              for e in entries if "drift" in e),
-            key=lambda d: ({NEEDS_REVIEW: 0, NOT_COMPARED: 1, ALIGNED: 2}[d["classification"]],
-                           d["rpm"], d["element"]),
+            key=lambda d: (_DRIFT_ORDER[d["classification"]], d["rpm"], d["element"]),
         ),
+        "stale_drift_reviews": stale_reviews,
         "stale_mappings": stale,
         "unmapped_elements": unmapped,
         "config_gaps": config_gaps(pin, entries, packages_dir),
@@ -810,6 +868,33 @@ def build_report(pin: dict, records: list[ElementRecord], factory_locks: dict,
         "elements": [{k: v for k, v in e.items() if k != "drift"}
                      for e in entries if e.get("reason") != BUILD_ONLY_REASON],
     }
+
+
+def apply_drift_reviews(reviews: dict, entries: list[dict]) -> list[dict]:
+    """Mark the drift rows a reviewer judged; return the reviews that no longer apply.
+
+    A review holds only for the pair of versions it judged: a bump on either
+    side reopens the row (it keeps its measured classification) and lists the
+    review as stale, as does a review of a row that is now aligned or gone.
+    """
+    stale = []
+    by_element = {e["element"]: e for e in entries if "drift" in e}
+    for element, review in sorted(reviews.items()):
+        entry = by_element.get(element)
+        judged = (review["factory_version"], review["dakota_version"])
+        if entry is None:
+            stale.append({"element": element, "judged": list(judged),
+                          "now": "no factory drift row for this element"})
+            continue
+        drift = entry["drift"]
+        now = (drift["factory_version"], drift["dakota_version"])
+        if now != judged or drift["classification"] == ALIGNED:
+            stale.append({"element": element, "rpm": entry["rpm"], "judged": list(judged),
+                          "now": f"{drift['classification']}: {drift['reason']}"})
+            continue
+        drift["classification"] = REVIEWED
+        drift["review"] = {k: review[k] for k in ("verdict", "reason", "issue") if review.get(k)}
+    return stale
 
 
 def import_queue(entries: list[dict], disposition: str) -> list[dict]:
@@ -884,11 +969,36 @@ def render_markdown(report: dict) -> str:
     lines += ["", "| package | factory | Dakota | classification | element |",
               "| --- | --- | --- | --- | --- |"]
     for item in drift:
-        if item["classification"] == ALIGNED:
+        if item["classification"] in (ALIGNED, REVIEWED):
             continue
         lines.append(f"| {item['rpm']} | {item['factory_version'] or '—'} | "
                      f"{item['dakota_version'] or '—'} | {item['classification']} | "
                      f"`{item['element']}` |")
+    lines.append("")
+    reviewed = [item for item in drift if item["classification"] == REVIEWED]
+    lines += ["### Reviewed drift", "",
+              "A reviewer's verdict from `drift_reviews` in `config/dakota.json`, "
+              "valid for exactly these two versions.", "",
+              "| package | factory | Dakota | verdict | reason | element |",
+              "| --- | --- | --- | --- | --- | --- |"]
+    for item in reviewed:
+        review = item["review"]
+        reason = review["reason"] + (f" ({review['issue']})" if review.get("issue") else "")
+        lines.append(f"| {item['rpm']} | {item['factory_version'] or '—'} | "
+                     f"{item['dakota_version'] or '—'} | {review['verdict']} | {reason} | "
+                     f"`{item['element']}` |")
+    lines.append("")
+    lines += ["### Stale drift reviews", ""]
+    if report["stale_drift_reviews"]:
+        lines.append("A version moved since the review, or the row is now aligned: "
+                     "re-review the row or delete the entry.")
+        lines.append("")
+        for item in report["stale_drift_reviews"]:
+            factory, dakota = item["judged"]
+            lines.append(f"- `{item['element']}`: judged factory {factory} vs Dakota "
+                         f"{dakota or '—'}; now {item['now']}")
+    else:
+        lines.append("- none")
     lines.append("")
 
     structural = [e for e in report["elements"] if e["disposition"] == STRUCTURAL]
