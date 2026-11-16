@@ -1,0 +1,34 @@
+From 5e8d1ecde4389f88af3d1c7927d570a62c9236f3 Mon Sep 17 00:00:00 2001
+From: Dan Callaghan <dcallagh@redhat.com>
+Date: Tue, 26 Jun 2018 15:51:46 +1000
+Subject: [PATCH] more fixes for tests without a tty
+
+---
+ blessings/tests.py | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/blessings/tests.py b/blessings/tests.py
+index da1a71b..1ee238b 100644
+--- a/blessings/tests.py
++++ b/blessings/tests.py
+@@ -72,6 +72,8 @@ def test_parametrization():
+ def test_height_and_width():
+     """Assert that ``height_and_width()`` returns ints."""
+     t = TestTerminal()  # kind shouldn't matter.
++    if not t.is_a_tty:
++        raise SkipTest()
+     assert isinstance(t.height, int)
+     assert isinstance(t.width, int)
+ 
+@@ -193,7 +195,7 @@ def test_number_of_colors_without_tty():
+ 
+ def test_number_of_colors_with_tty():
+     """``number_of_colors`` should work."""
+-    t = TestTerminal()
++    t = TestTerminal(force_styling=True)
+     eq_(t.number_of_colors, 256)
+ 
+ 
+-- 
+2.50.1
+
