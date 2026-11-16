@@ -3455,6 +3455,13 @@
       "sha512": "cf750d84a15daa5450d61d800d2283d88627be98382997cfa417c0cdbcbdf0f40cdd0397b7100a5c6bdc2346cb860b6bde9237c56514aaa532ac86a9e33a5b26"
     },
     {
+      "name": "libgsystemservice",
+      "version": "0.3.0",
+      "url": "https://gitlab.gnome.org/pwithnall/libgsystemservice/-/archive/0.3.0/libgsystemservice-0.3.0.tar.gz",
+      "filename": "libgsystemservice-0.3.0.tar.gz",
+      "sha512": "ad422be588a223ac966dba9e745042581a695923c3368ee45435f91150cd0b624de99e6a2ad567ffb7c0601aa1eb1e4ae2dbcd7d2f5385d4b98c3d7941fa22a1"
+    },
+    {
       "name": "libgtop2",
       "version": "2.41.3",
       "url": "https://download.gnome.org/sources/libgtop/2.41/libgtop-2.41.3.tar.xz",
@@ -4325,6 +4332,13 @@
       "sha512": "4b24bf2b0543c16781be798387cfe5227f150c37304971ac5bd11c2715df22ba03e5909b05c97422b69102113279b3b4a606d0babe4b97000120e458755f9b7c"
     },
     {
+      "name": "libtsm",
+      "version": "4.8.0",
+      "url": "https://github.com/kmscon/libtsm/archive/v4.8.0/libtsm-4.8.0.tar.gz",
+      "filename": "libtsm-4.8.0.tar.gz",
+      "sha512": "cd40679eb25ade1505dbf7eca8d032ae5dc57b92be4f3a7ea4be79b68d2988bb6f8ba202d0bdf4b4dc76b7c743bc54ecc315b24e29b055cbfed9aefb29a653f6"
+    },
+    {
       "name": "libudfread",
       "version": "1.2.0",
       "url": "https://code.videolan.org/videolan/libudfread/-/archive/1.2.0/libudfread-1.2.0.tar.bz2",
@@ -4975,6 +4989,13 @@
       "sha512": "3d3e369b91f2aad336c682f5cc47ec25726409c29bf85ff407ae5ad3a81300fd227df82877efc2a6d461301dafcd3a40ee3556ce803e5e766b18b5dca2d35500"
     },
     {
+      "name": "nerd-fonts-symbols",
+      "version": "3.5.1",
+      "url": "https://github.com/ryanoasis/nerd-fonts/releases/download/v3.5.1/NerdFontsSymbolsOnly.tar.xz",
+      "filename": "nerd-fonts-symbols-3.5.1.tar.xz",
+      "sha512": "983fa63bc543a6b63d1d76186b7f1152b3c8f2b01cafa7db92adadc8aacc04147d36fcd03fd4ac8f95296f072c74c3c1f55a4c939ede6906e3e9e1840c657b53"
+    },
+    {
       "name": "net-snmp",
       "version": "5.9.5.2",
       "url": "https://downloads.sourceforge.net/project/net-snmp/net-snmp/5.9.5.2/net-snmp-5.9.5.2.tar.gz",
@@ -5298,6 +5319,13 @@
       "url": "https://developers.yubico.com/pam-u2f/Releases/pam_u2f-1.4.0.tar.gz",
       "filename": "pam_u2f-1.4.0.tar.gz",
       "sha512": "6ee4c5538a3b290748fae3b8c285b20a784fe2c0fdeff3a0bf250ec9b03659c6ddda4ea2d668c93d606f810e4f68cf3fc4130584a8532db9c9833a684d78f51f"
+    },
+    {
+      "name": "pam_pkcs11",
+      "version": "0.6.14",
+      "url": "https://github.com/OpenSC/pam_pkcs11/archive/refs/tags/pam_pkcs11-0.6.14.tar.gz",
+      "filename": "pam_pkcs11-0.6.14.tar.gz",
+      "sha512": "f169b6397229a8fd7985cbb64b1db957e42768636d747dd90c6597cebc3a1be5dc84af74c28cef7780a939950b2b907470d730517afa806b40cce063ef23ea10"
     },
     {
       "name": "pam_yubico",
@@ -7880,6 +7908,13 @@
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/zenity/zenity-4.2.2.tar.xz/sha512/383ca702e096b1ac1b26db431aa9c3c78b2e4ce62c2a8ea60d7f40ca8ed86095b73cc17d96590c7bf51916447e5533caef18ae9d524e6cf365cba13a544d72ec/zenity-4.2.2.tar.xz"
       ]
+    },
+    {
+      "name": "zig",
+      "version": "0.17.0",
+      "url": "https://ziglang.org/download/0.17.0/zig-x86_64-linux-0.17.0.tar.xz",
+      "filename": "zig-x86_64-linux-0.17.0.tar.xz",
+      "sha512": "152a876860ee15c8d7b77fe7107638e2739732350e4cfe98b6f2748265294994f78dbbe249367316318353b9d401d5184d34833cd221fffd088354f74f4ec499"
     },
     {
       "name": "zimg",
