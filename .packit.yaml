@@ -2956,6 +2956,12 @@ packages:
     downstream_package_name: oath-toolkit
     paths:
       - packages/oath-toolkit
+  ocl-icd:
+    specfile_path: ocl-icd.spec
+    upstream_package_name: ocl-icd
+    downstream_package_name: ocl-icd
+    paths:
+      - packages/ocl-icd
   oddjob:
     specfile_path: oddjob.spec
     upstream_package_name: oddjob

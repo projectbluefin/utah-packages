@@ -4679,6 +4679,13 @@
       ]
     },
     {
+      "name": "ocl-icd",
+      "version": "2.3.5",
+      "url": "https://github.com/OCL-dev/ocl-icd//archive/v2.3.5/ocl-icd-2.3.5.tar.gz",
+      "filename": "ocl-icd-2.3.5.tar.gz",
+      "sha512": "b7964d99dec661a12bb72de4fcf7e6b2efa9732d46154b453560611e9a6cc303ce621b87c8a753c620af2e16ad3c5931748917510b60a8c2b3f55dd2a9587ff7"
+    },
+    {
       "name": "oddjob",
       "version": "0.34.7",
       "url": "https://releases.pagure.org/oddjob/oddjob-0.34.7.tar.gz",
