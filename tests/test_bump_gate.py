@@ -611,7 +611,14 @@ class EnqueueBehaviorTests(unittest.TestCase):
             "if args[:2] == ['workflow', 'run']:\n"
             "    sys.exit(0)\n"
             "if args[:2] == ['pr', 'view']:\n"
-            "    print(os.environ.get('CURRENT_PR', os.environ.get('CURRENT_HEAD', '')))\n"
+            "    if 'PR_VIEWS' in os.environ:\n"
+            "        views = json.loads(os.environ['PR_VIEWS'])\n"
+            "        seen = root / 'views'\n"
+            "        n = int(seen.read_text()) if seen.exists() else 0\n"
+            "        seen.write_text(str(n + 1))\n"
+            "        print(json.dumps(views[min(n, len(views) - 1)]))\n"
+            "    else:\n"
+            "        print(os.environ.get('CURRENT_HEAD', ''))\n"
             "    sys.exit(0)\n"
             "if any(arg.endswith('/dispatches') for arg in args):\n"
             "    (root / 'dispatch.json').write_text(sys.stdin.read())\n"
@@ -698,16 +705,23 @@ class EnqueueBehaviorTests(unittest.TestCase):
         return subprocess.run(["bash", "-c", self.validate], cwd=self.workspace, env=self.env,
                               capture_output=True, text=True)
 
-    def run_landing(self) -> subprocess.CompletedProcess:
+    def view(self, status: str = "CLEAN", head: str | None = None) -> dict:
+        return {"state": "OPEN", "headRefName": "bump/upstream-sources",
+                "headRefOid": head or self.sha, "isCrossRepository": False,
+                "mergeStateStatus": status}
+
+    def run_landing(self, views: list[dict] | None = None) -> subprocess.CompletedProcess:
         for name, data in (
             ("landing.json", self.landing),
             ("enqueue.json", {"data": {"enqueuePullRequest": {"mergeQueueEntry": {"id": "MQE_42"}}}}),
             ("merged.json", {"merged": True}),
         ):
             (self.root / name).write_text(json.dumps(data))
+        (self.root / "views").unlink(missing_ok=True)
         return subprocess.run(["bash", "-c", self.merge], cwd=self.workspace,
                               env={**self.env, "PR": "42", "SHA": self.sha,
-                                   "GH_TOKEN": "repo-scoped-app-token"},
+                                   "GH_TOKEN": "repo-scoped-app-token",
+                                   "PR_VIEWS": json.dumps(views or [self.view()])},
                               capture_output=True, text=True)
 
     def calls(self) -> list[dict]:
@@ -766,35 +780,53 @@ class EnqueueBehaviorTests(unittest.TestCase):
         result = self.run_landing()
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         calls = self.calls()
-        self.assertEqual(calls[-2]["args"],
+        self.assertEqual(calls[-3]["args"],
                          ["pr", "checks", "42", "-R", "projectbluefin/utah-packages",
                           "--required", "--watch"])
+        self.assertEqual(calls[-2]["args"][:2], ["pr", "view"])
+        self.assertIn("mergeStateStatus", calls[-2]["args"][-1])
         self.assertEqual(calls[-1]["args"],
                          ["api", "--method", "PUT", "repos/projectbluefin/utah-packages/pulls/42/merge",
                           "-f", f"sha={self.sha}", "-f", "merge_method=squash"])
         self.assertFalse(any("--auto" in call["args"] for call in calls))
 
     def test_behind_head_is_updated_and_regated_not_merged(self) -> None:
+        # The state is read after the checks watch, so a head main moved
+        # past while its checks ran is caught too (#864).
         self.landing["data"]["repository"]["mergeQueue"] = None
-        self.landing["data"]["repository"]["pullRequest"].update(
-            mergeStateStatus="BEHIND", headRefName="bump/upstream-sources")
-        self.env["CURRENT_PR"] = json.dumps({"state": "OPEN", "headRefName": "bump/upstream-sources",
-                                             "headRefOid": "f" * 40, "isCrossRepository": False})
-        result = self.run_landing()
+        result = self.run_landing([self.view("BEHIND"), self.view("BEHIND", "f" * 40)])
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        calls = [call["args"] for call in self.calls()]
+        checks = calls.index(["pr", "checks", "42", "-R", "projectbluefin/utah-packages",
+                              "--required", "--watch"])
+        update = next(i for i, args in enumerate(calls) if f"expected_head_sha={self.sha}" in args)
+        self.assertLess(checks, update)
+        self.assertEqual(calls[-1][:3], ["workflow", "run", "bump-upstream-gate.yml"])
+        self.assertIn("bump/upstream-sources", calls[-1])
+        self.assertFalse(any(arg.endswith("/merge") for args in calls for arg in args))
+
+    def test_an_unknown_state_is_read_again_before_merging(self) -> None:
+        self.landing["data"]["repository"]["mergeQueue"] = None
+        result = self.run_landing([self.view("UNKNOWN"), self.view("CLEAN")])
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         calls = self.calls()
-        self.assertTrue(any(f"expected_head_sha={self.sha}" in call["args"] for call in calls))
-        self.assertEqual(calls[-1]["args"][:3], ["workflow", "run", "bump-upstream-gate.yml"])
-        self.assertFalse(any("/merge" in arg for call in calls for arg in call["args"]))
+        self.assertEqual(sum(call["args"][:2] == ["pr", "view"] for call in calls), 2)
+        self.assertTrue(calls[-1]["args"][-3].endswith("sha=" + self.sha))
+
+    def test_a_head_that_moved_during_the_checks_is_not_merged(self) -> None:
+        self.landing["data"]["repository"]["mergeQueue"] = None
+        result = self.run_landing([self.view("CLEAN", "f" * 40)])
+        self.assertNotEqual(result.returncode, 0)
+        self.assertFalse(any(arg.endswith("/merge") for call in self.calls() for arg in call["args"]))
 
     def test_update_race_does_not_dispatch_or_merge(self) -> None:
         self.landing["data"]["repository"]["mergeQueue"] = None
-        self.landing["data"]["repository"]["pullRequest"].update(
-            mergeStateStatus="BEHIND", headRefName="bump/upstream-sources")
         self.env["UPDATE_EXIT"] = "1"
-        result = self.run_landing()
+        result = self.run_landing([self.view("BEHIND")])
         self.assertNotEqual(result.returncode, 0)
-        self.assertFalse(any(call["args"][:2] == ["workflow", "run"] for call in self.calls()))
+        calls = self.calls()
+        self.assertFalse(any(call["args"][:2] == ["workflow", "run"] for call in calls))
+        self.assertFalse(any(arg.endswith("/merge") for call in calls for arg in call["args"]))
 
     def test_queue_discovery_error_never_falls_back_to_direct_merge(self) -> None:
         self.env["DISCOVERY_EXIT"] = "1"

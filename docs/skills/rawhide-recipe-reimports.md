@@ -18,10 +18,12 @@ metadata:
 dispatch-based gate needs, because a `GITHUB_TOKEN` pull request triggers no
 `pull_request` runs of its own.
 
-The no-queue landing workflow updates a behind daily branch only with the
-previously built head as its expected SHA, then dispatches a new gate. The
-merge commit needs its own package build verdict; the old verdict cannot
-authorize it.
+The no-queue landing workflow (`bump-upstream-enqueue.yml`) reads the pull
+request's `mergeStateStatus` after the required checks pass. When main moved
+past the built head (`BEHIND`, which strict freshness refuses to merge), it
+updates the daily branch with the built head as the expected SHA, then
+dispatches a new gate. The merge commit needs its own package build verdict;
+the old verdict cannot authorize it.
 
 ## What counts as a move
 

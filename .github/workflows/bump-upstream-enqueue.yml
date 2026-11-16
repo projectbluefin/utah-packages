@@ -110,7 +110,7 @@ jobs:
             repository(owner: $owner, name: $name) {
               mergeQueue(branch: "main") { id }
               pullRequest(number: $pr) {
-                id state baseRefName headRefName headRefOid isCrossRepository mergeStateStatus
+                id state baseRefName headRefOid isCrossRepository
               }
             }
           }
@@ -140,11 +140,24 @@ jobs:
             jq -e '((.errors // []) | length == 0) and
               (.data.enqueuePullRequest.mergeQueueEntry.id | type == "string" and length > 0)' enqueued.json > /dev/null
           else
-            if jq -e '.data.repository.pullRequest.mergeStateStatus == "BEHIND"' landing.json > /dev/null; then
-              branch=$(jq -r .data.repository.pullRequest.headRefName landing.json)
+            gh pr checks "$PR" -R "$REPOSITORY" --required --watch
+            # Strict freshness (#864): a head main moved past while it built,
+            # or while its checks ran, cannot merge (405). Read the state now,
+            # after the watch; GitHub answers UNKNOWN until it recomputes it.
+            for _ in $(seq 1 10); do
+              gh pr view "$PR" -R "$REPOSITORY" \
+                --json state,headRefName,headRefOid,isCrossRepository,mergeStateStatus > current.json
+              jq -e --arg sha "$SHA" '.state == "OPEN" and .headRefOid == $sha
+                and (.isCrossRepository | not)' current.json > /dev/null
+              [ "$(jq -r .mergeStateStatus current.json)" != UNKNOWN ] && break
+              sleep 3
+            done
+            if jq -e '.mergeStateStatus == "BEHIND"' current.json > /dev/null; then
+              branch=$(jq -r .headRefName current.json)
               case "$branch" in bump/upstream-sources|bump/rawhide-imports) ;; *) exit 1 ;; esac
               # GitHub checks the old head atomically. Never reuse its build
-              # verdict for the merge commit created by update-branch.
+              # verdict for the merge commit created by update-branch: the
+              # new head goes back through the gate, which hands it here again.
               gh api --method PUT "repos/$REPOSITORY/pulls/$PR/update-branch" \
                 -f expected_head_sha="$SHA" > updated.json
               for _ in $(seq 1 30); do
@@ -162,7 +175,6 @@ jobs:
               echo "::error::update-branch did not produce a new head" >&2
               exit 1
             fi
-            gh pr checks "$PR" -R "$REPOSITORY" --required --watch
             # A single SHA-pinned merge, never durable auto-merge: tomorrow's
             # daily branch head must earn its own named-package build verdict.
             gh api --method PUT "repos/$REPOSITORY/pulls/$PR/merge" \
