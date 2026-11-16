@@ -4045,6 +4045,13 @@
       "sha512": "4b24bf2b0543c16781be798387cfe5227f150c37304971ac5bd11c2715df22ba03e5909b05c97422b69102113279b3b4a606d0babe4b97000120e458755f9b7c"
     },
     {
+      "name": "libtsm",
+      "version": "4.8.0",
+      "url": "https://github.com/kmscon/libtsm/archive/v4.8.0/libtsm-4.8.0.tar.gz",
+      "filename": "libtsm-4.8.0.tar.gz",
+      "sha512": "cd40679eb25ade1505dbf7eca8d032ae5dc57b92be4f3a7ea4be79b68d2988bb6f8ba202d0bdf4b4dc76b7c743bc54ecc315b24e29b055cbfed9aefb29a653f6"
+    },
+    {
       "name": "libudfread",
       "version": "1.2.0",
       "url": "https://code.videolan.org/videolan/libudfread/-/archive/1.2.0/libudfread-1.2.0.tar.bz2",

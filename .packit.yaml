@@ -2566,6 +2566,12 @@ packages:
     downstream_package_name: libtracefs
     paths:
       - packages/libtracefs
+  libtsm:
+    specfile_path: libtsm.spec
+    upstream_package_name: libtsm
+    downstream_package_name: libtsm
+    paths:
+      - packages/libtsm
   libudfread:
     specfile_path: libudfread.spec
     upstream_package_name: libudfread
