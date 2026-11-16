@@ -2237,6 +2237,13 @@
       ]
     },
     {
+      "name": "isns-utils",
+      "version": "0.103",
+      "url": "https://github.com/open-iscsi/open-isns/archive/v0.103.tar.gz#/open-isns-0.103.tar.gz",
+      "filename": "open-isns-0.103.tar.gz",
+      "sha512": "219dd4f7e0a8459f5acaf2036fc737b90604cdcfe78b5492d50e4826744923afe35c9c331b3e39aa7c9bb5ebb2c378c464dced204d51da46e2b7474c6ca94057"
+    },
+    {
       "name": "iso-codes",
       "version": "4.20.1",
       "url": "https://salsa.debian.org/iso-codes-team/iso-codes/-/archive/v4.20.1/iso-codes-v4.20.1.tar.gz",

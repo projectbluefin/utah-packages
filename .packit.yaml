@@ -1420,6 +1420,12 @@ packages:
     downstream_package_name: iputils
     paths:
       - packages/iputils
+  isns-utils:
+    specfile_path: isns-utils.spec
+    upstream_package_name: isns-utils
+    downstream_package_name: isns-utils
+    paths:
+      - packages/isns-utils
   iso-codes:
     specfile_path: iso-codes.spec
     upstream_package_name: iso-codes
