@@ -6,44 +6,48 @@ which regenerates `_pb2.py` files that the 3.19.6 runtime cannot import
 So the 3.19.x-generated bindings are generated once and shipped as sources instead
 of being regenerated at build time.
 
-## Source10 — `criu-rpc_pb2.py` (single file)
+In criu 4.3 the 76 `.proto` schemas live in the top-level `images/` directory
+(`lib/pycriu/images/` holds only the Python helpers), and upstream's Makefiles
+generate with `-I=images`, so protoc writes each binding straight into
+`--python_out` as `<name>_pb2.py`.
+
+## Regenerating Source10 and Source11
+
+Run from the root of the criu 4.3 source (Source0; its SHA-512 is in
+`packages/criu/sources`) with protoc 3.19.6 on `PATH`, for example
+`protoc-3.19.6-linux-x86_64.zip` from the protobuf v3.19.6 release. protoc
+finds `google/protobuf/descriptor.proto` (imported by `opts.proto`) in the
+`include/` directory next to its binary. GNU tar is required for the archive.
 
 ```sh
-# From a checkout of criu 4.3 with protobuf-3.19.x on PATH. protoc strips the
-# -I include dir from the input path before writing, so pass the full input
-# path (lib/pycriu/images/rpc.proto) with -I=lib/pycriu/images: the output lands
-# at --python_out/rpc_pb2.py. protoc does not create --python_out, so mkdir it.
-mkdir -p /tmp/rpc
-protoc -I=lib/pycriu/images --python_out=/tmp/rpc lib/pycriu/images/rpc.proto
-cp /tmp/rpc/rpc_pb2.py packages/criu/criu-rpc_pb2.py
+# Absolute path of packages/criu in a utah-packages checkout.
+package_dir=/path/to/utah-packages/packages/criu
+generated=$(mktemp -d)
+mkdir -p "$generated/rpc" "$generated/images/criu-pycriu-images"
+
+# Source10: criu-rpc_pb2.py. Patch100 makes lib/pycriu/Makefile copy
+# $RPC_PB2_PY instead of running protoc.
+protoc -I=images --python_out="$generated/rpc" images/rpc.proto
+cp "$generated/rpc/rpc_pb2.py" "$package_dir/criu-rpc_pb2.py"
+
+# Source11: criu-pycriu-images.tar, the other 75 image bindings. rpc_pb2.py
+# is Source10, so it is left out of the archive.
+protoc -I=images --python_out="$generated/images/criu-pycriu-images" images/*.proto
+rm -f "$generated/images/criu-pycriu-images/rpc_pb2.py"
+# Rooted at criu-pycriu-images/, which %prep strips with
+# --strip-components=1. The fixed order, owner and mtime make the archive
+# byte-identical on every run.
+TZ=UTC tar --format=gnu --sort=name --mtime='2020-01-01 00:00:00' \
+    --owner=0 --group=0 --numeric-owner --mode='u=rwX,go=rX' \
+    -cf "$package_dir/criu-pycriu-images.tar" \
+    -C "$generated/images" criu-pycriu-images
 ```
 
-Patched into `lib/pycriu/Makefile` (Patch100) so the build copies
-`$RPC_PB2_PY` instead of running protoc.
+Both commands reproduce the committed files byte for byte. The archive holds
+76 entries (the `criu-pycriu-images/` directory and 75 `*_pb2.py`), including
+`opts_pb2.py` and `sk_opts_pb2.py`, which other image bindings import. Patch101
+makes `lib/pycriu/images/Makefile` copy `$PYCRIU_IMAGES_PB2/*` instead of running
+protoc.
 
-## Source11 — `criu-pycriu-images.tar` (75 image bindings)
-
-```sh
-# Same environment. Generate every image binding except rpc_pb2.py into a
-# criu-pycriu-images/ directory (the prefix the spec extracts with
-# --strip-components=1). protoc strips the -I include dir from each input path,
-# so with -I=lib/pycriu/images every file lands at
-# --python_out/<name>_pb2.py: target criu-pycriu-images/ directly.
-mkdir -p /tmp/images/criu-pycriu-images
-protoc -I=lib/pycriu/images --python_out=/tmp/images/criu-pycriu-images \
-    lib/pycriu/images/*.proto
-# rpc_pb2.py is shipped separately (Source10), so drop it from the image set:
-rm -f /tmp/images/criu-pycriu-images/rpc_pb2.py
-# Archive exactly criu-pycriu-images/ so --strip-components=1 lands the 75
-# bindings directly in %{_builddir}/criu-pycriu-images:
-tar cf packages/criu/criu-pycriu-images.tar -C /tmp/images criu-pycriu-images
-```
-
-The tarball holds 76 entries (the `criu-pycriu-images/` dir + 75 `*_pb2.py`),
-including `opts_pb2.py`/`sk_opts_pb2.py` that some image bindings import, and
-deliberably **excludes** `rpc_pb2.py` (shipped as Source10). Patch101 extracts it
-into `%{_builddir}/criu-pycriu-images` and the build copies from
-`$PYCRIU_IMAGES_PB2` instead of regenerating with protoc 6.x.
-
-All bindings are pre-3.20 codegen with no `runtime_version` marker, matching the
+All bindings are pre-3.20 codegen with no `runtime_version` import, matching the
 pinned 3.19.6 runtime.
