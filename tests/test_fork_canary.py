@@ -467,7 +467,7 @@ class CarryOverTests(unittest.TestCase):
         for name in ("tools/canary.py", "Justfile", ".github/workflows/rebuild-rpms.yml",
                      ".github/actions/x/action.yml", "config/buildroot-image", "Containerfile",
                      "locks/libical/buildroot_lock.json", "packages/libical/libical.spec",
-                     "packages/python-typing-inspection/python-typing-inspection.spec",
+                     "packages/xevd/xevd.spec",
                      "packages/policy.toml", "reports/x.json", ".packit.yaml", ".gitattributes",
                      "renovate.json"):
             with self.subTest(name=name):
