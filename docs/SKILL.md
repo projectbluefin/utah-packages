@@ -33,6 +33,7 @@ Both are indexed below. A skill that exists but is not listed here fails
 | Import, configure, or verify font package recipes | [`skills/font-package-recipes.md`](skills/font-package-recipes.md) |
 | Import a terminal emulator (ptyxis, gnome-console, kgx) or its vte291 stack | [`skills/terminal-emulator-recipes.md`](skills/terminal-emulator-recipes.md) |
 | Carry or verify GNOME Shell theme fixes | [`skills/gnome-shell-theme-patches.md`](skills/gnome-shell-theme-patches.md) |
+| Add, bump or review a GNOME Shell extension recipe written from a Dakota shell-extension element | [`skills/gnome-shell-extension-recipes.md`](skills/gnome-shell-extension-recipes.md) |
 | Interpret or regenerate the GNOME-vs-gnome-build-meta audit | [`skills/gnome-build-meta-audit.md`](skills/gnome-build-meta-audit.md) |
 | Diff a GNOME source version, patch line, feature flag, or dependency edge against BuildStream intent | [`skills/gnome-build-meta-audit.md`](skills/gnome-build-meta-audit.md) |
 | Package a Dakota or gnome-build-meta configuration element as a `dakota-config` or `gnome-os-config` subpackage, or move their pinned commits | [`skills/config-packages.md`](skills/config-packages.md) |
