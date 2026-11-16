@@ -304,6 +304,12 @@ packages:
     downstream_package_name: cdparanoia
     paths:
       - packages/cdparanoia
+  chairlift:
+    specfile_path: chairlift.spec
+    upstream_package_name: chairlift
+    downstream_package_name: chairlift
+    paths:
+      - packages/chairlift
   chromaprint:
     specfile_path: chromaprint.spec
     upstream_package_name: chromaprint

@@ -439,6 +439,13 @@
       ]
     },
     {
+      "name": "chairlift",
+      "version": "26.11.2",
+      "url": "https://github.com/projectbluefin/chairlift/releases/download/v26.11.2/chairlift_26.11.2_linux_amd64.tar.gz",
+      "filename": "chairlift-26.11.2-x86_64.tar.gz",
+      "sha512": "c94581103d32f1d03e56a39cc2d9fcbec0dbe07919ba4a39088dbb7c0feedd9590b9a01061e4cdf38e3ea0b45e63d8761bb96cc218d8765a794c39910bd02c75"
+    },
+    {
       "name": "chromaprint",
       "version": "1.6.2",
       "url": "https://github.com/acoustid/chromaprint/releases/download/v1.6.2/chromaprint-1.6.2.tar.gz",
