@@ -4525,6 +4525,13 @@
       "sha512": "847935813453368ba890839e422a71912a8f53cc1256cd6800849976b58929d8415641d521ab3a7523262e0ef76058fb5db228f68e467424d45846d0f1ab2ebc"
     },
     {
+      "name": "ministream",
+      "version": "0.99.1",
+      "url": "https://download.gnome.org/sources/ministream/0.99/ministream-0.99.1.tar.xz",
+      "filename": "ministream-0.99.1.tar.xz",
+      "sha512": "7025b24a3b7ddd4c78c78646eaf500391f6eaf9b390857662818fb1d733aa2e2a2820a4ee57324bc67d4f00b01c09379b32dda30fca4581280bec02535853b17"
+    },
+    {
       "name": "mobile-broadband-provider-info",
       "version": "20240407",
       "url": "https://download.gnome.org/sources/mobile-broadband-provider-info/20240407/mobile-broadband-provider-info-20240407.tar.xz",
