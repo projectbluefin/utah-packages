@@ -243,6 +243,13 @@
       ]
     },
     {
+      "name": "android-udev-rules",
+      "version": "20260423",
+      "url": "https://github.com/M0Rf30/android-udev-rules/archive/refs/tags/20260423.tar.gz",
+      "filename": "android-udev-rules-20260423.tar.gz",
+      "sha512": "97966f1c02a9f85825a217384c94cfa8b9f721173e543c324b866ee7823b09ca67ec7ba1b012ce10de9d56ae7e4157d4cec8364c8e325001664cf6383778a5fe"
+    },
+    {
       "name": "anthy-unicode",
       "version": "1.0.0.20260213",
       "url": "https://github.com/fujiwarat/anthy-unicode/releases/download/1.0.0.20260213/anthy-unicode-1.0.0.20260213.tar.xz",
