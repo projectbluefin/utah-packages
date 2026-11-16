@@ -1,0 +1,59 @@
+From 7744ee345fe799d89cda38a249210ff0ad973853 Mon Sep 17 00:00:00 2001
+From: Fabio Valentini <decathorpe@gmail.com>
+Date: Mon, 17 Aug 2026 19:48:57 +0200
+Subject: [PATCH 3/4] meson: pass through "rpm" profile to cargo build
+
+---
+ pam/src/meson.build    | 4 ++--
+ portal/src/meson.build | 4 ++--
+ server/src/meson.build | 4 ++--
+ 3 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/pam/src/meson.build b/pam/src/meson.build
+index 98a8052..a10289b 100644
+--- a/pam/src/meson.build
++++ b/pam/src/meson.build
+@@ -6,8 +6,8 @@ if is_devel
+   rust_target = 'debug'
+   message('Building in debug mode')
+ else
+-  cargo_options += [ '--release' ]
+-  rust_target = 'release'
++  cargo_options += [ '--profile', 'rpm' ]
++  rust_target = 'rpm'
+   message('Building in release mode')
+ endif
+ 
+diff --git a/portal/src/meson.build b/portal/src/meson.build
+index a7cec56..8c518b5 100644
+--- a/portal/src/meson.build
++++ b/portal/src/meson.build
+@@ -6,8 +6,8 @@ if is_devel
+   rust_target = 'debug'
+   message('Building in debug mode')
+ else
+-  cargo_options += [ '--release' ]
+-  rust_target = 'release'
++  cargo_options += [ '--profile', 'rpm' ]
++  rust_target = 'rpm'
+   message('Building in release mode')
+ endif
+ 
+diff --git a/server/src/meson.build b/server/src/meson.build
+index fa4845b..70c6293 100644
+--- a/server/src/meson.build
++++ b/server/src/meson.build
+@@ -6,8 +6,8 @@ if is_devel
+   rust_target = 'debug'
+   message('Building in debug mode')
+ else
+-  cargo_options += [ '--release' ]
+-  rust_target = 'release'
++  cargo_options += [ '--profile', 'rpm' ]
++  rust_target = 'rpm'
+   message('Building in release mode')
+ endif
+ 
+-- 
+2.55.0
+

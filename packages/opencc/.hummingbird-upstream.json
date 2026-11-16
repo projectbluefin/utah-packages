@@ -1,0 +1,8 @@
+{
+  "package": "opencc",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/opencc.git",
+  "commit": "4d411097be126845af51f7dfee3097b26531ffe4",
+  "tree": "fa1aebb37aec04d2d9828519851c07706283699a",
+  "imported_at": "2026-11-16T04:05:32.351324+00:00"
+}

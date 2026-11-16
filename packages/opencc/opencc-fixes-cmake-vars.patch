@@ -1,0 +1,30 @@
+commit 01d0b4c88711daf697223be1aee78940f82b983e
+Author: Peng Wu <pwu@redhat.com>
+Date:   Mon Aug 11 16:22:12 2025 +0800
+
+    Update for https://fedoraproject.org/wiki/Changes/CMake_drop_install_vars
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index b79e5b5..d5974f1 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -21,6 +21,7 @@ cmake_minimum_required(VERSION 3.5)
+ set (PACKAGE_NAME opencc)
+ project (${PACKAGE_NAME} CXX)
+ include (CTest)
++include(GNUInstallDirs)
+ 
+ ######## Options
+ option(BUILD_DOCUMENTATION "Use Doxygen to create the HTML based API documentation" OFF)
+@@ -78,6 +79,11 @@ endif()
+ 
+ ######## Directory
+ 
++set(LIB_INSTALL_DIR "${CMAKE_INSTALL_LIBDIR}" CACHE PATH "")
++if(CMAKE_INSTALL_LIBDIR MATCHES "lib64$")
++  set(LIB_SUFFIX 64)
++endif()
++
+ set (DIR_PREFIX ${CMAKE_INSTALL_PREFIX})
+ set (DIR_INCLUDE ${DIR_PREFIX}/include)
+ set (DIR_SHARE ${DIR_PREFIX}/share)

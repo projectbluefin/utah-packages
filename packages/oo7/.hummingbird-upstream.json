@@ -1,0 +1,8 @@
+{
+  "package": "oo7",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/oo7.git",
+  "commit": "dc60828fe050121c20800950eb1b19c6de64d164",
+  "tree": "9053ee980e5ce83d879309f051596c6523078b2d",
+  "imported_at": "2026-11-16T04:09:27.544054+00:00"
+}

@@ -1,0 +1,8 @@
+{
+  "package": "libpanel",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libpanel.git",
+  "commit": "58a4be4ea73065ac29d91811a757e89a19c3038c",
+  "tree": "f77ad8647484b3e0e8f32da2119073663bca4730",
+  "imported_at": "2026-11-16T04:08:49.283848+00:00"
+}

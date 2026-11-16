@@ -1,0 +1,8 @@
+{
+  "package": "gcab",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/gcab.git",
+  "commit": "9d9bd07aefc485e3e34d270e5a5dd8b9dcb9b051",
+  "tree": "2396b912f0691376cde5e2bd53e5dde5386faaed",
+  "imported_at": "2026-11-16T04:17:18.131971+00:00"
+}
