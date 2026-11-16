@@ -6159,6 +6159,13 @@
       ]
     },
     {
+      "name": "spice",
+      "version": "0.16.0",
+      "url": "https://www.spice-space.org/download/releases/spice-0.16.0.tar.bz2",
+      "filename": "spice-0.16.0.tar.bz2",
+      "sha512": "21fb8cc3cc4b3c185a1d3735dfda5df054e9244eeec9f3e2e2cf6f67acce70b213766502e55ac7c7e3b69872895cb28b79a39b4d428b63e030eaa157b6c48731"
+    },
+    {
       "name": "spice-protocol",
       "version": "0.14.5",
       "url": "https://www.spice-space.org/download/releases/spice-protocol-0.14.5.tar.xz",
