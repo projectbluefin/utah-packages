@@ -623,6 +623,13 @@
       ]
     },
     {
+      "name": "dejavu-fonts",
+      "version": "2.37",
+      "url": "https://github.com/dejavu-fonts/dejavu-fonts/archive/version_2_37/dejavu-fonts-version_2_37.tar.gz",
+      "filename": "dejavu-fonts-version_2_37.tar.gz",
+      "sha512": "44908104637b2f10c3c9fa0d0eeacfd109fc2203bba1c07c8b24e5264ead92f41a5bb397fe6c5206c4cc3fde37b8b05e14c61c9ba38893b06b2a5ea6a929ae17"
+    },
+    {
       "name": "desktop-file-utils",
       "version": "0.28",
       "url": "https://www.freedesktop.org/software/desktop-file-utils/releases/desktop-file-utils-0.28.tar.xz",

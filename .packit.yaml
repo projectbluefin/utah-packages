@@ -424,6 +424,12 @@ packages:
     downstream_package_name: ddcutil
     paths:
       - packages/ddcutil
+  dejavu-fonts:
+    specfile_path: dejavu-fonts.spec
+    upstream_package_name: dejavu-fonts
+    downstream_package_name: dejavu-fonts
+    paths:
+      - packages/dejavu-fonts
   desktop-file-utils:
     specfile_path: desktop-file-utils.spec
     upstream_package_name: desktop-file-utils
