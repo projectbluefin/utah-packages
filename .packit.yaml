@@ -256,6 +256,12 @@ packages:
     downstream_package_name: borgbackup
     paths:
       - packages/borgbackup
+  bpftool:
+    specfile_path: bpftool.spec
+    upstream_package_name: bpftool
+    downstream_package_name: bpftool
+    paths:
+      - packages/bpftool
   bpftop:
     specfile_path: bpftop.spec
     upstream_package_name: bpftop

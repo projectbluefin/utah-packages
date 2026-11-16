@@ -372,6 +372,13 @@
       "sha512": "1303e334b32dd62847918920777ca47eec072974859f612d054fc516fdab56eea588d34ae2f71e9c0757486769dd5ba057d5c6bb05294f40ff52a8b41f7e5801"
     },
     {
+      "name": "bpftool",
+      "version": "7.8.1",
+      "url": "https://github.com/libbpf/bpftool/releases/download/v7.8.1/bpftool-libbpf-v7.8.1-sources.tar.gz",
+      "filename": "bpftool-libbpf-v7.8.1-sources.tar.gz",
+      "sha512": "8e13487a70ea5a7da7b697a95e4bb6b7d02954d19d37a7ce1d499ae75eca266557095ed5dabf27cbbe184771e451c7f707ba054b5ad383854fc999dc79c34fc9"
+    },
+    {
       "name": "bpftop",
       "version": "0.9.1",
       "url": "https://github.com/jfernandez/bpftop/archive/v0.9.1/bpftop-0.9.1.tar.gz",
