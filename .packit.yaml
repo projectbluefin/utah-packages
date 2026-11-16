@@ -958,12 +958,78 @@ packages:
     downstream_package_name: gnome-shell
     paths:
       - packages/gnome-shell
+  gnome-shell-extension-bazaar-companion:
+    specfile_path: gnome-shell-extension-bazaar-companion.spec
+    upstream_package_name: gnome-shell-extension-bazaar-companion
+    downstream_package_name: gnome-shell-extension-bazaar-companion
+    paths:
+      - packages/gnome-shell-extension-bazaar-companion
+  gnome-shell-extension-budslink-companion:
+    specfile_path: gnome-shell-extension-budslink-companion.spec
+    upstream_package_name: gnome-shell-extension-budslink-companion
+    downstream_package_name: gnome-shell-extension-budslink-companion
+    paths:
+      - packages/gnome-shell-extension-budslink-companion
+  gnome-shell-extension-custom-command-menu:
+    specfile_path: gnome-shell-extension-custom-command-menu.spec
+    upstream_package_name: gnome-shell-extension-custom-command-menu
+    downstream_package_name: gnome-shell-extension-custom-command-menu
+    paths:
+      - packages/gnome-shell-extension-custom-command-menu
+  gnome-shell-extension-fuzzy-application-search:
+    specfile_path: gnome-shell-extension-fuzzy-application-search.spec
+    upstream_package_name: gnome-shell-extension-fuzzy-application-search
+    downstream_package_name: gnome-shell-extension-fuzzy-application-search
+    paths:
+      - packages/gnome-shell-extension-fuzzy-application-search
+  gnome-shell-extension-gradia-capture:
+    specfile_path: gnome-shell-extension-gradia-capture.spec
+    upstream_package_name: gnome-shell-extension-gradia-capture
+    downstream_package_name: gnome-shell-extension-gradia-capture
+    paths:
+      - packages/gnome-shell-extension-gradia-capture
   gnome-shell-extension-gsconnect:
     specfile_path: gnome-shell-extension-gsconnect.spec
     upstream_package_name: gnome-shell-extension-gsconnect
     downstream_package_name: gnome-shell-extension-gsconnect
     paths:
       - packages/gnome-shell-extension-gsconnect
+  gnome-shell-extension-power-status-color:
+    specfile_path: gnome-shell-extension-power-status-color.spec
+    upstream_package_name: gnome-shell-extension-power-status-color
+    downstream_package_name: gnome-shell-extension-power-status-color
+    paths:
+      - packages/gnome-shell-extension-power-status-color
+  gnome-shell-extension-quicksettings-audio-devices-hider:
+    specfile_path: gnome-shell-extension-quicksettings-audio-devices-hider.spec
+    upstream_package_name: gnome-shell-extension-quicksettings-audio-devices-hider
+    downstream_package_name: gnome-shell-extension-quicksettings-audio-devices-hider
+    paths:
+      - packages/gnome-shell-extension-quicksettings-audio-devices-hider
+  gnome-shell-extension-quicksettings-audio-devices-renamer:
+    specfile_path: gnome-shell-extension-quicksettings-audio-devices-renamer.spec
+    upstream_package_name: gnome-shell-extension-quicksettings-audio-devices-renamer
+    downstream_package_name: gnome-shell-extension-quicksettings-audio-devices-renamer
+    paths:
+      - packages/gnome-shell-extension-quicksettings-audio-devices-renamer
+  gnome-shell-extension-syncthing-toggle:
+    specfile_path: gnome-shell-extension-syncthing-toggle.spec
+    upstream_package_name: gnome-shell-extension-syncthing-toggle
+    downstream_package_name: gnome-shell-extension-syncthing-toggle
+    paths:
+      - packages/gnome-shell-extension-syncthing-toggle
+  gnome-shell-extension-tailscale-qs:
+    specfile_path: gnome-shell-extension-tailscale-qs.spec
+    upstream_package_name: gnome-shell-extension-tailscale-qs
+    downstream_package_name: gnome-shell-extension-tailscale-qs
+    paths:
+      - packages/gnome-shell-extension-tailscale-qs
+  gnome-shell-extension-tilingshell:
+    specfile_path: gnome-shell-extension-tilingshell.spec
+    upstream_package_name: gnome-shell-extension-tilingshell
+    downstream_package_name: gnome-shell-extension-tilingshell
+    paths:
+      - packages/gnome-shell-extension-tilingshell
   gnome-system-monitor:
     specfile_path: gnome-system-monitor.spec
     upstream_package_name: gnome-system-monitor
@@ -4144,6 +4210,12 @@ packages:
     downstream_package_name: tesseract-tessdata
     paths:
       - packages/tesseract-tessdata
+  tex-gyre-fonts:
+    specfile_path: tex-gyre-fonts.spec
+    upstream_package_name: tex-gyre-fonts
+    downstream_package_name: tex-gyre-fonts
+    paths:
+      - packages/tex-gyre-fonts
   thermald:
     specfile_path: thermald.spec
     upstream_package_name: thermald
@@ -4318,6 +4390,12 @@ packages:
     downstream_package_name: uvg266
     paths:
       - packages/uvg266
+  uwelcome:
+    specfile_path: uwelcome.spec
+    upstream_package_name: uwelcome
+    downstream_package_name: uwelcome
+    paths:
+      - packages/uwelcome
   v4l-utils:
     specfile_path: v4l-utils.spec
     upstream_package_name: v4l-utils

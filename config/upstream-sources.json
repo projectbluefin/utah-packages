@@ -1470,6 +1470,41 @@
       ]
     },
     {
+      "name": "gnome-shell-extension-bazaar-companion",
+      "version": "0^20260403git3bb9134",
+      "url": "https://github.com/bazaar-org/bazaar-companion/archive/3bb9134985343ffd1993520eb37c90e113bfb09b/bazaar-companion-3bb9134.tar.gz",
+      "filename": "bazaar-companion-3bb9134.tar.gz",
+      "sha512": "57f979e7307a41bd5e734572a4eb1e68229eb6822a69079165d66b5b90ac00cc893c3ff5812facd828e9cae9be7c2dd9137f8dbaa8c17e77f2c2846919121dac"
+    },
+    {
+      "name": "gnome-shell-extension-budslink-companion",
+      "version": "0^20260823gitc11b6cf",
+      "url": "https://github.com/maniacx/BudsLink-Companion/archive/c11b6cf5626ee5417efc0af91148736e0697c354/BudsLink-Companion-c11b6cf.tar.gz",
+      "filename": "BudsLink-Companion-c11b6cf.tar.gz",
+      "sha512": "ab0d3635eba46dfe3758b1916639801982ed29c62f19c733798c1169dcd50c852ba10895348ac122dc93993a0f153b69b162a6cd2dfa1adde6d308d39bedfc5b"
+    },
+    {
+      "name": "gnome-shell-extension-custom-command-menu",
+      "version": "16",
+      "url": "https://github.com/StorageB/custom-command-menu/archive/v16/custom-command-menu-16.tar.gz",
+      "filename": "custom-command-menu-16.tar.gz",
+      "sha512": "1d8ca91a21fe9493137f87488457b6fb11e784a4717c8d5d9322c5156e5351d625b3140de536c23b9f0f479984a7bd456df15fe7fdbd5733c3ea4ff7ac014218"
+    },
+    {
+      "name": "gnome-shell-extension-fuzzy-application-search",
+      "version": "2",
+      "url": "https://codeberg.org/mkhl/gnome-shell-extension-fuzzy-application-search/archive/v2.tar.gz",
+      "filename": "gnome-shell-extension-fuzzy-application-search-2.tar.gz",
+      "sha512": "28086447b90902c69b6a6424fdf94ee2da1d72a74d5a909ea93bab30b2cdbdee38b0e41c4ada04289014b16be0ca811c47af19919c407cc910a8d78a2738239f"
+    },
+    {
+      "name": "gnome-shell-extension-gradia-capture",
+      "version": "0^20261016git0b7e47e",
+      "url": "https://github.com/AlexanderVanhee/gradia-capture/archive/0b7e47e1e5c1e68e234e4d2d24b307e1da1d18a9/gradia-capture-0b7e47e.tar.gz",
+      "filename": "gradia-capture-0b7e47e.tar.gz",
+      "sha512": "bdc961feaf2a6c07ff6bd1ef89e165a06fedc4d30dc49c7e1614e3aca4efd14ce6f63aab1bd253dfc8ef7c0ec58d5e46396f1f6cee2b44b349162fdb8450c37a"
+    },
+    {
       "name": "gnome-shell-extension-gsconnect",
       "version": "72",
       "url": "https://github.com/GSConnect/gnome-shell-extension-gsconnect/archive/v72/gnome-shell-extension-gsconnect-72.tar.gz",
@@ -1478,6 +1513,48 @@
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/gnome-shell-extension-gsconnect/gnome-shell-extension-gsconnect-72.tar.gz/sha512/d2d6931d945ac28884048c60107aa9daa9494d4863e37278830047acaa2706b84815952a1df9c9a2b3e63599b56ae7bc89cafb76980a66878ab44b4700bcf260/gnome-shell-extension-gsconnect-72.tar.gz"
       ]
+    },
+    {
+      "name": "gnome-shell-extension-power-status-color",
+      "version": "0^20261111gitf43fc6d",
+      "url": "https://github.com/projectbluefin/bluefin-bling/archive/f43fc6dccdfebe28e9312756d538208d073f7854/bluefin-bling-f43fc6d.tar.gz",
+      "filename": "bluefin-bling-f43fc6d.tar.gz",
+      "sha512": "5c84c8afee4278afcf2078aca371ee86d6796185aa97019b14935fe272902ccc93319c5cf86ad02cd8d8db7e3f4fc657b748b9460823dea9443ef05bce34fc50"
+    },
+    {
+      "name": "gnome-shell-extension-quicksettings-audio-devices-hider",
+      "version": "18",
+      "url": "https://extensions.gnome.org/download-extension/quicksettings-audio-devices-hider@marcinjahn.com.shell-extension.zip?version_tag=69924",
+      "filename": "gnome-shell-extension-quicksettings-audio-devices-hider-18.zip",
+      "sha512": "013e1ef09a31fb5047b0ec30670a355a96fed78cbba456af69cde98f948cc6ac702163e751402dc227340922f69331dced9705bed0454dff36f46819912edd41"
+    },
+    {
+      "name": "gnome-shell-extension-quicksettings-audio-devices-renamer",
+      "version": "8",
+      "url": "https://extensions.gnome.org/download-extension/quicksettings-audio-devices-renamer@marcinjahn.com.shell-extension.zip?version_tag=69925",
+      "filename": "gnome-shell-extension-quicksettings-audio-devices-renamer-8.zip",
+      "sha512": "3e22730865574c91f79efffb8103fa8d1f6191ebbe349b0877a3104290f422be2e42f1620ea112bcdd5556d9f643bf55b92c0e4d737965c536b15ed12e54075f"
+    },
+    {
+      "name": "gnome-shell-extension-syncthing-toggle",
+      "version": "0^20261102gitbaa802a",
+      "url": "https://github.com/projectbluefin/bluefin-bling/archive/baa802a45d7aaa514ad02e3b91076546bfa034d9/bluefin-bling-baa802a.tar.gz",
+      "filename": "bluefin-bling-baa802a.tar.gz",
+      "sha512": "a3a66c9ba422b761762483c7ddf1ca75e8251aab530cab7a4b3e8ef76dde07c516e11360e49cebaba5db421a5202bc228b24d5b19411834f2a74c9e662b9d8e9"
+    },
+    {
+      "name": "gnome-shell-extension-tailscale-qs",
+      "version": "9",
+      "url": "https://github.com/tailscale-qs/tailscale-gnome-qs/archive/v9/tailscale-gnome-qs-9.tar.gz",
+      "filename": "tailscale-gnome-qs-9.tar.gz",
+      "sha512": "3cef555acc944dde9576470c60579987030d1f383f130fac615dd609ecebcd6d6be735dc177f471cf31d3f9e45135c73e43bba19349f33b271a641728e668177"
+    },
+    {
+      "name": "gnome-shell-extension-tilingshell",
+      "version": "17.3",
+      "url": "https://extensions.gnome.org/download-extension/tilingshell@ferrarodomenico.com.shell-extension.zip?version_tag=70233",
+      "filename": "gnome-shell-extension-tilingshell-17.3.zip",
+      "sha512": "e2338565f5e713dea8a4848ea19ed4613ff3b8ce74a2dcafac0c1f7105adeb245b8d6c1ff86617c5e4f1c7c2a3ea6a5598c474f53665498f6c8f43016d97cc00"
     },
     {
       "name": "gnome-system-monitor",
@@ -6442,6 +6519,13 @@
       "sha512": "d5e3461d262e300ebf21abc39d19471a6aabed442eab8fdee772368a02c4fe0d2e5738701e31b2d0777989778c9db0169a57ea89537266bc66d2228fb96ea63e"
     },
     {
+      "name": "tex-gyre-fonts",
+      "version": "2.501",
+      "url": "https://mirrors.ctan.org/fonts/tex-gyre.zip",
+      "filename": "tex-gyre-fonts-2.501.zip",
+      "sha512": "1135fd8cd8c308d1deff5ed31dbb96e88d074dff1b0f99eb0fd295397805d2dab0a43ed2727750be0d7ea013b1eda390bbaba42e8410379e5665ec80cdcee9e6"
+    },
+    {
       "name": "thermald",
       "version": "2.5.13",
       "url": "https://github.com/intel/thermal_daemon/archive/v2.5.13/thermald-2.5.13.tar.gz",
@@ -6688,6 +6772,13 @@
       "url": "https://github.com/ultravideo/uvg266/archive/v0.8.1/uvg266-0.8.1.tar.gz",
       "filename": "uvg266-0.8.1.tar.gz",
       "sha512": "892b0732516fe2639f93b250bbed342da8134deeaa6f0ccb429ff8451df727f971c7ee284fef93eaa431c5c54a8b8789ffc853d8b45ae93433ba17007989bbae"
+    },
+    {
+      "name": "uwelcome",
+      "version": "0.4.1",
+      "url": "https://github.com/projectbluefin/uwelcome/releases/download/v0.4.1/uwelcome_0.4.1_linux_amd64",
+      "filename": "uwelcome-0.4.1-x86_64",
+      "sha512": "f262cf688b15b7b6af10ec93a32329066ab646b044c9182371e6498c7077befbffcdc4856248a4618d20efcd72befa593780a07f2105f983b5619f00905fb76d"
     },
     {
       "name": "v4l-utils",
