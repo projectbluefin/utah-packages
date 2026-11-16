@@ -4318,6 +4318,12 @@ packages:
     downstream_package_name: virt-what
     paths:
       - packages/virt-what
+  virtiofsd:
+    specfile_path: virtiofsd.spec
+    upstream_package_name: virtiofsd
+    downstream_package_name: virtiofsd
+    paths:
+      - packages/virtiofsd
   vo-amrwbenc:
     specfile_path: vo-amrwbenc.spec
     upstream_package_name: vo-amrwbenc
