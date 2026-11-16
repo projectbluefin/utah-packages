@@ -69,6 +69,12 @@ fails as `No match for argument: <name> = <version>`. Both the container
 repository file and the mock template therefore set `minrate=1` and
 `timeout=300` on the Hummingbird repository; keep them in step.
 
+It also answers `Status code: 503` for a minute at a time, and librepo's own
+retries all land inside that minute. In the container lane every dnf call that
+must succeed (base install, the libxml2 split upgrade, builddep) goes through
+`with_backoff` in `tools/build_container.sh`, which waits 5, 15 and 45 seconds
+between attempts. A new required dnf call there goes through it too.
+
 ## Libraries loaded at runtime
 
 A package-name dependency can be essential even when no ELF SONAME edge
