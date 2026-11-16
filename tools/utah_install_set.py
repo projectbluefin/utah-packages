@@ -3,7 +3,7 @@
 
 The publish gate's Hummingbird-only consumer transaction resolves the runtime
 contract in config/ -- about 78 packages. Utah installs far more:
-packages/bluefin.toml [fedora] and [fedora_v<major>] plus packages/utah.toml
+packages/base.toml [fedora] and [fedora_v<major>] plus packages/utah.toml
 [gnome], [parity], [hardware], [services] and [build], minus [unavailable]
 (projectbluefin/utah scripts/install-packages.py). A factory repository could
 satisfy the first and still break the second, and Utah found out one image
@@ -40,13 +40,14 @@ import re
 import shutil
 import subprocess
 import sys
+import urllib.error
 import urllib.request
 from pathlib import Path
 
 UTAH = "https://raw.githubusercontent.com/projectbluefin/utah/{ref}/{path}"
 FILES = {
     "installer": "scripts/install-packages.py",
-    "manifest": "packages/bluefin.toml",
+    "manifest": "packages/base.toml",
     "overlay": "packages/utah.toml",
     # Utah's own repository files, so the resolution uses its excludes and
     # priorities -- utah-packages.repo excludes grub2*, for one.
@@ -57,6 +58,10 @@ FILES = {
     # resolution runs inside it, because Utah installs on top of its rpmdb.
     "containerfile": "Containerfile",
 }
+# Utah renamed packages/bluefin.toml to packages/base.toml
+# (projectbluefin/utah#1253); a ref from before the rename 404s on the new
+# name and is fetched by the old one.
+FALLBACKS = {"manifest": "packages/bluefin.toml"}
 FEDORA_MAJOR = "44"
 
 # The same patterns Utah's --resolve and the gate's transaction treat as a
@@ -69,12 +74,23 @@ ERRORS = re.compile(
 SUMMARY = re.compile(r"(?m)^Transaction Summary:?\s*$|^Nothing to do\.?\s*$")
 
 
+def download(ref: str, path: str) -> bytes:
+    with urllib.request.urlopen(UTAH.format(ref=ref, path=path), timeout=60) as response:
+        return response.read()
+
+
 def fetch(ref: str, directory: Path) -> dict[str, Path]:
     paths = {}
     for key, path in FILES.items():
+        try:
+            data = download(ref, path)
+        except urllib.error.HTTPError as error:
+            if error.code != 404 or key not in FALLBACKS:
+                raise
+            path = FALLBACKS[key]
+            data = download(ref, path)
         target = directory / Path(path).name
-        with urllib.request.urlopen(UTAH.format(ref=ref, path=path), timeout=60) as response:
-            target.write_bytes(response.read())
+        target.write_bytes(data)
         paths[key] = target
     return paths
 
