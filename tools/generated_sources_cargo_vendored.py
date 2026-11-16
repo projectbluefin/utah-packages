@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Cargo-vendored source0 generators: python-pydantic-core, prefixdevname,
+"""Cargo-vendored source0 generators: tealdeer, python-pydantic-core, prefixdevname,
 gst-thumbnailers and kanata.
 
 The inputs are ``Cargo.lock`` entries and a vendored ``.crate``/git tree rather
@@ -361,6 +361,32 @@ def _kanata_metadata(package_dir: Path) -> dict:
     }
 
 
+
+# --- tealdeer ------------------------------------------------------------------
+
+# Project Bluefin Dakota ships tealdeer (bluefin/tealdeer.bst). Fedora has no
+# recipe and Hummingbird ships no Rust crate RPMs, so the tag archive's
+# Cargo.lock is vendored beside it, as gst-thumbnailers does.
+TEALDEER_UPSTREAM_URL = "https://github.com/tealdeer-rs/tealdeer/archive/refs/tags/v{version}.tar.gz"
+TEALDEER_INPUT_SHA512 = {
+    "1.8.1": "3601007703b5f95adcd7b8e7a3467100b15d66d4d8fb6f6e11544f0046b844e4c8eedbd92522f49dbee36be92cccc6534687b51bd9e065dc9e0d731c0db593ec",
+}
+
+
+def _tealdeer_metadata(package_dir: Path) -> dict:
+    version = generated_sources.spec_version(package_dir, "tealdeer.spec")
+    return {
+        "name": "tealdeer",
+        "version": version,
+        "filename": f"tealdeer-{version}-vendored.tar.xz",
+        "generate": {
+            "script": generated_sources.SCRIPT_PATH,
+            "input": f"{TEALDEER_UPSTREAM_URL.format(version=version)} (sha512-pinned) and every crates.io crate its Cargo.lock pins (sha256-pinned by Cargo.lock)",
+            "method": f"add vendor/<crate>-<version> for each Cargo.lock crate with .cargo-checksum.json, as cargo vendor --versioned-dirs lays it out, and repack deterministically as tealdeer-{version}-vendored.tar.xz",
+        },
+    }
+
+
 def _kanata_generate(package_dir: Path, out_dir: Path) -> Path:
     version = generated_sources.spec_version(package_dir, "kanata.spec")
     return _cargo_vendored_generate(
@@ -368,5 +394,17 @@ def _kanata_generate(package_dir: Path, out_dir: Path) -> Path:
         version,
         KANATA_UPSTREAM_URL.format(version=version),
         KANATA_INPUT_SHA512.get(version),
+        out_dir,
+    )
+
+
+
+def _tealdeer_generate(package_dir: Path, out_dir: Path) -> Path:
+    version = generated_sources.spec_version(package_dir, "tealdeer.spec")
+    return _cargo_vendored_generate(
+        "tealdeer",
+        version,
+        TEALDEER_UPSTREAM_URL.format(version=version),
+        TEALDEER_INPUT_SHA512.get(version),
         out_dir,
     )
