@@ -11,7 +11,7 @@
 Name:           gdm
 Epoch:          1
 Version:        51.0
-Release:        %autorelease
+Release:        %autorelease -b 2
 Summary:        The GNOME Display Manager
 
 License:        GPL-2.0-or-later
@@ -62,7 +62,7 @@ Requires: accountsservice
 Requires: dbus-common
 Requires: dconf
 # since we use it, and pam spams the log if the module is missing
-Requires: gnome-keyring-pam
+Requires: pam_oo7
 Requires: gnome-session >= 50~alpha
 Requires: gnome-session-wayland-session >= 50~alpha
 Requires: gnome-settings-daemon >= 3.27.90
