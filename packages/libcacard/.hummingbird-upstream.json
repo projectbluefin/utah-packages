@@ -1,0 +1,8 @@
+{
+  "package": "libcacard",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/libcacard.git",
+  "commit": "3e0186d9f86d5d6bdf80b1cd681083f48f9cb4aa",
+  "tree": "e45761e66f7311d6834ad276a2f75f4bc3edea1d",
+  "imported_at": "2026-11-16T04:13:53.071409+00:00"
+}

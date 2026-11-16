@@ -1,0 +1,8 @@
+{
+  "package": "rpcsvc-proto",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/rpcsvc-proto.git",
+  "commit": "02894b2cf3a61a09bfd5ec320b64b79838b76750",
+  "tree": "ac6849012918ffb21160fdc1bd073f54eb4f2900",
+  "imported_at": "2026-11-16T04:15:29.810038+00:00"
+}

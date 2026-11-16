@@ -1,0 +1,25 @@
+From 773a2e289a282798a27c3f826fc1741cf7bd08a5 Mon Sep 17 00:00:00 2001
+From: Fabio Valentini <decathorpe@gmail.com>
+Date: Mon, 17 Aug 2026 21:30:29 +0200
+Subject: [PATCH 4/4] drop yet unused Python bindings from cargo workspace
+
+---
+ Cargo.toml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Cargo.toml b/Cargo.toml
+index ff1682b..cdd7d7d 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -11,7 +11,7 @@ members = [
+   "macros",
+   "pam",
+   "portal",
+-  "python",
++#  "python",
+   "server",
+ ]
+ 
+-- 
+2.55.0
+

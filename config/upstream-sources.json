@@ -97,6 +97,34 @@
       ]
     },
     {
+      "name": "SDL3_image",
+      "version": "3.4.8",
+      "url": "https://github.com/libsdl-org/SDL_image/releases/download/release-3.4.8/SDL3_image-3.4.8.tar.gz",
+      "filename": "SDL3_image-3.4.8.tar.gz",
+      "sha512": "45f04c178a39ca05e033303cc650a6cbdab2ae41c68eb9d28f2f113f12bcb75c8001a1f45a17c4f1a8f5d46511a4f0dab7437dd07be8b5658e3992ddcbeb720f"
+    },
+    {
+      "name": "SDL3_mixer",
+      "version": "3.2.4",
+      "url": "https://github.com/libsdl-org/SDL_mixer/archive/release-3.2.4/SDL_mixer-release-3.2.4.tar.gz",
+      "filename": "SDL_mixer-release-3.2.4.tar.gz",
+      "sha512": "f173ff0346c1645f665fc17c78021b0487fcb2742a6228663872afc0ff926c1f19e3e3c150f352020b7523bb5de924390980dd8978c4b223cde83a16048f0d2d"
+    },
+    {
+      "name": "SDL3_net",
+      "version": "3.2.0",
+      "url": "https://www.libsdl.org/projects/SDL_net/release/SDL3_net-3.2.0.tar.gz",
+      "filename": "SDL3_net-3.2.0.tar.gz",
+      "sha512": "6959901348c7fa16855f5b2fad251a136bb29ff843f95cc860ef25a54eba0f2ae35de2c2658a1b8de585f9fbc39b9ea879b9eac720457329dc69ef8e349ebf98"
+    },
+    {
+      "name": "SDL3_ttf",
+      "version": "3.2.2",
+      "url": "https://github.com/libsdl-org/SDL_ttf/releases/download/release-3.2.2/SDL3_ttf-3.2.2.tar.gz",
+      "filename": "SDL3_ttf-3.2.2.tar.gz",
+      "sha512": "3cbab124642e23bd751f5a919c0094c8f9e004b566fbd57e6a61f92d0c8d0a14b9b6613faaff8093c4e523a81f07a4145870c29e1eb66eb5b5a5ff2c37c0806b"
+    },
+    {
       "name": "a52dec",
       "version": "0.7.4",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/a52dec/a52dec-0.7.4.tar.gz/sha512/4b26fe9492f218b775fb190b76ecf06edaeb656adfe6dcbd24d0a0f86871c3ba917edb88a398eb12dccedaa1605b6f0a0be06b09f9fddd9a46e457b7dd244848/a52dec-0.7.4.tar.gz",
@@ -292,6 +320,13 @@
       ]
     },
     {
+      "name": "baobab",
+      "version": "50.0",
+      "url": "https://download.gnome.org/sources/baobab/50/baobab-50.0.tar.xz",
+      "filename": "baobab-50.0.tar.xz",
+      "sha512": "0318c2fc68aa54502f1500b35f44a6378341af189afda3b82e5231f67e079e6c7bd6dcb820254042d69cf211cbcd5db3ce694d61246a2d315dcc500ffa33c4f0"
+    },
+    {
       "name": "bash-color-prompt",
       "version": "0.96.2",
       "url": "https://github.com/juhp/bash-color-prompt/archive/refs/tags/v0.96.2.tar.gz",
@@ -370,6 +405,13 @@
       "url": "https://github.com/borgbackup/borg/releases/download/1.4.5/borgbackup-1.4.5.tar.gz",
       "filename": "borgbackup-1.4.5.tar.gz",
       "sha512": "1303e334b32dd62847918920777ca47eec072974859f612d054fc516fdab56eea588d34ae2f71e9c0757486769dd5ba057d5c6bb05294f40ff52a8b41f7e5801"
+    },
+    {
+      "name": "bpftool",
+      "version": "7.8.1",
+      "url": "https://github.com/libbpf/bpftool/releases/download/v7.8.1/bpftool-libbpf-v7.8.1-sources.tar.gz",
+      "filename": "bpftool-libbpf-v7.8.1-sources.tar.gz",
+      "sha512": "8e13487a70ea5a7da7b697a95e4bb6b7d02954d19d37a7ce1d499ae75eca266557095ed5dabf27cbbe184771e451c7f707ba054b5ad383854fc999dc79c34fc9"
     },
     {
       "name": "bpftop",
@@ -630,6 +672,13 @@
       ]
     },
     {
+      "name": "dejavu-fonts",
+      "version": "2.37",
+      "url": "https://github.com/dejavu-fonts/dejavu-fonts/archive/version_2_37/dejavu-fonts-version_2_37.tar.gz",
+      "filename": "dejavu-fonts-version_2_37.tar.gz",
+      "sha512": "44908104637b2f10c3c9fa0d0eeacfd109fc2203bba1c07c8b24e5264ead92f41a5bb397fe6c5206c4cc3fde37b8b05e14c61c9ba38893b06b2a5ea6a929ae17"
+    },
+    {
       "name": "desktop-file-utils",
       "version": "0.28",
       "url": "https://www.freedesktop.org/software/desktop-file-utils/releases/desktop-file-utils-0.28.tar.xz",
@@ -731,6 +780,13 @@
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/double-conversion/double-conversion-3.4.0.tar.gz/sha512/9a6f43497a772c78660d0c0f9bc42902f5cb99066a08f0ab50345db37ddf62bb491ae7f5ca45819251e3a1d41282e5646b269e912cbd24eca6b440a31409712f/double-conversion-3.4.0.tar.gz"
       ]
+    },
+    {
+      "name": "dtc",
+      "version": "1.8.1",
+      "url": "https://www.kernel.org/pub/software/utils/dtc/dtc-1.8.1.tar.xz",
+      "filename": "dtc-1.8.1.tar.xz",
+      "sha512": "9a2987aab1e3be91b71a72e5aea7a4e3f88e66521e68fea25345f5e1f86189c0ed82668e31d4ce7869cb0e0277289ffa3b62bc2a002f2d18849be84aa4fab757"
     },
     {
       "name": "dymo-cups-drivers",
@@ -848,6 +904,13 @@
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/fastfetch/fastfetch-2.70.0.tar.gz/sha512/72843e7a411bc2d6f32bd1b8800758b6a3f4e3519b6a044134c578fed0a6345ce35b6001ceffcdf2bd5b5ac6dd9c27e0662a051439f57a17fd4145657b2da571/fastfetch-2.70.0.tar.gz"
       ]
+    },
+    {
+      "name": "fcitx5-gtk",
+      "version": "5.1.7",
+      "url": "https://download.fcitx-im.org/fcitx5/fcitx5-gtk/fcitx5-gtk-5.1.7.tar.zst",
+      "filename": "fcitx5-gtk-5.1.7.tar.zst",
+      "sha512": "0f6c1f00faab0898577969027ea88533e89123ebfe90c1076a4e6a900c4d992dcb34f8ccf20261b2565f3d8c53eed9780a5e9aca5add9487a7b291487e8b1d98"
     },
     {
       "name": "fdk-aac-free",
@@ -1014,6 +1077,13 @@
       }
     },
     {
+      "name": "frei0r-plugins",
+      "version": "3.7.1",
+      "url": "https://github.com/dyne/frei0r/archive/v3.7.1/frei0r-plugins-3.7.1.tar.gz",
+      "filename": "frei0r-plugins-3.7.1.tar.gz",
+      "sha512": "c9bef5ea05108a4a6c16ac20690b7f83febda5b88fb3fd9547a92a764810edc305c273d671d85a253130eebbf7c8611a676b32a2075b991f0ffb47428c8c4245"
+    },
+    {
       "name": "fribidi",
       "version": "1.0.16",
       "url": "https://github.com/fribidi/fribidi/releases/download/v1.0.16/fribidi-1.0.16.tar.xz",
@@ -1085,6 +1155,13 @@
       "url": "https://github.com/FeralInteractive/gamemode/releases/download/1.8.2/gamemode-1.8.2.tar.xz",
       "filename": "gamemode-1.8.2.tar.xz",
       "sha512": "d35b11b7911a0ef4d19119ee68e781b1f6c90eb9baa2c365416164b4f1fcb277c43026e844bfa86727bab82c5f3d6bd5b8adee2cd481e1e067be6a0e23c06b5b"
+    },
+    {
+      "name": "gcab",
+      "version": "1.6",
+      "url": "https://download.gnome.org/sources/gcab/1.6/gcab-1.6.tar.xz",
+      "filename": "gcab-1.6.tar.xz",
+      "sha512": "26b8dcf47ba98e7cc073a551d1c965c13a72d298c8a4e124823bdbb20fe314c8f687232df9ae824a54d81f96fe7d9ac1a40aed24e51f8706595079cec2c61fc9"
     },
     {
       "name": "gcr",
@@ -1162,6 +1239,13 @@
       ]
     },
     {
+      "name": "gflags",
+      "version": "2.2.2",
+      "url": "https://github.com/gflags/gflags/archive/v2.2.2/gflags-2.2.2.tar.gz",
+      "filename": "gflags-2.2.2.tar.gz",
+      "sha512": "98c4703aab24e81fe551f7831ab797fb73d0f7dfc516addb34b9ff6d0914e5fd398207889b1ae555bac039537b1d4677067dae403b64903577078d99c1bdb447"
+    },
+    {
       "name": "ghostscript",
       "version": "10.08.0",
       "url": "https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs10080/ghostscript-10.08.0.tar.xz",
@@ -1223,6 +1307,13 @@
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/glibmm2.68/glibmm-2.90.0.tar.xz/sha512/ac5972b9f42972aac36064a2aa2d9fd085b25836d91b3c8b06bc0fb6f6d600366d0e2d24be7d8e88fd7984c6d51b5ae4546463b502d0b73676de50931ad065f9/glibmm-2.90.0.tar.xz"
       ]
+    },
+    {
+      "name": "glog",
+      "version": "0.7.1",
+      "url": "https://github.com/google/glog/archive/v0.7.1/glog-0.7.1.tar.gz",
+      "filename": "glog-0.7.1.tar.gz",
+      "sha512": "2dabac87d44e4fe58beceb31b22be732b47df84c22f1af8c0e7d0f262de939889de1f16025c1256539f2833ef3393bc92034e983aa2886752bb8705801a68630"
     },
     {
       "name": "glow",
@@ -1456,11 +1547,25 @@
       ]
     },
     {
+      "name": "gnome-shell-extension-appindicator",
+      "version": "66",
+      "url": "https://github.com/ubuntu/gnome-shell-extension-appindicator/archive/v66/gnome-shell-extension-appindicator-66.tar.gz",
+      "filename": "gnome-shell-extension-appindicator-66.tar.gz",
+      "sha512": "bacff0fb07d995a2b162f175e8a06eb32e8ef719abd185ccf2034b25569fae73f8bd6bce5d8d96928ff57aca125c8eeeb7537550f37ca0dbf276b6f3343029c8"
+    },
+    {
       "name": "gnome-shell-extension-bazaar-companion",
       "version": "0^20260403git3bb9134",
       "url": "https://github.com/bazaar-org/bazaar-companion/archive/3bb9134985343ffd1993520eb37c90e113bfb09b/bazaar-companion-3bb9134.tar.gz",
       "filename": "bazaar-companion-3bb9134.tar.gz",
       "sha512": "57f979e7307a41bd5e734572a4eb1e68229eb6822a69079165d66b5b90ac00cc893c3ff5812facd828e9cae9be7c2dd9137f8dbaa8c17e77f2c2846919121dac"
+    },
+    {
+      "name": "gnome-shell-extension-blur-my-shell",
+      "version": "75",
+      "url": "https://github.com/aunetx/blur-my-shell/archive/v75/blur-my-shell-75.tar.gz",
+      "filename": "blur-my-shell-75.tar.gz",
+      "sha512": "c25b7986a8f6764577b5238e78c5488be0b3a42a57d66726c887c7e7fc8a036afc3fcc7e72159df1170da984f13e1d3c0eb24a22779f2e7bc28ff11b162d4e53"
     },
     {
       "name": "gnome-shell-extension-budslink-companion",
@@ -1470,11 +1575,25 @@
       "sha512": "ab0d3635eba46dfe3758b1916639801982ed29c62f19c733798c1169dcd50c852ba10895348ac122dc93993a0f153b69b162a6cd2dfa1adde6d308d39bedfc5b"
     },
     {
+      "name": "gnome-shell-extension-caffeine",
+      "version": "61",
+      "url": "https://github.com/eonpatapon/gnome-shell-extension-caffeine/archive/v61.tar.gz#/gnome-shell-extension-caffeine-v61.tar.gz",
+      "filename": "gnome-shell-extension-caffeine-v61.tar.gz",
+      "sha512": "7e1deed0f0325487fc1ad26a0a768b6e70ebc90fc3fbc91cb124cec25836cdb51234cabf8780ceed4e33855c91aecc6318486283dde1a558efbffba9f181fc3e"
+    },
+    {
       "name": "gnome-shell-extension-custom-command-menu",
       "version": "16",
       "url": "https://github.com/StorageB/custom-command-menu/archive/v16/custom-command-menu-16.tar.gz",
       "filename": "custom-command-menu-16.tar.gz",
       "sha512": "1d8ca91a21fe9493137f87488457b6fb11e784a4717c8d5d9322c5156e5351d625b3140de536c23b9f0f479984a7bd456df15fe7fdbd5733c3ea4ff7ac014218"
+    },
+    {
+      "name": "gnome-shell-extension-dash-to-dock",
+      "version": "110",
+      "url": "https://github.com/micheleg/dash-to-dock/archive/extensions.gnome.org-v110.tar.gz#/gnome-shell-extension-dash-to-dock-110.tar.gz",
+      "filename": "gnome-shell-extension-dash-to-dock-110.tar.gz",
+      "sha512": "5f45f84a6f23961d61e41d14aa55236b586dd510f0bc20fb4b310dd43f6d6d87b391d618c0fb58a52cfc6e95b3ce777775580a105b9c488761ea59e1cc017919"
     },
     {
       "name": "gnome-shell-extension-fuzzy-application-search",
@@ -1584,6 +1703,20 @@
       "sha512": "21fcac0d49d1a1ec0d30c68e3cc0ba6bc88cefef7114adacaf65cf4fb3b52c89e4f71ea2d7a7685b44bd7a0573f56e44c0a4516389245969f472f71097a6bf00"
     },
     {
+      "name": "gnu-efi",
+      "version": "3.0.18",
+      "url": "https://sourceforge.net/projects/gnu-efi/files/gnu-efi-3.0.18.tar.bz2",
+      "filename": "gnu-efi-3.0.18.tar.bz2",
+      "sha512": "39f9fa14b880441a94a04400ff8850efdd9474929e5501dfd05af06e7747b4d0f7cb742ac811c7026cf52d00508efb73018be4d61d63a1211de0cd931cbc473d"
+    },
+    {
+      "name": "gnu-free-fonts",
+      "version": "20120503",
+      "url": "https://ftp.gnu.org/gnu/freefont/freefont-src-20120503.tar.gz",
+      "filename": "freefont-src-20120503.tar.gz",
+      "sha512": "34628b574346758957f1b310ba23164d3a1704bb336a289614f02e8abec01286274408cc7c53c4832205adcca5de24cb25f04e23bc67b0ada4407154a95224fc"
+    },
+    {
       "name": "gobject-introspection",
       "version": "1.86.0",
       "url": "https://download.gnome.org/sources/gobject-introspection/1.86/gobject-introspection-1.86.0.tar.xz",
@@ -1593,6 +1726,20 @@
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/gobject-introspection/gobject-introspection-1.86.0.tar.xz/sha512/a9d2edbe1cea710e10ef1ea8059a45cf5689bace43b5d2a6861809e863a6de7114b4763db8df3916ad6202c9967f48f7997acd0810a86e5e88dea7e0be88b585/gobject-introspection-1.86.0.tar.xz"
       ]
+    },
+    {
+      "name": "google-carlito-fonts",
+      "version": "1.103",
+      "url": "https://storage.googleapis.com/chromeos-localmirror/distfiles/crosextrafonts-carlito-20130920.tar.gz",
+      "filename": "crosextrafonts-carlito-20130920.tar.gz",
+      "sha512": "eb516060487d30353e06de711921c0d54c5844f2be69b1c1d37edac4b27303e9213a6bb306f309dc5827b2a6a2a37c9cb85b62368164eba6dd397dbaab3e3ba0"
+    },
+    {
+      "name": "google-crosextra-caladea-fonts",
+      "version": "1.002",
+      "url": "https://storage.googleapis.com/chromeos-localmirror/distfiles/crosextrafonts-20130214.tar.gz",
+      "filename": "crosextrafonts-20130214.tar.gz",
+      "sha512": "71f3cfcfbec33d8526184dce32f244f13b29f97aff31c0609487f27135adc0a4d5950e068f8be101e4fd06498cf103be68d781fc611142f060bbc9cb0b81273e"
     },
     {
       "name": "google-noto-color-emoji-fonts",
@@ -1615,6 +1762,13 @@
       ]
     },
     {
+      "name": "google-noto-serif-cjk-vf-fonts",
+      "version": "2.003",
+      "url": "https://github.com/googlefonts/noto-cjk/releases/download/Serif2.003/02_NotoSerifCJK-OTF-VF.zip",
+      "filename": "02_NotoSerifCJK-OTF-VF.zip",
+      "sha512": "6ef819a5c315da8af2d22b57159add82c753bd6e55037b66e528d18fbbf96cd897b2361d4d0286995aaa374a3afd4d3e4682a765284631b36493645b21515f3f"
+    },
+    {
       "name": "gpm",
       "version": "1.20.7",
       "filename": "gpm-1.20.7.tar.xz",
@@ -1632,6 +1786,13 @@
       "filename": "graphene-1.10.8.tar.xz",
       "feed": "https://github.com/ebassi/graphene/releases/download/1.10.8/graphene-1.10.8.tar.xz",
       "sha512": "c56dab6712cf58387d0512a213cd0cd456679e46a495ee5cfd9bc25440cda2d72d56974af4e462f3c863869a1e2e506b702f468933045609d35fdf006212c67d"
+    },
+    {
+      "name": "grpc",
+      "version": "1.75.1",
+      "url": "https://github.com/grpc/grpc/archive/v1.75.1/grpc-1.75.1.tar.gz",
+      "filename": "grpc-1.75.1.tar.gz",
+      "sha512": "ffc3fde817f60e151cb2d2c0980485faf15270c12f2ec5f1228ef595d019ddf3c5e977f974cb8d5911010e0083652edddade1e999155a2fa2e72c3fd3a1aefb2"
     },
     {
       "name": "grub2",
@@ -1826,6 +1987,13 @@
       ]
     },
     {
+      "name": "gtk4-layer-shell",
+      "version": "1.3.0",
+      "url": "https://github.com/wmww/gtk4-layer-shell/archive/v1.3.0/gtk4-layer-shell-1.3.0.tar.gz",
+      "filename": "gtk4-layer-shell-1.3.0.tar.gz",
+      "sha512": "dab8350caa6713406e4dd8a3f701f1ed1fb287913d96d697f7c3875efd27b24a504e01010c2e1cf90d45241ef3e1efa5dc678c69182946f0abf7010648700eff"
+    },
+    {
       "name": "gtkmm4.0",
       "version": "4.24.0",
       "url": "https://download.gnome.org/sources/gtkmm/4.24/gtkmm-4.24.0.tar.xz",
@@ -1874,6 +2042,13 @@
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/gupnp/gupnp-1.6.10.tar.xz/sha512/c9a91cdef4da79565291f1ade0c683b3015bc89e3849794461bd6d47eccc45cda8fba120ec3422aa77bf6d352d45f82f434e7db5dcb9545fe612d2f34d1c9116/gupnp-1.6.10.tar.xz"
       ]
+    },
+    {
+      "name": "gupnp-av",
+      "version": "0.14.5",
+      "url": "https://download.gnome.org/sources/gupnp-av/0.14/gupnp-av-0.14.5.tar.xz",
+      "filename": "gupnp-av-0.14.5.tar.xz",
+      "sha512": "745e5a167e2384c404241968d54dd0c1f0b7d54c9530eabeaa4d23f80410aae91090461eb8482465898172d1af7aebf72c5706b3f853100290d6754d25ecf023"
     },
     {
       "name": "gupnp-dlna",
@@ -2128,6 +2303,13 @@
       ]
     },
     {
+      "name": "ibus-rime",
+      "version": "1.6.0",
+      "url": "https://github.com/rime/ibus-rime/archive/1.6.0.tar.gz#/ibus-rime-1.6.0.tar.gz",
+      "filename": "ibus-rime-1.6.0.tar.gz",
+      "sha512": "a22347558b5ca75f04e74a2441ecd7cd41e4f3866501a3130cdd3731306ab316136c1647fd9a8e651259df7b05d5756f2b9e56cd377462cdd08cb19499faced2"
+    },
+    {
       "name": "ibus-typing-booster",
       "version": "2.31.4",
       "url": "https://github.com/mike-fabian/ibus-typing-booster/releases/download/2.31.4/ibus-typing-booster-2.31.4.tar.gz",
@@ -2321,6 +2503,20 @@
       ]
     },
     {
+      "name": "iscsi-initiator-utils",
+      "version": "6.2.1.13",
+      "url": "https://github.com/open-iscsi/open-iscsi/archive/40f6b2944f8a8553ad57975d1f2bb512cc23d7d1.tar.gz#/open-iscsi-40f6b29.tar.gz",
+      "filename": "open-iscsi-40f6b29.tar.gz",
+      "sha512": "dbb1ba500614a5f3f8c6a809806caf65e58746c710682d8e69deaef114186f91fc6a6c74c752661249d6770ef870a8ea78e6bde4c8e7f676e3d2f73704cf97b0"
+    },
+    {
+      "name": "isns-utils",
+      "version": "0.103",
+      "url": "https://github.com/open-iscsi/open-isns/archive/v0.103.tar.gz#/open-isns-0.103.tar.gz",
+      "filename": "open-isns-0.103.tar.gz",
+      "sha512": "219dd4f7e0a8459f5acaf2036fc737b90604cdcfe78b5492d50e4826744923afe35c9c331b3e39aa7c9bb5ebb2c378c464dced204d51da46e2b7474c6ca94057"
+    },
+    {
       "name": "iso-codes",
       "version": "4.20.1",
       "url": "https://salsa.debian.org/iso-codes-team/iso-codes/-/archive/v4.20.1/iso-codes-v4.20.1.tar.gz",
@@ -2429,6 +2625,13 @@
       "sha512": "fa467fa737f3af4abf2dd3fc4fc40fbf8de79ffa9150cd88c694ce98916ef34d69163ac36f6048c074aa560a35ebc66d6b606daab5d8b74e6132f44781f3716c"
     },
     {
+      "name": "kmscon",
+      "version": "10.1.1",
+      "url": "https://github.com/kmscon/kmscon//archive/v10.1.1/kmscon-10.1.1.tar.gz",
+      "filename": "kmscon-10.1.1.tar.gz",
+      "sha512": "8c64e711d0ff4d32e1ebfc2c3bb3a6d9d8c3fbbe616e35c6cb0b66416449e35cbc225d5bb5547a00f0de6ccc3ec5034f8c3bb8bc89eee83ce61c0618ce09e199"
+    },
+    {
       "name": "kvazaar",
       "version": "2.3.2",
       "url": "https://github.com/ultravideo/kvazaar/archive/v2.3.2.tar.gz",
@@ -2441,6 +2644,13 @@
       "url": "https://dbmx.net/kyotocabinet/pkg/kyotocabinet-1.2.80.tar.gz",
       "filename": "kyotocabinet-1.2.80.tar.gz",
       "sha512": "9fe0a92c9a76db5ce06ef4d5a551c05930f2a9c065ab695b030fdaf45692bfe88d91f1b75791f50d0772c699567744cd74f3ef407172874d4bba467989d54328"
+    },
+    {
+      "name": "ladspa",
+      "version": "1.17",
+      "url": "https://www.ladspa.org/download/ladspa_sdk_1.17.tgz",
+      "filename": "ladspa_sdk_1.17.tgz",
+      "sha512": "c096e70d245c50ffad379f2c9aab2735c205dfe7c27b5710cad6e43b39f8accc7b8bd2cd7ebbea2c399ad76018b3d4c701ed271de552d098b12ab218a58f0497"
     },
     {
       "name": "lame",
@@ -2484,6 +2694,13 @@
       "url": "https://github.com/DanBloomberg/leptonica/archive/1.87.0/leptonica-1.87.0.tar.gz",
       "filename": "leptonica-1.87.0.tar.gz",
       "sha512": "2a1953dd0c962a05dac9bb30eac311896f414c658d976008b0c2d1b3b85ec25c5fd811be3f98a37f2131ded134799ea609a667fb1eaacf42d1aca9cc5cf1bd92"
+    },
+    {
+      "name": "leveldb",
+      "version": "1.23",
+      "url": "https://github.com/google/leveldb/archive/1.23/leveldb-1.23.tar.gz",
+      "filename": "leveldb-1.23.tar.gz",
+      "sha512": "ac15eac29387b9f702a901b6567d47a9f8c17cf5c7d8700a77ec771da25158c83b04959c33f3d4de7a3f033ef08f545d14ba823a8d527e21889c4b78065b0f84"
     },
     {
       "name": "libICE",
@@ -2843,6 +3060,13 @@
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/libcaca/libcaca-0.99.beta20.tar.bz2/sha512/8cfb84351f9022c62b655822a9558fbe187260fc18ad89ccf99863c499759fba497388066d066fa529f29d6f808be02a6948849ee19617617ade59b3f5c410eb/libcaca-0.99.beta20.tar.bz2"
       ]
+    },
+    {
+      "name": "libcacard",
+      "version": "2.8.2",
+      "url": "https://www.spice-space.org/download/libcacard/libcacard-2.8.2.tar.xz",
+      "filename": "libcacard-2.8.2.tar.xz",
+      "sha512": "535d1fbdfac8ca14261486c192ecb74cd31a6e7d0ef843d2a1a6a56960538107b346f632103478c17081752a6994decfed5fca835d84c08e7c01a8aeefd27075"
     },
     {
       "name": "libcamera",
@@ -3517,6 +3741,13 @@
       "sha512": "8eef2b1214d2b512c8d4483f4a8a967cd05f065cb7dd0ec9ac09b2989a2bce0f60a897a7b154e90f2d6f9e3b53ac8bebe7e9c577dfe2afdb37686c027b3a97a7"
     },
     {
+      "name": "libmicrohttpd",
+      "version": "1.0.10",
+      "url": "https://ftp.gnu.org/gnu/libmicrohttpd/libmicrohttpd-1.0.10.tar.gz",
+      "filename": "libmicrohttpd-1.0.10.tar.gz",
+      "sha512": "b67458fad556fa0b73edf728efbc30a2304c544d98409b9efbdda5ebfb6668b31c1c96620eac33994ade1255f8170cd4628f0a61b57a9cef255d4980110b362f"
+    },
+    {
       "name": "libmodplug",
       "version": "0.8.9.0",
       "url": "https://downloads.sourceforge.net/modplug-xmms/libmodplug-0.8.9.0.tar.gz",
@@ -3678,6 +3909,13 @@
       "url": "https://download.savannah.gnu.org/releases/m17n/libotf-0.9.16.tar.gz",
       "filename": "libotf-0.9.16.tar.gz",
       "sha512": "0f68c45c1224f02dc0f1a8e9915dd9c1c70d71259b4e2f7bbd4fbec6426e58d4a26e4cbf28dbb8ed051ba6f532f99fc4e74b4ddf97a93ec947fa6260c875d0b4"
+    },
+    {
+      "name": "libpanel",
+      "version": "1.10.4",
+      "url": "https://download.gnome.org/sources/libpanel/1.10/libpanel-1.10.4.tar.xz",
+      "filename": "libpanel-1.10.4.tar.xz",
+      "sha512": "27c428f306deb6e662b912b5fa1e195de115b511685ef51e068fe18174b92959cb5353f2500298d271d21f99fa96e879c39e3c839a6b5934e12d380e9c73cd73"
     },
     {
       "name": "libpaper",
@@ -3852,6 +4090,13 @@
       ]
     },
     {
+      "name": "librime",
+      "version": "1.16.1",
+      "url": "https://github.com/rime/librime/archive/1.16.1.tar.gz#/librime-1.16.1.tar.gz",
+      "filename": "librime-1.16.1.tar.gz",
+      "sha512": "ff48cd3d8a6b39c998735522160e1e213a978bc15e439412a417023042e9c623f0b98ec98c70bd21f0bb204d5197cdc6660cef202da4032ea6a3e4ec99570369"
+    },
+    {
       "name": "librist",
       "version": "0.2.11",
       "url": "https://code.videolan.org/rist/librist/-/archive/v0.2.11/librist-v0.2.11.tar.gz",
@@ -3935,6 +4180,13 @@
         "input": "https://gitlab.freedesktop.org/slirp/libslirp.git tag v4.9.6 (commit 392af90207fc51dd9f9044ee9b1f963f3c851c2c)",
         "method": "git archive --format=tar --prefix=libslirp-4.9.6/ of the pinned commit, compressed deterministically as libslirp-4.9.6.tar.xz"
       }
+    },
+    {
+      "name": "libsmbios",
+      "version": "2.4.3",
+      "url": "https://github.com/dell/libsmbios/archive/v2.4.3/libsmbios-2.4.3.tar.gz",
+      "filename": "libsmbios-2.4.3.tar.gz",
+      "sha512": "7f6fb36fa9653e123b416b275953fb5652025e76dac3b4ec5600168e193ea56f8ac3ea1a3b5db29d2770e73d88152d712a35bf77a9b3fc5596570fae885585ad"
     },
     {
       "name": "libsndfile",
@@ -4165,6 +4417,13 @@
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/libvdpau/libvdpau-1.5.tar.bz2/sha512/7affb14874431eba1be6e8634fcbb6247cbf6956fb88116e06e60de30a7852a407e8598176a369c2ba4bfaef4be58727e51d4bc390f705991ac83d660f611ff5/libvdpau-1.5.tar.bz2"
       ]
+    },
+    {
+      "name": "libvirt",
+      "version": "12.9.0",
+      "url": "https://download.libvirt.org/libvirt-12.9.0.tar.xz",
+      "filename": "libvirt-12.9.0.tar.xz",
+      "sha512": "7401081ac40a31908dc700b62cf046bb5a35c7a4544adb41b68aecfca5a878bfefa4ef9b9e2768a5f4333299ec7e54b1ddbfb12a31d058742c005daebbfb4f84"
     },
     {
       "name": "libvisual",
@@ -4439,6 +4698,13 @@
       "sha512": "ab4bcf593f633b1ed16c0eb6aa4525458a00655ef9c87619bf85eaa966f8fd094a8e871b825f679e0d97923f8bbbf11841ff467022390ca2f1a5b5f66ccd5d1b"
     },
     {
+      "name": "lzip",
+      "version": "1.26",
+      "url": "https://download.savannah.gnu.org/releases/lzip/lzip-1.26.tar.gz",
+      "filename": "lzip-1.26.tar.gz",
+      "sha512": "df99d7c9ce932486aec64fe9f9c378a9f98300deac6f6065c9543006cf35daeb52b419316d4672c182acbd0c8105388267947dfc9267965697d521259d59a0ad"
+    },
+    {
       "name": "m17n-db",
       "version": "1.8.15",
       "url": "https://download-mirror.savannah.gnu.org/releases/m17n/m17n-db-1.8.15.tar.gz",
@@ -4489,6 +4755,13 @@
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/man-pages/man-pages-6.13.tar.xz/sha512/bd080e2d4de4e998998f73f2b1b8228baaf808c59431a640e56f721dba2d5d501341b3ed55cc82d3fd88c42e441f88e3afd6597be0de7cbde291dd11d778e993/man-pages-6.13.tar.xz"
       ]
+    },
+    {
+      "name": "marisa",
+      "version": "0.3.0",
+      "url": "https://github.com/s-yata/marisa-trie/archive/refs/tags/v0.3.0.tar.gz#/marisa-0.3.0.tar.gz",
+      "filename": "marisa-0.3.0.tar.gz",
+      "sha512": "6d72b13daec877c9c42e2c93e591e3a5e9c738bb130c5d90d6adfde81d5b500684ca176439b7502d9243b6417f34c7b39750ff3fb3a5c52d8d06cb9bc5f14c22"
     },
     {
       "name": "mdadm",
@@ -4709,6 +4982,13 @@
       "sha512": "33b75e41dcc21126ca46835d086e2848ac5daf8ab2b3291e2c9496c2460a43897f980c6b7ad8bca55bb9882e98492af7aafd7f456bee12b0e460cdc2c06e18e0"
     },
     {
+      "name": "newt",
+      "version": "0.52.25",
+      "url": "https://gitlab.com/newt-ui/newt/-/releases/0.52.25/downloads/newt-0.52.25.tar.gz",
+      "filename": "newt-0.52.25.tar.gz",
+      "sha512": "23f239ff599f63fdfec83ba32256a4b4e081d84fe7844a32a9770a0776df7e200315f794d031bca0f7c3526a9730fb3f62973bad40bf96618de6e336e97a8096"
+    },
+    {
       "name": "nfs-utils",
       "version": "2.9.2",
       "url": "https://www.kernel.org/pub/linux/utils/nfs-utils/2.9.2/nfs-utils-2.9.2.tar.xz",
@@ -4791,6 +5071,13 @@
       ]
     },
     {
+      "name": "ocl-icd",
+      "version": "2.3.5",
+      "url": "https://github.com/OCL-dev/ocl-icd//archive/v2.3.5/ocl-icd-2.3.5.tar.gz",
+      "filename": "ocl-icd-2.3.5.tar.gz",
+      "sha512": "b7964d99dec661a12bb72de4fcf7e6b2efa9732d46154b453560611e9a6cc303ce621b87c8a753c620af2e16ad3c5931748917510b60a8c2b3f55dd2a9587ff7"
+    },
+    {
       "name": "oddjob",
       "version": "0.34.7",
       "url": "https://releases.pagure.org/oddjob/oddjob-0.34.7.tar.gz",
@@ -4800,6 +5087,13 @@
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/oddjob/oddjob-0.34.7.tar.gz/sha512/df98f3d2ce18de5d2db6d638995c01c80aec51f7ad979b879b2e8d8f7d6c2e464cbff3c70ed9b528399337f8fba31744f955ca17fdad1d4e9193fb0f10ea391a/oddjob-0.34.7.tar.gz"
       ]
+    },
+    {
+      "name": "oo7",
+      "version": "0.7.0~beta^1.e91b98a",
+      "url": "https://github.com/linux-credentials/oo7/archive/e91b98a7235a4971c6cbb7f0533034afc8a8f618/oo7-e91b98a.tar.gz",
+      "filename": "oo7-e91b98a.tar.gz",
+      "sha512": "4ebce6b36406ad1d53421269a8788226a047a4475b2e69a6d84388c6d0569fddd91357c5c38d1b1a906dc3fb51d50068930ed6ce1ad9ace51025350b6c9dbc79"
     },
     {
       "name": "open-vm-tools",
@@ -4829,6 +5123,13 @@
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/openapv/openapv-0.3.0.0.tar.gz/sha512/38bf5f541b9879337c44b5e836209325dfe2c0aae1d94eca2e9e5a36ed80c824fadcfa9f5365fff2a43418f1aab8e74061f370cba045cd3c2a89b1386338448b/openapv-0.3.0.0.tar.gz"
       ]
+    },
+    {
+      "name": "opencc",
+      "version": "1.2.0",
+      "url": "https://github.com/BYVoid/OpenCC/archive/ver.1.2.0.tar.gz#/OpenCC-ver.1.2.0.tar.gz",
+      "filename": "OpenCC-ver.1.2.0.tar.gz",
+      "sha512": "63af2486d7bb2e058243e7edb4793b198472edf052f0909e6ff5819770cfbe1d3d01a4c45916f8e9350537e4d1648d494d7d976e969764c1b51816b492fff0b7"
     },
     {
       "name": "openconnect",
@@ -4911,6 +5212,13 @@
       "sha512": "1d435938d5db45ffc60e2ac2512c42bc7ee893991d213b19033a60cabca19a7ddd5bf1f71bb172dcb77220bfa87abe92564b3edc878f22a87dfd4e7bcacf662f"
     },
     {
+      "name": "openssl-pkcs11",
+      "version": "0.4.21",
+      "url": "https://github.com/OpenSC/libp11/releases/download/libp11-0.4.21/libp11-0.4.21.tar.gz",
+      "filename": "libp11-0.4.21.tar.gz",
+      "sha512": "2ec8cdb79a827c81c05c9a92be307efac377c34261152f7545dd601ce1da6430930ca8229565d40e94a861c90a873f230b9e854d28ab985d6ecbbf01ea29751b"
+    },
+    {
       "name": "openvpn",
       "version": "2.7.8",
       "url": "https://build.openvpn.net/downloads/releases/openvpn-2.7.8.tar.gz",
@@ -4927,6 +5235,13 @@
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/opus/opus-1.6.tar.gz/sha512/23a71d6ed610d35742c990902eb2c7b17f28fb8d38677193f984e3ad7ed506c816062f241af5d8ab901cc91d0ddb890b774efac3867a7cef2d53d26464ea7df3/opus-1.6.tar.gz"
       ]
+    },
+    {
+      "name": "opusfile",
+      "version": "0.12",
+      "url": "https://downloads.xiph.org/releases/opus/opusfile-0.12.tar.gz",
+      "filename": "opusfile-0.12.tar.gz",
+      "sha512": "e25e6968a3183ac0628ce1000840fd6f9f636e92ba984d6a72b76fb2a98ec632d2de4c66a8e4c05ef30655c2a4a13ab35f89606fa7d79a54cfa8506543ca57af"
     },
     {
       "name": "orc",
@@ -5946,6 +6261,13 @@
       "sha512": "364e841749cd00cf526b2d4a145be9c11fa9531637c8450cbb06f26502434ee890ccd5926ad3adad7b13fa9552a3a821801d24470b95108b9cafcfa023f562c8"
     },
     {
+      "name": "rpcsvc-proto",
+      "version": "1.4",
+      "url": "https://github.com/thkukuk/rpcsvc-proto/releases/download/v1.4/rpcsvc-proto-1.4.tar.xz",
+      "filename": "rpcsvc-proto-1.4.tar.xz",
+      "sha512": "c3011d7d7ef97a4a751f6921df1a23e1dd8ac50fb0690c759d37010ed7be27968a2130e3b8872cb48d5914216f9d539096a424f1ec38a75f7ed899748151c6f4"
+    },
+    {
       "name": "rpm-ostree",
       "version": "2026.3",
       "url": "https://github.com/coreos/rpm-ostree/releases/download/v2026.3/rpm-ostree-2026.3.tar.xz",
@@ -6016,6 +6338,13 @@
       "url": "https://crates.io/api/v1/crates/gst-plugin-dav1d/0.15.0/download#/gst-plugin-dav1d-0.15.0.crate",
       "filename": "gst-plugin-dav1d-0.15.0.crate",
       "sha512": "9326a569da4ad762f743107577d4817bb28724cfb036b35eaf7d57acfb25d0b52239df86d778e519788651d867200e4c0c2a3cacf438fc3d3f3e2016e02f5cc8"
+    },
+    {
+      "name": "rust-gst-plugin-gtk4",
+      "version": "0.15.2",
+      "url": "https://crates.io/api/v1/crates/gst-plugin-gtk4/0.15.2/download#/gst-plugin-gtk4-0.15.2.crate",
+      "filename": "gst-plugin-gtk4-0.15.2.crate",
+      "sha512": "afaee32875a37506cb2478f5a59296e44137e0df944fc1ba088fc9bad76cb853693b54f73feb64be7fca0bce4bc22f59caf73999dac9c4c5e2fd27927ea1cc4f"
     },
     {
       "name": "rust-just",
@@ -6282,6 +6611,13 @@
       ]
     },
     {
+      "name": "speexdsp",
+      "version": "1.2.1",
+      "url": "https://downloads.xiph.org/releases/speex/speexdsp-1.2.1.tar.gz",
+      "filename": "speexdsp-1.2.1.tar.gz",
+      "sha512": "41b5f37b48db5cb8c5a0f6437a4a8266d2627a5b7c1088de8549fe0bf0bb3105b7df8024fe207eef194096e0726ea73e2b53e0a4293d8db8e133baa0f8a3bad3"
+    },
+    {
       "name": "spice",
       "version": "0.16.0",
       "url": "https://www.spice-space.org/download/releases/spice-0.16.0.tar.bz2",
@@ -6432,6 +6768,20 @@
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/strace/strace-7.3.tar.xz/sha512/177f6de73ba731cba4e71ea8407e663d8f96a4bd59b6aeba4db9b57c55b438d4b764b5f694ec4011e867ba70c55f75cecf6747b0afd0311aa4f23fc51a5351f6/strace-7.3.tar.xz"
       ]
+    },
+    {
+      "name": "sudo-rs",
+      "version": "0.2.15",
+      "url": "https://github.com/trifectatechfoundation/sudo-rs/archive/v0.2.15/sudo-rs-0.2.15.tar.gz",
+      "filename": "sudo-rs-0.2.15.tar.gz",
+      "sha512": "18a2c8bc44fa2c0cea75379764c445e50e2a6ab086d10b7cb8135952dfc5fedcfc3069d57b03f5f74d8a31248aa0705bef7bbc13b3aab43ee90bf3dc2fae6801"
+    },
+    {
+      "name": "sushi",
+      "version": "51.2",
+      "url": "https://download.gnome.org/sources/sushi/51/sushi-51.2.tar.xz",
+      "filename": "sushi-51.2.tar.xz",
+      "sha512": "00fcc24e94a402db0bcfa12748cab58fa6297d6dc9f57bd6c89b9805b9c14d7f4249fdce0652fac5c866bc2c19882c9531d5655284f11a9be56fb44366598764"
     },
     {
       "name": "svt-vp9",
@@ -6592,6 +6942,13 @@
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/tmux/tmux-3.8.tar.gz/sha512/0ece3486676ea38f781206f653379a17560aef654177d9142b591763e6dd29bdc4811c9c09b4dfb9b97b298831074262430369126e48cf35e3e2586d3dd78976/tmux-3.8.tar.gz"
       ]
+    },
+    {
+      "name": "tomlplusplus",
+      "version": "3.4.0",
+      "url": "https://github.com/marzer/tomlplusplus/archive/v3.4.0/tomlplusplus-3.4.0.tar.gz",
+      "filename": "tomlplusplus-3.4.0.tar.gz",
+      "sha512": "c227fc8147c9459b29ad24002aaf6ab2c42fac22ea04c1c52b283a0172581ccd4527b33c1931e0ef0d1db6b6a53f9e9882c6d4231c7f3494cf070d0220741aa5"
     },
     {
       "name": "toolbox",
@@ -6784,6 +7141,13 @@
       ]
     },
     {
+      "name": "usbredir",
+      "version": "0.15.0",
+      "url": "https://www.spice-space.org/download/usbredir/usbredir-0.15.0.tar.xz",
+      "filename": "usbredir-0.15.0.tar.xz",
+      "sha512": "21e99fa419f35fabf7eb3f066a36d5b43a81fef818ceda42dc637566ff1c53ef02f9a81ad8ab32af3039e248c82eb708ae5de80f18b662d156d53221fc1d63fc"
+    },
+    {
       "name": "usbutils",
       "version": "019",
       "url": "https://www.kernel.org/pub/linux/utils/usb/usbutils/usbutils-019.tar.xz",
@@ -6803,6 +7167,13 @@
       "url": "https://github.com/ublue-os/uupd/releases/download/v1.5.5/uupd_Linux_x86_64.tar.gz",
       "filename": "uupd-1.5.5-x86_64.tar.gz",
       "sha512": "275e88fc755beebe7af79b51025ed3ea1329f52d0d9dc8496cd0054d31d3d34b456364648bc83daab8a9b1702850762d3f35aad6ffb39e865fe180f6c6dc8386"
+    },
+    {
+      "name": "uutils-coreutils",
+      "version": "0.7.0",
+      "url": "https://github.com/uutils/coreutils/archive/0.7.0/uutils-coreutils-0.7.0.tar.gz",
+      "filename": "uutils-coreutils-0.7.0.tar.gz",
+      "sha512": "e6d01d9320050efaa64ac261d86fddbb79895a0768c388248b412be571989ec4fc78c094e9606d56154abab06b3f66bd4784c55dbf8129db183e78df4bd7c43c"
     },
     {
       "name": "uvg266",
@@ -6841,6 +7212,13 @@
       ]
     },
     {
+      "name": "virglrenderer",
+      "version": "1.3.0",
+      "url": "https://gitlab.freedesktop.org/virgl/virglrenderer/-/archive/1.3.0/virglrenderer-1.3.0.tar.bz2",
+      "filename": "virglrenderer-1.3.0.tar.bz2",
+      "sha512": "79f229040a0d4a6b96270603dbe111a791a2e542167b8f86524341640c742cec5263214c02138d520ee6e85da6bf95c7c273e86546d2acf53a21b5f6e5203095"
+    },
+    {
       "name": "virt-what",
       "version": "1.27",
       "url": "https://people.redhat.com/~rjones/virt-what/files/virt-what-1.27.tar.gz",
@@ -6849,6 +7227,13 @@
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/virt-what/virt-what-1.27.tar.gz/sha512/8d10111e38a87504daccf36e9386863aa92308c96be65164412d92c56c12d42f38e6e251fabe7945ce74e1419fc82c0ac3cdbd0f25b19cd72feda2e199307d6f/virt-what-1.27.tar.gz"
       ]
+    },
+    {
+      "name": "virtiofsd",
+      "version": "1.14.0",
+      "url": "https://crates.io/api/v1/crates/virtiofsd/1.14.0/download#/virtiofsd-1.14.0.crate",
+      "filename": "virtiofsd-1.14.0.crate",
+      "sha512": "8961384262144c98993808707cf832937217808a84cc5ac2cba375c2bb0f6fe108738dba4fa3d84d837422e59a27859ba2ea42ce40321eccb6ae9822eb319536"
     },
     {
       "name": "vo-amrwbenc",
@@ -7009,6 +7394,13 @@
       ]
     },
     {
+      "name": "wildmidi",
+      "version": "0.5.0",
+      "url": "https://github.com/Mindwerks/wildmidi/archive/wildmidi-0.5.0.tar.gz",
+      "filename": "wildmidi-0.5.0.tar.gz",
+      "sha512": "0c5faa8ff054ed7b5851570fb4cca542c39189e10d4c73121dff6fcfc8366ad043fc54c155f70b4b622b269b76341a4800607ecc317a7873381112abadd4c308"
+    },
+    {
       "name": "wireguard-tools",
       "version": "1.0.20260223",
       "url": "https://git.zx2c4.com/wireguard-tools/snapshot/wireguard-tools-1.0.20260223.tar.xz",
@@ -7048,6 +7440,13 @@
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/wl-clipboard/wl-clipboard-2.3.0.tar.gz/sha512/101dd7a18fbaee0754318cf9ec8403068df4091ccc5d3dd0bd1e46627d56a183c718c206816c08e5dbadf6fd5c747fa0c95eca1925fa27c7eeda133909696f9b/wl-clipboard-2.3.0.tar.gz"
       ]
+    },
+    {
+      "name": "woff2",
+      "version": "1.0.2",
+      "url": "https://github.com/google/woff2/archive/v1.0.2/woff2-1.0.2.tar.gz",
+      "filename": "woff2-1.0.2.tar.gz",
+      "sha512": "c788bba1530aec463e755e901f9342f4b599e3a07f54645fef1dc388ab5d5c30625535e5dd38e9e792e04a640574baa50eeefb6b7338ab403755f4a4e0c3044d"
     },
     {
       "name": "words",
@@ -7314,6 +7713,13 @@
       ]
     },
     {
+      "name": "xorg-x11-font-utils",
+      "version": "7.5",
+      "url": "https://www.x.org/pub/individual/font/font-util-1.4.1.tar.xz",
+      "filename": "font-util-1.4.1.tar.xz",
+      "sha512": "cec7fc38ba64ca9c81c59a8395da94d71c75e14f19faf6457da0a1a8c3c1cf51bcaab227834f6f5a6d274ba2557555e542dbe2bd88e527c45ea196318bbc38d0"
+    },
+    {
       "name": "xorg-x11-server-Xwayland",
       "stage": 5,
       "version": "26.0.99.901",
@@ -7389,6 +7795,13 @@
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/xvidcore/xvidcore-1.3.7.tar.bz2/sha512/e2b22e7a7e103af7adcc999d95484f991a0a33df02b912fe042b2e23d2af07381c737d23158dbf0fad770ee680572f86fbe04ab2ef33c81e2e0180ead2acc8ed/xvidcore-1.3.7.tar.bz2"
       ]
+    },
+    {
+      "name": "yaml-cpp",
+      "version": "0.8.0",
+      "url": "https://github.com/jbeder/yaml-cpp/archive/0.8.0/yaml-cpp-0.8.0.tar.gz",
+      "filename": "yaml-cpp-0.8.0.tar.gz",
+      "sha512": "aae9d618f906117d620d63173e95572c738db518f4ff1901a06de2117d8deeb8045f554102ca0ba4735ac0c4d060153a938ef78da3e0da3406d27b8298e5f38e"
     },
     {
       "name": "ydotool",

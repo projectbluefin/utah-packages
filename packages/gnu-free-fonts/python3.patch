@@ -1,0 +1,68 @@
+--- a/tools/generate/MacTT.bak	2012-05-03 08:23:30.000000000 -0500
++++ b/tools/generate/MacTT	2023-10-18 11:09:56.437731484 -0500
+@@ -43,7 +43,7 @@
+ 		f = fontforge.open( argv[i] )
+ 		ttfile = f.fontname + ".mac.ttf"
+ 		vstr = trim_version_str( f )
+-		print "Generating Mac TrueType file ", ttfile, ' ', vstr
++		print("Generating Mac TrueType file ", ttfile, ' ', vstr)
+ 		f.selection.all()
+ 		f.autoHint()
+ 		f.autoInstr()
+@@ -51,4 +51,4 @@
+ 		#f.generate( ttfile, flags=('opentype','old-kern') )
+ 		f.close()
+ else:
+-	print "Usage: " + scriptname + " font.sfd [font.sfd ...]"
++	print("Usage: " + scriptname + " font.sfd [font.sfd ...]")
+--- a/tools/generate/OpenType.bak	2012-05-03 08:23:30.000000000 -0500
++++ b/tools/generate/OpenType	2023-10-18 11:09:56.901729078 -0500
+@@ -42,7 +42,7 @@
+ 		f = fontforge.open( argv[i] )
+ 		otfile = f.fontname + ".otf"
+ 		vstr = trim_version_str( f )
+-		print "Generating OpenType file ", otfile, ' ', vstr
++		print("Generating OpenType file ", otfile, ' ', vstr)
+ 		# Wanted to set to 'UniocdeBmp' if there were no high unicodes
+ 		# but all attemtps to determine that from Python failed.
+ 		f.encoding = 'UnicodeFull'
+@@ -51,4 +51,4 @@
+ 		f.generate( otfile, flags=('opentype','old-kern','round') )
+ 		f.close()
+ else:
+-	print "Usage: " + scriptname + " font.sfd [font.sfd ...]"
++	print("Usage: " + scriptname + " font.sfd [font.sfd ...]")
+--- a/tools/generate/TrueType.bak	2012-05-03 08:23:30.000000000 -0500
++++ b/tools/generate/TrueType	2023-10-18 11:09:57.386726565 -0500
+@@ -42,7 +42,7 @@
+ 		f = fontforge.open( sys.argv[i] )
+ 		ttfile = f.fontname + ".ttf"
+ 		vstr = trim_version_str( f )
+-		print "Generating TrueType file ", ttfile, ' ', vstr
++		print("Generating TrueType file ", ttfile, ' ', vstr)
+ 		# Wanted to set to 'UniocdeBmp' if there were no high unicodes
+ 		# but all attemtps to determine that from Python failed.
+ 		f.encoding = 'UnicodeFull'
+@@ -54,4 +54,4 @@
+ 		f.generate( ttfile, flags=('opentype','old-kern','no-hints') )
+ 		f.close()
+ else:
+-	print "Usage: " + scriptname + " font.sfd [font.sfd ...]"
++	print("Usage: " + scriptname + " font.sfd [font.sfd ...]")
+--- a/tools/generate/WOFF.bak	2012-05-03 08:23:30.000000000 -0500
++++ b/tools/generate/WOFF	2023-10-18 11:09:57.892723941 -0500
+@@ -153,7 +153,7 @@
+ 		f = fontforge.open( sys.argv[i] )
+ 		woff_file = f.fontname + ".woff"
+ 		vstr = trim_version_str( f )
+-		print "Generating WOFF file ", woff_file, ' ', vstr
++		print("Generating WOFF file ", woff_file, ' ', vstr)
+ 		# Wanted to set to 'UniocdeBmp' if there were no high unicodes
+ 		# but all attemtps to determine that from Python failed.
+ 		f.encoding = 'UnicodeFull'
+@@ -171,4 +171,4 @@
+ 		f.generate( woff_file, flags=('opentype','no-hints') )
+ 		f.close()
+ else:
+-	print "Usage: " + scriptname + " font.sfd [font.sfd ...]"
++	print("Usage: " + scriptname + " font.sfd [font.sfd ...]")
