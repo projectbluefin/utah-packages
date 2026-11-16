@@ -21,7 +21,11 @@ that measurement explicit, evidence-backed and reproducible:
 - ``reports/audit-dakota.json`` / ``.md`` hold the disposition counts, the
   import queue (Fedora-importable and new-spec elements without a factory
   recipe, user-visible ones first) and the version drift of the elements the
-  factory already builds.
+  factory already builds. They are derived and never committed: every recipe
+  import moves them, so a tracked copy would go stale or make concurrent
+  import PRs conflict (#309). CI publishes the live report as an artifact.
+- ``--check`` builds the report in memory, writes nothing, and fails when the
+  committed inputs break the audit's contract (see ``contract_problems``).
 
 Dispositions
 ------------
@@ -1066,6 +1070,27 @@ def refresh_mapping(pin: dict, records: list[ElementRecord], fedora: FedoraIndex
 
 # --- CLI ----------------------------------------------------------------------
 
+def contract_problems(pin: dict, records: list[ElementRecord]) -> list[str]:
+    """What makes the committed snapshot and pin unusable for the audit.
+
+    The mapping names exactly the snapshot's elements, and every reviewer
+    decision names a snapshot element, so a typo or a re-pin without
+    ``--refresh`` cannot silently drop an element. A stale disposition is not
+    a problem: importing a recipe makes one, and the report lists it.
+    """
+    snapshot = {record.element for record in records}
+    problems = []
+    elements = set(pin.get("elements") or {})
+    problems += [f"{e}: in the snapshot, not in the mapping (run --refresh)"
+                 for e in sorted(snapshot - elements)]
+    problems += [f"{e}: in the mapping, not in the snapshot (run --refresh)"
+                 for e in sorted(elements - snapshot)]
+    for section in ("overrides", "aliases", "config_subpackages"):
+        problems += [f"{section} {e}: not an element of the snapshot"
+                     for e in sorted(set(pin.get(section) or {}) - snapshot)]
+    return problems
+
+
 def parse_args(argv):
     repo = Path(__file__).resolve().parent.parent
     parser = argparse.ArgumentParser(description="Map Dakota's BuildStream elements to RPMs.")
@@ -1075,6 +1100,9 @@ def parse_args(argv):
     parser.add_argument("--packages-dir", type=Path, default=repo / "packages")
     parser.add_argument("--json-out", type=Path, default=repo / "reports" / "audit-dakota.json")
     parser.add_argument("--markdown-out", type=Path, default=repo / "reports" / "audit-dakota.md")
+    parser.add_argument("--check", action="store_true",
+                        help="build the report in memory, write nothing, and exit 1 when "
+                             "the snapshot and config/dakota.json break the audit contract")
     parser.add_argument("--refresh", action="store_true",
                         help="re-resolve Fedora and Hummingbird availability online and "
                              "rewrite the mapping in --pin")
@@ -1093,6 +1121,10 @@ def parse_args(argv):
 
 def main(argv=None) -> int:
     args = parse_args(argv)
+    if args.check and (args.refresh or args.import_sbom):
+        print("error: --check writes nothing; it cannot --refresh or --import-sbom",
+              file=sys.stderr)
+        return 2
     pin = load_pin(args.pin)
 
     if args.import_sbom:
@@ -1123,6 +1155,16 @@ def main(argv=None) -> int:
         print(f"mapping written: {args.pin}")
 
     report = build_report(resolved, records, factory_locks, args.packages_dir)
+    if args.check:
+        render_markdown(report)
+        problems = contract_problems(pin, records)
+        for problem in problems:
+            print(f"error: {problem}", file=sys.stderr)
+        print(json.dumps(report["counts"]))
+        print(f"{len(report['stale_mappings'])} stale mapping(s); "
+              f"{len(report['import_queue'][FEDORA_IMPORTABLE])} Fedora-importable and "
+              f"{len(report['import_queue'][NEW_SPEC])} new-spec RPMs in the import queue")
+        return 1 if problems else 0
     args.json_out.parent.mkdir(parents=True, exist_ok=True)
     args.json_out.write_text(json.dumps(report, indent=2) + "\n")
     args.markdown_out.write_text(render_markdown(report) + "\n")

@@ -34,9 +34,11 @@ from tools.audit_dakota import (
     build_snapshot,
     candidate_names,
     classify_element,
+    contract_problems,
     gnome_build_meta_aliases,
     image_ownership,
     load_pin,
+    main,
     parse_primary,
     project_of,
     read_snapshot,
@@ -525,6 +527,68 @@ class RefreshTests(unittest.TestCase):
         })
         self.assertEqual(aliases, {"gnome-build-meta.bst:sdk/gtk.bst": ["gtk4"],
                                    "gnome-build-meta.bst:sdk/gvfs-client.bst": ["gvfs"]})
+
+
+class CheckTests(unittest.TestCase):
+    """--check: the gate CI runs instead of diffing a committed report (#309)."""
+
+    def setUp(self) -> None:
+        self.records = [record("bluefin/a.bst"), record("bluefin/b.bst")]
+        self.pin = copy.deepcopy(PIN)
+        self.pin["elements"] = {"bluefin/a.bst": {"disposition": NEW_SPEC},
+                                "bluefin/b.bst": {"disposition": NEW_SPEC}}
+
+    def test_a_mapping_of_exactly_the_snapshot_passes(self) -> None:
+        self.assertEqual(contract_problems(self.pin, self.records), [])
+
+    def test_an_element_missing_from_either_side_fails(self) -> None:
+        del self.pin["elements"]["bluefin/b.bst"]
+        self.pin["elements"]["bluefin/gone.bst"] = {"disposition": NEW_SPEC}
+        problems = contract_problems(self.pin, self.records)
+        self.assertEqual(len(problems), 2)
+        self.assertTrue(problems[0].startswith("bluefin/b.bst: in the snapshot"))
+        self.assertTrue(problems[1].startswith("bluefin/gone.bst: in the mapping"))
+
+    def test_a_decision_about_an_unknown_element_fails(self) -> None:
+        self.pin["overrides"]["bluefin/typo.bst"] = {"disposition": NOT_APPLICABLE, "reason": "x"}
+        self.pin["aliases"]["bluefin/typo2.bst"] = ["x"]
+        self.pin["config_subpackages"] = {"bluefin/typo3.bst": ["dakota-config-x"]}
+        self.assertEqual(contract_problems(self.pin, self.records), [
+            "overrides bluefin/typo.bst: not an element of the snapshot",
+            "aliases bluefin/typo2.bst: not an element of the snapshot",
+            "config_subpackages bluefin/typo3.bst: not an element of the snapshot",
+        ])
+
+    def test_a_stale_disposition_is_not_a_problem(self) -> None:
+        # Importing a recipe makes the recorded disposition stale; an import
+        # PR must pass the gate without touching config/dakota.json.
+        self.pin["elements"]["bluefin/a.bst"]["disposition"] = FEDORA_IMPORTABLE
+        self.assertEqual(contract_problems(self.pin, self.records), [])
+
+    def test_check_writes_nothing_and_passes_on_the_committed_inputs(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            out = Path(directory)
+            code = main(["--check", "--json-out", str(out / "a.json"),
+                         "--markdown-out", str(out / "a.md")])
+            self.assertEqual(code, 0)
+            self.assertEqual(list(out.iterdir()), [])
+
+    def test_check_fails_on_a_broken_pin(self) -> None:
+        pin = json.loads((REPO / "config" / "dakota.json").read_text())
+        pin["overrides"]["bluefin/not-an-element.bst"] = {"disposition": NOT_APPLICABLE,
+                                                          "reason": "x"}
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "dakota.json"
+            path.write_text(json.dumps(pin))
+            self.assertEqual(main(["--check", "--pin", str(path)]), 1)
+
+    def test_check_refuses_to_write(self) -> None:
+        self.assertEqual(main(["--check", "--refresh"]), 2)
+
+    def test_the_report_is_ignored_not_committed(self) -> None:
+        ignored = (REPO / ".gitignore").read_text().splitlines()
+        self.assertIn("reports/audit-dakota.json", ignored)
+        self.assertIn("reports/audit-dakota.md", ignored)
 
 
 if __name__ == "__main__":

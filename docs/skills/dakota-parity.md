@@ -39,7 +39,7 @@ owes.
 | `config/dakota-elements.tsv` | The element snapshot: one row per SBOM element, with its primary source (`version`, `url`), patch count, and how many files, desktop entries, systemd units and `/usr/bin` commands it owns **in the published image**. |
 | `config/dakota.json` | `source`: the pinned Dakota revision, the publish run whose `sbom-dakota` artifact is the snapshot, the image digest, the junction refs. `aliases`, `overrides`, `config_subpackages`: reviewer decisions. `elements`: the generated mapping, one entry per element (`disposition`, `rpm`, `fedora`, `hummingbird`, `evidence`). |
 | `config/gnome-build-meta.json` | Reused: its `mapping` names the RPM for GNOME renames (`sdk/gtk.bst -> gtk4`), so the two audits never disagree on a GNOME name. |
-| `reports/audit-dakota.{json,md}` | The audit: counts, import queue, version drift, structural and config tables, stale mappings, config-package gaps. |
+| `reports/audit-dakota.{json,md}` | The audit: counts, import queue, version drift, structural and config tables, stale mappings, config-package gaps. Derived, git-ignored and never committed: every recipe import moves it, so a tracked copy would go stale or make concurrent import PRs conflict (#309). Every `validate.yml` run publishes the live report as the `dakota-audit` artifact and in its job summary. |
 
 "In the image" is measured, not guessed: chunkah writes the owning element of
 every file into the `user.component` xattr, and `--import-sbom` reads it from
@@ -72,8 +72,15 @@ name, add an `aliases` entry instead.
 ## Commands
 
 ```sh
-# Offline: the mapping and snapshot are committed; CI runs exactly this.
+# Offline, writes reports/audit-dakota.{json,md} (git-ignored).
 python3 tools/audit_dakota.py
+
+# The gate (`just dakota-audit`, part of `just check`, and validate.yml's
+# "Dakota element audit" job): builds the report in memory, writes nothing,
+# and fails when config/dakota.json's mapping does not name exactly the
+# snapshot's elements, or an override, alias or config_subpackages entry names
+# an element the snapshot lacks. Stale dispositions do not fail it.
+python3 tools/audit_dakota.py --check
 
 # Re-resolve Fedora and Hummingbird online and rewrite config/dakota.json.
 # Reads Rawhide's and Hummingbird's primary.xml and HEADs each resolved
@@ -94,6 +101,10 @@ revision and an OCI layout that does not hold the pinned digest.
 `.github/workflows/audit-dakota.yml` runs the offline audit weekly (non-gating)
 and uploads the report; dispatch it with `refresh` to get a re-resolved
 `config/dakota.json` as an artifact to review and commit.
+
+Hand-edit only `aliases`, `overrides` and `config_subpackages` in
+`config/dakota.json`; `elements` is written by `--refresh`. Keep the file's
+shape (2-space JSON, one key per element) so a refresh diff stays reviewable.
 
 ## Working the import queue
 
@@ -117,8 +128,10 @@ desktop entry, then a systemd unit, then a command, then libraries and data.
    gnome-build-meta audit diffs patches and `-D` options
    ([`gnome-build-meta-audit.md`](gnome-build-meta-audit.md)).
 4. Rerun the audit. Until `--refresh` runs, the landed recipe shows under
-   **Stale mappings** (recorded `fedora-importable`, now `factory`). Commit the
-   refreshed `config/dakota.json` and report with the import, not later.
+   **Stale mappings** (recorded `fedora-importable`, now `factory`); its live
+   disposition is already `factory`. That is expected and does not fail
+   `--check`. Leave `config/dakota.json` alone in an import PR, so
+   concurrent imports do not conflict; the next refresh records it.
 
 A `new-spec` row is written from the element: Source0 is the element's source
 URL at its ref, locked like any upstream source; the build follows the
@@ -160,5 +173,6 @@ a parity issue), so it leaves the gap list.
   resolve binary -> source. Rawhide's `primary.xml` `sourcerpm` does.
 - A dist-git repository exists for retired packages; Rawhide's repodata is
   the authority for "importable", dist-git HEAD only confirms the repository.
-- Keep `reports/audit-dakota.json` under the 500 KB `check-added-large-files`
-  limit: build-only elements are listed by name and drift is only in `drift`.
+- The report is published as an artifact, not committed, so its size is not
+  bound by `check-added-large-files`; build-only elements are still listed by
+  name and drift only in `drift`, to keep it readable.
