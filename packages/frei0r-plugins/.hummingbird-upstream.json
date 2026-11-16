@@ -1,0 +1,8 @@
+{
+  "package": "frei0r-plugins",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/frei0r-plugins.git",
+  "commit": "1a3a3a4ac151d45b2c603b5f729c738566dc8d16",
+  "tree": "a729fad3094e67c19fbb97935ca5d861cddf119d",
+  "imported_at": "2026-11-16T04:07:10.740203+00:00"
+}
