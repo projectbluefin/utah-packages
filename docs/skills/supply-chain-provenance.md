@@ -297,6 +297,19 @@ A recipe can only take one primary source from the lock; a second `sources`
 line is fetched from a dist-git lookaside — Fedora's by default, or
 `pkgs.rpmfusion.org` when the lock entry sets `lookaside: rpmfusion-free` — so
 a Utah-only recipe cannot use one.
+The same holds for a version past Fedora's: a second `sources` line named
+after the version (jpegxl's `third_party-<version>.tar.gz` and
+`testdata-<version>.tar.gz`, cut by hand from git submodules) exists in the
+lookaside only for versions Fedora built. Fold such tarballs into a
+generated primary instead: the `jpegxl` generator fills the release
+archive's empty submodule directories from the GitHub archives of the
+commits the tag's gitlinks pin (`gh api
+repos/<o>/<r>/contents/<path>?ref=<tag>` gives the commit), each archive
+SHA-512-pinned, applies the hand script's deletions (`skcms/profiles`), and
+the spec drops the extra Sources and the second `%setup`. Check that the
+archive's top directory ends in the pinned commit; a moved pin then fails
+instead of packing another tree.
+
 When the upstream has no release and its commit archive is far larger than
 what the recipe needs, add a `tools/generated_sources.py` generator that
 fetches only the needed files at a pinned commit, checks a SHA-512 per file,

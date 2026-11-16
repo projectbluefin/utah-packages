@@ -2284,14 +2284,14 @@
     },
     {
       "name": "jpegxl",
-      "version": "0.11.2",
-      "url": "https://github.com/libjxl/libjxl/archive/v0.11.2/jpegxl-0.11.2.tar.gz",
-      "filename": "jpegxl-0.11.2.tar.gz",
-      "feed": "https://github.com/libjxl/libjxl/archive/v0.11.2/jpegxl-0.11.2.tar.gz",
-      "sha512": "a7e1f7d060b358f4382e84367d66aa2850aef3b4524a0fdfe3f22dd258fb9e35dda7540f859d8bf4c32f31c61a7a03db677f4490a9f472cd25869a9d00797336",
-      "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/jpegxl/jpegxl-0.11.2.tar.gz/sha512/a7e1f7d060b358f4382e84367d66aa2850aef3b4524a0fdfe3f22dd258fb9e35dda7540f859d8bf4c32f31c61a7a03db677f4490a9f472cd25869a9d00797336/jpegxl-0.11.2.tar.gz"
-      ]
+      "version": "0.12.0",
+      "filename": "jpegxl-0.12.0.tar.xz",
+      "sha512": "290b5fb69e56aa28771e66a59b7825b82606597c39a664a44649ab605b275229b4b7a2c34cc79af1627fc1ac1135a3986723af7cba832a1263392e58c694c0f2",
+      "generate": {
+        "script": "tools/generated_sources.py",
+        "input": "https://github.com/libjxl/libjxl/archive/v0.12.0/jpegxl-0.12.0.tar.gz (sha512-pinned); submodule archives (sha512-pinned): testdata https://github.com/libjxl/testdata commit 73695d303670c90e4d506ea89d9901b081385089, third_party/sjpeg https://github.com/webmproject/sjpeg commit 94e0df6d0f8b44228de5be0ff35efb9f946a13c9, third_party/skcms https://github.com/google/skcms commit 96d9171c94b937a1b5f0293de7309ac16311b722",
+        "method": "fill the release's empty sjpeg, skcms (minus profiles/, per update_third_party.sh) and testdata submodules at the tag's gitlinks and repack deterministically as jpegxl-0.12.0.tar.xz"
+      }
     },
     {
       "name": "json-glib",
