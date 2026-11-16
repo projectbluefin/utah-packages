@@ -4312,6 +4312,12 @@ packages:
     downstream_package_name: vid.stab
     paths:
       - packages/vid.stab
+  virglrenderer:
+    specfile_path: virglrenderer.spec
+    upstream_package_name: virglrenderer
+    downstream_package_name: virglrenderer
+    paths:
+      - packages/virglrenderer
   virt-what:
     specfile_path: virt-what.spec
     upstream_package_name: virt-what
