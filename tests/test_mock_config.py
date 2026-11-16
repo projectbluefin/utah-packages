@@ -47,6 +47,15 @@ class PolicyAgreementTests(unittest.TestCase):
     def test_hummingbird_repo_exclusion_matches_the_container(self) -> None:
         self.assertEqual(workflow_list("HB_REPO_EXCLUDE"), HUMMINGBIRD_REPO_EXCLUDE)
 
+    def test_both_roots_wait_out_a_stalled_hummingbird_download(self) -> None:
+        # dnf's default aborts a transfer under 1000 B/s for 30 s; with one
+        # baseurl that is a hard failure (issue #1160).
+        repo = (ROOT / "config" / "hummingbird.repo").read_text()
+        mock = render().split("[public-hummingbird-x86_64-rpms]")[1]
+        for setting in ("minrate=1", "timeout=300"):
+            self.assertIn(f"\n{setting}\n", repo)
+            self.assertIn(f"\n{setting}\n", mock)
+
     def test_builds_against_the_same_fedora_the_container_uses(self) -> None:
         # The invariant is unchanged -- both roots must pair Hummingbird with
         # one Fedora release -- but the container path declares it in
