@@ -316,6 +316,18 @@ lose it. The libjwt hold that #575's commit message names never reached
 the library goes on `config/bump-review-only.txt` with the reason, the same
 way as libcdio.
 
+An abseil-cpp LTS move (`libabsl_*.so.2605` -> `.2608`) rebuilds its
+consumers against the new sonames, but a consumer that names Abseil's
+libraries itself can still break: mozc's `mozc-use-system-abseil-cpp.patch`
+lists `-labsl_*` flags by hand, and 20260817.0 renamed
+`libabsl_crc_cpu_detect` to `libabsl_base_cpu_detect`, so mozc failed to link
+(`cannot find -labsl_crc_cpu_detect`, run 43803202467). Fedora had adjusted
+the patch in the same mass rebuild; re-import the consumer at the Koji commit
+that says "Rebuilt for abseil-cpp <version>" in the abseil pull request.
+Dispatch `rebuild-rpms.yml` on the branch with the library and every recipe
+that BuildRequires `abseil-cpp-devel`, so the consumers build after it in the
+same run.
+
 ## The bump gate
 
 The daily pull request on `bump/upstream-sources` merges itself
