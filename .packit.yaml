@@ -2428,6 +2428,12 @@ packages:
     downstream_package_name: libslirp
     paths:
       - packages/libslirp
+  libsmbios:
+    specfile_path: libsmbios.spec
+    upstream_package_name: libsmbios
+    downstream_package_name: libsmbios
+    paths:
+      - packages/libsmbios
   libsndfile:
     specfile_path: libsndfile.spec
     upstream_package_name: libsndfile

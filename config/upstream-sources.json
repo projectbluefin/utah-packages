@@ -3846,6 +3846,13 @@
       }
     },
     {
+      "name": "libsmbios",
+      "version": "2.4.3",
+      "url": "https://github.com/dell/libsmbios/archive/v2.4.3/libsmbios-2.4.3.tar.gz",
+      "filename": "libsmbios-2.4.3.tar.gz",
+      "sha512": "7f6fb36fa9653e123b416b275953fb5652025e76dac3b4ec5600168e193ea56f8ac3ea1a3b5db29d2770e73d88152d712a35bf77a9b3fc5596570fae885585ad"
+    },
+    {
       "name": "libsndfile",
       "version": "1.2.2",
       "url": "https://github.com/libsndfile/libsndfile/releases/download/1.2.2/libsndfile-1.2.2.tar.xz",
