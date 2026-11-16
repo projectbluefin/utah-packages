@@ -1,0 +1,12 @@
+diff -up grpc-1.60.0/test/core/ext/filters/rbac/rbac_service_config_parser_test.cc.fixtest grpc-1.60.0/test/core/ext/filters/rbac/rbac_service_config_parser_test.cc
+--- grpc-1.60.0/test/core/ext/filters/rbac/rbac_service_config_parser_test.cc.fixtest	2023-12-08 17:28:04.404501542 -0500
++++ grpc-1.60.0/test/core/ext/filters/rbac/rbac_service_config_parser_test.cc	2023-12-08 17:28:45.318099150 -0500
+@@ -261,7 +261,7 @@ TEST_F(RbacServiceConfigParsingTest, Bad
+   EXPECT_EQ(service_config.status().message(),
+             "errors validating service config: ["
+             "field:methodConfig[0].rbacPolicy[0].rules.action "
+-            "error:is not a number; "
++            "errors:[is not a number; unknown action]; "
+             "field:methodConfig[0].rbacPolicy[0].rules.policies "
+             "error:is not an object]")
+       << service_config.status();

@@ -1,0 +1,8 @@
+{
+  "package": "google-carlito-fonts",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/google-carlito-fonts.git",
+  "commit": "6b61e240e8604fe5c2d4f2f3f7ba15ff44fca5e5",
+  "tree": "16548966eb2d771636388a7bb7fd5f00cd6bb129",
+  "imported_at": "2026-11-16T04:15:50.554376+00:00"
+}

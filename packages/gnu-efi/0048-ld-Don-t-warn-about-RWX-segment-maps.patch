@@ -1,0 +1,36 @@
+commit 0f2ec3d6a60fc5dce2a0cc79ea24fa1cc03c0251
+Author: Peter Jones <pjones@redhat.com>
+Date:   Tue Feb 21 14:14:41 2023 -0500
+
+    ld: Don't warn about RWX segment maps
+    
+    Newer gnu ld complains about RWX segment maps, and since we build with
+    "--fatal-warnings" we get the following:
+    
+      ld -nostdlib --warn-common --no-undefined --fatal-warnings \
+         --build-id=sha1 -shared -Bsymbolic \
+         -L/builddir/build/BUILD/gnu-efi-3.0.9//apps/../aa64/lib \
+         -L/builddir/build/BUILD/gnu-efi-3.0.9//apps/../aa64/gnuefi \
+         /builddir/build/BUILD/gnu-efi-3.0.9//apps/../aa64/gnuefi/crt0-efi-aarch64.o \
+         --defsym=EFI_SUBSYSTEM=0xa t.o -o t.so -lefi -lgnuefi \
+         /usr/lib/gcc/aarch64-redhat-linux/13/libgcc.a \
+         -T /builddir/build/BUILD/gnu-efi-3.0.9//apps/../gnuefi/elf_aarch64_efi.lds
+      ld: warning: t.so has a LOAD segment with RWX permissions
+    
+    Since the final linked binary will be PE, rather than ELF, and won't
+    even *have* segment maps, this should be safe to just disable.
+    
+    This patch adds "--no-warn-rwx-segments" to the ld command lines.
+    
+    Signed-off-by: Peter Jones <pjones@redhat.com>
+
+diff --git a/Make.defaults b/Make.defaults
+index a504f42..bb18c30 100755
+--- a/Make.defaults
++++ b/Make.defaults
+@@ -187,4 +187,4 @@ endif
+ ARFLAGS := rDv
+ ASFLAGS += $(ARCH3264)
+ LDFLAGS	+= -nostdlib --warn-common --no-undefined --fatal-warnings \
+-	   --build-id=sha1
++	   --build-id=sha1 --no-warn-rwx-segments

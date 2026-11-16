@@ -1,0 +1,25 @@
+upstream_package_name: tomlplusplus
+upstream_project_url: https://github.com/marzer/tomlplusplus
+
+downstream_package_name: tomlplusplus
+
+specfile_path: tomlplusplus.spec
+
+jobs:
+  - job: pull_from_upstream
+    trigger: release
+    dist_git_branches:
+      - rawhide
+      - epel-9
+
+  - job: koji_build
+    trigger: commit
+    dist_git_branches:
+      - rawhide
+      - epel-9
+
+  - job: bodhi_update
+    trigger: commit
+    dist_git_branches:
+      - rawhide
+      - epel-9

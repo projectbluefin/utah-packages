@@ -1,0 +1,12 @@
+- hosts: localhost
+  roles:
+  - role: standard-test-basic
+    tags:
+    - classic
+    remote_user: root
+    tests:
+    - virtiofsd_printcaps:
+        dir: .
+        run: ./virtiofsd_printcaps.sh
+    required_packages:
+    - virtiofsd
