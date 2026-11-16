@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright 2014 Parag Nemade <pnemade AT redhat DOT com> -->
+<component type="font">
+  <id>gnu-free</id>
+  <metadata_license>CC-BY-3.0</metadata_license>
+  <name>Freefont</name>
+  <summary>Free UCS Outline Fonts</summary>
+  <description>
+    <p>
+      Gnu FreeFont is a free family of scalable outline fonts, suitable for general
+      use on computers and for desktop publishing. It is Unicode-encoded for
+      compatibility with all modern operating systems.
+ 
+      Besides a full set of characters for writing systems based on the Latin
+      alphabet, FreeFont contains large selection of characters from other writing
+      systems some of which are hard to find elsewhere.
+
+      FreeFont also contains a large set of symbol characters, both technical and
+      decorative. We are especially pleased with the Mathematical Operators range,
+      with which most of the glyphs used in LaTeX can be displayed.
+    </p>
+  </description>
+  <updatecontact>pnemade_at_redhat_dot_com</updatecontact>
+  <url type="homepage">http://www.gnu.org/software/freefont/</url>
+</component>
+

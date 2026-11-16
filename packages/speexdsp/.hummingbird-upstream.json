@@ -1,0 +1,8 @@
+{
+  "package": "speexdsp",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/speexdsp.git",
+  "commit": "2f210e97cc77156466e5d3778527019770fb21cf",
+  "tree": "39ab3d4f5daef03140a002e8232c540a94ae0291",
+  "imported_at": "2026-11-16T04:14:15.845890+00:00"
+}

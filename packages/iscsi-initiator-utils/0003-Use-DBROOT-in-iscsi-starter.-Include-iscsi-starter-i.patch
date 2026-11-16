@@ -1,0 +1,56 @@
+From 2cd1a3dd3f3137fcb3fee334e72bcffc0ed44d25 Mon Sep 17 00:00:00 2001
+From: Gordon Messmer <gordon.messmer@gmail.com>
+Date: Sat, 4 Feb 2023 14:13:12 -0800
+Subject: [PATCH 3/6] Use DBROOT in iscsi-starter. Include iscsi-starter in
+ meson build.
+
+---
+ etc/Makefile                               | 2 +-
+ etc/systemd/iscsi-starter.service.template | 4 ++--
+ etc/systemd/meson.build                    | 2 +-
+ 3 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/etc/Makefile b/etc/Makefile
+index 4e705a2..2456f25 100644
+--- a/etc/Makefile
++++ b/etc/Makefile
+@@ -44,7 +44,7 @@ INAME_DEST_FILE		= $(DESTDIR)$(HOMEDIR)/initiatorname.iscsi
+ all: $(SYSTEMD_SOURCES) $(SYSTEMD_GENERATED_SERVICE_FILES)
+ 
+ $(SYSTEMD_GENERATED_SERVICE_FILES): systemd/%.service: systemd/%.service.template
+-	$(SED) -e 's:@SBINDIR@:$(SBINDIR):' $? > $@
++	$(SED) -e 's:@SBINDIR@:$(SBINDIR):; s:@DBROOT@:$(DBROOT):' $? > $@
+ 
+ install_etc: $(DESTDIR)$(HOMEDIR) $(ETC_DEST_FILES)
+ 
+diff --git a/etc/systemd/iscsi-starter.service.template b/etc/systemd/iscsi-starter.service.template
+index 5e97941..d3ea7cd 100644
+--- a/etc/systemd/iscsi-starter.service.template
++++ b/etc/systemd/iscsi-starter.service.template
+@@ -1,8 +1,8 @@
+ [Unit]
+ DefaultDependencies=no
+ Before=sysinit.target iscsi.service
+-RequiresMountsFor=/var/lib/iscsi/nodes
+-ConditionDirectoryNotEmpty=/var/lib/iscsi/nodes
++RequiresMountsFor=@DBROOT@/nodes
++ConditionDirectoryNotEmpty=@DBROOT@/nodes
+ 
+ [Service]
+ Type=oneshot
+diff --git a/etc/systemd/meson.build b/etc/systemd/meson.build
+index 90082c7..1470a53 100644
+--- a/etc/systemd/meson.build
++++ b/etc/systemd/meson.build
+@@ -3,7 +3,7 @@
+ #
+ 
+ # templated systemd service files
+-iscsi_etc_systemd_service_units = ['iscsi-init', 'iscsid', 'iscsi', 'iscsiuio']
++iscsi_etc_systemd_service_units = ['iscsi-init', 'iscsid', 'iscsi', 'iscsi-starter', 'iscsiuio']
+ iscsi_etc_systemd_service_units_arr = {}
+ foreach u: iscsi_etc_systemd_service_units
+   iscsi_etc_systemd_service_units_arr += {u + '.service': files(u + '.service.template')}
+-- 
+2.55.0
+

@@ -1,0 +1,17 @@
+Index: librime-1.12.0/src/rime/setup.cc
+===================================================================
+--- librime-1.12.0.orig/src/rime/setup.cc
++++ librime-1.12.0/src/rime/setup.cc
+@@ -9,6 +9,12 @@
+ 
+ #ifdef RIME_ENABLE_LOGGING
+ #include <glog/logging.h>
++namespace google {
++  namespace glog_internal_namespace_ {
++    extern bool IsGoogleLoggingInitialized();
++  }
++  const auto& IsGoogleLoggingInitialized = glog_internal_namespace_::IsGoogleLoggingInitialized;
++}
+ #else
+ #include "no_logging.h"
+ #endif  // RIME_ENABLE_LOGGING

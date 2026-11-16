@@ -1,0 +1,8 @@
+{
+  "package": "baobab",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/baobab.git",
+  "commit": "810feebb65c0d2b84ac29dce9b5b4c40a804f401",
+  "tree": "2b0134f36582c8f52754702833b2e41337610fe6",
+  "imported_at": "2026-11-16T04:07:48.286833+00:00"
+}

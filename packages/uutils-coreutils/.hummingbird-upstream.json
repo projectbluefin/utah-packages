@@ -1,0 +1,8 @@
+{
+  "package": "uutils-coreutils",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/uutils-coreutils.git",
+  "commit": "2c262254b7ba788504e25bf3913cd68e4f04400e",
+  "tree": "e7ebda149bc57c1972e2f061fac4e108712ba283",
+  "imported_at": "2026-11-16T04:17:08.754326+00:00"
+}

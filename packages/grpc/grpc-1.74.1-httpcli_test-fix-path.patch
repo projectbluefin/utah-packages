@@ -1,0 +1,15 @@
+diff --git a/test/core/util/http_client/httpcli_test_util.cc b/test/core/util/http_client/httpcli_test_util.cc
+index 578ba9f393..fce72c777b 100644
+--- a/test/core/util/http_client/httpcli_test_util.cc
++++ b/test/core/util/http_client/httpcli_test_util.cc
+@@ -52,8 +52,8 @@ HttpRequestTestServer StartHttpRequestTestServer(int argc, char** argv,
+       // Bazel paths will end in "test/core/util/http_client".
+       root = absl::StrCat(dirname, "/../../../..");
+     } else {
+-      // Cmake paths will be "cmake/build".
+-      root = absl::StrCat(dirname, "/../..");
++      // Cmake paths will be "redhat-linux-build".
++      root = absl::StrCat(dirname, "/..");
+     }
+   } else {
+     root = ".";

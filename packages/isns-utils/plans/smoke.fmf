@@ -1,0 +1,5 @@
+discover:
+  how: fmf
+  dist-git-source: true
+execute:
+  how: tmt

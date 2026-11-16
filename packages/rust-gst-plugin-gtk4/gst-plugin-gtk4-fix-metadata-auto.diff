@@ -1,0 +1,36 @@
+--- gst-plugin-gtk4-0.15.2/Cargo.toml	2006-07-24T01:21:28+00:00
++++ gst-plugin-gtk4-0.15.2/Cargo.toml	2026-06-18T21:06:59.434108+00:00
+@@ -88,7 +88,6 @@
+     "gst-gl-wayland",
+ ]
+ winegl = [
+-    "gdk-win32/egl",
+     "gst-gl-egl",
+ ]
+ x11egl = [
+@@ -178,25 +177,3 @@
+ [build-dependencies.gst-plugin-version-helper]
+ version = "0.8"
+ 
+-[target.'cfg(target_os = "macos")'.dependencies.gst-gl]
+-version = "0.25.0"
+-features = ["v1_18"]
+-package = "gstreamer-gl"
+-
+-[target.'cfg(target_os = "windows")'.dependencies.gdk-win32]
+-version = "0.11.0"
+-features = ["v4_4"]
+-package = "gdk4-win32"
+-
+-[target.'cfg(target_os = "windows")'.dependencies.gst-gl]
+-version = "0.25.0"
+-features = ["v1_20"]
+-package = "gstreamer-gl"
+-
+-[target.'cfg(target_os = "windows")'.dependencies.windows-sys]
+-version = ">=0.52, <=0.61"
+-features = [
+-    "Win32_Graphics_OpenGL",
+-    "Win32_Foundation",
+-    "Win32_Graphics_Gdi",
+-]
