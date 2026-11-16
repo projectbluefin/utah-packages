@@ -946,6 +946,12 @@ packages:
     downstream_package_name: gnome-shell
     paths:
       - packages/gnome-shell
+  gnome-shell-extension-appindicator:
+    specfile_path: gnome-shell-extension-appindicator.spec
+    upstream_package_name: gnome-shell-extension-appindicator
+    downstream_package_name: gnome-shell-extension-appindicator
+    paths:
+      - packages/gnome-shell-extension-appindicator
   gnome-shell-extension-gsconnect:
     specfile_path: gnome-shell-extension-gsconnect.spec
     upstream_package_name: gnome-shell-extension-gsconnect

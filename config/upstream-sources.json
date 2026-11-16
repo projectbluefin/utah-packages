@@ -1449,6 +1449,13 @@
       ]
     },
     {
+      "name": "gnome-shell-extension-appindicator",
+      "version": "66",
+      "url": "https://github.com/ubuntu/gnome-shell-extension-appindicator/archive/v66/gnome-shell-extension-appindicator-66.tar.gz",
+      "filename": "gnome-shell-extension-appindicator-66.tar.gz",
+      "sha512": "bacff0fb07d995a2b162f175e8a06eb32e8ef719abd185ccf2034b25569fae73f8bd6bce5d8d96928ff57aca125c8eeeb7537550f37ca0dbf276b6f3343029c8"
+    },
+    {
       "name": "gnome-shell-extension-gsconnect",
       "version": "72",
       "url": "https://github.com/GSConnect/gnome-shell-extension-gsconnect/archive/v72/gnome-shell-extension-gsconnect-72.tar.gz",
