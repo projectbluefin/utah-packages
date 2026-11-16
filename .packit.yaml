@@ -3238,6 +3238,12 @@ packages:
     downstream_package_name: neon
     paths:
       - packages/neon
+  nerd-fonts-symbols:
+    specfile_path: nerd-fonts-symbols.spec
+    upstream_package_name: nerd-fonts-symbols
+    downstream_package_name: nerd-fonts-symbols
+    paths:
+      - packages/nerd-fonts-symbols
   net-snmp:
     specfile_path: net-snmp.spec
     upstream_package_name: net-snmp
