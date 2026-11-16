@@ -6795,6 +6795,13 @@
       "sha512": "703eb218704c7a11cdce25a71f4fc91bf4f042a8b185f79f3954699081c0db8a6234ad6f11738d8b2fe6a492a03d029cbe01762a47869edc473e4fbaa6e0ee32"
     },
     {
+      "name": "uupd",
+      "version": "1.5.5",
+      "url": "https://github.com/ublue-os/uupd/releases/download/v1.5.5/uupd_Linux_x86_64.tar.gz",
+      "filename": "uupd-1.5.5-x86_64.tar.gz",
+      "sha512": "275e88fc755beebe7af79b51025ed3ea1329f52d0d9dc8496cd0054d31d3d34b456364648bc83daab8a9b1702850762d3f35aad6ffb39e865fe180f6c6dc8386"
+    },
+    {
       "name": "uvg266",
       "version": "0.8.1",
       "url": "https://github.com/ultravideo/uvg266/archive/v0.8.1/uvg266-0.8.1.tar.gz",
