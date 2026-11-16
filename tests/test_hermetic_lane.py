@@ -166,9 +166,11 @@ class HermeticLaneTests(unittest.TestCase):
         helper = script[start:end].replace("sleep \"$NET_RETRY_PAUSE\"", "true")
         with tempfile.TemporaryDirectory() as directory:
             counter = Path(directory) / "count"
+            reports = Path(directory) / "reports"
             probe = f"""
 set -euo pipefail
 PACKAGE=probe
+REPORT_DIR={reports}
 {helper}
 cleanups=0
 cleanup() {{ cleanups=$((cleanups + 1)); }}
@@ -187,6 +189,13 @@ echo "attempts=$(cat {counter}) cleanups=$cleanups"
             self.assertEqual(gives_up.returncode, 1, gives_up.stdout + gives_up.stderr)
             self.assertEqual(counter.read_text().strip(), "3")
             self.assertIn("::error title=probe failed::probe: probe failed 3 times (last exit 1)", gives_up.stdout)
+            self.assertFalse((reports / "infra-failure").exists())
+            counter.unlink()
+            outage = subprocess.run(
+                ["bash", "-c", probe.replace("flaky() {", "flaky() { echo 'urllib3 IncompleteRead' >&2;")],
+                env={"PASS_ON": "9", "PATH": "/usr/bin:/bin"}, capture_output=True, text=True)
+            self.assertEqual(outage.returncode, 1, outage.stdout + outage.stderr)
+            self.assertEqual((reports / "infra-failure").read_text().strip(), "probe")
             counter.unlink()
             capped = subprocess.run(["bash", "-c", probe],
                                     env={"PASS_ON": "9", "HERMETIC_NET_ATTEMPTS": "1", "PATH": "/usr/bin:/bin"},

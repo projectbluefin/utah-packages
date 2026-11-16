@@ -306,7 +306,7 @@ class CommandLineTests(unittest.TestCase):
             infra_output = Path(tmp) / "infra.json"
             _, failed = self.run_report(
                 Path(tmp),
-                build_list=json.dumps(["fish", "gtk4", "umotd"]),
+                build_list=["fish", "gtk4", "umotd"],
                 artifacts=["rpm-s0-fish", "infra-s0-umotd", "infra-s1-fish"],
                 infra_failed_output=str(infra_output),
             )

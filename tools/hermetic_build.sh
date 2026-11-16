@@ -48,12 +48,14 @@ NET_RETRY_PAUSE=15
 # gate must not hold the package's version as broken (#1179). An
 # unsatisfiable graph fails every attempt too, but with no download error,
 # and stays an ordinary failure.
-NET_ERRORS='All mirrors were tried|No more mirrors to try|Curl error|Cannot download|Status code: 5[0-9][0-9]'
+NET_ERRORS='All mirrors were tried|No more mirrors to try|Curl error|Cannot download|Status code: 5[0-9][0-9]|IncompleteRead|Connection reset|ConnectionResetError|Connection aborted|RemoteDisconnected|Read timed out|MaxRetryError'
+REPORT_DIR=${REPORT_DIR:-/work/reports}
 online() {
   label=$1 cleanup=$2
   shift 2
   attempt=1
-  log=/work/reports/online.log
+  mkdir -p "$REPORT_DIR"
+  log=$REPORT_DIR/online.log
   while true; do
     status=0
     "$@" 2>&1 | tee "$log" || status=$?
@@ -63,7 +65,7 @@ online() {
     if [ "$attempt" -ge "$NET_ATTEMPTS" ]; then
       echo "::error title=$label failed::$PACKAGE: $label failed $attempt times (last exit $status)"
       if grep -qE "$NET_ERRORS" "$log"; then
-        echo "$label" > /work/reports/infra-failure
+        echo "$label" > "$REPORT_DIR/infra-failure"
       fi
       return "$status"
     fi
@@ -191,6 +193,9 @@ PY
       tail -3 "$fetch_log"
     else
       grep -vE "Downloading |urllib3" "$fetch_log" | tail -40 || true
+      # The filter above hides urllib3's outage lines (IncompleteRead, resets)
+      # that `online` must still see to tell an outage from a bad lock.
+      grep -E "urllib3" "$fetch_log" | grep -E "$NET_ERRORS" | tail -5 || true
     fi
     return "$fetch_status"
   }
