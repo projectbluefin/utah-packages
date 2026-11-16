@@ -4,8 +4,9 @@ description: >-
   What it takes to ship a terminal emulator on Hummingbird: Hummingbird
   carries no VTE at all, so every VTE-based terminal needs a complete dependency closure with
   vte291 first, plus the build ordering and source-lock shape for the GTK4
-  desktop closure. Load when importing ptyxis, gnome-console, kgx, vte291, or
-  any other terminal recipe.
+  desktop closure; Ghostty instead needs the Zig toolchain recipe. Load when
+  importing ptyxis, gnome-console, kgx, vte291, ghostty, zig, or any other
+  terminal recipe.
 metadata:
   type: procedure
 ---
@@ -94,3 +95,24 @@ Hummingbird-supplied ones* it skips, so it is one lower than the other three
 and moves by the same delta, not to the same number.
 
 Refresh the generated backlog report when importing terminal recipes; each newly provided binary changes its inventory-derived state even when the audit total stays fixed.
+
+## Ghostty needs the factory's own Zig
+
+Ghostty builds with `zig build`, and each Ghostty release sets a
+`minimum_zig_version` in `build.zig.zon` that its `build.zig` enforces. Zig
+breaks compatibility between minor releases, so the toolchain has to match
+the release's minor series exactly. Neither Hummingbird nor Fedora can supply
+it: Hummingbird carries only `zig-srpm-macros`, and Rawhide's `zig` trailed
+(0.16.0 when Ghostty 1.4.0 required 0.17.0).
+
+`packages/zig` therefore repackages the official ziglang.org release binary,
+as Dakota's `elements/bluefin/zig.bst` does, on the `tailscale` binary-repack
+precedent: the upstream tarball is `Source0`, SHA-512-locked, cross-checked
+against the SHA-256 that `https://ziglang.org/download/index.json` publishes.
+The binary is static and stripped, with no GNU build-id note, so the recipe
+disables debuginfo, stripping and the missing-build-id failure. It installs
+the library at `%{_prefix}/lib/zig`, the path Zig searches beside
+`<exe>/../lib/zig`, so no `ZIG_LIB_DIR` is needed. The lock has no `feed`:
+move it by hand together with Ghostty, to the newest patch release of the
+series Ghostty's `minimum_zig_version` names. Utah never installs it; it is a
+BuildRequires only.
