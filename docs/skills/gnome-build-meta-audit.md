@@ -22,6 +22,10 @@ RPM subpackages and downstream policy can all justify a difference. The goal is
 a maintained, evidence-backed delta, not a mechanical replacement of Fedora
 packaging and not a one-time spreadsheet.
 
+The Dakota element audit ([`dakota-parity.md`](dakota-parity.md)) reuses this
+file's `mapping` for GNOME renames, so a corrected mapping here corrects both
+audits.
+
 ## Pinned input
 
 `config/gnome-build-meta.json` records the authoritative GNOME input:

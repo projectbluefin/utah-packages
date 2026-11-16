@@ -1714,6 +1714,12 @@ packages:
     downstream_package_name: json-glib
     paths:
       - packages/json-glib
+  kanata:
+    specfile_path: kanata.spec
+    upstream_package_name: kanata
+    downstream_package_name: kanata
+    paths:
+      - packages/kanata
   kde-filesystem:
     specfile_path: kde-filesystem.spec
     upstream_package_name: kde-filesystem
@@ -4546,6 +4552,12 @@ packages:
     downstream_package_name: tcpdump
     paths:
       - packages/tcpdump
+  tealdeer:
+    specfile_path: tealdeer.spec
+    upstream_package_name: tealdeer
+    downstream_package_name: tealdeer
+    paths:
+      - packages/tealdeer
   tecla:
     specfile_path: tecla.spec
     upstream_package_name: tecla
