@@ -4444,6 +4444,12 @@ packages:
     downstream_package_name: wl-clipboard
     paths:
       - packages/wl-clipboard
+  woff2:
+    specfile_path: woff2.spec
+    upstream_package_name: woff2
+    downstream_package_name: woff2
+    paths:
+      - packages/woff2
   words:
     specfile_path: words.spec
     upstream_package_name: words

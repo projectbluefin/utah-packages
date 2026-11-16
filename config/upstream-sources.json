@@ -6893,6 +6893,13 @@
       ]
     },
     {
+      "name": "woff2",
+      "version": "1.0.2",
+      "url": "https://github.com/google/woff2/archive/v1.0.2/woff2-1.0.2.tar.gz",
+      "filename": "woff2-1.0.2.tar.gz",
+      "sha512": "c788bba1530aec463e755e901f9342f4b599e3a07f54645fef1dc388ab5d5c30625535e5dd38e9e792e04a640574baa50eeefb6b7338ab403755f4a4e0c3044d"
+    },
+    {
       "name": "words",
       "version": "3.0",
       "url": "https://src.fedoraproject.org/repo/pkgs/rpms/words/mwords.tar.Z/md5/d867188424b3ae6512a754d5c73f0dfe/mwords.tar.Z",
