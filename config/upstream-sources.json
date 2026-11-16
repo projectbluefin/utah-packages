@@ -1218,6 +1218,13 @@
       ]
     },
     {
+      "name": "glog",
+      "version": "0.7.1",
+      "url": "https://github.com/google/glog/archive/v0.7.1/glog-0.7.1.tar.gz",
+      "filename": "glog-0.7.1.tar.gz",
+      "sha512": "2dabac87d44e4fe58beceb31b22be732b47df84c22f1af8c0e7d0f262de939889de1f16025c1256539f2833ef3393bc92034e983aa2886752bb8705801a68630"
+    },
+    {
       "name": "glow",
       "version": "3.0.0",
       "url": "https://github.com/charmbracelet/glow/archive/v3.0.0/glow-3.0.0.tar.gz",

@@ -802,6 +802,12 @@ packages:
     downstream_package_name: glibmm2.68
     paths:
       - packages/glibmm2.68
+  glog:
+    specfile_path: glog.spec
+    upstream_package_name: glog
+    downstream_package_name: glog
+    paths:
+      - packages/glog
   glow:
     specfile_path: glow.spec
     upstream_package_name: glow
