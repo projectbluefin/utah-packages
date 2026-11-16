@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import contextlib
+import hashlib
 import io
 import json
 import os
@@ -12,6 +13,7 @@ import unittest
 from unittest.mock import patch
 import urllib.error
 
+from tools.bump_gate import load_review_only
 from tools.upstream_bump import (
     GnomeStable,
     anitya_versions,
@@ -40,8 +42,9 @@ from tools.upstream_bump import (
     forge_proposal,
     forge_versions,
     newer,
+    rebuilt_fallback,
     strip_tag_prefix,
-    substituted,
+    swap_version,
     candidates,
     check_bumpable,
     held,
@@ -1701,6 +1704,26 @@ class ForgeEntryRewriteTests(unittest.TestCase):
         self.assertNotIn("old" * 10, fallback)
         self.assertIn("new" * 10, fallback)
 
+    def test_the_signature_url_moves_with_the_version(self):
+        # cryptopp verifies a detached .sig beside its release asset; the old
+        # release's signature cannot verify the new tarball.
+        base = "https://github.com/cryptopp-modern/cryptopp-modern/releases/download"
+        entry = {
+            "name": "cryptopp",
+            "version": "2026.10.0",
+            "url": f"{base}/2026.10.0/cryptopp-modern-2026.10.0.tar.gz",
+            "filename": "cryptopp-modern-2026.10.0.tar.gz",
+            "sha512": "a" * 128,
+            "signature_url": f"{base}/2026.10.0/cryptopp-modern-2026.10.0.tar.gz.sig",
+            "gpg_key": "packages/cryptopp/gpgkey.gpg",
+        }
+        updated = forge_planned_entry(entry, "2026.11.0", "b" * 128)
+        self.assertEqual(updated["signature_url"],
+                         f"{base}/2026.11.0/cryptopp-modern-2026.11.0.tar.gz.sig")
+        self.assertEqual(updated["url"], f"{base}/2026.11.0/cryptopp-modern-2026.11.0.tar.gz")
+        # The key is the project's, not the release's: it does not move.
+        self.assertEqual(updated["gpg_key"], entry["gpg_key"])
+
     def test_a_version_absent_from_the_url_refuses_to_substitute(self):
         # Substituting nothing would write a new version beside an old tarball.
         entry = {
@@ -1712,10 +1735,20 @@ class ForgeEntryRewriteTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             forge_planned_entry(entry, "1.1", "y" * 8)
 
-    def test_substituted_handles_strings_and_lists(self):
-        self.assertEqual(substituted("a-1.0", [("1.0", "2.0")]), "a-2.0")
-        self.assertEqual(substituted(["a-1.0", "b-1.0"], [("1.0", "2.0")]),
-                         ["a-2.0", "b-2.0"])
+    def test_swap_version_handles_strings_and_lists(self):
+        self.assertEqual(swap_version("a-1.0", "1.0", "2.0"), "a-2.0")
+        self.assertEqual(swap_version(["a-1.0", "b-1.0"], "1.0", "2.0"), ["a-2.0", "b-2.0"])
+
+    def test_swap_version_replaces_only_the_whole_version(self):
+        # 1.0 inside 1.0.1, and 238 inside a hex digest, are not the version.
+        self.assertEqual(swap_version("a-1.0.1/a-1.0.tar", "1.0", "1.1"), "a-1.0.1/a-1.1.tar")
+        self.assertEqual(swap_version("f238a/libgudev-238.tar.xz", "238", "239"),
+                         "f238a/libgudev-239.tar.xz")
+        self.assertEqual(swap_version("librist-v0.2.11.tar.gz", "0.2.11", "0.2.20"),
+                         "librist-v0.2.20.tar.gz")
+        self.assertEqual(swap_version("libmediainfo/26.05/libmediainfo_26.05.tar.xz",
+                                      "26.05", "26.10"),
+                         "libmediainfo/26.10/libmediainfo_26.10.tar.xz")
 
 
 class ForgeLabelTests(unittest.TestCase):
@@ -2260,3 +2293,213 @@ def run_main_with_gbm(root: Path, tree: Path, caches: dict[str, list[str]]):
         code = upstream_bump.main()
     moved = [(c.args[1]["name"], c.args[1]["latest"]) for c in applied.call_args_list]
     return code, moved, out.getvalue(), err.getvalue()
+
+
+MESA_ANITYA_URL = "https://release-monitoring.org/api/v2/versions/?project_id=1970"
+
+
+def explicit_feed_tree(tmp: str, entry: dict) -> Path:
+    """A scratch tree with one lock on a project download, its recipe and manifest."""
+    root = Path(tmp)
+    (root / "config").mkdir()
+    (root / "config" / "upstream-sources.json").write_text(
+        json.dumps({"packages": [entry]}, indent=2) + "\n"
+    )
+    package = root / "packages" / entry["name"]
+    package.mkdir(parents=True)
+    (package / f"{entry['name']}.spec").write_text(
+        f"Version:        {entry['version']}\nRelease:        2%{{?dist}}\n"
+    )
+    (package / "sources").write_text(f"SHA512 ({entry['filename']}) = {entry['sha512']}\n")
+    return root
+
+
+class RebuiltFallbackTests(unittest.TestCase):
+    """Every lookaside shape in the lock is rebuilt in the SHA-512 form."""
+
+    LOOKASIDE = "https://src.fedoraproject.org/repo/pkgs/rpms"
+    DIGEST = "c" * 128
+
+    def test_a_five_segment_lookaside_pin_gets_the_new_name_and_digest(self) -> None:
+        for algo, old in (("sha512", "a" * 128), ("md5", "b" * 32)):
+            with self.subTest(algo=algo):
+                url = (f"{self.LOOKASIDE}/mesa/mesa-26.2.1.tar.xz/{algo}/{old}/"
+                       "mesa-26.2.1.tar.xz")
+                self.assertEqual(
+                    rebuilt_fallback(url, "26.2.1", "26.2.6", self.DIGEST),
+                    f"{self.LOOKASIDE}/mesa/mesa-26.2.6.tar.xz/sha512/{self.DIGEST}/"
+                    "mesa-26.2.6.tar.xz",
+                )
+
+    def test_a_legacy_four_segment_md5_pin_is_not_left_with_its_old_hash(self) -> None:
+        # libatasmart's real lock entry: <file>/<md5>/<file>, no algorithm segment.
+        url = (f"{self.LOOKASIDE}/libatasmart/libatasmart-0.19.tar.xz/"
+               "53afe2b155c36f658e121fe6def33e77/libatasmart-0.19.tar.xz")
+        self.assertEqual(
+            rebuilt_fallback(url, "0.19", "0.20", self.DIGEST),
+            f"{self.LOOKASIDE}/libatasmart/libatasmart-0.20.tar.xz/sha512/{self.DIGEST}/"
+            "libatasmart-0.20.tar.xz",
+        )
+
+    def test_a_lookaside_url_whose_file_names_differ_is_only_version_swapped(self) -> None:
+        url = f"{self.LOOKASIDE}/mesa/mesa-26.2.1.tar.xz/{'b' * 32}/other-26.2.1.tar.xz"
+        self.assertEqual(
+            rebuilt_fallback(url, "26.2.1", "26.2.6", self.DIGEST),
+            f"{self.LOOKASIDE}/mesa/mesa-26.2.6.tar.xz/{'b' * 32}/other-26.2.6.tar.xz",
+        )
+
+    def test_another_mirror_only_has_its_version_swapped(self) -> None:
+        self.assertEqual(
+            rebuilt_fallback("https://mirror.example/mesa-26.2.1.tar.xz",
+                             "26.2.1", "26.2.6", self.DIGEST),
+            "https://mirror.example/mesa-26.2.6.tar.xz",
+        )
+
+
+class ExplicitFeedMoveTests(unittest.TestCase):
+    """A same-major release read from an explicit feed moves the lock's own primary.
+
+    The daily run used to report every one of these as "the new bytes must be
+    ingested through the primary first" -- mesa 26.2.1 -> 26.2.6, gstreamer
+    1.28.6 -> 1.28.9, bluez 5.87 -> 5.88 -- although the primary was the
+    project's own download and only needed the version swapped.
+    """
+
+    MESA = {
+        "name": "mesa",
+        "version": "26.2.1",
+        "url": "https://archive.mesa3d.org/mesa-26.2.1.tar.xz",
+        "filename": "mesa-26.2.1.tar.xz",
+        "sha512": "a" * 128,
+        "feed": "https://release-monitoring.org/project/1970",
+        "fallback_urls": [
+            "https://src.fedoraproject.org/repo/pkgs/rpms/mesa/mesa-26.2.1.tar.xz/"
+            "sha512/" + "a" * 128 + "/mesa-26.2.1.tar.xz",
+            # A legacy md5 lookaside pin, filed with no algorithm segment: its
+            # hash cannot be substituted.
+            "https://src.fedoraproject.org/repo/pkgs/rpms/mesa/mesa-26.2.1.tar.xz/"
+            + "b" * 32 + "/mesa-26.2.1.tar.xz",
+        ],
+    }
+
+    def anitya(self, versions, project="1970"):
+        url = f"https://release-monitoring.org/api/v2/versions/?project_id={project}"
+        return {url: json.dumps({"stable_versions": versions}).encode()}
+
+    def test_mesa_same_series_release_is_applied_with_a_derived_url_and_digest(self) -> None:
+        tarball = b"mesa 26.2.6 bytes"
+        new_url = "https://archive.mesa3d.org/mesa-26.2.6.tar.xz"
+        opener = fake_opener({**self.anitya(["27.0.0", "26.2.6", "26.2.1"]), new_url: tarball})
+        with tempfile.TemporaryDirectory() as tmp:
+            root = explicit_feed_tree(tmp, dict(self.MESA))
+            proposals = plan(root, None, opener=opener)
+            self.assertEqual([(p["kind"], p["latest"]) for p in proposals],
+                             [("update", "26.2.6")])
+            updated = apply(root, proposals[0], opener=opener)
+            written = json.loads((root / "config" / "upstream-sources.json").read_text())
+            spec = (root / "packages" / "mesa" / "mesa.spec").read_text()
+            manifest = (root / "packages" / "mesa" / "sources").read_text()
+        digest = hashlib.sha512(tarball).hexdigest()
+        self.assertEqual(written["packages"][0], updated)
+        self.assertEqual(updated["url"], new_url)
+        self.assertEqual(updated["filename"], "mesa-26.2.6.tar.xz")
+        self.assertEqual(updated["version"], "26.2.6")
+        self.assertEqual(updated["sha512"], digest)
+        # The feed stays; every fallback is the content-addressed SHA-512 form.
+        self.assertEqual(updated["feed"], self.MESA["feed"])
+        lookaside = ("https://src.fedoraproject.org/repo/pkgs/rpms/mesa/mesa-26.2.6.tar.xz/"
+                     f"sha512/{digest}/mesa-26.2.6.tar.xz")
+        self.assertEqual(updated["fallback_urls"], [lookaside, lookaside])
+        self.assertIn("Version:        26.2.6", spec)
+        self.assertIn("Release:        1%{?dist}", spec)
+        self.assertEqual(manifest, f"SHA512 (mesa-26.2.6.tar.xz) = {digest}\n")
+
+    def test_a_cross_major_release_is_still_review(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = explicit_feed_tree(tmp, dict(self.MESA))
+            proposals = plan(root, None, opener=fake_opener(self.anitya(["27.0.0", "26.2.1"])))
+        self.assertEqual([(p["kind"], p["latest"]) for p in proposals], [("review", "27.0.0")])
+
+    def test_a_primary_without_its_version_gets_its_own_reason(self) -> None:
+        entry = {**self.MESA, "url": "https://archive.mesa3d.org/mesa-latest.tar.xz",
+                 "filename": "mesa-latest.tar.xz"}
+        with tempfile.TemporaryDirectory() as tmp:
+            root = explicit_feed_tree(tmp, entry)
+            proposals = plan(root, None, opener=fake_opener(self.anitya(["26.2.6", "26.2.1"])))
+        self.assertEqual(len(proposals), 1)
+        self.assertEqual(proposals[0]["kind"], "review")
+        self.assertEqual(
+            proposals[0]["reason"],
+            "the primary https://archive.mesa3d.org/mesa-latest.tar.xz does not carry "
+            "the version 26.2.1, so no 26.2.6 download can be derived from it",
+        )
+
+    def test_a_content_addressed_primary_gets_its_own_reason(self) -> None:
+        # PyPI files each release under its own blake2b path.
+        url = ("https://files.pythonhosted.org/packages/38/61/"
+               "0b9ae6399dd4a58d8c1b1dc5a27d6f2808023d0b5dd3104bb99f45a33ff6/"
+               "argcomplete-3.6.3.tar.gz")
+        entry = {"name": "python-argcomplete", "version": "3.6.3", "url": url,
+                 "filename": "argcomplete-3.6.3.tar.gz", "sha512": "e" * 128,
+                 "feed": "https://release-monitoring.org/project/1970"}
+        with tempfile.TemporaryDirectory() as tmp:
+            root = explicit_feed_tree(tmp, entry)
+            proposals = plan(root, None, opener=fake_opener(self.anitya(["3.7.2", "3.6.3"])))
+        self.assertEqual(proposals[0]["kind"], "review")
+        self.assertIn("filed under a content hash", proposals[0]["reason"])
+
+    def test_a_lookaside_primary_is_never_derived_and_says_why(self) -> None:
+        entry = dict(AnityaFeedTests.ENTRY)
+        with tempfile.TemporaryDirectory() as tmp:
+            root = explicit_feed_tree(tmp, entry)
+            proposals = plan(root, None,
+                             opener=fake_opener(self.anitya(["1.8.13", "1.8.12"], "1764")))
+            with self.assertRaises(ValueError):
+                apply(root, {"name": "libX11", "kind": "update", "latest": "1.8.13"},
+                      opener=fake_opener({}))
+        self.assertEqual(proposals[0]["kind"], "review")
+        self.assertIn("Fedora's lookaside", proposals[0]["reason"])
+        self.assertIn("names no download", proposals[0]["reason"])
+
+    def test_a_derived_url_that_is_not_served_is_named(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = explicit_feed_tree(tmp, dict(self.MESA))
+            with self.assertRaisesRegex(ValueError, "mesa-26.2.6.tar.xz"):
+                apply(root, {"name": "mesa", "kind": "update", "latest": "26.2.6"},
+                      opener=fake_opener({}))
+
+    def test_a_review_only_package_is_still_not_applied(self) -> None:
+        import contextlib
+        from unittest import mock
+
+        from tools import upstream_bump
+        from tools.bump_gate import REVIEW_ONLY
+
+        # The boot chain: grub2 is on the real list, so the gate refuses it too.
+        self.assertIn("grub2", load_review_only(ROOT))
+        grub = {
+            "name": "grub2",
+            "version": "2.12",
+            "url": "https://ftp.gnu.org/gnu/grub/grub-2.12.tar.xz",
+            "filename": "grub-2.12.tar.xz",
+            "sha512": "c" * 128,
+            "feed": "https://release-monitoring.org/project/1257",
+        }
+        out, err = io.StringIO(), io.StringIO()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = explicit_feed_tree(tmp, grub)
+            (root / REVIEW_ONLY).write_text("grub2\n")
+            argv = ["upstream_bump.py", "--apply", "--root", str(root)]
+            with mock.patch.object(sys, "argv", argv), \
+                    mock.patch.dict(os.environ, {}, clear=False), \
+                    mock.patch.object(upstream_bump, "anitya_versions",
+                                      return_value=["2.16", "2.12"]), \
+                    mock.patch.object(upstream_bump, "apply") as applied, \
+                    contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+                os.environ.pop("GITHUB_OUTPUT", None)
+                out.reconfigure = lambda **_: None
+                code = upstream_bump.main()
+        self.assertEqual(code, 0)
+        applied.assert_not_called()
+        self.assertIn("needs review  grub2: 2.12 -> 2.16", err.getvalue())
+        self.assertIn(REVIEW_ONLY, err.getvalue())
