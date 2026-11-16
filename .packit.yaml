@@ -3958,6 +3958,12 @@ packages:
     downstream_package_name: speex
     paths:
       - packages/speex
+  speexdsp:
+    specfile_path: speexdsp.spec
+    upstream_package_name: speexdsp
+    downstream_package_name: speexdsp
+    paths:
+      - packages/speexdsp
   spice-protocol:
     specfile_path: spice-protocol.spec
     upstream_package_name: spice-protocol
