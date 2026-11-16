@@ -4552,6 +4552,12 @@ packages:
     downstream_package_name: tcpdump
     paths:
       - packages/tcpdump
+  tealdeer:
+    specfile_path: tealdeer.spec
+    upstream_package_name: tealdeer
+    downstream_package_name: tealdeer
+    paths:
+      - packages/tealdeer
   tecla:
     specfile_path: tecla.spec
     upstream_package_name: tecla
