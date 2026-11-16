@@ -7,7 +7,7 @@ default:
 # when a gate here is enforced by no workflow.
 #
 # Everything CI gates on, minus the builds.
-check: factory-check validate multimedia workflow-quoting runtime-contract factory-build-backlog test
+check: factory-check validate multimedia workflow-quoting runtime-contract factory-build-backlog dakota-audit test
 
 # Package-factory configuration: provenance, source locks, Packit coverage,
 # and no recipe silencing its own %check with tests_nonfatal.
@@ -36,6 +36,13 @@ runtime-contract:
 # a recipe import never edits a tracked report (#309, merge-queue conflicts).
 factory-build-backlog:
     python3 tools/factory_build_backlog.py --check
+
+# The Dakota element audit, built in memory from config/dakota-elements.tsv
+# and config/dakota.json: the mapping names exactly the snapshot's elements and
+# every reviewer decision names one of them. Prints the live counts; the report
+# itself is never committed, for the same #309 reason as the backlog.
+dakota-audit:
+    python3 tools/audit_dakota.py --check
 
 # Refresh derived inventory after combining current main and PR source changes.
 # Keep this mutating recovery command separate from the read-only `check`.

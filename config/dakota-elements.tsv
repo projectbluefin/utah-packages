@@ -1,0 +1,1205 @@
+element	name	in_image	sources	version	url	patches	files	apps	units	commands
+bluefin/alsa-utils.bst	alsa-utils	yes	tar	1.2.14	https://www.alsa-project.org/files/pub/utils/alsa-utils-1.2.14.tar.bz2	0	37	0	2	18
+bluefin/bindmounts.bst	bindmounts	yes	local			0	3	0	0	0
+bluefin/bluefin-docs.bst	bluefin-docs	yes	remote	26.11.1	https://github.com/projectbluefin/documentation/releases/download/26.11.1/bluefin.pdf	0	1	0	0	0
+bluefin/boost.bst	boost	no	anitya	49551aff3b22cbc5c5a9ed3dbc92f0e23ea50a0f7325b0d198b705e8ee3fc305	https://archives.boost.io/release/1.90.0/source/boost_1_90_0.tar.bz2	0	0	0	0	0
+bluefin/bootc-install-config.bst	bootc-install-config	yes	local			0	1	0	0	0
+bluefin/brew-tarball.bst	brew-tarball	yes	docker	sha256:130848582eed433e85af6fa8c829ddec12ddaa6b18bc037a610b4b8da3c97458	https://ghcr.io	0	1	0	0	0
+bluefin/brew.bst	brew	yes	git_repo	550a03e3d5f600282c8b4c73060bb830c91c1f74	https://github.com/ublue-os/brew.git	0	10	0	5	0
+bluefin/brlaser.bst	brlaser	yes	git_repo	23117fe9e0266396e4791cdae84d979928aed135	https://github.com/pdewacht/brlaser.git	0	2	0	0	0
+bluefin/chairlift.bst	chairlift	yes	tar	26.11.2	https://github.com/projectbluefin/chairlift/releases/download/v26.11.2/chairlift_26.11.2_linux_amd64.tar.gz	0	5	0	0	1
+bluefin/common.bst	common	yes	git_module+git_repo+local+patch+remote	2026.11	https://github.com/projectbluefin/common.git	4	247	3	18	10
+bluefin/composefs-loop-udisks-ignore.bst	composefs-loop-udisks-ignore	yes	local			0	1	0	0	0
+bluefin/deps.bst	deps	no				0	0	0	0	0
+bluefin/distrobox.bst	distrobox	yes	git_repo+go_module+local	1.8.2	https://github.com/89luca89/distrobox.git	0	2	0	0	0
+bluefin/efibootmgr.bst	efibootmgr	yes	git_repo	c3f9f0534e32158f62c43564036878b93b9e0fd6	https://github.com/rhboot/efibootmgr.git	0	4	0	0	2
+bluefin/fastfetch.bst	fastfetch	yes	git_repo	2.67.1	https://github.com/fastfetch-cli/fastfetch.git	0	44	0	0	2
+bluefin/fedora-shim.bst	fedora-shim	yes	remote	16.1	https://kojipkgs.fedoraproject.org/packages/shim/16.1/7/x86_64/shim-x64-16.1-7.x86_64.rpm	0	2	0	0	0
+bluefin/firstboot-date.bst	firstboot-date	yes	local			0	6	0	4	2
+bluefin/firstboot-services.bst	firstboot-services	yes	local			0	2	0	1	0
+bluefin/flatpak-apps.bst	flatpak-apps	yes	local			0	1	0	0	0
+bluefin/fprintd-fingerprint-auth.bst	fprintd-fingerprint-auth	yes				0	1	0	0	0
+bluefin/fprintd-system-auth.bst	fprintd-system-auth	yes				0	1	0	0	0
+bluefin/ghostty.bst	ghostty	yes	patch+remote+tar	1.4.0	https://release.files.ghostty.org/1.4.0/ghostty-1.4.0.tar.gz	1	893	1	0	1
+bluefin/glog.bst	glog	yes	git_repo	7b134a5c82c0c0b5698bb6bf7a835b230c5638e4	https://github.com/google/glog.git	0	6	0	0	0
+bluefin/gnome-epub-thumbnailer.bst	gnome-epub-thumbnailer	yes	git_repo	1.8	https://gitlab.gnome.org/GNOME/gnome-epub-thumbnailer.git	0	4	0	0	2
+bluefin/gnome-ponytail-daemon.bst	gnome-ponytail-daemon	yes	git_repo	0.0.11	https://gitlab.gnome.org/ofourdan/gnome-ponytail-daemon.git	0	5	0	1	0
+bluefin/gnome-shell-extensions.bst	gnome-shell-extensions	no				0	0	0	0	0
+bluefin/gtk4-layer-shell.bst	gtk4-layer-shell	yes	tar	1.3.0	https://github.com/wmww/gtk4-layer-shell/archive/refs/tags/v1.3.0.tar.gz	0	3	0	0	0
+bluefin/gum.bst	gum	yes	tar	2.0.2	https://github.com/charmbracelet/gum/releases/download/v2.0.2/gum_2.0.2_Linux_x86_64.tar.gz	0	6	0	0	1
+bluefin/hyperv-daemons.bst	hyperv-daemons	yes	git_repo+local	7.3.1	https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git	0	14	0	3	4
+bluefin/ibus-rime.bst	ibus-rime	yes	git_repo	3c73b2cf80685e75ed42c7631790936fb4f6b4b2	https://github.com/rime/ibus-rime.git	0	11	0	0	0
+bluefin/ifuse.bst	ifuse	yes	tar	1.2.1	https://github.com/libimobiledevice/ifuse/releases/download/1.2.1/ifuse-1.2.1.tar.bz2	0	2	0	0	1
+bluefin/intel-media-driver.bst	intel-media-driver	yes				0	1	0	0	0
+bluefin/just-overrides.bst	just-overrides	yes	local			0	7	0	0	0
+bluefin/kanata.bst	kanata	yes	cargo2+git_repo	1.12.0	https://github.com/jtroo/kanata.git	0	10	0	1	1
+bluefin/kexec-disable.bst	kexec-disable	yes				0	1	0	0	0
+bluefin/leveldb.bst	leveldb	yes	git_repo	99b3c03b3284f5886f9ef9a4ef703d57373e61be	https://github.com/google/leveldb.git	0	5	0	0	0
+bluefin/librime.bst	librime	yes	git_repo	33e78140250125871856cdc5b42ddc6a5fcd3cd4	https://github.com/rime/librime.git	0	8	0	0	4
+bluefin/libtracefs.bst	libtracefs	yes	git_repo	1.8.3	https://git.kernel.org/pub/scm/libs/libtrace/libtracefs.git	0	2	0	0	0
+bluefin/libvirt.bst	libvirt	yes	git_module+git_repo+local	12.7.0	https://gitlab.com/libvirt/libvirt.git	0	829	0	52	23
+bluefin/lm-sensors.bst	lm-sensors	yes	git_repo	5c3ba50f806dea27c3b1e368966191c735459111	https://github.com/lm-sensors/lm-sensors.git	0	23	0	1	7
+bluefin/lockdown-kargs.bst	lockdown-kargs	yes				0	1	0	0	0
+bluefin/marisa-trie.bst	marisa-trie	yes	git_repo	3e87d53b78e15f2f43783d5e376561a8c9722051	https://github.com/s-yata/marisa-trie.git	0	12	0	0	7
+bluefin/migrate-var-home-passwd.bst	migrate-var-home-passwd	yes	local			0	3	0	1	0
+bluefin/nautilus-python.bst	nautilus-python	yes	git_repo	4.2.0	https://gitlab.gnome.org/GNOME/nautilus-python.git	0	9	0	0	0
+bluefin/nerd-fonts-symbols.bst	nerd-fonts-symbols	yes	remote+tar	3.5.1	https://github.com/ryanoasis/nerd-fonts/releases/download/v3.5.1/NerdFontsSymbolsOnly.tar.xz	0	7	0	0	0
+bluefin/nethogs.bst	nethogs	yes	git_repo+local	0.9.0	https://github.com/raboof/nethogs.git	0	4	0	0	1
+bluefin/network.bst	network	yes				0	2	0	0	0
+bluefin/networkmanager-polkit.bst	networkmanager-polkit	yes	local			0	1	0	0	0
+bluefin/nfs-utils.bst	nfs-utils	yes	anitya	7dbc05eb8b32828b322872b759a62cb3979cb4118f344dd8616813d1390e84e0	https://www.kernel.org/pub/linux/utils/nfs-utils/3.1.1/nfs-utils-3.1.1.tar.xz	0	83	0	8	21
+bluefin/nicstat.bst	nicstat	yes	anitya+patch_queue	c4cc33f8838f4523f27c3d7584eedbe59f4c587f0821612f5ac2201adc18b367	https://downloads.sourceforge.net/nicstat/nicstat-1.95.tar.gz	1	1	0	0	1
+bluefin/nspawn.bst	nspawn	yes	cargo2+git_repo	1.5.1	https://github.com/nspawn/nspawn.git	0	10	0	1	1
+bluefin/oo7-passwd-pam.bst	oo7-passwd-pam	yes				0	1	0	0	0
+bluefin/open-vm-tools.bst	open-vm-tools	yes	patch+tar	13.1.0	https://github.com/vmware/open-vm-tools/releases/download/stable-13.1.0/open-vm-tools-13.1.0-25218885.tar.gz	1	49	0	1	10
+bluefin/opencc.bst	opencc	yes	git_repo	025f371dc76b598d77384fbdab90c937471844d8	https://github.com/BYVoid/OpenCC.git	0	50	0	0	3
+bluefin/plymouth-bluefin-theme.bst	plymouth-bluefin-theme	yes	local			0	3	0	0	0
+bluefin/powertop.bst	powertop	yes	tar	2.16.1	https://github.com/fenrus75/powertop/archive/refs/tags/v2.16.1.tar.gz	0	15	0	0	1
+bluefin/qemu-guest-agent.bst	qemu-guest-agent	yes				0	2	0	1	0
+bluefin/rpcbind.bst	rpcbind	yes	anitya	f6edf8cdf562aedd5d53b8bf93962d61623292bfc4d47eedd3f427d84d06f37e	https://downloads.sourceforge.net/project/rpcbind/rpcbind/1.2.7/rpcbind-1.2.7.tar.bz2	0	10	0	2	2
+bluefin/secure-boot-tools-files.bst	secure-boot-tools-files	yes				0	2	0	1	0
+bluefin/secure-boot-tools.bst	secure-boot-tools	no	local			0	0	0	0	0
+bluefin/secure-boot.bst	secure-boot	no				0	0	0	0	0
+bluefin/shell-extensions/app-indicators.bst	app-indicators	yes	git_repo	52da5222a17f7a862e8a47d2bc523f29abf59964	https://github.com/ubuntu/gnome-shell-extension-appindicator.git	0	51	0	0	0
+bluefin/shell-extensions/bazaar-companion.bst	bazaar-companion	yes	git_repo	3bb9134985343ffd1993520eb37c90e113bfb09b	https://github.com/bazaar-org/bazaar-companion.git	0	5	0	0	0
+bluefin/shell-extensions/blur-my-shell.bst	blur-my-shell	yes	git_repo	b1e415cc5ff3dffef72a69b552d8c64ae7d28a45	https://github.com/aunetx/blur-my-shell.git	0	212	0	0	0
+bluefin/shell-extensions/budslink-companion.bst	budslink-companion	yes	git_repo+patch	c11b6cf5626ee5417efc0af91148736e0697c354	https://github.com/maniacx/BudsLink-Companion.git	1	136	0	0	0
+bluefin/shell-extensions/caffeine.bst	caffeine	yes	git_repo	0c35fdf997d2ffaa34f90b2cae7695b9014bc59c	https://github.com/eonpatapon/gnome-shell-extension-caffeine.git	0	42	0	0	0
+bluefin/shell-extensions/custom-command-menu.bst	custom-command-menu	yes	git_repo+local	66e5d62a6b71f1b38c4d170d6c6244f7609e563f	https://github.com/StorageB/custom-command-menu.git	0	35	0	0	0
+bluefin/shell-extensions/dash-to-dock.bst	dash-to-dock	yes	git_repo	2dfae3474d6984b566ef0c3dab1524a675bbba48	https://github.com/micheleg/dash-to-dock.git	0	70	0	0	0
+bluefin/shell-extensions/disable-ext-validator.bst	disable-ext-validator	yes				0	1	0	0	0
+bluefin/shell-extensions/fuzzy-application-search.bst	fuzzy-application-search	yes	git_repo	864bf0ca6a3963e93cde7d5fd4fba8fb37cf0f49	https://codeberg.org/mkhl/gnome-shell-extension-fuzzy-application-search.git	0	6	0	0	0
+bluefin/shell-extensions/gradia-capture.bst	gradia-capture	yes	git_repo	0b7e47e1e5c1e68e234e4d2d24b307e1da1d18a9	https://github.com/AlexanderVanhee/gradia-capture.git	0	29	0	0	0
+bluefin/shell-extensions/gsconnect.bst	gsconnect	yes	git_repo	61cc76b966f95a19d396fe0fc42a755fcb902bd4	https://github.com/gsconnect/gnome-shell-extension-gsconnect.git	0	188	2	0	0
+bluefin/shell-extensions/power-status-color.bst	power-status-color	yes	git_repo	f43fc6dccdfebe28e9312756d538208d073f7854	https://github.com/projectbluefin/bluefin-bling.git	0	4	0	0	0
+bluefin/shell-extensions/quicksettings-audio-devices-hider.bst	quicksettings-audio-devices-hider	yes	zip	217082e049572ae54bc90bc09240f896e25f4a2609e0c0aa4b7133bed46d935d	https://extensions.gnome.org/download-extension/quicksettings-audio-devices-hider@marcinjahn.com.shell-extension.zip?version_tag=69924	0	6	0	0	0
+bluefin/shell-extensions/quicksettings-audio-devices-renamer.bst	quicksettings-audio-devices-renamer	yes	zip	a4f33897983376a23c5de69d6a008d1451afcc05cd7ce3b56630bd739c095a2e	https://extensions.gnome.org/download-extension/quicksettings-audio-devices-renamer@marcinjahn.com.shell-extension.zip?version_tag=69925	0	6	0	0	0
+bluefin/shell-extensions/syncthing-toggle.bst	syncthing-toggle	yes	git_repo	baa802a45d7aaa514ad02e3b91076546bfa034d9	https://github.com/projectbluefin/bluefin-bling.git	0	12	0	0	0
+bluefin/shell-extensions/tailscale-qs.bst	tailscale-qs	yes	git_repo+patch	7feced3f4b9bdf3ae775b203ca023ffbca2b29cb	https://github.com/tailscale-qs/tailscale-gnome-qs.git	1	7	0	0	0
+bluefin/shell-extensions/tilingshell.bst	tilingshell	yes	patch+zip	0a9f2b26de65294f53350d74089a3dae9376642784a722e98fc8d78fcc470a35	https://extensions.gnome.org/download-extension/tilingshell@ferrarodomenico.com.shell-extension.zip?version_tag=70233	1	94	0	0	0
+bluefin/signed-efi.bst	signed-efi	yes	local			0	3	0	0	0
+bluefin/signed-modules.bst	signed-modules	yes	local			0	4356	0	0	0
+bluefin/sudo-linuxbrew-path.bst	sudo-linuxbrew-path	yes				0	1	0	0	0
+bluefin/sudo-rs.bst	sudo-rs	yes	cargo2+git_repo	0.2.15	https://github.com/memorysafety/sudo-rs.git	0	3	0	0	1
+bluefin/swapfile.bst	swapfile	yes	local			0	3	0	1	0
+bluefin/syncthing.bst	syncthing	yes	tar	2.1.5	https://github.com/syncthing/syncthing/releases/download/v2.1.5/syncthing-source-v2.1.5.tar.gz	0	77	0	1	1
+bluefin/sysstat.bst	sysstat	yes	git_repo	12.8.0	https://github.com/sysstat/sysstat.git	0	22	0	7	7
+bluefin/tailscale-setup.bst	tailscale-setup	yes	local			0	4	1	0	0
+bluefin/tailscale.bst	tailscale	yes	tar	1.104.4	https://pkgs.tailscale.com/stable/tailscale_1.104.4_amd64.tgz	0	4	0	1	2
+bluefin/tealdeer.bst	tealdeer	yes	remote	1.8.1	https://github.com/tealdeer-rs/tealdeer/releases/download/v1.8.1/tealdeer-linux-x86_64-musl	0	4	0	0	1
+bluefin/tiptop.bst	tiptop	yes	git_repo	e91f7d6099c1f97f6492237cad7addea591b530b	https://gitlab.inria.fr/rohou/tiptop.git	0	1	0	0	1
+bluefin/trace-cmd.bst	trace-cmd	yes	git_repo	3.4	https://git.kernel.org/pub/scm/utils/trace-cmd/trace-cmd.git	0	4	0	0	1
+bluefin/udev-groups.bst	udev-groups	yes	local			0	1	0	0	0
+bluefin/umotd.bst	umotd	yes	remote	0.3.3	https://github.com/projectbluefin/umotd/releases/download/v0.3.3/umotd_0.3.3_linux_amd64	0	1	0	0	1
+bluefin/unsigned-modules.bst	unsigned-modules	no				0	0	0	0	0
+bluefin/usbmuxd.bst	usbmuxd	yes	git_repo	1.1.1	https://github.com/libimobiledevice/usbmuxd.git	0	7	0	1	1
+bluefin/user-avatars.bst	user-avatars	yes	local			0	1	0	0	0
+bluefin/uupd.bst	uupd	yes	tar	1.5.5	https://github.com/ublue-os/uupd/releases/download/v1.5.5/uupd_Linux_x86_64.tar.gz	0	6	0	3	1
+bluefin/uutils-coreutils.bst	uutils-coreutils	yes	cargo2+git_repo	0.12.0	https://github.com/uutils/coreutils.git	0	1	0	0	1
+bluefin/uwelcome.bst	uwelcome	yes	remote	0.4.1	https://github.com/projectbluefin/uwelcome/releases/download/v0.4.1/uwelcome_0.4.1_linux_amd64	0	1	0	0	1
+bluefin/virtiofsd.bst	virtiofsd	yes	cargo2+git_repo	1.14.0	https://gitlab.com/virtio-fs/virtiofsd.git	0	3	0	0	0
+bluefin/virtualization.bst	virtualization	no				0	0	0	0	0
+bluefin/vte.bst	vte	yes	tar	0.84.0	https://download.gnome.org/sources/vte/0.84/vte-0.84.0.tar.xz	0	116	0	0	0
+bluefin/wallpaper-month.bst	wallpaper-month	yes	local			0	1	0	1	0
+bluefin/wallpapers.bst	wallpapers	yes	docker	sha256:5de1c73addda7f96e1f226ea633993f148121805ee57f52eb10fc93cd79fcda8	https://ghcr.io	0	60	0	0	0
+bluefin/wireplumber-pcsp.bst	wireplumber-pcsp	yes	local			0	1	0	0	0
+bluefin/xdg-terminal-exec.bst	xdg-terminal-exec	yes	git_repo	0.14.4	https://github.com/Vladimir-csp/xdg-terminal-exec.git	0	2	0	0	1
+bluefin/yaml-cpp.bst	yaml-cpp	yes	git_repo	2f86d13775d119edbb69af52e5f566fd65c6953b	https://github.com/jbeder/yaml-cpp.git	0	5	0	0	0
+bluefin/ydotool.bst	ydotool	yes	git_repo	1.0.4	https://github.com/ReimuNotMoe/ydotool.git	0	8	0	1	2
+bluefin/zig.bst	zig	no	tar	0.17.0	https://ziglang.org/download/0.17.0/zig-x86_64-linux-0.17.0.tar.xz	0	0	0	0	0
+bluefin/zswap-config.bst	zswap-config	yes				0	2	0	0	0
+core/dnsmasq.bst	dnsmasq	yes	git_repo	2.93	http://thekelleys.org.uk/git/dnsmasq.git	0	3	0	0	1
+core/linux-fdsdk.bst	linux-fdsdk	no	git_repo+local+patch_queue	7.3.1	https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git	2	0	0	0	0
+core/linux-module-cert.bst	linux-module-cert	no	local			0	0	0	0	0
+core/mesa-default.bst	mesa-default	yes				0	1	0	0	0
+core/meta-gnome-core-apps.bst	meta-gnome-core-apps	no				0	0	0	0	0
+core/ntsync-modules-load.bst	ntsync-modules-load	yes				0	1	0	0	0
+core/sandbox-tools.bst	sandbox-tools	no				0	0	0	0	0
+core/syncthing-go.bst	syncthing-go	no	anitya	a0721c54c688901448d77ad9b3ec7ea7c474730755ff891382e92ecb93ff2cb1	https://go.dev/dl/go1.26.6.src.tar.gz	0	0	0	0	0
+freedesktop-sdk.bst:bootstrap/acl.bst	acl	yes	git_repo	2.4.0	https://git.savannah.gnu.org/git/acl.git	0	58	0	0	3
+freedesktop-sdk.bst:bootstrap/attr.bst	attr	yes	git_repo	2.6.0	https://git.savannah.gnu.org/git/attr.git	0	21	0	0	3
+freedesktop-sdk.bst:bootstrap/base-sdk/autoconf.bst	autoconf	no	tar	2.73	https://ftp.gnu.org/gnu/autoconf/autoconf-2.73.tar.xz	0	0	0	0	0
+freedesktop-sdk.bst:bootstrap/base-sdk/autoconf2.69.bst	autoconf2.69	no	tar	2.69	https://ftp.gnu.org/gnu/autoconf/autoconf-2.69.tar.xz	0	0	0	0	0
+freedesktop-sdk.bst:bootstrap/base-sdk/automake.bst	automake	no	tar	1.18.1	https://ftp.gnu.org/gnu/automake/automake-1.18.1.tar.xz	0	0	0	0	0
+freedesktop-sdk.bst:bootstrap/base-sdk/binary-seed-x86_64.bst	binary-seed-x86_64	no	docker	sha256:cc3395813209a6a6da63989a99c0463ec1eb67e5c90b68063a508b6d6b2640cc	https://registry.gitlab.com	0	0	0	0	0
+freedesktop-sdk.bst:bootstrap/base-sdk/binary-seed.bst	binary-seed	no				0	0	0	0	0
+freedesktop-sdk.bst:bootstrap/base-sdk/bison.bst	bison	no	tar	3.8.2	https://ftp.gnu.org/gnu/bison/bison-3.8.2.tar.gz	0	0	0	0	0
+freedesktop-sdk.bst:bootstrap/base-sdk/flex.bst	flex	no	patch+tar	2.6.4	https://github.com/westes/flex/files/981163/flex-2.6.4.tar.gz	1	0	0	0	0
+freedesktop-sdk.bst:bootstrap/base-sdk/gettext.bst	gettext	no	tar	1.0	https://ftp.gnu.org/gnu/gettext/gettext-1.0.tar.lz	0	0	0	0	0
+freedesktop-sdk.bst:bootstrap/base-sdk/libtool.bst	libtool	no	tar	2.5.4	https://ftp.gnu.org/gnu/libtool/libtool-2.5.4.tar.xz	0	0	0	0	0
+freedesktop-sdk.bst:bootstrap/base-sdk/m4.bst	m4	no	tar	1.4.21	https://ftp.gnu.org/gnu/m4/m4-1.4.21.tar.xz	0	0	0	0	0
+freedesktop-sdk.bst:bootstrap/base-sdk/perl.bst	perl	no	git_repo+local+patch	5.44.0	https://github.com/perl/perl5.git	1	0	0	0	0
+freedesktop-sdk.bst:bootstrap/base-sdk/pkg-config.bst	pkg-config	no	git_repo	3.0.8	https://github.com/pkgconf/pkgconf.git	0	0	0	0	0
+freedesktop-sdk.bst:bootstrap/base-sdk/tar.bst	tar	no	patch+tar	1.35	https://ftp.gnu.org/gnu/tar/tar-1.35.tar.xz	1	0	0	0	0
+freedesktop-sdk.bst:bootstrap/base-sdk/texinfo.bst	texinfo	no	tar	7.3	https://ftp.gnu.org/gnu/texinfo/texinfo-7.3.tar.xz	0	0	0	0	0
+freedesktop-sdk.bst:bootstrap/base-sdk/xxhash.bst	xxhash	no	git_repo	0.8.4	https://github.com/Cyan4973/xxHash.git	0	0	0	0	0
+freedesktop-sdk.bst:bootstrap/base-sdk/zstd.bst	zstd	no	git_repo	1.5.7	https://github.com/facebook/zstd.git	0	0	0	0	0
+freedesktop-sdk.bst:bootstrap/bash.bst	bash	yes	git_repo+patch	5.3	https://git.savannah.gnu.org/git/bash.git	1	98	0	0	2
+freedesktop-sdk.bst:bootstrap/binutils.bst	binutils	yes	git_repo+patch	2.47	https://sourceware.org/git/binutils-gdb.git	1	292	0	0	13
+freedesktop-sdk.bst:bootstrap/build/binutils-stage1.bst	binutils-stage1	no	git_repo+patch	2.47	https://sourceware.org/git/binutils-gdb.git	1	0	0	0	0
+freedesktop-sdk.bst:bootstrap/build/coreutils-manpages.bst	coreutils-manpages	no	tar	9.12	https://ftp.gnu.org/gnu/coreutils/coreutils-9.12.tar.xz	0	0	0	0	0
+freedesktop-sdk.bst:bootstrap/build/debug-utils.bst	debug-utils	no				0	0	0	0	0
+freedesktop-sdk.bst:bootstrap/build/debugedit-build.bst	debugedit-build	no	tar	5.2	https://sourceware.org/ftp/debugedit/5.2/debugedit-5.2.tar.xz	0	0	0	0	0
+freedesktop-sdk.bst:bootstrap/build/dwz-build.bst	dwz-build	no	git_repo	0.17	https://sourceware.org/git/dwz.git	0	0	0	0	0
+freedesktop-sdk.bst:bootstrap/build/elfutils-build.bst	elfutils-build	no	tar	0.195	https://sourceware.org/pub/elfutils/0.195/elfutils-0.195.tar.bz2	0	0	0	0	0
+freedesktop-sdk.bst:bootstrap/build/file-stage1.bst	file-stage1	no	git_repo	5.48	https://github.com/file/file.git	0	0	0	0	0
+freedesktop-sdk.bst:bootstrap/build/gcc-stage1.bst	gcc-stage1	no	git_repo+patch_queue+tar	16.2.0	https://gcc.gnu.org/git/gcc.git	5	0	0	0	0
+freedesktop-sdk.bst:bootstrap/build/gcc-stage2.bst	gcc-stage2	no	git_repo+patch_queue+tar	16.2.0	https://gcc.gnu.org/git/gcc.git	5	0	0	0	0
+freedesktop-sdk.bst:bootstrap/build/libgcc_s.bst	libgcc_s	no				0	0	0	0	0
+freedesktop-sdk.bst:bootstrap/build/ncurses-stage1.bst	ncurses-stage1	no	git_repo+patch	6.6	https://github.com/ThomasDickey/ncurses-snapshots.git	1	0	0	0	0
+freedesktop-sdk.bst:bootstrap/build/python3.bst	python3	no	git_repo+patch	3.14.9	https://github.com/python/cpython.git	1	0	0	0	0
+freedesktop-sdk.bst:bootstrap/build/rsync.bst	rsync	no	git_repo	3.5.1	https://git.samba.org/rsync.git	0	0	0	0	0
+freedesktop-sdk.bst:bootstrap/build/stripper.bst	stripper	no	local			0	0	0	0	0
+freedesktop-sdk.bst:bootstrap/bzip2.bst	bzip2	yes	git_repo+patch	1.0.8	https://sourceware.org/git/bzip2.git	1	10	0	0	5
+freedesktop-sdk.bst:bootstrap/coreutils.bst	coreutils	yes	patch+tar	9.12	https://ftp.gnu.org/gnu/coreutils/coreutils-9.12.tar.xz	1	156	0	0	3
+freedesktop-sdk.bst:bootstrap/debugedit.bst	debugedit	yes	tar	5.2	https://sourceware.org/ftp/debugedit/5.2/debugedit-5.2.tar.xz	0	4	0	0	1
+freedesktop-sdk.bst:bootstrap/diffutils.bst	diffutils	yes	tar	3.12	https://ftp.gnu.org/gnu/diffutils/diffutils-3.12.tar.xz	0	45	0	0	4
+freedesktop-sdk.bst:bootstrap/dwz.bst	dwz	no	git_repo	0.17	https://sourceware.org/git/dwz.git	0	0	0	0	0
+freedesktop-sdk.bst:bootstrap/elfutils.bst	elfutils	yes	tar	0.195	https://sourceware.org/pub/elfutils/0.195/elfutils-0.195.tar.bz2	0	175	0	0	18
+freedesktop-sdk.bst:bootstrap/file.bst	file	yes	git_repo	5.48	https://github.com/file/file.git	0	8	0	0	1
+freedesktop-sdk.bst:bootstrap/findutils.bst	findutils	yes	patch+tar	4.11.0	https://ftp.gnu.org/gnu/findutils/findutils-4.11.0.tar.xz	1	47	0	0	2
+freedesktop-sdk.bst:bootstrap/gawk.bst	gawk	yes	git_repo+patch	5.4.1	https://git.savannah.gnu.org/git/gawk.git	1	95	0	0	2
+freedesktop-sdk.bst:bootstrap/gcc.bst	gcc	no	git_repo+patch_queue+tar	16.2.0	https://gcc.gnu.org/git/gcc.git	5	0	0	0	0
+freedesktop-sdk.bst:bootstrap/glibc.bst	glibc	yes	git_repo+patch_queue	2.44	https://sourceware.org/git/glibc.git	1	1469	0	0	21
+freedesktop-sdk.bst:bootstrap/gnu-config.bst	gnu-config	no	git_repo	428664896cf9e92d264976a960c76660938dffce	https://git.savannah.gnu.org/git/config.git	0	0	0	0	0
+freedesktop-sdk.bst:bootstrap/go.bst	go	no	git_repo+patch	1.27.3	https://github.com/golang/go.git	1	0	0	0	0
+freedesktop-sdk.bst:bootstrap/grep.bst	grep	yes	tar	3.12	https://ftp.gnu.org/gnu/grep/grep-3.12.tar.xz	0	50	0	0	3
+freedesktop-sdk.bst:bootstrap/gzip.bst	gzip	yes	local+patch+tar	1.15	https://ftp.gnu.org/gnu/gzip/gzip-1.15.tar.xz	1	25	0	0	14
+freedesktop-sdk.bst:bootstrap/libselinux.bst	libselinux	yes	git_repo	3.11	https://github.com/SELinuxProject/selinux.git	0	281	0	0	31
+freedesktop-sdk.bst:bootstrap/libsepol.bst	libsepol	yes	git_repo	3.11	https://github.com/SELinuxProject/selinux.git	0	11	0	0	6
+freedesktop-sdk.bst:bootstrap/libxcrypt.bst	libxcrypt	yes	git_repo+patch	4.5.2	https://github.com/besser82/libxcrypt.git	1	14	0	0	0
+freedesktop-sdk.bst:bootstrap/linux-headers.bst	linux-headers	yes	git_repo	6.18.41	https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git	0	1038	0	0	0
+freedesktop-sdk.bst:bootstrap/make.bst	make	yes	tar	4.4.1	https://ftp.gnu.org/gnu/make/make-4.4.1.tar.lz	0	37	0	0	1
+freedesktop-sdk.bst:bootstrap/ncurses-pkgconfig-dir.bst	ncurses-pkgconfig-dir	no				0	0	0	0	0
+freedesktop-sdk.bst:bootstrap/ncurses.bst	ncurses	yes	git_repo+patch	6.6	https://github.com/ThomasDickey/ncurses-snapshots.git	1	3057	0	0	7
+freedesktop-sdk.bst:bootstrap/pcre2.bst	pcre2	yes	git_module+git_repo	10.49	https://github.com/PCRE2Project/pcre2.git	0	225	0	0	2
+freedesktop-sdk.bst:bootstrap/readline.bst	readline	yes	git_repo+patch	8.3	https://git.savannah.gnu.org/git/readline.git	1	13	0	0	0
+freedesktop-sdk.bst:bootstrap/sed.bst	sed	yes	tar	4.10	https://ftp.gnu.org/gnu/sed/sed-4.10.tar.xz	0	45	0	0	1
+freedesktop-sdk.bst:bootstrap/stripper.bst	stripper	no	local			0	0	0	0	0
+freedesktop-sdk.bst:bootstrap/symlinks.bst	symlinks	no	local			0	0	0	0	0
+freedesktop-sdk.bst:bootstrap/xxhash.bst	xxhash	yes	git_repo	0.8.4	https://github.com/Cyan4973/xxHash.git	0	3	0	0	1
+freedesktop-sdk.bst:bootstrap/xz.bst	xz	yes	git_repo	5.8.4	https://github.com/tukaani-project/xz.git	0	81	0	0	8
+freedesktop-sdk.bst:bootstrap/zlib-ng.bst	zlib-ng	yes	git_repo	2.3.3	https://github.com/zlib-ng/zlib-ng.git	0	6	0	0	0
+freedesktop-sdk.bst:bootstrap/zstd.bst	zstd	yes	git_repo	1.5.7	https://github.com/facebook/zstd.git	0	12	0	0	3
+freedesktop-sdk.bst:components/_private/apparmor-base.bst	apparmor-base	no	git_repo	4.1.8	https://gitlab.com/apparmor/apparmor.git	0	0	0	0	0
+freedesktop-sdk.bst:components/_private/avahi-base.bst	avahi-base	no	git_repo+local+patch_queue	0.8	https://github.com/lathiat/avahi.git	5	0	0	0	0
+freedesktop-sdk.bst:components/_private/bluez-base.bst	bluez-base	no	git_repo	5.87	https://git.kernel.org/pub/scm/bluetooth/bluez.git	0	0	0	0	0
+freedesktop-sdk.bst:components/_private/bpf.bst	bpf	yes	git_repo+patch_queue	7.3	https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git	1	5	0	0	4
+freedesktop-sdk.bst:components/_private/buildsystem-cmake.bst	buildsystem-cmake	no				0	0	0	0	0
+freedesktop-sdk.bst:components/_private/cmake-stage1.bst	cmake-stage1	no	git_repo	4.4.4	https://gitlab.kitware.com/cmake/cmake.git	0	0	0	0	0
+freedesktop-sdk.bst:components/_private/cryptsetup-base.bst	cryptsetup-base	no	git_repo	2.8.8	https://gitlab.com/cryptsetup/cryptsetup.git	0	0	0	0	0
+freedesktop-sdk.bst:components/_private/cryptsetup-lvm2-stage1.bst	cryptsetup-lvm2-stage1	no				0	0	0	0	0
+freedesktop-sdk.bst:components/_private/cups-base.bst	cups-base	no	git_repo+local	2.4.19	https://github.com/OpenPrinting/cups.git	0	0	0	0	0
+freedesktop-sdk.bst:components/_private/dbus-base.bst	dbus-base	no	git_repo	1.16.2	https://gitlab.freedesktop.org/dbus/dbus.git	0	0	0	0	0
+freedesktop-sdk.bst:components/_private/flex-base.bst	flex-base	no	patch+tar	2.6.4	https://github.com/westes/flex/files/981163/flex-2.6.4.tar.gz	1	0	0	0	0
+freedesktop-sdk.bst:components/_private/freetype-stage1.bst	freetype-stage1	no	git_repo+patch	2.15.0	https://gitlab.freedesktop.org/freetype/freetype.git	1	0	0	0	0
+freedesktop-sdk.bst:components/_private/gamemode-base.bst	gamemode-base	no	git_repo	1.8.2	https://github.com/FeralInteractive/gamemode.git	0	0	0	0	0
+freedesktop-sdk.bst:components/_private/gcc-base.bst	gcc-base	no	git_repo+patch_queue+tar	16.2.0	https://gcc.gnu.org/git/gcc.git	5	0	0	0	0
+freedesktop-sdk.bst:components/_private/geoclue-base.bst	geoclue-base	no	git_repo+local	2.8.2	https://gitlab.freedesktop.org/geoclue/geoclue.git	0	0	0	0	0
+freedesktop-sdk.bst:components/_private/git-minimal.bst	git-minimal	no	git_repo	2.56.0	https://github.com/git/git.git	0	0	0	0	0
+freedesktop-sdk.bst:components/_private/gnu-efi.bst	gnu-efi	yes	git_repo	4.0.4	https://github.com/ncroxon/gnu-efi.git	0	38	0	0	0
+freedesktop-sdk.bst:components/_private/libsmbios.bst	libsmbios	yes	git_repo	2.4.3	https://github.com/dell/libsmbios.git	0	78	0	0	13
+freedesktop-sdk.bst:components/_private/lvm2-base.bst	lvm2-base	no	git_repo+patch	2.3.43	https://gitlab.com/lvmteam/lvm2.git	1	0	0	0	0
+freedesktop-sdk.bst:components/_private/lvm2-stage1.bst	lvm2-stage1	no	git_repo+patch	2.3.43	https://gitlab.com/lvmteam/lvm2.git	1	0	0	0	0
+freedesktop-sdk.bst:components/_private/meson.bst	meson	no	git_repo	1.12.0	https://github.com/mesonbuild/meson.git	0	0	0	0	0
+freedesktop-sdk.bst:components/_private/pipewire-base.bst	pipewire-base	no	git_repo	1.6.8	https://gitlab.freedesktop.org/PipeWire/pipewire.git	0	0	0	0	0
+freedesktop-sdk.bst:components/_private/polkit-base.bst	polkit-base	no	git_repo	128	https://github.com/polkit-org/polkit.git	0	0	0	0	0
+freedesktop-sdk.bst:components/_private/python3-build-bootstrap.bst	python3-build-bootstrap	no	local			0	0	0	0	0
+freedesktop-sdk.bst:components/_private/python3-build.bst	python3-build	no	git_repo	1.6.1	https://github.com/pypa/build.git	0	0	0	0	0
+freedesktop-sdk.bst:components/_private/python3-flit-core.bst	python3-flit-core	no	git_repo+patch	3.12.0	https://github.com/pypa/flit.git	1	0	0	0	0
+freedesktop-sdk.bst:components/_private/python3-installer-bootstrap.bst	python3-installer-bootstrap	no	local			0	0	0	0	0
+freedesktop-sdk.bst:components/_private/python3-installer.bst	python3-installer	no	git_repo	1.0.1	https://github.com/pypa/installer.git	0	0	0	0	0
+freedesktop-sdk.bst:components/_private/python3-minimal.bst	python3-minimal	no	git_repo+patch	3.14.9	https://github.com/python/cpython.git	1	0	0	0	0
+freedesktop-sdk.bst:components/_private/python3-packaging.bst	python3-packaging	no	git_repo	26.3	https://github.com/pypa/packaging.git	0	0	0	0	0
+freedesktop-sdk.bst:components/_private/python3-pyproject-hooks.bst	python3-pyproject-hooks	no	git_repo	1.3.3	https://github.com/pypa/pyproject-hooks.git	0	0	0	0	0
+freedesktop-sdk.bst:components/_private/python3-setuptools.bst	python3-setuptools	no	git_repo	83.0.0	https://github.com/pypa/setuptools.git	0	0	0	0	0
+freedesktop-sdk.bst:components/_private/python3-wheel.bst	python3-wheel	no	git_repo	0.48.0	https://github.com/pypa/wheel.git	0	0	0	0	0
+freedesktop-sdk.bst:components/_private/rust-stage1-x86_64.bst	rust-stage1-x86_64	no	tar	1.98.1	https://static.rust-lang.org/dist/rust-1.98.1-x86_64-unknown-linux-gnu.tar.xz	0	0	0	0	0
+freedesktop-sdk.bst:components/_private/rust-stage1.bst	rust-stage1	no				0	0	0	0	0
+freedesktop-sdk.bst:components/_private/sbsigntools.bst	sbsigntools	no	git_module+git_repo	0.9.5	https://git.kernel.org/pub/scm/linux/kernel/git/jejb/sbsigntools.git	0	0	0	0	0
+freedesktop-sdk.bst:components/_private/systemd-hwdb.bst	systemd-hwdb	yes				0	1	0	0	0
+freedesktop-sdk.bst:components/_private/systemd-stage1.bst	systemd-stage1	no	git_repo	261.4	https://github.com/systemd/systemd.git	0	0	0	0	0
+freedesktop-sdk.bst:components/_private/util-linux-base.bst	util-linux-base	no	git_repo	2.42.4	https://git.kernel.org/pub/scm/utils/util-linux/util-linux.git	0	0	0	0	0
+freedesktop-sdk.bst:components/_private/vala-bootstrap.bst	vala-bootstrap	no	git_repo	b2beeaccdf2307ced172646c2ada9765e1747b28	https://gitlab.gnome.org/Archive/vala-bootstrap.git	0	0	0	0	0
+freedesktop-sdk.bst:components/_private/valgrind.bst	valgrind	no	git_repo	3.28.0	https://sourceware.org/git/valgrind.git	0	0	0	0	0
+freedesktop-sdk.bst:components/aardvark-dns.bst	aardvark-dns	yes	cargo2+git_repo	2.1.0	https://github.com/containers/aardvark-dns.git	0	1	0	0	0
+freedesktop-sdk.bst:components/abseil-cpp.bst	abseil-cpp	yes	git_repo	20260817.0	https://github.com/abseil/abseil-cpp.git	0	94	0	0	0
+freedesktop-sdk.bst:components/alsa-lib.bst	alsa-lib	yes	git_repo+patch_queue	1.2.16	https://github.com/alsa-project/alsa-lib.git	1	83	0	0	1
+freedesktop-sdk.bst:components/alsa-plugins.bst	alsa-plugins	yes	git_repo	1.2.12	https://github.com/alsa-project/alsa-plugins.git	0	17	0	0	0
+freedesktop-sdk.bst:components/amf-headers.bst	amf-headers	no	tar	1.5.2	https://github.com/GPUOpen-LibrariesAndSDKs/AMF/releases/download/v1.5.2/AMF-headers-v1.5.2.tar.gz	0	0	0	0	0
+freedesktop-sdk.bst:components/aom.bst	aom	yes	git_repo+patch	3.15.2	https://aomedia.googlesource.com/aom.git	1	4	0	0	2
+freedesktop-sdk.bst:components/apparmor-manifest.bst	apparmor-manifest	no				0	0	0	0	0
+freedesktop-sdk.bst:components/apparmor-profiles.bst	apparmor-profiles	yes				0	310	0	0	0
+freedesktop-sdk.bst:components/apparmor.bst	apparmor	yes				0	408	0	1	21
+freedesktop-sdk.bst:components/appstream-minimal.bst	appstream-minimal	no	git_repo	1.1.6	https://github.com/ximion/appstream.git	0	0	0	0	0
+freedesktop-sdk.bst:components/appstream.bst	appstream	yes	git_repo	1.1.6	https://github.com/ximion/appstream.git	0	1185	0	0	0
+freedesktop-sdk.bst:components/asciidoc.bst	asciidoc	yes	git_repo	10.2.1	https://github.com/asciidoc-py/asciidoc-py.git	0	157	0	0	2
+freedesktop-sdk.bst:components/asciidoctor.bst	asciidoctor	no	git_repo	2.0.26	https://github.com/asciidoctor/asciidoctor.git	0	0	0	0	0
+freedesktop-sdk.bst:components/aspell.bst	aspell	yes	git_repo	0.60.8	https://git.savannah.gnu.org/git/aspell.git	0	140	0	0	8
+freedesktop-sdk.bst:components/audit.bst	audit	yes	git_repo+local	4.2.1	https://github.com/linux-audit/audit-userspace.git	0	193	0	2	12
+freedesktop-sdk.bst:components/autoconf-archive.bst	autoconf-archive	no	tar	2024.10.16	https://ftp.gnu.org/gnu/autoconf-archive/autoconf-archive-2024.10.16.tar.xz	0	0	0	0	0
+freedesktop-sdk.bst:components/autoconf.bst	autoconf	no	tar	2.73	https://ftp.gnu.org/gnu/autoconf/autoconf-2.73.tar.xz	0	0	0	0	0
+freedesktop-sdk.bst:components/autoconf2.69.bst	autoconf2.69	no	tar	2.69	https://ftp.gnu.org/gnu/autoconf/autoconf-2.69.tar.xz	0	0	0	0	0
+freedesktop-sdk.bst:components/automake.bst	automake	no	tar	1.18.1	https://ftp.gnu.org/gnu/automake/automake-1.18.1.tar.xz	0	0	0	0	0
+freedesktop-sdk.bst:components/avahi-gobject.bst	avahi-gobject	yes				0	3	0	0	0
+freedesktop-sdk.bst:components/avahi-libs.bst	avahi-libs	yes				0	2	0	0	0
+freedesktop-sdk.bst:components/avahi-manifest.bst	avahi-manifest	no				0	0	0	0	0
+freedesktop-sdk.bst:components/avahi.bst	avahi	yes				0	86	0	3	7
+freedesktop-sdk.bst:components/bash-completion.bst	bash-completion	yes	git_repo	2.18.0	https://github.com/scop/bash-completion.git	0	530	0	0	0
+freedesktop-sdk.bst:components/bash-config.bst	bash-config	yes	local			0	4	0	0	0
+freedesktop-sdk.bst:components/bc.bst	bc	no	tar	1.08.2	https://ftp.gnu.org/gnu/bc/bc-1.08.2.tar.gz	0	0	0	0	0
+freedesktop-sdk.bst:components/binutils.bst	binutils	no				0	0	0	0	0
+freedesktop-sdk.bst:components/bison.bst	bison	no	git_module+git_repo	3.8.2	https://git.savannah.gnu.org/git/bison.git	0	0	0	0	0
+freedesktop-sdk.bst:components/bluez-headers.bst	bluez-headers	no	git_repo	5.87	https://git.kernel.org/pub/scm/bluetooth/bluez.git	0	0	0	0	0
+freedesktop-sdk.bst:components/bluez-libs.bst	bluez-libs	yes				0	1	0	0	0
+freedesktop-sdk.bst:components/bluez-manifest.bst	bluez-manifest	no				0	0	0	0	0
+freedesktop-sdk.bst:components/bluez.bst	bluez	yes				0	101	0	3	10
+freedesktop-sdk.bst:components/bpf-maybe.bst	bpf-maybe	no				0	0	0	0	0
+freedesktop-sdk.bst:components/brotli.bst	brotli	yes	git_repo	1.2.1	https://github.com/google/brotli.git	0	8	0	0	0
+freedesktop-sdk.bst:components/btrfs-progs.bst	btrfs-progs	yes	git_repo	7.1	https://git.kernel.org/pub/scm/linux/kernel/git/kdave/btrfs-progs.git	0	39	0	0	9
+freedesktop-sdk.bst:components/bubblewrap.bst	bubblewrap	yes	git_repo	0.13.1	https://github.com/projectatomic/bubblewrap.git	0	4	0	0	1
+freedesktop-sdk.bst:components/buildbox.bst	buildbox	yes	git_repo	1.4.30	https://gitlab.com/BuildGrid/buildbox/buildbox.git	0	16	0	0	14
+freedesktop-sdk.bst:components/buildstream2.bst	buildstream2	yes	git_repo	2.8.1	https://github.com/apache/buildstream.git	0	680	0	0	1
+freedesktop-sdk.bst:components/bzip2.bst	bzip2	no				0	0	0	0	0
+freedesktop-sdk.bst:components/c-ares.bst	c-ares	yes	git_repo	1.34.9	https://github.com/c-ares/c-ares.git	0	159	0	0	0
+freedesktop-sdk.bst:components/ca-certificates.bst	ca-certificates	yes	git_repo+patch	070c292b486904a007d155c8e2e4f484be29f790	https://src.fedoraproject.org/rpms/ca-certificates.git	2	16	0	0	2
+freedesktop-sdk.bst:components/cargo-c.bst	cargo-c	no	cargo2+git_repo+remote	0.10.26	https://github.com/lu-zero/cargo-c.git	0	0	0	0	0
+freedesktop-sdk.bst:components/catatonit.bst	catatonit	yes	git_repo	0.2.1	https://github.com/openSUSE/catatonit.git	0	1	0	0	1
+freedesktop-sdk.bst:components/ccid.bst	ccid	yes	git_repo	1.8.4	https://github.com/LudovicRousseau/CCID.git	0	5	0	0	0
+freedesktop-sdk.bst:components/clean-xml-catalog.bst	clean-xml-catalog	no				0	0	0	0	0
+freedesktop-sdk.bst:components/cmake.bst	cmake	no	git_repo	4.4.4	https://gitlab.kitware.com/cmake/cmake.git	0	0	0	0	0
+freedesktop-sdk.bst:components/compat-vulkan-link.bst	compat-vulkan-link	no				0	0	0	0	0
+freedesktop-sdk.bst:components/composefs.bst	composefs	yes	git_repo	1.0.8	https://github.com/containers/composefs.git	0	8	0	0	0
+freedesktop-sdk.bst:components/conmon.bst	conmon	yes	git_repo	2.2.1	https://github.com/containers/conmon.git	0	2	0	0	1
+freedesktop-sdk.bst:components/containers-common.bst	containers-common	yes	git_repo	0.70.0	https://github.com/podman-container-tools/container-libs.git	0	14	0	0	0
+freedesktop-sdk.bst:components/cpio.bst	cpio	no	git_module+git_repo+patch	2.15	https://git.savannah.gnu.org/git/cpio.git	1	0	0	0	0
+freedesktop-sdk.bst:components/cracklib.bst	cracklib	yes	git_repo	2.10.3	https://github.com/cracklib/cracklib.git	0	14	0	0	6
+freedesktop-sdk.bst:components/crun.bst	crun	yes	git_module+git_repo	1.30.1	https://github.com/containers/crun.git	0	7	0	0	1
+freedesktop-sdk.bst:components/cryptsetup-manifest.bst	cryptsetup-manifest	no				0	0	0	0	0
+freedesktop-sdk.bst:components/cryptsetup.bst	cryptsetup	yes				0	73	0	0	3
+freedesktop-sdk.bst:components/cunit.bst	cunit	no	git_repo	3.5.5	https://gitlab.com/cunity/cunit.git	0	0	0	0	0
+freedesktop-sdk.bst:components/cups-daemon-only.bst	cups-daemon-only	yes				0	823	1	5	23
+freedesktop-sdk.bst:components/cups-daemon.bst	cups-daemon	no				0	0	0	0	0
+freedesktop-sdk.bst:components/cups-filters.bst	cups-filters	yes	git_repo+patch_queue	2.0.1	https://github.com/OpenPrinting/cups-filters.git	2	57	0	0	0
+freedesktop-sdk.bst:components/cups-manifest.bst	cups-manifest	no				0	0	0	0	0
+freedesktop-sdk.bst:components/cups.bst	cups	yes				0	15	0	0	1
+freedesktop-sdk.bst:components/curl.bst	curl	yes	git_repo	8.21.0	https://github.com/curl/curl.git	0	7	0	0	2
+freedesktop-sdk.bst:components/cyrus-sasl.bst	cyrus-sasl	yes	git_repo+patch	2.1.28	https://github.com/cyrusimap/cyrus-sasl.git	2	64	0	0	5
+freedesktop-sdk.bst:components/cython.bst	cython	no	git_repo	3.3.0	https://github.com/cython/cython.git	0	0	0	0	0
+freedesktop-sdk.bst:components/dav1d.bst	dav1d	yes	git_repo	1.5.4	https://code.videolan.org/videolan/dav1d.git	0	3	0	0	1
+freedesktop-sdk.bst:components/dbus-manifest.bst	dbus-manifest	no				0	0	0	0	0
+freedesktop-sdk.bst:components/dbus-tools.bst	dbus-tools	yes				0	1	0	0	1
+freedesktop-sdk.bst:components/dbus.bst	dbus	yes				0	417	0	4	8
+freedesktop-sdk.bst:components/debuginfod.bst	debuginfod	yes	tar	0.195	https://sourceware.org/pub/elfutils/0.195/elfutils-0.195.tar.bz2	0	3	0	0	2
+freedesktop-sdk.bst:components/dejavu-fonts.bst	dejavu-fonts	yes	tar	2.37	https://sourceforge.net/projects/dejavu/files/dejavu/2.37/dejavu-fonts-ttf-2.37.tar.bz2	0	29	0	0	0
+freedesktop-sdk.bst:components/desktop-file-utils.bst	desktop-file-utils	yes	git_repo	0.28	https://gitlab.freedesktop.org/xdg/desktop-file-utils.git	0	8	0	0	3
+freedesktop-sdk.bst:components/dictionaries.bst	dictionaries	yes	git_repo+local	26.8.2	https://git.libreoffice.org/dictionaries.git	0	445	0	0	0
+freedesktop-sdk.bst:components/diffutils.bst	diffutils	no				0	0	0	0	0
+freedesktop-sdk.bst:components/dmidecode.bst	dmidecode	yes	git_repo	3.7	https://git.savannah.gnu.org/git/dmidecode.git	0	11	0	0	4
+freedesktop-sdk.bst:components/docbook-xml.bst	docbook-xml	yes	zip	4.5	https://archive.docbook.org/xml/4.5/docbook-xml-4.5.zip	0	70	0	0	0
+freedesktop-sdk.bst:components/docbook-xsl.bst	docbook-xsl	yes	patch+tar	1.79.2	https://github.com/docbook/xslt10-stylesheets/releases/download/release/1.79.2/docbook-xsl-nons-1.79.2.tar.gz	2	1801	0	0	0
+freedesktop-sdk.bst:components/docbook5-xml.bst	docbook5-xml	no	zip	5.0	https://docs.oasis-open.org/docbook/xml/5.0/docbook-5.0.zip	0	0	0	0	0
+freedesktop-sdk.bst:components/docbook5-xsl.bst	docbook5-xsl	no	zip	1.79.2	https://github.com/docbook/xslt10-stylesheets/releases/download/release/1.79.2/docbook-xsl-1.79.2.zip	0	0	0	0	0
+freedesktop-sdk.bst:components/dosfstools.bst	dosfstools	yes	git_repo	4.2	https://github.com/dosfstools/dosfstools.git	0	18	0	0	3
+freedesktop-sdk.bst:components/doxygen.bst	doxygen	yes	git_repo	1.18.0	https://github.com/doxygen/doxygen.git	0	5	0	0	1
+freedesktop-sdk.bst:components/dtc.bst	dtc	yes	git_repo	1.8.1	https://git.kernel.org/pub/scm/utils/dtc/dtc.git	0	8	0	0	7
+freedesktop-sdk.bst:components/duktape.bst	duktape	yes	patch+tar	2.7.0	https://github.com/svaarala/duktape/releases/download/v2.7.0/duktape-2.7.0.tar.xz	1	3	0	0	0
+freedesktop-sdk.bst:components/dummy-gbm.bst	dummy-gbm	yes	git_repo	26.2.5	https://gitlab.freedesktop.org/mesa/mesa.git	0	1	0	0	0
+freedesktop-sdk.bst:components/e2fsprogs.bst	e2fsprogs	yes	git_repo	1.47.4	https://git.kernel.org/pub/scm/fs/ext2/e2fsprogs.git	0	94	0	0	21
+freedesktop-sdk.bst:components/ed.bst	ed	no	tar	1.22.5	https://ftp.gnu.org/gnu/ed/ed-1.22.5.tar.lz	0	0	0	0	0
+freedesktop-sdk.bst:components/efivar.bst	efivar	yes	git_repo+patch_queue	39	https://github.com/rhboot/efivar.git	1	37	0	0	2
+freedesktop-sdk.bst:components/elfutils.bst	elfutils	no				0	0	0	0	0
+freedesktop-sdk.bst:components/ell.bst	ell	no	git_repo	0.83	https://git.kernel.org/pub/scm/libs/ell/ell.git	0	0	0	0	0
+freedesktop-sdk.bst:components/erofs-utils.bst	erofs-utils	yes	git_repo	1.9.4	https://git.kernel.org/pub/scm/linux/kernel/git/xiang/erofs-utils.git	0	12	0	0	5
+freedesktop-sdk.bst:components/exfat-progs.bst	exfat-progs	yes	git_repo	1.4.3	https://github.com/exfatprogs/exfatprogs.git	0	20	0	0	8
+freedesktop-sdk.bst:components/expat.bst	expat	yes	git_repo	2.8.5	https://github.com/libexpat/libexpat.git	0	5	0	0	1
+freedesktop-sdk.bst:components/extra-cmake-modules.bst	extra-cmake-modules	no	git_repo	6.31.0	https://github.com/KDE/extra-cmake-modules.git	0	0	0	0	0
+freedesktop-sdk.bst:components/f2fs-tools.bst	f2fs-tools	yes	git_repo+patch	1.16.0	https://git.kernel.org/pub/scm/linux/kernel/git/jaegeuk/f2fs-tools.git	2	18	0	0	6
+freedesktop-sdk.bst:components/fakecap.bst	fakecap	no	local			0	0	0	0	0
+freedesktop-sdk.bst:components/fdsdk-lic-dedup.bst	fdsdk-lic-dedup	yes	local			0	1	0	0	1
+freedesktop-sdk.bst:components/ffmpeg.bst	ffmpeg	yes	git_repo	8.1.3	https://git.ffmpeg.org/ffmpeg.git	0	17	0	0	3
+freedesktop-sdk.bst:components/fftw.bst	fftw	yes	tar	3.3.11	https://www.fftw.org/fftw-3.3.11.tar.gz	0	18	0	0	3
+freedesktop-sdk.bst:components/file.bst	file	no				0	0	0	0	0
+freedesktop-sdk.bst:components/findutils.bst	findutils	no				0	0	0	0	0
+freedesktop-sdk.bst:components/flatpak-builder.bst	flatpak-builder	yes	git_module+git_repo	1.4.12	https://github.com/flatpak/flatpak-builder.git	0	5	0	0	1
+freedesktop-sdk.bst:components/flatpak-minimal.bst	flatpak-minimal	no	git_repo	1.18.4	https://github.com/flatpak/flatpak.git	0	0	0	0	0
+freedesktop-sdk.bst:components/flatpak-xdg-utils.bst	flatpak-xdg-utils	yes	git_repo	1.0.6	https://github.com/flatpak/flatpak-xdg-utils.git	0	3	0	0	3
+freedesktop-sdk.bst:components/flex.bst	flex	no				0	0	0	0	0
+freedesktop-sdk.bst:components/fmtlib.bst	fmtlib	yes	git_repo+patch	12.2.0	https://github.com/fmtlib/fmt.git	2	4	0	0	0
+freedesktop-sdk.bst:components/fontconfig.bst	fontconfig	yes	git_repo	2.18.3	https://gitlab.freedesktop.org/fontconfig/fontconfig.git	0	65	0	0	10
+freedesktop-sdk.bst:components/foomatic-db.bst	foomatic-db	yes	git_repo	20240504	https://github.com/OpenPrinting/foomatic-db.git	0	13348	0	0	0
+freedesktop-sdk.bst:components/freetype.bst	freetype	yes	git_repo+patch	2.15.0	https://gitlab.freedesktop.org/freetype/freetype.git	1	1	0	0	0
+freedesktop-sdk.bst:components/frei0r.bst	frei0r	yes	git_repo	3.6.0	https://github.com/dyne/frei0r.git	0	163	0	0	0
+freedesktop-sdk.bst:components/fribidi.bst	fribidi	yes	git_repo	1.0.17	https://github.com/fribidi/fribidi.git	0	2	0	0	1
+freedesktop-sdk.bst:components/fuse-overlayfs.bst	fuse-overlayfs	yes	git_repo	1.18	https://github.com/containers/fuse-overlayfs.git	0	2	0	0	1
+freedesktop-sdk.bst:components/fuse3.bst	fuse3	yes	git_repo	3.18.3	https://github.com/libfuse/libfuse.git	0	7	0	0	2
+freedesktop-sdk.bst:components/gamemode-manifest.bst	gamemode-manifest	no				0	0	0	0	0
+freedesktop-sdk.bst:components/gawk.bst	gawk	no				0	0	0	0	0
+freedesktop-sdk.bst:components/gcc-libs.bst	gcc-libs	yes				0	14	0	0	0
+freedesktop-sdk.bst:components/gcc-manifest.bst	gcc-manifest	no				0	0	0	0	0
+freedesktop-sdk.bst:components/gcc.bst	gcc	yes				0	1789	0	0	11
+freedesktop-sdk.bst:components/gdb.bst	gdb	no	git_repo	18.1	https://sourceware.org/git/binutils-gdb.git	0	0	0	0	0
+freedesktop-sdk.bst:components/gdbm.bst	gdbm	yes	tar	1.26	https://ftp.gnu.org/gnu/gdbm/gdbm-1.26.tar.gz	0	26	0	0	3
+freedesktop-sdk.bst:components/genpeimg.bst	genpeimg	yes	git_repo	14.0.0	https://git.code.sf.net/p/mingw-w64/mingw-w64.git	0	8	0	0	1
+freedesktop-sdk.bst:components/geoclue-libs.bst	geoclue-libs	yes				0	28	0	0	0
+freedesktop-sdk.bst:components/geoclue-manifest.bst	geoclue-manifest	no				0	0	0	0	0
+freedesktop-sdk.bst:components/geoclue.bst	geoclue	yes				0	37	0	1	0
+freedesktop-sdk.bst:components/gettext.bst	gettext	yes	tar	1.0	https://ftp.gnu.org/gnu/gettext/gettext-1.0.tar.lz	0	2543	0	0	25
+freedesktop-sdk.bst:components/gflags.bst	gflags	yes	git_repo	2.3.1	https://github.com/gflags/gflags.git	0	3	0	0	1
+freedesktop-sdk.bst:components/ghostscript.bst	ghostscript	yes	git_repo	10.08.0	https://github.com/ArtifexSoftware/ghostpdl.git	0	217	0	0	28
+freedesktop-sdk.bst:components/giflib.bst	giflib	yes	git_repo	6.1.3	https://git.code.sf.net/p/giflib/code.git	0	32	0	0	5
+freedesktop-sdk.bst:components/git-lfs.bst	git-lfs	yes	git_repo+go_module	3.8.0	https://github.com/git-lfs/git-lfs.git	0	22	0	0	1
+freedesktop-sdk.bst:components/git.bst	git	yes	git_repo	2.56.0	https://github.com/git/git.git	0	327	0	0	0
+freedesktop-sdk.bst:components/glibc-gconv-cache.bst	glibc-gconv-cache	yes				0	1	0	0	0
+freedesktop-sdk.bst:components/glslang.bst	glslang	yes	git_repo+patch	1.4.357	https://github.com/KhronosGroup/Vulkan-Headers.git	1	4	0	0	0
+freedesktop-sdk.bst:components/gmp.bst	gmp	yes	patch+tar	6.3.0	https://ftp.gnu.org/gnu/gmp/gmp-6.3.0.tar.xz	1	5	0	0	0
+freedesktop-sdk.bst:components/gnu-efi-maybe.bst	gnu-efi-maybe	no				0	0	0	0	0
+freedesktop-sdk.bst:components/gnu-free-fonts.bst	gnu-free-fonts	yes	local+zip	20120503	https://ftp.gnu.org/gnu/freefont/freefont-ttf-20120503.zip	0	15	0	0	0
+freedesktop-sdk.bst:components/gnupg.bst	gnupg	yes	git_repo+patch	2.4.9	https://github.com/gpg/gnupg.git	3	67	0	0	20
+freedesktop-sdk.bst:components/gnutls.bst	gnutls	yes	git_module+git_repo+patch	3.8.13	https://gitlab.com/gnutls/gnutls.git	3	12	0	0	7
+freedesktop-sdk.bst:components/go-md2man.bst	go-md2man	no	git_repo+go_module	2.0.7	https://github.com/cpuguy83/go-md2man.git	0	0	0	0	0
+freedesktop-sdk.bst:components/go.bst	go	no	git_repo+patch	1.27.3	https://github.com/golang/go.git	1	0	0	0	0
+freedesktop-sdk.bst:components/google-crosextra-caladea.bst	google-crosextra-caladea	yes	git_repo+local	336a529cfad3d103d6527752686f8331d13e820a	https://github.com/huertatipografica/Caladea.git	0	7	0	0	0
+freedesktop-sdk.bst:components/google-crosextra-carlito.bst	google-crosextra-carlito	yes	git_repo+local	3a810cab78ebd6e2e4eed42af9e8453c4f9b850a	https://github.com/googlefonts/carlito.git	0	7	0	0	0
+freedesktop-sdk.bst:components/gperf.bst	gperf	no	git_repo+patch	3.3	https://git.savannah.gnu.org/git/gperf.git	5	0	0	0	0
+freedesktop-sdk.bst:components/gpgme.bst	gpgme	yes	git_repo	2.1.2	https://github.com/gpg/gpgme.git	0	12	0	0	3
+freedesktop-sdk.bst:components/gpgmepp.bst	gpgmepp	yes	git_repo	2.1.0	https://github.com/gpg/gpgmepp.git	0	1	0	0	0
+freedesktop-sdk.bst:components/graphite2.bst	graphite2	yes	git_repo+patch	1.3.15	https://github.com/silnrsi/graphite.git	1	6	0	0	1
+freedesktop-sdk.bst:components/grep.bst	grep	no				0	0	0	0	0
+freedesktop-sdk.bst:components/groff.bst	groff	yes	tar	1.24.1	https://ftp.gnu.org/gnu/groff/groff-1.24.1.tar.gz	0	658	0	0	38
+freedesktop-sdk.bst:components/grpc.bst	grpc	yes	git_module+git_repo+patch	1.84.1	https://github.com/grpc/grpc.git	3	34	0	0	7
+freedesktop-sdk.bst:components/gstreamer-libav.bst	gstreamer-libav	yes	git_repo+local+patch_queue	1.28.6	https://gitlab.freedesktop.org/gstreamer/gstreamer.git	1	1	0	0	0
+freedesktop-sdk.bst:components/gstreamer-plugins-bad.bst	gstreamer-plugins-bad	yes	git_repo+local+patch_queue	1.28.6	https://gitlab.freedesktop.org/gstreamer/gstreamer.git	1	216	0	0	2
+freedesktop-sdk.bst:components/gstreamer-plugins-base.bst	gstreamer-plugins-base	yes	git_repo+local+patch_queue	1.28.6	https://gitlab.freedesktop.org/gstreamer/gstreamer.git	1	106	0	0	3
+freedesktop-sdk.bst:components/gstreamer-plugins-good.bst	gstreamer-plugins-good	yes	git_repo+local+patch_queue	1.28.6	https://gitlab.freedesktop.org/gstreamer/gstreamer.git	1	115	0	0	0
+freedesktop-sdk.bst:components/gstreamer-plugins-rs.bst	gstreamer-plugins-rs	yes	cargo2+git_repo+patch	0.15.4	https://gitlab.freedesktop.org/gstreamer/gst-plugins-rs.git	2	9	0	0	0
+freedesktop-sdk.bst:components/gstreamer-plugins-ugly.bst	gstreamer-plugins-ugly	yes	git_repo+local+patch_queue	1.28.6	https://gitlab.freedesktop.org/gstreamer/gstreamer.git	1	4	0	0	0
+freedesktop-sdk.bst:components/gstreamer.bst	gstreamer	yes	git_repo+local+patch_queue	1.28.6	https://gitlab.freedesktop.org/gstreamer/gstreamer.git	1	72	0	0	5
+freedesktop-sdk.bst:components/gtk-doc.bst	gtk-doc	no	git_repo	1.37.0	https://gitlab.gnome.org/GNOME/gtk-doc.git	0	0	0	0	0
+freedesktop-sdk.bst:components/gyp.bst	gyp	no	git_repo	0.22.4	https://github.com/nodejs/gyp-next.git	0	0	0	0	0
+freedesktop-sdk.bst:components/gzip.bst	gzip	no				0	0	0	0	0
+freedesktop-sdk.bst:components/harfbuzz.bst	harfbuzz	yes	git_repo	14.3.1	https://github.com/harfbuzz/harfbuzz.git	0	227	0	0	5
+freedesktop-sdk.bst:components/help2man.bst	help2man	no	tar	1.49.3	https://ftp.gnu.org/gnu/help2man/help2man-1.49.3.tar.xz	0	0	0	0	0
+freedesktop-sdk.bst:components/hicolor-icon-theme.bst	hicolor-icon-theme	yes	git_repo	0.17	https://gitlab.freedesktop.org/xdg/default-icon-theme.git	0	2	0	0	0
+freedesktop-sdk.bst:components/hidapi.bst	hidapi	yes	git_repo	0.15.0	https://github.com/libusb/hidapi.git	0	2	0	0	0
+freedesktop-sdk.bst:components/highway.bst	highway	yes	git_repo	1.4.0	https://github.com/google/highway.git	0	4	0	0	0
+freedesktop-sdk.bst:components/hotdoc.bst	hotdoc	no	patch+pypi	0.17.4	https://files.pythonhosted.org/packages/60/fd/32e24a747181e060ace04cd927698b2b5b3b90f6bf2c014e12df630c183a/hotdoc-0.17.4.tar.gz	2	0	0	0	0
+freedesktop-sdk.bst:components/hunspell.bst	hunspell	yes	git_repo	1.7.3	https://github.com/hunspell/hunspell.git	0	20	0	0	12
+freedesktop-sdk.bst:components/hwdata.bst	hwdata	yes	git_repo	0.412	https://github.com/vcrhonek/hwdata.git	0	7	0	0	0
+freedesktop-sdk.bst:components/hyphen.bst	hyphen	yes	git_repo	2.8.9	https://github.com/hunspell/hyphen.git	0	3	0	0	1
+freedesktop-sdk.bst:components/iana-config.bst	iana-config	yes	git_repo+local	2019.07.16	https://gitlab.com/freedesktop-sdk/mirrors/iana-config.git	0	2	0	0	0
+freedesktop-sdk.bst:components/icu.bst	icu	yes	patch+tar	3a2e7a47604ba702f345878308e6fefeca612ee895cf4a5f222e7955fabfe0c0	https://github.com/unicode-org/icu/releases/download/release-78.3/icu4c-78.3-sources.tgz	1	44	0	0	17
+freedesktop-sdk.bst:components/inih.bst	inih	yes	git_repo	62	https://github.com/benhoyt/inih.git	0	2	0	0	0
+freedesktop-sdk.bst:components/iproute2.bst	iproute2	yes	git_repo	7.3.0	https://git.kernel.org/pub/scm/network/iproute2/iproute2.git	0	165	0	0	11
+freedesktop-sdk.bst:components/iptables.bst	iptables	yes	git_repo	1.8.13	https://git.netfilter.org/iptables	0	147	0	0	3
+freedesktop-sdk.bst:components/iputils.bst	iputils	yes	git_repo	20250605	https://github.com/iputils/iputils.git	0	23	0	0	4
+freedesktop-sdk.bst:components/iso-codes.bst	iso-codes	yes	git_repo	4.20.1	https://salsa.debian.org/iso-codes-team/iso-codes.git	0	732	0	0	0
+freedesktop-sdk.bst:components/itstool.bst	itstool	yes	git_repo	2.0.7	https://github.com/itstool/itstool.git	0	10	0	0	1
+freedesktop-sdk.bst:components/jansson.bst	jansson	yes	git_repo	2.15.1	https://github.com/akheron/jansson.git	0	2	0	0	0
+freedesktop-sdk.bst:components/jpeg.bst	jpeg	yes	git_repo	3.2.0	https://github.com/libjpeg-turbo/libjpeg-turbo.git	0	28	0	0	6
+freedesktop-sdk.bst:components/jq.bst	jq	yes	git_module+git_repo	1.8.2	https://github.com/jqlang/jq.git	0	10	0	0	1
+freedesktop-sdk.bst:components/json-c.bst	json-c	yes	git_repo	0.19	https://github.com/json-c/json-c.git	0	2	0	0	0
+freedesktop-sdk.bst:components/kbd.bst	kbd	yes	git_repo	2.10.0	https://github.com/legionus/kbd.git	0	719	0	0	24
+freedesktop-sdk.bst:components/keyutils.bst	keyutils	yes	git_repo	1.6.3	https://git.kernel.org/pub/scm/linux/kernel/git/dhowells/keyutils.git	0	46	0	0	3
+freedesktop-sdk.bst:components/kmod.bst	kmod	yes	git_repo	34.2	https://git.kernel.org/pub/scm/utils/kernel/kmod/kmod.git	0	23	0	0	1
+freedesktop-sdk.bst:components/ladspa-sdk.bst	ladspa-sdk	yes	tar	1.17	https://www.ladspa.org/download/ladspa_sdk_1.17.tgz	0	9	0	0	3
+freedesktop-sdk.bst:components/lame.bst	lame	yes	patch+tar	4.0	https://sourceforge.net/projects/lame/files/lame/4.0/lame-4.0.tar.gz	3	20	0	0	1
+freedesktop-sdk.bst:components/lcms.bst	lcms	yes	git_repo	2.19.1	https://github.com/mm2/Little-CMS.git	0	13	0	0	5
+freedesktop-sdk.bst:components/less.bst	less	yes	git_repo	710	https://github.com/gwsw/less.git	0	8	0	0	1
+freedesktop-sdk.bst:components/libaio.bst	libaio	yes	tar	0.3.113	https://releases.pagure.org/libaio/libaio-0.3.113.tar.gz	0	2	0	0	0
+freedesktop-sdk.bst:components/libapparmor.bst	libapparmor	yes				0	1	0	0	0
+freedesktop-sdk.bst:components/libarchive.bst	libarchive	yes	git_repo	3.8.9	https://github.com/libarchive/libarchive.git	0	51	0	0	4
+freedesktop-sdk.bst:components/libassuan.bst	libassuan	yes	git_repo	3.0.2	https://github.com/gpg/libassuan.git	0	2	0	0	0
+freedesktop-sdk.bst:components/libatasmart.bst	libatasmart	yes	git_repo	0.19	https://gitlab.com/freedesktop-sdk/mirrors/git_https/git.0pointer.net/libatasmart.git	0	4	0	0	2
+freedesktop-sdk.bst:components/libavif.bst	libavif	yes	git_repo	1.4.2	https://github.com/AOMediaCodec/libavif.git	0	2	0	0	0
+freedesktop-sdk.bst:components/libblockdev.bst	libblockdev	yes	git_repo	3.5.0	https://github.com/storaged-project/libblockdev.git	0	21	0	0	2
+freedesktop-sdk.bst:components/libbpf.bst	libbpf	yes	git_repo	1.7.0	https://github.com/libbpf/libbpf.git	0	1	0	0	0
+freedesktop-sdk.bst:components/libbytesize.bst	libbytesize	yes	git_repo	2.12	https://github.com/storaged-project/libbytesize.git	0	39	0	0	1
+freedesktop-sdk.bst:components/libcamera.bst	libcamera	yes	git_module+git_repo+patch	0.7.2	https://git.libcamera.org/libcamera/libcamera.git	1	24	0	0	4
+freedesktop-sdk.bst:components/libcap-ng.bst	libcap-ng	yes	git_repo	0.9.6	https://github.com/stevegrubb/libcap-ng.git	0	32	0	0	3
+freedesktop-sdk.bst:components/libcap.bst	libcap	yes	git_repo+patch	2.78	https://git.kernel.org/pub/scm/libs/libcap/libcap.git	1	91	0	0	4
+freedesktop-sdk.bst:components/libcbor.bst	libcbor	yes	git_repo	0.14.0	https://github.com/PJK/libcbor.git	0	2	0	0	0
+freedesktop-sdk.bst:components/libcupsfilters.bst	libcupsfilters	yes	git_repo+patch	2.2.1	https://github.com/OpenPrinting/libcupsfilters.git	2	35	0	0	0
+freedesktop-sdk.bst:components/libdaemon.bst	libdaemon	yes	git_repo	0.14	https://gitlab.com/freedesktop-sdk/mirrors/libdaemon/libdaemon.git	0	3	0	0	0
+freedesktop-sdk.bst:components/libdatrie.bst	libdatrie	yes	git_repo	0.2.14	https://github.com/tlwg/libdatrie.git	0	29	0	0	1
+freedesktop-sdk.bst:components/libdbus.bst	libdbus	yes				0	1	0	0	0
+freedesktop-sdk.bst:components/libdecor.bst	libdecor	yes	git_repo	0.2.5	https://gitlab.freedesktop.org/libdecor/libdecor.git	0	3	0	0	0
+freedesktop-sdk.bst:components/libdevmapper.bst	libdevmapper	yes				0	3	0	0	0
+freedesktop-sdk.bst:components/libdrm.bst	libdrm	yes	git_repo	2.4.134	https://gitlab.freedesktop.org/mesa/drm.git	0	7	0	0	0
+freedesktop-sdk.bst:components/libebur128.bst	libebur128	yes	git_repo	1.2.6	https://github.com/jiixyj/libebur128.git	0	2	0	0	0
+freedesktop-sdk.bst:components/libeconf.bst	libeconf	yes	git_repo	0.8.5	https://github.com/openSUSE/libeconf.git	0	54	0	0	1
+freedesktop-sdk.bst:components/libei.bst	libei	yes	git_repo	1.6.0	https://gitlab.freedesktop.org/libinput/libei.git	0	5	0	0	1
+freedesktop-sdk.bst:components/libepoxy.bst	libepoxy	yes	git_repo	1.5.10	https://github.com/anholt/libepoxy.git	0	1	0	0	0
+freedesktop-sdk.bst:components/liberation-fonts.bst	liberation-fonts	yes	local+tar	2.1.5	https://github.com/liberationfonts/liberation-fonts/files/7261482/liberation-fonts-ttf-2.1.5.tar.gz	0	17	0	0	0
+freedesktop-sdk.bst:components/libevdev.bst	libevdev	yes	git_repo	1.14.0	https://gitlab.freedesktop.org/libevdev/libevdev.git	0	9	0	0	3
+freedesktop-sdk.bst:components/libevent.bst	libevent	yes	git_repo	2.1.13	https://github.com/libevent/libevent.git	0	6	0	0	1
+freedesktop-sdk.bst:components/libexif.bst	libexif	yes	git_repo	0.6.26	https://github.com/libexif/libexif.git	0	43	0	0	0
+freedesktop-sdk.bst:components/libffi.bst	libffi	yes	git_repo	3.8.0	https://github.com/libffi/libffi.git	0	7	0	0	0
+freedesktop-sdk.bst:components/libfido2.bst	libfido2	yes	git_repo	1.17.0	https://github.com/Yubico/libfido2.git	0	38	0	0	3
+freedesktop-sdk.bst:components/libfl.bst	libfl	yes				0	1	0	0	0
+freedesktop-sdk.bst:components/libflac.bst	libflac	yes	git_repo	1.5.0	https://gitlab.xiph.org/xiph/flac.git	0	9	0	0	2
+freedesktop-sdk.bst:components/libfyaml.bst	libfyaml	yes	git_repo+patch	0.9.6	https://github.com/pantoniou/libfyaml.git	1	5	0	0	1
+freedesktop-sdk.bst:components/libgamemode.bst	libgamemode	no				0	0	0	0	0
+freedesktop-sdk.bst:components/libgcrypt.bst	libgcrypt	yes	git_repo	1.12.4	https://github.com/gpg/libgcrypt.git	0	5	0	0	3
+freedesktop-sdk.bst:components/libglvnd.bst	libglvnd	yes	git_repo	1.7.0	https://gitlab.freedesktop.org/glvnd/libglvnd.git	0	8	0	0	0
+freedesktop-sdk.bst:components/libgpg-error.bst	libgpg-error	yes	git_repo	1.61	https://github.com/gpg/libgpg-error.git	0	27	0	0	1
+freedesktop-sdk.bst:components/libgudev.bst	libgudev	yes	git_repo	238	https://gitlab.gnome.org/GNOME/libgudev.git	0	2	0	0	0
+freedesktop-sdk.bst:components/libgusb.bst	libgusb	yes	git_repo	0.4.9	https://github.com/hughsie/libgusb.git	0	196	0	0	1
+freedesktop-sdk.bst:components/libheif.bst	libheif	yes	git_repo	1.23.1	https://github.com/strukturag/libheif.git	0	3	0	0	0
+freedesktop-sdk.bst:components/libidn2.bst	libidn2	yes	tar	2.3.8	https://ftp.gnu.org/gnu/libidn/libidn2-2.3.8.tar.gz	0	50	0	0	1
+freedesktop-sdk.bst:components/libinput.bst	libinput	yes	git_repo	1.32.0	https://gitlab.freedesktop.org/libinput/libinput.git	0	105	0	0	1
+freedesktop-sdk.bst:components/libjxl.bst	libjxl	yes	git_repo	0.12.0	https://github.com/libjxl/libjxl.git	0	7	0	0	0
+freedesktop-sdk.bst:components/libksba.bst	libksba	yes	git_repo	1.8.1	https://github.com/gpg/libksba.git	0	4	0	0	0
+freedesktop-sdk.bst:components/liblc3.bst	liblc3	yes	git_repo	1.1.3	https://github.com/google/liblc3.git	0	1	0	0	0
+freedesktop-sdk.bst:components/libmbim.bst	libmbim	yes	git_repo	1.34.0	https://gitlab.freedesktop.org/mobile-broadband/libmbim.git	0	9	0	0	2
+freedesktop-sdk.bst:components/libmicrohttpd.bst	libmicrohttpd	yes	git_repo	1.0.10	https://gitlab.com/freedesktop-sdk/mirrors/git_gnunet_org/libmicrohttpd.git	0	5	0	0	0
+freedesktop-sdk.bst:components/libmnl.bst	libmnl	yes	git_repo	1.0.5	https://git.netfilter.org/libmnl	0	1	0	0	0
+freedesktop-sdk.bst:components/libmysofa.bst	libmysofa	yes	git_repo	1.3.5	https://github.com/hoene/libmysofa.git	0	13	0	0	0
+freedesktop-sdk.bst:components/libndp.bst	libndp	yes	git_repo	1.9	https://github.com/jpirko/libndp.git	0	3	0	0	1
+freedesktop-sdk.bst:components/libnftnl.bst	libnftnl	yes	git_repo	1.3.2	https://git.netfilter.org/libnftnl	0	2	0	0	0
+freedesktop-sdk.bst:components/libnghttp2.bst	libnghttp2	yes	git_repo	1.70.0	https://github.com/nghttp2/nghttp2.git	0	10	0	0	0
+freedesktop-sdk.bst:components/libnghttp3.bst	libnghttp3	yes	git_module+git_repo+patch	1.18.0	https://github.com/ngtcp2/nghttp3.git	1	4	0	0	0
+freedesktop-sdk.bst:components/libngtcp2.bst	libngtcp2	yes	git_repo+patch	1.25.0	https://github.com/ngtcp2/ngtcp2.git	1	6	0	0	0
+freedesktop-sdk.bst:components/libnice.bst	libnice	yes	git_repo	0.1.23	https://gitlab.freedesktop.org/libnice/libnice.git	0	7	0	0	2
+freedesktop-sdk.bst:components/libnl.bst	libnl	yes	git_repo	3.12.0	https://github.com/thom311/libnl.git	0	73	0	0	48
+freedesktop-sdk.bst:components/libnvme.bst	libnvme	yes	git_repo	1.16.2	https://github.com/linux-nvme/libnvme.git	0	7	0	0	0
+freedesktop-sdk.bst:components/libogg.bst	libogg	yes	git_repo	1.3.6	https://github.com/xiph/ogg.git	0	84	0	0	0
+freedesktop-sdk.bst:components/libp11.bst	libp11	yes	git_repo	0.4.20	https://github.com/OpenSC/libp11.git	0	6	0	0	0
+freedesktop-sdk.bst:components/libpaper.bst	libpaper	yes	git_module+git_repo	2.3.0	https://github.com/rrthomas/libpaper.git	0	7	0	0	1
+freedesktop-sdk.bst:components/libpipeline.bst	libpipeline	yes	git_repo	1.5.8	https://gitlab.com/libpipeline/libpipeline.git	0	2	0	0	0
+freedesktop-sdk.bst:components/libpng.bst	libpng	yes	git_repo	1.6.59	https://github.com/glennrp/libpng.git	0	11	0	0	2
+freedesktop-sdk.bst:components/libppd.bst	libppd	yes	git_repo	2.1.1	https://github.com/OpenPrinting/libppd.git	0	19	0	0	0
+freedesktop-sdk.bst:components/libproxy.bst	libproxy	yes	git_repo	0.5.12	https://github.com/libproxy/libproxy.git	0	62	0	0	1
+freedesktop-sdk.bst:components/libpsl.bst	libpsl	yes	git_module+git_repo	0.23.3	https://github.com/rockdaboot/libpsl.git	0	9	0	0	2
+freedesktop-sdk.bst:components/libpulse.bst	libpulse	yes	git_repo+patch	17.0	https://gitlab.freedesktop.org/pulseaudio/pulseaudio.git	1	70	0	0	4
+freedesktop-sdk.bst:components/libqmi.bst	libqmi	yes	git_repo	1.38.0	https://gitlab.freedesktop.org/mobile-broadband/libqmi.git	0	10	0	0	3
+freedesktop-sdk.bst:components/libqrencode.bst	libqrencode	no	git_repo	4.1.1	https://github.com/fukuchi/libqrencode.git	0	0	0	0	0
+freedesktop-sdk.bst:components/libqrtr-glib.bst	libqrtr-glib	yes	git_repo	1.4.0	https://gitlab.freedesktop.org/mobile-broadband/libqrtr-glib.git	0	2	0	0	0
+freedesktop-sdk.bst:components/libsamplerate.bst	libsamplerate	yes	git_repo	0.2.2	https://github.com/libsndfile/libsamplerate.git	0	19	0	0	0
+freedesktop-sdk.bst:components/libseccomp.bst	libseccomp	yes	git_repo	2.6.1	https://github.com/seccomp/libseccomp.git	0	39	0	0	1
+freedesktop-sdk.bst:components/libslirp.bst	libslirp	yes	git_repo	4.9.6	https://gitlab.freedesktop.org/slirp/libslirp.git	0	3	0	0	0
+freedesktop-sdk.bst:components/libsmbios-maybe.bst	libsmbios-maybe	no				0	0	0	0	0
+freedesktop-sdk.bst:components/libsrtp2.bst	libsrtp2	yes	git_repo	2.8.0	https://github.com/cisco/libsrtp.git	0	1	0	0	0
+freedesktop-sdk.bst:components/libtasn1.bst	libtasn1	yes	git_repo	4.21.0	https://gitlab.com/gnutls/libtasn1.git	0	49	0	0	3
+freedesktop-sdk.bst:components/libthai.bst	libthai	yes	git_repo	0.1.30	https://github.com/tlwg/libthai.git	0	2	0	0	0
+freedesktop-sdk.bst:components/libtheora.bst	libtheora	yes	git_repo	1.2.0	https://gitlab.xiph.org/xiph/theora.git	0	92	0	0	0
+freedesktop-sdk.bst:components/libtiff.bst	libtiff	yes	git_repo	4.7.2	https://gitlab.com/libtiff/libtiff.git	0	27	0	0	18
+freedesktop-sdk.bst:components/libtirpc.bst	libtirpc	yes	tar	1.3.8	https://sourceforge.net/projects/libtirpc/files/libtirpc/1.3.8/libtirpc-1.3.8.tar.bz2	0	24	0	0	0
+freedesktop-sdk.bst:components/libtool.bst	libtool	yes	tar	2.6.2	https://ftp.gnu.org/gnu/libtool/libtool-2.6.2.tar.xz	0	7	0	0	0
+freedesktop-sdk.bst:components/libtraceevent.bst	libtraceevent	yes	git_repo	1.9.1	https://git.kernel.org/pub/scm/libs/libtrace/libtraceevent.git	0	15	0	0	0
+freedesktop-sdk.bst:components/libunistring.bst	libunistring	yes	tar	1.4.2	https://ftp.gnu.org/gnu/libunistring/libunistring-1.4.2.tar.xz	0	29	0	0	0
+freedesktop-sdk.bst:components/libunwind.bst	libunwind	yes	git_repo+patch	1.8.3	https://github.com/libunwind/libunwind.git	1	6	0	0	0
+freedesktop-sdk.bst:components/liburcu.bst	liburcu	yes	git_repo	0.15.7	https://git.liburcu.org/userspace-rcu.git	0	92	0	0	0
+freedesktop-sdk.bst:components/liburing.bst	liburing	yes	git_repo	2.15	https://github.com/axboe/liburing.git	0	231	0	0	0
+freedesktop-sdk.bst:components/libusb.bst	libusb	yes	git_repo	1.0.30	https://github.com/libusb/libusb.git	0	1	0	0	0
+freedesktop-sdk.bst:components/libva.bst	libva	yes	git_repo	2.24.1	https://github.com/intel/libva.git	0	5	0	0	0
+freedesktop-sdk.bst:components/libvdpau.bst	libvdpau	yes	git_repo	1.5	https://gitlab.freedesktop.org/vdpau/libvdpau.git	0	4	0	0	0
+freedesktop-sdk.bst:components/libvorbis.bst	libvorbis	yes	git_repo	1.3.7	https://github.com/xiph/vorbis.git	0	140	0	0	0
+freedesktop-sdk.bst:components/libvpx.bst	libvpx	yes	git_repo	1.17.0	https://chromium.googlesource.com/webm/libvpx.git	0	4	0	0	2
+freedesktop-sdk.bst:components/libwacom.bst	libwacom	yes	git_repo	2.20.0	https://github.com/linuxwacom/libwacom.git	0	847	0	0	4
+freedesktop-sdk.bst:components/libwebp.bst	libwebp	yes	git_repo	1.6.0	https://chromium.googlesource.com/webm/libwebp.git	0	17	0	0	6
+freedesktop-sdk.bst:components/libxkbcommon.bst	libxkbcommon	yes	git_repo	1.13.2	https://github.com/xkbcommon/libxkbcommon.git	0	5	0	0	0
+freedesktop-sdk.bst:components/libxml2.bst	libxml2	yes	git_repo	2.15.4	https://gitlab.gnome.org/GNOME/libxml2.git	0	13	0	0	2
+freedesktop-sdk.bst:components/libxmlb.bst	libxmlb	yes	git_repo	0.3.29	https://github.com/hughsie/libxmlb.git	0	35	0	0	1
+freedesktop-sdk.bst:components/libxslt.bst	libxslt	yes	git_repo+patch	1.1.45	https://gitlab.gnome.org/GNOME/libxslt.git	1	77	0	0	1
+freedesktop-sdk.bst:components/libyaml.bst	libyaml	yes	git_repo	0.2.5	https://github.com/yaml/libyaml.git	0	2	0	0	0
+freedesktop-sdk.bst:components/linux-firmware.bst	linux-firmware	yes	git_repo	a2dcb924f0897368b0b4f305cbf9808cdda90ce0	https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git	0	4071	0	0	0
+freedesktop-sdk.bst:components/linux-pam-base.bst	linux-pam-base	yes	git_repo	1.7.3	https://github.com/linux-pam/linux-pam.git	0	150	0	1	6
+freedesktop-sdk.bst:components/linux-pam.bst	linux-pam	yes	local			0	19	0	0	0
+freedesktop-sdk.bst:components/llvm.bst	llvm	no	git_repo	22.1.8	https://github.com/llvm/llvm-project.git	0	0	0	0	0
+freedesktop-sdk.bst:components/locales.bst	locales	yes				0	5976	0	0	0
+freedesktop-sdk.bst:components/lua.bst	lua	yes	local+tar	5.5.1	https://www.lua.org/ftp/lua-5.5.1.tar.gz	0	4	0	0	2
+freedesktop-sdk.bst:components/lvm2.bst	lvm2	yes				0	105	0	0	8
+freedesktop-sdk.bst:components/lz4.bst	lz4	yes	git_repo	1.10.0	https://github.com/lz4/lz4.git	0	3	0	0	1
+freedesktop-sdk.bst:components/lzip.bst	lzip	yes	tar	1.26	https://download-mirror.savannah.gnu.org/releases/lzip/lzip-1.26.tar.gz	0	4	0	0	1
+freedesktop-sdk.bst:components/lzo.bst	lzo	yes	tar	2.10	https://www.oberhumer.com/opensource/lzo/download/lzo-2.10.tar.gz	0	8	0	0	0
+freedesktop-sdk.bst:components/m4.bst	m4	no	tar	1.4.21	https://ftp.gnu.org/gnu/m4/m4-1.4.21.tar.xz	0	0	0	0	0
+freedesktop-sdk.bst:components/make.bst	make	no				0	0	0	0	0
+freedesktop-sdk.bst:components/man-db.bst	man-db	yes	git_repo	2.13.1	https://gitlab.com/man-db/man-db.git	0	67	0	2	8
+freedesktop-sdk.bst:components/mandoc.bst	mandoc	no	tar	1.14.6	https://mdocml.bsd.lv/snapshots/mandoc-1.14.6.tar.gz	0	0	0	0	0
+freedesktop-sdk.bst:components/mdadm.bst	mdadm	yes	git_repo+local	4.6	https://git.kernel.org/pub/scm/utils/mdadm/mdadm.git	0	24	0	11	2
+freedesktop-sdk.bst:components/mesa-headers.bst	mesa-headers	no	git_repo	26.2.5	https://gitlab.freedesktop.org/mesa/mesa.git	0	0	0	0	0
+freedesktop-sdk.bst:components/meson.bst	meson	no				0	0	0	0	0
+freedesktop-sdk.bst:components/modemmanager.bst	modemmanager	yes	git_repo	1.24.2	https://gitlab.freedesktop.org/mobile-broadband/ModemManager.git	0	144	0	1	2
+freedesktop-sdk.bst:components/mpfr.bst	mpfr	yes	git_repo	4.2.2	https://gitlab.inria.fr/mpfr/mpfr.git	0	15	0	0	0
+freedesktop-sdk.bst:components/mpg123.bst	mpg123	yes	tar	1.33.7	https://www.mpg123.de/download/mpg123-1.33.7.tar.bz2	0	9	0	0	0
+freedesktop-sdk.bst:components/mtdev.bst	mtdev	yes	tar	1.1.7	https://bitmath.org/code/mtdev/mtdev-1.1.7.tar.gz	0	3	0	0	1
+freedesktop-sdk.bst:components/mutool.bst	mutool	no	git_module+git_repo	1.27.2	https://github.com/ArtifexSoftware/mupdf.git	0	0	0	0	0
+freedesktop-sdk.bst:components/mythes.bst	mythes	yes	git_repo	1.2.6	https://github.com/hunspell/mythes.git	0	3	0	0	1
+freedesktop-sdk.bst:components/nano.bst	nano	yes	git_repo	9.3	https://git.savannah.gnu.org/git/nano.git	0	98	0	0	1
+freedesktop-sdk.bst:components/nasm.bst	nasm	no	git_repo	3.02	https://github.com/netwide-assembler/nasm.git	0	0	0	0	0
+freedesktop-sdk.bst:components/netavark.bst	netavark	yes	cargo2+git_repo	2.1.0	https://github.com/containers/netavark.git	0	7	0	4	0
+freedesktop-sdk.bst:components/nettle.bst	nettle	yes	git_repo	4.0	https://git.lysator.liu.se/nettle/nettle.git	0	7	0	0	5
+freedesktop-sdk.bst:components/networkmanager.bst	networkmanager	yes	git_repo	1.58.1	https://gitlab.freedesktop.org/NetworkManager/NetworkManager.git	0	179	0	9	4
+freedesktop-sdk.bst:components/newt.bst	newt	yes	git_repo	0.52.25	https://pagure.io/newt.git	0	77	0	0	1
+freedesktop-sdk.bst:components/nftables.bst	nftables	yes	git_repo	1.1.7	https://git.netfilter.org/nftables.git	0	25	0	0	1
+freedesktop-sdk.bst:components/ninja.bst	ninja	no	git_repo	1.13.2	https://github.com/ninja-build/ninja.git	0	0	0	0	0
+freedesktop-sdk.bst:components/noto-emoji.bst	noto-emoji	yes	git_repo	2.051	https://github.com/googlefonts/noto-emoji.git	0	3	0	0	0
+freedesktop-sdk.bst:components/npth.bst	npth	yes	git_repo	1.8	https://github.com/gpg/npth.git	0	2	0	0	0
+freedesktop-sdk.bst:components/nspr.bst	nspr	yes	tar	4.39	https://archive.mozilla.org/pub/nspr/releases/v4.39/src/nspr-4.39.tar.gz	0	3	0	0	0
+freedesktop-sdk.bst:components/nss.bst	nss	yes	git_repo+local+patch	3.112.5	https://github.com/mozilla/nss.git	2	9	0	0	0
+freedesktop-sdk.bst:components/nv-codec-headers.bst	nv-codec-headers	no	git_repo	13.1.15	https://git.videolan.org/git/ffmpeg/nv-codec-headers.git	0	0	0	0	0
+freedesktop-sdk.bst:components/oci-builder.bst	oci-builder	no	local			0	0	0	0	0
+freedesktop-sdk.bst:components/open-iscsi.bst	open-iscsi	yes	git_repo	2.1.13	https://github.com/open-iscsi/open-iscsi.git	0	29	0	6	9
+freedesktop-sdk.bst:components/open-isns.bst	open-isns	yes	git_repo	0.103	https://github.com/open-iscsi/open-isns.git	0	14	0	2	3
+freedesktop-sdk.bst:components/openal.bst	openal	yes	git_repo	1.25.2	https://github.com/kcat/openal-soft.git	0	14	0	0	0
+freedesktop-sdk.bst:components/opencl.bst	opencl	yes	git_repo	2.3.5	https://github.com/OCL-dev/ocl-icd.git	0	4	0	0	1
+freedesktop-sdk.bst:components/openjpeg.bst	openjpeg	yes	git_repo	2.5.4	https://github.com/uclouvain/openjpeg.git	0	10	0	0	3
+freedesktop-sdk.bst:components/openssh-systemd.bst	openssh-systemd	yes	local			0	4	0	1	0
+freedesktop-sdk.bst:components/openssh.bst	openssh	yes	git_repo	10.6	https://github.com/openssh/openssh-portable.git	0	35	0	0	9
+freedesktop-sdk.bst:components/openssl.bst	openssl	yes	git_repo	3.5.9	https://github.com/openssl/openssl.git	0	1824	0	0	1
+freedesktop-sdk.bst:components/opus.bst	opus	yes	git_repo	1.6.1	https://gitlab.xiph.org/xiph/opus.git	0	2	0	0	0
+freedesktop-sdk.bst:components/opusfile.bst	opusfile	yes	git_repo+patch	0.12	https://gitlab.xiph.org/xiph/opusfile.git	1	6	0	0	0
+freedesktop-sdk.bst:components/orc.bst	orc	yes	git_repo	0.4.42	https://gitlab.freedesktop.org/gstreamer/orc.git	0	3	0	0	1
+freedesktop-sdk.bst:components/ostree-minimal.bst	ostree-minimal	no	git_module+git_repo	2026.4	https://github.com/ostreedev/ostree.git	0	0	0	0	0
+freedesktop-sdk.bst:components/ostree.bst	ostree	yes	git_module+git_repo	2026.4	https://github.com/ostreedev/ostree.git	0	21	0	6	2
+freedesktop-sdk.bst:components/p11-kit.bst	p11-kit	yes	git_module+git_repo	0.26.5	https://github.com/p11-glue/p11-kit.git	0	84	0	0	2
+freedesktop-sdk.bst:components/pahole.bst	pahole	no	git_repo	1.32	https://git.kernel.org/pub/scm/devel/pahole/pahole.git	0	0	0	0	0
+freedesktop-sdk.bst:components/parallel.bst	parallel	no	git_repo	20260722	https://git.savannah.gnu.org/git/parallel.git	0	0	0	0	0
+freedesktop-sdk.bst:components/parted.bst	parted	yes	tar	3.7	https://ftp.gnu.org/gnu/parted/parted-3.7.tar.xz	0	40	0	0	2
+freedesktop-sdk.bst:components/passt.bst	passt	yes	git_repo	2026.10.02	https://gitlab.com/freedesktop-sdk/mirrors/passt/passt.git	0	10	0	0	4
+freedesktop-sdk.bst:components/patch.bst	patch	no	git_module+git_repo+patch_queue	2.8	https://git.savannah.gnu.org/git/patch.git	2	0	0	0	0
+freedesktop-sdk.bst:components/patchelf.bst	patchelf	no	git_repo	0.19.2	https://github.com/NixOS/patchelf.git	0	0	0	0	0
+freedesktop-sdk.bst:components/pciutils.bst	pciutils	yes	git_repo	3.15.0	https://git.kernel.org/pub/scm/utils/pciutils/pciutils.git	0	11	0	0	4
+freedesktop-sdk.bst:components/pcsc-lite.bst	pcsc-lite	yes	git_repo	2.5.3	https://github.com/LudovicRousseau/PCSC.git	0	16	0	2	2
+freedesktop-sdk.bst:components/pdfio.bst	pdfio	yes	git_repo	1.6.5	https://github.com/michaelrsweet/pdfio.git	0	22	0	0	0
+freedesktop-sdk.bst:components/perl-build.bst	perl-build	no	git_repo	0.4234	https://github.com/Perl-Toolchain-Gang/Module-Build	0	0	0	0	0
+freedesktop-sdk.bst:components/perl-class-inspector.bst	perl-class-inspector	no	cpan	1.36	https://cpan.metacpan.org/authors/id/P/PL/PLICEASE/Class-Inspector-1.36.tar.gz	0	0	0	0	0
+freedesktop-sdk.bst:components/perl-file-sharedir-install.bst	perl-file-sharedir-install	no	cpan	0.14	https://cpan.metacpan.org/authors/id/E/ET/ETHER/File-ShareDir-Install-0.14.tar.gz	0	0	0	0	0
+freedesktop-sdk.bst:components/perl-file-sharedir.bst	perl-file-sharedir	no	cpan	1.118	https://cpan.metacpan.org/authors/id/R/RE/REHSACK/File-ShareDir-1.118.tar.gz	0	0	0	0	0
+freedesktop-sdk.bst:components/perl-module-build.bst	perl-module-build	no	cpan	0.4234	https://cpan.metacpan.org/authors/id/L/LE/LEONT/Module-Build-0.4234.tar.gz	0	0	0	0	0
+freedesktop-sdk.bst:components/perl-module-install.bst	perl-module-install	no	cpan	1.21	https://cpan.metacpan.org/authors/id/E/ET/ETHER/Module-Install-1.21.tar.gz	0	0	0	0	0
+freedesktop-sdk.bst:components/perl-module-scandeps.bst	perl-module-scandeps	no	cpan	1.37	https://cpan.metacpan.org/authors/id/R/RS/RSCHUPP/Module-ScanDeps-1.37.tar.gz	0	0	0	0	0
+freedesktop-sdk.bst:components/perl-pod-parser.bst	perl-pod-parser	no	cpan	1.67	https://cpan.metacpan.org/authors/id/M/MA/MAREKR/Pod-Parser-1.67.tar.gz	0	0	0	0	0
+freedesktop-sdk.bst:components/perl-sasl.bst	perl-sasl	yes	cpan	2.2000	https://cpan.metacpan.org/authors/id/E/EH/EHUELS/Authen-SASL-2.2000.tar.gz	0	28	0	0	0
+freedesktop-sdk.bst:components/perl-ssl.bst	perl-ssl	yes	cpan	2.099	https://cpan.metacpan.org/authors/id/S/SU/SULLR/IO-Socket-SSL-2.099.tar.gz	0	10	0	0	0
+freedesktop-sdk.bst:components/perl-ssleay.bst	perl-ssleay	yes	cpan	1.96	https://cpan.metacpan.org/authors/id/C/CH/CHRISN/Net-SSLeay-1.96.tar.gz	0	84	0	0	0
+freedesktop-sdk.bst:components/perl-xml-parser.bst	perl-xml-parser	no	cpan	2.59	https://cpan.metacpan.org/authors/id/T/TO/TODDR/XML-Parser-2.59.tar.gz	0	0	0	0	0
+freedesktop-sdk.bst:components/perl-yaml-tiny.bst	perl-yaml-tiny	no	cpan	1.76	https://cpan.metacpan.org/authors/id/E/ET/ETHER/YAML-Tiny-1.76.tar.gz	0	0	0	0	0
+freedesktop-sdk.bst:components/perl.bst	perl	yes	git_repo+local+patch	5.44.0	https://github.com/perl/perl5.git	1	2873	0	0	30
+freedesktop-sdk.bst:components/pipewire-daemon.bst	pipewire-daemon	yes				0	122	0	5	1
+freedesktop-sdk.bst:components/pipewire-manifest.bst	pipewire-manifest	no				0	0	0	0	0
+freedesktop-sdk.bst:components/pipewire.bst	pipewire	yes				0	2071	0	0	19
+freedesktop-sdk.bst:components/pixman.bst	pixman	yes	git_repo	0.46.4	https://gitlab.freedesktop.org/pixman/pixman.git	0	1	0	0	0
+freedesktop-sdk.bst:components/pkg-config.bst	pkg-config	no	git_repo	3.0.8	https://github.com/pkgconf/pkgconf.git	0	0	0	0	0
+freedesktop-sdk.bst:components/po4a.bst	po4a	no	git_repo	0.74	https://github.com/mquinson/po4a.git	0	0	0	0	0
+freedesktop-sdk.bst:components/podman.bst	podman	yes	git_repo	6.1.4	https://github.com/podman-container-tools/podman.git	0	275	0	15	2
+freedesktop-sdk.bst:components/polkit-gobject.bst	polkit-gobject	yes				0	4	0	0	0
+freedesktop-sdk.bst:components/polkit-manifest.bst	polkit-manifest	no				0	0	0	0	0
+freedesktop-sdk.bst:components/polkit.bst	polkit	yes				0	49	0	3	4
+freedesktop-sdk.bst:components/poppler.bst	poppler	yes	git_repo	26.10.0	https://gitlab.freedesktop.org/poppler/poppler.git	0	32	0	0	13
+freedesktop-sdk.bst:components/popt.bst	popt	yes	git_repo	1.19	https://github.com/rpm-software-management/popt.git	0	39	0	0	0
+freedesktop-sdk.bst:components/procps.bst	procps	yes	git_repo	4.0.7	https://gitlab.com/procps-ng/procps.git	0	56	0	0	18
+freedesktop-sdk.bst:components/protobuf.bst	protobuf	yes	git_repo	36.2	https://github.com/protocolbuffers/protobuf.git	0	9	0	0	4
+freedesktop-sdk.bst:components/pwquality.bst	pwquality	yes	git_repo+patch	1.4.5	https://github.com/libpwquality/libpwquality.git	1	68	0	0	2
+freedesktop-sdk.bst:components/pycairo.bst	pycairo	yes	git_repo	1.29.2	https://github.com/pygobject/pycairo.git	0	8	0	0	0
+freedesktop-sdk.bst:components/python3-alabaster.bst	python3-alabaster	no	git_repo	1.0.0	https://github.com/sphinx-doc/alabaster.git	0	0	0	0	0
+freedesktop-sdk.bst:components/python3-appdirs.bst	python3-appdirs	no	git_repo	1.4.4	https://github.com/ActiveState/appdirs.git	0	0	0	0	0
+freedesktop-sdk.bst:components/python3-arpy.bst	python3-arpy	yes	git_repo	2.4.0	https://github.com/viraptor/arpy.git	0	9	0	0	0
+freedesktop-sdk.bst:components/python3-attrs.bst	python3-attrs	yes	git_repo	26.1.0	https://github.com/python-attrs/attrs.git	0	74	0	0	0
+freedesktop-sdk.bst:components/python3-babel.bst	python3-babel	no	git_repo+remote	2.18.0	https://github.com/python-babel/babel.git	0	0	0	0	0
+freedesktop-sdk.bst:components/python3-backports-entrypoints-selectable.bst	python3-backports-entrypoints-selectable	no	git_repo	1.3.0	https://github.com/jaraco/backports.entry_points_selectable.git	0	0	0	0	0
+freedesktop-sdk.bst:components/python3-blessings.bst	python3-blessings	yes	git_repo	1.7	https://github.com/erikrose/blessings.git	0	12	0	0	0
+freedesktop-sdk.bst:components/python3-build.bst	python3-build	no				0	0	0	0	0
+freedesktop-sdk.bst:components/python3-calver.bst	python3-calver	no	git_repo	2025.10.20	https://github.com/di/calver.git	0	0	0	0	0
+freedesktop-sdk.bst:components/python3-certifi.bst	python3-certifi	yes	git_repo	2026.10.23	https://github.com/certifi/python-certifi.git	0	22	0	0	0
+freedesktop-sdk.bst:components/python3-chardet.bst	python3-chardet	yes	git_repo+patch	6.0.0	https://github.com/chardet/chardet.git	1	261	0	0	1
+freedesktop-sdk.bst:components/python3-charset-normalizer.bst	python3-charset-normalizer	yes	git_repo	3.5.2	https://github.com/jawah/charset_normalizer.git	0	44	0	0	1
+freedesktop-sdk.bst:components/python3-click.bst	python3-click	yes	pypi	8.5.0	https://files.pythonhosted.org/packages/c7/0e/7fa0ef50764b67090eca4114772a2abf8b6148198475e54c660b97caeee6/click-8.5.0.tar.gz	0	58	0	0	0
+freedesktop-sdk.bst:components/python3-contextlib2.bst	python3-contextlib2	no	git_repo	21.6.0	https://github.com/jazzband/contextlib2.git	0	0	0	0	0
+freedesktop-sdk.bst:components/python3-dbus-deviation.bst	python3-dbus-deviation	no	git_repo	0.6.1	https://github.com/pwithnall/dbus-deviation.git	0	0	0	0	0
+freedesktop-sdk.bst:components/python3-dbus.bst	python3-dbus	yes	git_repo	1.5.1	https://gitlab.freedesktop.org/dbus/dbus-python.git	0	72	0	0	0
+freedesktop-sdk.bst:components/python3-docutils.bst	python3-docutils	no	pypi	0.22.4	https://files.pythonhosted.org/packages/ae/b6/03bb70946330e88ffec97aefd3ea75ba575cb2e762061e0e62a213befee8/docutils-0.22.4.tar.gz	0	0	0	0	0
+freedesktop-sdk.bst:components/python3-dulwich.bst	python3-dulwich	yes	git_repo	1.2.19	https://github.com/jelmer/dulwich.git	0	266	0	0	3
+freedesktop-sdk.bst:components/python3-editables.bst	python3-editables	no	git_repo	0.6	https://github.com/pfmoore/editables.git	0	0	0	0	0
+freedesktop-sdk.bst:components/python3-faust-cchardet.bst	python3-faust-cchardet	no	git_module+git_repo	3.2.0	https://github.com/faust-streaming/cChardet.git	0	0	0	0	0
+freedesktop-sdk.bst:components/python3-flit-core.bst	python3-flit-core	no				0	0	0	0	0
+freedesktop-sdk.bst:components/python3-grpcio.bst	python3-grpcio	yes	git_module+git_repo+patch	1.84.1	https://github.com/grpc/grpc.git	3	178	0	0	0
+freedesktop-sdk.bst:components/python3-hatch-fancy-pypi-readme.bst	python3-hatch-fancy-pypi-readme	no	git_repo	25.1.0	https://github.com/hynek/hatch-fancy-pypi-readme.git	0	0	0	0	0
+freedesktop-sdk.bst:components/python3-hatch-vcs.bst	python3-hatch-vcs	no	git_repo	0.5.0	https://github.com/ofek/hatch-vcs.git	0	0	0	0	0
+freedesktop-sdk.bst:components/python3-hatchling.bst	python3-hatchling	no	git_repo	1.32.4	https://github.com/pypa/hatch.git	0	0	0	0	0
+freedesktop-sdk.bst:components/python3-idna.bst	python3-idna	yes	git_repo	3.20	https://github.com/kjd/idna.git	0	37	0	0	1
+freedesktop-sdk.bst:components/python3-imagesize.bst	python3-imagesize	no	git_repo	2.0.1	https://github.com/shibukawa/imagesize_py.git	0	0	0	0	0
+freedesktop-sdk.bst:components/python3-installer.bst	python3-installer	no				0	0	0	0	0
+freedesktop-sdk.bst:components/python3-jinja2.bst	python3-jinja2	yes	git_repo	3.1.6	https://github.com/pallets/jinja.git	0	82	0	0	0
+freedesktop-sdk.bst:components/python3-lxml.bst	python3-lxml	yes	git_repo+patch	6.1.3	https://github.com/lxml/lxml.git	1	149	0	0	0
+freedesktop-sdk.bst:components/python3-mako.bst	python3-mako	yes	git_repo	1.4.3	https://github.com/sqlalchemy/mako.git	0	107	0	0	1
+freedesktop-sdk.bst:components/python3-markdown.bst	python3-markdown	yes	git_repo	3.11.1	https://github.com/Python-Markdown/markdown.git	0	107	0	0	1
+freedesktop-sdk.bst:components/python3-markupsafe.bst	python3-markupsafe	yes	git_repo	3.0.4	https://github.com/pallets/markupsafe.git	0	16	0	0	0
+freedesktop-sdk.bst:components/python3-meson-python.bst	python3-meson-python	no	git_repo	0.22.1	https://github.com/mesonbuild/meson-python.git	0	0	0	0	0
+freedesktop-sdk.bst:components/python3-networkx.bst	python3-networkx	no	git_repo	3.7	https://github.com/networkx/networkx.git	0	0	0	0	0
+freedesktop-sdk.bst:components/python3-nftables.bst	python3-nftables	yes	git_repo	1.1.7	https://git.netfilter.org/nftables.git	0	11	0	0	0
+freedesktop-sdk.bst:components/python3-packaging.bst	python3-packaging	yes				0	75	0	0	0
+freedesktop-sdk.bst:components/python3-pathspec.bst	python3-pathspec	no	git_repo	1.1.1	https://github.com/cpburnz/python-pathspec.git	0	0	0	0	0
+freedesktop-sdk.bst:components/python3-pefile.bst	python3-pefile	no	git_repo	2024.8.26	https://github.com/erocarrera/pefile.git	0	0	0	0	0
+freedesktop-sdk.bst:components/python3-pil.bst	python3-pil	yes	git_repo+patch	12.3.0	https://github.com/python-pillow/Pillow.git	1	316	0	0	0
+freedesktop-sdk.bst:components/python3-pkgconfig.bst	python3-pkgconfig	no	git_repo	1.6.0	https://github.com/matze/pkgconfig.git	0	0	0	0	0
+freedesktop-sdk.bst:components/python3-pluggy.bst	python3-pluggy	no	git_repo	1.7.0	https://github.com/pytest-dev/pluggy.git	0	0	0	0	0
+freedesktop-sdk.bst:components/python3-pluginbase.bst	python3-pluginbase	yes	git_repo	1.0.1	https://github.com/mitsuhiko/pluginbase.git	0	10	0	0	0
+freedesktop-sdk.bst:components/python3-ply.bst	python3-ply	yes	git_repo	3.11	https://github.com/dabeaz/ply.git	0	22	0	0	0
+freedesktop-sdk.bst:components/python3-poetry-core.bst	python3-poetry-core	no	git_repo	2.5.0	https://github.com/python-poetry/poetry-core.git	0	0	0	0	0
+freedesktop-sdk.bst:components/python3-protobuf.bst	python3-protobuf	yes	pypi	7.36.2	https://files.pythonhosted.org/packages/d9/89/5b8517baa72f84a67b8a307ba953c91057af618bf40bf676f3c03551f8f0/protobuf-7.36.2.tar.gz	0	186	0	0	0
+freedesktop-sdk.bst:components/python3-psutil.bst	python3-psutil	yes	git_repo	7.2.2	https://github.com/giampaolo/psutil.git	0	37	0	0	0
+freedesktop-sdk.bst:components/python3-pycparser.bst	python3-pycparser	no	git_repo	3.12	https://github.com/eliben/pycparser.git	0	0	0	0	0
+freedesktop-sdk.bst:components/python3-pyelftools.bst	python3-pyelftools	no	git_repo	0.33	https://github.com/eliben/pyelftools.git	0	0	0	0	0
+freedesktop-sdk.bst:components/python3-pygments.bst	python3-pygments	no	git_repo	2.21.0	https://github.com/pygments/pygments.git	0	0	0	0	0
+freedesktop-sdk.bst:components/python3-pyparsing.bst	python3-pyparsing	no	git_repo	3.3.3	https://github.com/pyparsing/pyparsing.git	0	0	0	0	0
+freedesktop-sdk.bst:components/python3-pyproject-hooks.bst	python3-pyproject-hooks	no				0	0	0	0	0
+freedesktop-sdk.bst:components/python3-pyproject-metadata.bst	python3-pyproject-metadata	no	git_repo	0.12.1	https://github.com/pypa/pyproject-metadata.git	0	0	0	0	0
+freedesktop-sdk.bst:components/python3-pyroaring.bst	python3-pyroaring	yes	git_repo	1.2.0	https://github.com/Ezibenroc/PyRoaringBitMap.git	0	9	0	0	0
+freedesktop-sdk.bst:components/python3-pyyaml.bst	python3-pyyaml	yes	git_repo	6.0.3	https://github.com/yaml/pyyaml.git	0	60	0	0	0
+freedesktop-sdk.bst:components/python3-requests.bst	python3-requests	yes	git_repo	2.34.2	https://github.com/psf/requests.git	0	66	0	0	0
+freedesktop-sdk.bst:components/python3-roman-numerals.bst	python3-roman-numerals	no	git_repo	4.1.0	https://github.com/AA-Turner/roman-numerals.git	0	0	0	0	0
+freedesktop-sdk.bst:components/python3-ruamel-yaml-clib.bst	python3-ruamel-yaml-clib	yes	git_repo	0.2.15	https://github.com/ruamel/yaml.clib.git	0	7	0	0	0
+freedesktop-sdk.bst:components/python3-ruamel-yaml.bst	python3-ruamel-yaml	yes	pypi	0.19.1	https://files.pythonhosted.org/packages/c7/3b/ebda527b56beb90cb7652cb1c7e4f91f48649fbcd8d2eb2fb6e77cd3329b/ruamel_yaml-0.19.1.tar.gz	0	105	0	0	0
+freedesktop-sdk.bst:components/python3-schema.bst	python3-schema	no	git_repo	0.7.8	https://github.com/keleshev/schema.git	0	0	0	0	0
+freedesktop-sdk.bst:components/python3-semantic-version.bst	python3-semantic-version	no	git_repo	2.10.0	https://github.com/rbarrois/python-semanticversion.git	0	0	0	0	0
+freedesktop-sdk.bst:components/python3-setuptools-git.bst	python3-setuptools-git	no	git_repo	1.2	https://github.com/msabramo/setuptools-git.git	0	0	0	0	0
+freedesktop-sdk.bst:components/python3-setuptools-rust.bst	python3-setuptools-rust	no	git_repo	1.13.0	https://github.com/PyO3/setuptools-rust.git	0	0	0	0	0
+freedesktop-sdk.bst:components/python3-setuptools-scm.bst	python3-setuptools-scm	no	git_repo	10.3.4	https://github.com/pypa/setuptools_scm.git	0	0	0	0	0
+freedesktop-sdk.bst:components/python3-setuptools.bst	python3-setuptools	yes				0	1079	0	0	0
+freedesktop-sdk.bst:components/python3-smartypants.bst	python3-smartypants	no	git_repo	2.0.2	https://github.com/leohemsted/smartypants.py.git	0	0	0	0	0
+freedesktop-sdk.bst:components/python3-snowballstemmer.bst	python3-snowballstemmer	no	pypi	3.1.1	https://files.pythonhosted.org/packages/43/f8/0a71edf031f03c40db17503cb8ca78a69a171254e568e7db241b0ab57ea1/snowballstemmer-3.1.1.tar.gz	0	0	0	0	0
+freedesktop-sdk.bst:components/python3-sphinx-rtd-theme.bst	python3-sphinx-rtd-theme	no	git_repo	3.1.0	https://github.com/readthedocs/sphinx_rtd_theme.git	0	0	0	0	0
+freedesktop-sdk.bst:components/python3-sphinx.bst	python3-sphinx	no	git_repo	9.1.0	https://github.com/sphinx-doc/sphinx.git	0	0	0	0	0
+freedesktop-sdk.bst:components/python3-sphinxcontrib-applehelp.bst	python3-sphinxcontrib-applehelp	no	git_repo	2.0.0	https://github.com/sphinx-doc/sphinxcontrib-applehelp.git	0	0	0	0	0
+freedesktop-sdk.bst:components/python3-sphinxcontrib-devhelp.bst	python3-sphinxcontrib-devhelp	no	git_repo	2.0.0	https://github.com/sphinx-doc/sphinxcontrib-devhelp.git	0	0	0	0	0
+freedesktop-sdk.bst:components/python3-sphinxcontrib-htmlhelp.bst	python3-sphinxcontrib-htmlhelp	no	git_repo	2.1.0	https://github.com/sphinx-doc/sphinxcontrib-htmlhelp.git	0	0	0	0	0
+freedesktop-sdk.bst:components/python3-sphinxcontrib-jquery.bst	python3-sphinxcontrib-jquery	no	git_repo	4.1	https://github.com/sphinx-contrib/jquery.git	0	0	0	0	0
+freedesktop-sdk.bst:components/python3-sphinxcontrib-jsmath.bst	python3-sphinxcontrib-jsmath	no	git_repo	2.0.0	https://github.com/sphinx-doc/sphinxcontrib-jsmath.git	0	0	0	0	0
+freedesktop-sdk.bst:components/python3-sphinxcontrib-qthelp.bst	python3-sphinxcontrib-qthelp	no	git_repo	2.0.0	https://github.com/sphinx-doc/sphinxcontrib-qthelp.git	0	0	0	0	0
+freedesktop-sdk.bst:components/python3-sphinxcontrib-serializinghtml.bst	python3-sphinxcontrib-serializinghtml	no	git_repo	2.0.0	https://github.com/sphinx-doc/sphinxcontrib-serializinghtml.git	0	0	0	0	0
+freedesktop-sdk.bst:components/python3-tomlkit.bst	python3-tomlkit	no	git_repo	0.15.2	https://github.com/python-poetry/tomlkit.git	0	0	0	0	0
+freedesktop-sdk.bst:components/python3-toposort.bst	python3-toposort	no	git_repo	1.10	https://gitlab.com/ericvsmith/toposort.git	0	0	0	0	0
+freedesktop-sdk.bst:components/python3-trove-classifiers.bst	python3-trove-classifiers	no	git_repo	2026.9.21	https://github.com/pypa/trove-classifiers.git	0	0	0	0	0
+freedesktop-sdk.bst:components/python3-typing-extensions.bst	python3-typing-extensions	yes	git_repo	4.16.0	https://github.com/python/typing_extensions.git	0	7	0	0	0
+freedesktop-sdk.bst:components/python3-typogrify.bst	python3-typogrify	no	git_repo	2.0.7	https://github.com/mintchaos/typogrify.git	0	0	0	0	0
+freedesktop-sdk.bst:components/python3-ujson.bst	python3-ujson	yes	git_repo	6.0.0	https://github.com/ultrajson/ultrajson.git	0	8	0	0	0
+freedesktop-sdk.bst:components/python3-urllib3.bst	python3-urllib3	yes	git_repo+patch	2.8.0	https://github.com/urllib3/urllib3.git	2	114	0	0	0
+freedesktop-sdk.bst:components/python3-vcs-versioning.bst	python3-vcs-versioning	no	git_repo	2.6.0	https://github.com/pypa/setuptools_scm.git	0	0	0	0	0
+freedesktop-sdk.bst:components/python3-wheel.bst	python3-wheel	no				0	0	0	0	0
+freedesktop-sdk.bst:components/python3-wheezy-template.bst	python3-wheezy-template	no	git_repo	3.2.5	https://github.com/akornatskyy/wheezy.template.git	0	0	0	0	0
+freedesktop-sdk.bst:components/python3.bst	python3	yes	git_repo+patch	3.14.9	https://github.com/python/cpython.git	1	2335	0	0	2
+freedesktop-sdk.bst:components/rdfind.bst	rdfind	no	git_repo	1.8.0	https://github.com/pauldreik/rdfind.git	0	0	0	0	0
+freedesktop-sdk.bst:components/rsync.bst	rsync	yes	git_repo	3.5.1	https://git.samba.org/rsync.git	0	5	0	0	2
+freedesktop-sdk.bst:components/rtkit.bst	rtkit	yes	git_repo+local	0.14	https://gitlab.freedesktop.org/pipewire/rtkit.git	0	11	0	1	1
+freedesktop-sdk.bst:components/ruby.bst	ruby	no	tar	4.0.6	https://cache.ruby-lang.org/pub/ruby/4.0/ruby-4.0.6.tar.xz	0	0	0	0	0
+freedesktop-sdk.bst:components/rust-bindgen.bst	rust-bindgen	no	cargo2+git_repo	0.73.2	https://github.com/rust-lang/rust-bindgen.git	0	0	0	0	0
+freedesktop-sdk.bst:components/rust-cbindgen.bst	rust-cbindgen	no	cargo2+git_repo	0.29.4	https://github.com/mozilla/cbindgen.git	0	0	0	0	0
+freedesktop-sdk.bst:components/rust-src.bst	rust-src	no	tar	1.99.1	https://static.rust-lang.org/dist/rustc-1.99.1-src.tar.xz	0	0	0	0	0
+freedesktop-sdk.bst:components/rust.bst	rust	no	tar	1.99.1	https://static.rust-lang.org/dist/rustc-1.99.1-src.tar.xz	0	0	0	0	0
+freedesktop-sdk.bst:components/sbc.bst	sbc	yes	git_repo+patch	2.2	https://git.kernel.org/pub/scm/bluetooth/sbc.git	1	4	0	0	3
+freedesktop-sdk.bst:components/sbsigntools-maybe.bst	sbsigntools-maybe	no				0	0	0	0	0
+freedesktop-sdk.bst:components/scdoc.bst	scdoc	no	git_repo	1.11.5	https://git.sr.ht/~sircmpwn/scdoc	0	0	0	0	0
+freedesktop-sdk.bst:components/sdl2-compat.bst	sdl2-compat	yes	git_repo	2.32.74	https://github.com/libsdl-org/sdl2-compat.git	0	1	0	0	0
+freedesktop-sdk.bst:components/sdl3-image.bst	sdl3-image	yes	git_repo	3.4.8	https://github.com/libsdl-org/SDL_image.git	0	1	0	0	0
+freedesktop-sdk.bst:components/sdl3-mixer.bst	sdl3-mixer	yes	git_repo	3.2.4	https://github.com/libsdl-org/SDL_mixer.git	0	3	0	0	0
+freedesktop-sdk.bst:components/sdl3-net.bst	sdl3-net	yes	git_repo	3.2.0	https://github.com/libsdl-org/SDL_net.git	0	1	0	0	0
+freedesktop-sdk.bst:components/sdl3-ttf.bst	sdl3-ttf	yes	git_repo	3.2.2	https://github.com/libsdl-org/SDL_ttf.git	0	1	0	0	0
+freedesktop-sdk.bst:components/sdl3.bst	sdl3	yes	git_repo	3.4.14	https://github.com/libsdl-org/SDL.git	0	3	0	0	0
+freedesktop-sdk.bst:components/sed.bst	sed	no				0	0	0	0	0
+freedesktop-sdk.bst:components/shaderc.bst	shaderc	yes	git_repo+patch	2026.4	https://github.com/google/shaderc.git	1	4	0	0	0
+freedesktop-sdk.bst:components/shadow.bst	shadow	yes	git_repo	4.20.3	https://github.com/shadow-maint/shadow.git	0	479	0	0	29
+freedesktop-sdk.bst:components/shared-mime-info.bst	shared-mime-info	yes	git_repo	2.5.1	https://gitlab.freedesktop.org/xdg/shared-mime-info.git	0	87	0	0	1
+freedesktop-sdk.bst:components/sign-file.bst	sign-file	no	git_repo	6.18.41	https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git	0	0	0	0	0
+freedesktop-sdk.bst:components/skopeo.bst	skopeo	yes	git_repo	1.24.1	https://github.com/podman-container-tools/skopeo.git	0	16	0	0	1
+freedesktop-sdk.bst:components/slang.bst	slang	yes	tar	2.3.3	https://www.jedsoft.org/releases/slang/slang-2.3.3.tar.bz2	0	154	0	0	1
+freedesktop-sdk.bst:components/sndfile.bst	sndfile	yes	git_repo+patch_queue	1.2.2	https://github.com/libsndfile/libsndfile.git	3	20	0	0	0
+freedesktop-sdk.bst:components/sof-firmware.bst	sof-firmware	yes	tar	2026.09.2	https://github.com/thesofproject/sof-bin/releases/download/v2026.09.2/sof-bin-2026.09.2.tar.gz	0	613	0	0	0
+freedesktop-sdk.bst:components/speex.bst	speex	yes	git_repo	1.2.1	https://gitlab.xiph.org/xiph/speex.git	0	6	0	0	2
+freedesktop-sdk.bst:components/speexdsp.bst	speexdsp	yes	git_repo	1.2.1	https://gitlab.xiph.org/xiph/speexdsp.git	0	2	0	0	0
+freedesktop-sdk.bst:components/spirv-headers.bst	spirv-headers	no	git_repo+patch	1.4.357	https://github.com/KhronosGroup/Vulkan-Headers.git	1	0	0	0	0
+freedesktop-sdk.bst:components/spirv-llvm-translator.bst	spirv-llvm-translator	no	git_repo	22.1.7	https://github.com/KhronosGroup/SPIRV-LLVM-Translator.git	0	0	0	0	0
+freedesktop-sdk.bst:components/spirv-tools.bst	spirv-tools	no	git_repo+patch	1.4.357	https://github.com/KhronosGroup/Vulkan-Headers.git	1	0	0	0	0
+freedesktop-sdk.bst:components/sqlite.bst	sqlite	yes	git_repo	3.53.4	https://github.com/sqlite/sqlite.git	0	6	0	0	1
+freedesktop-sdk.bst:components/squashfs-tools.bst	squashfs-tools	yes	git_repo	4.6.1	https://github.com/plougher/squashfs-tools.git	0	6	0	0	2
+freedesktop-sdk.bst:components/steam-devices.bst	steam-devices	yes	git_repo	1.0.0	https://github.com/ValveSoftware/steam-devices	0	3	0	0	0
+freedesktop-sdk.bst:components/strace.bst	strace	no	git_repo	7.2	https://github.com/strace/strace.git	0	0	0	0	0
+freedesktop-sdk.bst:components/stripper.bst	stripper	no				0	0	0	0	0
+freedesktop-sdk.bst:components/sudo.bst	sudo	yes	git_repo+local	1.9.16	https://github.com/sudo-project/sudo.git	0	120	0	0	5
+freedesktop-sdk.bst:components/supported-locales.bst	supported-locales	no	git_repo+local+patch_queue	2.44	https://sourceware.org/git/glibc.git	1	0	0	0	0
+freedesktop-sdk.bst:components/svt-av1.bst	svt-av1	yes	git_repo	4.2.0	https://gitlab.com/AOMediaCodec/SVT-AV1	0	4	0	0	1
+freedesktop-sdk.bst:components/swig.bst	swig	no	git_repo	4.5.1	https://github.com/swig/swig.git	0	0	0	0	0
+freedesktop-sdk.bst:components/systemd-hwdb-maybe.bst	systemd-hwdb-maybe	no				0	0	0	0	0
+freedesktop-sdk.bst:components/systemd-manifest.bst	systemd-manifest	no				0	0	0	0	0
+freedesktop-sdk.bst:components/taglib.bst	taglib	yes	git_repo	2.3.1	https://github.com/taglib/taglib.git	0	2	0	0	0
+freedesktop-sdk.bst:components/tar.bst	tar	yes	patch+tar	1.35	https://ftp.gnu.org/gnu/tar/tar-1.35.tar.xz	1	47	0	0	1
+freedesktop-sdk.bst:components/tex-gyre-fonts.bst	tex-gyre-fonts	yes	local+zip	1773c470f9e388e087b68e3426e115af2cd236845a7e05ceb25b2a503409a7a3	https://mirrors.ctan.org/fonts/tex-gyre.zip	0	35	0	0	0
+freedesktop-sdk.bst:components/texinfo.bst	texinfo	no	tar	7.3	https://ftp.gnu.org/gnu/texinfo/texinfo-7.3.tar.xz	0	0	0	0	0
+freedesktop-sdk.bst:components/tomlplusplus.bst	tomlplusplus	yes	git_repo	3.4.0	https://github.com/marzer/tomlplusplus.git	0	2	0	0	0
+freedesktop-sdk.bst:components/tpm2-tools.bst	tpm2-tools	no	git_repo	5.8	https://github.com/tpm2-software/tpm2-tools.git	0	0	0	0	0
+freedesktop-sdk.bst:components/tpm2-tss.bst	tpm2-tss	yes	git_repo	4.2.0	https://github.com/tpm2-software/tpm2-tss.git	0	208	0	0	0
+freedesktop-sdk.bst:components/tzdata.bst	tzdata	yes	git_repo	2026e	https://github.com/eggert/tz.git	0	605	0	0	0
+freedesktop-sdk.bst:components/usbutils.bst	usbutils	yes	git_repo	020	https://git.kernel.org/pub/scm/linux/kernel/git/gregkh/usbutils.git	0	14	0	0	3
+freedesktop-sdk.bst:components/utf-locale.bst	utf-locale	yes				0	24	0	0	0
+freedesktop-sdk.bst:components/utf8cpp.bst	utf8cpp	no	git_repo	4.1.1	https://github.com/nemtrif/utfcpp.git	0	0	0	0	0
+freedesktop-sdk.bst:components/util-linux-full.bst	util-linux-full	yes				0	32	0	0	32
+freedesktop-sdk.bst:components/util-linux-libfdisk.bst	util-linux-libfdisk	yes				0	1	0	0	0
+freedesktop-sdk.bst:components/util-linux-libs.bst	util-linux-libs	yes				0	104	0	0	0
+freedesktop-sdk.bst:components/util-linux-manifest.bst	util-linux-manifest	no				0	0	0	0	0
+freedesktop-sdk.bst:components/util-linux.bst	util-linux	yes				0	1271	0	0	83
+freedesktop-sdk.bst:components/v4l-utils.bst	v4l-utils	yes	git_repo	1.32.0	https://git.linuxtv.org/v4l-utils.git	0	762	0	0	20
+freedesktop-sdk.bst:components/valgrind-maybe.bst	valgrind-maybe	no				0	0	0	0	0
+freedesktop-sdk.bst:components/vim.bst	vim	yes	git_repo+patch	9.2.1225	https://github.com/vim/vim.git	1	2480	2	0	3
+freedesktop-sdk.bst:components/vmlinuxh-pregenerated.bst	vmlinuxh-pregenerated	no	git_repo	aee5c9b8fb77282d458f318369dfaf6d7d9cb59f	https://gitlab.com/freedesktop-sdk/vmlinux-h.git	0	0	0	0	0
+freedesktop-sdk.bst:components/vmlinuxh.bst	vmlinuxh	no				0	0	0	0	0
+freedesktop-sdk.bst:components/volume-key.bst	volume-key	yes	git_repo+patch	0.3.12	https://pagure.io/volume_key.git	1	45	0	0	1
+freedesktop-sdk.bst:components/vulkan-headers.bst	vulkan-headers	no	git_repo+patch	1.4.357	https://github.com/KhronosGroup/Vulkan-Headers.git	1	0	0	0	0
+freedesktop-sdk.bst:components/vulkan-icd-loader.bst	vulkan-icd-loader	yes	git_repo+patch	1.4.357	https://github.com/KhronosGroup/Vulkan-Headers.git	1	2	0	0	0
+freedesktop-sdk.bst:components/wavpack.bst	wavpack	yes	git_repo	5.9.0	https://github.com/dbry/WavPack.git	0	18	0	0	4
+freedesktop-sdk.bst:components/wayland-protocols.bst	wayland-protocols	yes	git_repo	1.49	https://gitlab.freedesktop.org/wayland/wayland-protocols.git	0	59	0	0	0
+freedesktop-sdk.bst:components/wayland.bst	wayland	yes	git_repo	1.26.0	https://gitlab.freedesktop.org/wayland/wayland.git	0	7	0	0	0
+freedesktop-sdk.bst:components/webrtc-audio-processing.bst	webrtc-audio-processing	yes	git_repo+patch	2.1	https://gitlab.freedesktop.org/pulseaudio/webrtc-audio-processing.git	2	2	0	0	0
+freedesktop-sdk.bst:components/wget2.bst	wget2	yes	git_module+git_repo	2.2.1	https://gitlab.com/gnuwget/wget2.git	0	2	0	0	1
+freedesktop-sdk.bst:components/which.bst	which	yes	tar	2.25	https://carlowood.github.io/which/which-2.25.tar.gz	0	3	0	0	1
+freedesktop-sdk.bst:components/wildmidi.bst	wildmidi	yes	git_repo	0.5.0	https://github.com/Mindwerks/wildmidi.git	0	26	0	0	0
+freedesktop-sdk.bst:components/wireless-regdb-bin.bst	wireless-regdb-bin	yes	git_repo	2023.0.9	https://git.kernel.org/pub/scm/linux/kernel/git/sforshee/wireless-regdb.git	0	5	0	0	0
+freedesktop-sdk.bst:components/wireplumber.bst	wireplumber	yes	git_repo	0.5.18	https://gitlab.freedesktop.org/pipewire/wireplumber.git	0	179	0	2	3
+freedesktop-sdk.bst:components/wpa-supplicant.bst	wpa-supplicant	yes	git_repo	2.12	https://w1.fi/hostap.git	0	11	0	4	3
+freedesktop-sdk.bst:components/xcb-util-cursor.bst	xcb-util-cursor	yes	git_module+git_repo	0.1.6	https://gitlab.freedesktop.org/xorg/lib/libxcb-cursor.git	0	2	0	0	0
+freedesktop-sdk.bst:components/xcb-util-image.bst	xcb-util-image	yes	git_module+git_repo	0.4.1	https://gitlab.freedesktop.org/xorg/lib/libxcb-image.git	0	2	0	0	0
+freedesktop-sdk.bst:components/xcb-util-keysyms.bst	xcb-util-keysyms	yes	git_module+git_repo	0.4.1	https://gitlab.freedesktop.org/xorg/lib/libxcb-keysyms.git	0	2	0	0	0
+freedesktop-sdk.bst:components/xcb-util-renderutil.bst	xcb-util-renderutil	yes	git_module+git_repo	0.3.10	https://gitlab.freedesktop.org/xorg/lib/libxcb-render-util.git	0	2	0	0	0
+freedesktop-sdk.bst:components/xcb-util-wm.bst	xcb-util-wm	yes	git_module+git_repo	0.4.2	https://gitlab.freedesktop.org/xorg/lib/libxcb-wm.git	0	3	0	0	0
+freedesktop-sdk.bst:components/xcb-util.bst	xcb-util	yes	git_module+git_repo	0.4.1	https://gitlab.freedesktop.org/xorg/lib/libxcb-util.git	0	2	0	0	0
+freedesktop-sdk.bst:components/xdg-dbus-proxy.bst	xdg-dbus-proxy	yes	git_repo	0.1.9	https://github.com/flatpak/xdg-dbus-proxy.git	0	1	0	0	1
+freedesktop-sdk.bst:components/xdg-desktop-portal-manifest.bst	xdg-desktop-portal-manifest	no				0	0	0	0	0
+freedesktop-sdk.bst:components/xdg-portal-interfaces.bst	xdg-portal-interfaces	yes				0	32	0	0	0
+freedesktop-sdk.bst:components/xdg-user-dirs.bst	xdg-user-dirs	yes	git_repo	0.20	https://gitlab.freedesktop.org/xdg/xdg-user-dirs.git	0	91	0	1	2
+freedesktop-sdk.bst:components/xfsprogs.bst	xfsprogs	yes	git_repo	7.2.1	https://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git	0	100	0	0	25
+freedesktop-sdk.bst:components/xmlto.bst	xmlto	yes	git_repo	0.0.29	https://codeberg.org/xmlto/xmlto.git	0	39	0	0	2
+freedesktop-sdk.bst:components/xmltoman.bst	xmltoman	no	git_repo+patch	0.6	https://github.com/atsb/xmltoman.git	1	0	0	0	0
+freedesktop-sdk.bst:components/xorg-app-xkbcomp.bst	xorg-app-xkbcomp	yes	git_repo	1.5.0	https://gitlab.freedesktop.org/xorg/app/xkbcomp.git	0	3	0	0	1
+freedesktop-sdk.bst:components/xorg-data-xkeyboard-config.bst	xorg-data-xkeyboard-config	yes	git_repo	2.49	https://gitlab.freedesktop.org/xkeyboard-config/xkeyboard-config.git	0	389	0	0	0
+freedesktop-sdk.bst:components/xorg-font-util.bst	xorg-font-util	yes	git_repo	1.4.2	https://gitlab.freedesktop.org/xorg/font/util.git	0	22	0	0	2
+freedesktop-sdk.bst:components/xorg-lib-fontenc.bst	xorg-lib-fontenc	yes	git_repo	1.1.9	https://gitlab.freedesktop.org/xorg/lib/libfontenc.git	0	2	0	0	0
+freedesktop-sdk.bst:components/xorg-lib-ice.bst	xorg-lib-ice	yes	git_repo	1.1.2	https://gitlab.freedesktop.org/xorg/lib/libice.git	0	4	0	0	0
+freedesktop-sdk.bst:components/xorg-lib-pciaccess.bst	xorg-lib-pciaccess	yes	git_repo	0.19	https://gitlab.freedesktop.org/xorg/lib/libpciaccess.git	0	2	0	0	0
+freedesktop-sdk.bst:components/xorg-lib-sm.bst	xorg-lib-sm	yes	git_repo	1.2.6	https://gitlab.freedesktop.org/xorg/lib/libsm.git	0	4	0	0	0
+freedesktop-sdk.bst:components/xorg-lib-x11.bst	xorg-lib-x11	yes	git_repo	1.8.14	https://gitlab.freedesktop.org/xorg/lib/libx11.git	0	1148	0	0	0
+freedesktop-sdk.bst:components/xorg-lib-xau.bst	xorg-lib-xau	yes	git_repo	1.0.12	https://gitlab.freedesktop.org/xorg/lib/libxau.git	0	11	0	0	0
+freedesktop-sdk.bst:components/xorg-lib-xcb.bst	xorg-lib-xcb	yes	git_repo	1.17.0	https://gitlab.freedesktop.org/xorg/lib/libxcb.git	0	2339	0	0	0
+freedesktop-sdk.bst:components/xorg-lib-xcomposite.bst	xorg-lib-xcomposite	yes	git_repo	0.4.7	https://gitlab.freedesktop.org/xorg/lib/libxcomposite.git	0	2	0	0	0
+freedesktop-sdk.bst:components/xorg-lib-xcursor.bst	xorg-lib-xcursor	yes	git_repo	1.2.3	https://gitlab.freedesktop.org/xorg/lib/libxcursor.git	0	62	0	0	0
+freedesktop-sdk.bst:components/xorg-lib-xcvt.bst	xorg-lib-xcvt	yes	git_repo	0.1.3	https://gitlab.freedesktop.org/xorg/lib/libxcvt.git	0	4	0	0	1
+freedesktop-sdk.bst:components/xorg-lib-xdamage.bst	xorg-lib-xdamage	yes	git_repo	1.1.7	https://gitlab.freedesktop.org/xorg/lib/libxdamage.git	0	2	0	0	0
+freedesktop-sdk.bst:components/xorg-lib-xdmcp.bst	xorg-lib-xdmcp	yes	git_repo	1.1.5	https://gitlab.freedesktop.org/xorg/lib/libxdmcp.git	0	3	0	0	0
+freedesktop-sdk.bst:components/xorg-lib-xext.bst	xorg-lib-xext	yes	git_repo	1.3.7	https://gitlab.freedesktop.org/xorg/lib/libxext.git	0	68	0	0	0
+freedesktop-sdk.bst:components/xorg-lib-xfixes.bst	xorg-lib-xfixes	yes	git_repo	6.0.2	https://gitlab.freedesktop.org/xorg/lib/libxfixes.git	0	3	0	0	0
+freedesktop-sdk.bst:components/xorg-lib-xfont2.bst	xorg-lib-xfont2	yes	git_repo	2.0.9	https://gitlab.freedesktop.org/xorg/lib/libxfont.git	0	2	0	0	0
+freedesktop-sdk.bst:components/xorg-lib-xft.bst	xorg-lib-xft	yes	git_repo	2.3.9	https://gitlab.freedesktop.org/xorg/lib/libxft.git	0	80	0	0	0
+freedesktop-sdk.bst:components/xorg-lib-xi.bst	xorg-lib-xi	yes	git_repo	1.8.4	https://gitlab.freedesktop.org/xorg/lib/libxi.git	0	2	0	0	0
+freedesktop-sdk.bst:components/xorg-lib-xinerama.bst	xorg-lib-xinerama	yes	git_repo	1.1.6	https://gitlab.freedesktop.org/xorg/lib/libxinerama.git	0	7	0	0	0
+freedesktop-sdk.bst:components/xorg-lib-xkbfile.bst	xorg-lib-xkbfile	yes	git_repo	1.2.0	https://gitlab.freedesktop.org/xorg/lib/libxkbfile.git	0	2	0	0	0
+freedesktop-sdk.bst:components/xorg-lib-xpm.bst	xorg-lib-xpm	yes	git_repo	3.5.20	https://gitlab.freedesktop.org/xorg/lib/libxpm.git	0	47	0	0	1
+freedesktop-sdk.bst:components/xorg-lib-xrandr.bst	xorg-lib-xrandr	yes	git_repo	1.5.5	https://gitlab.freedesktop.org/xorg/lib/libxrandr.git	0	17	0	0	0
+freedesktop-sdk.bst:components/xorg-lib-xrender.bst	xorg-lib-xrender	yes	git_repo	0.9.13	https://gitlab.freedesktop.org/xorg/lib/libxrender.git	0	3	0	0	0
+freedesktop-sdk.bst:components/xorg-lib-xscrnsaver.bst	xorg-lib-xscrnsaver	yes	git_repo	1.2.5	https://gitlab.freedesktop.org/xorg/lib/libxscrnsaver.git	0	14	0	0	0
+freedesktop-sdk.bst:components/xorg-lib-xshmfence.bst	xorg-lib-xshmfence	yes	git_repo	1.3.3	https://gitlab.freedesktop.org/xorg/lib/libxshmfence.git	0	2	0	0	0
+freedesktop-sdk.bst:components/xorg-lib-xt.bst	xorg-lib-xt	yes	git_repo	1.3.1	https://gitlab.freedesktop.org/xorg/lib/libxt.git	0	292	0	0	0
+freedesktop-sdk.bst:components/xorg-lib-xtrans.bst	xorg-lib-xtrans	yes	git_repo	1.6.0	https://gitlab.freedesktop.org/xorg/lib/libxtrans.git	0	2	0	0	0
+freedesktop-sdk.bst:components/xorg-lib-xtst.bst	xorg-lib-xtst	yes	git_repo	1.2.6	https://gitlab.freedesktop.org/xorg/lib/libxtst.git	0	4	0	0	0
+freedesktop-sdk.bst:components/xorg-lib-xv.bst	xorg-lib-xv	yes	git_repo	1.0.13	https://gitlab.freedesktop.org/xorg/lib/libxv.git	0	28	0	0	0
+freedesktop-sdk.bst:components/xorg-lib-xxf86vm.bst	xorg-lib-xxf86vm	yes	git_repo	1.1.7	https://gitlab.freedesktop.org/xorg/lib/libxxf86vm.git	0	25	0	0	0
+freedesktop-sdk.bst:components/xorg-proto-xcb.bst	xorg-proto-xcb	no	git_repo	1.17.0	https://gitlab.freedesktop.org/xorg/proto/xcbproto.git	0	0	0	0	0
+freedesktop-sdk.bst:components/xorg-proto-xorgproto.bst	xorg-proto-xorgproto	yes	git_repo	2026.1	https://gitlab.freedesktop.org/xorg/proto/xorgproto.git	0	48	0	0	0
+freedesktop-sdk.bst:components/xorg-util-macros.bst	xorg-util-macros	no	git_repo	1.20.2	https://gitlab.freedesktop.org/xorg/util/macros.git	0	0	0	0	0
+freedesktop-sdk.bst:components/xwayland.bst	xwayland	yes	git_repo	24.1.14	https://gitlab.freedesktop.org/xorg/xserver.git	0	6	1	0	1
+freedesktop-sdk.bst:components/xxhash.bst	xxhash	no				0	0	0	0	0
+freedesktop-sdk.bst:components/xz-docs.bst	xz-docs	yes	git_repo	5.8.4	https://github.com/tukaani-project/xz.git	0	64	0	0	0
+freedesktop-sdk.bst:components/xz.bst	xz	no				0	0	0	0	0
+freedesktop-sdk.bst:components/zip.bst	zip	yes	patch_queue+tar	3.0	https://downloads.sourceforge.net/infozip/zip30.tar.gz	5	9	0	0	4
+freedesktop-sdk.bst:components/zlib.bst	zlib	no				0	0	0	0	0
+freedesktop-sdk.bst:components/zstd.bst	zstd	no				0	0	0	0	0
+freedesktop-sdk.bst:extensions/mesa/libclc.bst	libclc	yes	git_repo	22.1.8	https://github.com/llvm/llvm-project.git	0	50	0	0	0
+freedesktop-sdk.bst:extensions/mesa/libdrm.bst	libdrm	yes	git_repo	2.4.134	https://gitlab.freedesktop.org/mesa/drm.git	0	11	0	0	0
+freedesktop-sdk.bst:extensions/mesa/llvm.bst	llvm	yes				0	329	0	0	0
+freedesktop-sdk.bst:extensions/mesa/mesa-extra.bst	mesa-extra	yes	git_repo+tar	26.2.5	https://gitlab.freedesktop.org/mesa/mesa.git	0	108	0	0	0
+freedesktop-sdk.bst:extensions/platform-vaapi-intel/gmmlib.bst	gmmlib	yes	git_repo	22.10.1	https://github.com/intel/gmmlib.git	0	3	0	0	0
+freedesktop-sdk.bst:extensions/platform-vaapi-intel/intel-media-driver.bst	intel-media-driver	yes	git_repo	26.3.5	https://github.com/intel/media-driver.git	0	3	0	0	0
+freedesktop-sdk.bst:integration/ldconfig.bst	ldconfig	yes				0	1	0	0	0
+freedesktop-sdk.bst:integration/mtab.bst	mtab	no				0	0	0	0	0
+freedesktop-sdk.bst:platform.bst	platform	no				0	0	0	0	0
+freedesktop-sdk.bst:public-stacks/buildsystem-autotools.bst	buildsystem-autotools	no				0	0	0	0	0
+freedesktop-sdk.bst:public-stacks/buildsystem-cmake.bst	buildsystem-cmake	no				0	0	0	0	0
+freedesktop-sdk.bst:public-stacks/buildsystem-go.bst	buildsystem-go	no				0	0	0	0	0
+freedesktop-sdk.bst:public-stacks/buildsystem-make.bst	buildsystem-make	no				0	0	0	0	0
+freedesktop-sdk.bst:public-stacks/buildsystem-meson.bst	buildsystem-meson	no				0	0	0	0	0
+freedesktop-sdk.bst:public-stacks/buildsystem-python-flit.bst	buildsystem-python-flit	no				0	0	0	0	0
+freedesktop-sdk.bst:public-stacks/buildsystem-python-hatchling.bst	buildsystem-python-hatchling	no				0	0	0	0	0
+freedesktop-sdk.bst:public-stacks/buildsystem-python-meson.bst	buildsystem-python-meson	no				0	0	0	0	0
+freedesktop-sdk.bst:public-stacks/buildsystem-python-poetry.bst	buildsystem-python-poetry	no				0	0	0	0	0
+freedesktop-sdk.bst:public-stacks/buildsystem-python-setuptools.bst	buildsystem-python-setuptools	no				0	0	0	0	0
+freedesktop-sdk.bst:public-stacks/buildsystem-rust.bst	buildsystem-rust	no				0	0	0	0	0
+freedesktop-sdk.bst:public-stacks/runtime-gnu.bst	runtime-gnu	no				0	0	0	0	0
+freedesktop-sdk.bst:public-stacks/runtime-minimal.bst	runtime-minimal	no				0	0	0	0	0
+freedesktop-sdk.bst:vm/config/sudo.bst	sudo	yes	local			0	1	0	0	0
+freedesktop-sdk.bst:vm/config/useradd-default.bst	useradd-default	yes	local			0	1	0	0	0
+freedesktop-sdk.bst:vm/prepare-image.bst	prepare-image	no	local			0	0	0	0	0
+gnome-build-meta.bst:buildsystems/autotools.bst	autotools	no				0	0	0	0	0
+gnome-build-meta.bst:buildsystems/cmake.bst	cmake	no				0	0	0	0	0
+gnome-build-meta.bst:buildsystems/jobserver-pool.bst	jobserver-pool	no	git_repo	1.13.2	https://github.com/ninja-build/ninja.git	0	0	0	0	0
+gnome-build-meta.bst:buildsystems/make.bst	make	no				0	0	0	0	0
+gnome-build-meta.bst:buildsystems/meson.bst	meson	no				0	0	0	0	0
+gnome-build-meta.bst:buildsystems/recc-wrapper.bst	recc-wrapper	no	local			0	0	0	0	0
+gnome-build-meta.bst:core-deps/LibVNCServer.bst	LibVNCServer	yes	git_repo	0.9.15	https://github.com/LibVNC/libvncserver.git	0	3	0	0	0
+gnome-build-meta.bst:core-deps/NetworkManager.bst	NetworkManager	yes	git_repo	1.58.1	https://gitlab.freedesktop.org/NetworkManager/NetworkManager.git	0	313	0	0	0
+gnome-build-meta.bst:core-deps/boltd.bst	boltd	yes	git_repo	0.9.11	https://gitlab.freedesktop.org/bolt/bolt.git	0	9	0	1	1
+gnome-build-meta.bst:core-deps/brltty.bst	brltty	yes	git_repo	6.9.1	https://github.com/brltty/brltty.git	0	796	0	4	26
+gnome-build-meta.bst:core-deps/callaudiod.bst	callaudiod	no	git_repo	0.1.99	https://gitlab.com/mobian1/callaudiod.git	0	0	0	0	0
+gnome-build-meta.bst:core-deps/cjson.bst	cjson	yes	git_repo	1.7.19	https://github.com/DaveGamble/cJSON.git	0	3	0	0	0
+gnome-build-meta.bst:core-deps/cmark.bst	cmark	no	git_repo	0.31.2	https://github.com/commonmark/cmark.git	0	0	0	0	0
+gnome-build-meta.bst:core-deps/colord-gtk.bst	colord-gtk	yes	git_repo	0.3.1	https://github.com/hughsie/colord-gtk.git	0	24	0	0	1
+gnome-build-meta.bst:core-deps/colord.bst	colord	yes	git_repo	1.4.8	https://github.com/hughsie/colord.git	0	166	0	2	5
+gnome-build-meta.bst:core-deps/cups-pk-helper.bst	cups-pk-helper	yes	git_repo+local+patch	0.2.7	https://gitlab.freedesktop.org/cups-pk-helper/cups-pk-helper.git	1	48	0	1	0
+gnome-build-meta.bst:core-deps/dasbus.bst	dasbus	yes	pypi	1.7	https://files.pythonhosted.org/packages/37/79/9c5984d723ffbe2e839ee649690f3e1fa6544ab6a17a5150e5ac14a47072/dasbus-1.7.tar.gz	0	80	0	0	0
+gnome-build-meta.bst:core-deps/dconf.bst	dconf	yes	tar	51.0	https://download.gnome.org/sources/dconf/51/dconf-51.0.tar.xz	0	9	0	1	1
+gnome-build-meta.bst:core-deps/ebtables.bst	ebtables	yes	anitya	b71f654784a726329f88b412ef7b96b4e5d786ed2bd28193ed7b4c0d677dfd2a	https://www.netfilter.org/pub/ebtables/ebtables-2.0.11.tar.gz	0	8	0	0	5
+gnome-build-meta.bst:core-deps/editorconfig-core-c.bst	editorconfig-core-c	no	git_repo	0.12.11	https://github.com/editorconfig/editorconfig-core-c.git	0	0	0	0	0
+gnome-build-meta.bst:core-deps/evolution-data-server.bst	evolution-data-server	yes	tar	3.62.1	https://download.gnome.org/sources/evolution-data-server/3.62/evolution-data-server-3.62.1.tar.xz	0	219	2	5	0
+gnome-build-meta.bst:core-deps/exempi.bst	exempi	yes	git_repo	2.6.6	https://gitlab.freedesktop.org/libopenraw/exempi.git	0	6	0	0	1
+gnome-build-meta.bst:core-deps/exiv2.bst	exiv2	yes	git_repo	0.28.9	https://github.com/Exiv2/exiv2.git	0	6	0	0	1
+gnome-build-meta.bst:core-deps/fast-float.bst	fast-float	no	git_repo	8.3.2	https://github.com/fastfloat/fast_float.git	0	0	0	0	0
+gnome-build-meta.bst:core-deps/fdk-aac-free.bst	fdk-aac-free	yes	tar	2.0.0	https://people.freedesktop.org/~wtay/fdk-aac-free-2.0.0.tar.gz	0	1	0	0	0
+gnome-build-meta.bst:core-deps/feedbackd.bst	feedbackd	no	git_repo	0.8.10	https://gitlab.freedesktop.org/feedbackd/feedbackd.git	0	0	0	0	0
+gnome-build-meta.bst:core-deps/flatpak.bst	flatpak	yes	git_repo	1.18.4	https://github.com/flatpak/flatpak.git	0	122	0	4	3
+gnome-build-meta.bst:core-deps/folks.bst	folks	no	tar	0.15.12	https://download.gnome.org/sources/folks/0.15/folks-0.15.12.tar.xz	0	0	0	0	0
+gnome-build-meta.bst:core-deps/foundry.bst	foundry	no	tar	1.2.0	https://download.gnome.org/sources/foundry/1.2/foundry-1.2.0.tar.xz	0	0	0	0	0
+gnome-build-meta.bst:core-deps/freerdp.bst	freerdp	yes	git_repo	3.32.2	https://github.com/freerdp/freerdp.git	0	28	0	0	5
+gnome-build-meta.bst:core-deps/fwupd-efi.bst	fwupd-efi	yes	git_repo	1.8	https://github.com/fwupd/fwupd-efi.git	0	3	0	0	0
+gnome-build-meta.bst:core-deps/fwupd.bst	fwupd	yes	git_repo	2.1.9	https://github.com/fwupd/fwupd.git	0	5066	0	3	3
+gnome-build-meta.bst:core-deps/geocode-glib.bst	geocode-glib	yes	tar	3.26.4	https://download.gnome.org/sources/geocode-glib/3.26/geocode-glib-3.26.4.tar.xz	0	41	0	0	0
+gnome-build-meta.bst:core-deps/gexiv2.bst	gexiv2	yes	tar	0.16.2	https://download.gnome.org/sources/gexiv2/0.16/gexiv2-0.16.2.tar.xz	0	4	0	0	0
+gnome-build-meta.bst:core-deps/glib-testing.bst	glib-testing	no	git_repo	0.2.0	https://gitlab.gnome.org/pwithnall/libglib-testing.git	0	0	0	0	0
+gnome-build-meta.bst:core-deps/gmobile.bst	gmobile	no	git_repo	0.7.4	https://gitlab.gnome.org/World/Phosh/gmobile.git	0	0	0	0	0
+gnome-build-meta.bst:core-deps/gnome-autoar.bst	gnome-autoar	yes	tar	0.5.2	https://download.gnome.org/sources/gnome-autoar/0.5/gnome-autoar-0.5.2.tar.xz	0	2	0	0	0
+gnome-build-meta.bst:core-deps/gnome-online-accounts.bst	gnome-online-accounts	yes	tar	3.58.1	https://download.gnome.org/sources/gnome-online-accounts/3.58/gnome-online-accounts-3.58.1.tar.xz	0	815	2	0	0
+gnome-build-meta.bst:core-deps/gom.bst	gom	no	tar	0.5.6	https://download.gnome.org/sources/gom/0.5/gom-0.5.6.tar.xz	0	0	0	0	0
+gnome-build-meta.bst:core-deps/gsound.bst	gsound	yes	tar	1.0.3	https://download.gnome.org/sources/gsound/1.0/gsound-1.0.3.tar.xz	0	21	0	0	1
+gnome-build-meta.bst:core-deps/gssdp.bst	gssdp	yes	tar	1.6.6	https://download.gnome.org/sources/gssdp/1.6/gssdp-1.6.6.tar.xz	0	2	0	0	0
+gnome-build-meta.bst:core-deps/gst-editing-services.bst	gst-editing-services	yes	anitya	4d93d2309b7d01529cd5e3375f99bf7e69c2e32cf59ce4533b31a5c7119b9b58	https://gstreamer.freedesktop.org/src/gstreamer-editing-services/gst-editing-services-1.28.8.tar.xz	0	10	0	0	1
+gnome-build-meta.bst:core-deps/gupnp-av.bst	gupnp-av	yes	tar	0.14.5	https://download.gnome.org/sources/gupnp-av/0.14/gupnp-av-0.14.5.tar.xz	0	7	0	0	0
+gnome-build-meta.bst:core-deps/gupnp-dlna.bst	gupnp-dlna	yes	tar	0.12.0	https://download.gnome.org/sources/gupnp-dlna/0.12/gupnp-dlna-0.12.0.tar.xz	0	23	0	0	2
+gnome-build-meta.bst:core-deps/gupnp.bst	gupnp	yes	tar	1.6.10	https://download.gnome.org/sources/gupnp/1.6/gupnp-1.6.10.tar.xz	0	4	0	0	1
+gnome-build-meta.bst:core-deps/gweather-locations.bst	gweather-locations	yes	tar	2026.2	https://download.gnome.org/sources/gweather-locations/2026/gweather-locations-2026.2.tar.xz	0	97	0	0	0
+gnome-build-meta.bst:core-deps/hwdata.bst	hwdata	no	git_repo	0.412	https://github.com/vcrhonek/hwdata.git	0	0	0	0	0
+gnome-build-meta.bst:core-deps/ibus-daemon.bst	ibus-daemon	yes				0	101	0	2	2
+gnome-build-meta.bst:core-deps/jasmine-gjs.bst	jasmine-gjs	no	git_repo	3.10.1	https://github.com/ptomato/jasmine-gjs.git	0	0	0	0	0
+gnome-build-meta.bst:core-deps/jsonrpc-glib.bst	jsonrpc-glib	no	tar	3.44.2	https://download.gnome.org/sources/jsonrpc-glib/3.44/jsonrpc-glib-3.44.2.tar.xz	0	0	0	0	0
+gnome-build-meta.bst:core-deps/libbluray.bst	libbluray	yes	git_module+git_repo	1.5.1	https://code.videolan.org/videolan/libbluray.git	0	172	0	0	3
+gnome-build-meta.bst:core-deps/libcanberra.bst	libcanberra	yes	anitya	c2b671e67e0c288a69fc33dc1b6f1b534d07882c2aceed37004bf48c601afa72	https://0pointer.de/lennart/projects/libcanberra/libcanberra-0.30.tar.xz	0	24	0	0	1
+gnome-build-meta.bst:core-deps/libcdio-paranoia.bst	libcdio-paranoia	yes	anitya	99488b8b678f497cb2e2f4a1a9ab4a6329c7e2537a366d5e4fef47df52907ff6	https://ftp.gnu.org/gnu/libcdio/libcdio-paranoia-10.2+2.0.2.tar.gz	0	5	0	0	1
+gnome-build-meta.bst:core-deps/libcdio.bst	libcdio	yes	git_repo	2.4.0	https://github.com/libcdio/libcdio-C.git	0	17	0	0	6
+gnome-build-meta.bst:core-deps/libcheck.bst	libcheck	no	git_repo+patch	0.15.2	https://github.com/libcheck/check.git	1	0	0	0	0
+gnome-build-meta.bst:core-deps/libcloudproviders.bst	libcloudproviders	yes	tar	0.4.1	https://download.gnome.org/sources/libcloudproviders/0.4/libcloudproviders-0.4.1.tar.xz	0	2	0	0	0
+gnome-build-meta.bst:core-deps/libcue.bst	libcue	yes	git_repo	2.3.0	https://github.com/lipnitsk/libcue.git	0	2	0	0	0
+gnome-build-meta.bst:core-deps/libdisplay-info.bst	libdisplay-info	yes	git_repo	0.4.0	https://gitlab.freedesktop.org/emersion/libdisplay-info.git	0	3	0	0	0
+gnome-build-meta.bst:core-deps/libdvdcss.bst	libdvdcss	yes	git_repo	1.6.0	https://code.videolan.org/videolan/libdvdcss.git	0	26	0	0	0
+gnome-build-meta.bst:core-deps/libdvdread.bst	libdvdread	yes	git_repo	7.1.1	https://code.videolan.org/videolan/libdvdread.git	0	53	0	0	0
+gnome-build-meta.bst:core-deps/libgit2-glib.bst	libgit2-glib	no	tar	1.2.1	https://download.gnome.org/sources/libgit2-glib/1.2/libgit2-glib-1.2.1.tar.xz	0	0	0	0	0
+gnome-build-meta.bst:core-deps/libgsf.bst	libgsf	yes	tar	1.14.60	https://download.gnome.org/sources/libgsf/1.14/libgsf-1.14.60.tar.xz	0	96	0	0	3
+gnome-build-meta.bst:core-deps/libgsystemservice.bst	libgsystemservice	yes	git_repo	0.3.0	https://gitlab.gnome.org/pwithnall/libgsystemservice.git	0	18	0	0	0
+gnome-build-meta.bst:core-deps/libgtop.bst	libgtop	yes	tar	2.41.3	https://download.gnome.org/sources/libgtop/2.41/libgtop-2.41.3.tar.xz	0	141	0	0	0
+gnome-build-meta.bst:core-deps/libgweather.bst	libgweather	yes	tar	4.6.0	https://download.gnome.org/sources/libgweather/4.6/libgweather-4.6.0.tar.xz	0	278	0	0	0
+gnome-build-meta.bst:core-deps/libgxps.bst	libgxps	yes	tar	0.3.2	https://download.gnome.org/sources/libgxps/0.3/libgxps-0.3.2.tar.xz	0	7	0	0	5
+gnome-build-meta.bst:core-deps/libhandy.bst	libhandy	yes	tar	1.8.3	https://download.gnome.org/sources/libhandy/1.8/libhandy-1.8.3.tar.xz	0	751	0	0	0
+gnome-build-meta.bst:core-deps/libical3.bst	libical3	yes	git_repo	3.0.20	https://github.com/libical/libical.git	0	14	0	0	0
+gnome-build-meta.bst:core-deps/libimobiledevice-glue.bst	libimobiledevice-glue	yes	git_repo	1.3.3	https://github.com/libimobiledevice/libimobiledevice-glue.git	0	1	0	0	0
+gnome-build-meta.bst:core-deps/libimobiledevice.bst	libimobiledevice	yes	git_repo	1.4.0	https://github.com/libimobiledevice/libimobiledevice.git	0	45	0	0	21
+gnome-build-meta.bst:core-deps/libmediaart.bst	libmediaart	yes	tar	1.9.7	https://download.gnome.org/sources/libmediaart/1.9/libmediaart-1.9.7.tar.xz	0	3	0	0	0
+gnome-build-meta.bst:core-deps/libmediainfo.bst	libmediainfo	no	git_repo	26.10	https://github.com/MediaArea/MediaInfoLib.git	0	0	0	0	0
+gnome-build-meta.bst:core-deps/libmtp.bst	libmtp	yes	git_repo	1.1.23	https://github.com/libmtp/libmtp.git	0	22	0	0	17
+gnome-build-meta.bst:core-deps/libnfs.bst	libnfs	yes	git_repo	8.0.0	https://github.com/sahlberg/libnfs.git	0	12	0	0	4
+gnome-build-meta.bst:core-deps/libnma.bst	libnma	yes	tar	1.10.6	https://download.gnome.org/sources/libnma/1.10/libnma-1.10.6.tar.xz	0	110	0	0	0
+gnome-build-meta.bst:core-deps/libosinfo.bst	libosinfo	yes	git_repo+local+patch	1.12.0	https://gitlab.com/libosinfo/libosinfo.git	2	89	0	0	3
+gnome-build-meta.bst:core-deps/libpeas.bst	libpeas	no	tar	2.2.1	https://download.gnome.org/sources/libpeas/2.2/libpeas-2.2.1.tar.xz	0	0	0	0	0
+gnome-build-meta.bst:core-deps/libplist.bst	libplist	yes	git_repo	2.8.0	https://github.com/libimobiledevice/libplist.git	0	4	0	0	1
+gnome-build-meta.bst:core-deps/librest.bst	librest	yes	tar	0.10.2	https://download.gnome.org/sources/librest/0.10/librest-0.10.2.tar.xz	0	197	0	0	0
+gnome-build-meta.bst:core-deps/libspelling.bst	libspelling	yes	tar	0.4.10	https://download.gnome.org/sources/libspelling/0.4/libspelling-0.4.10.tar.xz	0	164	0	0	0
+gnome-build-meta.bst:core-deps/libtatsu.bst	libtatsu	yes	git_repo	1.0.5	https://github.com/libimobiledevice/libtatsu.git	0	1	0	0	0
+gnome-build-meta.bst:core-deps/libusbmuxd.bst	libusbmuxd	yes	git_repo	2.1.1	https://github.com/libimobiledevice/libusbmuxd.git	0	5	0	0	2
+gnome-build-meta.bst:core-deps/libvirt-glib.bst	libvirt-glib	no	git_repo	5.0.0	https://gitlab.com/libvirt/libvirt-glib.git	0	0	0	0	0
+gnome-build-meta.bst:core-deps/libvirt.bst	libvirt	no	git_module+git_repo+local	12.8.0	https://gitlab.com/libvirt/libvirt.git	0	0	0	0	0
+gnome-build-meta.bst:core-deps/libzen.bst	libzen	no	git_repo	0.4.41	https://github.com/MediaArea/ZenLib.git	0	0	0	0	0
+gnome-build-meta.bst:core-deps/libzip.bst	libzip	yes	git_repo	1.12.1	https://github.com/nih-at/libzip.git	0	142	0	0	3
+gnome-build-meta.bst:core-deps/localsearch.bst	localsearch	yes	tar	3.12.0	https://download.gnome.org/sources/localsearch/3.12/localsearch-3.12.0.tar.xz	0	174	0	3	1
+gnome-build-meta.bst:core-deps/malcontent.bst	malcontent	yes	git_module+git_repo+remote	0.14.0	https://gitlab.freedesktop.org/pwithnall/malcontent.git	0	486	1	5	2
+gnome-build-meta.bst:core-deps/mobile-broadband-provider-info.bst	mobile-broadband-provider-info	yes	tar	89bfeff215f4bff8e9c3ff2ec25250fdb080d11e9bfa59c6fc71982ac01c814a	https://download.gnome.org/sources/mobile-broadband-provider-info/20240407/mobile-broadband-provider-info-20240407.tar.xz	0	4	0	0	0
+gnome-build-meta.bst:core-deps/msgraph.bst	msgraph	yes	tar	0.3.5	https://download.gnome.org/sources/msgraph/0.3/msgraph-0.3.5.tar.xz	0	222	0	0	0
+gnome-build-meta.bst:core-deps/nv-codec-headers.bst	nv-codec-headers	no	git_repo	13.1.15	https://github.com/FFmpeg/nv-codec-headers.git	0	0	0	0	0
+gnome-build-meta.bst:core-deps/oo7-daemon.bst	oo7-daemon	yes	cargo2+git_repo	0.7.0	https://github.com/linux-credentials/oo7.git	0	20	0	1	0
+gnome-build-meta.bst:core-deps/oo7-pam.bst	oo7-pam	yes	cargo2+git_repo	0.7.0	https://github.com/linux-credentials/oo7.git	0	1	0	0	0
+gnome-build-meta.bst:core-deps/oo7-portal.bst	oo7-portal	yes	cargo2+git_repo	0.7.0	https://github.com/linux-credentials/oo7.git	0	5	1	1	0
+gnome-build-meta.bst:core-deps/osinfo-db-tools.bst	osinfo-db-tools	yes	git_repo	1.12.0	https://gitlab.com/libosinfo/osinfo-db-tools.git	0	27	0	0	4
+gnome-build-meta.bst:core-deps/osinfo-db.bst	osinfo-db	no	git_repo	ae7a0bfe36940a7dde23fcd95ce60c0608cb7e33	https://gitlab.com/libosinfo/osinfo-db.git	0	0	0	0	0
+gnome-build-meta.bst:core-deps/passim.bst	passim	yes	git_repo	0.1.12	https://github.com/hughsie/passim.git	0	26	0	1	1
+gnome-build-meta.bst:core-deps/phodav.bst	phodav	yes	tar	3.0	https://download.gnome.org/sources/phodav/3.0/phodav-3.0.tar.xz	0	46	0	1	2
+gnome-build-meta.bst:core-deps/plymouth.bst	plymouth	yes	git_repo	26.134.222	https://gitlab.freedesktop.org/plymouth/plymouth.git	0	287	0	12	3
+gnome-build-meta.bst:core-deps/power-profiles-daemon.bst	power-profiles-daemon	yes	git_repo	0.30	https://gitlab.freedesktop.org/upower/power-profiles-daemon.git	0	30	0	1	1
+gnome-build-meta.bst:core-deps/protobuf-c.bst	protobuf-c	yes	git_repo+patch	1.5.2	https://github.com/protobuf-c/protobuf-c.git	1	2	0	0	0
+gnome-build-meta.bst:core-deps/pyatspi.bst	pyatspi	yes	tar	2.58.2	https://download.gnome.org/sources/pyatspi/2.58/pyatspi-2.58.2.tar.xz	0	51	0	0	0
+gnome-build-meta.bst:core-deps/pycups.bst	pycups	yes	anitya	843e385c1dbf694996ca84ef02a7f30c28376035588f5fbeacd6bae005cf7c8d	https://github.com/OpenPrinting/pycups/releases/download/v2.0.4/pycups-2.0.4.tar.gz	0	6	0	0	0
+gnome-build-meta.bst:core-deps/python-argcomplete.bst	python-argcomplete	no	pypi	3.7.2	https://files.pythonhosted.org/packages/87/6f/5a73f04007ca950701765949209f068da628bd11f9c2da287278ce91e0ee/argcomplete-3.7.2.tar.gz	0	0	0	0	0
+gnome-build-meta.bst:core-deps/python-dbusmock.bst	python-dbusmock	no	pypi	0.38.1	https://files.pythonhosted.org/packages/7b/56/fb685394b46925ea4bd0ff09ad2d772820734bdf96583468c5cf0f767ca0/python_dbusmock-0.38.1.tar.gz	0	0	0	0	0
+gnome-build-meta.bst:core-deps/python-pyparsing.bst	python-pyparsing	no	pypi	3.3.3	https://files.pythonhosted.org/packages/e4/11/b213bebff182584360cb8d17c72c1677fec5c5c228de439e63bcf8ab1c8f/pyparsing-3.3.3.tar.gz	0	0	0	0	0
+gnome-build-meta.bst:core-deps/setxkbmap.bst	setxkbmap	no	git_repo	1.3.5	https://gitlab.freedesktop.org/xorg/app/setxkbmap.git	0	0	0	0	0
+gnome-build-meta.bst:core-deps/simdutf.bst	simdutf	yes	git_repo	9.3.2	https://github.com/simdutf/simdutf.git	0	5	0	0	2
+gnome-build-meta.bst:core-deps/slirp-helper.bst	slirp-helper	yes	anitya+cargo2	6b54688ec71b50947cafb52c990073a47dc384aea926e33e7fe0e91b0996470b	https://static.crates.io/crates/libslirp/libslirp-4.3.2.crate	0	1	0	0	0
+gnome-build-meta.bst:core-deps/sofia-sip.bst	sofia-sip	no	git_repo	1.13.18	https://github.com/freeswitch/sofia-sip.git	0	0	0	0	0
+gnome-build-meta.bst:core-deps/spice-gtk.bst	spice-gtk	no	git_module+git_repo	0.43	https://gitlab.freedesktop.org/spice/spice-gtk.git	0	0	0	0	0
+gnome-build-meta.bst:core-deps/startup-notification.bst	startup-notification	yes	git_repo	fce365db713897a9cc6b52cac6536f4cb9c3abf1	https://gitlab.freedesktop.org/xdg/startup-notification.git	0	2	0	0	0
+gnome-build-meta.bst:core-deps/system-config-printer.bst	system-config-printer	yes	anitya	b1a69e1b4ec2add569a87aeca811a37c5361ee6ae327ec852b79e64223e34bee	https://github.com/OpenPrinting/system-config-printer/releases/download/v1.5.18/system-config-printer-1.5.18.tar.xz	0	57	0	0	2
+gnome-build-meta.bst:core-deps/systemd-base.bst	systemd-base	no	git_repo	262.1	https://github.com/systemd/systemd.git	0	0	0	0	0
+gnome-build-meta.bst:core-deps/systemd-libs.bst	systemd-libs	yes				0	3	0	0	0
+gnome-build-meta.bst:core-deps/systemd.bst	systemd	yes				0	2909	0	261	57
+gnome-build-meta.bst:core-deps/tcl.bst	tcl	no	anitya	536c45543f64d6eb11832d97ba3494aacff046fbc5040273bd55258d0e448ff1	https://downloads.sourceforge.net/tcl/tcl9.1.0-src.tar.gz	0	0	0	0	0
+gnome-build-meta.bst:core-deps/template-glib.bst	template-glib	no	tar	3.40.0	https://download.gnome.org/sources/template-glib/3.40/template-glib-3.40.0.tar.xz	0	0	0	0	0
+gnome-build-meta.bst:core-deps/totem-pl-parser.bst	totem-pl-parser	yes	tar	3.26.7	https://download.gnome.org/sources/totem-pl-parser/3.26/totem-pl-parser-3.26.7.tar.xz	0	108	0	0	0
+gnome-build-meta.bst:core-deps/udisks2.bst	udisks2	yes	git_repo	2.11.2	https://github.com/storaged-project/udisks.git	0	90	0	1	2
+gnome-build-meta.bst:core-deps/umockdev.bst	umockdev	no	git_repo	0.19.9	https://github.com/martinpitt/umockdev.git	0	0	0	0	0
+gnome-build-meta.bst:core-deps/upower.bst	upower	yes	git_repo	1.91.5	https://gitlab.freedesktop.org/upower/upower.git	0	66	0	1	1
+gnome-build-meta.bst:core-deps/vte.bst	vte	no	tar	0.84.1	https://download.gnome.org/sources/vte/0.84/vte-0.84.1.tar.xz	0	0	0	0	0
+gnome-build-meta.bst:core-deps/xauth.bst	xauth	no	git_repo	1.1.5	https://gitlab.freedesktop.org/xorg/app/xauth.git	0	0	0	0	0
+gnome-build-meta.bst:core-deps/xdg-desktop-portal-base.bst	xdg-desktop-portal-base	no	git_repo	1.22.1	https://github.com/flatpak/xdg-desktop-portal.git	0	0	0	0	0
+gnome-build-meta.bst:core-deps/xdg-desktop-portal-gnome.bst	xdg-desktop-portal-gnome	yes	git_repo+tar	51.0	https://download.gnome.org/sources/xdg-desktop-portal-gnome/51/xdg-desktop-portal-gnome-51.0.tar.xz	0	65	1	1	0
+gnome-build-meta.bst:core-deps/xdg-desktop-portal-gtk.bst	xdg-desktop-portal-gtk	yes	git_repo	1.15.3	https://github.com/flatpak/xdg-desktop-portal-gtk	0	39	1	1	0
+gnome-build-meta.bst:core-deps/xdg-desktop-portal.bst	xdg-desktop-portal	yes				0	76	0	4	0
+gnome-build-meta.bst:core-deps/xdg-sound-theme.bst	xdg-sound-theme	yes	git_repo	0.8	https://gitlab.freedesktop.org/xdg/xdg-sound-theme.git	0	29	0	0	0
+gnome-build-meta.bst:core-deps/xdg-user-dirs-gtk.bst	xdg-user-dirs-gtk	yes	tar	0.16	https://download.gnome.org/sources/xdg-user-dirs-gtk/0.16/xdg-user-dirs-gtk-0.16.tar.xz	0	84	1	1	1
+gnome-build-meta.bst:core-deps/xorg-lib-xmu.bst	xorg-lib-xmu	no	git_repo	1.3.1	https://gitlab.freedesktop.org/xorg/lib/libxmu.git	0	0	0	0	0
+gnome-build-meta.bst:core-deps/xvfb.bst	xvfb	no	git_repo	26.0.99	https://gitlab.freedesktop.org/xorg/xserver.git	0	0	0	0	0
+gnome-build-meta.bst:core.bst	core	no				0	0	0	0	0
+gnome-build-meta.bst:core/baobab.bst	baobab	yes	tar	50.0	https://download.gnome.org/sources/baobab/50/baobab-50.0.tar.xz	0	452	1	0	1
+gnome-build-meta.bst:core/calls.bst	calls	no	git_repo+tar	51.1	https://download.gnome.org/sources/calls/51/calls-51.1.tar.xz	0	0	0	0	0
+gnome-build-meta.bst:core/d-spy.bst	d-spy	no	tar	50.0	https://download.gnome.org/sources/d-spy/50/d-spy-50.0.tar.xz	0	0	0	0	0
+gnome-build-meta.bst:core/dconf-editor.bst	dconf-editor	no	tar	49.0	https://download.gnome.org/sources/dconf-editor/49/dconf-editor-49.0.tar.xz	0	0	0	0	0
+gnome-build-meta.bst:core/gdm.bst	gdm	yes	local+tar	51.0	https://download.gnome.org/sources/gdm/51/gdm-51.0.tar.xz	0	150	0	2	1
+gnome-build-meta.bst:core/gnome-backgrounds.bst	gnome-backgrounds	yes	tar	51.0.1	https://download.gnome.org/sources/gnome-backgrounds/51/gnome-backgrounds-51.0.1.tar.xz	0	76	0	0	0
+gnome-build-meta.bst:core/gnome-bluetooth.bst	gnome-bluetooth	yes	tar	47.2	https://download.gnome.org/sources/gnome-bluetooth/47/gnome-bluetooth-47.2.tar.xz	0	115	1	0	1
+gnome-build-meta.bst:core/gnome-boxes.bst	gnome-boxes	no	tar	50.0	https://download.gnome.org/sources/gnome-boxes/50/gnome-boxes-50.0.tar.xz	0	0	0	0	0
+gnome-build-meta.bst:core/gnome-builder.bst	gnome-builder	no	tar	50.0	https://download.gnome.org/sources/gnome-builder/50/gnome-builder-50.0.tar.xz	0	0	0	0	0
+gnome-build-meta.bst:core/gnome-color-manager.bst	gnome-color-manager	yes	tar	3.36.2	https://download.gnome.org/sources/gnome-color-manager/3.36/gnome-color-manager-3.36.2.tar.xz	0	198	3	0	4
+gnome-build-meta.bst:core/gnome-control-center.bst	gnome-control-center	yes	git_repo+tar	51.1	https://download.gnome.org/sources/gnome-control-center/51/gnome-control-center-51.1.tar.xz	0	307	28	0	1
+gnome-build-meta.bst:core/gnome-desktop.bst	gnome-desktop	yes	git_repo+tar	51.0	https://download.gnome.org/sources/gnome-desktop/51/gnome-desktop-51.0.tar.xz	0	244	0	0	0
+gnome-build-meta.bst:core/gnome-disk-utility.bst	gnome-disk-utility	yes	tar	46.1	https://download.gnome.org/sources/gnome-disk-utility/46/gnome-disk-utility-46.1.tar.xz	0	97	3	0	2
+gnome-build-meta.bst:core/gnome-initial-setup.bst	gnome-initial-setup	yes	tar	51.1	https://download.gnome.org/sources/gnome-initial-setup/51/gnome-initial-setup-51.1.tar.xz	0	94	1	3	0
+gnome-build-meta.bst:core/gnome-menus.bst	gnome-menus	yes	tar	3.38.1	https://download.gnome.org/sources/gnome-menus/3.38/gnome-menus-3.38.1.tar.xz	0	137	0	0	0
+gnome-build-meta.bst:core/gnome-remote-desktop.bst	gnome-remote-desktop	yes	tar	51.0	https://download.gnome.org/sources/gnome-remote-desktop/51/gnome-remote-desktop-51.0.tar.xz	0	87	0	6	1
+gnome-build-meta.bst:core/gnome-session.bst	gnome-session	yes	tar	51.0	https://download.gnome.org/sources/gnome-session/51/gnome-session-51.0.tar.xz	0	159	0	4	3
+gnome-build-meta.bst:core/gnome-settings-daemon.bst	gnome-settings-daemon	yes	tar	51.1	https://download.gnome.org/sources/gnome-settings-daemon/51/gnome-settings-daemon-51.1.tar.xz	0	168	0	16	0
+gnome-build-meta.bst:core/gnome-shell.bst	gnome-shell	yes	git_repo+tar	51.1	https://download.gnome.org/sources/gnome-shell/51/gnome-shell-51.1.tar.xz	0	170	3	2	4
+gnome-build-meta.bst:core/gnome-tour.bst	gnome-tour	yes	cargo2+tar	50.0	https://download.gnome.org/sources/gnome-tour/50/gnome-tour-50.0.tar.xz	0	77	1	0	1
+gnome-build-meta.bst:core/gnome-user-docs.bst	gnome-user-docs	yes	tar	51.0	https://download.gnome.org/sources/gnome-user-docs/51/gnome-user-docs-51.0.tar.xz	0	16218	0	0	0
+gnome-build-meta.bst:core/gnome-user-share.bst	gnome-user-share	yes	cargo2+tar	48.3	https://download.gnome.org/sources/gnome-user-share/48/gnome-user-share-48.3.tar.xz	0	98	1	1	0
+gnome-build-meta.bst:core/gst-thumbnailers.bst	gst-thumbnailers	yes	cargo2+tar	1.1.0	https://download.gnome.org/sources/gst-thumbnailers/1.1/gst-thumbnailers-1.1.0.tar.xz	0	5	0	0	2
+gnome-build-meta.bst:core/gvfs-daemon.bst	gvfs-daemon	yes				0	163	0	7	0
+gnome-build-meta.bst:core/manuals.bst	manuals	no	tar	50.1	https://download.gnome.org/sources/manuals/50/manuals-50.1.tar.xz	0	0	0	0	0
+gnome-build-meta.bst:core/meta-gnome-core-developer-tools.bst	meta-gnome-core-developer-tools	no				0	0	0	0	0
+gnome-build-meta.bst:core/meta-gnome-core-mobile.bst	meta-gnome-core-mobile	no				0	0	0	0	0
+gnome-build-meta.bst:core/meta-gnome-core-os-services.bst	meta-gnome-core-os-services	no				0	0	0	0	0
+gnome-build-meta.bst:core/meta-gnome-core-shell.bst	meta-gnome-core-shell	no				0	0	0	0	0
+gnome-build-meta.bst:core/mutter.bst	mutter	yes	git_repo+tar	51.1	https://download.gnome.org/sources/mutter/51/mutter-51.1.tar.xz	0	477	1	0	3
+gnome-build-meta.bst:core/nautilus.bst	nautilus	yes	git_repo+tar	51.1	https://download.gnome.org/sources/nautilus/51/nautilus-51.1.tar.xz	0	142	2	0	2
+gnome-build-meta.bst:core/orca.bst	orca	yes	tar	51.1	https://download.gnome.org/sources/orca/51/orca-51.1.tar.xz	0	1853	1	1	1
+gnome-build-meta.bst:core/papers.bst	papers	yes	cargo2+tar	51.1	https://download.gnome.org/sources/papers/51/papers-51.1.tar.xz	0	3633	2	0	3
+gnome-build-meta.bst:core/rygel.bst	rygel	yes	tar	46.1	https://download.gnome.org/sources/rygel/46/rygel-46.1.tar.xz	0	146	2	1	2
+gnome-build-meta.bst:core/sushi.bst	sushi	yes	tar	51.2	https://download.gnome.org/sources/sushi/51/sushi-51.2.tar.xz	0	98	1	0	1
+gnome-build-meta.bst:core/sysprof-app.bst	sysprof-app	yes				0	188	1	1	3
+gnome-build-meta.bst:core/systemd-presets.bst	systemd-presets	yes	local			0	7	0	0	0
+gnome-build-meta.bst:core/tecla.bst	tecla	yes	tar	51.0	https://download.gnome.org/sources/tecla/51/tecla-51.0.tar.xz	0	59	1	0	1
+gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/_private/fake-toolbox-env.bst	fake-toolbox-env	no				0	0	0	0	0
+gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/accountsservice.bst	accountsservice	yes	git_repo	26.27.3	https://gitlab.freedesktop.org/accountsservice/accountsservice.git	0	89	0	1	0
+gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/android-udev-rules.bst	android-udev-rules	yes	git_repo	5e7cef34d9e445b4a34d445d164f8cf862efd19a	https://github.com/M0Rf30/android-udev-rules.git	0	2	0	0	0
+gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/distrobox.bst	distrobox	yes	git_repo	1.8.2	https://github.com/89luca89/distrobox.git	0	65	0	0	13
+gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/dotconf.bst	dotconf	yes	git_repo	1.4.1	https://github.com/williamh/dotconf.git	0	51	0	0	0
+gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/espeak-ng.bst	espeak-ng	yes	git_repo	1.52.0	https://github.com/espeak-ng/espeak-ng.git	0	373	0	0	1
+gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/fish.bst	fish	yes	cargo2+git_repo	4.9.3	https://github.com/fish-shell/fish-shell.git	0	8	0	0	1
+gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/graphviz.bst	graphviz	yes	git_repo	16.1.0	https://gitlab.com/graphviz/graphviz.git	0	226	0	0	26
+gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/intltool.bst	intltool	no	patch_queue+tar	0.51.0	https://launchpad.net/intltool/trunk/0.51.0/+download/intltool-0.51.0.tar.gz	1	0	0	0	0
+gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/just.bst	just	yes	cargo2+git_repo	1.52.0	https://github.com/casey/just.git	0	1	0	0	1
+gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/libcacard.bst	libcacard	yes	git_repo	2.8.2	https://gitlab.freedesktop.org/spice/libcacard.git	0	2	0	0	0
+gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/libgit2.bst	libgit2	no	git_repo	1.9.7	https://github.com/libgit2/libgit2.git	0	0	0	0	0
+gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/libgphoto2.bst	libgphoto2	yes	git_repo	2.5.34	https://github.com/gphoto/libgphoto2.git	0	162	0	0	2
+gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/libpcap.bst	libpcap	yes	git_repo	1.11.0	https://github.com/the-tcpdump-group/libpcap.git	0	66	0	0	1
+gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/libsass.bst	libsass	yes	git_repo	3.6.6	https://github.com/sass/libsass.git	0	2	0	0	0
+gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/libssh2.bst	libssh2	yes	git_repo	1.11.1	https://github.com/libssh2/libssh2.git	0	207	0	0	0
+gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/mokutil.bst	mokutil	yes	git_repo	0.7.2	https://github.com/lcp/mokutil.git	0	3	0	0	1
+gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/nss-mdns.bst	nss-mdns	yes	git_repo	0.15.1	https://github.com/lathiat/nss-mdns.git	0	6	0	0	0
+gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/numactl.bst	numactl	yes	git_repo	2.0.19	https://github.com/numactl/numactl.git	0	14	0	0	6
+gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/nvme-cli.bst	nvme-cli	yes	git_repo	3.1	https://github.com/linux-nvme/nvme-cli.git	0	23	0	4	1
+gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/openldap.bst	openldap	yes	git_repo	cbc3211e0f9c01e4fbf5c795ccdffd57d9ce660b	https://git.openldap.org/openldap/openldap.git	0	133	0	0	10
+gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/opensc.bst	opensc	yes	git_repo+local	0.27.1	https://github.com/OpenSC/OpenSC.git	0	88	1	0	23
+gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/perl-parse-yapp.bst	perl-parse-yapp	no	cpan	1.21	https://cpan.metacpan.org/authors/id/W/WB/WBRASWELL/Parse-Yapp-1.21.tar.gz	0	0	0	0	0
+gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/pkcs11-helper.bst	pkcs11-helper	yes	git_repo	1.31.0	https://github.com/OpenSC/pkcs11-helper.git	0	87	0	0	0
+gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/ppp.bst	ppp	yes	git_repo	2.5.4	https://github.com/ppp-project/ppp.git	0	45	0	0	5
+gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/python3-six.bst	python3-six	no	git_repo	1.17.0	https://github.com/benjaminp/six.git	0	0	0	0	0
+gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/qemu.bst	qemu	yes	git_module+git_repo	11.1.1	https://gitlab.com/qemu-project/qemu.git	0	183	1	0	12
+gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/rpcsvc-proto.bst	rpcsvc-proto	yes	git_repo	1.4.4	https://github.com/thkukuk/rpcsvc-proto.git	0	3	0	0	1
+gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/samba.bst	samba	yes	git_repo+patch	4.25.0	https://gitlab.com/samba-team/samba	1	908	0	0	53
+gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/sassc.bst	sassc	yes	git_repo	3.6.2	https://github.com/sass/sassc.git	0	1	0	0	1
+gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/sonic.bst	sonic	yes	git_repo+patch	0.2.0	https://github.com/waywardgeek/sonic.git	1	3	0	0	1
+gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/speech-dispatcher.bst	speech-dispatcher	yes	git_repo	0.12.1	https://github.com/brailcom/speechd.git	0	428	0	3	4
+gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/spice-protocol.bst	spice-protocol	yes	git_repo	0.14.5	https://gitlab.freedesktop.org/spice/spice-protocol.git	0	1	0	0	0
+gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/spice-vdagent.bst	spice-vdagent	yes	git_repo	0.23.0	https://gitlab.freedesktop.org/spice/linux/vd_agent	0	9	0	3	2
+gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/spice.bst	spice	yes	git_module+git_repo	0.16.0	https://gitlab.freedesktop.org/spice/spice.git	0	1	0	0	0
+gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/toolbox.bst	toolbox	yes	tar	0.3	https://github.com/containers/toolbox/releases/download/0.3/toolbox-0.3-vendored.tar.xz	0	103	0	0	1
+gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/usbredir.bst	usbredir	yes	git_repo	0.15.0	https://gitlab.freedesktop.org/spice/usbredir.git	0	5	0	0	1
+gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/virglrenderer.bst	virglrenderer	yes	git_repo	1.3.0	https://gitlab.freedesktop.org/virgl/virglrenderer.git	0	4	0	0	1
+gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/wl-clipboard.bst	wl-clipboard	yes	git_repo	2.3.0	https://github.com/bugaevc/wl-clipboard.git	0	11	0	0	2
+gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/words.bst	words	yes	tar	2020.12.07	https://ftp.gnu.org/gnu/aspell/dict/en/aspell6-en-2020.12.07-0.tar.bz2	0	38	0	0	0
+gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/zram-generator.bst	zram-generator	yes	cargo2+git_repo	1.2.1	https://github.com/systemd/zram-generator.git	0	3	0	1	0
+gnome-build-meta.bst:gnomeos-deps/NetworkManager-openconnect.bst	NetworkManager-openconnect	yes	git_repo+local+patch_queue	1.2.10	https://gitlab.gnome.org/GNOME/NetworkManager-openconnect.git	2	67	0	0	0
+gnome-build-meta.bst:gnomeos-deps/NetworkManager-openvpn.bst	NetworkManager-openvpn	yes	git_repo+local	1.12.5	https://gitlab.gnome.org/GNOME/NetworkManager-openvpn.git	0	73	0	0	0
+gnome-build-meta.bst:gnomeos-deps/NetworkManager-vpnc.bst	NetworkManager-vpnc	yes	git_repo	1.4.0	https://gitlab.gnome.org/GNOME/NetworkManager-vpnc.git	0	70	0	0	0
+gnome-build-meta.bst:gnomeos-deps/alsa-ucm-conf.bst	alsa-ucm-conf	yes	git_repo	1.2.16	https://github.com/alsa-project/alsa-ucm-conf.git	0	677	0	0	0
+gnome-build-meta.bst:gnomeos-deps/anthy.bst	anthy	yes	git_repo	1.0.0	https://github.com/fujiwarat/anthy-unicode.git	0	20	0	0	3
+gnome-build-meta.bst:gnomeos-deps/bindfs.bst	bindfs	yes	git_repo	1.18.4	https://github.com/mpartel/bindfs.git	0	2	0	0	1
+gnome-build-meta.bst:gnomeos-deps/bpftop.bst	bpftop	yes	cargo2+git_repo	0.9.0	https://github.com/Netflix/bpftop.git	0	1	0	0	1
+gnome-build-meta.bst:gnomeos-deps/debuginfod-config.bst	debuginfod-config	yes	local			0	1	0	0	0
+gnome-build-meta.bst:gnomeos-deps/deps-x86_64.bst	deps-x86_64	no				0	0	0	0	0
+gnome-build-meta.bst:gnomeos-deps/deps.bst	deps	no				0	0	0	0	0
+gnome-build-meta.bst:gnomeos-deps/disable-iscsi.bst	disable-iscsi	yes	local			0	1	0	0	0
+gnome-build-meta.bst:gnomeos-deps/firewalld.bst	firewalld	yes	git_repo+local	2.5.2	https://github.com/firewalld/firewalld.git	0	495	0	1	3
+gnome-build-meta.bst:gnomeos-deps/flathub-config.bst	flathub-config	yes	remote	3371dd250e61d9e1633630073fefda153cd4426f72f4afa0c3373ae2e8fea03a	https://dl.flathub.org/repo/flathub.flatpakrepo	0	1	0	0	0
+gnome-build-meta.bst:gnomeos-deps/fprintd.bst	fprintd	yes	git_repo	1.94.5	https://gitlab.freedesktop.org/libfprint/fprintd.git	0	88	0	1	4
+gnome-build-meta.bst:gnomeos-deps/gnome-mimeapps.bst	gnome-mimeapps	yes	local			0	1	0	0	0
+gnome-build-meta.bst:gnomeos-deps/hidraw-udev.bst	hidraw-udev	yes	local			0	2	0	0	0
+gnome-build-meta.bst:gnomeos-deps/ibus-anthy.bst	ibus-anthy	yes	git_repo	1.5.18	https://github.com/ibus/ibus-anthy.git	0	99	1	0	0
+gnome-build-meta.bst:gnomeos-deps/ibus-hangul.bst	ibus-hangul	yes	git_repo	1.5.5	https://github.com/libhangul/ibus-hangul.git	0	28	1	0	0
+gnome-build-meta.bst:gnomeos-deps/ibus-libpinyin.bst	ibus-libpinyin	yes	git_repo	1.16.5	https://github.com/libpinyin/ibus-libpinyin.git	0	61	2	0	0
+gnome-build-meta.bst:gnomeos-deps/ibus-typing-booster.bst	ibus-typing-booster	yes	git_repo	2.31.2	https://github.com/mike-fabian/ibus-typing-booster.git	0	519	3	0	1
+gnome-build-meta.bst:gnomeos-deps/iio-sensor-proxy.bst	iio-sensor-proxy	yes	git_repo	3.9	https://gitlab.freedesktop.org/hadess/iio-sensor-proxy.git	0	6	0	1	1
+gnome-build-meta.bst:gnomeos-deps/intel-ucode.bst	intel-ucode	no	git_repo	bdc92abe5c499c3fd7988b76a128d05c9120a520	https://github.com/intel/Intel-Linux-Processor-Microcode-Data-Files.git	0	0	0	0	0
+gnome-build-meta.bst:gnomeos-deps/iucode-tool.bst	iucode-tool	no	git_repo	2.3.1	https://gitlab.com/iucode-tool/iucode-tool.git	0	0	0	0	0
+gnome-build-meta.bst:gnomeos-deps/journald-config.bst	journald-config	yes	local			0	1	0	0	0
+gnome-build-meta.bst:gnomeos-deps/kmscon.bst	kmscon	yes	git_repo+local	10.0.4	https://github.com/kmscon/kmscon.git	0	18	0	2	2
+gnome-build-meta.bst:gnomeos-deps/kyotocabinet.bst	kyotocabinet	yes	anitya+patch_queue	4c85d736668d82920bfdbdb92ac3d66b7db1108f09581a769dd9160a02def349	https://dbmx.net/kyotocabinet/pkg/kyotocabinet-1.2.80.tar.gz	2	309	0	0	17
+gnome-build-meta.bst:gnomeos-deps/ld-config.bst	ld-config	yes				0	1	0	0	0
+gnome-build-meta.bst:gnomeos-deps/libfprint.bst	libfprint	yes	git_repo	1.94.100	https://gitlab.freedesktop.org/libfprint/libfprint.git	0	45	0	0	0
+gnome-build-meta.bst:gnomeos-deps/libhangul.bst	libhangul	yes	git_repo	0.2.0	https://github.com/libhangul/libhangul.git	0	5	0	0	1
+gnome-build-meta.bst:gnomeos-deps/libpinyin.bst	libpinyin	yes	git_repo+tar	2.11.91	https://github.com/libpinyin/libpinyin.git	0	28	0	0	3
+gnome-build-meta.bst:gnomeos-deps/libssc.bst	libssc	yes	git_repo	0.4.4	https://codeberg.org/DylanVanAssche/libssc.git	0	30	0	0	1
+gnome-build-meta.bst:gnomeos-deps/libtsm.bst	libtsm	yes	git_repo	4.8.0	https://github.com/kmscon/libtsm.git	0	4	0	0	0
+gnome-build-meta.bst:gnomeos-deps/m17n-db.bst	m17n-db	yes	git_repo	e1721339a8a0c220ea28707d3e9c0c2095bca6b7	https://git.savannah.gnu.org/git/m17n/m17n-db.git	0	724	0	0	1
+gnome-build-meta.bst:gnomeos-deps/m17n-lib.bst	m17n-lib	yes	git_repo	9c4641568c50d4c7197efa395257a638937d04db	https://git.savannah.gnu.org/git/m17n/m17n-lib.git	0	14	0	0	6
+gnome-build-meta.bst:gnomeos-deps/microcode.bst	microcode	no				0	0	0	0	0
+gnome-build-meta.bst:gnomeos-deps/modprobe-config.bst	modprobe-config	yes	local			0	1	0	0	0
+gnome-build-meta.bst:gnomeos-deps/nano-default-editor.bst	nano-default-editor	yes	local			0	2	0	0	0
+gnome-build-meta.bst:gnomeos-deps/nm-connectivity-config.bst	nm-connectivity-config	yes	local			0	1	0	0	0
+gnome-build-meta.bst:gnomeos-deps/noise-suppression-for-voice.bst	noise-suppression-for-voice	yes	git_repo	1.21	https://github.com/werman/noise-suppression-for-voice.git	0	8	0	0	0
+gnome-build-meta.bst:gnomeos-deps/noto-cjk.bst	noto-cjk	yes	local+zip	2.004	https://github.com/notofonts/noto-cjk/releases/download/Sans2.004/03_NotoSansCJK-OTC.zip	0	5	0	0	0
+gnome-build-meta.bst:gnomeos-deps/oo7-cli.bst	oo7-cli	yes	cargo2+git_repo	0.7.0	https://github.com/linux-credentials/oo7.git	0	1	0	0	1
+gnome-build-meta.bst:gnomeos-deps/openconnect.bst	openconnect	yes	git_repo	9.21	https://gitlab.com/openconnect/openconnect.git	0	50	0	0	1
+gnome-build-meta.bst:gnomeos-deps/openvpn.bst	openvpn	yes	git_repo	2.7.8	https://github.com/OpenVPN/openvpn.git	0	19	0	0	1
+gnome-build-meta.bst:gnomeos-deps/pam-pkcs11.bst	pam-pkcs11	yes	git_repo+local	0.6.14	https://github.com/OpenSC/pam_pkcs11.git	0	37	0	1	7
+gnome-build-meta.bst:gnomeos-deps/pam-wrapper.bst	pam-wrapper	no	git_repo	1.1.8	https://git.samba.org/pam_wrapper.git	0	0	0	0	0
+gnome-build-meta.bst:gnomeos-deps/pcrlock-config.bst	pcrlock-config	yes	local			0	1	0	0	0
+gnome-build-meta.bst:gnomeos-deps/preset-all.bst	preset-all	yes	local			0	1	0	1	0
+gnome-build-meta.bst:gnomeos-deps/python3-zstd.bst	python3-zstd	no	git_repo	1.5.7	https://github.com/sergey-dryabzhinsky/python-zstd.git	0	0	0	0	0
+gnome-build-meta.bst:gnomeos-deps/snapd.bst	snapd	yes	local+tar	2.75.2	https://github.com/canonical/snapd/releases/download/2.75.2/snapd_2.75.2.vendor.tar.xz	0	74	2	9	1
+gnome-build-meta.bst:gnomeos-deps/switcheroo-control.bst	switcheroo-control	yes	git_repo	3.0	https://gitlab.freedesktop.org/hadess/switcheroo-control.git	0	27	0	1	1
+gnome-build-meta.bst:gnomeos-deps/sysext-utils.bst	sysext-utils	yes	git_repo	0.4.0	https://gitlab.gnome.org/World/sysext-utils.git	0	48	0	0	5
+gnome-build-meta.bst:gnomeos-deps/sysupdate-config.bst	sysupdate-config	yes	local			0	1	0	0	0
+gnome-build-meta.bst:gnomeos-deps/thermald.bst	thermald	yes	git_repo	2.15.10	https://github.com/intel/thermal_daemon.git	0	8	0	1	1
+gnome-build-meta.bst:gnomeos-deps/udev-hide-usr.bst	udev-hide-usr	yes				0	1	0	0	0
+gnome-build-meta.bst:gnomeos-deps/uinput.bst	uinput	yes	local			0	1	0	0	0
+gnome-build-meta.bst:gnomeos-deps/uresourced.bst	uresourced	yes	git_repo	0.5.5	https://gitlab.freedesktop.org/benzea/uresourced.git	0	45	0	3	0
+gnome-build-meta.bst:gnomeos-deps/vpnc-scripts.bst	vpnc-scripts	yes	git_repo	ce9e961bd0f6b867e1c7c35f78f6fb973f6ff101	https://gitlab.com/openconnect/vpnc-scripts.git	0	4	0	0	0
+gnome-build-meta.bst:gnomeos-deps/vpnc.bst	vpnc	yes	git_repo	d0fd23d9432d54e7f354ecf3ced1e35d92d3dbde	https://github.com/streambinder/vpnc.git	0	13	0	1	4
+gnome-build-meta.bst:gnomeos-deps/vte-config.bst	vte-config	yes	local			0	2	0	0	0
+gnome-build-meta.bst:gnomeos-deps/wpa-supplicant-config.bst	wpa-supplicant-config	yes	local			0	1	0	0	0
+gnome-build-meta.bst:gnomeos-deps/wsdd.bst	wsdd	yes	git_repo	0.9	https://github.com/christgau/wsdd.git	0	3	0	0	1
+gnome-build-meta.bst:gnomeos-deps/zswap-generator.bst	zswap-generator	no	cargo2+local			0	0	0	0	0
+gnome-build-meta.bst:gnomeos/generate-initramfs.bst	generate-initramfs	no	local			0	0	0	0	0
+gnome-build-meta.bst:gnomeos/ldconfig-always.bst	ldconfig-always	yes	local			0	1	0	0	0
+gnome-build-meta.bst:incubator/meta-gnome-incubator-apps.bst	meta-gnome-incubator-apps	no				0	0	0	0	0
+gnome-build-meta.bst:incubator/resources.bst	resources	no	cargo2+tar	51.0	https://download.gnome.org/sources/resources/51/resources-51.0.tar.xz	0	0	0	0	0
+gnome-build-meta.bst:oci/initramfs/deps.bst	deps	no				0	0	0	0	0
+gnome-build-meta.bst:oci/initramfs/filesystem.bst	filesystem	no				0	0	0	0	0
+gnome-build-meta.bst:oci/initramfs/image.bst	image	yes				0	1	0	0	0
+gnome-build-meta.bst:oci/initramfs/initial-scripts.bst	initial-scripts	no				0	0	0	0	0
+gnome-build-meta.bst:oci/integration/bootc-config.bst	bootc-config	yes	local			0	2	0	0	0
+gnome-build-meta.bst:oci/integration/lvm2-enable-activation.bst	lvm2-enable-activation	no				0	0	0	0	0
+gnome-build-meta.bst:sdk-deps/glib-stage1.bst	glib-stage1	no	tar	2.90.1	https://download.gnome.org/sources/glib/2.90/glib-2.90.1.tar.xz	0	0	0	0	0
+gnome-build-meta.bst:sdk-deps/gobject-introspection-stage1.bst	gobject-introspection-stage1	no	tar	1.86.0	https://download.gnome.org/sources/gobject-introspection/1.86/gobject-introspection-1.86.0.tar.xz	0	0	0	0	0
+gnome-build-meta.bst:sdk-deps/gvfs-manifest.bst	gvfs-manifest	no				0	0	0	0	0
+gnome-build-meta.bst:sdk-deps/gvfs.bst	gvfs	no	tar	1.62.0	https://download.gnome.org/sources/gvfs/1.62/gvfs-1.62.0.tar.xz	0	0	0	0	0
+gnome-build-meta.bst:sdk-deps/ibus-manifest.bst	ibus-manifest	no				0	0	0	0	0
+gnome-build-meta.bst:sdk-deps/ibus.bst	ibus	no	tar	1.5.35	https://github.com/ibus/ibus/releases/download/1.5.35-beta1/ibus-1.5.35-beta1.tar.gz	0	0	0	0	0
+gnome-build-meta.bst:sdk-deps/libpanel.bst	libpanel	yes	tar	1.10.4	https://download.gnome.org/sources/libpanel/1.10/libpanel-1.10.4.tar.xz	0	594	0	0	0
+gnome-build-meta.bst:sdk-deps/sysprof-manifest.bst	sysprof-manifest	no				0	0	0	0	0
+gnome-build-meta.bst:sdk-deps/sysprof.bst	sysprof	no	tar	51.0	https://download.gnome.org/sources/sysprof/51/sysprof-51.0.tar.xz	0	0	0	0	0
+gnome-build-meta.bst:sdk-deps/unifdef.bst	unifdef	no	git_repo	2.12	https://github.com/fanf2/unifdef.git	0	0	0	0	0
+gnome-build-meta.bst:sdk-platform.bst	sdk-platform	no				0	0	0	0	0
+gnome-build-meta.bst:sdk/adwaita-fonts.bst	adwaita-fonts	yes	tar	51.0	https://download.gnome.org/sources/adwaita-fonts/51/adwaita-fonts-51.0.tar.xz	0	7	0	0	0
+gnome-build-meta.bst:sdk/adwaita-icon-theme.bst	adwaita-icon-theme	yes	tar	51.0	https://download.gnome.org/sources/adwaita-icon-theme/51/adwaita-icon-theme-51.0.tar.xz	0	803	0	0	0
+gnome-build-meta.bst:sdk/at-spi2-core.bst	at-spi2-core	yes	tar	2.62.1	https://download.gnome.org/sources/at-spi2-core/2.62/at-spi2-core-2.62.1.tar.xz	0	1246	0	1	0
+gnome-build-meta.bst:sdk/blueprint-compiler.bst	blueprint-compiler	yes	tar	0.22.2	https://download.gnome.org/sources/blueprint-compiler/0.22/blueprint-compiler-0.22.2.tar.xz	0	145	0	0	1
+gnome-build-meta.bst:sdk/cairo.bst	cairo	yes	git_repo	1.18.6	https://gitlab.freedesktop.org/cairo/cairo.git	0	9	0	0	0
+gnome-build-meta.bst:sdk/cantarell-fonts.bst	cantarell-fonts	yes	anitya	706778e6f9468d534d7afe05e4f6e1586110395ef37d24df259746736fd6b702	https://cantarell.gnome.org/releases/cantarell-fonts-0.311.tar.xz	0	6	0	0	0
+gnome-build-meta.bst:sdk/enchant-2.bst	enchant-2	yes	git_module+git_repo	2.8.21	https://github.com/rrthomas/enchant.git	0	13	0	0	2
+gnome-build-meta.bst:sdk/fcitx5-gtk.bst	fcitx5-gtk	yes	git_repo	5.1.7	https://github.com/fcitx/fcitx5-gtk.git	0	5	0	0	2
+gnome-build-meta.bst:sdk/gcab.bst	gcab	yes	tar	1.6	https://download.gnome.org/sources/gcab/1.6/gcab-1.6.tar.xz	0	55	0	0	1
+gnome-build-meta.bst:sdk/gcr.bst	gcr	yes	tar	4.4.1	https://download.gnome.org/sources/gcr/4.4/gcr-4.4.1.tar.xz	0	892	0	2	1
+gnome-build-meta.bst:sdk/gdk-pixbuf.bst	gdk-pixbuf	yes	tar	2.44.8	https://download.gnome.org/sources/gdk-pixbuf/2.44/gdk-pixbuf-2.44.8.tar.xz	0	390	0	0	3
+gnome-build-meta.bst:sdk/gi-docgen.bst	gi-docgen	no	tar	2026.1	https://download.gnome.org/sources/gi-docgen/2026/gi-docgen-2026.1.tar.xz	0	0	0	0	0
+gnome-build-meta.bst:sdk/gjs.bst	gjs	yes	tar	1.90.1	https://download.gnome.org/sources/gjs/1.90/gjs-1.90.1.tar.xz	0	13	0	0	1
+gnome-build-meta.bst:sdk/glib-networking.bst	glib-networking	yes	tar	2.90.0	https://download.gnome.org/sources/glib-networking/2.90/glib-networking-2.90.0.tar.xz	0	82	0	1	0
+gnome-build-meta.bst:sdk/glib.bst	glib	yes	tar	2.90.1	https://download.gnome.org/sources/glib/2.90/glib-2.90.1.tar.xz	0	7795	0	0	18
+gnome-build-meta.bst:sdk/glycin.bst	glycin	yes	cargo2+tar	2.2.3	https://download.gnome.org/sources/glycin/2.2/glycin-2.2.3.tar.xz	0	13	0	0	1
+gnome-build-meta.bst:sdk/gobject-introspection.bst	gobject-introspection	yes	tar	1.86.0	https://download.gnome.org/sources/gobject-introspection/1.86/gobject-introspection-1.86.0.tar.xz	0	161	0	0	6
+gnome-build-meta.bst:sdk/graphene.bst	graphene	yes	git_repo	1.10.8	https://github.com/ebassi/graphene.git	0	3	0	0	0
+gnome-build-meta.bst:sdk/gsettings-desktop-schemas.bst	gsettings-desktop-schemas	yes	tar	51.0	https://download.gnome.org/sources/gsettings-desktop-schemas/51/gsettings-desktop-schemas-51.0.tar.xz	0	98	0	0	0
+gnome-build-meta.bst:sdk/gssproxy.bst	gssproxy	yes	git_repo	0.9.3	https://github.com/gssapi/gssproxy.git	0	3	0	0	0
+gnome-build-meta.bst:sdk/gst-plugin-gtk4.bst	gst-plugin-gtk4	yes	anitya+cargo2	9d22a27972c25e706b428e78356458446314c70eb31aef07d4a32b843a6dea94	https://static.crates.io/crates/gst-plugin-gtk4/gst-plugin-gtk4-0.15.2.crate	0	1	0	0	0
+gnome-build-meta.bst:sdk/gtk+-3.bst	gtk+-3	yes	tar	3.24.52	https://download.gnome.org/sources/gtk/3.24/gtk-3.24.52.tar.xz	0	982	0	0	6
+gnome-build-meta.bst:sdk/gtk-doc.bst	gtk-doc	no	tar	1.36.1	https://download.gnome.org/sources/gtk-doc/1.36/gtk-doc-1.36.1.tar.xz	0	0	0	0	0
+gnome-build-meta.bst:sdk/gtk.bst	gtk	yes	tar	4.24.1	https://download.gnome.org/sources/gtk/4.24/gtk-4.24.1.tar.xz	0	11107	0	0	8
+gnome-build-meta.bst:sdk/gtksourceview.bst	gtksourceview	yes	tar	5.22.0	https://download.gnome.org/sources/gtksourceview/5.22/gtksourceview-5.22.0.tar.xz	0	948	0	0	1
+gnome-build-meta.bst:sdk/gvfs-client.bst	gvfs-client	yes				0	3	0	0	0
+gnome-build-meta.bst:sdk/json-glib.bst	json-glib	yes	tar	1.10.8	https://download.gnome.org/sources/json-glib/1.10/json-glib-1.10.8.tar.xz	0	391	0	0	2
+gnome-build-meta.bst:sdk/krb5.bst	krb5	yes	git_repo+patch_queue	1.22.2	https://github.com/krb5/krb5.git	2	76	0	0	25
+gnome-build-meta.bst:sdk/libadwaita.bst	libadwaita	yes	tar	1.10.0	https://download.gnome.org/sources/libadwaita/1.10/libadwaita-1.10.0.tar.xz	0	2510	0	0	0
+gnome-build-meta.bst:sdk/libdex.bst	libdex	yes	tar	1.2.0	https://download.gnome.org/sources/libdex/1.2/libdex-1.2.0.tar.xz	0	444	0	0	0
+gnome-build-meta.bst:sdk/libgee.bst	libgee	yes	tar	0.20.8	https://download.gnome.org/sources/libgee/0.20/libgee-0.20.8.tar.xz	0	2	0	0	0
+gnome-build-meta.bst:sdk/libglycin-gtk4.bst	libglycin-gtk4	yes	cargo2+tar	2.2.3	https://download.gnome.org/sources/glycin/2.2/glycin-2.2.3.tar.xz	0	2	0	0	0
+gnome-build-meta.bst:sdk/libglycin.bst	libglycin	yes	cargo2+tar	2.2.3	https://download.gnome.org/sources/glycin/2.2/glycin-2.2.3.tar.xz	0	2	0	0	0
+gnome-build-meta.bst:sdk/libibus.bst	libibus	yes				0	56	0	0	0
+gnome-build-meta.bst:sdk/libmanette-0.2.bst	libmanette-0.2	yes	tar	0.2.13	https://download.gnome.org/sources/libmanette/0.2/libmanette-0.2.13.tar.xz	0	97	0	0	1
+gnome-build-meta.bst:sdk/libnotify.bst	libnotify	yes	tar	0.8.8	https://download.gnome.org/sources/libnotify/0.8/libnotify-0.8.8.tar.xz	0	116	0	0	1
+gnome-build-meta.bst:sdk/libportal.bst	libportal	yes	git_repo	0.11.0	https://github.com/flatpak/libportal.git	0	286	0	0	0
+gnome-build-meta.bst:sdk/librsvg.bst	librsvg	yes	cargo2+tar	2.63.2	https://download.gnome.org/sources/librsvg/2.63/librsvg-2.63.2.tar.xz	0	131	0	0	1
+gnome-build-meta.bst:sdk/libsecret.bst	libsecret	yes	tar	0.21.8	https://download.gnome.org/sources/libsecret/0.21/libsecret-0.21.8.2.tar.xz	0	393	0	0	1
+gnome-build-meta.bst:sdk/libsoup.bst	libsoup	yes	tar	3.8.0	https://download.gnome.org/sources/libsoup/3.8/libsoup-3.8.0.tar.xz	0	783	0	0	0
+gnome-build-meta.bst:sdk/ministream.bst	ministream	yes	git_repo	0.99.1	https://gitlab.gnome.org/sp1rit/ministream.git	0	2	0	0	0
+gnome-build-meta.bst:sdk/mozjs.bst	mozjs	yes	patch+tar	140.17.0	https://ftp.mozilla.org/pub/firefox/releases/140.17.0esr/source/firefox-140.17.0esr.source.tar.xz	2	475	0	0	0
+gnome-build-meta.bst:sdk/nuspell.bst	nuspell	yes	git_repo	5.1.9	https://github.com/nuspell/nuspell.git	0	3	0	0	1
+gnome-build-meta.bst:sdk/pango.bst	pango	yes	tar	1.58.2	https://download.gnome.org/sources/pango/1.58/pango-1.58.2.tar.xz	0	1017	0	0	3
+gnome-build-meta.bst:sdk/pinentry.bst	pinentry	yes	git_repo	1.3.3	https://github.com/gpg/pinentry.git	0	2	0	0	1
+gnome-build-meta.bst:sdk/pygobject.bst	pygobject	yes	git_repo+tar	3.58.1	https://download.gnome.org/sources/pygobject/3.58/pygobject-3.58.1.tar.gz	0	58	0	0	0
+gnome-build-meta.bst:sdk/sysprof-minimal.bst	sysprof-minimal	no	tar	51.0	https://download.gnome.org/sources/sysprof/51/sysprof-51.0.tar.xz	0	0	0	0	0
+gnome-build-meta.bst:sdk/tinysparql.bst	tinysparql	yes	remote+tar	3.12.0	https://download.gnome.org/sources/tinysparql/3.12/tinysparql-3.12.0.tar.xz	0	339	0	1	1
+gnome-build-meta.bst:sdk/vala.bst	vala	yes	tar	0.56.19	https://download.gnome.org/sources/vala/0.56/vala-0.56.19.tar.xz	0	10	0	0	3
+gnome-build-meta.bst:sdk/webkit2gtk-4.1.bst	webkit2gtk-4.1	yes	tar	2.54.1	https://webkitgtk.org/releases/webkitgtk-2.54.1.tar.xz	0	3959	0	0	0
+gnome-build-meta.bst:sdk/webkitgtk-6.0.bst	webkitgtk-6.0	yes	tar	2.54.1	https://webkitgtk.org/releases/webkitgtk-2.54.1.tar.xz	0	1700	0	0	1
+gnome-build-meta.bst:sdk/woff2.bst	woff2	yes	git_repo+patch	1.0.2	https://github.com/google/woff2.git	1	3	0	0	0
+gnome-build-meta.bst:sdk/yelp-tools.bst	yelp-tools	yes	tar	42.1	https://download.gnome.org/sources/yelp-tools/42/yelp-tools-42.1.tar.xz	0	17	0	0	3
+gnome-build-meta.bst:sdk/yelp-xsl.bst	yelp-xsl	yes	tar	49.0	https://download.gnome.org/sources/yelp-xsl/49/yelp-xsl-49.0.tar.xz	0	71	0	0	0
+gnome-build-meta.bst:sdk/yelp.bst	yelp	yes	tar	49.2	https://download.gnome.org/sources/yelp/49/yelp-49.2.tar.xz	0	325	1	0	1
+gnome-build-meta.bst:void/zenity.bst	zenity	no				0	0	0	0	0
+gnomeos-deps/bootc.bst	bootc	yes	cargo2+git_repo	1.17.3	https://github.com/bootc-dev/bootc.git	0	110	0	10	3
+oci/bluefin-base.bst	bluefin-base	no				0	0	0	0	0
+oci/bluefin.bst	bluefin	no				0	0	0	0	0
+oci/chunkah-metadata-tool.bst	chunkah-metadata-tool	no	local			0	0	0	0	0
+oci/chunkah/bluefin.bst	bluefin	no				0	0	0	0	0
+oci/chunkah/boot.bst	boot	no				0	0	0	0	0
+oci/chunkah/brew-toolchain.bst	brew-toolchain	no				0	0	0	0	0
+oci/layers/bluefin-init-scripts.bst	bluefin-init-scripts	no				0	0	0	0	0
+oci/layers/bluefin-stack.bst	bluefin-stack	no				0	0	0	0	0
+oci/layers/bluefin.bst	bluefin	no				0	0	0	0	0
+oci/layers/boot-stack.bst	boot-stack	no				0	0	0	0	0
+oci/layers/boot.bst	boot	no				0	0	0	0	0
+oci/layers/brew-toolchain-closure.bst	brew-toolchain-closure	no				0	0	0	0	0
+oci/layers/brew-toolchain.bst	brew-toolchain	no				0	0	0	0	0
+oci/oci-append-layer-tool.bst	oci-append-layer-tool	no	local			0	0	0	0	0
+oci/os-release.bst	os-release	yes				0	2	0	0	0
