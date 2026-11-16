@@ -5824,6 +5824,13 @@
       "sha512": "364e841749cd00cf526b2d4a145be9c11fa9531637c8450cbb06f26502434ee890ccd5926ad3adad7b13fa9552a3a821801d24470b95108b9cafcfa023f562c8"
     },
     {
+      "name": "rpcsvc-proto",
+      "version": "1.4",
+      "url": "https://github.com/thkukuk/rpcsvc-proto/releases/download/v1.4/rpcsvc-proto-1.4.tar.xz",
+      "filename": "rpcsvc-proto-1.4.tar.xz",
+      "sha512": "c3011d7d7ef97a4a751f6921df1a23e1dd8ac50fb0690c759d37010ed7be27968a2130e3b8872cb48d5914216f9d539096a424f1ec38a75f7ed899748151c6f4"
+    },
+    {
       "name": "rpm-ostree",
       "version": "2026.3",
       "url": "https://github.com/coreos/rpm-ostree/releases/download/v2026.3/rpm-ostree-2026.3.tar.xz",

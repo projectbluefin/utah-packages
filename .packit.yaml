@@ -3742,6 +3742,12 @@ packages:
     downstream_package_name: rpcbind
     paths:
       - packages/rpcbind
+  rpcsvc-proto:
+    specfile_path: rpcsvc-proto.spec
+    upstream_package_name: rpcsvc-proto
+    downstream_package_name: rpcsvc-proto
+    paths:
+      - packages/rpcsvc-proto
   rpm-ostree:
     specfile_path: rpm-ostree.spec
     upstream_package_name: rpm-ostree
