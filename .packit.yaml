@@ -70,6 +70,12 @@ packages:
     downstream_package_name: SDL3
     paths:
       - packages/SDL3
+  SDL3_net:
+    specfile_path: SDL3_net.spec
+    upstream_package_name: SDL3_net
+    downstream_package_name: SDL3_net
+    paths:
+      - packages/SDL3_net
   a52dec:
     specfile_path: a52dec.spec
     upstream_package_name: a52dec
