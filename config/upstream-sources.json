@@ -1792,6 +1792,13 @@
       ]
     },
     {
+      "name": "gupnp-av",
+      "version": "0.14.5",
+      "url": "https://download.gnome.org/sources/gupnp-av/0.14/gupnp-av-0.14.5.tar.xz",
+      "filename": "gupnp-av-0.14.5.tar.xz",
+      "sha512": "745e5a167e2384c404241968d54dd0c1f0b7d54c9530eabeaa4d23f80410aae91090461eb8482465898172d1af7aebf72c5706b3f853100290d6754d25ecf023"
+    },
+    {
       "name": "gupnp-dlna",
       "version": "0.12.0",
       "url": "https://download.gnome.org/sources/gupnp-dlna/0.12/gupnp-dlna-0.12.0.tar.xz",

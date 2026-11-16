@@ -1150,6 +1150,12 @@ packages:
     downstream_package_name: gupnp
     paths:
       - packages/gupnp
+  gupnp-av:
+    specfile_path: gupnp-av.spec
+    upstream_package_name: gupnp-av
+    downstream_package_name: gupnp-av
+    paths:
+      - packages/gupnp-av
   gupnp-dlna:
     specfile_path: gupnp-dlna.spec
     upstream_package_name: gupnp-dlna
