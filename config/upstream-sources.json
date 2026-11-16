@@ -1007,6 +1007,13 @@
       }
     },
     {
+      "name": "frei0r-plugins",
+      "version": "3.7.1",
+      "url": "https://github.com/dyne/frei0r/archive/v3.7.1/frei0r-plugins-3.7.1.tar.gz",
+      "filename": "frei0r-plugins-3.7.1.tar.gz",
+      "sha512": "c9bef5ea05108a4a6c16ac20690b7f83febda5b88fb3fd9547a92a764810edc305c273d671d85a253130eebbf7c8611a676b32a2075b991f0ffb47428c8c4245"
+    },
+    {
       "name": "fribidi",
       "version": "1.0.16",
       "url": "https://github.com/fribidi/fribidi/releases/download/v1.0.16/fribidi-1.0.16.tar.xz",
