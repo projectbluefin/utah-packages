@@ -70,6 +70,12 @@ packages:
     downstream_package_name: SDL3
     paths:
       - packages/SDL3
+  SDL3_ttf:
+    specfile_path: SDL3_ttf.spec
+    upstream_package_name: SDL3_ttf
+    downstream_package_name: SDL3_ttf
+    paths:
+      - packages/SDL3_ttf
   a52dec:
     specfile_path: a52dec.spec
     upstream_package_name: a52dec
