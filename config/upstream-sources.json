@@ -1450,12 +1450,12 @@
     },
     {
       "name": "gnome-shell-extension-gsconnect",
-      "version": "72",
-      "url": "https://github.com/GSConnect/gnome-shell-extension-gsconnect/archive/v72/gnome-shell-extension-gsconnect-72.tar.gz",
-      "filename": "gnome-shell-extension-gsconnect-72.tar.gz",
-      "sha512": "d2d6931d945ac28884048c60107aa9daa9494d4863e37278830047acaa2706b84815952a1df9c9a2b3e63599b56ae7bc89cafb76980a66878ab44b4700bcf260",
+      "version": "74",
+      "url": "https://github.com/GSConnect/gnome-shell-extension-gsconnect/archive/v74/gnome-shell-extension-gsconnect-74.tar.gz",
+      "filename": "gnome-shell-extension-gsconnect-74.tar.gz",
+      "sha512": "68e2721dba5a214699415654ef2967bfff3f68d45b2d6cb814106808ade954549cc9c9c42e923cb09102b8d1ad0504c4d993a77bb49df74fbf20058d157495fb",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/gnome-shell-extension-gsconnect/gnome-shell-extension-gsconnect-72.tar.gz/sha512/d2d6931d945ac28884048c60107aa9daa9494d4863e37278830047acaa2706b84815952a1df9c9a2b3e63599b56ae7bc89cafb76980a66878ab44b4700bcf260/gnome-shell-extension-gsconnect-72.tar.gz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/gnome-shell-extension-gsconnect/gnome-shell-extension-gsconnect-74.tar.gz/sha512/68e2721dba5a214699415654ef2967bfff3f68d45b2d6cb814106808ade954549cc9c9c42e923cb09102b8d1ad0504c4d993a77bb49df74fbf20058d157495fb/gnome-shell-extension-gsconnect-74.tar.gz"
       ]
     },
     {
@@ -2385,13 +2385,13 @@
     },
     {
       "name": "lcms2",
-      "version": "2.16",
-      "url": "https://downloads.sourceforge.net/project/lcms/lcms/2.16/lcms2-2.16.tar.gz",
-      "filename": "lcms2-2.16.tar.gz",
+      "version": "2.19.1",
+      "url": "https://downloads.sourceforge.net/project/lcms/lcms/2.19.1/lcms2-2.19.1.tar.gz",
+      "filename": "lcms2-2.19.1.tar.gz",
       "feed": "https://release-monitoring.org/project/9815",
-      "sha512": "638dd6ad6787456c8145510d18b2d0727bd0a446a13ac2934aabc9531d1156eca2a2c0fd780a453823fbd35a1895f9d8de5dc4b3cab505459dd3f0535b4e837d",
+      "sha512": "0c476a0c2ed7a4eabd149767c6e6fb372090dfd582b93ae738c9bd3dda94a2fc1c0b7da4b400422a3bc3650c9b98c9956ba9181b29f9b7c57f08763e20b7c8ac",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/lcms2/lcms2-2.16.tar.gz/sha512/638dd6ad6787456c8145510d18b2d0727bd0a446a13ac2934aabc9531d1156eca2a2c0fd780a453823fbd35a1895f9d8de5dc4b3cab505459dd3f0535b4e837d/lcms2-2.16.tar.gz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/lcms2/lcms2-2.19.1.tar.gz/sha512/0c476a0c2ed7a4eabd149767c6e6fb372090dfd582b93ae738c9bd3dda94a2fc1c0b7da4b400422a3bc3650c9b98c9956ba9181b29f9b7c57f08763e20b7c8ac/lcms2-2.19.1.tar.gz"
       ]
     },
     {
@@ -3600,13 +3600,13 @@
     },
     {
       "name": "libpcap",
-      "version": "1.10.6",
-      "url": "https://www.tcpdump.org/release/libpcap-1.10.6.tar.xz",
-      "filename": "libpcap-1.10.6.tar.xz",
+      "version": "1.11.0",
+      "url": "https://www.tcpdump.org/release/libpcap-1.11.0.tar.xz",
+      "filename": "libpcap-1.11.0.tar.xz",
       "feed": "https://release-monitoring.org/project/1702",
-      "sha512": "d0841d91ac68dda73bad9198e7a43195ec68b04d2987500946c34fdf066924462f025b26b5b2a88bfa67d82fa946246d498cf50f3b5de4adbc8537162e1a16c4",
+      "sha512": "a786a1a498aaff30c972d92e5250be269aef06fcd0879b7b9b656fae7f15fa37dd4bb314fc6aa475993065f9b02599b76e0a5cafd5edec8fd9833887d71c26c3",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/libpcap/libpcap-1.10.6.tar.xz/sha512/d0841d91ac68dda73bad9198e7a43195ec68b04d2987500946c34fdf066924462f025b26b5b2a88bfa67d82fa946246d498cf50f3b5de4adbc8537162e1a16c4/libpcap-1.10.6.tar.xz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libpcap/libpcap-1.11.0.tar.xz/sha512/a786a1a498aaff30c972d92e5250be269aef06fcd0879b7b9b656fae7f15fa37dd4bb314fc6aa475993065f9b02599b76e0a5cafd5edec8fd9833887d71c26c3/libpcap-1.11.0.tar.xz"
       ]
     },
     {
@@ -3944,13 +3944,13 @@
     },
     {
       "name": "libtheora",
-      "version": "1.1.1",
-      "url": "https://downloads.xiph.org/releases/theora/libtheora-1.1.1.tar.xz",
-      "filename": "libtheora-1.1.1.tar.xz",
+      "version": "1.2.0",
+      "url": "https://downloads.xiph.org/releases/theora/libtheora-1.2.0.tar.xz",
+      "filename": "libtheora-1.2.0.tar.xz",
       "feed": "https://release-monitoring.org/project/11793",
-      "sha512": "032fb60f10ac0074ec87d5f8c586702309edc50dc0d2842d2f9b9c46ebd1500acc399e9309f858f318fff5b8fbe953234db3afb54ed74a03d0f2c6ee8c3ed481",
+      "sha512": "849db0c916f0f0b1237a4893594ff4b9e72d4ad1dca42f3f2979af5971f42c3fe77a75b181dfdd1c1353bbca4c832d6ab43f6d509c0650901c692e96ceab5f26",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/libtheora/libtheora-1.1.1.tar.xz/md5/9eeabf1ad65b7f41533854a59f7a716d/libtheora-1.1.1.tar.xz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libtheora/libtheora-1.2.0.tar.xz/sha512/849db0c916f0f0b1237a4893594ff4b9e72d4ad1dca42f3f2979af5971f42c3fe77a75b181dfdd1c1353bbca4c832d6ab43f6d509c0650901c692e96ceab5f26/libtheora-1.2.0.tar.xz"
       ]
     },
     {
@@ -3999,10 +3999,10 @@
     },
     {
       "name": "liburing",
-      "version": "2.13",
-      "url": "https://brick.kernel.dk/snaps/liburing-2.13.tar.gz",
-      "filename": "liburing-2.13.tar.gz",
-      "sha512": "21e0d662eb0ba0183469cea38b2abc66d0544d6480b7f56136743d0e10b141e8b1a7f8279523cfe36ee9b4d40403e050b965260b858eb944d20b7e33a008e54e"
+      "version": "2.15",
+      "url": "https://brick.kernel.dk/snaps/liburing-2.15.tar.gz",
+      "filename": "liburing-2.15.tar.gz",
+      "sha512": "fee6098128e009199d591db0d3f766a9ab808abfdd3286d51cb893429be133117f1598692e80ec3e77740dcf59d9b175659bf645bbeee47cc16fa5944e4bc535"
     },
     {
       "name": "libusbmuxd",
@@ -4168,13 +4168,13 @@
     },
     {
       "name": "libxkbfile",
-      "version": "1.1.3",
-      "url": "https://xorg.freedesktop.org/archive/individual/lib/libxkbfile-1.1.3.tar.xz",
-      "filename": "libxkbfile-1.1.3.tar.xz",
+      "version": "1.2.0",
+      "url": "https://xorg.freedesktop.org/archive/individual/lib/libxkbfile-1.2.0.tar.xz",
+      "filename": "libxkbfile-1.2.0.tar.xz",
       "feed": "https://release-monitoring.org/project/1781",
-      "sha512": "d80ac41f6fa3a1ffad77ea1f8f9d9542f0bd210d74b263802bc6e6c1594fe325b27f42b5454aeeb36352518963b1ed1fdbbad95d7db3690b2e36d54742b7c236",
+      "sha512": "772035b6bc1d692e8141e095fc2a8cf2ba7daed1d7148def862103160e0d7706f46865367befbbe4c777e7311b224d2cd4474f399d747b122dd395deac3e7cb7",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/libxkbfile/libxkbfile-1.1.3.tar.xz/sha512/d80ac41f6fa3a1ffad77ea1f8f9d9542f0bd210d74b263802bc6e6c1594fe325b27f42b5454aeeb36352518963b1ed1fdbbad95d7db3690b2e36d54742b7c236/libxkbfile-1.1.3.tar.xz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libxkbfile/libxkbfile-1.2.0.tar.xz/sha512/772035b6bc1d692e8141e095fc2a8cf2ba7daed1d7148def862103160e0d7706f46865367befbbe4c777e7311b224d2cd4474f399d747b122dd395deac3e7cb7/libxkbfile-1.2.0.tar.xz"
       ]
     },
     {
@@ -4259,11 +4259,14 @@
     },
     {
       "name": "lm_sensors",
-      "version": "3.6.0",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/lm_sensors/lm-sensors-3-6-0.tar.gz/sha512/4e80361913aff5403f1f0737fd4f42cffe43cc170ef48fff3914c9952f71990739d723f7b0b8120d9a01bcbbc829e964cfbd0a5cf18508af8f8dc825b49860bf/lm-sensors-3-6-0.tar.gz",
-      "filename": "lm-sensors-3-6-0.tar.gz",
+      "version": "3.6.2",
+      "url": "https://github.com/lm-sensors/lm-sensors/archive/V3-6-2/lm-sensors-3-6-2.tar.gz",
+      "filename": "lm-sensors-3-6-2.tar.gz",
       "feed": "https://release-monitoring.org/project/1831",
-      "sha512": "4e80361913aff5403f1f0737fd4f42cffe43cc170ef48fff3914c9952f71990739d723f7b0b8120d9a01bcbbc829e964cfbd0a5cf18508af8f8dc825b49860bf"
+      "sha512": "a89ae984814f5224bf621727252042d2b84a5cc5c125dd7024ff1be223e4c269b1e7c23512e56b3f2f38c088d7c6e54df47af51d63740deb09c44f837060695a",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/lm_sensors/lm-sensors-3-6-2.tar.gz/sha512/a89ae984814f5224bf621727252042d2b84a5cc5c125dd7024ff1be223e4c269b1e7c23512e56b3f2f38c088d7c6e54df47af51d63740deb09c44f837060695a/lm-sensors-3-6-2.tar.gz"
+      ]
     },
     {
       "name": "localsearch",
@@ -5060,10 +5063,10 @@
     },
     {
       "name": "pkcs11-helper",
-      "version": "1.30.0",
-      "url": "https://github.com/OpenSC/pkcs11-helper/releases/download/pkcs11-helper-1.30.0/pkcs11-helper-1.30.0.tar.bz2",
-      "filename": "pkcs11-helper-1.30.0.tar.bz2",
-      "sha512": "19fba76e41210cc17f9efa4501d0214d4a5c777ab7b2671888fd280b150bae4a6b190c7f47fb783015f9aa40d409fd6087264e531d6f28d0bed4293dcbf8bdd5"
+      "version": "1.31.0",
+      "url": "https://github.com/OpenSC/pkcs11-helper/releases/download/pkcs11-helper-1.31.0/pkcs11-helper-1.31.0.tar.bz2",
+      "filename": "pkcs11-helper-1.31.0.tar.bz2",
+      "sha512": "0833efc59e9093dd398a54640d858b01a830ef7adfb40321c1e0ed0afa004500fc1259cc66bc49c5263935adeda0a3bfe658de538eefd66888685a71f731c484"
     },
     {
       "name": "pkcs11-provider",
@@ -6642,10 +6645,10 @@
     },
     {
       "name": "usbutils",
-      "version": "019",
-      "url": "https://www.kernel.org/pub/linux/utils/usb/usbutils/usbutils-019.tar.xz",
-      "filename": "usbutils-019.tar.xz",
-      "sha512": "fb4acc570c2b71f90c51c2717dc80e844727c8fcfebb5d92c57145eb9d09cbd1f63cf405e07db76c3afaaf3fac87b90f3f512d0a7c4d50cb9e6f26438eca9390"
+      "version": "020",
+      "url": "https://www.kernel.org/pub/linux/utils/usb/usbutils/usbutils-020.tar.xz",
+      "filename": "usbutils-020.tar.xz",
+      "sha512": "61234ddd4f45dca4b33eb9d0babf09d82a3ddb3f02e7eec2709487a126951de626ca82af20809e75410e7f06875a6a83ad42ee65959686c58e9a9d73d11c14af"
     },
     {
       "name": "usermode",
@@ -6721,7 +6724,7 @@
     },
     {
       "name": "vpnc-script",
-      "version": "20230907",
+      "version": "20250727",
       "no_upstream_source": true
     },
     {
@@ -6901,11 +6904,11 @@
     },
     {
       "name": "wpa_supplicant",
-      "version": "2.11",
-      "url": "https://w1.fi/releases/wpa_supplicant-2.11.tar.gz",
-      "filename": "wpa_supplicant-2.11.tar.gz",
+      "version": "2.12",
+      "url": "https://w1.fi/releases/wpa_supplicant-2.12.tar.gz",
+      "filename": "wpa_supplicant-2.12.tar.gz",
       "feed": "https://release-monitoring.org/project/5146",
-      "sha512": "9a0a3a9d6fa2235903c40aa57b5955f0c9dd1dccfd0e3825a3b6f92b3e32db8d464b3ea0aef3285ba3ee109e7b190560cedd744902e954f0003cdba543e277b2"
+      "sha512": "5e996323fea2a5f6fefe4f2456481b9e8409adb5bf1d7a72d4489f3db2e3a968d6d9fe5cc0959b820f5b18faa330adb1245da98aad49631009609fbd0f447901"
     },
     {
       "name": "wsdd",

@@ -1701,6 +1701,24 @@ class ForgeEntryRewriteTests(unittest.TestCase):
         self.assertNotIn("old" * 10, fallback)
         self.assertIn("new" * 10, fallback)
 
+    def test_a_version_inside_the_old_digest_does_not_corrupt_it(self):
+        # gsconnect 72 -> 74: the old digest contains "72", and swapping the
+        # version first left a fallback naming a digest that never existed.
+        old, new = "ab72cd" * 4, "ef74" * 6
+        entry = {
+            "name": "gsconnect",
+            "version": "72",
+            "url": "https://github.com/g/g/archive/v72/g-72.tar.gz",
+            "filename": "g-72.tar.gz",
+            "sha512": old,
+            "fallback_urls": [f"https://lookaside.invalid/g-72.tar.gz/sha512/{old}/g-72.tar.gz"],
+        }
+        updated = forge_planned_entry(entry, "74", new)
+        self.assertEqual(
+            updated["fallback_urls"],
+            [f"https://lookaside.invalid/g-74.tar.gz/sha512/{new}/g-74.tar.gz"],
+        )
+
     def test_a_version_absent_from_the_url_refuses_to_substitute(self):
         # Substituting nothing would write a new version beside an old tarball.
         entry = {

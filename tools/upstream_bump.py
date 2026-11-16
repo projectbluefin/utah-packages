@@ -629,12 +629,18 @@ def planned_entry(entry: dict, release: str, digest: str, module: str | None = N
 
 
 def substituted(value, replacements: list[tuple[str, str]]):
-    """A string, or list of strings, with every replacement applied in turn."""
+    """A string, or list of strings, with every replacement applied at once.
+
+    One pass over the original text, longest match first: replacing in turn
+    let one swap rewrite the other's text. gsconnect 72 -> 74 turned the
+    "72" inside the old lookaside digest into "74" before the digest swap ran,
+    so the fallback kept a corrupt digest no lookaside object has.
+    """
     if isinstance(value, list):
         return [substituted(item, replacements) for item in value]
-    for old, new in replacements:
-        value = value.replace(old, new)
-    return value
+    table = dict(replacements)
+    pattern = "|".join(re.escape(old) for old in sorted(table, key=len, reverse=True))
+    return re.sub(pattern, lambda match: table[match.group(0)], value) if table else value
 
 
 def forge_planned_entry(entry: dict, release: str, digest: str) -> dict:
