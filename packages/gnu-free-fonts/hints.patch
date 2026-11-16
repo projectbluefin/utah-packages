@@ -1,0 +1,13 @@
+diff -ur freefont-20120503.orig/tools/generate/TrueType freefont-20120503/tools/generate/TrueType
+--- freefont-20120503.orig/tools/generate/TrueType	2012-05-03 15:23:30.000000000 +0200
++++ freefont-20120503/tools/generate/TrueType	2026-02-06 18:19:08.946646299 +0100
+@@ -51,7 +51,7 @@
+ 		f.selection.all()
+ 		f.autoHint()
+ 		f.autoInstr()
+-		f.generate( ttfile, flags=('opentype','old-kern','no-hints') )
++		f.generate( ttfile, flags=('opentype','old-kern') )
+ 		f.close()
+ else:
+ 	print("Usage: " + scriptname + " font.sfd [font.sfd ...]")
+
