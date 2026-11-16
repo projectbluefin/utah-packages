@@ -982,6 +982,12 @@ packages:
     downstream_package_name: gnome-user-share
     paths:
       - packages/gnome-user-share
+  gnu-free-fonts:
+    specfile_path: gnu-free-fonts.spec
+    upstream_package_name: gnu-free-fonts
+    downstream_package_name: gnu-free-fonts
+    paths:
+      - packages/gnu-free-fonts
   gobject-introspection:
     specfile_path: gobject-introspection.spec
     upstream_package_name: gobject-introspection
