@@ -48,6 +48,11 @@ BuildRequires:  meson >= 1.2
 
 BuildRequires:  pkgconfig(glycin-2) >= 2.0.0
 BuildRequires:  pkgconfig(gstreamer-1.0) >= 1.26.0
+# Utah: the vendored gstreamer-app-sys and gstreamer-video-sys crates link
+# these. Fedora gets them through its rust-*-sys-devel crate RPMs, which the
+# bundled build does not install.
+BuildRequires:  pkgconfig(gstreamer-app-1.0)
+BuildRequires:  pkgconfig(gstreamer-video-1.0)
 
 # GStreamer plugin dependencies (tests)
 BuildRequires:  gstreamer1-plugins-base
