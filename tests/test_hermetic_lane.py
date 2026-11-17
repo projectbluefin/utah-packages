@@ -194,6 +194,53 @@ echo "attempts=$(cat {counter}) cleanups=$cleanups"
             self.assertEqual(capped.returncode, 1)
             self.assertEqual(counter.read_text().strip(), "1")
 
+    def test_the_remote_fetch_rotates_the_baked_in_mirror_each_attempt(self) -> None:
+        # The lock bakes in whichever mirror the metalink handed mock -- the
+        # failing run resolved to mirror.acm.umn.edu, which is down, so every
+        # retry then hit that same dead host. The rewrite in fetch_remote
+        # rewrites the lock to the next working mirror before each attempt,
+        # and rewrites the non-standard /fedora/fedora/linux/ prefix that
+        # mirror bakes in to the standard /fedora/linux/ prefix the others
+        # serve. The online wrapper is untouched; only fetch_remote changed.
+        import json
+        import subprocess
+        import tempfile
+
+        script = SCRIPT.read_text()
+        anchor = 'python3 - "$H/lock/remote.json" "$index" "$index_file" <<\'PY\''
+        start = script.index(anchor)
+        end = script.index("\nPY\n", start)
+        rewrite = script[start + len(anchor) + 1:end]
+        with tempfile.TemporaryDirectory() as directory:
+            lock = Path(directory) / "remote.json"
+            index_file = Path(directory) / "index"
+            lock.write_text(json.dumps({"buildroot": {"rpms": [
+                {"name": "fedora-release-common", "version": "44", "release": "18",
+                 "arch": "noarch",
+                 "url": "https://mirror.acm.umn.edu/fedora/fedora/linux/updates/44/Everything/x86_64/Packages/f/fedora-release-common-44-18.noarch.rpm"},
+                {"name": "local-stage", "version": "1", "release": "1", "arch": "x86_64",
+                 "url": "file:///work/prior/local-stage-1-1.x86_64.rpm"},
+            ]}}))
+            mirrors = []
+            for _ in range(3):
+                index_value = index_file.read_text() if index_file.exists() else "0"
+                subprocess.run(
+                    ["bash", "-c",
+                     f"python3 - {lock} {index_value} {index_file} <<'PY'\n{rewrite}\nPY"],
+                    check=True,
+                )
+                mirrors.append(json.loads(lock.read_text())["buildroot"]["rpms"][0]["url"])
+            local = json.loads(lock.read_text())["buildroot"]["rpms"][1]["url"]
+        # Each attempt rewrote the non-standard prefix to the standard one...
+        for url in mirrors:
+            self.assertIn("https://", url)
+            self.assertNotIn("/fedora/fedora/linux/", url)
+            self.assertIn("/fedora/linux/updates/", url)
+        # ...and each attempt used a different mirror, so a retry spans hosts.
+        self.assertEqual(len(set(mirrors)), 3)
+        # The file:// local stage package was never a remote URL; leave it.
+        self.assertEqual(local, "file:///work/prior/local-stage-1-1.x86_64.rpm")
+
     def test_mock_config_carries_a_ready_bootstrap_image_only_when_asked(self) -> None:
         plain = render()
         self.assertNotIn("bootstrap_image", plain)

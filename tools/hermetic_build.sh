@@ -176,6 +176,41 @@ PY
   fetch_remote() {
     fetch_log="$H/fetch.log"
     fetch_status=0
+    # A flaky single mirror must not fail the build. The lock bakes in
+    # whichever mirror the metalink handed mock -- the failing run resolved
+    # to mirror.acm.umn.edu, and every retry then hit that same dead host.
+    # Rewrite its URLs to the next working mirror before each attempt. The
+    # non-standard /fedora/fedora/linux/ prefix that mirror bakes in is
+    # rewritten to the standard /fedora/linux/ prefix every other mirror
+    # serves -- a single strip of the redundant fedora/ segment, so it holds
+    # for the main repo (releases/44/os/...) and updates (updates/44/...)
+    # alike, and for any Fedora version. A small index file tracks which
+    # mirror we are on; clean_repo removes only the repo, so the index
+    # survives and each call to this function tries a different one.
+    index_file="$H/fetch.mirror.index"
+    index=$(cat "$index_file" 2>/dev/null || echo 0)
+    python3 - "$H/lock/remote.json" "$index" "$index_file" <<'PY'
+import json, re, sys
+path, index, index_file = sys.argv[1], int(sys.argv[2]), sys.argv[3]
+mirrors = (
+    "mirror.fcix.net",
+    "volico.mm.fcix.net",
+    "paducahix.mm.fcix.net",
+    "mirror.servaxnet.com",
+    "fedora.mirror.constant.com",
+)
+mirror = mirrors[index % len(mirrors)]
+lock = json.load(open(path))
+def rewrite(url):
+    if not url.startswith("http"):
+        return url
+    url = re.sub(r"https?://[^/]+", f"https://{mirror}", url)
+    return url.replace("/fedora/fedora/linux/", "/fedora/linux/")
+for r in lock["buildroot"]["rpms"]:
+    r["url"] = rewrite(r["url"])
+json.dump(lock, open(path, "w"), indent=2)
+open(index_file, "w").write(str((index + 1) % len(mirrors)))
+PY
     mock-hermetic-repo --lockfile "$H/lock/remote.json" --output-repo "$H/repo" \
       >"$fetch_log" 2>&1 || fetch_status=$?
     if [ "$fetch_status" -eq 0 ]; then
