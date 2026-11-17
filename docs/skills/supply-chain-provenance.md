@@ -484,9 +484,11 @@ early one), prefixed like every other artifact of the run.
 
 Its sources are `repository/reports`, so those reports move the way the RPMs
 do. `publish_gate.py assemble` decides which packages this publication
-replaced; their fresh reports come from `built/reports` (each package's
-`rpm-s<N>-<package>` artifact), a failed or losing package keeps the report it
-was published with, and a pruned source loses its report with its RPMs.
+replaced; their fresh reports come from `built/reports`, the per-package
+`*.json` reports bundled into the merged `rpm-s<N>` artifact alongside the
+RPMs they describe (the #970 merge kept the reports with the RPMs rather than
+dropping them), a failed or losing package keeps the report it was published
+with, and a pruned source loses its report with its RPMs.
 
 Reports are classified by shape, not by filename: a buildroot snapshot is
 `schema`+`name`+`packages`, a source report carries `package`. Unrelated JSON

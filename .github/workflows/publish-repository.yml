@@ -456,9 +456,10 @@ jobs:
           echo "report=$(jq -c . work/publish-report.json)" >> "$GITHUB_OUTPUT"
       # The manifest reads its sources from repository/reports, so they have
       # to move the way the RPMs do: a package this publication replaced
-      # brings the report its build just wrote (built/reports, from its
-      # rpm-s<N>-<package> artifact), a failed or losing package keeps the one
-      # it was published with, and a pruned source takes its report with it.
+      # brings the report its build just wrote (built/reports, the per-package
+      # reports bundled in the merged rpm-s<N> artifact), a failed or losing
+      # package keeps the one it was published with, and a pruned source takes
+      # its report with it.
       - name: Carry the source reports of what this publication replaced
         env:
           PRUNE_SOURCES: ${{ inputs.prune_sources }}
@@ -867,6 +868,7 @@ jobs:
   # Names every package that did not publish, loudly, whether or not publish
   # ran: in the job summary on every run, and on main in one tracking issue
   # that is opened, updated as the failing set changes, and closed by the
-  # first run with no failures. Failures are read from the run's own artifact
-  # list -- build-stage.yml uploads rpm-s<stage>-<package> only for a package
-  # that produced RPMs -- so a publish that never started still gets a report.
+  # first run with no failures. Failures are read from the merged rpm-s<N>
+  # artifacts the run produced -- a selected source that built nothing carries
+  # no SOURCERPM in any of them -- so a publish that never started still gets a
+  # report.

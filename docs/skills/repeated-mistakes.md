@@ -510,10 +510,10 @@ artifact is produced and no red check run is recorded against the commit.
 
 ## 22. The tracking issue speaks only when the run reached a verdict
 
-**What happened.** The `report` job names every selected package with no
-`rpm-s<stage>-<package>` artifact as failed and files or refreshes the
-`Factory: packages failing on main` issue. Twice it spoke for a run that had
-decided nothing. A canary dispatched on `main` reused the production issue
+**What happened.** The `report` job names every selected package whose source
+built nothing -- its merged RPMs carry no SOURCERPM -- as failed and files or
+refreshes the `Factory: packages failing on main` issue. Twice it spoke for a
+run that had decided nothing. A canary dispatched on `main` reused the production issue
 (`b858eee`, `#261`) until the artifact prefix told them apart. Then a run
 cancelled by hand one minute into `rebuild0` (`#267`) reported all 215
 selected packages as failed and the publish job as `cancelled`: the job ran
