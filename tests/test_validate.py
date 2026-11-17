@@ -477,13 +477,31 @@ class ValidateScriptTests(unittest.TestCase):
         assert "upstream's own checksum manifest" in result.stderr
         assert "fallback_urls" not in result.stderr
 
-    def test_the_fedora_url_remediation_keeps_the_fedora_host_in_fallback_urls(self) -> None:
+    def test_the_fedora_url_remediation_points_at_upstream_and_keeps_the_fedora_host_in_fallback_urls(self) -> None:
         # Only a primary `url`/`url_template` can keep the Fedora host in a
-        # fallback; the remediation still says that there.
+        # fallback; the remediation must still tell the reader to re-point the
+        # primary field at the upstream release first, or a reader could move the
+        # URL into `fallback_urls` and leave no primary `url` at all.
         result = self.check(source_urls={"example": LOOKASIDE_URL})
         assert result.returncode != 0
         assert "example (url)" in result.stderr
+        assert "point `url` at the project's own release" in result.stderr
         assert "fallback_urls" in result.stderr
+
+    def test_reports_every_fedora_field_on_one_entry(self) -> None:
+        # The ratchet must name every offending field in one pass, not stop at
+        # the first; a second Fedora field would otherwise fail only on the next
+        # run. `offending_names` is a set, so a repeated name is harmless.
+        result = self.check(
+            source_urls={"example": LOOKASIDE_URL},
+            source_sha256_urls={
+                "example": "https://src.fedoraproject.org/repo/pkgs/example/example.sha256"
+            },
+        )
+        assert result.returncode != 0
+        assert "takes its payload from Fedora, not upstream: example" in result.stderr
+        # offenders are sorted, so the fields print alphabetically in one pass.
+        assert "example (sha256_url, url)" in result.stderr
 
     def test_accepts_a_non_fedora_url_in_the_url_template_position(self) -> None:
         result = self.check(

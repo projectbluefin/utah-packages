@@ -153,8 +153,9 @@ def fedora_primary_sources(path: Path) -> list[tuple[str, str]]:
         for key in fields:
             host = urllib.parse.urlparse(entry.get(key) or "").hostname or ""
             if host in FEDORA_HOSTS or host.endswith(".fedoraproject.org"):
+                # Report every offending field, not just the first, so a second
+                # Fedora field is left for this run to name, not the next one.
                 offenders.append((name, key))
-                break
     return sorted(offenders)
 
 
@@ -175,8 +176,9 @@ def _fedora_ratchet_fix(name: str, fields: list[str]) -> str:
     for field in fields:
         if field in ("url", "url_template"):
             actions.append(
-                f"keep the Fedora host in `fallback_urls` (source_pipeline.py "
-                f"already consults it after an upstream transport failure)"
+                f"point `{field}` at the project's own release and keep the "
+                f"Fedora host in `fallback_urls` (source_pipeline.py already "
+                f"consults it after an upstream transport failure)"
             )
         elif field == "sha256_url":
             actions.append("point `sha256_url` at the upstream's own checksum manifest")
