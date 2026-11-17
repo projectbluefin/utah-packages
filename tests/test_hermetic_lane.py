@@ -241,6 +241,46 @@ echo "attempts=$(cat {counter}) cleanups=$cleanups"
         # The file:// local stage package was never a remote URL; leave it.
         self.assertEqual(local, "file:///work/prior/local-stage-1-1.x86_64.rpm")
 
+    def test_mirror_rewrite_leaves_non_fedora_urls_untouched(self) -> None:
+        # The mirror rotation rewrites the remote lock so a dead mirror's URLs
+        # point at the next working one. It must rewrite only URLs that already
+        # target a Fedora mirror path; a Hummingbird (packages.redhat.com) or
+        # other project URL is left exactly as-is, so a non-Fedora package never
+        # has its source hijacked to a public mirror. (Review on this PR: the
+        # original rewrite() replaced every http(s) URL.)
+        import json
+        import subprocess
+        import tempfile
+        from pathlib import Path
+
+        script = SCRIPT.read_text()
+        marker = 'python3 - "$H/lock/remote.json" "$index" "$index_file" <<\'PY\''
+        body = script[script.index(marker) + len(marker):]
+        body = body[:body.index("\nPY")]
+
+        with tempfile.TemporaryDirectory() as directory:
+            lock = Path(directory) / "remote.json"
+            index_file = Path(directory) / "index"
+            lock.write_text(json.dumps({
+                "buildroot": {
+                    "rpms": [
+                        {"url": "https://packages.redhat.com/install/hummingbird/1/x86_64/os/PKGS/example-1.noarch.rpm"},
+                        {"url": "https://mirror.acm.umn.edu/fedora/fedora/linux/releases/44/Everything/x86_64/os/PKGS/fedora-1.noarch.rpm"},
+                    ]
+                }
+            }))
+            subprocess.run(["python3", "-", str(lock), "0", str(index_file)],
+                           input=body, text=True, check=True)
+            urls = [r["url"] for r in json.loads(lock.read_text())["buildroot"]["rpms"]]
+            # Hummingbird URL: unchanged.
+            self.assertEqual(
+                urls[0],
+                "https://packages.redhat.com/install/hummingbird/1/x86_64/os/PKGS/example-1.noarch.rpm",
+            )
+            # Fedora URL: rewritten to the working mirror's standard path.
+            self.assertTrue(urls[1].startswith("https://mirror.fcix.net/fedora/linux/"))
+            self.assertNotIn("/fedora/fedora/linux/", urls[1])
+
     def test_mock_config_carries_a_ready_bootstrap_image_only_when_asked(self) -> None:
         plain = render()
         self.assertNotIn("bootstrap_image", plain)

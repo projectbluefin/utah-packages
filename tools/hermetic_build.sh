@@ -201,11 +201,18 @@ mirrors = (
 )
 mirror = mirrors[index % len(mirrors)]
 lock = json.load(open(path))
+# Only rewrite URLs that already target a Fedora mirror path; a Hummingbird
+# (packages.redhat.com) or other project URL is left exactly as-is, so a
+# non-Fedora package never has its source hijacked to a public mirror. The
+# non-standard /fedora/fedora/linux/ prefix that mirror bakes in is stripped to
+# the standard /fedora/linux/ prefix every mirror serves. The regex matches the
+# host and the optional /pub/ and doubled /fedora/fedora/ segments, so a
+# Hummingbird URL under a redhat.com host does not match and is untouched.
+FEDORA_PATH = re.compile(r"^https?://[^/]+/(?:pub/)?fedora/(?:fedora/)?linux/")
 def rewrite(url):
-    if not url.startswith("http"):
+    if not FEDORA_PATH.match(url):
         return url
-    url = re.sub(r"https?://[^/]+", f"https://{mirror}", url)
-    return url.replace("/fedora/fedora/linux/", "/fedora/linux/")
+    return FEDORA_PATH.sub(f"https://{mirror}/fedora/linux/", url, count=1)
 for r in lock["buildroot"]["rpms"]:
     r["url"] = rewrite(r["url"])
 json.dump(lock, open(path, "w"), indent=2)
