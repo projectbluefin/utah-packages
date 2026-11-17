@@ -122,15 +122,18 @@ def check_provenance(path: Path, data: dict) -> None:
 
 
 def fedora_primary_sources(path: Path) -> list[str]:
-    """Names in the source lock whose primary `url` is Fedora infrastructure.
+    """Names in the source lock whose primary source is Fedora infrastructure.
 
-    `tools/source_pipeline.py` fetches the primary `url` directly, so an entry
-    pointing at Fedora takes its payload from the lookaside rather than from
-    the project's own release -- which is the one thing AGENTS.md and
+    `tools/source_pipeline.py` fetches the payload from `url` or `url_template`
+    and a checksum manifest from `sha256_url`, so an entry pointing at Fedora in
+    any of these takes its payload from the lookaside rather than from the
+    project's own release -- which is the one thing AGENTS.md and
     docs/targeting-hummingbird.md say the factory does not do. The SHA-512 lock
     still holds, so this is provenance, not integrity: Fedora belongs in
     `fallback_urls`, which source_pipeline already consults after an upstream
-    transport failure, not in the primary position.
+    transport failure, not in the primary position. Every field the pipeline
+    fetches from is checked, so a rawhide URL in `url_template` or `sha256_url`
+    cannot slip past the ratchet the way one in `url` cannot.
     """
     if not path.is_file():
         return []
@@ -138,12 +141,21 @@ def fedora_primary_sources(path: Path) -> list[str]:
         data = json.loads(path.read_text())
     except (OSError, json.JSONDecodeError):
         raise SystemExit(f"invalid source lock: {path}")
+    # The three fields source_pipeline.py actually fetches from; matching the
+    # coverage of check_plaintext_source_urls so no fetch path escapes this.
+    fields = ("url", "url_template", "sha256_url")
     offenders = []
     for entry in data.get("packages", []):
         if not isinstance(entry, dict):
             continue
-        host = urllib.parse.urlparse(entry.get("url") or "").hostname or ""
-        if host in FEDORA_HOSTS or host.endswith(".fedoraproject.org"):
+        hosts = (
+            urllib.parse.urlparse(entry.get(key) or "").hostname or ""
+            for key in fields
+        )
+        if any(
+            h in FEDORA_HOSTS or h.endswith(".fedoraproject.org")
+            for h in hosts
+        ):
             offenders.append(entry.get("name") or entry.get("filename") or "<unnamed>")
     return sorted(offenders)
 

@@ -71,6 +71,8 @@ class ValidateScriptTests(unittest.TestCase):
         buildroot_pin=DEFAULT_BUILDROOT_PIN,
         source_urls=None,
         source_fallbacks=None,
+        source_templates=None,
+        source_sha256_urls=None,
         fedora_baseline=None,
         review_only=None,
         sources_files=None,
@@ -94,6 +96,10 @@ class ValidateScriptTests(unittest.TestCase):
         for entry in locks:
             if entry["name"] in (source_urls or {}):
                 entry["url"] = source_urls[entry["name"]]
+            if entry["name"] in (source_templates or {}):
+                entry["url_template"] = source_templates[entry["name"]]
+            if entry["name"] in (source_sha256_urls or {}):
+                entry["sha256_url"] = source_sha256_urls[entry["name"]]
             if entry["name"] in (source_fallbacks or {}):
                 entry["fallback_urls"] = list(source_fallbacks[entry["name"]])
         (root / "config" / "upstream-sources.json").write_text(
@@ -417,6 +423,36 @@ class ValidateScriptTests(unittest.TestCase):
         )
         assert result.returncode != 0
         assert "takes its payload from Fedora" in result.stderr
+
+    def test_rejects_a_fedora_url_in_the_url_template_position(self) -> None:
+        # source_pipeline.py builds the payload from `url_template` when there is
+        # no `url`, so a Fedora URL there pulls from the lookaside just the same.
+        result = self.check(
+            source_templates={
+                "example": "https://src.fedoraproject.org/repo/pkgs/example/example-{version}.tar.xz"
+            },
+        )
+        assert result.returncode != 0
+        assert "takes its payload from Fedora, not upstream: example" in result.stderr
+
+    def test_rejects_a_fedora_url_in_the_sha256_url_position(self) -> None:
+        # The checksum manifest is fetched from `sha256_url`; a Fedora host there
+        # is still the factory reading its bytes off Fedora infrastructure.
+        result = self.check(
+            source_sha256_urls={
+                "example": "https://src.fedoraproject.org/repo/pkgs/example/example.sha256"
+            },
+        )
+        assert result.returncode != 0
+        assert "takes its payload from Fedora, not upstream: example" in result.stderr
+
+    def test_accepts_a_non_fedora_url_in_the_url_template_position(self) -> None:
+        result = self.check(
+            source_templates={
+                "example": "https://github.com/example/example/releases/v{version}.tar.xz"
+            },
+        )
+        assert result.returncode == 0, result.stdout + result.stderr
 
     def test_rejects_a_source_lock_that_fetches_over_plain_http(self) -> None:
         # upstream_bump.py pins the SHA-512 of whatever the primary url serves
