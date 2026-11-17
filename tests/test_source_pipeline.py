@@ -33,6 +33,7 @@ from tools.source_pipeline import (
     verify_signature,
     verify_staged_sources,
 )
+from tools import source_pipeline
 
 
 @contextlib.contextmanager
@@ -125,6 +126,143 @@ class SourcePipelineTests(unittest.TestCase):
             with patch("tools.source_pipeline.fetch", side_effect=RuntimeError("offline")):
                 with self.assertRaisesRegex(RuntimeError, "upstream.example.*mirror.example"):
                     fetch_with_fallbacks(["https://upstream.example/source", "https://mirror.example/source"], destination)
+
+    def test_resolve_commit_url_substitutes_pinned_commit(self) -> None:
+        package = {"name": "demo"}
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            package_dir = root / "packages" / "demo"
+            package_dir.mkdir(parents=True)
+            (package_dir / ".hummingbird-upstream.json").write_text(
+                json.dumps({"package": "demo", "branch": "rawhide", "commit": "abc123def456"})
+            )
+            old_cwd = os.getcwd()
+            os.chdir(root)
+            try:
+                resolved = source_pipeline._resolve_commit_url(
+                    "https://src.fedoraproject.org/rpms/demo/raw/{commit}/f/macros.kf5",
+                    package,
+                )
+            finally:
+                os.chdir(old_cwd)
+            self.assertEqual(
+                resolved,
+                "https://src.fedoraproject.org/rpms/demo/raw/abc123def456/f/macros.kf5",
+            )
+
+    def test_resolve_commit_url_without_pinned_commit_raises(self) -> None:
+        package = {"name": "demo"}
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            package_dir = root / "packages" / "demo"
+            package_dir.mkdir(parents=True)
+            old_cwd = os.getcwd()
+            os.chdir(root)
+            try:
+                with self.assertRaisesRegex(ValueError, "no dist-git commit is pinned"):
+                    source_pipeline._resolve_commit_url(
+                        "https://src.fedoraproject.org/rpms/demo/raw/{commit}/f/macros.kf5",
+                        package,
+                    )
+            finally:
+                os.chdir(old_cwd)
+
+    def test_commit_placeholder_resolves_before_fetching_end_to_end(self) -> None:
+        # An end-to-end run through main(): the {commit} placeholder in the
+        # configured URL is replaced by the pinned dist-git commit, and the
+        # fetched file is then hash-verified and staged beside the spec.
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            commit_dir = root / "abc123def456"
+            commit_dir.mkdir()
+            source = commit_dir / "upstream.tar.xz"
+            source.write_bytes(b"verified source")
+            package_dir = root / "packages" / "demo"
+            package_dir.mkdir(parents=True)
+            (package_dir / ".hummingbird-upstream.json").write_text(
+                json.dumps({"package": "demo", "branch": "rawhide", "commit": "abc123def456"})
+            )
+            config = root / "sources.json"
+            config.write_text(
+                json.dumps(
+                    {
+                        "packages": [
+                            {
+                                "name": "demo",
+                                "url": source.as_uri().replace(
+                                    "/abc123def456/upstream.tar.xz", "/{commit}/upstream.tar.xz"
+                                ),
+                                "filename": "upstream.tar.xz",
+                                "sha512": hashlib.sha512(source.read_bytes()).hexdigest(),
+                            }
+                        ]
+                    }
+                )
+            )
+
+            old_argv = sys.argv
+            old_cwd = os.getcwd()
+            try:
+                sys.argv = [
+                    str(SOURCE_PIPELINE), "demo",
+                    "--config", str(config),
+                    "--output", str(root / "sources"),
+                    "--report-dir", str(root / "reports"),
+                    "--stage-into", str(root / "packages"),
+                ]
+                os.chdir(root)
+                returncode = source_pipeline.main()
+            finally:
+                sys.argv = old_argv
+                os.chdir(old_cwd)
+
+            self.assertEqual(returncode, 0)
+            self.assertEqual(
+                (package_dir / "upstream.tar.xz").read_bytes(), b"verified source"
+            )
+            report = (root / "reports" / "demo.json").read_text()
+            self.assertIn('"result": "accepted"', report)
+            self.assertIn("abc123def456", report)
+
+    def test_commit_placeholder_without_pinned_commit_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            package_dir = root / "packages" / "demo"
+            package_dir.mkdir(parents=True)
+            config = root / "sources.json"
+            config.write_text(
+                json.dumps(
+                    {
+                        "packages": [
+                            {
+                                "name": "demo",
+                                "url": "https://src.fedoraproject.org/rpms/demo/raw/{commit}/f/upstream.tar.xz",
+                                "filename": "upstream.tar.xz",
+                                "sha512": "ab" * 64,
+                            }
+                        ]
+                    }
+                )
+            )
+            old_argv = sys.argv
+            old_cwd = os.getcwd()
+            try:
+                sys.argv = [
+                    str(SOURCE_PIPELINE), "demo",
+                    "--config", str(config),
+                    "--output", str(root / "sources"),
+                    "--report-dir", str(root / "reports"),
+                ]
+                os.chdir(root)
+                returncode = source_pipeline.main()
+            finally:
+                sys.argv = old_argv
+                os.chdir(old_cwd)
+
+            self.assertEqual(returncode, 1)
+            report = (root / "reports" / "demo.json").read_text()
+            self.assertIn('"result": "rejected"', report)
+            self.assertIn("no dist-git commit is pinned", report)
 
     def test_stages_verified_source_for_packit(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

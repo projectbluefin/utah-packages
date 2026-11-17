@@ -319,6 +319,44 @@ def selected(locks: dict[str, dict], name: str | None) -> list[dict]:
     return [locks[name]]
 
 
+def _dist_git_commit(package: dict) -> str | None:
+    """Return the pinned dist-git commit for a package, or None.
+
+    A few sources are recipe files that live only in Fedora dist-git (a
+    ``macros.kf5`` or a ``teamnames`` file), never in an upstream release. They
+    are still pinned: to the recipe's dist-git commit in
+    ``.hummingbird-upstream.json``. Reading it here lets the pipeline fetch the
+    file from that exact commit instead of from a moving branch such as
+    rawhide.
+    """
+    manifest = Path("packages") / package["name"] / ".hummingbird-upstream.json"
+    if not manifest.is_file():
+        return None
+    try:
+        return json.loads(manifest.read_text()).get("commit")
+    except (json.JSONDecodeError, OSError):
+        return None
+
+
+def _resolve_commit_url(url: str | None, package: dict) -> str | None:
+    """Substitute a pinned dist-git commit into any ``{commit}`` placeholder.
+
+    A ``{commit}`` placeholder in a source URL stands for the commit pinned in
+    the package's ``.hummingbird-upstream.json``. Resolving it keeps a source
+    that comes from Fedora dist-git locked to the recipe's commit instead of
+    following a branch such as rawhide, while still tracking the recipe if it
+    is re-imported at a new commit.
+    """
+    if url is None or "{commit}" not in url:
+        return url
+    commit = _dist_git_commit(package)
+    if not commit:
+        raise ValueError(
+            f"package {package['name']!r} url {url!r} uses {{commit}} but no dist-git commit is pinned"
+        )
+    return url.replace("{commit}", commit)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("package", nargs="?")
@@ -392,6 +430,15 @@ def main() -> int:
         else:
             raise SystemExit("invalid direct-source entry: require url or url_template plus version")
         name, expected = package["name"], package["sha512"].lower()
+        report: dict[str, object] = {"package": name, "checked_at": datetime.now(UTC).isoformat()}
+        try:
+            url = _resolve_commit_url(url, package)
+        except Exception as error:  # noqa: BLE001
+            report.update({"result": "rejected", "error": str(error)})
+            args.report_dir.mkdir(parents=True, exist_ok=True)
+            (args.report_dir / f"{name}.json").write_text(json.dumps(report, indent=2, sort_keys=True) + "\n")
+            print(json.dumps(report, sort_keys=True))
+            return 1
         target_dir = args.output / name
         target_dir.mkdir(parents=True, exist_ok=True)
         filename = package.get("filename") or Path(urllib.parse.urlparse(url).path).name or f"{name}.source"
@@ -401,7 +448,6 @@ def main() -> int:
             not isinstance(fallback_urls, list) or not all(isinstance(item, str) and item for item in fallback_urls)
         ):
             raise SystemExit("invalid direct-source entry: fallback_urls must be a list of non-empty URLs")
-        report: dict[str, object] = {"package": name, "checked_at": datetime.now(UTC).isoformat()}
         if url is not None:
             report["url"] = url
         try:

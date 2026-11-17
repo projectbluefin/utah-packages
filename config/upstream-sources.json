@@ -2614,7 +2614,7 @@
     {
       "name": "kde-filesystem",
       "version": "5",
-      "url": "https://src.fedoraproject.org/rpms/kde-filesystem/raw/4f395f604e7ed4011226d72aa27bff0bb7b2aee2/f/teamnames",
+      "url": "https://src.fedoraproject.org/rpms/kde-filesystem/raw/{commit}/f/teamnames",
       "filename": "teamnames",
       "sha512": "6f75ae54d326bc23c3f011aaefe6deb3754579b922f6af94ba13af6f16b794f1b12c6e3ecc74eeb1ff905fdac6fc04b96e4e5e538096622ab3b6e33b38c6b624"
     },
@@ -2628,7 +2628,7 @@
     {
       "name": "kf5",
       "version": "5.116.0",
-      "url": "https://src.fedoraproject.org/rpms/kf5/raw/249e170c4968b43afee96b0768c4a335b81dfcbd/f/macros.kf5",
+      "url": "https://src.fedoraproject.org/rpms/kf5/raw/{commit}/f/macros.kf5",
       "filename": "macros.kf5",
       "sha512": "252d27ab79bac05ecb322fdfa80b827d1e6676fdb4af6af77b50dd9b6f60b006cdf11199a64668334f36531d90994e7d20748bc79cdb987e89bf317f7afe69af"
     },
