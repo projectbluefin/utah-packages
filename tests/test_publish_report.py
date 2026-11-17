@@ -218,6 +218,54 @@ class ArtifactPatternTests(unittest.TestCase):
         self.assertEqual(artifact_pattern("3", ""), "rpm-s{0,1,2,3}")
 
 
+class BudgetTests(unittest.TestCase):
+    """``budget`` -- fail loudly if the artifact listing still holds one RPM
+    per package, which actions/download-artifact would silently truncate at
+    1000. This is the guard the report job runs before it reports (#970)."""
+
+    def budget(self, names, prefix="", budget=1000):
+        import io
+        import json
+        import tempfile
+
+        from contextlib import redirect_stdout
+        from pathlib import Path
+
+        from tools.publish_gate import main
+
+        with tempfile.TemporaryDirectory() as tmp:
+            artifacts = Path(tmp) / "artifacts.json"
+            artifacts.write_text(json.dumps(names))
+            argv = ["budget", "--artifacts", str(artifacts), "--prefix", prefix]
+            if budget is not None:
+                argv += ["--budget", str(budget)]
+            with redirect_stdout(io.StringIO()):
+                try:
+                    return main(argv)
+                except SystemExit as code:
+                    return code.code if isinstance(code.code, int) else 1
+
+    def test_a_merged_run_stays_under_the_budget(self):
+        # One artifact per stage, not per package: well under 1000.
+        names = [f"rpm-s{i}" for i in range(14)]
+        self.assertEqual(self.budget(names), 0)
+
+    def test_a_per_package_run_over_the_budget_fails(self):
+        names = [f"rpm-s1-p{i}" for i in range(1500)]
+        self.assertNotEqual(self.budget(names), 0)
+
+    def test_lock_artifacts_do_not_count_against_the_budget(self):
+        # Only rpm-* counts; the unmerged lock-s<N>-<package> artifacts the
+        # canary reads do not push a merged run over the budget.
+        names = [f"rpm-s{i}" for i in range(14)] + [f"lock-s1-{p}" for p in ("a", "b")]
+        self.assertEqual(self.budget(names), 0)
+
+    def test_a_custom_budget_is_honoured(self):
+        names = [f"rpm-s1-p{i}" for i in range(50)]
+        self.assertNotEqual(self.budget(names, budget=40), 0)
+        self.assertEqual(self.budget(names, budget=60), 0)
+
+
 class CommandLineTests(unittest.TestCase):
     """``main`` -- the subcommands rebuild-rpms.yml actually runs."""
 

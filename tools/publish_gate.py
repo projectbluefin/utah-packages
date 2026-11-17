@@ -38,6 +38,7 @@ The command line is what the workflow runs:
 from __future__ import annotations
 
 import argparse
+import fnmatch
 import json
 import re
 import shutil
@@ -538,7 +539,7 @@ def _cli_budget(args: argparse.Namespace) -> int:
     skipped here; better to fail than to record finished builds as failed.
     """
     names = json.loads(args.artifacts.read_text())
-    matches = [n for n in names if _fnmatch(n, f"{args.prefix}rpm-*")]
+    matches = [n for n in names if fnmatch.fnmatch(n, f"{args.prefix}rpm-*")]
     if len(matches) > args.budget:
         raise SystemExit(
             f"artifact listing looks truncated: {len(matches)} {args.prefix}rpm-* "
@@ -615,6 +616,10 @@ def main(argv: list[str] | None = None) -> int:
     pattern_cmd = commands.add_parser("pattern")
     pattern_cmd.add_argument("--wave", default="")
     pattern_cmd.add_argument("--prefix", default="")
+    budget_cmd = commands.add_parser("budget")
+    budget_cmd.add_argument("--artifacts", type=Path, required=True)
+    budget_cmd.add_argument("--prefix", default="")
+    budget_cmd.add_argument("--budget", type=int, default=1000)
     args = parser.parse_args(argv)
     if args.command == "pattern":
         print(f"pattern={artifact_pattern(args.wave, args.prefix)}")
