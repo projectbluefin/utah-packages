@@ -393,6 +393,85 @@ class MainHttpErrorTests(unittest.TestCase):
         self.assertIn("token", msg)
 
 
+class HttpRetryTests(unittest.TestCase):
+    """Transient 5xx/connection errors are retried; auth, rate limit and 404 are not."""
+
+    class _Resp:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_a):
+            return False
+
+        def read(self):
+            return b'{"jobs": []}'
+
+    def _call(self, outcomes, func=None):
+        calls = []
+
+        def _urlopen(*_a, **_k):
+            outcome = outcomes[len(calls)]
+            calls.append(outcome)
+            if isinstance(outcome, Exception):
+                raise outcome
+            return self._Resp()
+
+        with patch.object(qw.urllib.request, "urlopen", side_effect=_urlopen), \
+             patch.object(qw.time, "sleep") as sleep:
+            result = (func or (lambda: qw._http_get_json("https://api.github.com/x", "tok")))()
+        return result, len(calls), sleep
+
+    def _error(self, code, headers=None):
+        return urllib.error.HTTPError("url", code, "reason", headers or {}, None)
+
+    def test_502_that_clears_returns_payload(self):
+        result, calls, sleep = self._call([self._error(502), "ok"])
+        self.assertEqual(result, {"jobs": []})
+        self.assertEqual(calls, 2)
+        sleep.assert_called_once_with(2)
+
+    def test_connection_error_is_retried(self):
+        result, calls, _ = self._call([urllib.error.URLError("reset"), TimeoutError(), "ok"])
+        self.assertEqual(result, {"jobs": []})
+        self.assertEqual(calls, 3)
+
+    def test_persistent_5xx_raises_after_last_attempt_with_same_message(self):
+        calls = []
+
+        def _urlopen(*_a, **_k):
+            calls.append(1)
+            raise self._error(503)
+
+        with patch.object(qw.urllib.request, "urlopen", side_effect=_urlopen), \
+             patch.object(qw.time, "sleep") as sleep, \
+             self.assertRaises(urllib.error.HTTPError) as ctx:
+            qw._http_get_json("https://api.github.com/x", "tok")
+        self.assertEqual(len(calls), 4)
+        self.assertEqual([c.args[0] for c in sleep.call_args_list], [2, 4, 8])
+        self.assertEqual(
+            qw._describe_http_error(ctx.exception), "Actions API request failed (503 reason)"
+        )
+
+    def test_auth_and_rate_limit_are_not_retried(self):
+        for error in (self._error(401), self._error(403), self._error(429),
+                      self._error(403, {"X-RateLimit-Remaining": "0"})):
+            with self.subTest(code=error.code, headers=dict(error.headers)):
+                with patch.object(qw.urllib.request, "urlopen", side_effect=[error]) as urlopen, \
+                     patch.object(qw.time, "sleep") as sleep, \
+                     self.assertRaises(urllib.error.HTTPError):
+                    qw._http_get_json("https://api.github.com/x", "tok")
+                self.assertEqual(urlopen.call_count, 1)
+                sleep.assert_not_called()
+
+    def test_404_in_fetch_jobs_is_not_retried(self):
+        result, calls, sleep = self._call(
+            [self._error(404), "ok"], func=lambda: qw.fetch_jobs("tok", "o", "r", 1)
+        )
+        self.assertEqual(result, [])
+        self.assertEqual(calls, 1)
+        sleep.assert_not_called()
+
+
 class RunnerPoolTests(unittest.TestCase):
     def test_labels_name_the_pool_order_independent(self):
         self.assertEqual(
