@@ -298,7 +298,7 @@ line is fetched from a dist-git lookaside — Fedora's by default, or
 `pkgs.rpmfusion.org` when the lock entry sets `lookaside: rpmfusion-free` — so
 a Utah-only recipe cannot use one.
 When the upstream has no release and its commit archive is far larger than
-what the recipe needs, add a `tools/generated_sources.py` generator that
+what the recipe needs, add a generator to `tools/generated_sources_git_archive.py` that
 fetches only the needed files at a pinned commit, checks a SHA-512 per file,
 and packs them deterministically (sorted, owner-less, fixed mtime, single xz
 stream). `bluefin-artwork-logos` does this for three files of

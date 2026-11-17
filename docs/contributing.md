@@ -38,7 +38,8 @@ repacked them by hand: `gpm` removes `doc/specs` from the upstream release for
 licensing reasons, and only Fedora's lookaside cache holds that hand-made
 tarball. No upstream URL serves those bytes. Do not lock the lookaside copy as
 `url`; add a deterministic transformation from the SHA-512-pinned upstream release to
-`tools/generated_sources.py`, lock it as a `generate` entry, and repin
+the matching `tools/generated_sources_*.py` unit
+(archive, cargo-vendored or git-archive), lock it as a `generate` entry, and repin
 `packages/<name>/sources` to the generated digest. Diff the unpacked tree
 against Fedora's archive first: for `gpm` they are identical.
 
@@ -182,7 +183,7 @@ source inputs and regenerating their derived inventory, or the next
 - `config/upstream-sources.json` -- delete the package's entry (the recipe with
   no entry is not eligible to build).
 - `packages/<name>/` -- delete the whole directory (recipe, patches, sources).
-- Any generator special-casing in `tools/generated_sources.py`.
+- Any generator special-casing in `tools/generated_sources*.py`.
 
 Then run `just regenerate-inventory` to remove the Packit block from the
 remaining inventory. No test or document pins the recipe count, so nothing

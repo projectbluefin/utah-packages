@@ -47,7 +47,7 @@ gh workflow run canary.yml -R projectbluefin/utah-packages --ref <branch> \
     Hummingbird ships no crate RPMs, and the ruling on #527 is to vendor per
     recipe, not package crates: `%bcond bundled_rust_deps 1` with Fedora's
     lookaside vendor tarball, or, when Fedora has none, a `vendor/` tree that
-    `tools/generated_sources.py` adds from the release's own Cargo.lock
+    `tools/generated_sources_cargo_vendored.py` adds from the release's own Cargo.lock
     (prefixdevname, gst-thumbnailers). Never a retry.
   - A Rust `%check` that never finishes, with idle `cargo build --release
     --bin <name>` children → integration tests that build their own binary
@@ -102,7 +102,7 @@ build failure the author can fix.
 
 Recipe imports can still need this proof when they add source-generation
 support under `tools/`, even if the change only registers a new package in
-`GIT_ARCHIVE_SOURCES` in `tools/generated_sources.py`. That is a pipeline
+`GIT_ARCHIVE_SOURCES` in `tools/generated_sources_git_archive.py`. That is a pipeline
 change; the recipe-inventory exception does not cover it. Inspect the actual
 pull request's files against its upstream merge base, not a fork's possibly
 stale `main`, to identify the triggering path.
