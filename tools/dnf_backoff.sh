@@ -1,5 +1,6 @@
-# Sourced, not run: defines with_backoff for container-lane scripts that
-# install from the Hummingbird repository (build_container.sh).
+# Sourced, not run: defines with_backoff for every container-lane script
+# that installs from the Hummingbird repository (build_container.sh and
+# the cache-key step in build-stage.yml).
 #
 # The Hummingbird repository is one host with no mirrors, so a bad
 # minute there is a failed build. retries=10 and timeout=120 in
@@ -11,9 +12,12 @@
 #
 # after four attempts inside one second. librepo retries with no
 # backoff, so all four hit the same bad moment. Waiting between
-# attempts is the part that was missing. It retries downloads and
-# resolution only, never the build, and an unsatisfiable graph still
-# fails every attempt and then fails the job.
+# attempts is the part that was missing. Every dnf call that must
+# succeed goes through this: vulkan-headers lost a libxml2 upgrade
+# and libical its @buildsys-build install (conmon) to the same 503
+# (issue #1160). It retries downloads and resolution only, never the
+# build, and an unsatisfiable graph still fails every attempt and
+# then fails the job.
 #
 # A last attempt that failed on a download leaves
 # $REPORT_DIR/infra-failure (default /work/reports), so the bump gate
