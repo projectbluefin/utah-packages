@@ -284,7 +284,7 @@ Some projects tag source revisions without publishing release files.
 `distribution-gpg-keys` is one example: its Fedora archive is made by the
 packaging repository, not published as an upstream release. Use the
 `GIT_ARCHIVE_SOURCES` resolver in
-[`tools/generated_sources.py`](../../tools/generated_sources.py): record the
+[`tools/generated_sources_git_archive.py`](../../tools/generated_sources_git_archive.py): record the
 upstream remote, tag pattern, compression, and full commit resolved by that
 tag. The generator fetches the tag, fails if it no longer resolves to the
 pinned commit, then archives that immutable commit with a stable prefix and
@@ -298,7 +298,7 @@ line is fetched from a dist-git lookaside — Fedora's by default, or
 `pkgs.rpmfusion.org` when the lock entry sets `lookaside: rpmfusion-free` — so
 a Utah-only recipe cannot use one.
 When the upstream has no release and its commit archive is far larger than
-what the recipe needs, add a generator to `tools/generated_sources_git_archive.py` that
+what the recipe needs, add a generator to `tools/generated_sources_archive.py` that
 fetches only the needed files at a pinned commit, checks a SHA-512 per file,
 and packs them deterministically (sorted, owner-less, fixed mtime, single xz
 stream). `bluefin-artwork-logos` does this for three files of
