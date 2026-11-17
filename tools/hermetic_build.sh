@@ -20,7 +20,8 @@
 #
 # Outputs under /work/hermetic: mock.cfg and mock.cfg.sha256, the lockfile
 # lock/buildroot_lock.json with the SRPM mock built beside it, repo/ (build
-# phase); /work/cache/root and /work/cache/disttag for the cache key; RPMs in
+# phase), fetch.mirror.index (which public Fedora mirror the fetch retries
+# have rotated to); /work/cache/root and /work/cache/disttag for the cache key; RPMs in
 # /work/result.
 set -euo pipefail
 phase=${1:?lock or build}
@@ -34,7 +35,8 @@ H=/work/hermetic
 mkdir -p "$H" /work/cache /work/result /work/reports
 # Only two steps in this lane reach the network: mock resolving the root
 # into the lock, and mock-hermetic-repo fetching the 200-300 RPMs the lock
-# names. Both fetch from Hummingbird's repositories, and a single reset or
+# names. Both fetch from Hummingbird's repositories and public Fedora mirrors (the
+# fetch retries rotate across five of them), and a single reset or
 # short read there took down mdadm, setxkbmap and dmidecode in one run
 # (#287) with nothing wrong in the package. Retry them; the offline build
 # itself is never retried here, its %check retry is separate and deliberate.
@@ -179,16 +181,17 @@ PY
     # A flaky single mirror must not fail the build. The lock bakes in
     # whichever mirror the metalink handed mock -- the failing run resolved
     # to mirror.acm.umn.edu, and every retry then hit that same dead host.
-    # Rewrite its URLs to the next working mirror before each attempt. The
+    # The first attempt keeps the mirror the lock was resolved against; each
+    # retry rewrites its URLs to the next working mirror. The
     # non-standard /fedora/fedora/linux/ prefix that mirror bakes in is
     # rewritten to the standard /fedora/linux/ prefix every other mirror
     # serves -- a single strip of the redundant fedora/ segment, so it holds
     # for the main repo (releases/44/os/...) and updates (updates/44/...)
     # alike, and for any Fedora version. A small index file tracks which
-    # mirror we are on; clean_repo removes only the repo, so the index
-    # survives and each call to this function tries a different one.
+    # mirror we are on (absent on the first attempt); clean_repo removes only
+    # the repo, so the index survives and each retry tries a different one.
     index_file="$H/fetch.mirror.index"
-    index=$(cat "$index_file" 2>/dev/null || echo 0)
+    index=$(cat "$index_file" 2>/dev/null || echo -1)
     python3 - "$H/lock/remote.json" "$index" "$index_file" <<'PY'
 import json, re, sys
 path, index, index_file = sys.argv[1], int(sys.argv[2]), sys.argv[3]
@@ -199,6 +202,9 @@ mirrors = (
     "mirror.servaxnet.com",
     "fedora.mirror.constant.com",
 )
+if index < 0:
+    open(index_file, "w").write("0")
+    sys.exit(0)
 mirror = mirrors[index % len(mirrors)]
 lock = json.load(open(path))
 # Only rewrite URLs that already target a Fedora mirror path; a Hummingbird
