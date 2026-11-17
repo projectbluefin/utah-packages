@@ -19,6 +19,7 @@ import yaml
 ROOT = Path(__file__).resolve().parent.parent
 SCRIPT = ROOT / "tools" / "dnf_backoff.sh"
 BUILD_STAGE = ROOT / ".github" / "workflows" / "build-stage.yml"
+BUILD_CONTAINER = ROOT / "tools" / "build_container.sh"
 
 
 def with_backoff() -> str:
@@ -82,6 +83,15 @@ class DnfBackoffTests(unittest.TestCase):
         self.assertTrue(required)
         for line in required:
             self.assertTrue(line.startswith("with_backoff dnf "), line)
+
+    def test_every_build_container_retry_names_a_command(self) -> None:
+        # with_backoff runs "$@", so its first word must be a command. A bare
+        # path (the generated .buildreqs.nosrc.rpm) is executed, exits 126 and
+        # fails every %generate_buildrequires build after the waits.
+        calls = re.findall(r"^\s*with_backoff\s+(\S+)", BUILD_CONTAINER.read_text(), re.M)
+        self.assertTrue(calls)
+        for command in calls:
+            self.assertIn(command, {"dnf", "builddep_attempt"}, command)
 
 
 if __name__ == "__main__":

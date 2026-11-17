@@ -345,7 +345,7 @@ for _ in 1 2 3 4 5; do
        --define "dist $DISTTAG"; then break; fi
   generated=$(ls /builddir/rpmbuild/SRPMS/*.buildreqs.nosrc.rpm 2>/dev/null | head -1)
   test -n "$generated"
-  with_backoff "$generated"
+  with_backoff builddep_attempt "$generated"
 done
 # A %check that fails takes its evidence down with it. The test
 # binaries run inside /builddir, which is not a mounted volume, so
