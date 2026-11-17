@@ -103,6 +103,9 @@ make
 %install
 #rm -rf $RPM_BUILD_ROOT _doc CVS ANS doc/{\.cvsignore,CVS} init-redhat/{CVS,\.cvsignore}
 make DESTDIR=$RPM_BUILD_ROOT install
+# Regenerating the makefiles enables upstream's firmware install hook. Keep
+# these unlisted firmware blobs out of the package, as in the existing recipe.
+rm -f "$RPM_BUILD_ROOT"/lib/firmware/{pca200e.bin,pca200e_ecd.bin2,sba200e_ecd.bin2}
 rm -f $RPM_BUILD_ROOT/%{_libdir}/libatm.{a,la}
 install -m 0644 src/config/hosts.atm $RPM_BUILD_ROOT/etc/
 # Selectively sort what we want included in %%doc
