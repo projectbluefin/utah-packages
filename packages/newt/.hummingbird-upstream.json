@@ -1,0 +1,8 @@
+{
+  "package": "newt",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/newt.git",
+  "commit": "dfd8b4d00d0ce137aeac62fbd42278b801f75f4a",
+  "tree": "cbf84ed483e7086569cbb5f844f2b4067952bb05",
+  "imported_at": "2026-11-16T04:08:13.456788+00:00"
+}

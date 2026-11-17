@@ -1,0 +1,8 @@
+{
+  "package": "virglrenderer",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/virglrenderer.git",
+  "commit": "5396d76efe7b98fe724b5e244c58af51ab685d02",
+  "tree": "86bc9a619466acdbc27b5db491a596be0910ba6b",
+  "imported_at": "2026-11-16T04:06:18.383076+00:00"
+}

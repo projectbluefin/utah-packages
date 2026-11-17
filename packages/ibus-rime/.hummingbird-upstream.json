@@ -1,0 +1,8 @@
+{
+  "package": "ibus-rime",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/ibus-rime.git",
+  "commit": "3977cb391e2e99d2d8b51363ac19e7c7f860fbc7",
+  "tree": "05d8597e2e5e199af4280a608965e7793024ba07",
+  "imported_at": "2026-11-16T04:05:26.139788+00:00"
+}
