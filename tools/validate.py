@@ -121,19 +121,20 @@ def check_provenance(path: Path, data: dict) -> None:
                 raise SystemExit(f"{data['branch']} import must carry a full {key} SHA: {path}")
 
 
-def fedora_primary_sources(path: Path) -> list[str]:
-    """Names in the source lock whose primary source is Fedora infrastructure.
+def fedora_primary_sources(path: Path) -> list[tuple[str, str]]:
+    """(name, field) pairs whose source is Fedora infrastructure.
 
     `tools/source_pipeline.py` fetches the payload from `url` or `url_template`
-    and a checksum manifest from `sha256_url`, so an entry pointing at Fedora in
-    any of these takes its payload from the lookaside rather than from the
-    project's own release -- which is the one thing AGENTS.md and
-    docs/targeting-hummingbird.md say the factory does not do. The SHA-512 lock
-    still holds, so this is provenance, not integrity: Fedora belongs in
-    `fallback_urls`, which source_pipeline already consults after an upstream
-    transport failure, not in the primary position. Every field the pipeline
-    fetches from is checked, so a rawhide URL in `url_template` or `sha256_url`
-    cannot slip past the ratchet the way one in `url` cannot.
+    and a checksum manifest from `sha256_url`, and the GPG signature from
+    `signature_url`, so an entry pointing at Fedora in any of these takes its
+    bytes off the lookaside rather than the project's own release -- the one
+    thing AGENTS.md and docs/targeting-hummingbird.md say the factory does not
+    do. The SHA-512 lock still holds, so this is provenance, not integrity:
+    Fedora belongs in `fallback_urls`, which source_pipeline already consults
+    after an upstream transport failure, not in the primary position. Every
+    field the pipeline fetches from is checked, and each pair reports which
+    field triggered, so a rawhide URL in `url_template`, `sha256_url` or
+    `signature_url` cannot slip past the ratchet the way one in `url` cannot.
     """
     if not path.is_file():
         return []
@@ -141,22 +142,19 @@ def fedora_primary_sources(path: Path) -> list[str]:
         data = json.loads(path.read_text())
     except (OSError, json.JSONDecodeError):
         raise SystemExit(f"invalid source lock: {path}")
-    # The three fields source_pipeline.py actually fetches from; matching the
+    # Every field source_pipeline.py actually fetches from; matching the
     # coverage of check_plaintext_source_urls so no fetch path escapes this.
-    fields = ("url", "url_template", "sha256_url")
+    fields = ("url", "url_template", "sha256_url", "signature_url")
     offenders = []
     for entry in data.get("packages", []):
         if not isinstance(entry, dict):
             continue
-        hosts = (
-            urllib.parse.urlparse(entry.get(key) or "").hostname or ""
-            for key in fields
-        )
-        if any(
-            h in FEDORA_HOSTS or h.endswith(".fedoraproject.org")
-            for h in hosts
-        ):
-            offenders.append(entry.get("name") or entry.get("filename") or "<unnamed>")
+        name = entry.get("name") or entry.get("filename") or "<unnamed>"
+        for key in fields:
+            host = urllib.parse.urlparse(entry.get(key) or "").hostname or ""
+            if host in FEDORA_HOSTS or host.endswith(".fedoraproject.org"):
+                offenders.append((name, key))
+                break
     return sorted(offenders)
 
 
@@ -169,6 +167,22 @@ def read_fedora_primary_baseline(path: Path) -> list[str]:
         if stripped:
             names.append(stripped)
     return sorted(names)
+
+
+def _fedora_ratchet_fix(name: str, fields: list[str]) -> str:
+    """Remediation for one ratchet offender, matching the field that triggered it."""
+    actions = []
+    for field in fields:
+        if field in ("url", "url_template"):
+            actions.append(
+                f"keep the Fedora host in `fallback_urls` (source_pipeline.py "
+                f"already consults it after an upstream transport failure)"
+            )
+        elif field == "sha256_url":
+            actions.append("point `sha256_url` at the upstream's own checksum manifest")
+        else:  # signature_url
+            actions.append("point `signature_url` at the upstream's own signature")
+    return f"{name} ({', '.join(fields)}): " + "; ".join(actions) + "."
 
 
 def check_fedora_primary_sources(root: Path) -> None:
@@ -184,16 +198,26 @@ def check_fedora_primary_sources(root: Path) -> None:
     offenders = fedora_primary_sources(root / "config" / "upstream-sources.json")
     baseline_path = root / "config" / "fedora-primary-sources.txt"
     baseline = read_fedora_primary_baseline(baseline_path)
-    added = sorted(set(offenders) - set(baseline))
-    removed = sorted(set(baseline) - set(offenders))
+    offending_names = {name for name, _ in offenders}
+    added = sorted(name for name in offending_names if name not in baseline)
+    removed = sorted(set(baseline) - offending_names)
     if added:
+        # Report the offending field per name so the remediation matches it: a
+        # primary `url`/`url_template` can keep the Fedora host in a fallback,
+        # but a `sha256_url` or `signature_url` cannot -- that is not a payload
+        # position, and telling a sha256_url offender to do so is wrong advice.
+        fields_by_name: dict[str, list[str]] = {}
+        for name, field in offenders:
+            if name in added:
+                fields_by_name.setdefault(name, []).append(field)
+        detail = "\n".join(
+            _fedora_ratchet_fix(name, fields_by_name[name]) for name in added
+        )
         raise SystemExit(
             "source lock takes its payload from Fedora, not upstream: "
             f"{', '.join(added)}\n"
-            "Point the entry's `url` at the project's own release and keep the "
-            "Fedora URL in `fallback_urls`, which source_pipeline.py already "
-            "uses after an upstream transport failure. Where no upstream "
-            "artifact exists verbatim, add a generator in "
+            + detail
+            + "\nWhere no upstream artifact exists verbatim, add a generator in "
             "tools/generated_sources.py instead."
         )
     if removed:
