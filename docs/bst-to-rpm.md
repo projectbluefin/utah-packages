@@ -171,7 +171,9 @@ the transformation and fails on any difference
    package builds after the packages it needs;
 3. calls **`build-stage.yml`** for each stage, one job per package.
 
-The default build lane is **hermetic**, the way Hummingbird builds:
+The default build lane is **hermetic**, the way Hummingbird builds. It runs
+in the digest-pinned `ghcr.io/projectbluefin/utah-buildroot` image
+(`config/buildroot-image`):
 
 1. `hermetic_build.sh lock`: mock resolves the real `BuildRequires` online
    against Fedora 44, Hummingbird and the earlier stages, and writes
@@ -233,6 +235,8 @@ to an exact package set.
   pinning the Fedora and Hummingbird keys is in progress.
 - **Drift.** 57 factory packages are behind or ahead of Dakota's release line
   and need review. They're listed in the audit report.
-- **The build container differs from what `AGENTS.md` says.** Builds run in
-  `quay.io/fedora/fedora:44`, not the pinned Packit image. See
-  [`architecture.md`](architecture.md) and #43.
+- **`architecture.md`'s container table is out of date.** Since #264,
+  package builds run in the digest-pinned `ghcr.io/projectbluefin/utah-buildroot`
+  image (`config/buildroot-image`, refreshed by `refresh-buildroot.yml`), and
+  the pinned Packit image only generates SRPMs. #43 settled this and
+  `AGENTS.md` says so; `architecture.md` still shows the old table.
