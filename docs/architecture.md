@@ -10,8 +10,8 @@ flowchart TD
   Verify --> Lock["Exact source lock"]
   Spec --> GHA["GitHub Actions\nGitHub-hosted runner"]
   Lock --> GHA
-  GHA --> Stages["build-stage.yml\ncalled once per wave, 0-4"]
-  Stages --> Binary["rpmbuild -br / -ba\nin a Fedora 44 + Hummingbird root"]
+  GHA --> Stages["build-stage.yml\ncalled once per wave"]
+  Stages --> Binary["hermetic mock build\nin the pinned utah-buildroot root"]
   Binary --> Repo["RPM overlay + repodata"]
   Repo --> GHCR["Signed, attested GHCR image"]
 ```
@@ -53,8 +53,8 @@ Each workflow runs a digest-pinned container:
 | `packit-srpm-chunk.yml`, `import-rawhide-package.yml` (SRPM generation and import only) | `quay.io/packit/packit`, digest pinned |
 | `recalculate-hummingbird-gaps.yml` | `quay.io/hummingbird-community/bootc-os`, digest pinned |
 
-Package builds use the hermetic mock lane (default since #264): mock resolves
-a build-root lock, and then builds offline from exactly the locked RPMs. #43
+Package builds use the hermetic mock lane (default since [#264](https://github.com/projectbluefin/utah-packages/issues/264)): mock resolves
+a build-root lock, and then builds offline from exactly the locked RPMs. [#43](https://github.com/projectbluefin/utah-packages/issues/43)
 recorded this decision, and `AGENTS.md` describes the same split.
 
 `.github/workflows/packit-srpm-pilot.yml` proves the SRPM path but is
