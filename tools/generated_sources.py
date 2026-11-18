@@ -249,7 +249,8 @@ def _xz_compress_stream(chunks, sink) -> None:
 
 
 from tools.generated_sources_archive import (
-    _bluefin_artwork_generate, _bluefin_artwork_metadata, _fpaste_generate,
+    _bluefin_artwork_generate, _bluefin_artwork_metadata, _brew_tarball_generate,
+    _brew_tarball_metadata, _fpaste_generate,
     _fpaste_metadata, _freerdp_generate, _freerdp_metadata, _gpm_generate,
     _gpm_metadata, _hplip_generate, _hplip_metadata, _imd_generate,
     _imd_metadata, _openal_soft_generate, _openal_soft_metadata,
@@ -271,7 +272,9 @@ from tools.generated_sources_archive import (
     FPASTE_UPSTREAM_URL, FREERDP_DOOMED, FREERDP_UPSTREAM_URL, HPLIP_UPSTREAM_URL,
     SEVENZIP_UPSTREAM_URL, TAILSCALE_COMMITS, _bluefin_artwork_commit,
     _freerdp_pax_path, _freerdp_record_size, _imd_stripped, _openal_soft_dropped,
-    _sevenzip_dropped,
+    _sevenzip_dropped, BREW_TARBALL_MANIFESTS, BREW_TARBALL_MEMBER,
+    BREW_TARBALL_REGISTRY, BREW_TARBALL_REPOSITORY, _OCI_MANIFEST_TYPES,
+    _brew_tarball_extract, _registry_fetch, _verified_digest,
 )
 from tools.generated_sources_cargo_vendored import (
     GST_THUMBNAILERS_UPSTREAM_URL, _cargo_vendored_generate, _cargo_vendored_transform,
@@ -314,6 +317,7 @@ METADATA = {
     "fpaste": _fpaste_metadata,
     "7zip": _sevenzip_metadata,
     "bluefin-artwork-logos": _bluefin_artwork_metadata,
+    "brew-tarball": _brew_tarball_metadata,
 }
 
 GENERATORS = {
@@ -332,6 +336,7 @@ GENERATORS = {
     "fpaste": _fpaste_generate,
     "7zip": _sevenzip_generate,
     "bluefin-artwork-logos": _bluefin_artwork_generate,
+    "brew-tarball": _brew_tarball_generate,
 }
 
 

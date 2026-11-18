@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Network-tarball source0 generators: intel-media-driver-free, tailscale,
-gpm, openal-soft, 7zip, hplip, freerdp, fpaste and bluefin-artwork-logos.
+gpm, openal-soft, 7zip, hplip, freerdp, fpaste, bluefin-artwork-logos and
+brew-tarball.
 
 Each transform fetches a pinned upstream artifact, extracts it, and returns the
 ``sources``/``spec`` record for the source lock. Reachability failures are
@@ -12,6 +13,7 @@ import fnmatch
 import gzip
 import hashlib
 import io
+import json
 import lzma
 from pathlib import Path
 import re
@@ -19,6 +21,8 @@ import shutil
 import subprocess
 import tarfile
 import tempfile
+import urllib.error
+import urllib.request
 
 from tools import generated_sources as generated_sources
 
@@ -804,4 +808,100 @@ def _bluefin_artwork_generate(package_dir: Path, out_dir: Path) -> Path:
         files[path] = payload
     target = out_dir / f"bluefin-artwork-logos-{commit[:7]}.tar.xz"
     target.write_bytes(_bluefin_artwork_transform(files, commit))
+    return target
+
+
+# --- brew-tarball ----------------------------------------------------------------
+
+# Project Bluefin Dakota's bluefin/brew-tarball.bst stages the prebuilt Homebrew
+# prefix Universal Blue publishes only inside its ghcr.io/ublue-os/brew image, as
+# /system_files/usr/share/homebrew.tar.zst. The image's builder runs Homebrew's
+# install.sh (a git clone plus portable Ruby), which is not reproducible, so the
+# factory takes the file from the image Dakota pins: the per-architecture
+# manifest digest, keyed here by the Homebrew version the archive carries. The
+# manifest and every blob are checked against their digests and the member is
+# copied out unchanged.
+BREW_TARBALL_REGISTRY = "https://ghcr.io"
+BREW_TARBALL_REPOSITORY = "ublue-os/brew"
+BREW_TARBALL_MEMBER = "system_files/usr/share/homebrew.tar.zst"
+BREW_TARBALL_MANIFESTS = {
+    "7.0.11": "sha256:130848582eed433e85af6fa8c829ddec12ddaa6b18bc037a610b4b8da3c97458",
+}
+_OCI_MANIFEST_TYPES = (
+    "application/vnd.oci.image.manifest.v1+json,"
+    "application/vnd.docker.distribution.manifest.v2+json"
+)
+
+
+def _registry_fetch(path: str, token: str, accept: str | None = None) -> bytes:
+    headers = {"User-Agent": "utah-packages-generated-source/1", "Authorization": f"Bearer {token}"}
+    if accept:
+        headers["Accept"] = accept
+    url = f"{BREW_TARBALL_REGISTRY}{path}"
+    request = urllib.request.Request(url, headers=headers)
+    try:
+        with urllib.request.urlopen(request, timeout=300) as response:
+            return response.read()
+    except (urllib.error.URLError, TimeoutError, ConnectionError) as error:
+        if generated_sources.is_transport_failure(error):
+            raise generated_sources.UpstreamUnreachable(f"could not reach {url}: {error}") from error
+        raise
+
+
+def _verified_digest(payload: bytes, digest: str, what: str) -> bytes:
+    algorithm, _, expected = digest.partition(":")
+    if algorithm != "sha256":
+        raise RuntimeError(f"{what}: unsupported digest {digest}")
+    actual = hashlib.sha256(payload).hexdigest()
+    if actual != expected:
+        raise RuntimeError(f"{what}: expected {digest}, got sha256:{actual}")
+    return payload
+
+
+def _brew_tarball_extract(manifest: bytes, blob) -> bytes:
+    """Return BREW_TARBALL_MEMBER from the topmost layer of ``manifest`` that has it.
+
+    ``blob(digest)`` returns a layer's bytes already checked against its digest.
+    """
+    layers = json.loads(manifest).get("layers") or []
+    for layer in reversed(layers):
+        with tarfile.open(fileobj=io.BytesIO(blob(layer["digest"])), mode="r:*") as archive:
+            for member in archive.getmembers():
+                if member.name.removeprefix("./").lstrip("/") == BREW_TARBALL_MEMBER and member.isreg():
+                    return archive.extractfile(member).read()
+    raise RuntimeError(f"no layer carries {BREW_TARBALL_MEMBER}")
+
+
+def _brew_tarball_metadata(package_dir: Path) -> dict:
+    version = generated_sources.spec_version(package_dir, "brew-tarball.spec")
+    digest = BREW_TARBALL_MANIFESTS.get(version, "<unpinned>")
+    return {
+        "name": "brew-tarball",
+        "version": version,
+        "filename": f"homebrew-{version}.tar.zst",
+        "generate": {
+            "script": generated_sources.SCRIPT_PATH,
+            "input": f"ghcr.io/{BREW_TARBALL_REPOSITORY}@{digest} (linux/amd64 image manifest; manifest and layers digest-pinned)",
+            "method": f"copy /{BREW_TARBALL_MEMBER} unchanged out of the topmost image layer that carries it, as homebrew-{version}.tar.zst",
+        },
+    }
+
+
+def _brew_tarball_generate(package_dir: Path, out_dir: Path) -> Path:
+    version = generated_sources.spec_version(package_dir, "brew-tarball.spec")
+    digest = BREW_TARBALL_MANIFESTS.get(version)
+    if digest is None:
+        raise RuntimeError(f"no pinned image manifest for brew-tarball {version}")
+    token_url = f"{BREW_TARBALL_REGISTRY}/token?scope=repository:{BREW_TARBALL_REPOSITORY}:pull"
+    token = json.loads(generated_sources._fetch(token_url))["token"]
+    base = f"/v2/{BREW_TARBALL_REPOSITORY}"
+    manifest = _verified_digest(
+        _registry_fetch(f"{base}/manifests/{digest}", token, _OCI_MANIFEST_TYPES), digest, "image manifest"
+    )
+    payload = _brew_tarball_extract(
+        manifest,
+        lambda layer: _verified_digest(_registry_fetch(f"{base}/blobs/{layer}", token), layer, f"layer {layer}"),
+    )
+    target = out_dir / f"homebrew-{version}.tar.zst"
+    target.write_bytes(payload)
     return target
