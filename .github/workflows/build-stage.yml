@@ -105,8 +105,19 @@ on:
         default: ''
         type: string
 
+# A full rebuild makes ~1,700 artifacts. download-artifact's default listing
+# for the current run returns at most 1000 of them (oldest first) before a
+# pattern is applied, so the newest stages' RPMs were never downloaded:
+# publish failed its closure check (#970) and later stages built against
+# stale prior-stage RPMs. The pattern downloads below pass github-token and
+# run-id, which switches to the paginated REST listing; that listing stops
+# at ACTIONS_ARTIFACT_MAX_ARTIFACT_COUNT (default 1000), raised here.
+env:
+  ACTIONS_ARTIFACT_MAX_ARTIFACT_COUNT: '20000'
+
 permissions:
   contents: read
+  actions: read
   packages: write
 
 jobs:
@@ -212,6 +223,9 @@ jobs:
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           pattern: ${{ steps.prior.outputs.pattern }}
+          # The run's REST listing, which pages past 1000 (see env above).
+          github-token: ${{ github.token }}
+          run-id: ${{ github.run_id }}
           path: work/prior
           merge-multiple: true
         continue-on-error: true
