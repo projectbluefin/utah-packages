@@ -1,13 +1,14 @@
+%bcond ctest 1
 # Disable the mingw cross-build: it doubles the build to 90+ minutes and the
 # Windows DLLs are never used by Hummingbird consumers. Fedora enables it, but
 # this factory only needs the native libraries (mozc links absl).
 %bcond mingw 0
 
 # Installed library version
-%global lib_version 2605.0.0
+%global lib_version 2608.0.0
 
 Name:           abseil-cpp
-Version:        20260526.0
+Version:        20260817.0
 Release:        %autorelease
 Summary:        C++ Common Libraries
 
@@ -27,25 +28,36 @@ Summary:        C++ Common Libraries
 #     (https://gitlab.com/fedora/legal/fedora-license-data/-/merge_requests/205).
 License:        Apache-2.0 AND LicenseRef-Fedora-Public-Domain
 URL:            https://abseil.io
-Source:         https://github.com/abseil/abseil-cpp/archive/%{version}/%{name}-%{version}.tar.gz
+Source:         https://github.com/abseil/abseil-cpp/archive/%{version}/abseil-cpp-%{version}.tar.gz
 
-# Omit the “bind” block in test Test Mutex::FunctorCondition
+# Backport a fix for the bundled cctz:
+# Define O_NONBLOCK to 0 when the platform does not provide it - #372
+# https://github.com/google/cctz/commit/361e53992abb446c7ef33fa92828bbde01473ea8
 #
-# Work around failure to compile with GCC 16,
-# https://github.com/abseil/abseil-cpp/issues/1992.
-Patch:          0001-Omit-the-bind-block-in-test-Test-Mutex-FunctorCondit.patch
+# Fixes failure to compile on MinGW due to no `O_NONBLOCK` in `fcntl.h`.
+# See also discussion in https://github.com/abseil/abseil-cpp/pull/2159.
+Patch:          abseil-cpp-20260817.0-cctz-mingw.patch
 
-# PR #2071: Include immintrin.h instead of bmi2intrin.h
-# https://github.com/abseil/abseil-cpp/commit/d851fdd768b27c02b3fb786fd0987faddd279ece
-#
-# Fixes failure to build with GCC 16 when the BMI2 extensions are enabled,
-# e.g., when targeting x86_64-v3 on ELN/RHEL.
-Patch:          https://github.com/abseil/abseil-cpp/commit/d851fdd768b27c02b3fb786fd0987faddd279ece.patch
+BuildSystem:    cmake
 
-BuildRequires:  cmake
-# The default make backend would work just as well; ninja is observably faster
-BuildRequires:  ninja-build
+BuildOption(conf): -DABSL_ENABLE_INSTALL:BOOL=ON
+BuildOption(conf): -DABSL_FIND_GOOGLETEST:BOOL=ON
+BuildOption(conf): -DABSL_USE_EXTERNAL_GOOGLETEST:BOOL=ON
+BuildOption(conf): -DCMAKE_BUILD_TYPE:STRING=None
+BuildOption(conf): -DCMAKE_CXX_STANDARD:STRING=17
+# Test-only libraries are not part of the factory's runtime remit. Skipping
+# their graph avoids an LTO-heavy build that OOMs the hermetic runner; runtime
+# consumers (such as mozc) link the regular Abseil libraries.
+BuildOption(conf): -DABSL_BUILD_TESTING:BOOL=OFF
+BuildOption(conf): -DABSL_BUILD_TEST_HELPERS:BOOL=OFF
+BuildOption(check): --exclude-regex "${skips}"
+
 BuildRequires:  gcc-c++
+# The ninja backend for CMake (which is observably faster than the UNIX
+# Makefiles backend) is the default since
+# https://fedoraproject.org/wiki/Changes/CMake_ninja_default; we choose to
+# be explicit since the MinGW build uses a ninja-specific macro.
+BuildRequires:  ninja-build
 
 BuildRequires:  gmock-devel
 BuildRequires:  gtest-devel
@@ -98,8 +110,8 @@ and we now want to provide those resources to the C++ community as a whole.
 # of the generated spec rather than claiming unavailable libraries exist.
 %if 0
 %package testing
-Summary:        Libraries needed for running tests on the installed %{name}
-Requires:       %{name}%{?_isa} = %{version}-%{release}
+Summary:        Libraries needed for running tests on the installed abseil-cpp
+Requires:       abseil-cpp%{?_isa} = %{version}-%{release}
 
 Provides:       bundled(cctz)
 
@@ -108,15 +120,15 @@ Provides:       bundled(cctz)
 %endif
 
 %package devel
-Summary:        Development files for %{name}
-Requires:       %{name}%{?_isa} = %{version}-%{release}
+Summary:        Development files for abseil-cpp
+Requires:       abseil-cpp%{?_isa} = %{version}-%{release}
 
 # Some of the headers from CCTZ are part of the -devel subpackage. See the
 # corresponding virtual Provides in the base package for full details.
 Provides:       bundled(cctz)
 
 %description devel
-Development headers for %{name}
+Development headers for abseil-cpp
 
 %if %{with mingw}
 %package -n mingw32-abseil-cpp
@@ -137,40 +149,26 @@ MinGW Windows abseil-cpp library.
 %endif
 
 %prep
-%autosetup -p1 -S gendiff
+%autosetup -p1
 
-%build
-# Test-only libraries are not part of the factory's runtime remit. Skipping
-# their graph avoids an LTO-heavy build that OOMs the hermetic runner; runtime
-# consumers (such as mozc) link the regular Abseil libraries. RPM_BUILD_NCPUS
-# caps ninja parallelism.
-%cmake \
-    -GNinja \
-    -DABSL_USE_EXTERNAL_GOOGLETEST:BOOL=ON \
-    -DABSL_FIND_GOOGLETEST:BOOL=ON \
-    -DABSL_ENABLE_INSTALL:BOOL=ON \
-    -DABSL_BUILD_TESTING:BOOL=OFF \
-    -DABSL_BUILD_TEST_HELPERS:BOOL=OFF \
-    -DCMAKE_BUILD_TYPE:STRING=None \
-    -DCMAKE_CXX_STANDARD:STRING=17
-RPM_BUILD_NCPUS=2 %cmake_build
+# RPM_BUILD_NCPUS caps ninja parallelism (%%_smp_mflags reads it) so the
+# LTO-heavy build fits the hermetic runner's memory.
+%build -p
+export RPM_BUILD_NCPUS=2
 
 %if %{with mingw}
-%mingw_cmake \
-    -DABSL_BUILD_TESTING:BOOL=OFF \
-    -GNinja
+%build -a
+%mingw_cmake -GNinja -DABSL_BUILD_TESTING:BOOL=OFF
 %mingw_ninja --verbose
 %endif
 
-%install
-%cmake_install
-
 %if %{with mingw}
+%install -a
 %mingw_ninja_install
 %mingw_debug_install_post
 %endif
 
-%check
+%check -p
 skips='^($.'
 %ifarch ppc64le %{ix86}
 # [Bug]: Flaky test failures in absl_failure_signal_handler_test on ppc64le in
@@ -182,9 +180,49 @@ skips="${skips}|absl_failure_signal_handler_test"
 # https://github.com/abseil/abseil-cpp/issues/1925
 skips="${skips}|absl_stacktrace_test"
 %endif
+%ifarch %{ix86}
+# Seven of eight KernelTimeout tests fail with errors like:
+#
+# [ RUN      ] KernelTimeout.InfiniteFuture
+# /builddir/build/BUILD/abseil-cpp-20260526.0-build/abseil-cpp-20260526.0/…
+#   absl/synchronization/internal/kernel_timeout_test.cc:130: Failure
+# Expected: (absl::TimeFromTimespec(t.MakeAbsTimespec())) > (absl::Now() +
+#   absl::Hours(100000)), actual: 2038-01-19T03:14:07.999999999+00:00 vs
+#   2038-02-05T02:18:03.245767566+00:00
+# /builddir/build/BUILD/abseil-cpp-20260526.0-build/abseil-cpp-20260526.0/…
+#   absl/synchronization/internal/kernel_timeout_test.cc:133: Failure
+# Expected: (absl::TimeFromTimespec(t.MakeClockAbsoluteTimespec(0))) >
+#   (absl::Now() + absl::Hours(100000)), actual:
+#   2038-01-19T03:14:07.999999999+00:00 vs 2038-02-05T02:18:03.245848097+00:00
+# [  FAILED  ] KernelTimeout.InfiniteFuture (0 ms)
+#
+# This looks like a Year 2038 problem triggered by the passage of (actual,
+# wall-clock) time. We haven’t attempted to report it upstream because we
+# couldn’t easily reproduce it in a git checkout (working in a
+# fedora-rawhide-i386 mock chroot) and because i686 is a low priority.
+skips="${skips}|absl_kernel_timeout_internal_test"
+# Does this even matter? It seems like a minor discrepancy, and on the least
+# important architecture.
+#
+# [ RUN      ] TableDeathTest.InvalidIteratorAssertsSoo
+# /builddir/build/BUILD/abseil-cpp-20260817.0-build/abseil-cpp-20260817.0/…
+#   absl/container/internal/raw_hash_set_test.cc:3913: Failure
+# Death test: t.erase(t.end())
+#     Result: died but not with expected error.
+#   Expected: contains regular expression "erase.* called on end.. iterator."
+# Actual msg:
+# [  DEATH   ] absl_raw_hash_set_test: /builddir/build/BUILD/…
+#   abseil-cpp-20260817.0-build/abseil-cpp-20260817.0/absl/container/…
+#   internal/raw_hash_set.h:3071: void absl::lts_20260817::container
+# _internal::raw_hash_set<Policy, Params>::erase(iterator) [with Policy =
+#   absl::lts_20260817::container_internal::{anonymous}::ValuePolicy<long long
+#   int, true, true, false>; Params = {}]: Assertion `(capacity() > 0) && "Try
+#   enabling sanitizers."' failed.
+# [  DEATH   ]
+# [  FAILED  ] TableDeathTest.InvalidIteratorAssertsSoo (8 ms)
+skips="${skips}|absl_raw_hash_set_test"
+%endif
 skips="${skips})$"
-
-%ctest --exclude-regex "${skips}"
 
 %files
 %license LICENSE
@@ -192,6 +230,7 @@ skips="${skips})$"
 # All shared libraries except installed TESTONLY libraries; see the %%files
 # list for the -testing subpackage for those.
 %{_libdir}/libabsl_base.so.%{lib_version}
+%{_libdir}/libabsl_base_cpu_detect.so.%{lib_version}
 %{_libdir}/libabsl_city.so.%{lib_version}
 %{_libdir}/libabsl_civil_time.so.%{lib_version}
 %{_libdir}/libabsl_clock_interface.so.%{lib_version}
@@ -203,7 +242,6 @@ skips="${skips})$"
 %{_libdir}/libabsl_cordz_sample_token.so.%{lib_version}
 %{_libdir}/libabsl_crc32c.so.%{lib_version}
 %{_libdir}/libabsl_crc_cord_state.so.%{lib_version}
-%{_libdir}/libabsl_crc_cpu_detect.so.%{lib_version}
 %{_libdir}/libabsl_crc_internal.so.%{lib_version}
 %{_libdir}/libabsl_debugging_internal.so.%{lib_version}
 %{_libdir}/libabsl_decode_rust_punycode.so.%{lib_version}
@@ -226,6 +264,7 @@ skips="${skips})$"
 %{_libdir}/libabsl_flags_usage_internal.so.%{lib_version}
 %{_libdir}/libabsl_generic_printer_internal.so.%{lib_version}
 %{_libdir}/libabsl_graphcycles_internal.so.%{lib_version}
+%{_libdir}/libabsl_hardening.so.%{lib_version}
 %{_libdir}/libabsl_hash.so.%{lib_version}
 %{_libdir}/libabsl_hashtable_profiler.so.%{lib_version}
 %{_libdir}/libabsl_hashtablez_sampler.so.%{lib_version}
@@ -299,6 +338,7 @@ skips="${skips})$"
 %files -n mingw32-abseil-cpp
 %license LICENSE
 %{mingw32_bindir}/libabsl_base.dll
+%{mingw32_bindir}/libabsl_base_cpu_detect.dll
 %{mingw32_bindir}/libabsl_city.dll
 %{mingw32_bindir}/libabsl_civil_time.dll
 %{mingw32_bindir}/libabsl_clock_interface.dll
@@ -310,7 +350,6 @@ skips="${skips})$"
 %{mingw32_bindir}/libabsl_cordz_sample_token.dll
 %{mingw32_bindir}/libabsl_crc32c.dll
 %{mingw32_bindir}/libabsl_crc_cord_state.dll
-%{mingw32_bindir}/libabsl_crc_cpu_detect.dll
 %{mingw32_bindir}/libabsl_crc_internal.dll
 %{mingw32_bindir}/libabsl_debugging_internal.dll
 %{mingw32_bindir}/libabsl_decode_rust_punycode.dll
@@ -333,6 +372,7 @@ skips="${skips})$"
 %{mingw32_bindir}/libabsl_flags_usage_internal.dll
 %{mingw32_bindir}/libabsl_generic_printer_internal.dll
 %{mingw32_bindir}/libabsl_graphcycles_internal.dll
+%{mingw32_bindir}/libabsl_hardening.dll
 %{mingw32_bindir}/libabsl_hash.dll
 %{mingw32_bindir}/libabsl_hashtable_profiler.dll
 %{mingw32_bindir}/libabsl_hashtablez_sampler.dll
@@ -399,6 +439,7 @@ skips="${skips})$"
 %files -n mingw64-abseil-cpp
 %license LICENSE
 %{mingw64_bindir}/libabsl_base.dll
+%{mingw64_bindir}/libabsl_base_cpu_detect.dll
 %{mingw64_bindir}/libabsl_city.dll
 %{mingw64_bindir}/libabsl_civil_time.dll
 %{mingw64_bindir}/libabsl_clock_interface.dll
@@ -410,7 +451,6 @@ skips="${skips})$"
 %{mingw64_bindir}/libabsl_cordz_sample_token.dll
 %{mingw64_bindir}/libabsl_crc32c.dll
 %{mingw64_bindir}/libabsl_crc_cord_state.dll
-%{mingw64_bindir}/libabsl_crc_cpu_detect.dll
 %{mingw64_bindir}/libabsl_crc_internal.dll
 %{mingw64_bindir}/libabsl_debugging_internal.dll
 %{mingw64_bindir}/libabsl_decode_rust_punycode.dll
@@ -433,6 +473,7 @@ skips="${skips})$"
 %{mingw64_bindir}/libabsl_flags_usage_internal.dll
 %{mingw64_bindir}/libabsl_generic_printer_internal.dll
 %{mingw64_bindir}/libabsl_graphcycles_internal.dll
+%{mingw64_bindir}/libabsl_hardening.dll
 %{mingw64_bindir}/libabsl_hash.dll
 %{mingw64_bindir}/libabsl_hashtable_profiler.dll
 %{mingw64_bindir}/libabsl_hashtablez_sampler.dll
