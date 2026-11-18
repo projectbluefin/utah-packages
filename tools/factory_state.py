@@ -8,11 +8,16 @@ previous push forgets whatever the replaced run never built. So the answer is
 recorded where the packages are -- as a label on the published image:
 
     org.projectbluefin.factory.state = {"inputs": {name: digest},
-                                        "failed": {name: digest}}
+                                        "failed": {name: digest},
+                                        "withheld": {name: digest}}
 
 `inputs` is the input digest each published build was made from; `failed`
 names packages whose latest attempt at that digest failed, and which
-therefore still carry an older build. A package is changed when its current
+therefore still carry an older build. `withheld` names packages that built
+at that digest but were held back from publication because they would have
+left the repository unresolvable (tools/publish_holdback.py) -- a library
+whose soname moved before its consumers were rebuilt. They also carry an
+older build, but nothing about them failed, so every run retries them. A package is changed when its current
 digest differs from `inputs`, which also makes a run the union of every
 change since the last publication, however many runs were skipped.
 
@@ -73,7 +78,11 @@ def parse_labels(labels: dict | None) -> dict | None:
     if not raw:
         return None
     state = json.loads(raw)
-    return {"inputs": dict(state.get("inputs", {})), "failed": dict(state.get("failed", {}))}
+    return {
+        "inputs": dict(state.get("inputs", {})),
+        "failed": dict(state.get("failed", {})),
+        "withheld": dict(state.get("withheld", {})),
+    }
 
 
 def changed(
@@ -88,14 +97,21 @@ def changed(
     held: packages left out because their last attempt at this exact digest
     failed. Rebuilding an unchanged, known-failing package on every merge
     buys nothing; the scheduled and dispatched runs (retry_failed) try again.
+
+    A withheld package is retried by every run, push included: it built, and
+    what kept it out was its consumers, which a later run may well have
+    rebuilt. Its digest can match `inputs` (a full rebuild withheld it), so
+    the digest alone would never bring it back.
     """
     moved = {name for name, digest in digests.items()
              if state["inputs"].get(name) != digest}
     failing = {name for name in state["failed"] if name in digests}
+    withheld = {name for name in state.get("withheld", {}) if name in digests}
     if retry_failed:
-        return moved | failing, set()
-    held = {name for name in moved if state["failed"].get(name) == digests[name]}
-    return moved - held, held
+        return moved | failing | withheld, set()
+    held = {name for name in moved
+            if state["failed"].get(name) == digests[name] and name not in withheld}
+    return (moved - held) | withheld, held
 
 
 def merge(
@@ -106,6 +122,7 @@ def merge(
     replaced: list[str],
     failed: list[str],
     pruned: list[str],
+    withheld: list[str] = (),
 ) -> dict:
     """The state to record on the image a publish is about to push.
 
@@ -113,26 +130,37 @@ def merge(
     digest (everything it did not select), which is how the first labelled
     image learns the state of packages it did not rebuild. replaced: built
     and published by this run. failed: selected but not published; they keep
-    their previous entry in `inputs` and are recorded in `failed`.
+    their previous entry in `inputs` and are recorded in `failed`. withheld:
+    built but held back from publication; they too keep their previous entry
+    in `inputs`, and are recorded in `withheld` until a publication replaces
+    them.
     """
     inputs = dict((seed or {}).get("inputs", {}))
     previous_failures = dict((seed or {}).get("failed", {}))
+    previous_withheld = dict((seed or {}).get("withheld", {}))
     for name in trusted:
         if name in digests:
             inputs.setdefault(name, digests[name])
     for name in replaced:
         inputs[name] = digests[name]
         previous_failures.pop(name, None)
+        previous_withheld.pop(name, None)
     for name in failed:
         if name in digests:
             previous_failures[name] = digests[name]
+    for name in withheld:
+        if name in digests:
+            previous_withheld[name] = digests[name]
+            previous_failures.pop(name, None)
     for name in pruned:
         inputs.pop(name, None)
         previous_failures.pop(name, None)
+        previous_withheld.pop(name, None)
     known = set(digests)
     return {
         "inputs": {k: v for k, v in sorted(inputs.items()) if k in known},
         "failed": {k: v for k, v in sorted(previous_failures.items()) if k in known},
+        "withheld": {k: v for k, v in sorted(previous_withheld.items()) if k in known},
     }
 
 
@@ -162,6 +190,7 @@ def main(argv: list[str] | None = None) -> int:
         replaced=report.get("replaced", []) + report.get("bootstrapped", []),
         failed=report.get("failed", []),
         pruned=json.loads(args.pruned),
+        withheld=list(report.get("withheld", [])),
     )
     print(json.dumps(state, sort_keys=True, separators=(",", ":")))
     return 0

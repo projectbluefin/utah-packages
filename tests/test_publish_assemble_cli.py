@@ -113,7 +113,7 @@ class AssembleCommandTests(FakeRpmCase):
                       "gtk4-4.21-1.hum1.bfin.src.rpm")
         self.report_path = self.root / "work" / "nested" / "publish-report.json"
 
-    def run_assemble(self, build_list, losers=None):
+    def run_assemble(self, build_list, losers=None, withheld=None):
         argv = [
             "assemble",
             "--seed", str(self.root / "repository"),
@@ -123,6 +123,11 @@ class AssembleCommandTests(FakeRpmCase):
         ]
         if losers is not None:
             argv += ["--losers", json.dumps(losers)]
+        if withheld is not None:
+            path = self.root / "work" / "withheld.json"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(json.dumps({"withheld": withheld}))
+            argv += ["--withheld", str(path)]
         stdout, stderr = io.StringIO(), io.StringIO()
         with redirect_stdout(stdout), redirect_stderr(stderr):
             status = main(argv)
@@ -147,6 +152,8 @@ class AssembleCommandTests(FakeRpmCase):
             "kept_previous": ["fish", "gtk4"],
             "absent": ["libbar"],
             "precedence_losers": ["gtk4"],
+            "withheld": [],
+            "withheld_reasons": {},
             "bootstrapped": ["malcontent-bootstrap"],
         })
         self.assertEqual(self.published(), [
@@ -161,6 +168,25 @@ class AssembleCommandTests(FakeRpmCase):
         self.assertIn("| `gtk4` | previous build (this build lost precedence) |", stdout)
         self.assertIn("| `libbar` | nothing: never published |", stdout)
         self.assertIn("removed 3 seed RPMs, added 2 built RPMs", stderr)
+
+    def test_a_held_back_build_keeps_its_previous_build_and_is_not_a_failure(self):
+        # publish_holdback.py held mutter back: a published consumer still
+        # needs what mutter 50.0 provides. The rest of the run publishes.
+        self.keep_only_built("mutter-", "libwayland-")
+        report, stdout, stderr = self.run_assemble(
+            ["mutter", "wayland"],
+            withheld={"mutter": ["gnome-shell needs libmutter-17.so.0, which the new mutter no longer provides"]},
+        )
+
+        self.assertEqual(report["replaced"], ["wayland"])
+        self.assertEqual(report["withheld"], ["mutter"])
+        self.assertEqual(report["failed"], [])
+        self.assertIn("libmutter-17.so.0", report["withheld_reasons"]["mutter"][0])
+        self.assertIn("result/x86_64/mutter-50.0-1.hum1.bfin.x86_64.rpm", self.published())
+        self.assertIn("result/x86_64/mutter-common-50.0-1.hum1.bfin.x86_64.rpm", self.published())
+        self.assertNotIn("result/x86_64/mutter-50.1-1.hum1.bfin.x86_64.rpm", self.published())
+        self.assertIn("held back", stdout)
+        self.assertIn("removed 1 seed RPMs, added 1 built RPMs", stderr)
 
     def test_a_built_bootstrap_recipe_is_not_reported_as_failed(self):
         report, stdout, _ = self.run_assemble(["malcontent-bootstrap"])

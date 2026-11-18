@@ -10,6 +10,12 @@
 # wait for webkitgtk's three hours whenever they shared a run. Every
 # publication is gated on its own transaction; only the final one fails the
 # run when it does not resolve.
+#
+# A build that would break that transaction is held back rather than
+# blocking everything (tools/publish_holdback.py): a library whose soname
+# moved keeps its previous build, with whatever this publication built
+# against it, until its consumers resolve against the new one. Run
+# 44224171778 published nothing at all over one libnfs soname.
 name: Publish the factory repository
 
 on:
@@ -429,6 +435,55 @@ jobs:
           run-id: ${{ github.run_id }}
           path: built
           merge-multiple: true
+      - name: Install createrepo_c and rpm
+        run: sudo apt-get update && sudo apt-get install -y createrepo-c rpm
+      # What prepare extracted from every recipe's BuildRequires: a hold
+      # follows it to what this publication built against a held build.
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        if: inputs.build_list != '[]'
+        continue-on-error: true
+        with:
+          name: ${{ inputs.artifact_prefix }}build-graph
+          path: work/graph
+      # Which builds would leave the candidate unresolvable, decided from the
+      # metadata of the seed, of what built and of Hummingbird -- not from
+      # dnf's error text, which names only the first problem it meets. A held
+      # build keeps its previous published build, exactly as a precedence
+      # loser does, and so does every build in this publication built against
+      # a held one: it BuildRequires it (the build graph), or its binaries need
+      # what only the held build provides.
+      # The transaction below then judges exactly what will be pushed.
+      #
+      # Only what that transaction installs is judged -- the same package
+      # list the validate step below resolves -- so a break outside it holds
+      # nothing back.
+      #
+      # If Hummingbird's metadata cannot be fetched, nothing is held and the
+      # transaction decides alone, as it did before. Any other failure of the
+      # tool fails the publication: a bug here must not pass for "nothing to
+      # hold".
+      - name: Hold back the builds that would break the consumer transaction
+        id: holdback
+        env:
+          LOSERS: ${{ needs.precedence.outputs.losers || '[]' }}
+          CONSUMER: ${{ inputs.consumer || 'contract' }}
+        run: |
+          set -euo pipefail
+          mkdir -p built work/built-repo
+          createrepo_c --quiet --outputdir work/built-repo built
+          if [ "$CONSUMER" = built ]; then
+            scope=(--install-all)
+          else
+            python3 tools/runtime_contract.py \
+              config/bluefin-packages.toml config/runtime-contract.toml > work/install.txt
+            scope=(--install work/install.txt)
+          fi
+          python3 tools/publish_holdback.py \
+            --seed repository --built work/built-repo --losers "$LOSERS" \
+            --graph work/graph/rows \
+            "${scope[@]}" --output work/withheld.json | tee -a "$GITHUB_STEP_SUMMARY"
+          echo "withheld=$(jq -c '.withheld | keys' work/withheld.json)" >> "$GITHUB_OUTPUT"
+          jq -r '.withheld | to_entries[] | "::warning title=held back::\(.key): \(.value[0])"' work/withheld.json
       - name: Replace the packages this run built
         id: assemble
         env:
@@ -437,11 +492,10 @@ jobs:
           PRUNE_SOURCES: ${{ inputs.prune_sources }}
         run: |
           set -euo pipefail
-          sudo apt-get update && sudo apt-get install -y createrepo-c rpm
-          mkdir -p built
           python3 tools/publish_gate.py assemble \
             --seed repository --built built \
             --build-list "$BUILD_LIST" --losers "$LOSERS" \
+            --withheld work/withheld.json \
             --report work/publish-report.json | tee -a "$GITHUB_STEP_SUMMARY"
           replaced=$(jq '.replaced | length' work/publish-report.json)
           pruned=$(jq 'length' <<<"$PRUNE_SOURCES")
@@ -565,9 +619,9 @@ jobs:
         continue-on-error: true
         run: python3 tools/utah_install_set.py fetch --dir work/utah
       # Blocking for the final publication. An early one -- after one wave,
-      # while later waves still build -- can legitimately fail it: a library
-      # whose soname moved publishes before its consumers are rebuilt. It
-      # then publishes nothing, and the next publication tries again with
+      # while later waves still build -- can still fail it in a way the
+      # hold-back above does not model (a versioned Requires, a Conflicts).
+      # It then publishes nothing, and the next publication tries again with
       # more of the run in it.
       - name: Validate Hummingbird-only consumer transaction
         id: validate
@@ -863,6 +917,29 @@ jobs:
         with:
           name: ${{ inputs.artifact_prefix }}factory-manifest${{ inputs.wave != '' && format('-wave{0}', inputs.wave) || '' }}
           path: repository/manifest.json
+      # The final publication has pushed, signed and attested the resolvable
+      # subset by now, deliberately: holding builds back must not hold back
+      # the rest. But a held build is a package this run built and did not
+      # ship, so the final publication still fails the run -- last, after
+      # everything above, so the image it pushed is complete and verifiable
+      # as the next run's seed. An early publication only warns: the final
+      # one, or the next run, gets another chance.
+      - name: Fail the final publication when builds were held back
+        if: inputs.final && steps.holdback.outputs.withheld != '' && steps.holdback.outputs.withheld != '[]'
+        env:
+          WITHHELD: ${{ steps.holdback.outputs.withheld }}
+          DIGEST: ${{ steps.oci.outputs.digest }}
+        run: |
+          count=$(jq length <<<"$WITHHELD")
+          if [ -n "$DIGEST" ]; then
+            pushed="pushed the resolvable subset as $DIGEST"
+          else
+            pushed="pushed nothing"
+          fi
+          echo "::error title=builds held back::the final publication $pushed, and held back $count build(s) that would have left the repository unresolvable: $(jq -r 'join(", ")' <<<"$WITHHELD"). They keep their previous build; the next run retries them."
+          printf '\n**The final publication %s and fails the run:** %s build(s) were held back: %s\n' \
+            "$pushed" "$count" "$(jq -r 'map("`" + . + "`") | join(", ")' <<<"$WITHHELD")" >> "$GITHUB_STEP_SUMMARY"
+          exit 1
 
   # Names every package that did not publish, loudly, whether or not publish
   # ran: in the job summary on every run, and on main in one tracking issue
