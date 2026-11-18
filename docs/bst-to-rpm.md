@@ -216,8 +216,10 @@ A package can be put on the older container lane with
 `build_lane: container` in its source lock. That lane skips the lock and the
 check. No package uses it today.
 
-Packages build with the disttag `.hum1.bfin`, so their sonames match the
-Hummingbird image they go into.
+Packages build with the disttag `.<humN>.bfin` (today `.hum1.bfin`). `humN` is
+read from the Hummingbird packages in the build root. The tag names Hummingbird
+as the target and sorts above Hummingbird's own `.hum1` at an equal release
+([`targeting-hummingbird.md`](targeting-hummingbird.md)).
 
 **The cache.** After the lock step, a package whose inputs didn't change is
 taken from the package cache, and its offline build is skipped. The cache key
