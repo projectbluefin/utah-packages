@@ -15,8 +15,10 @@ import yaml
 
 from tools.dakota_repin import (
     DAKOTA_IMAGE,
+    PROJECT_REMOTES,
     apply,
     candidate_runs,
+    checkout_projects,
     compare_on_branch,
     has_artifacts,
     junction_pin,
@@ -260,11 +262,50 @@ class PrBodyTest(unittest.TestCase):
         self.assertIn("5 more in the report", body)
         self.assertIn(f"/compare/{OLD_SHA}...{NEW_SHA}", body)
         self.assertIn("every reviewer decision names one of them", body)
+        self.assertNotIn("## Patches and build options", body)
+
+        after["build_intent"] = [{"classification": "needs_review"}, {"classification": "aligned"}]
+        body = render_pr_body(before, after, SOURCE, repin, [])
+        self.assertIn("## Patches and build options of factory recipes", body)
+        self.assertIn("| needs_review | 0 | 1 |", body)
 
         failing = render_pr_body(before, after, SOURCE, repin,
                                  ["overrides x.bst: not an element of the snapshot"])
         self.assertIn("`just dakota-audit` fails on this pin", failing)
         self.assertIn("- overrides x.bst: not an element of the snapshot", failing)
+
+
+class CheckoutTest(unittest.TestCase):
+    def test_fetches_each_project_at_its_pinned_commit(self) -> None:
+        extra = "7825d44d436a51dcbf7d226904348e810c63bf75"
+        calls = []
+
+        def git(*args: str) -> None:
+            calls.append(args)
+            if args[2] == "checkout" and args[1].endswith("gnome-build-meta"):
+                write_to = Path(args[1], "elements", "freedesktop-sdk-extra.bst")
+                write_to.parent.mkdir(parents=True)
+                write_to.write_text(
+                    "kind: junction\nsources:\n- kind: git_repo\n  url: gitlab:x.git\n"
+                    f"  ref: freedesktop-sdk-extra-26.08.3-0-g{extra}\n")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            dirs = checkout_projects(SOURCE, Path(tmp), git)
+        fetched = {Path(c[1]).name: (c[6], c[7]) for c in calls if c[2] == "fetch"}
+        self.assertEqual(fetched, {
+            "dakota": (PROJECT_REMOTES["dakota"], OLD_SHA),
+            "gnome-build-meta": (PROJECT_REMOTES["gnome-build-meta"],
+                                 "8a89846df11e86cee57c728a86a247e61d604b84"),
+            "freedesktop-sdk": (PROJECT_REMOTES["freedesktop-sdk"],
+                                "114ae909ec9881958bd507c8b4414aa33f758d2b"),
+            "freedesktop-sdk-extra": (PROJECT_REMOTES["freedesktop-sdk-extra"], extra),
+        })
+        self.assertEqual(sorted(dirs), sorted(PROJECT_REMOTES))
+
+    def test_refuses_a_junction_without_a_commit(self) -> None:
+        source = {**SOURCE, "junctions": {**SOURCE["junctions"], "freedesktop-sdk.bst": "main"}}
+        with tempfile.TemporaryDirectory() as tmp, self.assertRaises(ValueError):
+            checkout_projects(source, Path(tmp), lambda *args: None)
 
 
 class WorkflowTest(unittest.TestCase):
@@ -282,7 +323,8 @@ class WorkflowTest(unittest.TestCase):
     def test_pull_request_carries_only_the_pin(self) -> None:
         pr = next(s for s in self.steps if "create-pull-request" in s.get("uses", ""))
         self.assertEqual(pr["with"]["add-paths"].split(),
-                         ["config/dakota.json", "config/dakota-elements.tsv"])
+                         ["config/dakota.json", "config/dakota-elements.tsv",
+                          "config/dakota-build-facts.json"])
         self.assertEqual(pr["with"]["branch"], "chore/dakota-repin")
 
     def test_unchanged_pin_does_nothing(self) -> None:
@@ -297,6 +339,10 @@ class WorkflowTest(unittest.TestCase):
         script = "\n".join(s.get("run", "") for s in self.steps)
         self.assertLess(script.index("dakota_repin.py apply"), script.index("--import-sbom"))
         self.assertIn("--image-layout work/dakota-oci --refresh", script)
+        # The build facts are rebuilt from checkouts at the new pin, after it is written.
+        self.assertLess(script.index("dakota_repin.py apply"),
+                        script.index("dakota_repin.py checkout"))
+        self.assertIn("--import-build-facts", script)
         self.assertIn("--preserve-digests", script)
         self.assertIn('ghcr.io/projectbluefin/dakota@${DIGEST}', script)
 

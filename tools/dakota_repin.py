@@ -13,9 +13,14 @@ refresh-dakota.yml runs this. The workflow is plumbing (``gh``, ``skopeo``,
         when it names the revision and digest config/dakota.json already pins.
     dakota_repin.py apply work/repin.json
         Write the proposed ``source`` into config/dakota.json, nothing else.
+    dakota_repin.py checkout --into work/src
+        Fetch Dakota, gnome-build-meta, freedesktop-sdk and
+        freedesktop-sdk-extra at the commits config/dakota.json pins, for
+        ``audit_dakota.py --import-build-facts``.
     dakota_repin.py pr-body --before OLD.json --after NEW.json --repin work/repin.json
         The pull request body: the pin move, the disposition counts before
-        and after, the version drift summary and any contract problem.
+        and after, the version drift summary, the patch and option summary and
+        any contract problem.
 
 The revision and digest come from Dakota's own ``digest-default`` record of
 the run, never from the SBOM or the image being checked: ``--import-sbom``
@@ -39,8 +44,14 @@ import yaml
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from tools.audit_dakota import (  # noqa: E402
+    DAKOTA_PROJECT,
     DISPOSITIONS,
+    FDSDK_EXTRA_PROJECT,
+    FDSDK_PROJECT,
+    GBM_PROJECT,
     contract_problems,
+    expected_build_refs,
+    junction_commit,
     load_pin,
     read_snapshot,
 )
@@ -57,6 +68,14 @@ JUNCTIONS = ("gnome-build-meta.bst", "freedesktop-sdk.bst")
 RUN_WINDOW = 20
 # Drift rows listed in the pull request body; the full list is in the report.
 BODY_DRIFT_ROWS = 40
+
+# Where --import-build-facts reads each project's .bst files from.
+PROJECT_REMOTES = {
+    DAKOTA_PROJECT: "https://github.com/projectbluefin/dakota.git",
+    GBM_PROJECT: "https://gitlab.gnome.org/GNOME/gnome-build-meta.git",
+    FDSDK_PROJECT: "https://gitlab.com/freedesktop-sdk/freedesktop-sdk.git",
+    FDSDK_EXTRA_PROJECT: "https://gitlab.com/freedesktop-sdk/freedesktop-sdk-extra.git",
+}
 
 _SHA = re.compile(r"[0-9a-f]{40}")
 _DIGEST = re.compile(r"sha256:[0-9a-f]{64}")
@@ -207,6 +226,41 @@ def apply(pin_path: Path, source: dict) -> None:
     load_pin(pin_path)
 
 
+def _git(*args: str) -> None:
+    subprocess.run(["git", *args], check=True)
+
+
+def fetch_commit(url: str, commit: str, dest: Path, git=_git) -> None:
+    """A shallow checkout of one commit, without the rest of the history."""
+    dest.mkdir(parents=True, exist_ok=True)
+    git("-C", str(dest), "init", "-q")
+    git("-C", str(dest), "fetch", "-q", "--depth", "1", url, commit)
+    git("-C", str(dest), "checkout", "-q", "FETCH_HEAD")
+
+
+def checkout_projects(source: dict, dest: Path, git=_git) -> dict[str, Path]:
+    """The four projects at the pinned commits, gnome-build-meta first.
+
+    freedesktop-sdk-extra's commit is read from gnome-build-meta's junction
+    element, so gnome-build-meta has to be on disk before it.
+    """
+    commits = {DAKOTA_PROJECT: source["revision"]}
+    for name, project in (("gnome-build-meta.bst", GBM_PROJECT),
+                          ("freedesktop-sdk.bst", FDSDK_PROJECT)):
+        commit = junction_commit((source.get("junctions") or {}).get(name, ""))
+        if not commit or not _SHA.fullmatch(commit):
+            raise ValueError(f"source.junctions {name} names no full commit")
+        commits[project] = commit
+    dirs = {project: dest / project for project in PROJECT_REMOTES}
+    for project in (DAKOTA_PROJECT, GBM_PROJECT, FDSDK_PROJECT):
+        fetch_commit(PROJECT_REMOTES[project], commits[project], dirs[project], git)
+    extra = expected_build_refs({"source": source}, dirs[GBM_PROJECT])[FDSDK_EXTRA_PROJECT]
+    if not _SHA.fullmatch(extra):
+        raise ValueError(f"freedesktop-sdk-extra ref {extra} is not a full commit")
+    fetch_commit(PROJECT_REMOTES[FDSDK_EXTRA_PROJECT], extra, dirs[FDSDK_EXTRA_PROJECT], git)
+    return dirs
+
+
 # --- Pull request body --------------------------------------------------------------
 
 def _short(value: str | None) -> str:
@@ -217,6 +271,13 @@ def _drift_totals(report: dict) -> dict[str, int]:
     totals: dict[str, int] = {}
     for item in report.get("drift", []):
         totals[item["classification"]] = totals.get(item["classification"], 0) + 1
+    return totals
+
+
+def _intent_totals(report: dict) -> dict[str, int]:
+    totals: dict[str, int] = {}
+    for row in report.get("build_intent") or []:
+        totals[row["classification"]] = totals.get(row["classification"], 0) + 1
     return totals
 
 
@@ -282,6 +343,15 @@ def render_pr_body(before: dict, after: dict, old_source: dict, repin: dict,
             lines.append(f"| … | | | {len(review) - BODY_DRIFT_ROWS} more in the report |")
         lines += ["", "</details>"]
 
+    old_intent = _intent_totals(before)
+    new_intent = _intent_totals(after)
+    if new_intent:
+        lines += ["", "## Patches and build options of factory recipes", "",
+                  "| classification | before | after |", "| --- | ---: | ---: |"]
+        for classification in sorted(set(old_intent) | set(new_intent)):
+            lines.append(f"| {classification} | {old_intent.get(classification, 0)} | "
+                         f"{new_intent.get(classification, 0)} |")
+
     lines += ["", "## Contract", ""]
     if problems:
         lines.append("`just dakota-audit` fails on this pin until these are fixed on this "
@@ -313,6 +383,8 @@ def main(argv=None) -> int:
     p_resolve.add_argument("--out", type=Path, required=True)
     p_apply = sub.add_parser("apply")
     p_apply.add_argument("repin", type=Path)
+    p_checkout = sub.add_parser("checkout")
+    p_checkout.add_argument("--into", type=Path, required=True)
     p_body = sub.add_parser("pr-body")
     p_body.add_argument("--before", type=Path, required=True,
                         help="audit report JSON of the old pin")
@@ -332,6 +404,11 @@ def main(argv=None) -> int:
         state = "moves" if result["changed"] else "is unchanged at"
         print(f"pin {state} {result['source']['revision']} "
               f"(run {result['run']}, {result['source']['image_digest']})")
+        return 0
+    if args.command == "checkout":
+        dirs = checkout_projects(load_pin(args.pin)["source"], args.into)
+        for project, path in dirs.items():
+            print(f"{project}: {path}")
         return 0
     if args.command == "apply":
         apply(args.pin, json.loads(args.repin.read_text())["source"])

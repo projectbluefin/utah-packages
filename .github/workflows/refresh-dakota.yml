@@ -8,9 +8,11 @@ name: Refresh the Dakota pin
 # testing branch with its sbom-dakota and digest-default artifacts
 # (tools/dakota_repin.py resolve). When it names the pinned revision and digest
 # it stops. Otherwise it writes the new source, copies the image by digest
-# into an OCI layout, rebuilds the snapshot and the mapping with
-# `tools/audit_dakota.py --import-sbom ... --image-layout ... --refresh`, and
-# opens or updates one pull request with the two config files. The import
+# into an OCI layout, fetches Dakota, gnome-build-meta, freedesktop-sdk and
+# freedesktop-sdk-extra at the new refs, rebuilds the snapshot, the mapping and
+# the build facts with `tools/audit_dakota.py --import-sbom ... --image-layout
+# ... --refresh --import-build-facts ...`, and opens or updates one pull
+# request with the three config files. The import
 # keeps its own checks: it refuses an SBOM whose namespace is not the new
 # revision and a layout that does not hold the new digest, both read from
 # Dakota's digest-default record rather than from the SBOM or the image.
@@ -83,8 +85,14 @@ jobs:
         run: |
           set -euo pipefail
           python3 tools/dakota_repin.py apply work/repin.json
+          # The four projects at the new pin, for each element's patches and
+          # configure options (config/dakota-build-facts.json).
+          python3 tools/dakota_repin.py checkout --into work/src
           python3 tools/audit_dakota.py --import-sbom work/sbom/dakota.sbom.json \
-            --image-layout work/dakota-oci --refresh
+            --image-layout work/dakota-oci --refresh --import-build-facts \
+            --dakota-dir work/src/dakota --gbm-dir work/src/gnome-build-meta \
+            --fdsdk-dir work/src/freedesktop-sdk \
+            --fdsdk-extra-dir work/src/freedesktop-sdk-extra
           python3 tools/dakota_repin.py pr-body --before work/before.json \
             --after reports/audit-dakota.json --repin work/repin.json \
             --old-pin work/old-pin.json > work/pr-body.md
@@ -112,6 +120,7 @@ jobs:
           add-paths: |
             config/dakota.json
             config/dakota-elements.tsv
+            config/dakota-build-facts.json
           branch: chore/dakota-repin
           delete-branch: true
           title: 'chore(dakota): re-pin Dakota to ${{ steps.resolve.outputs.revision }}'
