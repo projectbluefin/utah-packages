@@ -16,6 +16,11 @@ Source2:        libp11.keyring
 BuildRequires: make
 BuildRequires:  autoconf automake libtool
 BuildRequires:  openssl-devel
+# Utah: Rawhide builds this against OpenSSL 4, where libp11 builds only the
+# provider. Hummingbird has OpenSSL 3.5, where libp11 also builds the ENGINE
+# and needs openssl/engine.h, shipped in openssl-devel-engine (run
+# 44224171778). Fedora 44's recipe has the same BuildRequires.
+BuildRequires:  openssl-devel-engine
 BuildRequires:  openssl >= 3.0.0
 BuildRequires:  pkgconfig
 BuildRequires:  pkgconfig(p11-kit-1)
@@ -88,6 +93,8 @@ make check %{?_smp_mflags} || if [ $? -ne 0 ]; then cat tests/*.log; exit 1; fi;
 %{_libdir}/libp11.so.*
 %{_libdir}/ossl-modules/libpkcs11.so
 %{_libdir}/ossl-modules/pkcs11prov.so
+# Utah: the ENGINE libp11 builds against OpenSSL 3.x, as Fedora 44 ships it.
+%{_libdir}/engines-3/*.so
 
 %files -n libp11-devel
 %doc examples/ doc/api.out/html/
