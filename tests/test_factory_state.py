@@ -103,5 +103,108 @@ class MergeTests(unittest.TestCase):
         self.assertIsNone(parse_labels(None))
 
 
+class SharedOnlyTests(unittest.TestCase):
+    """A build-root move alone versus a package's own change (issue #1207)."""
+
+    def setUp(self) -> None:
+        self.tmp = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.tmp)
+        (self.tmp / "config").mkdir()
+        (self.tmp / "config" / "buildroot-image").write_text("ghcr.io/x@sha256:1\n")
+        (self.tmp / "config" / "hummingbird.repo").write_text("[hb]\n")
+        self.locks = {}
+        for name in ("fish", "gtk4", "mutter"):
+            (self.tmp / "packages" / name).mkdir(parents=True)
+            (self.tmp / "packages" / name / f"{name}.spec").write_text(f"Name: {name}\n")
+            self.locks[name] = {"name": name, "version": "1", "sha512": "a"}
+        # The published state, labelled the way publish writes it.
+        self.state = merge(None, factory_state.current(self.tmp, self.locks),
+                           trusted=list(self.locks), replaced=[], failed=[], pruned=[],
+                           shared=factory_state.shared_entry(self.tmp))
+
+    def move_root(self) -> None:
+        (self.tmp / "config" / "buildroot-image").write_text("ghcr.io/x@sha256:2\n")
+
+    def classify(self, state=None) -> tuple[set[str], set[str]]:
+        state = state or self.state
+        moved, _ = changed(state, factory_state.current(self.tmp, self.locks), retry_failed=False)
+        return moved, factory_state.shared_only(self.tmp, state, self.locks, moved)
+
+    def test_a_root_move_alone_is_shared_only(self) -> None:
+        self.move_root()
+        moved, only = self.classify()
+        self.assertEqual(moved, {"fish", "gtk4", "mutter"})
+        self.assertEqual(only, {"fish", "gtk4", "mutter"})
+
+    def test_an_edited_recipe_or_inventory_entry_is_never_shared_only(self) -> None:
+        self.move_root()
+        (self.tmp / "packages" / "fish" / "fix.patch").write_text("--- a\n")
+        self.locks["gtk4"] = dict(self.locks["gtk4"], sha512="b")
+        moved, only = self.classify()
+        self.assertEqual(moved, {"fish", "gtk4", "mutter"})
+        self.assertEqual(only, {"mutter"})
+
+    def test_a_recipe_edit_without_a_root_move_is_not_shared_only(self) -> None:
+        (self.tmp / "packages" / "fish" / "fix.patch").write_text("--- a\n")
+        moved, only = self.classify()
+        self.assertEqual((moved, only), ({"fish"}, set()))
+
+    def test_a_label_without_shared_proves_nothing(self) -> None:
+        legacy = {"inputs": self.state["inputs"], "failed": {}}
+        self.move_root()
+        moved, only = self.classify(legacy)
+        self.assertEqual(moved, {"fish", "gtk4", "mutter"})
+        self.assertEqual(only, set())
+
+    def test_a_new_package_is_not_shared_only(self) -> None:
+        self.move_root()
+        (self.tmp / "packages" / "new").mkdir()
+        (self.tmp / "packages" / "new" / "new.spec").write_text("Name: new\n")
+        self.locks["new"] = {"name": "new", "version": "1", "sha512": "a"}
+        moved, only = self.classify()
+        self.assertIn("new", moved)
+        self.assertNotIn("new", only)
+
+    def test_a_hummingbird_repo_move_alone_is_not_shared_only(self) -> None:
+        # The cache key does not carry hummingbird.repo, so a package changed
+        # only by it could hit an entry made before the change.
+        (self.tmp / "config" / "hummingbird.repo").write_text("[hb]\npriority=9\n")
+        moved, only = self.classify()
+        self.assertEqual(moved, {"fish", "gtk4", "mutter"})
+        self.assertEqual(only, set())
+
+    def test_a_root_and_repo_move_together_is_shared_only(self) -> None:
+        self.move_root()
+        (self.tmp / "config" / "hummingbird.repo").write_text("[hb]\npriority=9\n")
+        self.assertEqual(self.classify()[1], {"fish", "gtk4", "mutter"})
+
+    def test_a_partial_publish_after_a_move_keeps_the_proof(self) -> None:
+        # publish0 replaces fish on the new root and stamps the new shared
+        # digest; gtk4 and mutter, not yet rebuilt, keep inputs recorded under
+        # the old one.
+        self.move_root()
+        digests = factory_state.current(self.tmp, self.locks)
+        partial = merge(self.state, digests, trusted=[], replaced=["fish"], failed=[],
+                        pruned=[], shared=factory_state.shared_entry(self.tmp))
+        self.assertEqual(len(partial["shared"]), 2)
+        moved, only = self.classify(partial)
+        self.assertEqual(moved, {"gtk4", "mutter"})
+        self.assertEqual(only, {"gtk4", "mutter"})
+
+    def test_the_history_is_bounded_and_newest_first(self) -> None:
+        state = self.state
+        for n in range(factory_state.SHARED_HISTORY + 3):
+            (self.tmp / "config" / "buildroot-image").write_text(f"ghcr.io/x@sha256:{n + 10}\n")
+            state = merge(state, factory_state.current(self.tmp, self.locks), trusted=[],
+                          replaced=[], failed=[], pruned=[],
+                          shared=factory_state.shared_entry(self.tmp))
+        self.assertEqual(len(state["shared"]), factory_state.SHARED_HISTORY)
+        self.assertEqual(state["shared"][0], factory_state.shared_entry(self.tmp))
+
+    def test_the_shared_history_survives_the_label(self) -> None:
+        labels = {LABEL: json.dumps(self.state)}
+        self.assertEqual(parse_labels(labels)["shared"], [factory_state.shared_entry(self.tmp)])
+
+
 if __name__ == "__main__":
     unittest.main()
