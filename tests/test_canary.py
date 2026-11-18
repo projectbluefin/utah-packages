@@ -83,6 +83,19 @@ class SaltTests(unittest.TestCase):
         for relative in canary.BUILD_PATH:
             self.assertTrue((ROOT / relative).is_file(), relative)
 
+    def test_every_tool_the_build_scripts_run_is_salted(self) -> None:
+        # A change to a script the build runs has to compile for real in the
+        # canary. verify_hermetic_repo.py was missed (#1196's canary hit the
+        # cache and never ran it).
+        called = set()
+        for script in ("tools/hermetic_build.sh", "tools/build_container.sh"):
+            text = (ROOT / script).read_text()
+            for name in re.findall(r"/tools/([A-Za-z0-9_.-]+)", text):
+                if (ROOT / "tools" / name).is_file():
+                    called.add(f"tools/{name}")
+        self.assertTrue(called)
+        self.assertEqual(sorted(called - set(canary.BUILD_PATH)), [])
+
     def test_a_build_path_change_moves_the_salt(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
