@@ -63,9 +63,11 @@ Semantics worth pinning (they are unit-tested in `tests/test_queue_wait.py`):
   opt-in** via the `QUEUE_WAIT_THRESHOLD` repo variable. The agreed threshold
   is a maintainer decision (#304 "Done when"), so the workflow does not hardcode
   one. The tool exits 1 when p50 exceeds the threshold, which is how the
-  daily job alerts — it goes red. Any Actions API failure (auth, permissions,
-  rate limit, 5xx) or missing token exits 2, so it is never mistaken for the
-  alert.
+  daily job alerts — it goes red. Each API call retries 500/502/503/504 and
+  connection errors three times (2s, 4s, 8s back-off) so one GitHub blip does
+  not lose the daily report; 401, 403, 404 and rate limits are never retried.
+  Any Actions API failure that survives that (auth, permissions, rate limit,
+  5xx) or a missing token exits 2, so it is never mistaken for the alert.
 - Splitting long poles, priority lanes and merge-queue batching are out of scope
   for a contributable PR. When a task asks for one of those, the shippable part
   is the measurement that would prove it works; the policy change stays a
