@@ -398,7 +398,10 @@ unknown generator or git error, and an unfetchable signature, SHA-256
 manifest or bundled source. An anti-bot HTML page served for an archive URL
 (`ChallengePage`, #889) is not an outage either: the host answered, so the
 next configured URL is tried, and if none serves the file the package is
-`rejected`; add a verified mirror to `fallback_urls`.
+`rejected`; add a verified mirror to `fallback_urls`. A body whose leading
+bytes do not match the URL's archive extension (`ARCHIVE_MAGIC` in
+`tools/source_pipeline.py`: `.tar.xz`, `.tar.gz`, `.tar.bz2` and so on) is
+treated as the same `ChallengePage` case, not as a digest mismatch.
 
 ## The scheduled verification run is never cancelled
 
