@@ -112,6 +112,27 @@ BuildRequires on top of this image, and its post-builddep `rpm -qa` is what
 the package cache key hashes. Read the snapshot as the shared base those roots
 start from.
 
+## The hermetic repository is checked against its lock
+
+`mock-hermetic-repo` saves whatever each lock URL returns, and the mock
+configuration resolves with `gpgcheck=0`. `tools/verify_hermetic_repo.py`
+therefore holds the materialized repository to `buildroot_lock.json` before
+the offline build: every locked RPM present, no other `*.rpm` anywhere in the
+tree, the MD5 of each file's header and payload equal to the lock's `sigmd5`,
+the NEVRA in that header equal to the entry, and the signing key ID equal to
+the lock's `signature` when it records one. The MD5 is computed from the
+bytes, never read from the file's own signature header. `hermetic_build.sh`
+runs it inside `fetch_remote`, so a mismatch is cleaned up and refetched like
+a dropped connection, and again on the whole repository after the `file://`
+half is copied in. Do not move it out of the retried fetch, and do not key it
+by URL: a mirror or a redirect has to pass the same check.
+
+The check proves the build used the root the lock phase resolved; it does not
+prove that root was genuine, because the lock phase itself runs with
+`gpgcheck=0`. mock records `signature` from `%{SIGPGP}`, which current Fedora
+and Hummingbird RPMs (header-only `RSAHEADER` signatures) leave empty, so the
+key ID check rarely has anything to compare.
+
 ## The snapshot runs on the runner
 
 `rpm -qa` runs inside the build root; the JSON is assembled outside it. The
