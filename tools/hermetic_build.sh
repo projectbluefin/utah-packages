@@ -191,6 +191,13 @@ PY
   # On success three lines are enough. On failure the cause -- createrepo_c
   # naming the RPM it could not read, a download error -- sits above the
   # traceback, so show the log without the per-RPM download noise.
+  #
+  # mock-hermetic-repo keeps whatever each URL answers, and the root was
+  # resolved with gpgcheck=0, so a fetch only counts once every downloaded
+  # RPM is the one the lock names: same SIGMD5, same NEVRA, nothing missing,
+  # nothing extra (tools/verify_hermetic_repo.py). It is part of the fetch, so
+  # a mismatch is cleaned up and fetched again like a dropped connection, and
+  # every retry passes through the same check whatever URL served it.
   # The lock names whichever Fedora mirror the metalink handed mock, so a
   # dead mirror failed every retry. The first attempt uses the lock as
   # resolved. Each retry points Fedora URLs at Fedora's own redirector,
@@ -212,8 +219,9 @@ PY
       tail -3 "$fetch_log"
     else
       grep -vE "Downloading |urllib3" "$fetch_log" | tail -40 || true
+      return "$fetch_status"
     fi
-    return "$fetch_status"
+    python3 /tools/verify_hermetic_repo.py --lockfile "$H/lock/remote.json" --repo "$H/repo"
   }
   clean_repo() { rm -rf "$H/repo"; }
   online "lock fetch" clean_repo fetch_remote
@@ -221,6 +229,10 @@ PY
     [ -n "$path" ] || continue
     cp "$path" "$H/repo/"
   done < "$H/local.txt"
+  # The repository as the offline build will see it -- downloads and the
+  # local earlier-stage and factory RPMs together -- against the whole lock.
+  # Nothing is retried here: the network is done, and a mismatch is fatal.
+  python3 /tools/verify_hermetic_repo.py --lockfile "$H/lock/buildroot_lock.json" --repo "$H/repo"
   createrepo_c -q "$H/repo"
   echo "hermetic repository: $(find "$H/repo" -maxdepth 1 -name "*.rpm" | wc -l) RPMs"
 }
