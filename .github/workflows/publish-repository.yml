@@ -490,12 +490,23 @@ jobs:
           BUILD_LIST: ${{ inputs.build_list }}
           LOSERS: ${{ needs.precedence.outputs.losers || '[]' }}
           PRUNE_SOURCES: ${{ inputs.prune_sources }}
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+          WAVE: ${{ inputs.wave }}
+          PREFIX: ${{ inputs.artifact_prefix }}
         run: |
           set -euo pipefail
+          # Fail closed on a short download: with hold-back, builds missing
+          # from built/ would otherwise publish as failures, silently.
+          gh api --paginate "repos/$REPOSITORY/actions/runs/$RUN_ID/artifacts?per_page=100" \
+            --jq '.artifacts[].name' | jq -R . | jq -s . > work/run-artifacts.json
+          echo "run artifacts listed: $(jq length work/run-artifacts.json)"
           python3 tools/publish_gate.py assemble \
             --seed repository --built built \
             --build-list "$BUILD_LIST" --losers "$LOSERS" \
             --withheld work/withheld.json \
+            --artifacts work/run-artifacts.json --prefix "$PREFIX" --wave "$WAVE" \
             --report work/publish-report.json | tee -a "$GITHUB_STEP_SUMMARY"
           replaced=$(jq '.replaced | length' work/publish-report.json)
           pruned=$(jq 'length' <<<"$PRUNE_SOURCES")

@@ -148,6 +148,7 @@ def merge(
     for name in failed:
         if name in digests:
             previous_failures[name] = digests[name]
+            previous_withheld.pop(name, None)
     for name in withheld:
         if name in digests:
             previous_withheld[name] = digests[name]

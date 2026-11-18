@@ -110,6 +110,16 @@ class WithheldTests(unittest.TestCase):
         self.assertEqual(parse_labels({LABEL: json.dumps({"inputs": {}, "failed": {}})})["withheld"], {})
 
 
+    def test_a_withheld_package_that_then_fails_is_held_like_any_failure(self) -> None:
+        seed = {"inputs": {"libnfs": "n1", "gvfs": "g2", "fish": "f1"},
+                "failed": {}, "withheld": {"libnfs": "n2"}}
+        state = merge(seed, self.DIGESTS, trusted=[], replaced=[], failed=["libnfs"],
+                      pruned=[])
+        self.assertEqual(state["withheld"], {})
+        self.assertEqual(state["failed"], {"libnfs": "n2"})
+        moved, held = changed(state, self.DIGESTS, retry_failed=False)
+        self.assertEqual((moved, held), (set(), {"libnfs"}))
+
 class MergeTests(unittest.TestCase):
     DIGESTS = {"fish": "f2", "gtk4": "g2", "mutter": "m1", "libfoo": "l1", "gone": "z"}
 

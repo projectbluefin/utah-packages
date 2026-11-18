@@ -222,6 +222,31 @@ def failures_from_artifacts(
     return sorted((set(build_list) - built) | (losers & set(build_list)))
 
 
+def undownloaded(
+    artifact_names: list[str], prefix: str, wave: str, build_list: list[str],
+    sources: set[str],
+) -> list[str]:
+    """Selected packages whose RPM artifact exists in the run but not on disk.
+
+    Every source with an uploaded ``rpm-s<stage>-<package>`` artifact in the
+    waves this publication covers must have RPMs among the downloaded files.
+    Otherwise the download was cut short (download-artifact's internal
+    listing stops at 1000), and assemble would count real builds as failures
+    and publish a partial repository. ``sources`` is every source name the
+    downloaded RPMs carry, bootstrap builds included.
+    """
+    last = None if wave == "" else int(wave)
+    expected = set()
+    for name in artifact_names:
+        if not name.startswith(prefix):
+            continue
+        match = RPM_ARTIFACT.match(name[len(prefix):])
+        if match and (last is None or int(match["stage"]) <= last):
+            expected.add(match["package"])
+    covered = set(sources) | {name + "-bootstrap" for name in sources}
+    return sorted((expected & set(build_list)) - covered)
+
+
 def source_names(paths: list[Path]) -> dict[str, str]:
     """RPM path -> source package name, read from the RPM headers.
 
@@ -615,6 +640,14 @@ def _cli_assemble(args: argparse.Namespace) -> int:
     everything = source_names(sorted(built_root.rglob("*.rpm")))
     built = publishable(everything)
     build_list = json.loads(args.build_list)
+    if args.artifacts:
+        missing = undownloaded(json.loads(args.artifacts.read_text()), args.prefix,
+                               args.wave, build_list, set(everything.values()))
+        if missing:
+            print(f"::error::{len(missing)} built package(s) have an artifact in this run "
+                  f"but no RPMs in the download, so it was cut short: {', '.join(missing)}",
+                  file=sys.stderr)
+            return 1
     # A bootstrap recipe that built is done: its output is for later waves.
     bootstrapped = sorted(
         name for name in build_list
@@ -695,6 +728,11 @@ def main(argv: list[str] | None = None) -> int:
     assemble_cmd.add_argument("--withheld", type=Path,
                               help="publish_holdback.py output: builds to hold back")
     assemble_cmd.add_argument("--report", type=Path, required=True)
+    assemble_cmd.add_argument("--artifacts", type=Path,
+                              help="JSON list of the run's artifact names: fail if any "
+                                   "covered RPM artifact is missing from --built")
+    assemble_cmd.add_argument("--prefix", default="")
+    assemble_cmd.add_argument("--wave", default="")
     failures_cmd = commands.add_parser("failures")
     failures_cmd.add_argument("--build-list", required=True)
     failures_cmd.add_argument("--artifacts", type=Path, required=True)

@@ -236,6 +236,47 @@ class AssembleCommandTests(FakeRpmCase):
         self.assertIn("removed 0 seed RPMs, added 0 built RPMs", stderr)
 
 
+    def assemble_with_artifacts(self, build_list, artifacts, wave=""):
+        path = self.root / "work" / "run-artifacts.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(artifacts))
+        argv = ["assemble", "--seed", str(self.root / "repository"),
+                "--built", str(self.root / "built"),
+                "--build-list", json.dumps(build_list),
+                "--report", str(self.report_path),
+                "--artifacts", str(path), "--prefix", "", "--wave", wave]
+        stderr = io.StringIO()
+        with redirect_stdout(io.StringIO()), redirect_stderr(stderr):
+            status = main(argv)
+        return status, stderr.getvalue()
+
+    def test_a_download_cut_short_fails_instead_of_publishing_builds_as_failures(self):
+        # gtk4 built and uploaded its artifact, but the download stopped short.
+        self.keep_only_built("mutter-", "libwayland-")
+        before = self.published()
+        status, stderr = self.assemble_with_artifacts(
+            ["mutter", "wayland", "gtk4"],
+            ["rpm-s0-mutter", "rpm-s0-wayland", "rpm-s1-gtk4", "build-graph"])
+
+        self.assertEqual(status, 1)
+        self.assertIn("gtk4", stderr)
+        self.assertEqual(self.published(), before)
+        self.assertFalse(self.report_path.exists())
+
+    def test_a_complete_download_passes_the_check(self):
+        status, _ = self.assemble_with_artifacts(
+            ["mutter", "wayland", "gtk4", "malcontent-bootstrap", "libbar"],
+            ["rpm-s0-mutter", "rpm-s0-wayland", "rpm-s1-gtk4",
+             "rpm-s0-malcontent-bootstrap", "build-graph"])
+        self.assertEqual(status, 0)
+
+    def test_artifacts_of_later_waves_are_not_expected_in_an_early_publication(self):
+        self.keep_only_built("mutter-", "libwayland-")
+        status, _ = self.assemble_with_artifacts(
+            ["mutter", "wayland", "gtk4"],
+            ["rpm-s0-mutter", "rpm-s0-wayland", "rpm-s1-gtk4"], wave="0")
+        self.assertEqual(status, 0)
+
 class SourceNamesTests(FakeRpmCase):
     def test_source_rpms_are_skipped_and_never_queried(self):
         binary = self.rpm_file("r/foo-1-1.x86_64.rpm", "foo-1-1.src.rpm")
