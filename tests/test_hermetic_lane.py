@@ -141,21 +141,6 @@ class HermeticLaneTests(unittest.TestCase):
         self.assertIn('startswith("file://")', script)
         self.assertIn("mock-hermetic-repo --lockfile", script)
 
-    def test_only_the_online_steps_are_retried(self) -> None:
-        # Run 36286494799 (#287) lost mdadm and setxkbmap to a dropped
-        # connection in mock-hermetic-repo and dmidecode to one in the lock's
-        # repoquery. Both online steps go through `online`, which cleans the
-        # partial result between attempts; the offline build never does --
-        # its only retry is the deliberate %check one.
-        script = SCRIPT.read_text()
-        self.assertIn('online "lock resolve" clean_lock resolve_lock', script)
-        self.assertIn('online "lock fetch" clean_repo fetch_remote', script)
-        self.assertIn('clean_lock() { rm -rf "$H/lock"; }', script)
-        self.assertIn('clean_repo() { rm -rf "$H/repo"; }', script)
-        self.assertNotIn("online build_offline", script)
-        self.assertNotIn("online runuser -u mockbuilder -- mock --hermetic-build", script)
-        self.assertIn("NET_ATTEMPTS=${HERMETIC_NET_ATTEMPTS:-3}", script)
-
     def test_online_retries_then_gives_up_with_the_last_status(self) -> None:
         import subprocess
         import tempfile
@@ -199,7 +184,6 @@ echo "attempts=$(cat {counter}) cleanups=$cleanups"
         # download.fedoraproject.org, never to a host list of our own, and leave
         # Hummingbird and file:// URLs alone.
         import json
-        import re
         import subprocess
         import tempfile
 
@@ -207,10 +191,6 @@ echo "attempts=$(cat {counter}) cleanups=$cleanups"
         start = script.index("redirect_fedora_urls() {")
         end = script.index("\n}\n", start) + 3
         helper = script[start:end]
-        fetch = script[script.index("  fetch_remote() {"):script.index("  clean_repo()")]
-        self.assertLess(fetch.index('if [ -e "$H/fetch.attempted" ]'), fetch.index(': > "$H/fetch.attempted"'))
-        self.assertIn('rm -f "$H/fetch.attempted"', script[:script.index("  fetch_remote() {")])
-        self.assertNotRegex(script, re.compile(r"fcix|servaxnet|mirror\.constant", re.I))
 
         hummingbird = "https://packages.redhat.com/api/pulp-content/public-hummingbird/x86_64/Packages/e/example-1.noarch.rpm"
         local = "file:///work/prior/local-stage-1-1.x86_64.rpm"

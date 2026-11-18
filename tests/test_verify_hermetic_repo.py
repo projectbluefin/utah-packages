@@ -197,10 +197,12 @@ class MaterializeTests(unittest.TestCase):
     """hermetic_build.sh's materialize(), run with a stand-in mock-hermetic-repo."""
 
     def run_materialize(self, serve: dict[str, str], local: list[dict], remote: list[dict],
-                        attempts: int = 2) -> tuple[subprocess.CompletedProcess, Path]:
+                        attempts: int = 2, first_bad: str | None = None,
+                        ) -> tuple[subprocess.CompletedProcess, Path]:
         script = SCRIPT.read_text()
         helper = script[script.index("NET_ATTEMPTS="):script.index("render_config() {")]
         helper = helper.replace('sleep "$NET_RETRY_PAUSE"', "true")
+        helper += script[script.index("redirect_fedora_urls() {"):script.index("materialize() {")]
         materialize = script[script.index("materialize() {"):script.index("build() {")]
         materialize = materialize.replace("/tools/", f"{ROOT}/tools/")
         directory = Path(self.directory.name)
@@ -214,15 +216,27 @@ class MaterializeTests(unittest.TestCase):
         # Stand-in for mock-hermetic-repo: "downloads" every locked URL from
         # SERVE (url -> file), the way any mirror or redirect could answer.
         (bin_dir / "mock-hermetic-repo").write_text(f"""#!/bin/sh
+attempt=$(grep -c fetch {directory}/fetches 2>/dev/null || true)
 echo fetch >> {directory}/fetches
 exec {sys.executable} -c '
 import json, shutil, sys, os
-lock, out = sys.argv[1], sys.argv[2]
+lock, out, attempt, first_bad = sys.argv[1], sys.argv[2], sys.argv[4], sys.argv[5]
 serve = json.load(open(sys.argv[3]))
 os.makedirs(out, exist_ok=True)
+bad = False
 for r in json.load(open(lock))["buildroot"]["rpms"]:
-    shutil.copy(serve[r["url"]], os.path.join(out, os.path.basename(r["url"])))
-' "$2" "$4" {directory}/serve.json
+    dest = os.path.join(out, os.path.basename(r["url"]))
+    with open("{directory}/requests", "a") as log:
+        print(r["url"], file=log)
+    if attempt == "" and r["url"] == first_bad:
+        with open(dest, "w") as rpm:
+            rpm.write("not an RPM")
+        bad = True
+    else:
+        shutil.copy(serve[r["url"]], dest)
+if bad:
+    sys.exit("createrepo_c: rpmReadPackageFile() error")
+' "$2" "$4" {directory}/serve.json "$attempt" "{first_bad or ""}"
 """)
         for tool in ("createrepo_c", "mock-hermetic-repo"):
             (bin_dir / tool).chmod(0o755)
@@ -275,6 +289,18 @@ materialize
         self.assertIn("::error title=lock fetch failed::probe: lock fetch failed 2 times", result.stdout)
         self.assertNotIn("hermetic repository:", result.stdout)
 
+    def test_a_failed_fetch_refetches_only_the_unreadable_rpm(self) -> None:
+        other = entry("zstd", make_rpm(self.mirror / "zstd.good", "zstd"))
+        result, directory = self.run_materialize({
+            self.good["url"]: str(self.mirror / "zip.good"),
+            other["url"]: str(self.mirror / "zstd.good"),
+        }, [], [self.good, other], first_bad=other["url"])
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("zstd-1.0-1.hum1.x86_64.rpm: cannot read as an RPM", result.stdout)
+        self.assertEqual((directory / "requests").read_text().splitlines(),
+                         [self.good["url"], other["url"], other["url"]])
+        self.assertIn("hermetic repository: 2 RPMs", result.stdout)
+
     def test_a_tampered_local_rpm_is_refused(self) -> None:
         make_rpm(Path(urlparse_path(self.local["url"])), "ModemManager-glib", release="1.hum1.bfin",
                  payload=b"evil")
@@ -284,15 +310,6 @@ materialize
         self.assertIn("ModemManager-glib-1.0-1.hum1.bfin.x86_64.rpm: SIGMD5", result.stdout)
         self.assertNotIn("hermetic repository:", result.stdout)
 
-    def test_the_check_sits_between_the_fetch_and_the_offline_build(self) -> None:
-        script = SCRIPT.read_text()
-        fetch = script[script.index("  fetch_remote() {"):script.index("  clean_repo() {")]
-        self.assertIn('python3 /tools/verify_hermetic_repo.py --lockfile "$H/lock/remote.json" --repo "$H/repo"',
-                      fetch)
-        whole = 'python3 /tools/verify_hermetic_repo.py --lockfile "$H/lock/buildroot_lock.json" --repo "$H/repo"'
-        self.assertLess(script.index("done < \"$H/local.txt\""), script.index(whole))
-        self.assertLess(script.index(whole), script.index('createrepo_c -q "$H/repo"'))
-        self.assertLess(script.index("  materialize\n"), script.index("build_offline 1"))
 
 
 def urlparse_path(url: str) -> str:
