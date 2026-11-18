@@ -310,6 +310,19 @@ materialize
         self.assertIn("ModemManager-glib-1.0-1.hum1.bfin.x86_64.rpm: SIGMD5", result.stdout)
         self.assertNotIn("hermetic repository:", result.stdout)
 
+    def test_whole_lock_verification_gates_offline_build(self) -> None:
+        script = SCRIPT.read_text()
+        materialize, build = script.split("\nbuild() {\n", 1)
+        fetch = materialize.index('  online "lock fetch"')
+        local_copy = materialize.index('done < "$H/local.txt"')
+        verify = materialize.index(
+            'python3 /tools/verify_hermetic_repo.py --lockfile "$H/lock/buildroot_lock.json" --repo "$H/repo"'
+        )
+        publish = materialize.index('createrepo_c -q "$H/repo"')
+        self.assertLess(fetch, local_copy)
+        self.assertLess(local_copy, verify)
+        self.assertLess(verify, publish)
+        self.assertLess(build.index("  materialize\n"), build.index("  build_offline 1"))
 
 
 def urlparse_path(url: str) -> str:

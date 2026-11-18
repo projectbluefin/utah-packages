@@ -127,6 +127,13 @@ a dropped connection, and again on the whole repository after the `file://`
 half is copied in. Do not move it out of the retried fetch, and do not key it
 by URL: a mirror or a redirect has to pass the same check.
 
+When changing fetch retries, preserve the regression tests for three boundaries:
+only lock resolution and network fetch are retried; Fedora retries use Fedora's
+redirector, not a private mirror list; and whole-lock verification runs after
+copying local RPMs but before publishing repository metadata for the offline
+build. Update assertions for changed retry mechanics without dropping those
+boundaries.
+
 The check proves the build used the root the lock phase resolved; it does not
 prove that root was genuine, because the lock phase itself runs with
 `gpgcheck=0`. mock records `signature` from `%{SIGPGP}`, which current Fedora
