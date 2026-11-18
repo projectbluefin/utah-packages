@@ -82,7 +82,8 @@ jobs:
   enqueue:
     needs: validate
     runs-on: ubuntu-24.04
-    permissions: {}
+    permissions:
+      actions: write # Re-dispatch the gate without granting Actions access to MergeRaptor.
     steps:
       # A fresh runner, no checkout and no branch tools or downloaded artifacts.
       - name: Mint a token only for this repository
@@ -94,10 +95,10 @@ jobs:
           repositories: ${{ github.event.repository.name }}
           permission-contents: write
           permission-pull-requests: write
-          permission-actions: write
       - name: Enqueue the built head or merge it once when no queue exists
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          DISPATCH_TOKEN: ${{ github.token }}
           REPOSITORY: ${{ github.repository }}
           PR: ${{ needs.validate.outputs.pr }}
           SHA: ${{ needs.validate.outputs.sha }}
@@ -167,7 +168,7 @@ jobs:
                   and (.isCrossRepository | not)' current.json > /dev/null
                 head=$(jq -r .headRefOid current.json)
                 if [ "$head" != "$SHA" ]; then
-                  gh workflow run bump-upstream-gate.yml -R "$REPOSITORY" --ref "$branch" -f pr="$PR"
+                  GH_TOKEN="$DISPATCH_TOKEN" gh workflow run bump-upstream-gate.yml -R "$REPOSITORY" --ref "$branch" -f pr="$PR"
                   exit 0
                 fi
                 sleep 2

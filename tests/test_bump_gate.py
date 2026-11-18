@@ -721,6 +721,7 @@ class EnqueueBehaviorTests(unittest.TestCase):
         return subprocess.run(["bash", "-c", self.merge], cwd=self.workspace,
                               env={**self.env, "PR": "42", "SHA": self.sha,
                                    "GH_TOKEN": "repo-scoped-app-token",
+                                   "DISPATCH_TOKEN": "job-scoped-dispatch-token",
                                    "PR_VIEWS": json.dumps(views or [self.view()])},
                               capture_output=True, text=True)
 
@@ -790,13 +791,25 @@ class EnqueueBehaviorTests(unittest.TestCase):
                           "-f", f"sha={self.sha}", "-f", "merge_method=squash"])
         self.assertFalse(any("--auto" in call["args"] for call in calls))
 
+    def test_app_token_cannot_manage_actions(self) -> None:
+        workflow = yaml.safe_load((WORKFLOWS / "bump-upstream-enqueue.yml").read_text())
+        job = workflow["jobs"]["enqueue"]
+        app = next(step for step in job["steps"] if step.get("id") == "app-token")
+        self.assertNotIn("permission-actions", app["with"])
+        self.assertEqual(job["permissions"], {"actions": "write"})
+        dispatch = next(step for step in job["steps"] if "DISPATCH_TOKEN" in step.get("env", {}))
+        self.assertEqual(dispatch["env"]["DISPATCH_TOKEN"], "${{ github.token }}")
+
     def test_behind_head_is_updated_and_regated_not_merged(self) -> None:
         # The state is read after the checks watch, so a head main moved
         # past while its checks ran is caught too (#864).
         self.landing["data"]["repository"]["mergeQueue"] = None
         result = self.run_landing([self.view("BEHIND"), self.view("BEHIND", "f" * 40)])
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        calls = [call["args"] for call in self.calls()]
+        requests = self.calls()
+        self.assertTrue(all(call["token"] == "repo-scoped-app-token" for call in requests[:-1]))
+        self.assertEqual(requests[-1]["token"], "job-scoped-dispatch-token")
+        calls = [call["args"] for call in requests]
         checks = calls.index(["pr", "checks", "42", "-R", "projectbluefin/utah-packages",
                               "--required", "--watch"])
         update = next(i for i, args in enumerate(calls) if f"expected_head_sha={self.sha}" in args)
