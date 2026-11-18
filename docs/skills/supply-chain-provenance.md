@@ -127,6 +127,10 @@ a dropped connection, and again on the whole repository after the `file://`
 half is copied in. Do not move it out of the retried fetch, and do not key it
 by URL: a mirror or a redirect has to pass the same check.
 
+Retries retain verified RPMs and rebuild the derived repository metadata and
+bootstrap image. Mock accepts an existing output repository, but its image
+sync refuses to overwrite an existing bootstrap image directory.
+
 When changing fetch retries, preserve the regression tests for three boundaries:
 only lock resolution and network fetch are retried; Fedora retries use Fedora's
 redirector, not a private mirror list; and whole-lock verification runs after

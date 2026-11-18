@@ -236,6 +236,8 @@ for r in json.load(open(lock))["buildroot"]["rpms"]:
         shutil.copy(serve[r["url"]], dest)
 if bad:
     sys.exit("createrepo_c: rpmReadPackageFile() error")
+os.makedirs(os.path.join(out, "repodata"), exist_ok=True)
+os.makedirs(os.path.join(out, "registry.example/fedora"))
 ' "$2" "$4" {directory}/serve.json "$attempt" "{first_bad or ""}"
 """)
         for tool in ("createrepo_c", "mock-hermetic-repo"):
@@ -300,6 +302,22 @@ materialize
         self.assertEqual((directory / "requests").read_text().splitlines(),
                          [self.good["url"], other["url"], other["url"]])
         self.assertIn("hermetic repository: 2 RPMs", result.stdout)
+
+    def test_a_verification_retry_recreates_the_bootstrap_image(self) -> None:
+        zip_rpm = "zip-1.0-1.hum1.x86_64.rpm"
+        original = f"https://mirror.example/fedora/linux/{zip_rpm}"
+        redirect = f"https://download.fedoraproject.org/pub/fedora/linux/{zip_rpm}"
+        wanted = dict(self.good, url=original)
+        other = entry("zstd", make_rpm(self.mirror / "zstd.good", "zstd"))
+        result, directory = self.run_materialize({
+            original: str(self.mirror / "zip.evil"),
+            redirect: str(self.mirror / "zip.good"),
+            other["url"]: str(self.mirror / "zstd.good"),
+        }, [], [wanted, other])
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual((directory / "requests").read_text().splitlines(),
+                         [original, other["url"], redirect])
+        self.assertTrue((directory / "hermetic/repo/registry.example/fedora").is_dir())
 
     def test_a_tampered_local_rpm_is_refused(self) -> None:
         make_rpm(Path(urlparse_path(self.local["url"])), "ModemManager-glib", release="1.hum1.bfin",

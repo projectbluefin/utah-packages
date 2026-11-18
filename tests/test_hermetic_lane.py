@@ -202,13 +202,6 @@ echo "attempts=$(cat {counter}) cleanups=$cleanups"
         start = script.index("redirect_fedora_urls() {")
         end = script.index("\n}\n", start) + 3
         helper = script[start:end]
-        fetch = script[script.index("  fetch_remote() {"):script.index('  online "lock fetch"')]
-        self.assertIn(
-            'if [ "$attempt" -gt 1 ]; then\n'
-            '      redirect_fedora_urls "$H/lock/pending.json" || return\n'
-            '    fi',
-            fetch,
-        )
 
         hummingbird = "https://packages.redhat.com/api/pulp-content/public-hummingbird/x86_64/Packages/e/example-1.noarch.rpm"
         local = "file:///work/prior/local-stage-1-1.x86_64.rpm"

@@ -210,6 +210,12 @@ PY
     fetch_log="$H/fetch.log"
     fetch_status=0
     if [ "$attempt" -gt 1 ]; then
+      # Keep verified RPMs, not the derived metadata or bootstrap image.
+      # Mock's skopeo sync refuses an existing image destination, including
+      # after an otherwise successful fetch whose RPMs failed verification.
+      if [ -d "$H/repo" ]; then
+        find "$H/repo" -mindepth 1 -maxdepth 1 -type d -exec rm -rf -- {} + || return
+      fi
       redirect_fedora_urls "$H/lock/pending.json" || return
     fi
     mock-hermetic-repo --lockfile "$H/lock/pending.json" --output-repo "$H/repo" \
