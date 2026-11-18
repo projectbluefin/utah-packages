@@ -442,6 +442,27 @@
       "sha512": "335348d5dc154a8114b803b97407ab6877302bef714277ebeec2590480b3159f21c4aec0a8b8f823bef3baf75615acd4eeed73fa457a63825a8073ce12767c01"
     },
     {
+      "name": "brew",
+      "version": "0^20261027git550a03e",
+      "url": "https://github.com/ublue-os/brew/archive/550a03e3d5f600282c8b4c73060bb830c91c1f74/brew-550a03e.tar.gz",
+      "filename": "brew-550a03e.tar.gz",
+      "sha512": "914f110fa921e413a26b1bf485812789300546471e16997f94e658251b7b54ae81e3eadce127f266dc1d5adda0072dcea591e6fd031b45c3fe0139c605e65e4f",
+      "fallback_urls": [
+        "https://codeload.github.com/ublue-os/brew/tar.gz/550a03e3d5f600282c8b4c73060bb830c91c1f74"
+      ]
+    },
+    {
+      "name": "brew-tarball",
+      "version": "7.0.11",
+      "filename": "homebrew-7.0.11.tar.zst",
+      "sha512": "35134f49b92cdad90ac1a4938995206f935ee6b12066306c0c569ab2847444ff425633802510f8e8085ee710cf07eb153b451c906a6d9686fd242125474f8489",
+      "generate": {
+        "script": "tools/generated_sources.py",
+        "input": "ghcr.io/ublue-os/brew@sha256:130848582eed433e85af6fa8c829ddec12ddaa6b18bc037a610b4b8da3c97458 (linux/amd64 image manifest; manifest and layers digest-pinned)",
+        "method": "copy /system_files/usr/share/homebrew.tar.zst unchanged out of the topmost image layer that carries it, as homebrew-7.0.11.tar.zst"
+      }
+    },
+    {
       "name": "brltty",
       "version": "6.9.1",
       "url": "https://brltty.app/archive/brltty-6.9.1.tar.xz",
