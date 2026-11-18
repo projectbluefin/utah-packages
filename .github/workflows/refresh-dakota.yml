@@ -1,0 +1,122 @@
+name: Refresh the Dakota pin
+
+# config/dakota.json pins the Dakota revision whose SBOM and image are the
+# element snapshot (config/dakota-elements.tsv). Moving it by hand fell behind:
+# every recipe that lands after the last re-pin shows as a stale mapping.
+#
+# Once a day this finds the newest successful publish.yml run on Dakota's
+# testing branch with its sbom-dakota and digest-default artifacts
+# (tools/dakota_repin.py resolve). When it names the pinned revision and digest
+# it stops. Otherwise it writes the new source, copies the image by digest
+# into an OCI layout, rebuilds the snapshot and the mapping with
+# `tools/audit_dakota.py --import-sbom ... --image-layout ... --refresh`, and
+# opens or updates one pull request with the two config files. The import
+# keeps its own checks: it refuses an SBOM whose namespace is not the new
+# revision and a layout that does not hold the new digest, both read from
+# Dakota's digest-default record rather than from the SBOM or the image.
+#
+# It never merges and never arms auto-merge: a re-pin can move dispositions
+# and orphan an override, so a reviewer reads the diff and the body.
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Daily 05:37 UTC: after Dakota's overnight publish, off the top of the hour.
+    - cron: '37 5 * * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dakota-repin
+  cancel-in-progress: false
+
+jobs:
+  repin:
+    # App credentials are restricted to trusted default main. A schedule
+    # payload carries no repository object; schedules always run on the
+    # default branch, so github.ref covers it.
+    if: github.repository_owner == 'projectbluefin' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Install PyYAML
+        run: pip install --disable-pip-version-check pyyaml==6.0.3
+      - name: Find Dakota's newest publish run
+        id: resolve
+        env:
+          # Dakota is public: its runs, artifacts and contents are read with
+          # this repository's token.
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 tools/dakota_repin.py resolve --out work/repin.json
+          {
+            echo "changed=$(jq -r .changed work/repin.json)"
+            echo "run=$(jq -r .run work/repin.json)"
+            echo "revision=$(jq -r .source.revision work/repin.json)"
+            echo "digest=$(jq -r .source.image_digest work/repin.json)"
+          } >> "$GITHUB_OUTPUT"
+      - name: Audit the current pin
+        if: steps.resolve.outputs.changed == 'true'
+        run: |
+          set -euo pipefail
+          cp config/dakota.json work/old-pin.json
+          python3 tools/audit_dakota.py --json-out work/before.json --markdown-out work/before.md
+      - name: Download the SBOM and copy the image by digest
+        if: steps.resolve.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN: ${{ steps.resolve.outputs.run }}
+          DIGEST: ${{ steps.resolve.outputs.digest }}
+        run: |
+          set -euo pipefail
+          gh run download "$RUN" -R projectbluefin/dakota -n sbom-dakota -D work/sbom
+          # --preserve-digests keeps the manifest blob at the pinned digest, which
+          # is what --image-layout looks up.
+          skopeo copy --preserve-digests \
+            "docker://ghcr.io/projectbluefin/dakota@${DIGEST}" "oci:work/dakota-oci:testing"
+      - name: Move the pin and rebuild the snapshot
+        if: steps.resolve.outputs.changed == 'true'
+        run: |
+          set -euo pipefail
+          python3 tools/dakota_repin.py apply work/repin.json
+          python3 tools/audit_dakota.py --import-sbom work/sbom/dakota.sbom.json \
+            --image-layout work/dakota-oci --refresh
+          python3 tools/dakota_repin.py pr-body --before work/before.json \
+            --after reports/audit-dakota.json --repin work/repin.json \
+            --old-pin work/old-pin.json > work/pr-body.md
+          cat work/pr-body.md >> "$GITHUB_STEP_SUMMARY"
+          rm -rf work/dakota-oci
+          git diff --stat
+      - name: Get repository-scoped mergeraptor token
+        if: steps.resolve.outputs.changed == 'true'
+        id: app-token
+        uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3
+        with:
+          client-id: ${{ secrets.MERGERAPTOR_APP_ID }}
+          private-key: ${{ secrets.MERGERAPTOR_PRIVATE_KEY }}
+          # No owner: scope to this repository; revoke the token at job completion.
+          repositories: ${{ github.event.repository.name }}
+          permission-contents: write
+          permission-pull-requests: write
+      - name: Open or update the re-pin pull request
+        if: steps.resolve.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@3ffccacd46053766916f087ce41d627c0b8cf2d1 # v8
+        with:
+          # App-authenticated writes trigger real PR CI, including the Dakota
+          # element audit gate.
+          token: ${{ steps.app-token.outputs.token }}
+          add-paths: |
+            config/dakota.json
+            config/dakota-elements.tsv
+          branch: chore/dakota-repin
+          delete-branch: true
+          title: 'chore(dakota): re-pin Dakota to ${{ steps.resolve.outputs.revision }}'
+          commit-message: |
+            chore(dakota): re-pin Dakota to ${{ steps.resolve.outputs.revision }}
+
+            projectbluefin/dakota publish.yml run ${{ steps.resolve.outputs.run }}, image ${{ steps.resolve.outputs.digest }}.
+          body-path: work/pr-body.md
