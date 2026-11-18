@@ -237,7 +237,8 @@ materialize
 """
         result = subprocess.run(["bash", "-c", probe], capture_output=True, text=True,
                                 env={"PATH": f"{bin_dir}:/usr/bin:/bin",
-                                     "HERMETIC_NET_ATTEMPTS": str(attempts)})
+                                     "HERMETIC_NET_ATTEMPTS": str(attempts),
+                                     "REPORT_DIR": str(directory / "reports")})
         return result, directory
 
     def setUp(self) -> None:
