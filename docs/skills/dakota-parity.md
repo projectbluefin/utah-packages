@@ -37,7 +37,7 @@ owes.
 | File | What it is |
 | --- | --- |
 | `config/dakota-elements.tsv` | The element snapshot: one row per SBOM element, with its primary source (`version`, `url`), patch count, and how many files, desktop entries, systemd units and `/usr/bin` commands it owns **in the published image**. |
-| `config/dakota.json` | `source`: the pinned Dakota revision, the publish run whose `sbom-dakota` artifact is the snapshot, the image digest, the junction refs. `aliases`, `overrides`, `config_subpackages`: reviewer decisions. `elements`: the generated mapping, one entry per element (`disposition`, `rpm`, `fedora`, `hummingbird`, `evidence`). |
+| `config/dakota.json` | `source`: the pinned Dakota revision, the publish run whose `sbom-dakota` artifact is the snapshot, the image digest, the junction refs. `aliases`, `overrides`, `config_subpackages`, `drift_reviews`: reviewer decisions. `elements`: the generated mapping, one entry per element (`disposition`, `rpm`, `fedora`, `hummingbird`, `evidence`). |
 | `config/gnome-build-meta.json` | Reused: its `mapping` names the RPM for GNOME renames (`sdk/gtk.bst -> gtk4`), so the two audits never disagree on a GNOME name. |
 | `reports/audit-dakota.{json,md}` | The audit: counts, import queue, version drift, structural and config tables, stale mappings, config-package gaps. Derived, git-ignored and never committed: every recipe import moves it, so a tracked copy would go stale or make concurrent import PRs conflict (#309). Every `validate.yml` run publishes the live report as the `dakota-audit` artifact and in its job summary. |
 
@@ -147,9 +147,36 @@ For every `factory` element the report compares the source lock's version
 with the element's by release line, with the gnome-build-meta audit's
 `release_line` (GNOME cycle numbers >= 40 compare the major; libraries
 compare `major.minor`). `needs_review` says which side leads. `not_compared`
-means Dakota's source carries no version (a bare commit or checksum). A split
+means Dakota's source carries no version (a bare commit). A `tar` or `anitya`
+source records its archive checksum as the SBOM version, so the version comes
+from the archive file name instead (`nfs-utils-3.1.1.tar.xz`). A split
 element with no source of its own (`bluez-libs`, `pipewire-daemon`) takes the
 version of the element that builds the same RPM, and says which.
+
+Work a `needs_review` or `not_compared` row one of three ways:
+
+- **Factory behind**: move the recipe to Dakota's version (or Rawhide's newer
+  release in the same line) in a hand pull request
+  ([`upstream-version-bumps.md`](upstream-version-bumps.md)). The row aligns
+  on its own once the lock moves.
+- **Factory ahead**: keep it (Fedora's recipe is the base; a newer release is
+  allowed) and record a `factory-ahead` review.
+- **Not comparable**: another version scheme or upstream behind the same RPM
+  name (hunspell-en, words, foomatic-db), a mislabelled tag in the element
+  (gnome-build-meta's thermald ref reads `v2.15.10` on the `v2.5.10` commit), or
+  the same release the SBOM cannot show (a commit at a tag): record a
+  `false-positive` or `same-version` review.
+
+A behind row that needs a design decision (a soname move with consumers
+outside the factory) gets a `tracked` review naming its issue.
+
+`drift_reviews` in `config/dakota.json` maps the element to `verdict`,
+`reason`, and the `factory_version` and `dakota_version` the reviewer judged
+(`null` when the SBOM carries none). The report marks the row `reviewed` only
+while both versions still match; a bump on either side reopens it and lists
+the review under **Stale drift reviews**, as does a review of a row that is now
+aligned. Re-review or delete those entries. utah-packages#1051 is the first
+triage, with the disposition of every row.
 
 ## Config packages
 
