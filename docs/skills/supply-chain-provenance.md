@@ -327,6 +327,22 @@ prunes the lock offline. To move the version, add the new release's SHA-512
 to the recipe's `*_INPUT_SHA512` table, bump the spec, regenerate, and pin the
 new digest in both `sources` and the lock.
 
+## A source published only inside a container image: copy it out by digest
+
+Some artifacts exist only as a file inside an upstream OCI image. Universal
+Blue's prebuilt Homebrew prefix (`homebrew.tar.zst`, which Dakota's
+`bluefin/brew-tarball.bst` stages) is built by `install.sh` in the
+`ghcr.io/ublue-os/brew` image and published nowhere else; its builder clones
+Homebrew and downloads portable Ruby, so it cannot be regenerated. The
+`brew-tarball` generator pins the per-architecture manifest digest Dakota
+pins, keyed by the Homebrew version inside (`git describe` of the archive's
+Homebrew checkout), fetches an anonymous pull token from `ghcr.io/token`,
+checks the manifest and each layer blob against their digests, and copies the
+member out of the topmost layer that carries it, byte for byte. Do not pin a
+tag (`latest` moves weekly) and do not repack the member. To move it, read the
+new per-arch digest from Dakota's element, add it to
+`BREW_TARBALL_MANIFESTS` under the new Homebrew version, and relock.
+
 ## A hand-repacked zstd source: generate xz, rename the Source
 
 When Fedora's repack script writes `.tar.zst` (7zip's
