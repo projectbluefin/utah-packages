@@ -1287,7 +1287,7 @@ def render_build_intent(rows: list[dict] | None, source: dict | None = None) -> 
         if row["classification"] != NEEDS_REVIEW:
             continue
         patches = [PurePosixPath(p).name for p in row["patches"]["only_in_dakota"]]
-        conflicts = [f"{c['option']}={c['dakota']} / {c['factory']}"
+        conflicts = [f"{c['option']}={c['dakota']} / {c['factory']}".replace("|", "\\|")
                      for c in row["options"]["conflicting"]]
         lines.append(f"| {row['rpm']} | {row['kind']} | {_clip(patches)} | "
                      f"{_clip(conflicts)} | `{row['element']}` |")

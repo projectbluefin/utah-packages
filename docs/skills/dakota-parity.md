@@ -131,7 +131,8 @@ stops. Otherwise it writes the source, copies the image with
 runs `--import-build-facts`, and opens or force-updates one pull request on
 `chore/dakota-repin` with only `config/dakota.json`,
 `config/dakota-elements.tsv` and `config/dakota-build-facts.json`. The body has the disposition counts before and
-after, the drift totals, the `needs_review` rows and any `contract_problems`
+after, the drift totals, the `needs_review` rows, the patch and option
+classification counts before and after, and any `contract_problems`
 (an override or alias naming an element the new snapshot dropped makes
 `just dakota-audit` fail until it is fixed on that branch). It never merges or
 arms auto-merge. The pull request is opened with the mergeraptor app token,

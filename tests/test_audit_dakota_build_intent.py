@@ -28,6 +28,7 @@ from tools.audit_dakota import (
     element_facts,
     element_options,
     expected_build_refs,
+    render_build_intent,
     import_build_facts,
     junction_commit,
     main,
@@ -234,6 +235,16 @@ class OptionTests(unittest.TestCase):
         self.assertEqual(result["only_in_factory"], ["only-fedora"])
         self.assertEqual(result["same"], 4)
 
+
+    def test_multi_value_conflict_keeps_table_row_shape(self) -> None:
+        row = {"rpm": "webkitgtk", "kind": "cmake", "element": "x.bst",
+               "classification": NEEDS_REVIEW,
+               "patches": {"only_in_dakota": []},
+               "options": {"conflicting": [{"option": "USE_GTK4", "dakota": "MAYBE",
+                                            "factory": "OFF|ON"}],
+                           "only_in_dakota": []}}
+        table_row = [l for l in render_build_intent([row]) if l.startswith("| webkitgtk")][0]
+        self.assertEqual(table_row.replace("\\|", "").count("|"), 6)
 
 def fake_head(refs: dict[str, str]):
     return lambda path: {"dakota": DAKOTA_SHA, "gnome-build-meta": GBM_SHA,
