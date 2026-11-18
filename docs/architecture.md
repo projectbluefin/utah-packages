@@ -45,32 +45,17 @@ Package builds, generated-source reproduction, reproducibility probes, and
 environment-sensitive validation run in GitHub Actions, in a container the
 workflow starts with `docker run`.
 
-**Which container is not what `AGENTS.md` says it is, and this is a live
-contradiction rather than a nuance.** `AGENTS.md` requires the digest-pinned
-`quay.io/packit/packit` image, and forbids replacing that digest with a
-mutable tag. What actually builds every RPM is:
+Each workflow runs a digest-pinned container:
 
-| workflow | container | pinned? |
-| --- | --- | --- |
-| `build-stage.yml` — the binary lane | `quay.io/fedora/fedora:44` | no, a mutable tag |
-| `rebuild-rpms.yml` — `preflight`, `precedence` | `quay.io/fedora/fedora:44` | no, a mutable tag |
-| `packit-srpm-pilot.yml` — verification only, feeds nothing | `quay.io/packit/packit` (digest pinned in `packit-srpm-chunk.yml`) | yes |
-| `recalculate-hummingbird-gaps.yml` | `quay.io/hummingbird-community/bootc-os:latest` | no, a mutable tag |
+| workflow | container |
+| --- | --- |
+| `build-stage.yml` (package builds), `rebuild-rpms.yml` `preflight`, `publish-repository.yml` `precedence` | `ghcr.io/projectbluefin/utah-buildroot`, the factory's copy of `fedora:44`. The pin is in `config/buildroot-image`; `refresh-buildroot.yml` moves it weekly. The run pulls it once and shares the bytes with every job. |
+| `packit-srpm-chunk.yml`, `import-rawhide-package.yml` (SRPM generation and import only) | `quay.io/packit/packit`, digest pinned |
+| `recalculate-hummingbird-gaps.yml` | `quay.io/hummingbird-community/bootc-os`, digest pinned |
 
-So the only workflow honouring the rule is the one that produces nothing, and
-the rule's own prohibition — a mutable tag — describes every real build.
-
-The rule is not arbitrary and is not a leftover. `docs/superpowers/specs/`
-carries an approved design in which Packit drives Mock, and the Packit image
-was pinned precisely because it supplies `packit`, `mock` and `createrepo_c`
-in one place. What the table shows is therefore an **unfinished
-implementation**, not a wrong rule: the binary lane never got past hand-rolled
-`rpmbuild` in a Fedora image. The mutable tag, the installed-but-unused mock,
-and the hand-simulated build root are all the same gap seen from different
-angles.
-
-Whether to finish that design or supersede it is tracked in
-[#43](https://github.com/projectbluefin/utah-packages/issues/43).
+Package builds use the hermetic mock lane (default since #264): mock resolves
+a build-root lock, and then builds offline from exactly the locked RPMs. #43
+recorded this decision, and `AGENTS.md` describes the same split.
 
 `.github/workflows/packit-srpm-pilot.yml` proves the SRPM path but is
 verification-only and manual-dispatch-only: its full-inventory fan-out is not
