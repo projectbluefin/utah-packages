@@ -1,0 +1,8 @@
+# There really is no documentation specific to the -devel or -testing
+# subpackages or to the mingw subpackages.
+addFilter(r"^abseil-cpp-(devel|testing)\.[.\S]+: W: no-documentation$")
+addFilter(r"^mingw(32|64)-abseil-cpp\.[.\S]+: W: no-documentation$")
+# Really, rpmlint just doesn’t understand MinGW very well.
+addFilter(r"^mingw(32|64)-abseil-cpp-debuginfo\.noarch: W: only-non-binary-in-usr-lib$")
+addFilter(r"^mingw(32|64)-abseil-cpp.noarch: W: devel-file-in-non-devel-package /")
+addFilter(r"^mingw(32|64)-abseil-cpp.noarch: E: arch-independent-package-contains-binary-or-object /")

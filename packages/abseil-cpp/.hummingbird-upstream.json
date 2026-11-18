@@ -2,7 +2,7 @@
   "package": "abseil-cpp",
   "branch": "rawhide",
   "remote": "https://src.fedoraproject.org/rpms/abseil-cpp.git",
-  "commit": "3e0cfa7427eb61830379a8e8549285ec3004d175",
-  "tree": "c86e3efeba4f1f41d7de4025a16b6d42cbc215f9",
-  "imported_at": "2026-08-30T15:46:52.810918+00:00"
+  "commit": "6590fc17c1b47c6e59f6f55550ff50f83c939f24",
+  "tree": "451f19671d3f5a62bb0cdcf907b387206a637984",
+  "imported_at": "2026-11-16T04:08:38.371169+00:00"
 }

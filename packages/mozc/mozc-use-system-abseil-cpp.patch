@@ -46,7 +46,7 @@ diff -Naur a/base/absl.gyp b/base/absl.gyp
 +          'all_dependent_settings': {
 +            'link_settings': {
 +              'libraries': [
-+                '-labsl_crc32c -labsl_crc_cord_state -labsl_crc_cpu_detect -labsl_crc_internal',
++                '-labsl_crc32c -labsl_crc_cord_state -labsl_base_cpu_detect -labsl_crc_internal',
 +              ],
 +            },
 +          },
