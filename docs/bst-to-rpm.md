@@ -227,14 +227,16 @@ to an exact package set.
   missed the newest stages and failed its consumer transaction check (#970). The fix is
   #1204.
 - **Full rebuilds are slow.** One takes about 10 hours, and only one runs at a
-  time. A merge can take most of a day to reach the published repository.
+  time. A merge can take most of a day to reach the published repository
+  (#1207).
 - **Hummingbird's package server is flaky.** Most failed builds in a large
-  run are transient download errors. Retry PRs: #1162, #1173, #1181, #1195.
+  run are transient download errors (#1208). Retry PRs: #1162, #1173, #1181,
+  #1195.
 - **Package signatures are not checked yet.** Builds resolve with
   `gpgcheck=0`. The hermetic lane now checks downloads against the lock, and
-  pinning the Fedora and Hummingbird keys is in progress.
+  pinning the Fedora and Hummingbird keys is #1206.
 - **Drift.** 57 factory packages are behind or ahead of Dakota's release line
-  and need review. They're listed in the audit report.
+  and need review. They're listed in the audit report (#1051, #1136).
 - **`architecture.md`'s container table is out of date.** Since #264,
   package builds run in the digest-pinned `ghcr.io/projectbluefin/utah-buildroot`
   image (`config/buildroot-image`, refreshed by `refresh-buildroot.yml`), and
