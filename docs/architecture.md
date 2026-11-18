@@ -1,5 +1,8 @@
 # Architecture
 
+For the whole path from a Dakota BuildStream element to an RPM in a Utah
+image, see [`bst-to-rpm.md`](bst-to-rpm.md).
+
 ```mermaid
 flowchart TD
   Fedora["Fedora spec + patches (recipe)"] --> Spec["RPM recipe"]
