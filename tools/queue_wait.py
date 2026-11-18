@@ -40,6 +40,7 @@ import json
 import math
 import os
 import sys
+import time
 import urllib.error
 import urllib.request
 from datetime import datetime, timezone
@@ -315,14 +316,35 @@ def _coerce_seconds(value: str) -> float:
     raise argparse.ArgumentTypeError(f"could not parse duration '{value}'")
 
 
+RETRY_DELAYS = (2, 4, 8)
+RETRYABLE_STATUS = frozenset({500, 502, 503, 504})
+
+
 def _http_get_json(url: str, token: str) -> dict:
+    """GET ``url`` as JSON, retrying transient 5xx and connection failures.
+
+    One report makes hundreds of paginated calls, so a single GitHub blip
+    (a 502, a dropped connection) would otherwise lose the whole day's report.
+    401/403/404 and rate limits are raised at once: retrying cannot help them
+    and would only spend the rate-limit budget.
+    """
     request = urllib.request.Request(url, headers={
         "Accept": "application/vnd.github+json",
         "Authorization": f"Bearer {token}",
         "X-GitHub-Api-Version": "2022-11-28",
     })
-    with urllib.request.urlopen(request, timeout=60) as response:
-        return json.loads(response.read().decode())
+    for delay in (*RETRY_DELAYS, None):
+        try:
+            with urllib.request.urlopen(request, timeout=60) as response:
+                return json.loads(response.read().decode())
+        except urllib.error.HTTPError as error:
+            if delay is None or error.code not in RETRYABLE_STATUS:
+                raise
+        except (urllib.error.URLError, TimeoutError):
+            if delay is None:
+                raise
+        time.sleep(delay)
+    raise AssertionError("unreachable")
 
 
 def fetch_runs(
