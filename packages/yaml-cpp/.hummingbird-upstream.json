@@ -1,0 +1,8 @@
+{
+  "package": "yaml-cpp",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/yaml-cpp.git",
+  "commit": "db6c2dc0cd537bc9b9fe00f5b4f80f550d8560d1",
+  "tree": "72b394520140f667b645f2934230b6ae964f3edd",
+  "imported_at": "2026-11-16T04:17:05.026677+00:00"
+}

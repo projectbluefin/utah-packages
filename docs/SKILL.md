@@ -31,10 +31,13 @@ Both are indexed below. A skill that exists but is not listed here fails
 | Change upstream version bumps, how GNOME locks follow GNOME's newest stable release (gnome-build-meta), their RPM release and rebuild counters, or the gate that merges the daily bump | [`skills/upstream-version-bumps.md`](skills/upstream-version-bumps.md) |
 | Change which Rawhide recipe moves the daily `bump/rawhide-imports` PR takes unattended | [`skills/rawhide-recipe-reimports.md`](skills/rawhide-recipe-reimports.md) |
 | Import, configure, or verify font package recipes | [`skills/font-package-recipes.md`](skills/font-package-recipes.md) |
-| Import a terminal emulator (ptyxis, gnome-console, kgx) or its vte291 stack | [`skills/terminal-emulator-recipes.md`](skills/terminal-emulator-recipes.md) |
+| Import a terminal emulator (ptyxis, gnome-console, kgx, ghostty), its vte291 stack, or Ghostty's zig toolchain | [`skills/terminal-emulator-recipes.md`](skills/terminal-emulator-recipes.md) |
 | Carry or verify GNOME Shell theme fixes | [`skills/gnome-shell-theme-patches.md`](skills/gnome-shell-theme-patches.md) |
+| Add, bump or review a GNOME Shell extension recipe written from a Dakota shell-extension element | [`skills/gnome-shell-extension-recipes.md`](skills/gnome-shell-extension-recipes.md) |
 | Interpret or regenerate the GNOME-vs-gnome-build-meta audit | [`skills/gnome-build-meta-audit.md`](skills/gnome-build-meta-audit.md) |
 | Diff a GNOME source version, patch line, feature flag, or dependency edge against BuildStream intent | [`skills/gnome-build-meta-audit.md`](skills/gnome-build-meta-audit.md) |
+| Package a Dakota or gnome-build-meta configuration element as a `dakota-config` or `gnome-os-config` subpackage, or move their pinned commits | [`skills/config-packages.md`](skills/config-packages.md) |
+| Map Dakota's BuildStream elements to RPMs, work the Dakota import queue (Fedora-importable and new-spec elements), decide an element's disposition, or re-pin the Dakota revision | [`skills/dakota-parity.md`](skills/dakota-parity.md) |
 | Change the GitHub Pages package catalog, its data source, or its styling | [`skills/package-catalog.md`](skills/package-catalog.md) |
 | Track the factory build backlog from issue #308 (live totals from `just factory-build-backlog`; never committed), or close a backlog gap | [`skills/factory-build-backlog.md`](skills/factory-build-backlog.md) |
 | Answer what the factory or Hummingbird currently publishes, with snapshot evidence, or judge installability | [`skills/repo-inspection.md`](skills/repo-inspection.md) |

@@ -1,3 +1,9 @@
+* Tue Nov 17 2026 Juan Resendiz <juanresendiz813@gmail.com> - 1:51.0-2
+- Accept gnome-keyring-pam as well as pam_oo7 until oo7 publishes
+
+* Mon Nov 16 2026 James Reilly <jreilly1821@gmail.com> - 1:51.0-2
+- Require pam_oo7 instead of gnome-keyring-pam, as Fedora Rawhide does
+
 * Mon Nov 24 2025 Fxzx micah <fxzxmicah@outlook.com> - 1:49.1-2
 - Don't require dbus-daemon
 

@@ -11,7 +11,7 @@
 Name:           gdm
 Epoch:          1
 Version:        51.0
-Release:        %autorelease
+Release:        %autorelease -b 2
 Summary:        The GNOME Display Manager
 
 License:        GPL-2.0-or-later
@@ -61,8 +61,13 @@ Provides: service(graphical-login) = %{name}
 Requires: accountsservice
 Requires: dbus-common
 Requires: dconf
-# since we use it, and pam spams the log if the module is missing
-Requires: gnome-keyring-pam
+# since we use it, and pam spams the log if the module is missing.
+# gdm 51's PAM files load both pam_oo7.so and pam_gnome_keyring.so as
+# optional (-auth/-password/-session), so either provider works. Rawhide
+# requires pam_oo7 alone; the factory accepts gnome-keyring-pam too until
+# oo7 publishes, because a Requires no repository can satisfy fails the
+# Hummingbird-only consumer transaction and holds back the whole candidate.
+Requires: (pam_oo7 or gnome-keyring-pam)
 Requires: gnome-session >= 50~alpha
 Requires: gnome-session-wayland-session >= 50~alpha
 Requires: gnome-settings-daemon >= 3.27.90

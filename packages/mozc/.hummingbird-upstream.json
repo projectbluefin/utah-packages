@@ -2,7 +2,7 @@
   "package": "mozc",
   "branch": "rawhide",
   "remote": "https://src.fedoraproject.org/rpms/mozc.git",
-  "commit": "8de1b627505ab4cf3ec29a89ccc15434b0a96e7b",
-  "tree": "c40e02c80c0aebf2288517d4dbeb5e5c72e67bf2",
-  "imported_at": "2026-08-29T06:03:00.832898+00:00"
+  "commit": "b3954ba7bfd3e5784cbdaeb2db538917e93abf62",
+  "tree": "9fc7e445cb6503619cfa12357f4f96780afcc751",
+  "imported_at": "2026-11-16T05:39:19.868194+00:00"
 }

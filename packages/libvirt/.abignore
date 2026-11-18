@@ -1,0 +1,31 @@
+[suppress_function]
+symbol_version_regexp = LIBVIRT_PRIVATE.*
+soname_regexp = libvirt\\.so.*
+
+[suppress_function]
+symbol_version_regexp = LIBVIRT_ADMIN_PRIVATE.*
+soname_regexp = libvirt-admin\\.so.*
+
+[suppress_variable]
+symbol_version_regexp = LIBVIRT_PRIVATE.*
+soname_regexp = libvirt\\.so.*
+
+[suppress_variable]
+symbol_version_regexp = LIBVIRT_ADMIN_PRIVATE.*
+soname_regexp = libvirt-admin\\.so.*
+
+[suppress_function]
+symbol_version_regexp = .*
+soname_regexp = libvirt_storage_.*\\.so.*
+
+[suppress_variable]
+symbol_version_regexp = .*
+soname_regexp = libvirt_storage_.*\\.so.*
+
+[suppress_function]
+symbol_version_regexp = .*
+soname_regexp = libvirt_driver_.*\\.so.*
+
+[suppress_variable]
+symbol_version_regexp = .*
+soname_regexp = libvirt_driver_.*\\.so.*
