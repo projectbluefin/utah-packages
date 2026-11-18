@@ -86,9 +86,9 @@ class ContainerInfraMarkerTests(unittest.TestCase):
             reports = root / "work" / "reports"
             calls = root / "calls"
             container = (
-                container.replace("/tools/dnf_backoff.sh", str(HELPER))
-                .replace("/work", str(root / "work"))
+                container.replace("/work", str(root / "work"))
                 .replace("/etc/yum.repos.d/", str(root / "repos") + "/")
+                .replace("/tools/dnf_backoff.sh", str(HELPER))
             )
             program = """
 set -e -o pipefail
