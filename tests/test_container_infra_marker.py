@@ -19,6 +19,7 @@ import unittest
 ROOT = Path(__file__).resolve().parent.parent
 HELPER = ROOT / "tools" / "dnf_backoff.sh"
 BUILD_CONTAINER = ROOT / "tools" / "build_container.sh"
+WORKFLOW = ROOT / ".github" / "workflows" / "build-stage.yml"
 
 
 def run(output: str, failures: int) -> tuple[int, str | None, list[str]]:
@@ -71,6 +72,59 @@ class ContainerInfraMarkerTests(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertEqual(waits, ["5", "15"])
         self.assertIsNone(marker)
+
+    def test_cache_key_dnf_failures_report_outages_not_dependency_errors(self) -> None:
+        workflow = WORKFLOW.read_text()
+        cache_step = workflow.split("      - name: Resolve the package cache key\n", 1)[1]
+        container = cache_step.split("utah-buildroot:run bash -exc '\n", 1)[1].split(
+            "\n            '\n", 1
+        )[0]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "work" / "cache").mkdir(parents=True)
+            (root / "repos").mkdir()
+            reports = root / "work" / "reports"
+            calls = root / "calls"
+            container = (
+                container.replace("/tools/dnf_backoff.sh", str(HELPER))
+                .replace("/work", str(root / "work"))
+                .replace("/etc/yum.repos.d/", str(root / "repos") + "/")
+            )
+            program = """
+set -e -o pipefail
+sleep() { :; }
+sed() { :; }
+cp() { :; }
+createrepo_c() { :; }
+find() { case "$1" in */prior) [ "$PRIOR" = 1 ] && echo prior.rpm ;; *) echo package.spec ;; esac; return 0; }
+rpm() { case "$1" in -qa) echo 1.hum1 ;; esac; return 0; }
+dnf() {
+  echo "$*" >> "$CALLS"
+  case "$*" in *"$FAIL_ON"*) echo "$FAIL_MESSAGE" >&2; return 7 ;; esac
+}
+""" + container
+            for target, prior in (("install createrepo_c", "1"),
+                                  ("install dnf-plugins-core", "0"),
+                                  ("upgrade libxml2", "0"),
+                                  ("builddep -D", "0")):
+                for message, expected_marker in (
+                    ("Status code: 503 for https://example.test/package.rpm", True),
+                    ("No match for argument: missing-devel", False),
+                ):
+                    with self.subTest(target=target, outage=expected_marker):
+                        calls.unlink(missing_ok=True)
+                        marker = reports / "infra-failure"
+                        marker.unlink(missing_ok=True)
+                        result = subprocess.run(
+                            ["bash", "-c", program],
+                            env={"PATH": "/usr/bin:/bin", "PACKAGE": "probe",
+                                 "REPORT_DIR": str(reports), "CALLS": str(calls),
+                                 "PRIOR": prior, "FAIL_ON": target, "FAIL_MESSAGE": message},
+                            capture_output=True, text=True,
+                        )
+                        self.assertEqual(result.returncode, 7, result.stdout + result.stderr)
+                        self.assertEqual(marker.exists(), expected_marker)
+                        self.assertEqual(sum(target in line for line in calls.read_text().splitlines()), 4)
 
     def test_builddep_goes_through_the_shared_helper(self) -> None:
         script = BUILD_CONTAINER.read_text()

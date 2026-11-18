@@ -65,7 +65,7 @@ cp /repos/hummingbird.repo /etc/yum.repos.d/
 # of the 51.beta stage 0 had just built. createrepo_c itself walks
 # the tree, so only the test needed fixing.
 if [ -n "$(find /work/prior -name "*.rpm" -print -quit 2>/dev/null)" ]; then
-  dnf -y $disable install createrepo_c
+  with_backoff dnf -y $disable install createrepo_c
   createrepo_c /work/prior
   printf "[stages]\nname=stages\nbaseurl=file:///work/prior\nenabled=1\ngpgcheck=0\npriority=1\n" \
     > /etc/yum.repos.d/stages.repo
@@ -159,7 +159,7 @@ fi
 # installs, so /usr/bin/echo and friends are missing. Most packages pull
 # them in transitively; squashfs-tools calls echo directly from its
 # manpage installer and fails without it.
-dnf -y $disable install dnf-plugins-core mock rpm-build @buildsys-build
+with_backoff dnf -y $disable install dnf-plugins-core mock rpm-build @buildsys-build
 # Hummingbird split libxml2 at 2.15.4-1.1: the library moved to a
 # new libxml2-16 package and libxml2 kept only xmllint. The new
 # package neither Obsoletes nor Conflicts the old one, and the
@@ -178,7 +178,7 @@ dnf -y $disable install dnf-plugins-core mock rpm-build @buildsys-build
 # before anything else asks for it.
 for split in libxml2; do
   rpm -q "$split" >/dev/null 2>&1 || continue
-  dnf -y $disable upgrade "$split"
+  with_backoff dnf -y $disable upgrade "$split"
 done
 rpm -q --qf "buildroot libxml2: %{NAME}-%{VERSION}-%{RELEASE}\n" libxml2 libxml2-16 || true
 rpm -q --qf "buildroot openssl: %{VERSION}-%{RELEASE}\n" openssl-libs || true

@@ -1,5 +1,5 @@
-# Sourced, not run: defines with_backoff for container-lane scripts that
-# install from the Hummingbird repository (build_container.sh).
+# Sourced, not run: defines with_backoff for container-lane build and
+# cache-key resolution steps that install from the Hummingbird repository.
 #
 # The Hummingbird repository is one host with no mirrors, so a bad
 # minute there is a failed build. retries=10 and timeout=120 in
