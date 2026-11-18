@@ -25,8 +25,8 @@ packaging and not a one-time spreadsheet.
 The Dakota element audit ([`dakota-parity.md`](dakota-parity.md)) reuses this
 file's `mapping` for GNOME renames, so a corrected mapping here corrects both
 audits. It also compares patches and options for every factory element, GNOME
-or not, at the gnome-build-meta ref Dakota pins, with this tool's
-`meson_options` and option normalization
+or not, at the gnome-build-meta ref Dakota pins, with this tool's `Loader`
+and option normalization
 ([`dakota-parity.md`](dakota-parity.md#patches-and-build-options)). This
 audit stays the one that pins a GNOME release and compares dependency edges.
 

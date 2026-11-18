@@ -79,10 +79,13 @@ from tools.audit_gnome_build_meta import (  # noqa: E402
     NEEDS_REVIEW,
     Loader,
     _factory_rev,
+    _MESON_INVOCATION,
+    _MESON_OPTION,
+    _RPM_CONDITIONAL,
+    _expanded_flag_macros,
     _feature_key,
     _unbalanced_brace,
     gbm_feature_options,
-    meson_options,
     normalize_feature_value,
     numeric_components,
     release_line,
@@ -781,8 +784,9 @@ def apply_junction_queues(roots: dict[str, Path], work: Path) -> tuple[dict[str,
         shutil.copytree(roots[project], copy, symlinks=True,
                         ignore=shutil.ignore_patterns(".git"))
         for name in files:
-            subprocess.run(["git", "apply", str(dakota / name)], cwd=copy, check=True,
-                           capture_output=True)
+            # stderr reaches the log: a queue patch that no longer applies
+            # fails the import with git's own message.
+            subprocess.run(["git", "apply", str(dakota / name)], cwd=copy, check=True)
         patched[project] = copy
         queues[project] = [{"patch": name, "files": _patched_files((dakota / name).read_text())}
                            for name in files]
@@ -957,11 +961,38 @@ def load_build_facts(path: Path | None) -> dict | None:
     return facts
 
 
-# The spec side. ``meson_options`` (gnome-build-meta audit) reads ``-D`` from
-# %meson and %cmake blocks; configure switches need their own reader.
-_CONFIGURE_INVOCATION = re.compile(r"^\s*(?:%\{?configure\w*\}?|\./configure|\.\./configure)(?![\w-])")
+# The spec side. The gnome-build-meta audit's ``meson_options`` keeps the first
+# value of each option; a recipe that builds twice (webkitgtk's GTK 3 and GTK 4
+# builds pass -DUSE_GTK4=OFF and ON) passes several, so every value is kept
+# here, from %meson/%cmake ``-D`` options and %configure switches alike.
+_CONFIGURE_INVOCATION = re.compile(
+    r"^\s*(?:%\{?configure\w*\}?|\./configure|\.\./configure)(?![\w-])")
 _CONFIGURE_SWITCH = re.compile(
     r"(?<![\w-])--(enable|disable|with|without)-([A-Za-z0-9][\w.+-]*)(?:=(\S*))?")
+_CONDITIONAL_MACRO = re.compile(r"%\{!?\?[\w-]+:")
+UNRESOLVED_VALUE = "%conditional"
+
+
+def _switch_pairs(text: str) -> list[tuple[str, str]]:
+    pairs = []
+    for verb, name, value in _CONFIGURE_SWITCH.findall(text):
+        name = _unbalanced_brace(name)
+        value = _unbalanced_brace((value or "").strip("'\"").rstrip("\\"))
+        if verb in ("disable", "without"):
+            pairs.append((f"{'enable' if verb == 'disable' else 'with'}-{name}", "no"))
+        else:
+            pairs.append((f"{verb}-{name}", value or "yes"))
+    return pairs
+
+
+def _dash_d_pairs(text: str) -> list[tuple[str, str]]:
+    pairs = []
+    for match in _MESON_OPTION.finditer(text):
+        name = _unbalanced_brace(match.group(1).strip("-").strip())
+        value = _unbalanced_brace((match.group(2) or "").strip().strip("'\"").rstrip("\\"))
+        if name:
+            pairs.append((name, value))
+    return pairs
 
 
 def configure_switches(text: str) -> dict[str, str]:
@@ -972,24 +1003,18 @@ def configure_switches(text: str) -> dict[str, str]:
     Path options (``--libdir=``) are packaging, not features, and are skipped.
     """
     out: dict[str, str] = {}
-    for verb, name, value in _CONFIGURE_SWITCH.findall(text):
-        name = _unbalanced_brace(name)
-        value = _unbalanced_brace((value or "").strip("'\"").rstrip("\\"))
-        if verb in ("disable", "without"):
-            key, value = (f"{'enable' if verb == 'disable' else 'with'}-{name}", "no")
-        else:
-            key, value = f"{verb}-{name}", value or "yes"
+    for key, value in _switch_pairs(text):
         out.setdefault(key, value)
     return out
 
 
-def spec_configure_switches(text: str) -> dict[str, str]:
-    """Configure switches of a spec's ``%configure`` / ``./configure`` blocks."""
-    out: dict[str, str] = {}
+def _invocation_blocks(text: str, invocation: re.Pattern) -> list[str]:
+    """Each invocation line with its continuation lines and RPM conditionals."""
+    blocks = []
     lines = text.splitlines()
     index = 0
     while index < len(lines):
-        if not _CONFIGURE_INVOCATION.match(lines[index]):
+        if not invocation.match(lines[index]):
             index += 1
             continue
         block = []
@@ -997,14 +1022,53 @@ def spec_configure_switches(text: str) -> dict[str, str]:
         while cursor < len(lines):
             line = lines[cursor]
             block.append(line)
-            if line.strip().startswith("%if") or line.strip() in ("%else", "%endif") \
-                    or line.rstrip().endswith("\\"):
+            if _RPM_CONDITIONAL.match(line.strip()) or line.rstrip().endswith("\\"):
                 cursor += 1
                 continue
             break
-        for key, value in configure_switches("\n".join(block)).items():
-            out.setdefault(key, value)
+        blocks.append("\n".join(block))
         index = cursor + 1
+    return blocks
+
+
+def _conditional_bodies(text: str) -> list[str]:
+    """Bodies of ``%{?macro:...}`` / ``%{!?macro:...}``: options a build may not pass."""
+    bodies = []
+    for match in _CONDITIONAL_MACRO.finditer(text):
+        depth, cursor = 1, match.end()
+        while cursor < len(text) and depth:
+            depth += {"{": 1, "}": -1}.get(text[cursor], 0)
+            cursor += 1
+        bodies.append(text[match.end():cursor - 1])
+    return bodies
+
+
+def spec_option_values(text: str) -> dict[str, list[str]]:
+    """Every value a spec passes for each option, across all its invocations.
+
+    ``-D`` options come from %meson and %cmake blocks (and the flag macros they
+    expand), switches from %configure and ./configure blocks. An option inside
+    a ``%{?macro:...}`` conditional also gets ``%conditional``: whether the
+    build passes it depends on a macro the text does not settle (libva's
+    ``%{?_without_wayland: -Dwith_wayland=no}``).
+    """
+    out: dict[str, list[str]] = {}
+
+    def add(key: str, value: str) -> None:
+        values = out.setdefault(key, [])
+        if value not in values:
+            values.append(value)
+
+    for block in _invocation_blocks(text, _MESON_INVOCATION):
+        for key, value in _dash_d_pairs("\n".join([block, *_expanded_flag_macros(block, text)])):
+            add(key, value)
+    for block in _invocation_blocks(text, _CONFIGURE_INVOCATION):
+        for key, value in _switch_pairs(block):
+            add(key, value)
+    for body in _conditional_bodies(text):
+        for key, _ in _dash_d_pairs(body) + _switch_pairs(body):
+            if key in out:
+                add(key, UNRESOLVED_VALUE)
     return out
 
 
@@ -1023,23 +1087,27 @@ def _unresolved(value: str) -> bool:
     return "%" in value or "$" in value
 
 
-def compare_options(dakota: dict[str, str], factory: dict[str, str]) -> dict:
+def compare_options(dakota: dict[str, str], factory: dict[str, list[str]]) -> dict:
     """Options only one side sets and options both set to different values.
 
-    Values are normalized as in the gnome-build-meta audit (``true`` equals
-    ``enabled``). A value that is still a macro or variable reference on
-    either side is not a conflict: it cannot be told from the text.
+    ``factory`` holds every value the recipe passes for an option. Values are
+    normalized as in the gnome-build-meta audit (``true`` equals
+    ``enabled``). An option conflicts only when Dakota's value matches none of
+    the recipe's; a value that is still a macro or variable reference on
+    either side is not a conflict, because the text cannot settle it.
     """
     dakota_keys = {_feature_key(k): k for k in dakota}
     factory_keys = {_feature_key(k): k for k in factory}
     conflicting, same = [], 0
     for key in sorted(set(dakota_keys) & set(factory_keys)):
-        d_value, f_value = dakota[dakota_keys[key]], factory[factory_keys[key]]
-        if (normalize_feature_value(d_value) == normalize_feature_value(f_value)
-                or _unresolved(d_value) or _unresolved(f_value)):
+        d_value, f_values = dakota[dakota_keys[key]], factory[factory_keys[key]]
+        if (_unresolved(d_value) or any(_unresolved(v) for v in f_values)
+                or normalize_feature_value(d_value) in {normalize_feature_value(v)
+                                                        for v in f_values}):
             same += 1
             continue
-        conflicting.append({"option": dakota_keys[key], "dakota": d_value, "factory": f_value})
+        conflicting.append({"option": dakota_keys[key], "dakota": d_value,
+                            "factory": "|".join(f_values)})
     return {
         "conflicting": conflicting,
         "only_in_dakota": sorted(dakota_keys[k] for k in set(dakota_keys) - set(factory_keys)),
@@ -1156,8 +1224,7 @@ def build_intent(entries: list[dict], facts: dict | None, factory_locks: dict,
         text = spec.read_text(errors="replace")
         patches = compare_patches(fact.get("patches") or [],
                                   factory_patches(text, spec.parent, rpm))
-        options = compare_options(element_options(fact),
-                                  {**meson_options(text), **spec_configure_switches(text)})
+        options = compare_options(element_options(fact), spec_option_values(text))
         reasons = []
         if patches["only_in_dakota"]:
             reasons.append(f"{len(patches['only_in_dakota'])} Dakota patch(es) not in the recipe")

@@ -203,11 +203,14 @@ recipe, offline (`build_intent` in the JSON, its own Markdown section):
   (`svn-r6564.patch` is `libmp3lame-symbols.patch`), so the subject and the
   hash do most of the matching.
 - **options**: `-D` options from the meson and cmake variables against the
-  spec's `%meson`/`%cmake` blocks (`meson_options` of the gnome-build-meta
-  audit), and `--enable/--disable/--with/--without` switches from the conf
-  variables against the spec's `%configure` and `./configure` blocks.
-  `--disable-x` is `enable-x=no`; `true` equals `enabled`. A value that is
-  still a macro or variable reference on either side is not a conflict.
+  spec's `%meson`/`%cmake` blocks, and `--enable/--disable/--with/--without`
+  switches from the conf variables against the spec's `%configure` and
+  `./configure` blocks. Every value the spec passes is kept (webkitgtk passes
+  `-DUSE_GTK4=OFF` and `ON` for its two builds; the gnome-build-meta audit's
+  `meson_options` keeps only the first), and an option conflicts only when
+  Dakota's value matches none of them. `--disable-x` is `enable-x=no`; `true`
+  equals `enabled`. A value that is still a macro or variable reference on
+  either side, or an option inside `%{?macro:...}`, is not a conflict.
 
 `needs_review`: Dakota carries a patch the recipe lacks, or both sides set an
 option differently. Options only Dakota sets are counted and kept in the

@@ -33,7 +33,7 @@ from tools.audit_dakota import (
     main,
     patch_identity,
     render_markdown,
-    spec_configure_switches,
+    spec_option_values,
     verify_build_roots,
 )
 
@@ -159,9 +159,23 @@ class ParserTests(unittest.TestCase):
             "echo --enable-not-an-option\n"
             "./configure --enable-openal\n"
         )
-        self.assertEqual(spec_configure_switches(spec), {
-            "enable-static": "no", "enable-obex": "yes", "with-udevdir": "%{_udevdir}",
-            "enable-openal": "yes"})
+        self.assertEqual(spec_option_values(spec), {
+            "enable-static": ["no"], "enable-obex": ["yes"], "with-udevdir": ["%{_udevdir}"],
+            "enable-openal": ["yes"]})
+
+    def test_spec_keeps_every_value_and_marks_conditional_macros(self) -> None:
+        # webkitgtk builds twice; libva passes an option only under a macro.
+        spec = (
+            "%cmake -B gtk3 -DUSE_GTK4=OFF \\\n  -DENABLE_DOCS=ON\n"
+            "%cmake -B gtk4 -DUSE_GTK4=ON\n"
+            "%meson \\\n"
+            "  %{?_without_wayland: -Dwith_wayland=no} \\\n"
+            "  -Dwith_x11=yes\n"
+            "CFLAGS='-DG_DISABLE_CAST_CHECKS'\n"
+        )
+        self.assertEqual(spec_option_values(spec), {
+            "USE_GTK4": ["OFF", "ON"], "ENABLE_DOCS": ["ON"],
+            "with_wayland": ["no", "%conditional"], "with_x11": ["yes"]})
 
     def test_element_options_by_variable(self) -> None:
         facts = {"options": {"meson-local": "-Dprofiler=false -Dx11=enabled",
@@ -208,15 +222,17 @@ class OptionTests(unittest.TestCase):
     def test_conflicts_normalize_and_skip_macros(self) -> None:
         result = compare_options(
             {"profiler": "false", "x11": "true", "docs": "false", "udev": "%{indep-libdir}",
-             "extensions-tool:bash_completion": "disabled", "only-dakota": "1"},
-            {"profiler": "true", "x11": "enabled", "udev": "/usr/lib/udev",
-             "bash_completion": "enabled", "only-fedora": "1", "docs": "%{?with_docs}"})
+             "extensions-tool:bash_completion": "disabled", "only-dakota": "1",
+             "USE_GTK4": "OFF"},
+            {"profiler": ["true"], "x11": ["enabled"], "udev": ["/usr/lib/udev"],
+             "bash_completion": ["enabled"], "only-fedora": ["1"],
+             "docs": ["true", "%conditional"], "USE_GTK4": ["OFF", "ON"]})
         self.assertEqual(result["conflicting"], [
             {"option": "extensions-tool:bash_completion", "dakota": "disabled", "factory": "enabled"},
             {"option": "profiler", "dakota": "false", "factory": "true"}])
         self.assertEqual(result["only_in_dakota"], ["only-dakota"])
         self.assertEqual(result["only_in_factory"], ["only-fedora"])
-        self.assertEqual(result["same"], 3)
+        self.assertEqual(result["same"], 4)
 
 
 def fake_head(refs: dict[str, str]):
