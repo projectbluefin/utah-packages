@@ -15,6 +15,10 @@
 # outside what a bump may commit, so only a reviewed pull request can shorten
 # it.
 accountsservice
+# brew-setup.service runs as root and unpacks brew-tarball, a prebuilt prefix
+# copied from ghcr.io/ublue-os/brew that cannot be rebuilt from source.
+brew
+brew-tarball
 cups-browsed
 cups-filters
 # thin_check/thin_repair run as root on block devices, and the vendored crate
