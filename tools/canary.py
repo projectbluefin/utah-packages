@@ -53,6 +53,11 @@ BUILD_PATH = (
     ".github/actions/load-buildroot/action.yml",
     ".github/actions/load-factory-repo/action.yml",
     "config/hummingbird.repo",
+    # The keys Fedora and Hummingbird packages are verified against: a
+    # rotation decides whether a root resolves at all.
+    "config/keys/RPM-GPG-KEY-fedora-44-primary",
+    "config/keys/RPM-GPG-KEY-redhat-release-2",
+    "config/keys/RPM-GPG-KEY-redhat-release-4",
     "tools/source_pipeline.py",
     "tools/dist_bump.py",
     "tools/package_cache_key.py",
