@@ -5172,9 +5172,13 @@
     {
       "name": "oo7",
       "version": "0.7.0~beta^1.e91b98a",
-      "url": "https://github.com/linux-credentials/oo7/archive/e91b98a7235a4971c6cbb7f0533034afc8a8f618/oo7-e91b98a.tar.gz",
-      "filename": "oo7-e91b98a.tar.gz",
-      "sha512": "4ebce6b36406ad1d53421269a8788226a047a4475b2e69a6d84388c6d0569fddd91357c5c38d1b1a906dc3fb51d50068930ed6ce1ad9ace51025350b6c9dbc79"
+      "filename": "oo7-e91b98a7235a4971c6cbb7f0533034afc8a8f618-vendored.tar.xz",
+      "sha512": "bf0f04bfc4cd36f592978bf3d9b2344ba38bdc695298573326260edf53dd9982e0b6c7dc1f9909d07a559edb0207b6307611a59c65f9d45e0b3dad5926f18d5a",
+      "generate": {
+        "script": "tools/generated_sources.py",
+        "input": "https://github.com/linux-credentials/oo7/archive/e91b98a7235a4971c6cbb7f0533034afc8a8f618/oo7-e91b98a.tar.gz (sha512-pinned) and every crates.io crate its Cargo.lock pins (sha256-pinned by Cargo.lock)",
+        "method": "add vendor/<crate>-<version> for each Cargo.lock crate with .cargo-checksum.json, as cargo vendor --versioned-dirs lays it out, and repack deterministically as oo7-e91b98a7235a4971c6cbb7f0533034afc8a8f618-vendored.tar.xz"
+      }
     },
     {
       "name": "open-vm-tools",

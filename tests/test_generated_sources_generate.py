@@ -855,6 +855,58 @@ class TealdeerGenerateTests(PackageDirMixin, unittest.TestCase):
             self.assertIn(f"{self.TOP}/vendor/tinycrate-1.0.0/src/lib.rs", archive.getnames())
 
 
+class Oo7GenerateTests(PackageDirMixin, unittest.TestCase):
+    """oo7 at a pinned commit, vendored from its GitHub commit archive (#1192)."""
+
+    COMMIT = "e91b98a7235a4971c6cbb7f0533034afc8a8f618"
+    TOP = f"oo7-{COMMIT}"
+    ARCHIVE_URL = f"https://github.com/linux-credentials/oo7/archive/{COMMIT}/oo7-e91b98a.tar.gz"
+
+    def write_oo7_spec(self, commit: str) -> None:
+        (self.package_dir / "oo7.spec").write_text(
+            f"%global commit {commit}\nName: oo7\nVersion:        0.7.0~beta^1.%{{shortcommit}}\nRelease: 1\n"
+        )
+
+    def setUp(self):
+        super().setUp()
+        self.write_oo7_spec(self.COMMIT)
+        self.crate = targz({"tinycrate-1.0.0/src/lib.rs": b"//"})
+        lock = (
+            '[[package]]\nname = "oo7"\nversion = "0.7.0-alpha"\n\n'
+            f'[[package]]\nname = "tinycrate"\nversion = "1.0.0"\nsource = "{CRATES_IO}"\n'
+            f'checksum = "{hashlib.sha256(self.crate).hexdigest()}"\n'
+        )
+        self.archive = targz({f"{self.TOP}/Cargo.lock": lock.encode(), f"{self.TOP}/Cargo.toml": b"[x]"})
+        self.crate_url = "https://static.crates.io/crates/tinycrate/tinycrate-1.0.0.crate"
+
+    def test_metadata_expands_the_commit_into_version_and_filename(self):
+        entry = generated_sources.metadata_for("oo7", self.package_dir)
+        self.assertEqual(entry["version"], "0.7.0~beta^1.e91b98a")
+        self.assertEqual(entry["filename"], f"{self.TOP}-vendored.tar.xz")
+        self.assertIn(self.ARCHIVE_URL, entry["generate"]["input"])
+
+    def test_an_unpinned_commit_fails_before_any_download(self):
+        self.write_oo7_spec("0" * 40)
+        with patch.object(generated_sources, "_fetch") as fetch:
+            with self.assertRaisesRegex(RuntimeError, "no pinned input SHA-512 for oo7"):
+                generated_sources.generate("oo7", self.package_dir, self.out_dir)
+        fetch.assert_not_called()
+
+    def test_a_short_commit_is_refused(self):
+        self.write_oo7_spec("e91b98a")
+        with self.assertRaisesRegex(ValueError, "full SHA-1"):
+            generated_sources.metadata_for("oo7", self.package_dir)
+
+    def test_the_pinned_archive_and_its_locked_crates_are_vendored(self):
+        fetch = UrlopenRecorder({self.ARCHIVE_URL: self.archive, self.crate_url: self.crate})
+        with patch.object(generated_sources.urllib.request, "urlopen", fetch), \
+                patch.dict(generated_sources.OO7_INPUT_SHA512, {self.COMMIT: sha512(self.archive)}):
+            target = generated_sources.generate("oo7", self.package_dir, self.out_dir)
+        self.assertEqual(target.name, f"{self.TOP}-vendored.tar.xz")
+        with tarfile.open(fileobj=io.BytesIO(lzma.decompress(target.read_bytes()))) as archive:
+            self.assertIn(f"{self.TOP}/vendor/tinycrate-1.0.0/src/lib.rs", archive.getnames())
+
+
 class CliTests(unittest.TestCase):
     def run_main(self, argv):
         stdout, stderr = io.StringIO(), io.StringIO()
