@@ -176,7 +176,11 @@
 %endif
 
 # Enable wireshark plugins for all distros
-%define with_wireshark 0%{!?_without_wireshark:1}
+# Utah: not here. Wireshark comes only from Fedora, so libvirt-wireshark could
+# never install on Utah, and wireshark-devel pulls Fedora's Qt 6, which links
+# the ICU 77 and FFmpeg the factory replaces. libvirt's BuildRequires failed
+# to resolve in each of runs 43823428407, 44010051148 and 44224171778.
+%define with_wireshark 0
 %define wireshark_plugindir %(pkg-config --variable plugindir wireshark)/epan
 
 # Enable libssh transport for all distros
