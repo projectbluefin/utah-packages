@@ -21,8 +21,9 @@ Release:        1%{?dist}
 Summary:        Prebuilt Homebrew prefix that brew-setup unpacks on first boot
 
 # Homebrew is BSD-2-Clause; the archive also carries its vendored Ruby gems
-# (mostly MIT) and portable Ruby (Ruby OR BSD-2-Clause).
-License:        BSD-2-Clause AND MIT AND (Ruby OR BSD-2-Clause)
+# (mostly MIT; sorbet-runtime is Apache-2.0) and portable Ruby (Ruby OR
+# BSD-2-Clause).
+License:        BSD-2-Clause AND MIT AND Apache-2.0 AND (Ruby OR BSD-2-Clause)
 URL:            https://github.com/ublue-os/brew
 Source0:        homebrew-%{version}.tar.zst
 
