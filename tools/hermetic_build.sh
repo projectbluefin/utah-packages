@@ -34,7 +34,8 @@ H=/work/hermetic
 mkdir -p "$H" /work/cache /work/result /work/reports
 # Only two steps in this lane reach the network: mock resolving the root
 # into the lock, and mock-hermetic-repo fetching the 200-300 RPMs the lock
-# names. Both fetch from Hummingbird's repositories, and a single reset or
+# names. Both fetch from Hummingbird's repositories and Fedora mirrors (a
+# fetch retry goes through Fedora's redirector), and a single reset or
 # short read there took down mdadm, setxkbmap and dmidecode in one run
 # (#287) with nothing wrong in the package. Retry them; the offline build
 # itself is never retried here, its %check retry is separate and deliberate.
@@ -152,6 +153,23 @@ PY
   ls "$H"/lock/*.src.rpm
 }
 
+# Rewrite every Fedora mirror URL in a lock to Fedora's redirector. Only a
+# URL with a /fedora/linux/ path (optionally under /pub/, or the doubled
+# /fedora/fedora/linux/ some mirrors use) matches; anything else, such as
+# packages.redhat.com, is left exactly as it is.
+redirect_fedora_urls() {
+  python3 - "$1" <<'PY'
+import json, re, sys
+path = sys.argv[1]
+FEDORA_PATH = re.compile(r"^https?://[^/]+/(?:pub/)?fedora/(?:fedora/)?linux/")
+REDIRECTOR = "https://download.fedoraproject.org/pub/fedora/linux/"
+lock = json.load(open(path))
+for r in lock["buildroot"]["rpms"]:
+    r["url"] = FEDORA_PATH.sub(REDIRECTOR, r["url"], count=1)
+json.dump(lock, open(path, "w"))
+PY
+}
+
 materialize() {
   # mock-hermetic-repo downloads over HTTP(S) and saves the bootstrap image;
   # it cannot read file:// URLs, which is where the earlier stages and the
@@ -173,9 +191,21 @@ PY
   # On success three lines are enough. On failure the cause -- createrepo_c
   # naming the RPM it could not read, a download error -- sits above the
   # traceback, so show the log without the per-RPM download noise.
+  # The lock names whichever Fedora mirror the metalink handed mock, so a
+  # dead mirror failed every retry. The first attempt uses the lock as
+  # resolved. Each retry points Fedora URLs at Fedora's own redirector,
+  # download.fedoraproject.org, which sends each request to a live mirror
+  # from the same MirrorManager pool the metalink draws from: no mirror list
+  # of our own, and no new host to trust. Hummingbird and file:// URLs are
+  # never rewritten. The marker is reset for every materialize.
+  rm -f "$H/fetch.attempted"
   fetch_remote() {
     fetch_log="$H/fetch.log"
     fetch_status=0
+    if [ -e "$H/fetch.attempted" ]; then
+      redirect_fedora_urls "$H/lock/remote.json"
+    fi
+    : > "$H/fetch.attempted"
     mock-hermetic-repo --lockfile "$H/lock/remote.json" --output-repo "$H/repo" \
       >"$fetch_log" 2>&1 || fetch_status=$?
     if [ "$fetch_status" -eq 0 ]; then
