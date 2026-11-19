@@ -52,6 +52,10 @@ that no upstream publishes verbatim:
 - gst-thumbnailers: the upstream GNOME release (SHA-512-pinned) with the same
   `vendor/` tree added. Hummingbird ships no Rust crate RPMs, so the recipe
   bundles its gtk-rs, clap and libglycin-rebind dependencies (#527)
+- hyperv-daemons: the kernel's tools/hv and the tools/build and
+  tools/scripts makefiles it includes, cut from the stable kernel release
+  (SHA-512-pinned). The kernel publishes no tools/hv archive; Fedora's
+  lookaside copy is a hand-cut snapshot of the same paths
 - tealdeer: the upstream GitHub tag archive (SHA-512-pinned) with the same
   `vendor/` tree added, for Dakota's tldr client (#1034)
 - oo7: the upstream GitHub commit archive (SHA-512-pinned, keyed by the
@@ -757,6 +761,108 @@ def _sevenzip_generate(package_dir: Path, out_dir: Path) -> Path:
     target = out_dir / f"7zip-{version}.tar.xz"
     target.write_bytes(_sevenzip_transform(payload, version))
     return target
+
+
+# --- hyperv-daemons ----------------------------------------------------------
+
+HYPERV_KERNEL_URL = "https://cdn.kernel.org/pub/linux/kernel/v{major}.x/linux-{version}.tar.xz"
+
+# kernel.org signs sha256sums.asc, not the archive's SHA-512; the SHA-256
+# listed there for each release was checked against these bytes.
+HYPERV_KERNEL_INPUT_SHA512 = {
+    "7.3.1": "eac8912be329999150a71257adc513e6a52891d122641943c3a440f775267705eff0b275b4d90d5298518ca638ab48fc2b7c3ee109d82f0bb34a1ac081e9c3a2",
+}
+
+# The paths of Fedora's tools-hv snapshot: tools/hv builds through the
+# kernel's tools build system and includes exactly these files of it.
+HYPERV_TOOLS_FILES = (
+    "tools/build/Build",
+    "tools/build/Build.include",
+    "tools/build/Makefile",
+    "tools/build/Makefile.build",
+    "tools/build/Makefile.feature",
+    "tools/build/Makefile.include",
+    "tools/scripts/Makefile.arch",
+    "tools/scripts/Makefile.include",
+    "tools/scripts/utilities.mak",
+)
+
+
+def _hyperv_kept(rel: str) -> bool:
+    return rel == "tools/hv" or rel.startswith("tools/hv/") or rel in HYPERV_TOOLS_FILES
+
+
+def _hyperv_transform(archive: bytes, version: str) -> bytes:
+    """Cut tools/hv and the build files it includes out of a kernel release.
+
+    Members are renamed from `linux-<version>/tools/...` to `tools/...`, the
+    layout the recipe's `%setup -n tools/hv` expects, and keep the kernel
+    archive's own modes and mtimes. The tools/build and tools/scripts
+    directories get entries of their own, sorted by name with ownership
+    zeroed, as one xz stream.
+    """
+    top = f"linux-{version}/"
+    kept: dict[str, tuple[tarfile.TarInfo, bytes | None]] = {}
+    with tarfile.open(fileobj=io.BytesIO(archive), mode="r:xz") as source:
+        for member in source:
+            name = member.name.rstrip("/")
+            if not name.startswith(top):
+                continue
+            rel = name[len(top):]
+            if member.isdir() and rel in ("tools", "tools/build", "tools/scripts"):
+                kept[rel] = (member, None)
+            elif _hyperv_kept(rel) and (member.isdir() or member.isreg()):
+                payload = source.extractfile(member).read() if member.isreg() else None
+                kept[rel] = (member, payload)
+    missing = [rel for rel in ("tools/hv/Makefile", *HYPERV_TOOLS_FILES) if rel not in kept]
+    if missing:
+        raise RuntimeError(f"linux-{version} lacks {', '.join(missing)}")
+    raw = io.BytesIO()
+    with tarfile.open(fileobj=raw, mode="w", format=tarfile.PAX_FORMAT) as result:
+        for rel in sorted(kept):
+            member, payload = kept[rel]
+            member.name = rel
+            member.uid = member.gid = 0
+            member.uname = member.gname = ""
+            member.pax_headers = {}
+            result.addfile(member, io.BytesIO(payload) if payload is not None else None)
+    out = io.BytesIO()
+    _xz_compress_stream(iter([raw.getvalue()]), out)
+    return out.getvalue()
+
+
+def _hyperv_url(version: str) -> str:
+    return HYPERV_KERNEL_URL.format(major=version.split(".")[0], version=version)
+
+
+def _hyperv_metadata(package_dir: Path) -> dict:
+    version = spec_version(package_dir, "hyperv-daemons.spec")
+    return {
+        "name": "hyperv-daemons",
+        "version": version,
+        "filename": f"tools-hv-{version}.tar.xz",
+        "generate": {
+            "script": SCRIPT_PATH,
+            "input": f"{_hyperv_url(version)} (sha512-pinned)",
+            "method": f"cut tools/hv and the tools/build and tools/scripts makefiles it includes from the stable kernel release and repack deterministically as tools-hv-{version}.tar.xz",
+        },
+    }
+
+
+def _hyperv_generate(package_dir: Path, out_dir: Path) -> Path:
+    version = spec_version(package_dir, "hyperv-daemons.spec")
+    pin = HYPERV_KERNEL_INPUT_SHA512.get(version)
+    if pin is None:
+        raise RuntimeError(f"no pinned input SHA-512 for linux {version}")
+    url = _hyperv_url(version)
+    payload = _fetch(url)
+    actual = hashlib.sha512(payload).hexdigest()
+    if actual != pin:
+        raise RuntimeError(f"input archive mismatch for {url}: expected {pin}, got {actual}")
+    target = out_dir / f"tools-hv-{version}.tar.xz"
+    target.write_bytes(_hyperv_transform(payload, version))
+    return target
+
 
 
 # --- hplip ---------------------------------------------------------------------
@@ -1831,6 +1937,7 @@ METADATA = {
     "freerdp": _freerdp_metadata,
     "fpaste": _fpaste_metadata,
     "7zip": _sevenzip_metadata,
+    "hyperv-daemons": _hyperv_metadata,
     "bluefin-artwork-logos": _bluefin_artwork_metadata,
     "bluefin-wallpapers": _bluefin_wallpapers_metadata,
     "tealdeer": _tealdeer_metadata,
@@ -1852,6 +1959,7 @@ GENERATORS = {
     "freerdp": _freerdp_generate,
     "fpaste": _fpaste_generate,
     "7zip": _sevenzip_generate,
+    "hyperv-daemons": _hyperv_generate,
     "bluefin-artwork-logos": _bluefin_artwork_generate,
     "bluefin-wallpapers": _bluefin_wallpapers_generate,
     "tealdeer": _tealdeer_generate,

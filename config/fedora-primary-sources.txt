@@ -12,7 +12,6 @@ foo2zjs
 foomatic-db
 fuse
 graphene
-hyperv-daemons
 kde-filesystem
 kde-settings
 kf5
