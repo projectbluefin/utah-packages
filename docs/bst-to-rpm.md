@@ -245,8 +245,9 @@ Before it pushes, it does three steps:
   Hummingbird for the same package. A build that loses keeps its previous
   version.
 - **hold-back** (`tools/publish_holdback.py`): a build can break what Utah
-  installs. Then that build keeps its previous version, and so does each
-  build in the same publication that used it. The usual cause is a library
+  installs. Then that build keeps its previous version. So does each build
+  in the same publication that BuildRequires it directly, or that needs what
+  only the held build's new version gives. The usual cause is a library
   that changes its soname before its consumers are rebuilt. The run summary
   gives each held-back build and the reason.
 - **consumer transaction**: what Utah installs must resolve as one dnf
@@ -295,8 +296,6 @@ to an exact package set.
 
 Each has a tracking issue with the current state:
 
-- Full rebuilds can't publish: the artifact download misses the newest
-  waves ([#970](https://github.com/projectbluefin/utah-packages/issues/970)).
 - Full rebuilds take 7–10 hours, so a merge can take most of a day to
   publish ([#1207](https://github.com/projectbluefin/utah-packages/issues/1207)).
 - Hummingbird's package server causes most failed builds in large runs
