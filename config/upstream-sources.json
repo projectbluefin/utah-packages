@@ -2394,18 +2394,6 @@
       ]
     },
     {
-      "name": "icu",
-      "version": "78.3",
-      "url": "https://github.com/unicode-org/icu/archive/refs/tags/release-78.3.tar.gz",
-      "filename": "release-78.3.tar.gz",
-      "feed": "https://github.com/unicode-org/icu/archive/refs/tags/release-78.3.tar.gz",
-      "sha512": "bdf82a46ed150fca6ff4620a20281d03560b5b1a392b1c609fd052c1e1ed2925bd49ce63c9d72c0d54fe597157de970e331693b9447e6ed685cd0cf620f9efd7",
-      "stage": 0,
-      "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/icu/release-78.3.tar.gz/sha512/bdf82a46ed150fca6ff4620a20281d03560b5b1a392b1c609fd052c1e1ed2925bd49ce63c9d72c0d54fe597157de970e331693b9447e6ed685cd0cf620f9efd7/release-78.3.tar.gz"
-      ]
-    },
-    {
       "name": "ifuse",
       "version": "1.2.1",
       "url": "https://github.com/libimobiledevice/ifuse/releases/download/1.2.1/ifuse-1.2.1.tar.bz2",

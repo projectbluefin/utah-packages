@@ -133,6 +133,19 @@ exclusion wide enough to remove the old major removes those dependencies
 too. `GLOBAL_EXCLUDE` is for a stale duplicate of a Hummingbird package,
 identified by exact release, never for a library at large.
 
+**The same ICU, from two repositories (#1214).** `507b2bf` stopped building icu
+and `publish-repository.yml` drops any carried-forward `libicu-*.bfin`, but the
+`icu` recipe stayed in `config/upstream-sources.json`. A run that built it
+resolved every libicu consumer's build root to the factory copy in
+`/work/prior`; a run that did not resolved it to Hummingbird's higher-release
+`libicu-78.3-9.hum1`, because nothing published carries ours. The two roots
+hash to different package cache keys, so gtk4 and eight other packages missed
+the cache depending only on what else was in the run. `priority` cannot fix
+this: it already ranks stages above the factory above Hummingbird, and the
+published repository simply has no libicu to rank. **Rule:** a package whose
+published copy is removed on purpose must not be built in the run either, or
+the build root depends on the run. `tests/test_icu_staging.py` pins it.
+
 ## 6. A re-import silently reverts every local decision
 
 **What happened.** samba's Ceph modules came back with the re-imported spec
