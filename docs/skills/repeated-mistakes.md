@@ -691,17 +691,20 @@ problem dnf meets. Only a *regression* against the seed counts, and only
 inside what the transaction installs (the contract, plus everything its
 Requires reach). There are two kinds: a capability that a published package
 needed and a new build dropped, and a Requires of a new build that nothing
-provides. The hold is transitive, so nothing ships against a held library.
-Any other build in the publication that was built against a held build is
-held too. It counts as built against when it BuildRequires the held build,
-directly or through other builds here (the build graph), or when its
-binaries need what only the held build provides. The held source keeps its
+provides. A hold spreads, so nothing ships against a held library. Any
+other build in the publication that was built against a held build is held
+too. It counts as built against when it BuildRequires the held build
+directly (the build graph), or when its binaries need what only the held
+build provides. Do not follow the graph through other builds: in run
+44478890278 that held 215 builds because one consumer of abseil-cpp
+(libphonenumber) failed to build. abseil-cpp has 6 direct dependents and
+126 through the graph. The held source keeps its
 seed build whole, and that is how the old gvfs-nfs goes on resolving against
 the old libnfs. The same dnf transaction then gates exactly what will be
 pushed. Replayed with the run's own RPMs, dnf resolves both cases. Wave 0
 holds libnfs and publishes 415 sources. The whole run holds gdm, and with it
-autofs, sssd and gnome-initial-setup, which BuildRequire it, and publishes
-850 sources. Held builds are recorded as `withheld` in the state label
+sssd and gnome-initial-setup, which BuildRequire it directly, and publishes
+851 sources. Held builds are recorded as `withheld` in the state label
 and retried by every run, and they are named in the tracking issue. The final
 publication pushes the resolvable subset and then fails the run in its last
 step. Do not move that step before the push or the signature.

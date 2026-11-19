@@ -287,9 +287,12 @@
     {
       "name": "aribb24",
       "version": "1.0.3^20160216git5e9be27",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/aribb24/aribb24-5e9be27.tar.gz/sha512/9dd0be0759482d10839c5cb9fe116b2e1aadb784f77e9206b5444e88e5f8d21ddabe79721bf343c41b8fc96c6e733873bc03930bd5bfeedd90d62f3617d75bfd/aribb24-5e9be27.tar.gz",
+      "url": "https://github.com/nkoriyama/aribb24/archive/5e9be272f96e00f15a2f3c5f8ba7e124862aec38.tar.gz",
       "filename": "aribb24-5e9be27.tar.gz",
-      "sha512": "9dd0be0759482d10839c5cb9fe116b2e1aadb784f77e9206b5444e88e5f8d21ddabe79721bf343c41b8fc96c6e733873bc03930bd5bfeedd90d62f3617d75bfd"
+      "sha512": "9dd0be0759482d10839c5cb9fe116b2e1aadb784f77e9206b5444e88e5f8d21ddabe79721bf343c41b8fc96c6e733873bc03930bd5bfeedd90d62f3617d75bfd",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/aribb24/aribb24-5e9be27.tar.gz/sha512/9dd0be0759482d10839c5cb9fe116b2e1aadb784f77e9206b5444e88e5f8d21ddabe79721bf343c41b8fc96c6e733873bc03930bd5bfeedd90d62f3617d75bfd/aribb24-5e9be27.tar.gz"
+      ]
     },
     {
       "name": "at-spi2-core",
@@ -1148,10 +1151,13 @@
     {
       "name": "fuse",
       "version": "2.9.9",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/fuse/fuse-2.9.9.tar.gz/sha512/3d82fafd04f2924299bb09d2bb144935fa004a43fb9a6568e2e1cc5a60fded2efa1711029a0d7f12b3e6e4501f7217f2ee3545646d89da8dece083cb390f23e2/fuse-2.9.9.tar.gz",
+      "url": "https://github.com/libfuse/libfuse/releases/download/fuse-2.9.9/fuse-2.9.9.tar.gz",
       "filename": "fuse-2.9.9.tar.gz",
       "feed": "https://github.com/libfuse/libfuse/releases/download/fuse-2.9.9.tar.gz",
-      "sha512": "3d82fafd04f2924299bb09d2bb144935fa004a43fb9a6568e2e1cc5a60fded2efa1711029a0d7f12b3e6e4501f7217f2ee3545646d89da8dece083cb390f23e2"
+      "sha512": "3d82fafd04f2924299bb09d2bb144935fa004a43fb9a6568e2e1cc5a60fded2efa1711029a0d7f12b3e6e4501f7217f2ee3545646d89da8dece083cb390f23e2",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/fuse/fuse-2.9.9.tar.gz/sha512/3d82fafd04f2924299bb09d2bb144935fa004a43fb9a6568e2e1cc5a60fded2efa1711029a0d7f12b3e6e4501f7217f2ee3545646d89da8dece083cb390f23e2/fuse-2.9.9.tar.gz"
+      ]
     },
     {
       "name": "fwupd",
@@ -1833,10 +1839,13 @@
     {
       "name": "graphene",
       "version": "1.10.8",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/graphene/graphene-1.10.8.tar.xz/sha512/c56dab6712cf58387d0512a213cd0cd456679e46a495ee5cfd9bc25440cda2d72d56974af4e462f3c863869a1e2e506b702f468933045609d35fdf006212c67d/graphene-1.10.8.tar.xz",
+      "url": "https://download.gnome.org/sources/graphene/1.10/graphene-1.10.8.tar.xz",
       "filename": "graphene-1.10.8.tar.xz",
       "feed": "https://github.com/ebassi/graphene/releases/download/1.10.8/graphene-1.10.8.tar.xz",
-      "sha512": "c56dab6712cf58387d0512a213cd0cd456679e46a495ee5cfd9bc25440cda2d72d56974af4e462f3c863869a1e2e506b702f468933045609d35fdf006212c67d"
+      "sha512": "c56dab6712cf58387d0512a213cd0cd456679e46a495ee5cfd9bc25440cda2d72d56974af4e462f3c863869a1e2e506b702f468933045609d35fdf006212c67d",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/graphene/graphene-1.10.8.tar.xz/sha512/c56dab6712cf58387d0512a213cd0cd456679e46a495ee5cfd9bc25440cda2d72d56974af4e462f3c863869a1e2e506b702f468933045609d35fdf006212c67d/graphene-1.10.8.tar.xz"
+      ]
     },
     {
       "name": "grpc",
@@ -3185,11 +3194,11 @@
     {
       "name": "libcue",
       "version": "2.3.0",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/libcue/libcue-2.3.0.tar.gz/sha512/fe2c39cc9794ac36c0706405e0432bab23228d343ba4e3395220d5b2a2ebf8b3c97e71d76a628f9144977c0dd56636f78d0c2d1f9f2b0d4068a837a258f035b6/libcue-2.3.0.tar.gz",
+      "url": "https://github.com/lipnitsk/libcue/archive/v2.3.0/libcue-2.3.0.tar.gz",
       "filename": "libcue-2.3.0.tar.gz",
       "sha512": "fe2c39cc9794ac36c0706405e0432bab23228d343ba4e3395220d5b2a2ebf8b3c97e71d76a628f9144977c0dd56636f78d0c2d1f9f2b0d4068a837a258f035b6",
       "fallback_urls": [
-        "https://github.com/lipnitsk/libcue/archive/v2.3.0/libcue-2.3.0.tar.gz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libcue/libcue-2.3.0.tar.gz/sha512/fe2c39cc9794ac36c0706405e0432bab23228d343ba4e3395220d5b2a2ebf8b3c97e71d76a628f9144977c0dd56636f78d0c2d1f9f2b0d4068a837a258f035b6/libcue-2.3.0.tar.gz"
       ]
     },
     {
@@ -3222,10 +3231,13 @@
     {
       "name": "libdbusmenu",
       "version": "16.04.0",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/libdbusmenu/libdbusmenu-16.04.0.tar.gz/sha512/ee9654ac4ed94bdebc94a6db83b126784273a417a645b2881b2ba676a5f67d7fc95dd2bb37bfb0890aa47299ed73cb21ed7de8b75f3fed6b69bfd39065062241/libdbusmenu-16.04.0.tar.gz",
+      "url": "https://launchpad.net/libdbusmenu/16.04/16.04.0/+download/libdbusmenu-16.04.0.tar.gz",
       "filename": "libdbusmenu-16.04.0.tar.gz",
       "feed": "https://release-monitoring.org/project/89383",
-      "sha512": "ee9654ac4ed94bdebc94a6db83b126784273a417a645b2881b2ba676a5f67d7fc95dd2bb37bfb0890aa47299ed73cb21ed7de8b75f3fed6b69bfd39065062241"
+      "sha512": "ee9654ac4ed94bdebc94a6db83b126784273a417a645b2881b2ba676a5f67d7fc95dd2bb37bfb0890aa47299ed73cb21ed7de8b75f3fed6b69bfd39065062241",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libdbusmenu/libdbusmenu-16.04.0.tar.gz/sha512/ee9654ac4ed94bdebc94a6db83b126784273a417a645b2881b2ba676a5f67d7fc95dd2bb37bfb0890aa47299ed73cb21ed7de8b75f3fed6b69bfd39065062241/libdbusmenu-16.04.0.tar.gz"
+      ]
     },
     {
       "name": "libdc1394",
@@ -4658,10 +4670,13 @@
     {
       "name": "linux-firmware",
       "version": "20261019",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/linux-firmware/linux-firmware-20261019.tar.xz/sha512/725bfcc57def709e43dcd89683e1a663c2d221e3d34da58ffcbf8af3b9c6da2b763739ec8fe0c2ece2620c71b2556b97f93e784c2d3f7c320b98bf35338e6aed/linux-firmware-20261019.tar.xz",
+      "url": "https://www.kernel.org/pub/linux/kernel/firmware/linux-firmware-20261019.tar.xz",
       "filename": "linux-firmware-20261019.tar.xz",
       "feed": "https://release-monitoring.org/project/141464",
-      "sha512": "725bfcc57def709e43dcd89683e1a663c2d221e3d34da58ffcbf8af3b9c6da2b763739ec8fe0c2ece2620c71b2556b97f93e784c2d3f7c320b98bf35338e6aed"
+      "sha512": "725bfcc57def709e43dcd89683e1a663c2d221e3d34da58ffcbf8af3b9c6da2b763739ec8fe0c2ece2620c71b2556b97f93e784c2d3f7c320b98bf35338e6aed",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/linux-firmware/linux-firmware-20261019.tar.xz/sha512/725bfcc57def709e43dcd89683e1a663c2d221e3d34da58ffcbf8af3b9c6da2b763739ec8fe0c2ece2620c71b2556b97f93e784c2d3f7c320b98bf35338e6aed/linux-firmware-20261019.tar.xz"
+      ]
     },
     {
       "name": "livesys-scripts",
@@ -4930,9 +4945,12 @@
     {
       "name": "mpage",
       "version": "2.5.7",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/mpage/mpage-2.5.7.tgz/sha512/e456e5daae7f6f395b34e5833baaeff74f5e00a0e61b780fcd600cdbe6455a9be8e0c9811ba21db167bea135de8e268fe4ede553e0a19630d5b854ec5620726b/mpage-2.5.7.tgz",
+      "url": "https://www.mesa.nl/pub/mpage/mpage-2.5.7.tgz",
       "filename": "mpage-2.5.7.tgz",
-      "sha512": "e456e5daae7f6f395b34e5833baaeff74f5e00a0e61b780fcd600cdbe6455a9be8e0c9811ba21db167bea135de8e268fe4ede553e0a19630d5b854ec5620726b"
+      "sha512": "e456e5daae7f6f395b34e5833baaeff74f5e00a0e61b780fcd600cdbe6455a9be8e0c9811ba21db167bea135de8e268fe4ede553e0a19630d5b854ec5620726b",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/mpage/mpage-2.5.7.tgz/sha512/e456e5daae7f6f395b34e5833baaeff74f5e00a0e61b780fcd600cdbe6455a9be8e0c9811ba21db167bea135de8e268fe4ede553e0a19630d5b854ec5620726b/mpage-2.5.7.tgz"
+      ]
     },
     {
       "name": "mpg123",
@@ -5689,16 +5707,22 @@
     {
       "name": "protobuf3",
       "version": "3.19.6",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/protobuf3/protobuf-3.19.6-all.tar.gz/sha512/8f92242f2be8e1bbfba41341c87709ad91ad83b8b3e3df88bb430411541d3399295f49291fd52b50e3487b0fce33181cb4d175685fd25aac72adfaee26a612d4/protobuf-3.19.6-all.tar.gz",
+      "url": "https://github.com/protocolbuffers/protobuf/archive/v3.19.6/protobuf-3.19.6-all.tar.gz",
       "filename": "protobuf-3.19.6-all.tar.gz",
-      "sha512": "8f92242f2be8e1bbfba41341c87709ad91ad83b8b3e3df88bb430411541d3399295f49291fd52b50e3487b0fce33181cb4d175685fd25aac72adfaee26a612d4"
+      "sha512": "8f92242f2be8e1bbfba41341c87709ad91ad83b8b3e3df88bb430411541d3399295f49291fd52b50e3487b0fce33181cb4d175685fd25aac72adfaee26a612d4",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/protobuf3/protobuf-3.19.6-all.tar.gz/sha512/8f92242f2be8e1bbfba41341c87709ad91ad83b8b3e3df88bb430411541d3399295f49291fd52b50e3487b0fce33181cb4d175685fd25aac72adfaee26a612d4/protobuf-3.19.6-all.tar.gz"
+      ]
     },
     {
       "name": "ptouch-driver",
       "version": "1.7.1",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/ptouch-driver/printer-driver-ptouch-1.7.1.tar.gz/sha512/ec6ffd0028ea8a7cd5503cb39fbcff39ef1d4661ba206437d6f6aa5e728655e212980b4b82352b9ed5f74a0066f0ef1659794b2c39a3e2f8ac5b0f0d530fc94d/printer-driver-ptouch-1.7.1.tar.gz",
+      "url": "https://github.com/philpem/printer-driver-ptouch/archive/v1.7.1/printer-driver-ptouch-1.7.1.tar.gz",
       "filename": "printer-driver-ptouch-1.7.1.tar.gz",
-      "sha512": "ec6ffd0028ea8a7cd5503cb39fbcff39ef1d4661ba206437d6f6aa5e728655e212980b4b82352b9ed5f74a0066f0ef1659794b2c39a3e2f8ac5b0f0d530fc94d"
+      "sha512": "ec6ffd0028ea8a7cd5503cb39fbcff39ef1d4661ba206437d6f6aa5e728655e212980b4b82352b9ed5f74a0066f0ef1659794b2c39a3e2f8ac5b0f0d530fc94d",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/ptouch-driver/printer-driver-ptouch-1.7.1.tar.gz/sha512/ec6ffd0028ea8a7cd5503cb39fbcff39ef1d4661ba206437d6f6aa5e728655e212980b4b82352b9ed5f74a0066f0ef1659794b2c39a3e2f8ac5b0f0d530fc94d/printer-driver-ptouch-1.7.1.tar.gz"
+      ]
     },
     {
       "name": "ptyxis",
