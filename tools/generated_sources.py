@@ -36,6 +36,9 @@ that no upstream publishes verbatim:
   set only as an OCI image, so package-gnome-wallpapers.sh and exactly the
   files it reads are fetched at the commit, SHA-512-checked, and packed at
   their repository paths
+- brew-tarball: Universal Blue's prebuilt Homebrew prefix, copied unchanged
+  out of the digest-pinned ghcr.io/ublue-os/brew image Dakota stages it from;
+  it is published nowhere else (#1039)
 - libslirp, rtmpdump: `git archive` of an upstream tag at a pinned commit.
   Neither project publishes a release file; Fedora's tarballs are a GitLab
   tag archive and a hand-run `git archive`, whose tar streams this
@@ -44,9 +47,16 @@ that no upstream publishes verbatim:
   `vendor/` tree of every crates.io crate its Cargo.lock pins, laid out as
   `cargo vendor --versioned-dirs` does. Upstream publishes no release asset,
   and the recipe builds offline from vendored crates
+- kanata: the upstream GitHub tag archive (SHA-512-pinned) with the same
+  `vendor/` tree added, for Dakota's keyboard remapper (projectbluefin/utah#1222)
 - gst-thumbnailers: the upstream GNOME release (SHA-512-pinned) with the same
   `vendor/` tree added. Hummingbird ships no Rust crate RPMs, so the recipe
   bundles its gtk-rs, clap and libglycin-rebind dependencies (#527)
+- tealdeer: the upstream GitHub tag archive (SHA-512-pinned) with the same
+  `vendor/` tree added, for Dakota's tldr client (#1034)
+- oo7: the upstream GitHub commit archive (SHA-512-pinned, keyed by the
+  spec's commit) with the same `vendor/` tree added. Fedora 44 lacks crate
+  RPMs the commit needs, and Hummingbird ships none (#1192)
 
 For these, the source lock names this script and records the SHA-512 of the
 bytes the transformation produces. Verification re-runs the transformation
@@ -1331,6 +1341,102 @@ def _bluefin_wallpapers_generate(package_dir: Path, out_dir: Path) -> Path:
     return target
 
 
+# --- brew-tarball ----------------------------------------------------------------
+
+# Project Bluefin Dakota's bluefin/brew-tarball.bst stages the prebuilt Homebrew
+# prefix Universal Blue publishes only inside its ghcr.io/ublue-os/brew image, as
+# /system_files/usr/share/homebrew.tar.zst. The image's builder runs Homebrew's
+# install.sh (a git clone plus portable Ruby), which is not reproducible, so the
+# factory takes the file from the image Dakota pins: the per-architecture
+# manifest digest, keyed here by the Homebrew version the archive carries. The
+# manifest and every blob are checked against their digests and the member is
+# copied out unchanged.
+BREW_TARBALL_REGISTRY = "https://ghcr.io"
+BREW_TARBALL_REPOSITORY = "ublue-os/brew"
+BREW_TARBALL_MEMBER = "system_files/usr/share/homebrew.tar.zst"
+BREW_TARBALL_MANIFESTS = {
+    "7.0.11": "sha256:130848582eed433e85af6fa8c829ddec12ddaa6b18bc037a610b4b8da3c97458",
+}
+_OCI_MANIFEST_TYPES = (
+    "application/vnd.oci.image.manifest.v1+json,"
+    "application/vnd.docker.distribution.manifest.v2+json"
+)
+
+
+def _registry_fetch(path: str, token: str, accept: str | None = None) -> bytes:
+    headers = {"User-Agent": "utah-packages-generated-source/1", "Authorization": f"Bearer {token}"}
+    if accept:
+        headers["Accept"] = accept
+    url = f"{BREW_TARBALL_REGISTRY}{path}"
+    request = urllib.request.Request(url, headers=headers)
+    try:
+        with urllib.request.urlopen(request, timeout=300) as response:
+            return response.read()
+    except (urllib.error.URLError, TimeoutError, ConnectionError) as error:
+        if is_transport_failure(error):
+            raise UpstreamUnreachable(f"could not reach {url}: {error}") from error
+        raise
+
+
+def _verified_digest(payload: bytes, digest: str, what: str) -> bytes:
+    algorithm, _, expected = digest.partition(":")
+    if algorithm != "sha256":
+        raise RuntimeError(f"{what}: unsupported digest {digest}")
+    actual = hashlib.sha256(payload).hexdigest()
+    if actual != expected:
+        raise RuntimeError(f"{what}: expected {digest}, got sha256:{actual}")
+    return payload
+
+
+def _brew_tarball_extract(manifest: bytes, blob) -> bytes:
+    """Return BREW_TARBALL_MEMBER from the topmost layer of ``manifest`` that has it.
+
+    ``blob(digest)`` returns a layer's bytes already checked against its digest.
+    """
+    layers = json.loads(manifest).get("layers") or []
+    for layer in reversed(layers):
+        with tarfile.open(fileobj=io.BytesIO(blob(layer["digest"])), mode="r:*") as archive:
+            for member in archive.getmembers():
+                if member.name.removeprefix("./").lstrip("/") == BREW_TARBALL_MEMBER and member.isreg():
+                    return archive.extractfile(member).read()
+    raise RuntimeError(f"no layer carries {BREW_TARBALL_MEMBER}")
+
+
+def _brew_tarball_metadata(package_dir: Path) -> dict:
+    version = spec_version(package_dir, "brew-tarball.spec")
+    digest = BREW_TARBALL_MANIFESTS.get(version, "<unpinned>")
+    return {
+        "name": "brew-tarball",
+        "version": version,
+        "filename": f"homebrew-{version}.tar.zst",
+        "generate": {
+            "script": SCRIPT_PATH,
+            "input": f"ghcr.io/{BREW_TARBALL_REPOSITORY}@{digest} (linux/amd64 image manifest; manifest and layers digest-pinned)",
+            "method": f"copy /{BREW_TARBALL_MEMBER} unchanged out of the topmost image layer that carries it, as homebrew-{version}.tar.zst",
+        },
+    }
+
+
+def _brew_tarball_generate(package_dir: Path, out_dir: Path) -> Path:
+    version = spec_version(package_dir, "brew-tarball.spec")
+    digest = BREW_TARBALL_MANIFESTS.get(version)
+    if digest is None:
+        raise RuntimeError(f"no pinned image manifest for brew-tarball {version}")
+    token_url = f"{BREW_TARBALL_REGISTRY}/token?scope=repository:{BREW_TARBALL_REPOSITORY}:pull"
+    token = json.loads(_fetch(token_url))["token"]
+    base = f"/v2/{BREW_TARBALL_REPOSITORY}"
+    manifest = _verified_digest(
+        _registry_fetch(f"{base}/manifests/{digest}", token, _OCI_MANIFEST_TYPES), digest, "image manifest"
+    )
+    payload = _brew_tarball_extract(
+        manifest,
+        lambda layer: _verified_digest(_registry_fetch(f"{base}/blobs/{layer}", token), layer, f"layer {layer}"),
+    )
+    target = out_dir / f"homebrew-{version}.tar.zst"
+    target.write_bytes(payload)
+    return target
+
+
 # --- prefixdevname -----------------------------------------------------------
 
 # Upstream publishes no release asset (the maintainer's spec still points at a
@@ -1388,12 +1494,16 @@ def _cargo_vendored_transform(source: bytes, top: str, crates: dict, mtime: int)
     return out.getvalue()
 
 
-def _cargo_vendored_generate(name: str, version: str, url: str, pin: str | None, out_dir: Path) -> Path:
+def _cargo_vendored_generate(
+    name: str, version: str, url: str, pin: str | None, out_dir: Path, top: str | None = None
+) -> Path:
     """Fetch a pinned release, then every crate its root Cargo.lock pins, and vendor them.
 
     The release is checked against its SHA-512 pin before any crate is
     downloaded, and each crate against its Cargo.lock SHA-256, so nothing
     reaches the output that was not pinned. Nothing is written on a mismatch.
+    `top` is the archive's top directory, and names the output; it defaults
+    to <name>-<version>, and a commit archive passes <name>-<commit>.
     """
     if pin is None:
         raise RuntimeError(f"no pinned input SHA-512 for {name} {version}")
@@ -1401,7 +1511,7 @@ def _cargo_vendored_generate(name: str, version: str, url: str, pin: str | None,
     actual = hashlib.sha512(archive).hexdigest()
     if actual != pin:
         raise RuntimeError(f"input archive mismatch for {url}: expected {pin}, got {actual}")
-    top = f"{name}-{version}"
+    top = top or f"{name}-{version}"
     with tarfile.open(fileobj=io.BytesIO(archive), mode="r:*") as source:
         lock_member = source.getmember(f"{top}/Cargo.lock")
         lock_text = source.extractfile(lock_member).read().decode()
@@ -1439,6 +1549,44 @@ def _prefixdevname_generate(package_dir: Path, out_dir: Path) -> Path:
         version,
         PREFIXDEVNAME_UPSTREAM_URL.format(version=version),
         PREFIXDEVNAME_INPUT_SHA512.get(version),
+        out_dir,
+    )
+
+
+# --- kanata --------------------------------------------------------------------
+
+# Project Bluefin Dakota builds kanata from its tag with cargo (bluefin/kanata.bst).
+# Fedora has no recipe and Hummingbird ships no Rust crate RPMs, so the tag
+# archive's Cargo.lock is vendored beside it, as prefixdevname does. The
+# workspace's own members (parser, keyberon, tcp_protocol) are path sources
+# inside the archive and need no download.
+KANATA_UPSTREAM_URL = "https://github.com/jtroo/kanata/archive/refs/tags/v{version}.tar.gz"
+KANATA_INPUT_SHA512 = {
+    "1.12.0": "c7473224d0077d1558da062b8787db650937f4125e19b4e4bd66e75a80db5f38ab8ccf0fcd93c20625035b93f309d92b7a182d214478c37e615805baaec6396d",
+}
+
+
+def _kanata_metadata(package_dir: Path) -> dict:
+    version = spec_version(package_dir, "kanata.spec")
+    return {
+        "name": "kanata",
+        "version": version,
+        "filename": f"kanata-{version}-vendored.tar.xz",
+        "generate": {
+            "script": SCRIPT_PATH,
+            "input": f"{KANATA_UPSTREAM_URL.format(version=version)} (sha512-pinned) and every crates.io crate its Cargo.lock pins (sha256-pinned by Cargo.lock)",
+            "method": f"add vendor/<crate>-<version> for each Cargo.lock crate with .cargo-checksum.json, as cargo vendor --versioned-dirs lays it out, and repack deterministically as kanata-{version}-vendored.tar.xz",
+        },
+    }
+
+
+def _kanata_generate(package_dir: Path, out_dir: Path) -> Path:
+    version = spec_version(package_dir, "kanata.spec")
+    return _cargo_vendored_generate(
+        "kanata",
+        version,
+        KANATA_UPSTREAM_URL.format(version=version),
+        KANATA_INPUT_SHA512.get(version),
         out_dir,
     )
 
@@ -1484,6 +1632,89 @@ def _gst_thumbnailers_generate(package_dir: Path, out_dir: Path) -> Path:
         version,
         _gst_thumbnailers_url(version),
         GST_THUMBNAILERS_INPUT_SHA512.get(version),
+        out_dir,
+    )
+
+
+# --- oo7 -----------------------------------------------------------------------
+
+# Fedora builds oo7 against its crate RPMs. Fedora 44 lacks three that the
+# pinned commit needs (formatx 0.4, gettext-rs 0.8, zgvariant 1), and
+# Hummingbird ships no crate RPMs, so the lock step cannot resolve them (run
+# 44224171778). The commit archive carries a Cargo.lock, so the factory
+# vendors exactly that set beside it, as gst-thumbnailers does. The archive
+# is keyed by the spec's %global commit and pinned here.
+OO7_UPSTREAM_URL = "https://github.com/linux-credentials/oo7/archive/{commit}/oo7-{shortcommit}.tar.gz"
+OO7_INPUT_SHA512 = {
+    "e91b98a7235a4971c6cbb7f0533034afc8a8f618": "4ebce6b36406ad1d53421269a8788226a047a4475b2e69a6d84388c6d0569fddd91357c5c38d1b1a906dc3fb51d50068930ed6ce1ad9ace51025350b6c9dbc79",
+}
+
+
+def _oo7_commit_version(package_dir: Path) -> tuple[str, str]:
+    macros = recipe_macros((package_dir / "oo7.spec").read_text())
+    commit = macros.get("commit", "")
+    if not re.fullmatch(r"[0-9a-f]{40}", commit):
+        raise ValueError("oo7.spec must pin %global commit to a full SHA-1")
+    return commit, macros["version"].replace("%{shortcommit}", commit[:7])
+
+
+def _oo7_url(commit: str) -> str:
+    return OO7_UPSTREAM_URL.format(commit=commit, shortcommit=commit[:7])
+
+
+def _oo7_metadata(package_dir: Path) -> dict:
+    commit, version = _oo7_commit_version(package_dir)
+    return {
+        "name": "oo7",
+        "version": version,
+        "filename": f"oo7-{commit}-vendored.tar.xz",
+        "generate": {
+            "script": SCRIPT_PATH,
+            "input": f"{_oo7_url(commit)} (sha512-pinned) and every crates.io crate its Cargo.lock pins (sha256-pinned by Cargo.lock)",
+            "method": f"add vendor/<crate>-<version> for each Cargo.lock crate with .cargo-checksum.json, as cargo vendor --versioned-dirs lays it out, and repack deterministically as oo7-{commit}-vendored.tar.xz",
+        },
+    }
+
+
+def _oo7_generate(package_dir: Path, out_dir: Path) -> Path:
+    commit, version = _oo7_commit_version(package_dir)
+    return _cargo_vendored_generate(
+        "oo7", commit, _oo7_url(commit), OO7_INPUT_SHA512.get(commit), out_dir, top=f"oo7-{commit}"
+    )
+
+
+# --- tealdeer ------------------------------------------------------------------
+
+# Project Bluefin Dakota ships tealdeer (bluefin/tealdeer.bst). Fedora has no
+# recipe and Hummingbird ships no Rust crate RPMs, so the tag archive's
+# Cargo.lock is vendored beside it, as gst-thumbnailers does.
+TEALDEER_UPSTREAM_URL = "https://github.com/tealdeer-rs/tealdeer/archive/refs/tags/v{version}.tar.gz"
+TEALDEER_INPUT_SHA512 = {
+    "1.8.1": "3601007703b5f95adcd7b8e7a3467100b15d66d4d8fb6f6e11544f0046b844e4c8eedbd92522f49dbee36be92cccc6534687b51bd9e065dc9e0d731c0db593ec",
+}
+
+
+def _tealdeer_metadata(package_dir: Path) -> dict:
+    version = spec_version(package_dir, "tealdeer.spec")
+    return {
+        "name": "tealdeer",
+        "version": version,
+        "filename": f"tealdeer-{version}-vendored.tar.xz",
+        "generate": {
+            "script": SCRIPT_PATH,
+            "input": f"{TEALDEER_UPSTREAM_URL.format(version=version)} (sha512-pinned) and every crates.io crate its Cargo.lock pins (sha256-pinned by Cargo.lock)",
+            "method": f"add vendor/<crate>-<version> for each Cargo.lock crate with .cargo-checksum.json, as cargo vendor --versioned-dirs lays it out, and repack deterministically as tealdeer-{version}-vendored.tar.xz",
+        },
+    }
+
+
+def _tealdeer_generate(package_dir: Path, out_dir: Path) -> Path:
+    version = spec_version(package_dir, "tealdeer.spec")
+    return _cargo_vendored_generate(
+        "tealdeer",
+        version,
+        TEALDEER_UPSTREAM_URL.format(version=version),
+        TEALDEER_INPUT_SHA512.get(version),
         out_dir,
     )
 
@@ -1589,34 +1820,42 @@ METADATA = {
     **{name: functools.partial(_git_archive_metadata, name) for name in GIT_ARCHIVE_SOURCES},
     "intel-media-driver-free": _imd_metadata,
     "tailscale": _tailscale_metadata,
+    "brew-tarball": _brew_tarball_metadata,
     "python-pydantic-core": _pydantic_core_metadata,
     "gpm": _gpm_metadata,
     "hplip": _hplip_metadata,
     "openal-soft": _openal_soft_metadata,
     "prefixdevname": _prefixdevname_metadata,
+    "kanata": _kanata_metadata,
     "gst-thumbnailers": _gst_thumbnailers_metadata,
     "freerdp": _freerdp_metadata,
     "fpaste": _fpaste_metadata,
     "7zip": _sevenzip_metadata,
     "bluefin-artwork-logos": _bluefin_artwork_metadata,
     "bluefin-wallpapers": _bluefin_wallpapers_metadata,
+    "tealdeer": _tealdeer_metadata,
+    "oo7": _oo7_metadata,
 }
 
 GENERATORS = {
     **{name: functools.partial(_git_archive_generate, name) for name in GIT_ARCHIVE_SOURCES},
     "intel-media-driver-free": _imd_generate,
     "tailscale": _tailscale_generate,
+    "brew-tarball": _brew_tarball_generate,
     "python-pydantic-core": _pydantic_core_generate,
     "hplip": _hplip_generate,
     "gpm": _gpm_generate,
     "openal-soft": _openal_soft_generate,
     "prefixdevname": _prefixdevname_generate,
+    "kanata": _kanata_generate,
     "gst-thumbnailers": _gst_thumbnailers_generate,
     "freerdp": _freerdp_generate,
     "fpaste": _fpaste_generate,
     "7zip": _sevenzip_generate,
     "bluefin-artwork-logos": _bluefin_artwork_generate,
     "bluefin-wallpapers": _bluefin_wallpapers_generate,
+    "tealdeer": _tealdeer_generate,
+    "oo7": _oo7_generate,
 }
 
 

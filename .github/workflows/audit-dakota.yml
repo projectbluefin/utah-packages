@@ -1,0 +1,47 @@
+name: Dakota element audit report
+
+# Non-gating. Maps every element of Dakota's BuildStream graph (the SBOM
+# snapshot in config/dakota-elements.tsv) to the RPM that provides it, against
+# the recipes currently in packages/, and uploads the report as an artifact.
+# The default run is offline. A dispatch with `refresh` re-resolves Fedora
+# Rawhide, Fedora dist-git and Hummingbird availability online and uploads the
+# rewritten config/dakota.json for review; it never commits it. A newer Dakota
+# is audited by re-importing the SBOM (docs/skills/dakota-parity.md).
+
+on:
+  workflow_dispatch:
+    inputs:
+      refresh:
+        description: Re-resolve Fedora and Hummingbird availability online
+        type: boolean
+        default: false
+  schedule:
+    - cron: '17 4 * * 1'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dakota-audit
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Install PyYAML
+        run: pip install --disable-pip-version-check pyyaml==6.0.3
+      - name: Run the audit
+        if: ${{ !inputs.refresh }}
+        run: python3 tools/audit_dakota.py
+      - name: Refresh the mapping and run the audit
+        if: ${{ inputs.refresh }}
+        run: python3 tools/audit_dakota.py --refresh
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: dakota-audit
+          path: |
+            config/dakota.json
+            reports/audit-dakota.json
+            reports/audit-dakota.md

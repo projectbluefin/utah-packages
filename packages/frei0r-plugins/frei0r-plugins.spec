@@ -1,3 +1,10 @@
+# Utah: no OpenCV plugins. OpenCV comes only from Fedora, so the -opencv
+# subpackage could never install on Utah: neither Hummingbird nor the factory
+# ships libopencv. Its BuildRequires also stops resolving whenever the factory
+# rebuilds a library under it -- openapv in run 44224171778, VTK in run
+# 43823428407.
+%bcond opencv 0
+
 Name:           frei0r-plugins
 Version:        3.7.1
 Release:        %autorelease
@@ -13,7 +20,9 @@ Buildrequires:  cmake
 BuildRequires:  gcc-c++
 BuildRequires:  gavl-devel >= 0.2.3
 BuildRequires:  libglvnd-devel
+%if %{with opencv}
 BuildRequires:  opencv-devel >= 1.0.0
+%endif
 BuildRequires:  cairo-devel >= 1.0.0
 
 
@@ -22,12 +31,14 @@ It is a minimalist plugin API for video sources and filters. The behavior of
 the effects can be controlled from the host by simple parameters. The intent is
 to solve the recurring re-implementation or adaptation issue of standard effect
 
+%if %{with opencv}
 %package	opencv
 Summary:  Frei0r plugins using OpenCV
 Requires:    %{name}%{?_isa} = %{version}-%{release}
 
 %description opencv
 Frei0r plugins that use the OpenCV computer vision framework.
+%endif
 
 %package -n     frei0r-devel
 Summary:        Development files for %{name}
@@ -43,6 +54,9 @@ developing applications that use %{name}.
 
 %build
 %cmake -DCMAKE_INSTALL_LIBDIR=%{_lib} \
+%if %{without opencv}
+    -DWITHOUT_OPENCV=ON \
+%endif
 
 %cmake_build
 
@@ -58,13 +72,17 @@ rm -rf %{buildroot}%{_docdir}/%{name}
 %doc ChangeLog README.md
 %license COPYING
 %dir %{_libdir}/frei0r-1
+%if %{with opencv}
 %exclude %{_libdir}/frei0r-1/facebl0r.so
 %exclude %{_libdir}/frei0r-1/facedetect.so
+%endif
 %{_libdir}/frei0r-1/*.so
 
+%if %{with opencv}
 %files opencv
 %{_libdir}/frei0r-1/facebl0r.so
 %{_libdir}/frei0r-1/facedetect.so
+%endif
 
 %files -n frei0r-devel
 %{_includedir}/frei0r.h
