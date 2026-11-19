@@ -7,7 +7,10 @@ workflow is plumbing; what it concludes lives here, where it is under test:
     canary.py touches-pipeline < changed-paths   exit 0 when the canary must run
     canary.py pr-relevant --repository R --pr N --set JSON
                                                  the same, judged on a pull request's
-                                                 files and the lock entries they change
+                                                 files and the lock entries they change;
+                                                 exit 10 when it need not run, and any
+                                                 other failure (a GitHub API error) is
+                                                 not a skip
     canary.py merge-group --repository R --head-ref REF --head-sha SHA --set JSON
                                                  exit 0 when a merge queue group is proven
                                                  without building (see merge_group_proof)
@@ -26,6 +29,7 @@ import json
 import os
 import re
 import subprocess
+import time
 import sys
 import tempfile
 import urllib.parse
@@ -65,6 +69,10 @@ BUILD_STEP = "Build the verified source with its RPM recipe"
 HERMETIC_BUILD_STEP = "Build offline from the lock (hermetic)"
 RESTORE_STEP = "Restore package RPM cache"
 BUILD_JOB = re.compile(r"^(?P<pass>pass\d+) / rebuild\d+ .*/ build \((?P<package>[^)]+)\)$")
+
+
+# pr-relevant's exit status when the canary need not run (see main).
+NOT_RELEVANT = 10
 
 
 def touches_pipeline(paths: list[str]) -> bool:
@@ -149,8 +157,18 @@ def pipeline_relevant(
     return False
 
 
-def _gh(args: Sequence[str]) -> str:
-    return subprocess.run(["gh", *args], capture_output=True, text=True, check=True).stdout
+def _gh(args: Sequence[str], tries: int = 3, delay: float = 10.0) -> str:
+    """`gh` with a short retry; the last failure propagates, never a default."""
+    for attempt in range(1, tries + 1):
+        try:
+            return subprocess.run(["gh", *args], capture_output=True, text=True,
+                                  check=True).stdout
+        except subprocess.CalledProcessError as error:
+            if attempt == tries:
+                print(error.stderr, file=sys.stderr, end="")
+                raise
+            time.sleep(delay * attempt)
+    raise AssertionError("unreachable")
 
 
 def _json_stream(text: str) -> list[dict]:
@@ -652,7 +670,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "touches-pipeline":
         return 0 if touches_pipeline(sys.stdin.read().splitlines()) else 1
     if args.command == "pr-relevant":
-        return 0 if pr_relevant(args.repository, args.pr, json.loads(args.set)) else 1
+        # 10, not 1: an uncaught error also exits 1, and a rate-limited files
+        # API once made Canary skip every pass and report success (#1218).
+        return 0 if pr_relevant(args.repository, args.pr, json.loads(args.set)) else NOT_RELEVANT
     if args.command == "merge-group":
         proven, reason = merge_group_proof(args.repository, args.head_ref, args.head_sha,
                                            json.loads(args.set))
