@@ -56,3 +56,6 @@ site/packages.json
 # Leftovers from patch / git apply --reject; never a tracked input.
 *.orig
 *.rej
+
+# npm ci --prefix tools/fetch-artifacts
+tools/fetch-artifacts/node_modules/

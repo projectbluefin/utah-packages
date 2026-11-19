@@ -51,6 +51,11 @@ on:
         required: false
         default: ''
         type: string
+      stage_map:
+        # Required: an empty map would silently name no artifacts.
+        description: JSON package -> wave from prepare (tools/rebuild_plan.py stage_outputs)
+        required: true
+        type: string
       publish_tag:
         required: false
         default: ''
@@ -71,15 +76,13 @@ on:
       losers:
         value: ${{ jobs.precedence.outputs.losers }}
 
-# A full rebuild makes ~1,700 artifacts. download-artifact's default listing
-# for the current run returns at most 1000 of them (oldest first) before a
-# pattern is applied, so the newest stages' RPMs were never downloaded:
-# publish failed its closure check (#970) and later stages built against
-# stale prior-stage RPMs. The pattern downloads below pass github-token and
-# run-id, which switches to the paginated REST listing; that listing stops
-# at ACTIONS_ARTIFACT_MAX_ARTIFACT_COUNT (default 1000), raised here.
-env:
-  ACTIONS_ARTIFACT_MAX_ARTIFACT_COUNT: '20000'
+# A full rebuild makes ~1,700 artifacts. download-artifact without a token
+# lists the run's artifacts before applying `pattern`, and that listing stops
+# at 1000 (oldest first): the newest waves' RPMs were never downloaded (#970).
+# With a token it lists over REST but then starts every download at once over
+# REST, which ran into GitHub's rate limits (run 44386298520). The RPM
+# downloads here go by exact name through the artifact service instead
+# (tools/fetch-artifacts/fetch.mjs), named from prepare's stage map.
 
 permissions:
   contents: read
@@ -116,15 +119,26 @@ jobs:
         env:
           WAVE: ${{ inputs.wave }}
           PREFIX: ${{ inputs.artifact_prefix }}
-        run: python3 tools/publish_gate.py pattern --wave "$WAVE" --prefix "$PREFIX" >> "$GITHUB_OUTPUT"
-      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+          STAGE_MAP: ${{ inputs.stage_map }}
+        run: |
+          set -euo pipefail
+          mkdir -p work built
+          python3 tools/publish_gate.py names --stage-map "$STAGE_MAP" \
+            --prefix "$PREFIX" --through "$WAVE" > work/covered-names.json
+          echo "covered: $(jq length work/covered-names.json) artifact names"
+      - name: Install the artifact client
+        run: npm ci --prefix tools/fetch-artifacts --ignore-scripts --no-audit --no-fund
+      # By exact name through the artifact service (see the comment above
+      # `env`). A name with no artifact is a build that failed; any other
+      # error fails the job.
+      - name: Download the RPMs this publication covers
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
-          pattern: ${{ steps.covered.outputs.pattern }}
-          # The run's REST listing, which pages past 1000 (see env above).
-          github-token: ${{ github.token }}
-          run-id: ${{ github.run_id }}
-          path: built
-          merge-multiple: true
+          script: |
+            const fs = require('fs')
+            const {fetchArtifacts} = await import(`${process.env.GITHUB_WORKSPACE}/tools/fetch-artifacts/fetch.mjs`)
+            const names = JSON.parse(fs.readFileSync('work/covered-names.json', 'utf8'))
+            await fetchArtifacts({names, path: `${process.env.GITHUB_WORKSPACE}/built`, core})
       - name: Assert our builds outrank Fedora and Hummingbird
         run: |
           mkdir -p work
@@ -416,19 +430,32 @@ jobs:
       # dropped one; replacement has to be by source package.
       - name: Name the artifacts this publication covers
         id: covered
+        if: inputs.build_list != '[]'
         env:
           WAVE: ${{ inputs.wave }}
           PREFIX: ${{ inputs.artifact_prefix }}
-        run: python3 tools/publish_gate.py pattern --wave "$WAVE" --prefix "$PREFIX" >> "$GITHUB_OUTPUT"
-      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+          STAGE_MAP: ${{ inputs.stage_map }}
+        run: |
+          set -euo pipefail
+          mkdir -p work built
+          python3 tools/publish_gate.py names --stage-map "$STAGE_MAP" \
+            --prefix "$PREFIX" --through "$WAVE" > work/covered-names.json
+          echo "covered: $(jq length work/covered-names.json) artifact names"
+      - name: Install the artifact client
         if: inputs.build_list != '[]'
+        run: npm ci --prefix tools/fetch-artifacts --ignore-scripts --no-audit --no-fund
+      # By exact name through the artifact service (see the comment above
+      # `env`). A name with no artifact is a build that failed; any other
+      # error fails the job.
+      - name: Download the RPMs this publication covers
+        if: inputs.build_list != '[]'
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
-          pattern: ${{ steps.covered.outputs.pattern }}
-          # The run's REST listing, which pages past 1000 (see env above).
-          github-token: ${{ github.token }}
-          run-id: ${{ github.run_id }}
-          path: built
-          merge-multiple: true
+          script: |
+            const fs = require('fs')
+            const {fetchArtifacts} = await import(`${process.env.GITHUB_WORKSPACE}/tools/fetch-artifacts/fetch.mjs`)
+            const names = JSON.parse(fs.readFileSync('work/covered-names.json', 'utf8'))
+            await fetchArtifacts({names, path: `${process.env.GITHUB_WORKSPACE}/built`, core})
       - name: Replace the packages this run built
         id: assemble
         env:
