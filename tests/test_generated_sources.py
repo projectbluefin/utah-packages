@@ -227,9 +227,9 @@ class OpenALSoftTransformTests(unittest.TestCase):
 
     def test_metadata_names_the_recipe_source_and_pinned_input(self):
         metadata = generated_sources.metadata_for("openal-soft", ROOT / "packages" / "openal-soft")
-        self.assertEqual(metadata["filename"], "openal-soft-1.24.2-clean.tar.xz")
-        self.assertIn("openal-soft-1.24.2.tar.bz2", metadata["generate"]["input"])
-        self.assertIn("1.24.2", generated_sources.OPENAL_SOFT_INPUT_SHA512)
+        self.assertEqual(metadata["filename"], "openal-soft-1.25.2-clean.tar.xz")
+        self.assertIn("openal-soft-1.25.2.tar.bz2", metadata["generate"]["input"])
+        self.assertIn("1.25.2", generated_sources.OPENAL_SOFT_INPUT_SHA512)
 
 
 def build_sevenzip_archive(version: str) -> bytes:
@@ -310,6 +310,84 @@ class SevenZipTransformTests(unittest.TestCase):
         self.assertIn("26.05", generated_sources.SEVENZIP_INPUT_SHA512)
         spec = (ROOT / "packages" / "7zip" / "7zip.spec").read_text()
         self.assertIn("Source:         %{name}-%{version}.tar.xz", spec)
+
+
+def build_kernel_archive(version: str) -> bytes:
+    """A synthetic kernel .tar.xz with tools/hv, its build files and neighbours."""
+    top = f"linux-{version}"
+    members = {
+        f"{top}/Makefile": b"dropped: the kernel's own Makefile",
+        f"{top}/drivers/hv/vmbus_drv.c": b"dropped",
+        f"{top}/tools/hv/Makefile": b"kept",
+        f"{top}/tools/hv/hv_kvp_daemon.c": b"kept",
+        f"{top}/tools/hv/hv_set_ifconfig.sh": b"kept",
+        f"{top}/tools/perf/Makefile": b"dropped: another tool",
+        f"{top}/tools/scripts/Makefile.unrelated": b"dropped: not included by tools/hv",
+        **{f"{top}/{rel}": b"kept" for rel in generated_sources.HYPERV_TOOLS_FILES},
+    }
+    directories = {top, f"{top}/drivers", f"{top}/drivers/hv", f"{top}/tools", f"{top}/tools/hv",
+                   f"{top}/tools/perf", f"{top}/tools/build", f"{top}/tools/scripts"}
+    raw = io.BytesIO()
+    with tarfile.open(fileobj=raw, mode="w", format=tarfile.PAX_FORMAT,
+                      pax_headers={"comment": "0123456789abcdef"}) as tar:
+        for name in sorted(directories | set(members)):
+            info = tarfile.TarInfo(name)
+            info.mtime, info.uid, info.gid, info.uname, info.gname = 1777000000, 1000, 1000, "linus", "linus"
+            if name in members:
+                info.size = len(members[name])
+                info.mode = 0o755 if name.endswith(".sh") else 0o644
+                tar.addfile(info, io.BytesIO(members[name]))
+            else:
+                info.type = tarfile.DIRTYPE
+                info.mode = 0o755
+                tar.addfile(info)
+    return lzma.compress(raw.getvalue(), format=lzma.FORMAT_XZ)
+
+
+class HypervToolsTransformTests(unittest.TestCase):
+    VERSION = "7.3.1"
+
+    def members(self, payload: bytes) -> list[tarfile.TarInfo]:
+        with tarfile.open(fileobj=io.BytesIO(payload), mode="r:xz") as tar:
+            return tar.getmembers()
+
+    def test_keeps_tools_hv_and_its_build_files_under_tools(self):
+        result = generated_sources._hyperv_transform(build_kernel_archive(self.VERSION), self.VERSION)
+        names = {member.name for member in self.members(result)}
+        expected = {"tools", "tools/hv", "tools/build", "tools/scripts", "tools/hv/Makefile",
+                    "tools/hv/hv_kvp_daemon.c", "tools/hv/hv_set_ifconfig.sh",
+                    *generated_sources.HYPERV_TOOLS_FILES}
+        self.assertEqual(names, expected)
+
+    def test_transform_is_byte_reproducible_sorted_and_ownerless(self):
+        archive = build_kernel_archive(self.VERSION)
+        first = generated_sources._hyperv_transform(archive, self.VERSION)
+        self.assertEqual(first, generated_sources._hyperv_transform(archive, self.VERSION))
+        members = self.members(first)
+        self.assertEqual([m.name for m in members], sorted(m.name for m in members))
+        for member in members:
+            self.assertEqual((member.uid, member.gid, member.uname, member.gname), (0, 0, "", ""))
+            self.assertEqual(member.mtime, 1777000000)
+            self.assertNotIn("comment", member.pax_headers)
+        modes = {m.name: m.mode for m in members}
+        self.assertEqual(modes["tools/hv/hv_set_ifconfig.sh"], 0o755)
+
+    def test_a_kernel_without_the_build_files_fails(self):
+        top = f"linux-{self.VERSION}"
+        raw = io.BytesIO()
+        with tarfile.open(fileobj=raw, mode="w", format=tarfile.PAX_FORMAT) as tar:
+            info = tarfile.TarInfo(f"{top}/tools/hv/Makefile")
+            tar.addfile(info, io.BytesIO(b""))
+        with self.assertRaisesRegex(RuntimeError, "tools/build/Build"):
+            generated_sources._hyperv_transform(lzma.compress(raw.getvalue(), format=lzma.FORMAT_XZ), self.VERSION)
+
+    def test_metadata_names_the_recipe_source_and_pinned_input(self):
+        metadata = generated_sources.metadata_for("hyperv-daemons", ROOT / "packages" / "hyperv-daemons")
+        self.assertEqual(metadata["filename"], "tools-hv-7.3.1.tar.xz")
+        self.assertIn("cdn.kernel.org/pub/linux/kernel/v7.x/linux-7.3.1.tar.xz", metadata["generate"]["input"])
+        self.assertIn("7.3.1", generated_sources.HYPERV_KERNEL_INPUT_SHA512)
+        spec = (ROOT / "packages" / "hyperv-daemons" / "hyperv-daemons.spec").read_text()
+        self.assertIn("Source0:  tools-hv-%{version}.tar.xz", spec)
 
 
 def build_hplip_archive(version: str) -> bytes:

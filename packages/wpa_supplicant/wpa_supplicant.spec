@@ -7,8 +7,8 @@
 Summary: WPA/WPA2/IEEE 802.1X Supplicant
 Name: wpa_supplicant
 Epoch: 1
-Version: 2.11
-Release: 13%{?dist}
+Version: 2.12
+Release: 1%{?dist}
 License: BSD-3-Clause
 Source0: http://w1.fi/releases/%{name}-%{version}.tar.gz
 Source1: wpa_supplicant.conf
@@ -33,30 +33,12 @@ Patch6: wpa_supplicant-defconfig-keep-CONFIG_WEP-enabled.patch
 # FIXME: Explain why are these two here
 Patch7: wpa_supplicant-defconfig-enable-WPA-EAP-SUITE-B-192-ciphers.patch
 Patch8: wpa_supplicant-defconfig-enable-OCV-support.patch
-# Allow legacy renegotiation with openssl 3.0 to fix connection to
-# PEAP/Radius servers that don't support secure renegotiation:
-# https://bugzilla.redhat.com/show_bug.cgi?id=2072070
-# From James Ralston in comment #24, thanks to James
-Patch9: wpa_supplicant-allow-legacy-renegotiation.patch
-# Revert 41638606054 ("Mark authorization completed on driver indication during
-# 4-way HS offload") as it break authentication on at least brcmfmac.
-# see https://bugzilla.redhat.com/show_bug.cgi?id=2302577
-Patch10: wpa_supplicant-Revert-Mark-authorization-completed-on-driver-indica.patch
-# Move signal strength change messages to debug to drastically reduce logging spew
-# see https://bugzilla.redhat.com/2309148
-# From: https://w1.fi/cgit/hostap/commit/?id=c330b5820eefa8e703dbce7278c2a62d9c69166a
-Patch11: wpa_supplicant-Send-signal-change-as-debug-msg.patch
-# use pkcs11-provider instead of OpenSSL engine
-Patch12: wpa_supplicant-OpenSSL-Use-pkcs11-provider-when-OPENSSL_NO_ENGINE-i.patch
-# https://bugzilla.redhat.com/show_bug.cgi?id=2439303
-Patch13: wpa_supplicant-OpenSSL-Support-PEM-encoded-chain-from-ca_cert-blob.patch
-# OpenSSL 4.0 build fixes
-Patch14: 0001-Use-OpenSSL-ASN1_STRING-accessors.patch
 
 URL: http://w1.fi/wpa_supplicant/
 
 %if %with gui
-BuildRequires: qt-devel >= 4.0
+BuildRequires: qt6-qtbase-devel
+BuildRequires: qt6-linguist
 %endif
 BuildRequires: openssl-devel
 BuildRequires: readline-devel
@@ -119,8 +101,8 @@ pushd wpa_supplicant
   export LIBDIR="%{_libdir}"
   make %{_smp_mflags} V=1
 %if %with gui
-  make wpa_gui-qt4 %{_smp_mflags} V=1 QTDIR=%{_libdir}/qt4 \
-    QMAKE='%{qmake_qt4}' LRELEASE='%{_qt4_bindir}/lrelease'
+  make %{_smp_mflags} V=1 wpa_gui-qt4 QTDIR=%{_libdir}/qt6 \
+     QMAKE='%{qmake_qt6}' LRELEASE='%{_qt6_bindir}/lrelease'
 %endif
   make eapol_test V=1
   make -C doc/docbook man V=1
@@ -222,6 +204,9 @@ chmod -R 0644 wpa_supplicant/examples/*.py
 
 
 %changelog
+* Thu Aug 13 2026 Davide Caratti <dcaratti@redhat.com> - 1:2.12-1
+- Update to version 2.12 (#2512500)
+
 * Fri Jul 17 2026 Fedora Release Engineering <releng@fedoraproject.org> - 1:2.11-13
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_45_Mass_Rebuild
 

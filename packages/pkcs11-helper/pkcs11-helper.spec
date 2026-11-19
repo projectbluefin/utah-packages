@@ -1,12 +1,14 @@
 Name:           pkcs11-helper
-Version:        1.30.0
-Release:        8%{?dist}
+Version:        1.31.0
+Release:        1%{?dist}
 Summary:        A library for using PKCS#11 providers
 
 License:        GPL-2.0-only OR BSD-3-Clause
 URL:            http://www.opensc-project.org/opensc/wiki/pkcs11-helper
 Source0:        https://github.com/OpenSC/pkcs11-helper/releases/download/pkcs11-helper-%{version}/pkcs11-helper-%{version}.tar.bz2
 # https://github.com/OpenSC/pkcs11-helper/pull/4
+# Utah: rebased onto 1.31.0, whose stricter _pkcs11h_util_hexToBinary() made
+# the first commit's hunk conflict; the trailing-NUL check is still dropped.
 Patch2:         pkcs11-helper-rfc7512.patch
 Patch3:         0001-Use-ASN1_TIME_to_tm-for-certificate-expiration.patch
 
@@ -72,6 +74,10 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 
 
 %changelog
+* Mon Nov 16 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 1.31.0-1
+- Update to 1.31.0
+- Rebase the RFC 7512 URI patch onto 1.31.0
+
 * Thu Jul 16 2026 Fedora Release Engineering <releng@fedoraproject.org> - 1.30.0-8
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_45_Mass_Rebuild
 

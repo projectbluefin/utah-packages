@@ -309,7 +309,7 @@ class SevenZipGenerateTests(PackageDirMixin, unittest.TestCase):
 
 
 class OpenALSoftGenerateTests(PackageDirMixin, unittest.TestCase):
-    VERSION = "1.24.2"
+    VERSION = "1.25.2"
     URL = f"https://openal-soft.org/openal-releases/openal-soft-{VERSION}.tar.bz2"
 
     def setUp(self):
