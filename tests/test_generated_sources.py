@@ -555,6 +555,48 @@ class BluefinArtworkTransformTests(unittest.TestCase):
             self.assertIn(f"bluefin-logo-{style}.png", recipe)
 
 
+class BluefinWallpapersTransformTests(unittest.TestCase):
+    COMMIT = "72c74badbdd7c60d006e89aca74e248316dddd54"
+    FILES = {
+        "LICENSE": b"Apache License",
+        "package-gnome-wallpapers.sh": b"#!/usr/bin/env bash\n",
+        "wallpapers/chicken/chicken.jxl": b"jxl",
+    }
+
+    def test_files_keep_their_repository_paths(self):
+        result = generated_sources._bluefin_wallpapers_transform(self.FILES, self.COMMIT)
+        with tarfile.open(fileobj=io.BytesIO(result), mode="r:xz") as tar:
+            self.assertEqual(tar.getnames(), [
+                "bluefin-wallpapers-72c74ba",
+                "bluefin-wallpapers-72c74ba/LICENSE",
+                "bluefin-wallpapers-72c74ba/package-gnome-wallpapers.sh",
+                "bluefin-wallpapers-72c74ba/wallpapers",
+                "bluefin-wallpapers-72c74ba/wallpapers/chicken",
+                "bluefin-wallpapers-72c74ba/wallpapers/chicken/chicken.jxl",
+            ])
+            self.assertEqual(tar.extractfile("bluefin-wallpapers-72c74ba/wallpapers/chicken/chicken.jxl").read(), b"jxl")
+
+    def test_transform_is_byte_reproducible_and_ownerless(self):
+        first = generated_sources._bluefin_wallpapers_transform(self.FILES, self.COMMIT)
+        reordered = dict(reversed(list(self.FILES.items())))
+        self.assertEqual(first, generated_sources._bluefin_wallpapers_transform(reordered, self.COMMIT))
+        with tarfile.open(fileobj=io.BytesIO(first), mode="r:xz") as tar:
+            for member in tar.getmembers():
+                self.assertEqual((member.uid, member.gid, member.uname, member.gname, member.mtime), (0, 0, "", "", 0))
+
+    def test_pins_cover_the_packaging_script_and_the_lock_matches(self):
+        pins = generated_sources.BLUEFIN_WALLPAPERS_FILES[self.COMMIT]
+        self.assertIn("package-gnome-wallpapers.sh", pins)
+        self.assertIn("LICENSE", pins)
+        lock = json.loads((ROOT / "config" / "upstream-sources.json").read_text())
+        entry = next(p for p in lock["packages"] if p["name"] == "bluefin-wallpapers")
+        metadata = generated_sources.metadata_for("bluefin-wallpapers", ROOT / "packages" / "bluefin-wallpapers")
+        self.assertEqual({key: entry[key] for key in metadata}, metadata)
+        self.assertIn(f"SHA512 ({entry['filename']}) = {entry['sha512']}",
+                      (ROOT / "packages" / "bluefin-wallpapers" / "sources").read_text())
+
+
+
 class GeneratedMetadataTests(unittest.TestCase):
     def test_intel_media_metadata_uses_spec_version(self):
         metadata = generated_sources.metadata_for(
