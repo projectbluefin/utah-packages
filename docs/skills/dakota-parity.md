@@ -88,16 +88,45 @@ python3 tools/audit_dakota.py --check
 # --hummingbird-primary take saved copies.
 python3 tools/audit_dakota.py --refresh
 
-# Re-pin Dakota: set source.revision, publish_run, sbom, image_digest in
-# config/dakota.json, then rebuild the snapshot from that run's SBOM and image.
+# Re-pin Dakota by hand (refresh-dakota.yml does this daily, below): find the
+# run and write the new source, then rebuild the snapshot from that run's SBOM
+# and image.
+python3 tools/dakota_repin.py resolve --out /tmp/repin.json
+python3 tools/dakota_repin.py apply /tmp/repin.json
 gh run download <run> -R projectbluefin/dakota -n sbom-dakota -D /tmp/sbom
-skopeo copy docker://ghcr.io/projectbluefin/dakota@<digest> oci:/tmp/dakota-oci:testing
+skopeo copy --preserve-digests docker://ghcr.io/projectbluefin/dakota@<digest> \
+    oci:/tmp/dakota-oci:testing
 python3 tools/audit_dakota.py --import-sbom /tmp/sbom/dakota.sbom.json \
     --image-layout /tmp/dakota-oci --refresh
 ```
 
 `--import-sbom` refuses an SBOM whose `documentNamespace` is not the pinned
 revision and an OCI layout that does not hold the pinned digest.
+
+### Automatic re-pin
+
+`.github/workflows/refresh-dakota.yml` runs daily (05:37 UTC) and on
+dispatch, from `main` only. `tools/dakota_repin.py resolve` takes the newest
+successful `publish.yml` run whose `head_branch` is `testing` (merge-queue
+publishes push only a `:SHA` tag and are skipped), that still has unexpired
+`sbom-dakota` and `digest-default` artifacts, and whose commit
+`compare/<sha>...testing` reports `identical` or `ahead`. The revision and
+digest come from `digest-default`'s `digest.json` (`variant: default`,
+`image: ghcr.io/projectbluefin/dakota`, `sha` equal to the run's), and the
+junction refs from `elements/{gnome-build-meta,freedesktop-sdk}.bst` at that
+commit, in the committed shape (`<track> <ref>`, or the ref alone when it
+already names the track). When revision and digest equal the pin, the job
+stops. Otherwise it writes the source, copies the image with
+`skopeo copy --preserve-digests` (about 3.6 GB), runs `--import-sbom ...
+--refresh`, and opens or force-updates one pull request on
+`chore/dakota-repin` with only `config/dakota.json` and
+`config/dakota-elements.tsv`. The body has the disposition counts before and
+after, the drift totals, the `needs_review` rows and any `contract_problems`
+(an override or alias naming an element the new snapshot dropped makes
+`just dakota-audit` fail until it is fixed on that branch). It never merges or
+arms auto-merge. The pull request is opened with the mergeraptor app token,
+like `refresh-buildroot.yml`, so its CI runs; Dakota's runs, artifacts and
+image are read with the workflow's own token, since Dakota is public.
 `.github/workflows/audit-dakota.yml` runs the offline audit weekly (non-gating)
 and uploads the report; dispatch it with `refresh` to get a re-resolved
 `config/dakota.json` as an artifact to review and commit.
