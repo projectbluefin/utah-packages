@@ -3310,7 +3310,7 @@
       "evidence": "rawhide source; dist-git rpms/setup exists"
     },
     "freedesktop-sdk.bst:components/icu.bst": {
-      "disposition": "factory",
+      "disposition": "hummingbird",
       "rpm": "icu",
       "fedora": "icu",
       "hummingbird": true,
