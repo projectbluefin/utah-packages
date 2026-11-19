@@ -280,6 +280,12 @@ packages:
     downstream_package_name: bluefin-docs
     paths:
       - packages/bluefin-docs
+  bluefin-wallpapers:
+    specfile_path: bluefin-wallpapers.spec
+    upstream_package_name: bluefin-wallpapers
+    downstream_package_name: bluefin-wallpapers
+    paths:
+      - packages/bluefin-wallpapers
   bluez:
     specfile_path: bluez.spec
     upstream_package_name: bluez
