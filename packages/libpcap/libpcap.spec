@@ -2,8 +2,8 @@
 # nor the factory. Stage 0 so ppp (stage 1) can link it.
 Name:     libpcap
 Epoch:    14
-Version:  1.10.6
-Release:  3%{?dist}
+Version:  1.11.0
+Release:  1%{?dist}
 Summary:  A system-independent interface for user-level packet capture
 License:  ISC AND BSD-2-Clause AND BSD-3-Clause AND BSD-4-Clause-UC
 URL:      https://www.tcpdump.org/
@@ -21,7 +21,9 @@ BuildRequires: rdma-core-devel
 %endif
 
 Source0:  https://www.tcpdump.org/release/%{name}-%{version}.tar.xz
-Source1:  https://www.tcpdump.org/release/%{name}-%{version}.tar.xz.sig
+# Utah: Fedora's Source1 (the detached .sig) is dropped. Nothing verified it, and
+# the factory fetches non-primary sources from Fedora's lookaside only, which
+# holds no signature for a release Fedora has not packaged.
 
 Patch0001:      0001-man-tcpdump-and-tcpslice-have-manpages-in-man8.patch
 Patch0002:      0002-pcap-config-mitigate-multilib-conflict.patch
@@ -95,6 +97,10 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/libpcap.a
 %{_mandir}/man5/pcap*.5*
 
 %changelog
+* Mon Nov 16 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 14:1.11.0-1
+- Update to 1.11.0
+- Drop the unverified detached signature Source1
+
 * Thu Jul 16 2026 Fedora Release Engineering <releng@fedoraproject.org> - 14:1.10.6-3
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_45_Mass_Rebuild
 

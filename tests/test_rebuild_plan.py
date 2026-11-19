@@ -6,6 +6,7 @@ import tempfile
 import unittest
 
 from tools.rebuild_plan import (
+    EARLY_WAVES,
     changed_entries,
     dependents_from_primary,
     expected_release,
@@ -452,11 +453,30 @@ class StageOutputTests(unittest.TestCase):
         self.assertEqual(json.loads(outputs["through0"]), ["libass", "webkitgtk"])
         self.assertEqual(json.loads(outputs["through1"]), ["libass", "ffmpeg", "webkitgtk"])
         self.assertEqual(json.loads(outputs["through2"]), json.loads(outputs["through1"]))
-        self.assertNotIn("through4", outputs, "only the first four waves publish early")
-        late = stage_outputs(build, {"libass": 0, "webkitgtk": 0, "ffmpeg": 5, "gst-bad": 6})
-        self.assertEqual(json.loads(late["early_waves"]), ["0"])
+        self.assertEqual(sorted(int(k.removeprefix("through")) for k in outputs if k.startswith("through")),
+                         list(EARLY_WAVES))
         single = stage_outputs([{"name": "xdg-terminal-exec"}], {"xdg-terminal-exec": 0})
         self.assertEqual(json.loads(single["early_waves"]), [], "one wave: the final publication covers it")
+
+    def test_early_publications_reach_past_the_first_four_waves(self) -> None:
+        # Run 44224171778 had thirteen waves; under the old 0..3 slots its
+        # waves 4 to 11 waited for wave 12. Now they publish at 4, 7 and 10.
+        waves = {f"p{n}": n for n in range(13)}
+        outputs = stage_outputs([{"name": name} for name in waves], waves)
+        self.assertEqual(json.loads(outputs["early_waves"]), ["0", "1", "2", "4", "7", "10"])
+        self.assertEqual(json.loads(outputs["through7"]), [f"p{n}" for n in range(8)])
+        self.assertEqual(len(json.loads(outputs["through10"])), 11)
+
+    def test_a_slot_that_adds_nothing_new_does_not_publish(self) -> None:
+        # Waves 0 and 5: slot 0 publishes p0; slots 1, 2 and 4 would publish
+        # exactly p0 again and move Utah's tag for nothing. Slot 7 would
+        # cover p5, but wave 5 is the last, which the final publication does.
+        waves = {"p0": 0, "p5": 5}
+        outputs = stage_outputs([{"name": name} for name in waves], waves)
+        self.assertEqual(json.loads(outputs["early_waves"]), ["0"])
+        waves = {"p0": 0, "p5": 5, "p9": 9}
+        outputs = stage_outputs([{"name": name} for name in waves], waves)
+        self.assertEqual(json.loads(outputs["early_waves"]), ["0", "7"])
 
     def test_solved_waves_override_the_config_stage(self) -> None:
         build = [{"name": "gnome-shell", "stage": 10}, {"name": "mutter", "stage": 6}]

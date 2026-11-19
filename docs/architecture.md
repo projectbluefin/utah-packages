@@ -195,16 +195,32 @@ decides the replacement (`assemble`), models the gate (`publish_allowed`) and
 checks the publish job against both; `tests/test_incremental_publish.py`
 drives them through each failure mode.
 
-Publication happens as waves finish, not once at the end. After each wave
-that has later waves still to come, `rebuild-rpms.yml` calls
-`publish-repository.yml` for waves 0..k (`publish0`..`publish3`, the first four waves), and a final
-call covers every wave. Each publication seeds from the image the previous
-one pushed, which the witness check accepts because it carries this run's id,
-and each is gated on its own Hummingbird-only transaction. An early one may
-fail it -- a library whose soname moved publishes before its consumers are
-rebuilt -- and then publishes nothing; only the final one fails the run. So a
-one-line fix to a wave-0 library publishes when wave 0 finishes, not when the
-slowest package in the same run does.
+Publication happens as waves finish, not once at the end. After waves 0, 1,
+2, 4, 7 and 10 (`publish0` to `publish10`, `EARLY_WAVES` in
+`tools/rebuild_plan.py`), `rebuild-rpms.yml` calls `publish-repository.yml`
+for waves 0..k. A slot runs only when its waves add something since the
+previous slot and a later wave still has work. A final call covers every
+wave. Each publication seeds from the image the previous one pushed, which
+the witness check accepts because it carries this run's id, and each is
+gated on its own Hummingbird-only transaction. So a one-line fix to a wave-0
+library publishes when wave 0 finishes, not when the slowest package in the
+same run does.
+
+A build that would break that transaction is held back instead of blocking
+everything (`tools/publish_holdback.py`). An example is a library whose
+soname moved while a published consumer still needs the old one. Before
+assembly, the publication compares the candidate's metadata with the seed's
+and Hummingbird's. Every new build that drops a capability a published
+package needs is held, and so is every new build whose Requires nothing
+provides. Only what the transaction installs is judged. Every other build in
+the publication that was built against a held build is held too. A build
+counts as built against a held build when it BuildRequires that build (the
+build graph), or when its binaries need what only that build provides. A held build keeps its previous published build and is
+recorded as `withheld` on the image, and every run retries it. The
+transaction then judges exactly what will be pushed. If it still fails, an
+early publication pushes nothing. The final one fails the run either way:
+when the transaction fails it pushes nothing, and when it held something
+back it first pushes the resolvable subset.
 
 A second, advisory check follows it: what Utah actually installs. The gate's
 contract is about 78 packages; Utah installs about 120 -- its base

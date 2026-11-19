@@ -1,5 +1,5 @@
 Name:          sbc
-Version:       2.1
+Version:       2.2
 Release:       %autorelease
 Summary:       Sub Band Codec used by bluetooth A2DP
 

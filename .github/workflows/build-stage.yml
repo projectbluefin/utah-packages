@@ -76,6 +76,11 @@ on:
         required: false
         default: ''
         type: string
+      stage_map:
+        # Required: an empty map would silently name no artifacts.
+        description: JSON package -> wave from prepare (tools/rebuild_plan.py stage_outputs)
+        required: true
+        type: string
       cache_salt:
         description: Canary cache namespace; empty for production keys.
         required: false
@@ -105,8 +110,17 @@ on:
         default: ''
         type: string
 
+# A full rebuild makes ~1,700 artifacts. download-artifact without a token
+# lists the run's artifacts before applying `pattern`, and that listing stops
+# at 1000 (oldest first): the newest waves' RPMs were never downloaded (#970).
+# With a token it lists over REST but then starts every download at once over
+# REST, which ran into GitHub's rate limits (run 44386298520). The RPM
+# downloads here go by exact name through the artifact service instead
+# (tools/fetch-artifacts/fetch.mjs), named from prepare's stage map.
+
 permissions:
   contents: read
+  actions: read
   packages: write
 
 jobs:
@@ -199,22 +213,30 @@ jobs:
         env:
           STAGE: ${{ inputs.stage }}
           PREFIX: ${{ inputs.artifact_prefix }}
+          STAGE_MAP: ${{ inputs.stage_map }}
         run: |
-          if [ "$STAGE" -eq 1 ]; then
-            stages=0
-          else
-            stages="{$(seq -s, 0 $((STAGE - 1)))}"
-          fi
-          echo "pattern=${PREFIX}rpm-s${stages}-*" >> "$GITHUB_OUTPUT"
-          echo "earlier stages: ${PREFIX}rpm-s${stages}-*"
+          set -euo pipefail
+          mkdir -p work
+          python3 tools/publish_gate.py names --stage-map "$STAGE_MAP" \
+            --prefix "$PREFIX" --below "$STAGE" > work/prior-names.json
+          echo "earlier stages: $(jq length work/prior-names.json) artifact names"
+      - name: Install the artifact client
+        if: inputs.stage != '0'
+        run: npm ci --prefix tools/fetch-artifacts --ignore-scripts --no-audit --no-fund
+      # By exact name through the artifact service (tools/fetch-artifacts):
+      # no 1000-artifact listing cap and no REST budget. A name with no
+      # artifact is an earlier build that failed; any other error fails this
+      # job, so a build never runs against a short set of earlier RPMs.
       - name: Collect RPMs built by earlier stages
         if: inputs.stage != '0'
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
-          pattern: ${{ steps.prior.outputs.pattern }}
-          path: work/prior
-          merge-multiple: true
-        continue-on-error: true
+          script: |
+            const fs = require('fs')
+            const {fetchArtifacts} = await import(`${process.env.GITHUB_WORKSPACE}/tools/fetch-artifacts/fetch.mjs`)
+            const names = JSON.parse(fs.readFileSync('work/prior-names.json', 'utf8'))
+            fs.mkdirSync('work/prior', {recursive: true})
+            await fetchArtifacts({names, path: `${process.env.GITHUB_WORKSPACE}/work/prior`, core})
       - name: Fetch and verify direct upstream source
         env:
           PACKAGE: ${{ matrix.package }}

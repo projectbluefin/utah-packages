@@ -136,6 +136,24 @@ tarball (download and verify; Fedora stays in `fallback_urls`), matching
 `packages/<name>/sources`, and no `dist_bump` to carry because `Release`
 resets with the new `Version`.
 
+## A version re-import whose bytes are not Fedora's
+
+`--replace` writes Fedora's `sources`, which pins Fedora's payload. When the
+old recipe's `sources` differed from Fedora's tree at the old pin (the
+old-pin diff shows it), the factory locks other bytes, so repin after the
+import. Two cases from the #1051 drift batch:
+
+- A generated Source0 (`generate` in the lock). intel-media-driver-free
+  26.2.4 -> 26.3.5: add the tag archive's SHA-512 to
+  `INTEL_MEDIA_INPUT_SHA512` in `tools/generated_sources.py`, run
+  `python3 tools/generated_sources.py <pkg> packages/<pkg> <out>` twice (the
+  digests must agree), and pin that digest in `sources` and the lock
+  (`metadata_for()` gives the `version`, `filename` and `generate` fields).
+  Unpack Fedora's lookaside copy and diff the trees; they matched.
+- An upstream tarball the lookaside recompressed. nfs-utils 3.1.1 from
+  kernel.org has Fedora's tree but other bytes, so `sources` pins the
+  kernel.org SHA-512 and the lock keeps no lookaside `fallback_urls`.
+
 ## Changing the rules
 
 Loosen a rule only with a test in `tests/test_rawhide_reimport.py` that shows

@@ -1,0 +1,33 @@
+From 71d8de08583e9b09f08a249abd3577022c80d4e3 Mon Sep 17 00:00:00 2001
+From: Neal Gompa <ngompa@fedoraproject.org>
+Date: Sun, 8 Nov 2026 14:10:19 -0500
+Subject: [PATCH] cmake: Fix installation of man pages
+
+The extra DESTDIR was causing the files to be installed into an
+invalid nested hierarchy.
+---
+ CMakeLists.txt | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index ef0c3ae..5929ca7 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1640,12 +1640,12 @@ if(SPHINX_EXECUTABLE)
+         endif()
+ 
+         file(INSTALL
+-            DESTINATION \"\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_MANDIR}/man1\"
++            DESTINATION \"\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_MANDIR}/man1\"
+             TYPE FILE
+             FILES \"${SPHINX_BUILD_DIR}/man/fy-tool.1\"
+         )
+         file(INSTALL
+-            DESTINATION \"\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_MANDIR}/man3\"
++            DESTINATION \"\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_MANDIR}/man3\"
+             TYPE FILE
+             FILES
+                 \"${SPHINX_BUILD_DIR}/man/libfyaml.3\"
+-- 
+2.56.0
+
