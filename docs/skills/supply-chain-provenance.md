@@ -338,9 +338,11 @@ archive's empty submodule directories from the GitHub archives of the
 commits the tag's gitlinks pin (`gh api
 repos/<o>/<r>/contents/<path>?ref=<tag>` gives the commit), each archive
 SHA-512-pinned, applies the hand script's deletions (`skcms/profiles`), and
-the spec drops the extra Sources and the second `%setup`. Check that the
-archive's top directory ends in the pinned commit; a moved pin then fails
-instead of packing another tree.
+the spec drops the extra Sources and the second `%setup`. The commits are
+pinned by hand per version; re-read the tag's gitlinks on every bump, since
+the generator cannot see them. 0.12.0 also builds with
+`-DJPEGXL_ENABLE_DEVTOOLS=OFF`, as Dakota does: its `djxl_fuzzer_corpus`
+fails to link against `libjxl_extras-internal`'s OpenEXR decoder.
 
 When the upstream has no release and its commit archive is far larger than
 what the recipe needs, add a `tools/generated_sources.py` generator that

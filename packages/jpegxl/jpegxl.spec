@@ -87,18 +87,12 @@ Summary:        Utilities for manipulating JPEG XL images
 Recommends:     gimp-jxl-plugin   = %{epoch}:%{version}-%{release}
 Provides:       jpegxl-utils = %{epoch}:%{version}-%{release}
 Obsoletes:      jpegxl-utils < 0.3.7-5
+# 0.12.0's djxl_fuzzer_corpus fails to link against libjxl_extras-internal's
+# OpenEXR decoder; Dakota builds the devtools off, so the package drops them.
+Obsoletes:      libjxl-devtools < %{epoch}:%{version}-%{release}
 
 %description -n libjxl-utils
 %{common_description}
-
-%package     -n libjxl-devtools
-Summary:        Development tools for JPEG-XL
-Requires:       libjxl%{?_isa} = %{epoch}:%{version}-%{release}
-
-%description -n libjxl-devtools
-%{common_description}
-
-Development tools for JPEG-XL
 
 %package        doc
 Summary:        Documentation for JPEG-XL
@@ -162,7 +156,7 @@ export CC=clang CXX=clang++
         -DBUILD_SHARED_LIBS:BOOL=ON \
         -DBUNDLE_LIBPNG_DEFAULT:BOOL=OFF \
         -DBUNDLE_GFLAGS_DEFAULT:BOOL=OFF \
-        -DJPEGXL_ENABLE_DEVTOOLS=ON
+        -DJPEGXL_ENABLE_DEVTOOLS=OFF
 %cmake_build -- all doc
 
 %install
@@ -194,24 +188,6 @@ cp -p %{_libdir}/libjxl.so.%{sover_old}*     \
 %{_bindir}/jxltran
 %{_mandir}/man1/cjxl.1*
 %{_mandir}/man1/djxl.1*
-
-%files -n libjxl-devtools
-%{_bindir}/djxl_fuzzer_corpus
-%{_bindir}/butteraugli_main
-%{_bindir}/decode_and_encode
-%{_bindir}/display_to_hlg
-%{_bindir}/exr_to_pq
-%{_bindir}/icc_simplify
-%{_bindir}/pq_to_hlg
-%{_bindir}/render_hlg
-%{_bindir}/tone_map
-%{_bindir}/texture_to_cube
-%{_bindir}/generate_lut_template
-%{_bindir}/ssimulacra_main
-%{_bindir}/ssimulacra2
-%{_bindir}/xyb_range
-%{_bindir}/jxl_from_tree
-%{_bindir}/local_tone_map
 
 %files doc
 %doc doc/*.md
