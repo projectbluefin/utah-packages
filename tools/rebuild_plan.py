@@ -461,6 +461,15 @@ def cacheable(build: list[dict], changed: set[str], stale: set[str]) -> list[str
     recipe changes the recipe digest -- so this is belt and braces, and it keeps
     the promise legible rather than resting on the key being right.
 
+    `changed` here means the package's own inputs changed. tools/rebuild_matrix.py
+    passes it without the packages that changed only because the build root
+    moved (factory_state.shared_only): nobody edited those, so nobody is owed a
+    cache-free build, and their key carries the new build-root digest, so it
+    can only match a build made on the new root. They still rebuild -- the
+    first run after a move misses -- but what they compile is cached, and a
+    rerun before the next successful publish reuses it instead of compiling
+    every package again (issue #1207).
+
     `stale` is excluded because a stale published package is one whose binaries
     require something nothing provides any more. Its recipe may not have moved,
     so its key can hit, and hitting would hand back the very build that is
