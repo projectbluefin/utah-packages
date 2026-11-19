@@ -15,7 +15,7 @@ proves:
 * a build that drops a capability a published package still needs is held,
   and the published build it would have replaced stays -- which is what the
   old consumer was linked against;
-* a hold is transitive over the build graph, restricted to this
+* a hold follows direct BuildRequires edges of the build graph, restricted to this
   publication: what it built against a held library is held too;
 * a Requires the published repository already left unmet is never a reason
   to hold anything, and Hummingbird's provides count;
@@ -167,14 +167,28 @@ class HoldbackTests(unittest.TestCase):
         self.assertEqual(result.names(), ["libnfs", "nfs-tool"])
         self.assertIn("BuildRequires it", result.withheld["nfs-tool"][0])
 
-    def test_the_graph_closure_is_transitive_inside_the_publication(self):
+    def test_the_graph_holds_only_direct_dependents(self):
+        # nautilus BuildRequires gvfs, which BuildRequires libnfs, but nautilus
+        # needs nothing only the new gvfs provides. Following the graph
+        # through gvfs held 215 builds of run 44478890278 behind one failed
+        # consumer of abseil-cpp; a real link is the metadata's to show.
         nautilus = binary("nautilus", "nautilus", [], ["gvfs-client"])
         result = decide([NEW_LIBNFS, *NEW_GVFS, nautilus],
                         dependents={"libnfs": {"gvfs", "qemu"}, "gvfs": {"nautilus"}})
-        self.assertEqual(result.names(), ["gvfs", "libnfs", "nautilus"])
+        self.assertEqual(result.names(), ["gvfs", "libnfs"])
         # qemu BuildRequires libnfs too, but this publication did not build
         # it: there is nothing of it to hold.
         self.assertNotIn("qemu", result.withheld)
+
+    def test_a_dependent_further_out_is_still_held_when_it_links_the_held_build(self):
+        # One hop of graph, then the metadata: nautilus links a library only
+        # the new gvfs ships, so it is held although its edge to libnfs is
+        # two steps long.
+        new_gvfs = [NEW_GVFS[0], binary("gvfs-client", "gvfs", ["libgvfscommon.so.1()(64bit)"])]
+        nautilus = binary("nautilus", "nautilus", [], ["libgvfscommon.so.1()(64bit)"])
+        result = decide([NEW_LIBNFS, *new_gvfs, nautilus],
+                        dependents={"libnfs": {"gvfs"}, "gvfs": {"nautilus"}})
+        self.assertEqual(result.names(), ["gvfs", "libnfs", "nautilus"])
 
     def test_built_against_a_held_build_counts_outside_the_transaction_too(self):
         # The transaction installs only libass, but gvfs-nfs must not ship
@@ -301,11 +315,12 @@ class Run44224171778Tests(unittest.TestCase):
     (see the pull request): wave 0 holds libnfs alone and publishes the other
     415 sources; the whole run holds gdm, whose 51.0 needs a pam_oo7 that
     nothing provides because oo7 failed to build -- a second break that dnf,
-    which reports only its first problem, never named -- and the three
-    sources that BuildRequire it.
+    which reports only its first problem, never named -- and the two
+    sources that BuildRequire it directly. autofs reaches gdm only through
+    sssd and needs nothing only the new gdm provides, so it is not held.
     """
 
-    GDM = ["autofs", "gdm", "gnome-initial-setup", "sssd"]
+    GDM = ["gdm", "gnome-initial-setup", "sssd"]
 
     def run_cli(self, built: str, install: list[str] | None = None) -> dict:
         with tempfile.TemporaryDirectory() as tmp:

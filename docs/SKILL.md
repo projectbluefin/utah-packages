@@ -21,7 +21,7 @@ Both are indexed below. A skill that exists but is not listed here fails
 | --- | --- |
 | Work out why a rebuild job failed, and whose bug it is | [`.agents/skills/build-failure-triage/SKILL.md`](../.agents/skills/build-failure-triage/SKILL.md) |
 | Query Hummingbird's image catalog, tags, CVEs, or SBOMs | [`.agents/skills/hummingbird/SKILL.md`](../.agents/skills/hummingbird/SKILL.md) |
-| Verify buildroot lock or recipe provenance contracts, or the name order of `config/upstream-sources.json` | [`skills/supply-chain-provenance.md`](skills/supply-chain-provenance.md) |
+| Verify buildroot lock or recipe provenance contracts, pinned package signature keys, or the name order of `config/upstream-sources.json` | [`skills/supply-chain-provenance.md`](skills/supply-chain-provenance.md) |
 | Change unit-test coverage instrumentation or its CI floor | [`skills/test-coverage.md`](skills/test-coverage.md) |
 | Finish a task and decide what learning to write back | [`skills/skill-improvement.md`](skills/skill-improvement.md) |
 | Measure CI queue wait, keep armed auto-merge PRs current, or understand runner-saturation policy boundaries (issue #304) | [`skills/queue-observability.md`](skills/queue-observability.md) |
