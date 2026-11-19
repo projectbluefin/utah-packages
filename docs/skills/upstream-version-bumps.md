@@ -421,8 +421,9 @@ Constraints that shaped it, so they are not rediscovered:
   --infra-failed-output` names those packages, and `rebuild-rpms.yml`
   exposes them as `infra_failed`. If that list is non-empty or missing,
   `holdable` holds nothing and the comment names the outage; the next
-  daily bump retries. An unsatisfiable graph fails every attempt without
-  a download error, so it stays an ordinary, holdable failure.
+  daily bump retries. A container dnf attempt marks only a terminal download
+  error: recovered transfer warnings do not hide a later dependency failure,
+  which remains holdable.
 - `upstream_bump.py` skips a proposal whose exact version is held and
   logs `held <name>`. A newer upstream release is proposed as usual, and
   applying it deletes the hold, which is why `bump-upstream-sources.yml`

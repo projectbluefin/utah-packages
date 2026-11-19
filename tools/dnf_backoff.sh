@@ -32,7 +32,8 @@ with_backoff() {
     fi
     if [ "$attempt" -eq 4 ]; then
       echo "$1 failed after 4 attempts" >&2
-      if grep -qE 'All mirrors were tried|No more mirrors to try|Curl error|Cannot download|Status code: 5[0-9][0-9]' "$log"; then
+      # Transfer warnings can describe downloads that recovered before dnf failed for another reason.
+      if grep -qE 'All mirrors were tried|No more mirrors to try|Cannot download' "$log"; then
         mkdir -p "${REPORT_DIR:-/work/reports}"
         echo "$1" > "${REPORT_DIR:-/work/reports}/infra-failure"
       fi

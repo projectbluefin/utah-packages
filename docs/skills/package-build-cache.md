@@ -109,6 +109,8 @@ dependency actually changed.
 - Keep the dependency-resolution probe aligned with the actual container build
   policy. A repository, exclusion, stage-input or disttag change belongs in
   both paths and in a regression test.
+- Keep shared build inputs such as `tools/dnf_backoff.sh` in the canary
+  build salt so changes to them force a real pass1 build.
 - The mock backend is not cache-enabled until it records and keys its own mock
   root. A container-lane entry must not be reused by mock merely because the
   source recipe matches. The hermetic lane does record its root -- the

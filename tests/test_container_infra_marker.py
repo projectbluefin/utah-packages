@@ -67,6 +67,16 @@ class ContainerInfraMarkerTests(unittest.TestCase):
         self.assertEqual(code, 7)
         self.assertIsNone(marker)
 
+    def test_recovered_transfer_errors_do_not_mask_a_dependency_failure(self) -> None:
+        code, marker, _ = run(
+            "Curl error (28): Timeout was reached\n"
+            "Status code: 503 for https://example.test/package.rpm\n"
+            "No match for argument: libfoo-devel",
+            failures=10,
+        )
+        self.assertEqual(code, 7)
+        self.assertIsNone(marker)
+
     def test_an_outage_that_clears_is_not_marked(self) -> None:
         code, marker, waits = run("Curl error (28): Timeout was reached", failures=2)
         self.assertEqual(code, 0)
@@ -108,7 +118,7 @@ dnf() {
                                   ("upgrade libxml2", "0"),
                                   ("builddep -D", "0")):
                 for message, expected_marker in (
-                    ("Status code: 503 for https://example.test/package.rpm", True),
+                    ("Cannot download package.rpm: All mirrors were tried", True),
                     ("No match for argument: missing-devel", False),
                 ):
                     with self.subTest(target=target, outage=expected_marker):
