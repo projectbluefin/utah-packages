@@ -24,6 +24,11 @@ that measurement explicit, evidence-backed and reproducible:
   factory already builds. They are derived and never committed: every recipe
   import moves them, so a tracked copy would go stale or make concurrent
   import PRs conflict (#309). CI publishes the live report as an artifact.
+- ``config/dakota-build-facts.json`` holds each element's patches and option
+  variables, read from the ``.bst`` files at the pinned refs with Dakota's
+  junction patch queues applied (``--import-build-facts``). The report
+  compares them with each factory recipe's ``Patch:`` lines and configure
+  arguments, offline and report-only.
 - ``--check`` builds the report in memory, writes nothing, and fails when the
   committed inputs break the audit's contract (see ``contract_problems``).
 
@@ -50,12 +55,15 @@ import argparse
 import concurrent.futures
 import csv
 import gzip
+import hashlib
 import io
 import json
 import re
+import shutil
 import subprocess
 import sys
 import tarfile
+import tempfile
 import urllib.error
 import urllib.request
 import xml.etree.ElementTree as ElementTree
@@ -64,12 +72,24 @@ from pathlib import Path, PurePosixPath
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+import yaml  # noqa: E402
+
 from tools.audit_gnome_build_meta import (  # noqa: E402
     ALIGNED,
     NEEDS_REVIEW,
+    Loader,
     _factory_rev,
+    _MESON_INVOCATION,
+    _MESON_OPTION,
+    _RPM_CONDITIONAL,
+    _expanded_flag_macros,
+    _feature_key,
+    _unbalanced_brace,
+    gbm_feature_options,
+    normalize_feature_value,
     numeric_components,
     release_line,
+    spec_patches,
 )
 from tools.package_inventory import load_source_locks  # noqa: E402
 
@@ -643,6 +663,638 @@ def with_gbm_aliases(pin: dict, gbm_pin: dict) -> dict:
     return resolved
 
 
+# --- Build intent: each element's patches and configure options ------------------
+#
+# The version drift above compares one number. A recipe aligned to its element
+# also carries the element's patches and builds with its options
+# (dakota-parity.md, Owner policy). The ``.bst`` files are read once, at import
+# time, from checkouts of the four projects at the pinned refs, with Dakota's
+# junction patch queues applied, into config/dakota-build-facts.json. The audit
+# compares that file with the recipes offline, so `just check` needs no
+# checkout.
+
+BUILD_FACTS_SCHEMA = 1
+# Element variables that carry the element's own configure arguments.
+# ``*-global`` are project-wide defaults shared by every element of a kind.
+OPTION_VARIABLES = ("meson-local", "meson-extra", "cmake-local", "cmake-extra",
+                    "conf-local", "conf-extra", "conf-args")
+_DASH_D_VARIABLES = ("meson-local", "meson-extra", "cmake-local", "cmake-extra")
+# Kinds that compile something. Everything else (stack, filter, compose,
+# import, script, ...) splits, combines or installs another element's output.
+BUILD_KINDS = ("autotools", "meson", "cmake", "make", "manual", "pyproject",
+               "makemaker", "modulebuild", "cargo")
+# Other projects reachable through a junction, per project.
+_PROJECT_JUNCTIONS = {
+    DAKOTA_PROJECT: {"gnome-build-meta.bst": GBM_PROJECT, "freedesktop-sdk.bst": FDSDK_PROJECT},
+    GBM_PROJECT: {"freedesktop-sdk.bst": FDSDK_PROJECT,
+                  "freedesktop-sdk-extra.bst": FDSDK_EXTRA_PROJECT},
+    FDSDK_EXTRA_PROJECT: {"freedesktop-sdk.bst": FDSDK_PROJECT},
+    FDSDK_PROJECT: {},
+}
+# Dakota junction elements whose patch queues rewrite another project's files.
+_DAKOTA_JUNCTION_QUEUES = {"gnome-build-meta.bst": GBM_PROJECT,
+                           "freedesktop-sdk.bst": FDSDK_PROJECT}
+_DESCRIBE_COMMIT = re.compile(r"-g([0-9a-f]{7,40})$")
+
+
+def junction_commit(ref: str) -> str | None:
+    """The commit a ``git describe`` junction ref names (``...-g<sha>``)."""
+    match = _DESCRIBE_COMMIT.search(ref.split()[-1]) if ref else None
+    return match.group(1) if match else None
+
+
+def _junction_ref(bst: Path) -> str:
+    node = yaml.safe_load(bst.read_text()) or {}
+    for source in node.get("sources") or []:
+        if source.get("kind") in ("git_repo", "git") and source.get("ref"):
+            return str(source["ref"])
+    raise ValueError(f"{bst}: junction has no git ref")
+
+
+def expected_build_refs(pin: dict, gbm_root: Path) -> dict[str, str]:
+    """The commit each project's checkout must be at.
+
+    Dakota's revision and the two junction refs come from the pin;
+    freedesktop-sdk-extra is a junction of gnome-build-meta, so its ref is read
+    from gnome-build-meta's junction element at the pinned ref.
+    """
+    junctions = pin["source"].get("junctions") or {}
+    refs = {DAKOTA_PROJECT: pin["source"]["revision"]}
+    for name, project in _DAKOTA_JUNCTION_QUEUES.items():
+        commit = junction_commit(junctions.get(name, ""))
+        if not commit:
+            raise ValueError(f"source.junctions {name}: no commit in {junctions.get(name)!r}")
+        refs[project] = commit
+    extra = junction_commit(_junction_ref(gbm_root / "elements" / "freedesktop-sdk-extra.bst"))
+    if not extra:
+        raise ValueError("gnome-build-meta's freedesktop-sdk-extra.bst names no commit")
+    refs[FDSDK_EXTRA_PROJECT] = extra
+    return refs
+
+
+def _git_head(path: Path) -> str:
+    return subprocess.run(["git", "-C", str(path), "rev-parse", "HEAD"], capture_output=True,
+                          text=True, check=True).stdout.strip()
+
+
+def verify_build_roots(refs: dict[str, str], roots: dict[str, Path], head=_git_head) -> dict[str, str]:
+    """Each checkout's full HEAD, refusing one that is not at its pinned ref."""
+    heads = {}
+    for project, ref in refs.items():
+        sha = head(roots[project])
+        if not sha.startswith(ref):
+            raise SystemExit(f"error: {project} checkout {roots[project]} is at {sha}, "
+                             f"not the pinned {ref}")
+        heads[project] = sha
+    return heads
+
+
+def _queue_files(root: Path, path: str) -> list[str]:
+    target = root / path
+    if target.is_file():
+        return [path]
+    return sorted(str(p.relative_to(root)) for p in target.rglob("*") if p.is_file())
+
+
+def _patched_files(text: str) -> list[str]:
+    return sorted({line[6:].strip() for line in text.splitlines() if line.startswith("+++ b/")})
+
+
+def apply_junction_queues(roots: dict[str, Path], work: Path) -> tuple[dict[str, Path], dict]:
+    """Copies of the junctioned projects with Dakota's patch queues applied.
+
+    Dakota builds gnome-build-meta and freedesktop-sdk with the patch queues
+    its junction elements name (``patches/freedesktop-sdk-dakota`` rewrites
+    ffmpeg's codec options, for one), so the file at the bare junction ref is
+    not what Dakota builds. Returns the patched roots and, per project, each
+    queue patch with the files it touches.
+    """
+    patched = dict(roots)
+    queues: dict[str, list[dict]] = {}
+    dakota = roots[DAKOTA_PROJECT]
+    for junction, project in _DAKOTA_JUNCTION_QUEUES.items():
+        node = yaml.safe_load((dakota / "elements" / junction).read_text()) or {}
+        files = []
+        for source in node.get("sources") or []:
+            if source.get("kind") == "patch_queue":
+                files += _queue_files(dakota, source["path"])
+        if not files:
+            continue
+        copy = work / project
+        shutil.copytree(roots[project], copy, symlinks=True,
+                        ignore=shutil.ignore_patterns(".git"))
+        for name in files:
+            # stderr reaches the log: a queue patch that no longer applies
+            # fails the import with git's own message.
+            subprocess.run(["git", "apply", str(dakota / name)], cwd=copy, check=True)
+        patched[project] = copy
+        queues[project] = [{"patch": name, "files": _patched_files((dakota / name).read_text())}
+                           for name in files]
+    return patched, queues
+
+
+class ProjectLoader(Loader):
+    """The gnome-build-meta audit's include resolver, across junctions.
+
+    ``(@): freedesktop-sdk.bst:include/x.yml`` resolves in the junctioned
+    project's checkout, not in the including one.
+    """
+
+    def __init__(self, project: str, roots: dict[str, Path]):
+        super().__init__(roots[project])
+        self.project = project
+        self.roots = roots
+
+    def _resolve_path(self, raw: str) -> Path:
+        project, rest = self.project, str(raw)
+        while ":" in rest:
+            junction, _, tail = rest.partition(":")
+            target = _PROJECT_JUNCTIONS.get(project, {}).get(junction)
+            if target is None:
+                break
+            project, rest = target, tail
+        if project == self.project:
+            return super()._resolve_path(rest)
+        return self.roots[project] / rest.lstrip("/")
+
+
+def patch_identity(text: str) -> dict:
+    """What identifies a patch across renames: its subject and its changed lines.
+
+    Fedora and the BuildStream projects name the same upstream backport
+    differently, so a patch is matched by name, by ``Subject:``, or by the
+    hash of its added and removed lines (whitespace at line ends ignored).
+    """
+    subject = ""
+    for line in text.splitlines():
+        if line.startswith("Subject:"):
+            subject = re.sub(r"^\[PATCH[^\]]*\]\s*", "", line[8:].strip())
+            break
+    changed = [line.rstrip() for line in text.splitlines()
+               if (line.startswith("+") and not line.startswith("+++"))
+               or (line.startswith("-") and not line.startswith("---"))]
+    digest = hashlib.sha256("\n".join(changed).encode()).hexdigest()[:16] if changed else ""
+    return {"subject": subject, "hunks": digest}
+
+
+def _expand_variables(value: str, variables: dict, depth: int = 0) -> str:
+    """Expand ``%{name}`` references to the element's own variables."""
+    if depth > 8:
+        return value
+
+    def sub(match: re.Match) -> str:
+        inner = variables.get(match.group(1))
+        return _expand_variables(inner, variables, depth + 1) if isinstance(inner, str) else match.group(0)
+
+    return re.sub(r"%\{([\w-]+)\}", sub, value)
+
+
+def _locator(project: str, path: str) -> str:
+    prefix = next(junction for junction, name in _JUNCTIONS.items() if name == project)
+    return f"{prefix}:{path}" if prefix else path
+
+
+def _filtered_element(project: str, node: dict) -> tuple[str, str] | None:
+    """``(project, path)`` of the one element a ``filter`` splits."""
+    deps = [d.get("filename") if isinstance(d, dict) else d
+            for d in (node.get("build-depends") or [])]
+    deps = [d for d in deps if isinstance(d, str)]
+    if len(deps) != 1:
+        return None
+    rest = deps[0]
+    while ":" in rest:
+        junction, _, tail = rest.partition(":")
+        target = _PROJECT_JUNCTIONS.get(project, {}).get(junction)
+        if target is None:
+            return None
+        project, rest = target, tail
+    return project, rest
+
+
+def element_facts(record: ElementRecord, roots: dict[str, Path]) -> dict:
+    """Kind, patch sources and option variables of one element's ``.bst``.
+
+    A ``filter`` builds nothing: it splits the files of the one element it
+    build-depends on (``bluez-libs`` out of ``_private/bluez-base``), so that
+    element's facts are recorded under ``build``.
+    """
+    return _element_facts(record.project, record.path, roots, follow=True)
+
+
+def _element_facts(project: str, path: str, roots: dict[str, Path], follow: bool) -> dict:
+    root = roots[project]
+    relpath = f"elements/{path}"
+    if not (root / relpath).is_file():
+        return {"error": f"{relpath} not found in {project}"}
+    try:
+        node = ProjectLoader(project, roots).load(relpath)
+    except Exception as exc:  # noqa: BLE001 - recorded per element, never aborts the import
+        return {"error": f"{type(exc).__name__}: {exc}"[:200]}
+    facts: dict = {"kind": node.get("kind")}
+    variables = node.get("variables") or {}
+    if not isinstance(variables, dict):
+        variables = {}
+    options = {name: " ".join(_expand_variables(variables[name], variables).split())
+               for name in OPTION_VARIABLES
+               if isinstance(variables.get(name), str) and variables[name].strip()}
+    if options:
+        facts["options"] = options
+    if "(?)" in variables:
+        facts["conditional_variables"] = True
+    patches = []
+    for source in node.get("sources") or []:
+        if not isinstance(source, dict) or source.get("kind") not in _PATCH_KINDS:
+            continue
+        for name in _queue_files(root, str(source.get("path") or "")):
+            patches.append({"path": name,
+                            **patch_identity((root / name).read_text(errors="replace"))})
+    if patches:
+        facts["patches"] = patches
+    if follow and facts["kind"] == "filter":
+        target = _filtered_element(project, node)
+        if target is not None:
+            facts["build"] = {"element": _locator(*target),
+                              **_element_facts(*target, roots, follow=False)}
+    return facts
+
+
+def import_build_facts(pin: dict, records: list[ElementRecord], dirs: dict[str, Path],
+                       head=_git_head) -> dict:
+    """The build-facts snapshot of every in-image element."""
+    refs = expected_build_refs(pin, dirs[GBM_PROJECT])
+    heads = verify_build_roots(refs, dirs, head)
+    with tempfile.TemporaryDirectory() as tmp:
+        roots, queues = apply_junction_queues(dirs, Path(tmp))
+        touched: dict[str, list[str]] = {}
+        for project, patches in queues.items():
+            for patch in patches:
+                for name in patch["files"]:
+                    touched.setdefault(f"{project}:{name}", []).append(PurePosixPath(patch["patch"]).name)
+        elements = {}
+        for record in records:
+            if not record.in_image:
+                continue
+            facts = element_facts(record, roots)
+            hits = touched.get(f"{record.project}:elements/{record.path}")
+            if hits:
+                facts["dakota_junction_patches"] = hits
+            elements[record.element] = facts
+    return {
+        "schema": BUILD_FACTS_SCHEMA,
+        "dakota_revision": pin["source"]["revision"],
+        "refs": heads,
+        "junction_patches": queues,
+        "elements": dict(sorted(elements.items())),
+    }
+
+
+def write_build_facts(path: Path, facts: dict) -> None:
+    path.write_text(json.dumps(facts, indent=1, sort_keys=False) + "\n")
+
+
+def load_build_facts(path: Path | None) -> dict | None:
+    if path is None or not path.is_file():
+        return None
+    facts = json.loads(path.read_text())
+    if facts.get("schema") != BUILD_FACTS_SCHEMA:
+        raise ValueError(f"{path}: unsupported schema")
+    return facts
+
+
+# The spec side. The gnome-build-meta audit's ``meson_options`` keeps the first
+# value of each option; a recipe that builds twice (webkitgtk's GTK 3 and GTK 4
+# builds pass -DUSE_GTK4=OFF and ON) passes several, so every value is kept
+# here, from %meson/%cmake ``-D`` options and %configure switches alike.
+_CONFIGURE_INVOCATION = re.compile(
+    r"^\s*(?:%\{?configure\w*\}?|\./configure|\.\./configure)(?![\w-])")
+_CONFIGURE_SWITCH = re.compile(
+    r"(?<![\w-])--(enable|disable|with|without)-([A-Za-z0-9][\w.+-]*)(?:=(\S*))?")
+_CONDITIONAL_MACRO = re.compile(r"%\{!?\?[\w-]+:")
+UNRESOLVED_VALUE = "%conditional"
+
+
+def _switch_pairs(text: str) -> list[tuple[str, str]]:
+    pairs = []
+    for verb, name, value in _CONFIGURE_SWITCH.findall(text):
+        name = _unbalanced_brace(name)
+        value = _unbalanced_brace((value or "").strip("'\"").rstrip("\\"))
+        if verb in ("disable", "without"):
+            pairs.append((f"{'enable' if verb == 'disable' else 'with'}-{name}", "no"))
+        else:
+            pairs.append((f"{verb}-{name}", value or "yes"))
+    return pairs
+
+
+def _dash_d_pairs(text: str) -> list[tuple[str, str]]:
+    pairs = []
+    for match in _MESON_OPTION.finditer(text):
+        name = _unbalanced_brace(match.group(1).strip("-").strip())
+        value = _unbalanced_brace((match.group(2) or "").strip().strip("'\"").rstrip("\\"))
+        if name:
+            pairs.append((name, value))
+    return pairs
+
+
+def configure_switches(text: str) -> dict[str, str]:
+    """``--enable/--disable/--with/--without`` switches as ``{enable-x: value}``.
+
+    ``--disable-x`` is ``enable-x=no`` and ``--without-x`` is ``with-x=no``, so
+    either spelling compares with the other side's; a bare switch is ``yes``.
+    Path options (``--libdir=``) are packaging, not features, and are skipped.
+    """
+    out: dict[str, str] = {}
+    for key, value in _switch_pairs(text):
+        out.setdefault(key, value)
+    return out
+
+
+def _invocation_blocks(text: str, invocation: re.Pattern) -> list[str]:
+    """Each invocation line with its continuation lines and RPM conditionals."""
+    blocks = []
+    lines = text.splitlines()
+    index = 0
+    while index < len(lines):
+        if not invocation.match(lines[index]):
+            index += 1
+            continue
+        block = []
+        cursor = index
+        while cursor < len(lines):
+            line = lines[cursor]
+            block.append(line)
+            if _RPM_CONDITIONAL.match(line.strip()) or line.rstrip().endswith("\\"):
+                cursor += 1
+                continue
+            break
+        blocks.append("\n".join(block))
+        index = cursor + 1
+    return blocks
+
+
+def _conditional_bodies(text: str) -> list[str]:
+    """Bodies of ``%{?macro:...}`` / ``%{!?macro:...}``: options a build may not pass."""
+    bodies = []
+    for match in _CONDITIONAL_MACRO.finditer(text):
+        depth, cursor = 1, match.end()
+        while cursor < len(text) and depth:
+            depth += {"{": 1, "}": -1}.get(text[cursor], 0)
+            cursor += 1
+        bodies.append(text[match.end():cursor - 1])
+    return bodies
+
+
+def spec_option_values(text: str) -> dict[str, list[str]]:
+    """Every value a spec passes for each option, across all its invocations.
+
+    ``-D`` options come from %meson and %cmake blocks (and the flag macros they
+    expand), switches from %configure and ./configure blocks. An option inside
+    a ``%{?macro:...}`` conditional also gets ``%conditional``: whether the
+    build passes it depends on a macro the text does not settle (libva's
+    ``%{?_without_wayland: -Dwith_wayland=no}``).
+    """
+    out: dict[str, list[str]] = {}
+
+    def add(key: str, value: str) -> None:
+        values = out.setdefault(key, [])
+        if value not in values:
+            values.append(value)
+
+    for block in _invocation_blocks(text, _MESON_INVOCATION):
+        for key, value in _dash_d_pairs("\n".join([block, *_expanded_flag_macros(block, text)])):
+            add(key, value)
+    for block in _invocation_blocks(text, _CONFIGURE_INVOCATION):
+        for key, value in _switch_pairs(block):
+            add(key, value)
+    for body in _conditional_bodies(text):
+        for key, _ in _dash_d_pairs(body) + _switch_pairs(body):
+            if key in out:
+                add(key, UNRESOLVED_VALUE)
+    return out
+
+
+def element_options(facts: dict) -> dict[str, str]:
+    """The element's options: ``-D`` from meson/cmake variables, switches from conf ones."""
+    options = facts.get("options") or {}
+    out = gbm_feature_options({k: v for k, v in options.items() if k in _DASH_D_VARIABLES})
+    for name, value in options.items():
+        if name not in _DASH_D_VARIABLES:
+            for key, switch in configure_switches(value).items():
+                out.setdefault(key, switch)
+    return out
+
+
+def _unresolved(value: str) -> bool:
+    return "%" in value or "$" in value
+
+
+def compare_options(dakota: dict[str, str], factory: dict[str, list[str]]) -> dict:
+    """Options only one side sets and options both set to different values.
+
+    ``factory`` holds every value the recipe passes for an option. Values are
+    normalized as in the gnome-build-meta audit (``true`` equals
+    ``enabled``). An option conflicts only when Dakota's value matches none of
+    the recipe's; a value that is still a macro or variable reference on
+    either side is not a conflict, because the text cannot settle it.
+    """
+    dakota_keys = {_feature_key(k): k for k in dakota}
+    factory_keys = {_feature_key(k): k for k in factory}
+    conflicting, same = [], 0
+    for key in sorted(set(dakota_keys) & set(factory_keys)):
+        d_value, f_values = dakota[dakota_keys[key]], factory[factory_keys[key]]
+        if (_unresolved(d_value) or any(_unresolved(v) for v in f_values)
+                or normalize_feature_value(d_value) in {normalize_feature_value(v)
+                                                        for v in f_values}):
+            same += 1
+            continue
+        conflicting.append({"option": dakota_keys[key], "dakota": d_value,
+                            "factory": "|".join(f_values)})
+    return {
+        "conflicting": conflicting,
+        "only_in_dakota": sorted(dakota_keys[k] for k in set(dakota_keys) - set(factory_keys)),
+        "only_in_factory": sorted(factory_keys[k] for k in set(factory_keys) - set(dakota_keys)),
+        "same": same,
+    }
+
+
+def _patch_name(name: str) -> str:
+    """A patch name without directory, number prefix, or suffix: ``0002-Fix-X.patch`` -> ``fix-x``."""
+    base = PurePosixPath(name.split("?", 1)[0]).name.lower()
+    base = re.sub(r"\.(?:patch|diff)$", "", base)
+    return re.sub(r"^(?:v?\d+[-_.])+", "", base)
+
+
+def factory_patches(spec_text: str, recipe_dir: Path, rpm: str) -> list[dict]:
+    """The recipe's ``Patch:`` lines with each patch file's identity when it is in the recipe."""
+    out = []
+    for raw in spec_patches(spec_text):
+        name = raw.replace("%{name}", rpm)
+        path = recipe_dir / PurePosixPath(name).name
+        identity = patch_identity(path.read_text(errors="replace")) if path.is_file() else {}
+        out.append({"path": name, **identity})
+    return out
+
+
+def compare_patches(dakota: list[dict], factory: list[dict]) -> dict:
+    """Dakota's patches matched to the recipe's by name, subject or changed lines."""
+    def keys(patch: dict) -> set:
+        out = {("name", _patch_name(patch["path"]))}
+        if patch.get("subject"):
+            out.add(("subject", patch["subject"].strip().lower()))
+        if patch.get("hunks"):
+            out.add(("hunks", patch["hunks"]))
+        return out
+
+    factory_keys = [keys(p) for p in factory]
+    matched, only_dakota, used = [], [], set()
+    for patch in dakota:
+        hit = next((i for i, k in enumerate(factory_keys) if keys(patch) & k), None)
+        if hit is None:
+            only_dakota.append(patch["path"])
+        else:
+            used.add(hit)
+            matched.append({"dakota": patch["path"], "factory": factory[hit]["path"]})
+    return {
+        "matched": matched,
+        "only_in_dakota": only_dakota,
+        "only_in_factory": [p["path"] for i, p in enumerate(factory) if i not in used],
+    }
+
+
+def _spec_path(packages_dir: Path, rpm: str, lock: dict) -> Path | None:
+    spec = packages_dir / rpm / lock.get("spec", f"{rpm}.spec")
+    if spec.is_file():
+        return spec
+    specs = sorted((packages_dir / rpm).glob("*.spec")) if (packages_dir / rpm).is_dir() else []
+    return specs[0] if len(specs) == 1 else None
+
+
+def build_intent(entries: list[dict], facts: dict | None, factory_locks: dict,
+                 packages_dir: Path | None) -> list[dict]:
+    """Patches and options of every ``factory`` element against its recipe.
+
+    ``needs_review`` when Dakota carries a patch the recipe does not, or both
+    sides set an option to different values; options only Dakota sets are
+    listed as evidence but do not by themselves need review, because most
+    restate a default or switch off docs and tests. ``not_compared`` says why
+    nothing was compared: no build facts, an element that builds nothing
+    itself (a filter or stack whose RPM no other element builds), no spec.
+    """
+    elements = (facts or {}).get("elements") or {}
+    factory_entries = [e for e in entries
+                       if e["disposition"] == FACTORY and e.get("rpm") in factory_locks]
+    builders: dict[str, list[str]] = {}
+    for entry in factory_entries:
+        if (elements.get(entry["element"]) or {}).get("kind") in BUILD_KINDS:
+            builders.setdefault(entry["rpm"], []).append(entry["element"])
+    compared: set[str] = set()
+
+    rows = []
+    for entry in factory_entries:
+        element, rpm = entry["element"], entry["rpm"]
+        row = {"element": element, "rpm": rpm}
+        fact = elements.get(element)
+        spec = _spec_path(packages_dir, rpm, factory_locks[rpm]) if packages_dir else None
+        if fact is None:
+            rows.append({**row, "classification": NOT_COMPARED,
+                         "reason": "no build facts for the element (--import-build-facts)"})
+            continue
+        if "error" in fact:
+            rows.append({**row, "classification": NOT_COMPARED,
+                         "reason": f"the .bst could not be read: {fact['error']}"})
+            continue
+        kind = fact.get("kind")
+        if kind not in BUILD_KINDS:
+            if builders.get(rpm):
+                continue  # the element that builds the RPM carries the comparison
+            build = fact.get("build") or {}
+            if build.get("kind") not in BUILD_KINDS:
+                rows.append({**row, "kind": kind, "classification": NOT_COMPARED,
+                             "reason": f"{kind} element builds nothing itself"})
+                continue
+            if build["element"] in compared:
+                continue  # another split of the same build already compared it
+            row["built_by"] = build["element"]
+            fact, kind = build, build["kind"]
+        compared.add(row.get("built_by", element))
+        row["kind"] = kind
+        if spec is None:
+            rows.append({**row, "classification": NOT_COMPARED,
+                         "reason": f"no spec in packages/{rpm}"})
+            continue
+        text = spec.read_text(errors="replace")
+        patches = compare_patches(fact.get("patches") or [],
+                                  factory_patches(text, spec.parent, rpm))
+        options = compare_options(element_options(fact), spec_option_values(text))
+        reasons = []
+        if patches["only_in_dakota"]:
+            reasons.append(f"{len(patches['only_in_dakota'])} Dakota patch(es) not in the recipe")
+        if options["conflicting"]:
+            reasons.append(f"{len(options['conflicting'])} option(s) set differently")
+        row.update({
+            "classification": NEEDS_REVIEW if reasons else ALIGNED,
+            "reason": "; ".join(reasons) or (
+                f"{len(patches['matched'])} Dakota patch(es), all in the recipe; "
+                f"{options['same']} option(s) both set, none differently"),
+            "patches": patches,
+            "options": options,
+        })
+        if fact.get("dakota_junction_patches"):
+            row["dakota_junction_patches"] = fact["dakota_junction_patches"]
+        if fact.get("conditional_variables"):
+            row["conditional_variables"] = True
+        rows.append(row)
+    order = {NEEDS_REVIEW: 0, NOT_COMPARED: 1, ALIGNED: 2}
+    return sorted(rows, key=lambda r: (order[r["classification"]], r["rpm"], r["element"]))
+
+
+def _clip(items: list[str], limit: int = 3) -> str:
+    shown = ", ".join(f"`{i}`" for i in items[:limit])
+    return shown + (f" +{len(items) - limit}" if len(items) > limit else "") if items else "—"
+
+
+def render_build_intent(rows: list[dict] | None, source: dict | None = None) -> list[str]:
+    lines = ["## Patches and build options of factory recipes", ""]
+    if rows is None:
+        return lines + ["- no build facts: run `--import-build-facts` "
+                        "(docs/skills/dakota-parity.md).", ""]
+    if source and not source.get("current"):
+        lines += [f"- **The build facts are for Dakota `{source.get('dakota_revision')}`, not "
+                  "the pinned revision**: re-run `--import-build-facts`.", ""]
+    totals: dict[str, int] = {}
+    for row in rows:
+        totals[row["classification"]] = totals.get(row["classification"], 0) + 1
+    compared = [r for r in rows if "patches" in r]
+    lines += [f"- **{c}**: {totals[c]}" for c in sorted(totals)]
+    lines += [
+        f"- Dakota patches not in the recipe: "
+        f"{sum(len(r['patches']['only_in_dakota']) for r in compared)} in "
+        f"{sum(1 for r in compared if r['patches']['only_in_dakota'])} elements",
+        f"- options set differently: "
+        f"{sum(len(r['options']['conflicting']) for r in compared)} in "
+        f"{sum(1 for r in compared if r['options']['conflicting'])} elements",
+        f"- options only Dakota sets (evidence, not a review trigger): "
+        f"{sum(len(r['options']['only_in_dakota']) for r in compared)} in "
+        f"{sum(1 for r in compared if r['options']['only_in_dakota'])} elements",
+        "",
+        "Patches match by name, `Subject:` or changed lines. The full evidence "
+        "(matched patches, every option of both sides) is in the JSON report.",
+        "",
+        "| package | kind | Dakota patches not in the recipe | options set differently "
+        "(Dakota / recipe) | element |",
+        "| --- | --- | --- | --- | --- |",
+    ]
+    for row in rows:
+        if row["classification"] != NEEDS_REVIEW:
+            continue
+        patches = [PurePosixPath(p).name for p in row["patches"]["only_in_dakota"]]
+        conflicts = [f"{c['option']}={c['dakota']} / {c['factory']}".replace("|", "\\|")
+                     for c in row["options"]["conflicting"]]
+        lines.append(f"| {row['rpm']} | {row['kind']} | {_clip(patches)} | "
+                     f"{_clip(conflicts)} | `{row['element']}` |")
+    lines.append("")
+    return lines
+
+
 # --- Pin ----------------------------------------------------------------------
 
 def load_pin(path: Path) -> dict:
@@ -725,7 +1377,7 @@ def config_gaps(pin: dict, entries: list[dict], packages_dir: Path | None) -> di
 
 
 def build_report(pin: dict, records: list[ElementRecord], factory_locks: dict,
-                 packages_dir: Path | None = None) -> dict:
+                 packages_dir: Path | None = None, build_facts: dict | None = None) -> dict:
     factory = set(factory_locks)
     stored = pin.get("elements") or {}
     entries = []
@@ -800,6 +1452,13 @@ def build_report(pin: dict, records: list[ElementRecord], factory_locks: dict,
             key=lambda d: ({NEEDS_REVIEW: 0, NOT_COMPARED: 1, ALIGNED: 2}[d["classification"]],
                            d["rpm"], d["element"]),
         ),
+        "build_intent": (None if build_facts is None
+                         else build_intent(entries, build_facts, factory_locks, packages_dir)),
+        "build_facts": (None if build_facts is None else {
+            "dakota_revision": build_facts.get("dakota_revision"),
+            "refs": build_facts.get("refs"),
+            "current": build_facts.get("dakota_revision") == pin["source"]["revision"],
+        }),
         "stale_mappings": stale,
         "unmapped_elements": unmapped,
         "config_gaps": config_gaps(pin, entries, packages_dir),
@@ -890,6 +1549,8 @@ def render_markdown(report: dict) -> str:
                      f"{item['dakota_version'] or '—'} | {item['classification']} | "
                      f"`{item['element']}` |")
     lines.append("")
+
+    lines += render_build_intent(report.get("build_intent"), report.get("build_facts"))
 
     structural = [e for e in report["elements"] if e["disposition"] == STRUCTURAL]
     lines += ["## Structural (Utah parity issues)", "", "| issue | element | reason |",
@@ -1110,6 +1771,16 @@ def parse_args(argv):
                         help="rewrite --snapshot from Dakota's SPDX SBOM (needs --image-layout)")
     parser.add_argument("--image-layout", type=Path,
                         help="OCI layout holding the pinned image (skopeo copy docker://... oci:DIR)")
+    parser.add_argument("--build-facts", type=Path,
+                        default=repo / "config" / "dakota-build-facts.json",
+                        help="patches and options of each element's .bst (--import-build-facts)")
+    parser.add_argument("--import-build-facts", action="store_true",
+                        help="rewrite --build-facts from checkouts of the four projects at the "
+                             "pinned refs (--dakota-dir, --gbm-dir, --fdsdk-dir, --fdsdk-extra-dir)")
+    parser.add_argument("--dakota-dir", type=Path)
+    parser.add_argument("--gbm-dir", type=Path)
+    parser.add_argument("--fdsdk-dir", type=Path)
+    parser.add_argument("--fdsdk-extra-dir", type=Path)
     parser.add_argument("--gbm-pin", type=Path, default=repo / "config" / "gnome-build-meta.json",
                         help="the gnome-build-meta audit's mapping, reused for GNOME renames")
     parser.add_argument("--rawhide-primary", type=Path,
@@ -1121,9 +1792,9 @@ def parse_args(argv):
 
 def main(argv=None) -> int:
     args = parse_args(argv)
-    if args.check and (args.refresh or args.import_sbom):
-        print("error: --check writes nothing; it cannot --refresh or --import-sbom",
-              file=sys.stderr)
+    if args.check and (args.refresh or args.import_sbom or args.import_build_facts):
+        print("error: --check writes nothing; it cannot --refresh, --import-sbom or "
+              "--import-build-facts", file=sys.stderr)
         return 2
     pin = load_pin(args.pin)
 
@@ -1142,6 +1813,18 @@ def main(argv=None) -> int:
         print(f"snapshot written: {args.snapshot}")
 
     records = read_snapshot(args.snapshot)
+
+    if args.import_build_facts:
+        dirs = {DAKOTA_PROJECT: args.dakota_dir, GBM_PROJECT: args.gbm_dir,
+                FDSDK_PROJECT: args.fdsdk_dir, FDSDK_EXTRA_PROJECT: args.fdsdk_extra_dir}
+        missing = [project for project, path in dirs.items() if path is None]
+        if missing:
+            print(f"error: --import-build-facts needs a checkout of {', '.join(missing)}",
+                  file=sys.stderr)
+            return 2
+        write_build_facts(args.build_facts, import_build_facts(pin, records, dirs))
+        print(f"build facts written: {args.build_facts}")
+
     factory_locks = load_source_locks(args.sources)
     resolved = with_gbm_aliases(pin, json.loads(args.gbm_pin.read_text()))
 
@@ -1154,7 +1837,8 @@ def main(argv=None) -> int:
         resolved["elements"] = pin["elements"]
         print(f"mapping written: {args.pin}")
 
-    report = build_report(resolved, records, factory_locks, args.packages_dir)
+    report = build_report(resolved, records, factory_locks, args.packages_dir,
+                          load_build_facts(args.build_facts))
     if args.check:
         render_markdown(report)
         problems = contract_problems(pin, records)
