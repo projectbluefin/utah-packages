@@ -2,7 +2,7 @@
   "package": "gnome-shell-extension-gsconnect",
   "branch": "rawhide",
   "remote": "https://src.fedoraproject.org/rpms/gnome-shell-extension-gsconnect.git",
-  "commit": "c7fd906c8f49c56fcc15c9ece336ddafa82ab086",
-  "tree": "898ed0de19dbbfcb9902a30fc6ef4d10980d6e71",
-  "imported_at": "2026-08-29T06:02:34.296995+00:00"
+  "commit": "78c8f07b55af45f837d3f30018d5e8436867ec9b",
+  "tree": "90399f47c7179b2759a922ead0f1a3d7030f0b8e",
+  "imported_at": "2026-11-16T04:17:43.029213+00:00"
 }

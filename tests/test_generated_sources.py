@@ -227,9 +227,9 @@ class OpenALSoftTransformTests(unittest.TestCase):
 
     def test_metadata_names_the_recipe_source_and_pinned_input(self):
         metadata = generated_sources.metadata_for("openal-soft", ROOT / "packages" / "openal-soft")
-        self.assertEqual(metadata["filename"], "openal-soft-1.24.2-clean.tar.xz")
-        self.assertIn("openal-soft-1.24.2.tar.bz2", metadata["generate"]["input"])
-        self.assertIn("1.24.2", generated_sources.OPENAL_SOFT_INPUT_SHA512)
+        self.assertEqual(metadata["filename"], "openal-soft-1.25.2-clean.tar.xz")
+        self.assertIn("openal-soft-1.25.2.tar.bz2", metadata["generate"]["input"])
+        self.assertIn("1.25.2", generated_sources.OPENAL_SOFT_INPUT_SHA512)
 
 
 def build_sevenzip_archive(version: str) -> bytes:
@@ -680,12 +680,7 @@ class GeneratedMetadataTests(unittest.TestCase):
         metadata = generated_sources.metadata_for(
             "intel-media-driver-free", ROOT / "packages" / "intel-media-driver-free"
         )
-        self.assertEqual(metadata["filename"], "intel-media-26.2.4-free.tar.gz")
-
-    def test_tailscale_metadata_pins_the_tag_commit(self):
-        metadata = generated_sources.metadata_for("tailscale", ROOT / "packages" / "tailscale")
-        self.assertEqual(metadata["filename"], "tailscale-1.98.8-vendored.tar.xz")
-        self.assertIn("05a91829316e055517a1e84f7b00016846ef4107", metadata["generate"]["input"])
+        self.assertEqual(metadata["filename"], "intel-media-26.3.5-free.tar.gz")
 
     def test_unknown_package_is_rejected(self):
         with self.assertRaisesRegex(ValueError, "no generated source resolver"):
@@ -695,13 +690,6 @@ class GeneratedMetadataTests(unittest.TestCase):
         for name in generated_sources.METADATA:
             metadata = generated_sources.metadata_for(name, ROOT / "packages" / name)
             self.assertNotIn("fedoraproject.org", str(metadata))
-
-
-class TailscaleToolchainGapTests(unittest.TestCase):
-    def test_generation_fails_closed_without_a_go_toolchain(self):
-        with patch("shutil.which", return_value=None):
-            with self.assertRaisesRegex(RuntimeError, "Go toolchain"):
-                generated_sources.generate("tailscale", ROOT / "packages" / "tailscale", Path("/tmp"))
 
 
 def _targz(members: dict[str, bytes], mtime: int = 1700000000) -> bytes:

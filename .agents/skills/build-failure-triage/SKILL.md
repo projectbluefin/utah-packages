@@ -225,6 +225,38 @@ check their URLs in the lock to distinguish Hummingbird from Fedora.
 The fetch retries only missing or rejected RPMs; a successful retry still
 has to verify the whole lock before the offline build.
 
+### Measuring package-server failures
+
+For a rebuild failure census (#1208), take the latest 20 `rebuild-rpms`
+runs and enumerate failed `build (<package>)` jobs with the paginated
+Actions jobs endpoint. Include jobs that finished before a run was cancelled;
+exclude cancelled jobs and publish, report, and preflight failures.
+
+Count each failed job once, by the first cause that prevented the build:
+
+- **Hummingbird transfer:** a terminal download error names the Hummingbird
+  host, or the rejected RPM maps to that host in the build-root lock.
+- **Other network:** the terminal error names another download host or service.
+- **Dependency cascade:** a required factory package failed earlier in the
+  same run and its missing output explains this failure.
+- **Recipe:** download and dependency setup succeeded, and the recipe's
+  build or tests failed.
+- **Unclassified:** report missing logs, ambiguous errors, and other
+  infrastructure failures separately. A retry warning that recovered is not
+  a cause, and a failed jobs page is not evidence of zero failures.
+
+Report counts by run, the sample window, and unclassified jobs. To evaluate
+the fewer-than-1-in-20 target, use a completed full rebuild after the shared
+retry policy lands; a cancelled run or a sample with missing evidence
+cannot establish the target.
+
+Do not add whole-job retries before measuring the existing package-download
+retries: a full rerun repeats work and can add load during an outage. If
+Hummingbird transfers still dominate, consider an availability-only cache
+for locked RPMs. It must preserve package verification and pinned signing
+keys, and should not be mistaken for a fallback for dependency resolution
+or repository metadata.
+
 ### A hanging test is not a starved test
 
 `%check` failures that report **no output at all** and land on the same
