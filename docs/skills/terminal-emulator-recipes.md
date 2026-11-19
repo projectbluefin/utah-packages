@@ -44,18 +44,19 @@ repository that is empty both print nothing.
 
 ## Verify the complete terminal closure
 
-Ptyxis requires the GTK4 VTE library, which in turn BuildRequires
+Ptyxis requires the GTK4 VTE library, which BuildRequires
 `pkgconfig(simdutf) >= 7.2.1`. VTE removes its bundled subprojects before
 building, so an import of only Ptyxis and VTE omits a required provider.
 Carry simdutf as a third recipe unless the enabled repositories demonstrably
-provide a sufficient version. The imported simdutf 9.0.0 recipe is pinned to
-Rawhide commit `6666acdef39a1c9660e235a949c09c23a054ac84`; fresh upstream
-archive bytes match the SHA-512 in its sources manifest.
+provide a sufficient version.
 
-The publication runtime contract must name `simdutf` explicitly as well.
-That keeps the provider in the candidate transaction used before publication;
-the Utah install-set check otherwise reports the missing runtime soname only
-after Ptyxis is already published.
+The simdutf 9.3.3 update changed its library soname from `.so.34` to `.so.37`.
+The existing vte291 build still required `.so.34`, so it could not resolve
+against the current provider. Set vte291's simdutf build floor to 9.3.3 and
+rebuild it; the resulting `vte291-gtk4` package links the published `.so.37`.
+The runtime contract must name `ptyxis`, not simdutf: Utah installs Ptyxis, and
+that consumer name makes the transaction follow its generated Requires through
+`vte291-gtk4` and catch a future provider/consumer mismatch.
 
 The factory solves build waves from actual BuildRequires. Prove the chain
 `simdutf -> vte291 -> ptyxis` in the pinned Packit runner, then verify the
