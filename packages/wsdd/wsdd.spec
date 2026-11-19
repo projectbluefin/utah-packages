@@ -1,6 +1,6 @@
 Name:           wsdd
-Version:        0.8
-Release:        7%{?dist}
+Version:        0.9
+Release:        1%{?dist}
 Summary:        Web Services Dynamic Discovery host daemon
 License:        MIT 
 URL:            https://github.com/christgau/wsdd 
@@ -61,6 +61,10 @@ install -m0644 -D wsdd.sysusers.conf %{buildroot}%{_sysusersdir}/wsdd.conf
 
 
 %changelog
+* Mon Nov 16 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 0.9-1
+- Update to 0.9 (Dakota's gnomeos-deps/wsdd.bst)
+- Rebase the Fedora systemd patch onto 0.9's unit and defaults file
+
 * Fri Jul 17 2026 Fedora Release Engineering <releng@fedoraproject.org> - 0.8-7
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_45_Mass_Rebuild
 

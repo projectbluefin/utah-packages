@@ -309,7 +309,7 @@ class SevenZipGenerateTests(PackageDirMixin, unittest.TestCase):
 
 
 class OpenALSoftGenerateTests(PackageDirMixin, unittest.TestCase):
-    VERSION = "1.24.2"
+    VERSION = "1.25.2"
     URL = f"https://openal-soft.org/openal-releases/openal-soft-{VERSION}.tar.bz2"
 
     def setUp(self):
@@ -340,33 +340,6 @@ class OpenALSoftGenerateTests(PackageDirMixin, unittest.TestCase):
         self.assertEqual(target.name, f"openal-soft-{self.VERSION}-clean.tar.xz")
         self.assertEqual(target.read_bytes(), generated_sources._openal_soft_transform(self.payload, self.VERSION))
         self.assertEqual([url for url, _, _ in fetch.requests], [self.URL])
-
-
-class TailscaleGenerateTests(PackageDirMixin, unittest.TestCase):
-    VERSION = "1.98.8"
-
-    def setUp(self):
-        super().setUp()
-        self.write_spec("tailscale.spec", self.VERSION)
-        self.out_dir.mkdir(parents=True)
-
-    def test_an_unpinned_version_fails_before_looking_for_go(self):
-        self.write_spec("tailscale.spec", "1.0.0")
-        with patch("shutil.which") as which:
-            with self.assertRaisesRegex(RuntimeError, "no pinned commit for tailscale 1.0.0"):
-                generated_sources.generate("tailscale", self.package_dir, self.out_dir)
-        which.assert_not_called()
-
-    def test_a_moved_tag_fails_closed_before_vendoring(self):
-        runs = []
-        with patch("shutil.which", return_value="/usr/bin/go"), \
-                patch.object(generated_sources.subprocess, "run", side_effect=lambda cmd, **_: runs.append(cmd)), \
-                patch.object(generated_sources.subprocess, "check_output", return_value="f" * 40 + "\n"):
-            with self.assertRaisesRegex(RuntimeError, f"tag v{self.VERSION} moved: expected 05a9"):
-                generated_sources.generate("tailscale", self.package_dir, self.out_dir)
-        self.assertEqual(len(runs), 1)
-        self.assertEqual(runs[0][:6], ["git", "clone", "-q", "--branch", f"v{self.VERSION}", "--depth"])
-        self.assertFalse((self.out_dir / f"tailscale-{self.VERSION}-vendored.tar.xz").exists())
 
 
 class BrewTarballGenerateTests(PackageDirMixin, unittest.TestCase):

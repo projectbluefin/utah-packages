@@ -13,7 +13,7 @@ diff --git a/pcap.3pcap.in b/pcap.3pcap.in
 index 492c227..46a2a4b 100644
 --- a/pcap.3pcap.in
 +++ b/pcap.3pcap.in
-@@ -1025,8 +1025,8 @@ script or some other configuration script to check whether the libpcap
+@@ -1010,8 +1010,8 @@ script or some other configuration script to check whether the libpcap
  1.0 APIs are available and use them only if they are.
  .SH SEE ALSO
  .BR autoconf (1),
@@ -22,7 +22,7 @@ index 492c227..46a2a4b 100644
 +.BR tcpdump (8),
 +.BR tcpslice (8),
  .BR \%pcap-filter (@MAN_MISC_INFO@),
- .BR pfconfig (8),
+ .BR bpf (@MAN_DEVICES@),
  .BR usermod (@MAN_ADMIN_COMMANDS@)
 -- 
 1.8.3.1
