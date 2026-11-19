@@ -49,14 +49,14 @@ NET_RETRY_PAUSE=15
 # gate must not hold the package's version as broken (#1179). A lock resolve
 # that loses the repository mid-query ends `Command failed: ... repoquery`
 # with no dnf error text (#287), so that counts too unless dnf named a
-# dependency problem. An unsatisfiable graph fails every attempt too, but
-# with no download error, and stays an ordinary failure.
+# dependency problem. A dependency error takes precedence over earlier
+# transfer warnings from downloads that recovered.
 NET_ERRORS='All mirrors were tried|No more mirrors to try|Curl error|Cannot download|Status code: 5[0-9][0-9]|IncompleteRead|Connection reset|ConnectionResetError|Connection aborted|RemoteDisconnected|Read timed out|MaxRetryError'
 SILENT_RESOLVE='Command failed: .*repoquery'
 DEP_ERRORS='No match for argument|Failed to resolve the transaction|nothing provides|Problem: |conflicting requests|none of the providers can be installed'
 infra_failed() {
-  grep -qE "$NET_ERRORS" "$1" && return 0
-  grep -qE "$SILENT_RESOLVE" "$1" && ! grep -qE "$DEP_ERRORS" "$1"
+  grep -qE "$DEP_ERRORS" "$1" && return 1
+  grep -qE "$NET_ERRORS|$SILENT_RESOLVE" "$1"
 }
 REPORT_DIR=${REPORT_DIR:-/work/reports}
 online() {

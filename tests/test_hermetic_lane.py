@@ -206,6 +206,14 @@ echo "attempts=$(cat {counter}) cleanups=$cleanups"
             self.assertEqual(unsatisfiable.returncode, 1, unsatisfiable.stdout + unsatisfiable.stderr)
             self.assertFalse((reports / "infra-failure").exists())
             counter.unlink()
+            recovered = "flaky() { printf '%s\\n' 'Curl error (28)' 'No match for argument: libfoo' >&2;"
+            unsatisfiable_after_retry = subprocess.run(
+                ["bash", "-c", probe.replace("flaky() {", recovered)],
+                env={"PASS_ON": "9", "PATH": "/usr/bin:/bin"}, capture_output=True, text=True)
+            self.assertEqual(unsatisfiable_after_retry.returncode, 1,
+                             unsatisfiable_after_retry.stdout + unsatisfiable_after_retry.stderr)
+            self.assertFalse((reports / "infra-failure").exists())
+            counter.unlink()
             capped = subprocess.run(["bash", "-c", probe],
                                     env={"PASS_ON": "9", "HERMETIC_NET_ATTEMPTS": "1", "PATH": "/usr/bin:/bin"},
                                     capture_output=True, text=True)
