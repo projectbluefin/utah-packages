@@ -191,7 +191,8 @@ cp -p %{_libdir}/libjxl.so.%{sover_old}*     \
 
 %files doc
 %doc doc/*.md
-%doc %{_vpath_builddir}/html
+# 0.12.0 builds doc/ as its own CMake project, so Doxygen writes under doc/.
+%doc %{_vpath_builddir}/doc/html
 %license LICENSE
 
 %files -n libjxl
