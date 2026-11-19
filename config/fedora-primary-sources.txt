@@ -9,7 +9,6 @@ enchant2
 fdk-aac-free
 foo2zjs
 foomatic-db
-hyperv-daemons
 kde-filesystem
 kde-settings
 kf5
