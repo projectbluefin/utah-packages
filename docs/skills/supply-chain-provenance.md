@@ -1,9 +1,9 @@
 ---
 name: supply-chain-provenance
 description: >-
-  Buildroot locking, live package NEVRA snapshots, recipe provenance
-  validation, source-lock name order, and the factory manifest published
-  beside the OCI digest.
+  Buildroot locking, pinned package signature keys, live package NEVRA
+  snapshots, recipe provenance validation, source-lock name order, and the
+  factory manifest published beside the OCI digest.
 metadata:
   type: procedure
 ---
@@ -114,8 +114,8 @@ start from.
 
 ## The hermetic repository is checked against its lock
 
-`mock-hermetic-repo` saves whatever each lock URL returns, and the mock
-configuration resolves with `gpgcheck=0`. `tools/verify_hermetic_repo.py`
+`mock-hermetic-repo` saves whatever each lock URL returns, and the offline
+repository it builds is installed with `gpgcheck=0`. `tools/verify_hermetic_repo.py`
 therefore holds the materialized repository to `buildroot_lock.json` before
 the offline build: every locked RPM present, no other `*.rpm` anywhere in the
 tree, the MD5 of each file's header and payload equal to the lock's `sigmd5`,
@@ -138,11 +138,57 @@ copying local RPMs but before publishing repository metadata for the offline
 build. Update assertions for changed retry mechanics without dropping those
 boundaries.
 
-The check proves the build used the root the lock phase resolved; it does not
-prove that root was genuine, because the lock phase itself runs with
-`gpgcheck=0`. mock records `signature` from `%{SIGPGP}`, which current Fedora
-and Hummingbird RPMs (header-only `RSAHEADER` signatures) leave empty, so the
-key ID check rarely has anything to compare.
+The check proves the build used the root the lock phase resolved. The lock
+phase is what proves that root genuine: it installs every RPM with dnf, and
+the `fedora`, `updates` and Hummingbird repositories verify package
+signatures against keys pinned in the repository (next section). mock
+records `signature` from `%{SIGPGP}`, which current Fedora and Hummingbird
+RPMs (header-only `RSAHEADER` signatures) leave empty, so the key ID check
+rarely has anything to compare; the SIGMD5 check ties the offline repository
+to the RPMs the lock phase verified.
+
+## Package signatures are checked against pinned keys
+
+`config/keys/` pins the public keys, each with its source, full fingerprint
+and how it was cross-checked in the file's preamble;
+`tools/mock_config.py` `KEYS` records the fingerprints, and
+`tests/test_package_keys.py` parses each file and fails if it is not the key
+named there.
+
+- Fedora 44: `RPM-GPG-KEY-fedora-44-primary`, fingerprint
+  `36F612DCF27F7D1A48A835E4DBFCF71C6D9F90A6`.
+- Hummingbird: Red Hat release key 2 (v4 RSA,
+  `567E347AD0044ADE55BA8A5F199E2F91FD431D51`) and release key 4 (v6
+  ML-DSA-87+Ed448,
+  `FCD355B305707A62DA143AB6E422397E50FE8467A2A95343D246D6276AFEDF8F`).
+  Every Hummingbird RPM carries a header signature from each, and dnf5 fails
+  the transaction ("Import of the key didn't help, wrong key?") unless it
+  trusts both, so `gpgkey` names both files. Hummingbird's own
+  `yum-repos/hummingbird.repo` sets `gpgcheck=0` for its lockfile tooling;
+  that is not a sign its RPMs are unsigned.
+
+Where the keys are read from:
+
+- mock: dnf runs in the bootstrap chroot, which sees no host path except
+  repository baseurls. mock copies `/etc/pki/mock/RPM-GPG-KEY-*` into each
+  chroot, so `hermetic_build.sh` (`install_tools`) and the mock lane in
+  `build-stage.yml` install `config/keys/` there, and the rendered config
+  names `file:///etc/pki/mock/...`. A `gpgkey` under `/repos` fails with
+  "cannot open file".
+- Container lane: `config/hummingbird.repo` names
+  `file:///repos/keys/...`, the `config/` mount every installing job uses.
+  Fedora comes from the build-root image's own repository files
+  (`gpgcheck=1`, the image's `fedora-gpg-keys`, byte-identical to the pinned
+  Fedora key).
+- `stages` and `factory` stay `gpgcheck=0`: their RPMs are this factory's
+  own output, nothing signs them with an RPM key, and the factory image that
+  carries the published repository is cosign-signed.
+
+When Fedora branches or Hummingbird rotates a key: fetch the new key from
+the official source, cross-check its fingerprint against a second source,
+add it to `config/keys/` with that record and to `KEYS`, and prove it with a
+real `dnf install` from each repository. `rpmkeys --checksig -v` against a
+temporary `--dbpath` names every signature an RPM carries.
 
 ## The snapshot runs on the runner
 

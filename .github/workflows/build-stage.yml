@@ -492,6 +492,8 @@ jobs:
             -v "$PWD/config:/repos:ro,Z" \
             utah-buildroot:run bash -exc '
               dnf -y install mock rpm-build python3
+              # The pinned keys the mock config verifies packages with.
+              install -D -m 0644 -t /etc/pki/mock /repos/keys/RPM-GPG-KEY-*
               # Whatever an earlier stage built, Fedora must not answer for.
               # Same rule the container path applies, from the same artifacts.
               PRIOR=
