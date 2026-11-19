@@ -88,7 +88,8 @@ class SaltTests(unittest.TestCase):
         # canary. verify_hermetic_repo.py was missed (#1196's canary hit the
         # cache and never ran it).
         called = set()
-        for script in ("tools/hermetic_build.sh", "tools/build_container.sh"):
+        for script in ("tools/hermetic_build.sh", "tools/build_container.sh",
+                       ".github/workflows/build-stage.yml"):
             text = (ROOT / script).read_text()
             for name in re.findall(r"/tools/([A-Za-z0-9_.-]+)", text):
                 if (ROOT / "tools" / name).is_file():
