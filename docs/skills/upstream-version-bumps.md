@@ -156,6 +156,35 @@ the reference when Fedora has one. Seen so far:
   `%check` aborted with `Error spawning dbus-daemon` (gate run 40032133559).
   BuildRequire `dbus-daemon`, as ModemManager already does.
 
+- A detached signature the spec only lists (`Source1: ...tar.gz.asc`, never
+  passed to `%{gpgverify}`) makes `check_bumpable()` refuse the bump: its
+  `sources` pin is bound to the old version, and the factory fetches every
+  non-primary source from Fedora's lookaside, which has no object for a
+  release Fedora has not packaged. liburing 2.15 and libpcap 1.11.0 dropped
+  the `Source1` line and its `sources` pin, with a `# Utah:` comment, then
+  `apply()` ran. A spec that does verify (fish) needs the signature and key
+  in the lock (`signature_url`, `gpg_key`) instead.
+- A minor release can still move a soname. libtheora 1.1.1 -> 1.2.0 bumped
+  all three libtool `-version-info` triples (`libtheora.so.0` -> `.so.1`,
+  `libtheoradec.so.1` -> `.so.2`, `libtheoraenc.so.1` -> `.so.2`). Compare
+  `current - age` in `configure.ac` between the two tarballs, then follow
+  "Soname-coupled bumps" below. Its merged patches also took `./autogen.sh`
+  and the `autoconf automake libtool` BuildRequires with them, and those
+  were the only thing pulling in `gcc`: `configure` died with "C compiler
+  cannot create executables" until the recipe BuildRequired `gcc` itself.
+- Fedora's dist-git can be ahead of Koji. wpa_supplicant's rawhide branch
+  carried 2.12 (`ca343e8`) for three months with no Koji build at all.
+  `getLatestBuilds` alone says Rawhide has not moved; `git log` on the
+  dist-git branch says it has, and its patch set is the reference for the
+  bump. Import it with `--ref` and say in the pull request that the commit
+  is not Koji-built.
+- After any hand or tool relock, check that each `fallback_urls` entry
+  contains the new `sha512`, and that a lookaside fallback uses the `sha512`
+  form. Plain substitution once rewrote the "72" inside gsconnect's old
+  digest on 72 -> 74 and kept libtheora's legacy `/md5/<old md5>/` path;
+  `rebuilt_fallback()` (see `swap_version()` below) now rebuilds lookaside
+  fallbacks from the new file name and digest.
+
 Verify a fix with `rebuild-rpms.yml` dispatched on the `fix/recipe-<name>`
 ref with `packages=["<name>"]`; a non-main ref publishes only a
 branch-named tag.

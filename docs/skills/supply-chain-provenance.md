@@ -356,6 +356,17 @@ commit from the spec's `%global commit`, so moving the pin is one spec edit
 plus a new digest table entry, and include the upstream `LICENSE` so the
 package can ship it.
 
+When the recipe builds one subtree of a release that is published only as a
+whole (Fedora's hyperv-daemons takes the kernel's `tools/hv` as a hand-cut
+lookaside snapshot), pin the whole release's SHA-512 and cut the subtree in
+the generator. `hyperv-daemons` reads the 160 MB stable kernel `.tar.xz`
+once (about 15 s), keeps `tools/hv` plus the `tools/build` and
+`tools/scripts` makefiles its Makefile includes (the file list of Fedora's
+snapshot, which still builds at v7.3.1), and fails if any of them is
+missing. kernel.org signs only `sha256sums.asc`: check the archive against
+its line there before pinning the SHA-512. Moving to a newer kernel is the
+spec `Version:` plus a `HYPERV_KERNEL_INPUT_SHA512` entry.
+
 Rust vendor generators must read the release root's exact lock path, not
 the first archive member ending in `Cargo.lock`. For `prefixdevname`, both
 dependency downloads and repacking use `prefixdevname-<version>/Cargo.lock`;
