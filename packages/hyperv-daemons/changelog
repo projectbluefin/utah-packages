@@ -1,3 +1,6 @@
+* Mon Nov 16 2026 Copilot <223556219+Copilot@users.noreply.github.com> - 7.3.1-1
+- Update tools/hv to the stable kernel v7.3.1 (fcopy and KVP fixes since 6.10-rc4)
+
 * Fri Jan 17 2025 Fedora Release Engineering <releng@fedoraproject.org> - 0-0.49.20240616git
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_42_Mass_Rebuild
 
