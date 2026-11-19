@@ -45,7 +45,7 @@ repository that is empty both print nothing.
 ## Verify the complete terminal closure
 
 Ptyxis requires the GTK4 VTE library, which BuildRequires
-`pkgconfig(simdutf) >= 7.2.1`. VTE removes its bundled subprojects before
+`pkgconfig(simdutf) >= 9.3.3`. VTE removes its bundled subprojects before
 building, so an import of only Ptyxis and VTE omits a required provider.
 Carry simdutf as a third recipe unless the enabled repositories demonstrably
 provide a sufficient version.
