@@ -38,6 +38,7 @@ owes.
 | --- | --- |
 | `config/dakota-elements.tsv` | The element snapshot: one row per SBOM element, with its primary source (`version`, `url`), patch count, and how many files, desktop entries, systemd units and `/usr/bin` commands it owns **in the published image**. |
 | `config/dakota.json` | `source`: the pinned Dakota revision, the publish run whose `sbom-dakota` artifact is the snapshot, the image digest, the junction refs. `aliases`, `overrides`, `config_subpackages`: reviewer decisions. `elements`: the generated mapping, one entry per element (`disposition`, `rpm`, `fedora`, `hummingbird`, `evidence`). |
+| `config/dakota-build-facts.json` | The build facts: for every in-image element, its `kind`, its patch sources (`patch` and `patch_queue`, each with its `Subject:` and a hash of its changed lines) and its option variables (`meson-local`, `meson-extra`, `cmake-local`, `cmake-extra`, `conf-local`, `conf-extra`, `conf-args`, with the element's own `%{...}` variables expanded), read from the `.bst` at the pinned refs. A `filter` records the element it splits under `build`. `refs` names the four commits it was read at. |
 | `config/gnome-build-meta.json` | Reused: its `mapping` names the RPM for GNOME renames (`sdk/gtk.bst -> gtk4`), so the two audits never disagree on a GNOME name. |
 | `reports/audit-dakota.{json,md}` | The audit: counts, import queue, version drift, structural and config tables, stale mappings, config-package gaps. Derived, git-ignored and never committed: every recipe import moves it, so a tracked copy would go stale or make concurrent import PRs conflict (#309). Every `validate.yml` run publishes the live report as the `dakota-audit` artifact and in its job summary. |
 
@@ -88,16 +89,60 @@ python3 tools/audit_dakota.py --check
 # --hummingbird-primary take saved copies.
 python3 tools/audit_dakota.py --refresh
 
-# Re-pin Dakota: set source.revision, publish_run, sbom, image_digest in
-# config/dakota.json, then rebuild the snapshot from that run's SBOM and image.
+# Rewrite config/dakota-build-facts.json from checkouts at the pinned refs.
+# Each checkout's HEAD must be the pinned commit; freedesktop-sdk-extra's is
+# read from gnome-build-meta's junction element.
+python3 tools/dakota_repin.py checkout --into /tmp/src
+python3 tools/audit_dakota.py --import-build-facts \
+    --dakota-dir /tmp/src/dakota --gbm-dir /tmp/src/gnome-build-meta \
+    --fdsdk-dir /tmp/src/freedesktop-sdk --fdsdk-extra-dir /tmp/src/freedesktop-sdk-extra
+
+# Re-pin Dakota by hand (refresh-dakota.yml does this daily, below): find the
+# run and write the new source, then rebuild the snapshot from that run's SBOM
+# and image.
+python3 tools/dakota_repin.py resolve --out /tmp/repin.json
+python3 tools/dakota_repin.py apply /tmp/repin.json
 gh run download <run> -R projectbluefin/dakota -n sbom-dakota -D /tmp/sbom
-skopeo copy docker://ghcr.io/projectbluefin/dakota@<digest> oci:/tmp/dakota-oci:testing
+skopeo copy --preserve-digests docker://ghcr.io/projectbluefin/dakota@<digest> \
+    oci:/tmp/dakota-oci:testing
 python3 tools/audit_dakota.py --import-sbom /tmp/sbom/dakota.sbom.json \
     --image-layout /tmp/dakota-oci --refresh
 ```
 
 `--import-sbom` refuses an SBOM whose `documentNamespace` is not the pinned
 revision and an OCI layout that does not hold the pinned digest.
+
+### Automatic re-pin
+
+`.github/workflows/refresh-dakota.yml` runs daily (05:37 UTC) and on
+dispatch, from `main` only. `tools/dakota_repin.py resolve` takes the newest
+successful `publish.yml` run whose `head_branch` is `testing` (merge-queue
+publishes push only a `:SHA` tag and are skipped), that still has unexpired
+`sbom-dakota` and `digest-default` artifacts, and whose commit
+`compare/<sha>...testing` reports `identical` or `ahead`. The revision and
+digest come from `digest-default`'s `digest.json` (`variant: default`,
+`image: ghcr.io/projectbluefin/dakota`, `sha` equal to the run's), and the
+junction refs from `elements/{gnome-build-meta,freedesktop-sdk}.bst` at that
+commit, in the committed shape (`<track> <ref>`, or the ref alone when it
+already names the track). When revision and digest equal the pin, the job
+stops. Otherwise it writes the source, copies the image with
+`skopeo copy --preserve-digests` (about 3.6 GB), runs `--import-sbom ...
+--refresh`, fetches the four projects with `dakota_repin.py checkout` and
+runs `--import-build-facts`, and opens or force-updates one pull request on
+`chore/dakota-repin` with only `config/dakota.json`,
+`config/dakota-elements.tsv` and `config/dakota-build-facts.json`. The body has the disposition counts before and
+after, the drift totals, the `needs_review` rows, the patch and option
+classification counts before and after, and any `contract_problems`
+(an override or alias naming an element the new snapshot dropped makes
+`just dakota-audit` fail until it is fixed on that branch). It never merges or
+arms auto-merge. The work runs in two jobs. `repin` fetches and parses the
+third-party content (it `git apply`s Dakota's patches to compare them) with
+read-only permissions and no secret, then uploads only the three config files
+and the PR body. `open-pr` starts from a fresh checkout, checks that those
+files are well-formed, and is the only job that mints the mergeraptor app
+token, like `refresh-buildroot.yml`, so the pull request's CI runs. Dakota's
+runs, artifacts and image are read with the workflow's own token, since
+Dakota is public.
 `.github/workflows/audit-dakota.yml` runs the offline audit weekly (non-gating)
 and uploads the report; dispatch it with `refresh` to get a re-resolved
 `config/dakota.json` as an artifact to review and commit.
@@ -124,9 +169,9 @@ desktop entry, then a systemd unit, then a command, then libraries and data.
    ([`repeated-mistakes.md`](repeated-mistakes.md) #23).
 3. Align it to the element: Dakota's version is in the report; the patches
    and options are in the `.bst` (Dakota, or gnome-build-meta/freedesktop-sdk
-   at the junction refs in `source.junctions`). For a GNOME module, the
-   gnome-build-meta audit diffs patches and `-D` options
-   ([`gnome-build-meta-audit.md`](gnome-build-meta-audit.md)).
+   at the junction refs in `source.junctions`). Once the recipe is `factory`,
+   the report's **Patches and build options** section lists the element's
+   patches the recipe lacks and the options both set differently (below).
 4. Rerun the audit. Until `--refresh` runs, the landed recipe shows under
    **Stale mappings** (recorded `fedora-importable`, now `factory`); its live
    disposition is already `factory`. That is expected and does not fail
@@ -150,6 +195,47 @@ compare `major.minor`). `needs_review` says which side leads. `not_compared`
 means Dakota's source carries no version (a bare commit or checksum). A split
 element with no source of its own (`bluez-libs`, `pipewire-daemon`) takes the
 version of the element that builds the same RPM, and says which.
+
+## Patches and build options
+
+For every `factory` element the report compares the build facts with the
+recipe, offline (`build_intent` in the JSON, its own Markdown section):
+
+- **patches**: the element's `patch` and `patch_queue` files against the
+  spec's `Patch:` lines. A pair matches by name (directory, number prefix and
+  suffix dropped: `0002-Fix-Build.patch` is `fix-build`), by `Subject:`, or by
+  the hash of the added and removed lines when the patch file is in
+  `packages/<rpm>/`. Fedora names the same backport differently
+  (`svn-r6564.patch` is `libmp3lame-symbols.patch`), so the subject and the
+  hash do most of the matching.
+- **options**: `-D` options from the meson and cmake variables against the
+  spec's `%meson`/`%cmake` blocks, and `--enable/--disable/--with/--without`
+  switches from the conf variables against the spec's `%configure` and
+  `./configure` blocks. Every value the spec passes is kept (webkitgtk passes
+  `-DUSE_GTK4=OFF` and `ON` for its two builds; the gnome-build-meta audit's
+  `meson_options` keeps only the first), and an option conflicts only when
+  Dakota's value matches none of them. `--disable-x` is `enable-x=no`; `true`
+  equals `enabled`. A value that is still a macro or variable reference on
+  either side, or an option inside `%{?macro:...}`, is not a conflict.
+
+`needs_review`: Dakota carries a patch the recipe lacks, or both sides set an
+option differently. Options only Dakota sets are counted and kept in the
+JSON, but do not trigger review on their own: most restate a default or turn
+off docs and tests. `aligned`: neither. `not_compared`: no build facts for the
+element, a `.bst` that did not parse, no spec, or a `filter`/`stack` whose RPM
+no element builds. A `filter` is compared through the element it splits
+(`bluez-libs` through `_private/bluez-base`), once per build.
+
+Dakota's junction patch queues (`patches/freedesktop-sdk-dakota`,
+`patches/gnome-build-meta`) are applied to copies of the junctioned checkouts
+before reading, because they change elements: `0002-ffmpeg-enable-all-native-codecs.patch`
+rewrites ffmpeg's `conf-extra`. An element a queue patch touches records it
+in `dakota_junction_patches`. `(?)` conditionals in variables are not
+evaluated; such an element has `conditional_variables: true`.
+
+The section is report-only: `--check` never fails on it. When the facts were
+read at another Dakota revision than the pin, the section says so; re-run
+`--import-build-facts`.
 
 ## Config packages
 

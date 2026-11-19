@@ -70,11 +70,16 @@ jobs:
           if [ "$HEAD_REPO" = "$REPO" ]; then
             echo "in-repository pull request: canary.yml provides the proof"
             echo "run=false" >> "$GITHUB_OUTPUT"
-          elif python3 tools/canary.py pr-relevant --repository "$REPO" --pr "$PR" --set "$CANARY_SET"; then
-            echo "run=true" >> "$GITHUB_OUTPUT"
           else
-            echo "no pipeline path changed; nothing to prove"
-            echo "run=false" >> "$GITHUB_OUTPUT"
+            rc=0
+            python3 tools/canary.py pr-relevant --repository "$REPO" --pr "$PR" --set "$CANARY_SET" || rc=$?
+            case "$rc" in
+              0) relevant=true ;;
+              10) relevant=false ;;
+              *) echo "::error title=canary::could not judge the pull request's files (exit $rc); failing rather than skipping"; exit 1 ;;
+            esac
+            [ "$relevant" = true ] || echo "no pipeline path changed; nothing to prove"
+            echo "run=$relevant" >> "$GITHUB_OUTPUT"
           fi
       - name: Name the cache salt
         id: name

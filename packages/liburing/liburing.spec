@@ -1,10 +1,12 @@
 Name: liburing
-Version: 2.13
-Release: 3%{?dist}
+Version: 2.15
+Release: 1%{?dist}
 Summary: Linux-native io_uring I/O access library
 License: (GPL-2.0-only WITH Linux-syscall-note OR MIT) AND (LGPL-2.0-or-later OR MIT)
 Source0: https://brick.kernel.dk/snaps/%{name}-%{version}.tar.gz
-Source1: https://brick.kernel.dk/snaps/%{name}-%{version}.tar.gz.asc
+# Utah: Fedora's Source1 (the detached .asc) is dropped. Nothing verified it, and
+# the factory fetches non-primary sources from Fedora's lookaside only, which
+# holds no signature for a release Fedora has not packaged.
 URL: https://git.kernel.dk/cgit/liburing/
 BuildRequires: gcc
 BuildRequires: gcc-c++
@@ -53,6 +55,10 @@ for the Linux-native io_uring.
 %{_mandir}/man7/*
 
 %changelog
+* Mon Nov 16 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 2.15-1
+- Update to 2.15
+- Drop the unverified detached signature Source1
+
 * Thu Jul 16 2026 Fedora Release Engineering <releng@fedoraproject.org> - 2.13-3
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_45_Mass_Rebuild
 
