@@ -5,19 +5,21 @@
 
 Name:           libtheora
 Epoch:          1
-Version:        1.1.1
-Release:        42%{?dist}
+Version:        1.2.0
+Release:        1%{?dist}
 Summary:        Theora Video Compression Codec
 License:        BSD-3-Clause
 URL:            http://www.theora.org
 Source0:        http://downloads.xiph.org/releases/theora/%{name}-%{version}.tar.xz
-Patch0:         libtheora-1.1.1-fix-pp_sharp_mod-calc.patch
-# https://bugs.archlinux.org/task/35985
-Patch1:         libtheora-1.1.1-libpng16.patch
-Patch2:         libtheora-1.1.1-libm.patch
+# Utah: 1.2.0 (Dakota's freedesktop-sdk components/libtheora.bst) carries the
+# three 1.1.1 patches upstream (each reverse-applies cleanly), and nothing
+# patches the build system any more, so the shipped configure is used as is
+# (gcc is now a BuildRequires of its own; libtool used to pull it in).
+# 1.2.0 bumps the sonames: libtheora.so.0 -> .so.1, libtheoradec.so.1 -> .so.2,
+# libtheoraenc.so.1 -> .so.2.
 
 BuildRequires: make
-BuildRequires:  autoconf automake libtool
+BuildRequires:  gcc
 BuildRequires:  libogg-devel >= 2:1.1
 BuildRequires:  libvorbis-devel
 BuildRequires:  SDL-devel libpng-devel
@@ -67,15 +69,11 @@ with theora bitstreams.
 
 %prep
 %setup -q
-%patch -P0 -p1
-%patch -P1 -p0 -b .libpng16
-%patch -P2 -p1
 
 # Update config.guess/sub to fix builds on new architectures (aarch64/ppc64le)
 cp /usr/lib/rpm/redhat/config.* .
 
 %build
-./autogen.sh
 # no custom CFLAGS please
 sed -i 's/CFLAGS="$CFLAGS $cflags_save"/CFLAGS="$cflags_save"/g' configure
 %configure --enable-shared --disable-static
@@ -106,7 +104,7 @@ install -m 755 examples/.libs/png2theora $RPM_BUILD_ROOT/%{_bindir}/png2theora
 
 
 %files
-%doc README COPYING
+%doc README.md COPYING
 %{_libdir}/*.so.*
 
 %files devel
@@ -125,6 +123,11 @@ install -m 755 examples/.libs/png2theora $RPM_BUILD_ROOT/%{_bindir}/png2theora
 
 
 %changelog
+* Mon Nov 16 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 1:1.2.0-1
+- Update to 1.2.0
+- Drop the pp_sharp_mod, libpng16 and libm patches (merged upstream) and autogen.sh
+- Sonames move to libtheora.so.1, libtheoradec.so.2 and libtheoraenc.so.2
+
 * Thu Jul 16 2026 Fedora Release Engineering <releng@fedoraproject.org> - 1:1.1.1-42
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_45_Mass_Rebuild
 

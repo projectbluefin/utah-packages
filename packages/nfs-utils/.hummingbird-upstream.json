@@ -2,7 +2,7 @@
   "package": "nfs-utils",
   "branch": "rawhide",
   "remote": "https://src.fedoraproject.org/rpms/nfs-utils.git",
-  "commit": "26e3c738bded2e3718add203bbbe16429fce53b2",
-  "tree": "54c7814e2139f10907b15d8eeed4604250f148e2",
-  "imported_at": "2026-10-18T08:54:08.919946+00:00"
+  "commit": "4925812bc8aac39727daba78fe63b2b825ed0520",
+  "tree": "50ee669287630307719e127ebc4ad51708eb7fc4",
+  "imported_at": "2026-11-16T04:10:46.995748+00:00"
 }

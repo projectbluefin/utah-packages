@@ -1,0 +1,76 @@
+From 0185220c4b3fb8ffe6dbc2d487c0bba09b61dd9e Mon Sep 17 00:00:00 2001
+From: Pantelis Antoniou <pantelis.antoniou@konsulko.com>
+Date: Mon, 16 Mar 2026 12:16:22 +0200
+Subject: [PATCH 03/10] test: Add fuzzing test for
+ treaming_alias_collection_state()
+
+Signed-off-by: Pantelis Antoniou <pantelis.antoniou@konsulko.com>
+---
+ test/libfyaml-test-fuzzing.c | 46 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 46 insertions(+)
+
+diff --git a/test/libfyaml-test-fuzzing.c b/test/libfyaml-test-fuzzing.c
+index 3b22e73..22798eb 100644
+--- a/test/libfyaml-test-fuzzing.c
++++ b/test/libfyaml-test-fuzzing.c
+@@ -1125,6 +1125,51 @@ START_TEST(fuzz_anchor_accel_cleanup_mapping_borrowed_input)
+ }
+ END_TEST
+ 
++START_TEST(fuzz_parser_streaming_alias_collection_state_mask)
++{
++	char data[] =
++		"\x7b\x0a\x7b\x26\x25\x3e\x25\x7b\x26\x30\x7a\x3a\x7b\x7b\x26"
++		"\x3a\x7b\x7b\x26\x3a\x7b\x66\x3a\x3a\x7b\x7b\x26\x54\x7b\x26"
++		"\x3a\x7b\x26\x3a\x7b\x26\x3a\x7b\x7b\x26\x3a\x7b\x26\x3a\x26"
++		"\x25\x3e\x25\x7b\x26\x31\x3a\x7b\x7b\x26\x3a\x7b\x32\x26\x3a"
++		"\x7b\x66\x3a\x3a\x7b\x7b\x26\x54\x7b\x26\x3a\x7b\x26\x3a\x7b"
++		"\x26\x3a\x7b\x7b\x26\x3a\x7b\x26\x3a\x26\x25\x3e\x25\x7b\x26"
++		"\x31\x3a\x7b\x28\x26\x3a\x7b\x26\x30\x7a\x3a\x7b\x7b\x26\x3a"
++		"\x7b\x7b\x26\x3a\x7b\x66\x3a\x3a\x7b\x7b\x26\x54\x7b\x26\x3a"
++		"\x7b\x26\x3a\x7b\x26\x3a\x7b\x7b\x26\x3a\x7b\x26\x3a\x26\x25"
++		"\x3e\x60\x7b\x26\x31\x3a\x7b\x7b\x26\x3a\x7b\x32\x26\x3a\x7b"
++		"\x66\x3a\x3a\x7b\x7b\x26\x54\x7b\x26\x3a\x7b\x26\x3a\x7b\x26"
++		"\x3a\x7b\x7b\x26\x3a\x7b\x26\x3a\x26\x25\x3e\x25\x7b\x26\x31"
++		"\x3a\x7b\x7b\x26\x3a\x7b\x32\x6e\x3a\x0a\x25\x59\x41\x4d\x4c"
++		"\x09\x31\x2e\x31\xc2\x85\xc2\x85\x27\x29\x23\x56\x56\x31\xc2"
++		"\x85\x2e\x2e\x2e\xc2\x85\x2d\x29\x4c\x09\x31\x3a\x7b\x26\x7b"
++		"\x3a\x7b\x26\x3a\x7b\x26\x3a\x7b\x0a\x25\x00\x00\x00";
++	struct fy_parser *fyp = NULL;
++	struct fy_parse_cfg cfg = {
++		.flags = FYPCF_RESOLVE_DOCUMENT | FYPCF_PREFER_RECURSIVE |
++			 FYPCF_YPATH_ALIASES,
++	};
++	struct fy_event *fyev;
++	FILE *f = NULL;
++
++	f = fmemopen((void *)data, sizeof(data), "r");
++	ck_assert_ptr_ne(f, NULL);
++
++	fyp = fy_parser_create(&cfg);
++	ck_assert_ptr_ne(fyp, NULL);
++
++	ck_assert_int_eq(fy_parser_set_input_fp(fyp, NULL, f), 0);
++
++	while ((fyev = fy_parser_parse(fyp)) != NULL) {
++		fy_event_get_comments(fyev);
++		fy_parser_event_free(fyp, fyev);
++	}
++
++	fclose(f);
++	fy_parser_destroy(fyp);
++}
++END_TEST
++
+ void libfyaml_case_fuzzing(struct fy_check_suite *cs)
+ {
+ 	struct fy_check_testcase *ctc;
+@@ -1193,4 +1238,5 @@ void libfyaml_case_fuzzing(struct fy_check_suite *cs)
+ 	fy_check_testcase_add_test(ctc, fuzz_path_expr_execute_oom);
+ 	fy_check_testcase_add_test(ctc, fuzz_anchor_accel_cleanup_scalar_borrowed_input);
+ 	fy_check_testcase_add_test(ctc, fuzz_anchor_accel_cleanup_mapping_borrowed_input);
++	fy_check_testcase_add_test(ctc, fuzz_parser_streaming_alias_collection_state_mask);
+ }
+-- 
+2.56.0
+

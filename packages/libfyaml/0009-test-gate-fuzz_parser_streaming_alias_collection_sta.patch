@@ -1,0 +1,44 @@
+From d54b52a8f40eaa846645b5466af77f3ea69fac8c Mon Sep 17 00:00:00 2001
+From: Pantelis Antoniou <pantelis.antoniou@konsulko.com>
+Date: Mon, 16 Mar 2026 16:47:52 +0200
+Subject: [PATCH 09/10] test: gate
+ fuzz_parser_streaming_alias_collection_state_mask for linux
+
+Signed-off-by: Pantelis Antoniou <pantelis.antoniou@konsulko.com>
+---
+ test/libfyaml-test-fuzzing.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/test/libfyaml-test-fuzzing.c b/test/libfyaml-test-fuzzing.c
+index 22798eb..17f928d 100644
+--- a/test/libfyaml-test-fuzzing.c
++++ b/test/libfyaml-test-fuzzing.c
+@@ -1125,6 +1125,8 @@ START_TEST(fuzz_anchor_accel_cleanup_mapping_borrowed_input)
+ }
+ END_TEST
+ 
++#if defined(__linux__)
++
+ START_TEST(fuzz_parser_streaming_alias_collection_state_mask)
+ {
+ 	char data[] =
+@@ -1170,6 +1172,8 @@ START_TEST(fuzz_parser_streaming_alias_collection_state_mask)
+ }
+ END_TEST
+ 
++#endif
++
+ void libfyaml_case_fuzzing(struct fy_check_suite *cs)
+ {
+ 	struct fy_check_testcase *ctc;
+@@ -1238,5 +1242,7 @@ void libfyaml_case_fuzzing(struct fy_check_suite *cs)
+ 	fy_check_testcase_add_test(ctc, fuzz_path_expr_execute_oom);
+ 	fy_check_testcase_add_test(ctc, fuzz_anchor_accel_cleanup_scalar_borrowed_input);
+ 	fy_check_testcase_add_test(ctc, fuzz_anchor_accel_cleanup_mapping_borrowed_input);
++#if defined(__linux__)
+ 	fy_check_testcase_add_test(ctc, fuzz_parser_streaming_alias_collection_state_mask);
++#endif
+ }
+-- 
+2.56.0
+

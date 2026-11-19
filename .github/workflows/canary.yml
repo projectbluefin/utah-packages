@@ -175,11 +175,14 @@ jobs:
           fi
           # Recipe inventory (new recipes and new lock entries) is not pipeline:
           # see pipeline_relevant in tools/canary.
-          if python3 tools/canary.py pr-relevant --repository "$REPO" --pr "$PR" --set "$CANARY_SET"; then
-            echo "run=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "run=false" >> "$GITHUB_OUTPUT"
-          fi
+          rc=0
+          python3 tools/canary.py pr-relevant --repository "$REPO" --pr "$PR" --set "$CANARY_SET" || rc=$?
+          case "$rc" in
+            0) relevant=true ;;
+            10) relevant=false ;;
+            *) echo "::error title=canary::could not judge the pull request's files (exit $rc); failing rather than skipping"; exit 1 ;;
+          esac
+          echo "run=$relevant" >> "$GITHUB_OUTPUT"
           if [ "$HEAD_REPO" = "$REPO" ]; then
             echo "fork=false" >> "$GITHUB_OUTPUT"
           else

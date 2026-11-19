@@ -2,8 +2,8 @@
 %global __strip /bin/true
 
 Name:           tailscale
-Version:        1.98.8
-Release:        3%{?dist}
+Version:        1.104.4
+Release:        1%{?dist}
 Summary:        The easiest, most secure way to use WireGuard and 2FA
 License:        BSD-3-Clause
 URL:            https://tailscale.com/
@@ -67,5 +67,8 @@ file tailscale tailscaled | grep -c 'statically linked' | grep -qx 2
 %dir %{_localstatedir}/cache/tailscale
 
 %changelog
+* Mon Nov 16 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 1.104.4-1
+- Update to 1.104.4
+
 * Sat Sep 05 2026 Project Bluefin <bot@projectbluefin.io> - 1.98.8-3
 - Package the official static release payload, matching Dakota

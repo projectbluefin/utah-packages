@@ -9,20 +9,20 @@ This is only used for Windows, which we are not building for.
  1 file changed, 4 deletions(-)
 
 diff --git a/Cargo.toml b/Cargo.toml
-index 0c433f922..0b6ded175 100644
+index 479f965..fa2283a 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -76,7 +76,6 @@ serial_test = { version = "3", default-features = false }
- widestring = "1.2.0"
+@@ -90,7 +90,6 @@ syn = { version = "2.0.117", default-features = false, features = ["parsing"] }
+ unic-langid = "0.9.6"
  unicode-segmentation = "1.12.0"
  unicode-width = "0.2.0"
 -unix_path = "1.0.1"
  walkdir = "2.5.0"
+ widestring = "1.2.0"
  xterm-color = "1.0.1"
- 
-@@ -155,9 +154,6 @@ fish-gettext-mo-file-parser.workspace = true
- phf_codegen = { workspace = true, optional = true }
+@@ -175,9 +174,6 @@ phf_codegen = { workspace = true, optional = true }
  rsconf.workspace = true
+ rustc_version.workspace = true
  
 -[target.'cfg(windows)'.build-dependencies]
 -unix_path.workspace = true
@@ -31,5 +31,5 @@ index 0c433f922..0b6ded175 100644
  crate-type = ["rlib"]
  path = "src/lib.rs"
 -- 
-2.53.0
+2.43.0
 
