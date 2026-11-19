@@ -68,6 +68,9 @@ online() {
 
 install_tools() {
   dnf -y -q install mock createrepo_c rpm-build python3 iproute >/dev/null
+  # The keys the mock config verifies Fedora and Hummingbird with
+  # (tools/mock_config.py KEYS_DIR); mock copies them into its chroots.
+  install -D -m 0644 -t /etc/pki/mock /repos/keys/RPM-GPG-KEY-*
   # mock builds as the user who invoked it. Invoked as root, the whole
   # build ran as root, and flac's %check refused it -- "iterator claims file
   # is writable when tester thinks it should not be; are you running as
