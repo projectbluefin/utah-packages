@@ -36,10 +36,6 @@
       "version": "0.9.3",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/40172661348"
     },
-    "highway": {
-      "version": "1.4.0",
-      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/40833963568"
-    },
     "hunspell": {
       "version": "1.7.6",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/40833963568"
@@ -76,10 +72,6 @@
       "version": "5.6.4",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/43384286878"
     },
-    "libplist": {
-      "version": "2.8.1",
-      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/43358822069"
-    },
     "openjph": {
       "version": "0.33.0",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/42773931857"
@@ -87,10 +79,6 @@
     "pyscard": {
       "version": "2.3.2",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/40833963568"
-    },
-    "python-click": {
-      "version": "8.5.1",
-      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/43358822069"
     },
     "python-dns": {
       "version": "2.9.2",
@@ -107,10 +95,6 @@
     "python-pydantic": {
       "version": "2.14.3",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/43358822069"
-    },
-    "simdutf": {
-      "version": "9.3.3",
-      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/40833963568"
     },
     "snowball": {
       "version": "3.2.0",
@@ -139,10 +123,6 @@
     "vvdec": {
       "version": "3.2.1",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/43358822069"
-    },
-    "wsdd": {
-      "version": "0.9",
-      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/40833963568"
     },
     "xdg-terminal-exec": {
       "version": "0.14.4",

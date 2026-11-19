@@ -150,6 +150,14 @@ the reference when Fedora has one. Seen so far:
 - Rawhide at the same version has often already dropped, rebased or added a
   patch (libayatana-appindicator 0.6.0 needed Rawhide's gapi metadata patch
   for its mono bindings).
+- A bundled detached signature (`fish-4.6.0.tar.xz.asc`,
+  `libdisplay-info-0.3.0.tar.xz.sig`) has no successor in the lookaside
+  until Fedora imports the release. Move the check into the source
+  pipeline: set `signature_url` and `gpg_key` (a tracked key file under
+  `packages/<name>/`) on the lock, drop the signature and key lines from
+  `sources`, and drop `%gpgverify` and its Sources from the spec (fish
+  4.9.3, libdisplay-info 0.4.0). `forge_planned_entry()` moves
+  `signature_url` with the tarball, so later bumps stay automatic.
 
 - A new test can need a new build tool too. sso-mib 0.10.2's `client-app`
   test runs a private bus with GTestDBus, which spawns `dbus-daemon`, so

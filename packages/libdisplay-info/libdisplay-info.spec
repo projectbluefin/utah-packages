@@ -1,23 +1,23 @@
 # See https://gitlab.freedesktop.org/emersion/libdisplay-info/-/merge_requests/149
 # for library versioning explanation.
-%global sover 3
+%global sover 4
 
 Name:           libdisplay-info
-Version:        0.3.0
-Release:        2%{?dist}
+Version:        0.4.0
+Release:        1%{?dist}
 Summary:        EDID and DisplayID library
 
 # Main license: MIT
 # test/data: CC-BY-4.0, MIT (see test/data/README.md).
 License:        MIT
 URL:            https://gitlab.freedesktop.org/emersion/libdisplay-info
+# The source pipeline verifies the release signature (signature_url and
+# gpg_key in config/upstream-sources.json) before the tarball is staged:
+# the factory can only fetch extra Source files from Fedora's lookaside,
+# which carries no signature for a release Fedora has not imported.
 Source0:        %{url}/-/releases/%{version}/downloads/%{name}-%{version}.tar.xz
-Source1:        %{url}/-/releases/%{version}/downloads/%{name}-%{version}.tar.xz.sig
-# 0FDE7BE0E88F5E48: emersion <contact@emersion.fr>
-Source2:        https://emersion.fr/.well-known/openpgpkey/hu/dj3498u4hyyarh35rkjfnghbjxug6b19#/gpgkey-0FDE7BE0E88F5E48.gpg
 
 BuildRequires:  gcc
-BuildRequires:  gnupg2
 BuildRequires:  meson >= 0.57
 BuildRequires:  pkgconfig(hwdata)
 
@@ -41,7 +41,6 @@ developing applications that use %{name}.
 
 
 %prep
-%{gpgverify} --keyring='%{SOURCE2}' --signature='%{SOURCE1}' --data='%{SOURCE0}'
 %autosetup
 
 
@@ -74,6 +73,10 @@ developing applications that use %{name}.
 
 
 %changelog
+* Mon Nov 16 2026 Utah package factory <noreply@projectbluefin.io> - 0.4.0-1
+- Update to 0.4.0 (Dakota's core-deps/libdisplay-info.bst); soname moves to .so.4
+- Verify the release signature in the source pipeline instead of %%prep
+
 * Thu Jul 16 2026 Fedora Release Engineering <releng@fedoraproject.org> - 0.3.0-2
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_45_Mass_Rebuild
 
