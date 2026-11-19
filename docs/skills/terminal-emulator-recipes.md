@@ -52,6 +52,11 @@ provide a sufficient version. The imported simdutf 9.0.0 recipe is pinned to
 Rawhide commit `6666acdef39a1c9660e235a949c09c23a054ac84`; fresh upstream
 archive bytes match the SHA-512 in its sources manifest.
 
+The publication runtime contract must name `simdutf` explicitly as well.
+That keeps the provider in the candidate transaction used before publication;
+the Utah install-set check otherwise reports the missing runtime soname only
+after Ptyxis is already published.
+
 The factory solves build waves from actual BuildRequires. Prove the chain
 `simdutf -> vte291 -> ptyxis` in the pinned Packit runner, then verify the
 Hummingbird-only consumer transaction. Hand-assigned stages do not prove

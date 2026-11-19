@@ -45,6 +45,10 @@ packages = [
   "gnome-shell",
   "gsettings-desktop-schemas",
   "gtk4",
+  # VTE, which provides the terminal library used by Ptyxis, links this
+  # runtime library. Keep it in the publication transaction so the provider
+  # is present when Utah installs Ptyxis (utah-packages#1228).
+  "simdutf",
   "libadwaita",
   "mutter",
   "tailscale",
