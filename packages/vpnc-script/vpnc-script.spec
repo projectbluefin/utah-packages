@@ -1,5 +1,5 @@
-%global git_date 20230907
-%global git_commit_hash 5b9e7e4c
+%global git_date 20250727
+%global git_commit_hash ce9e961b
 
 Name:		vpnc-script
 Version:	%{git_date}

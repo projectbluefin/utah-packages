@@ -56,7 +56,7 @@ def digest(path: Path, algorithm: str) -> str:
 # reported as what it is rather than as a digest mismatch.
 FETCH_ATTEMPTS = 3
 # A generated source fetches pinned upstream input and then builds an archive
-# (tailscale also vendors Go modules). The generator bounds its own network
+# (prefixdevname and gst-thumbnailers also vendor crates). The generator bounds its own network
 # calls and reports an unreachable host with EXIT_UPSTREAM_UNREACHABLE; this
 # outer bound only stops a wedged generator from hanging the job, and because
 # nothing proves such a hang is an outage, it fails the package.

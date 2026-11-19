@@ -34,7 +34,8 @@ H=/work/hermetic
 mkdir -p "$H" /work/cache /work/result /work/reports
 # Only two steps in this lane reach the network: mock resolving the root
 # into the lock, and mock-hermetic-repo fetching the 200-300 RPMs the lock
-# names. Both fetch from Hummingbird's repositories, and a single reset or
+# names. Both fetch from Hummingbird's repositories and Fedora mirrors (a
+# fetch retry goes through Fedora's redirector), and a single reset or
 # short read there took down mdadm, setxkbmap and dmidecode in one run
 # (#287) with nothing wrong in the package. Retry them; the offline build
 # itself is never retried here, its %check retry is separate and deliberate.
@@ -67,6 +68,9 @@ online() {
 
 install_tools() {
   dnf -y -q install mock createrepo_c rpm-build python3 iproute >/dev/null
+  # The keys the mock config verifies Fedora and Hummingbird with
+  # (tools/mock_config.py KEYS_DIR); mock copies them into its chroots.
+  install -D -m 0644 -t /etc/pki/mock /repos/keys/RPM-GPG-KEY-*
   # mock builds as the user who invoked it. Invoked as root, the whole
   # build ran as root, and flac's %check refused it -- "iterator claims file
   # is writable when tester thinks it should not be; are you running as
@@ -152,6 +156,56 @@ PY
   ls "$H"/lock/*.src.rpm
 }
 
+# Rewrite every Fedora mirror URL in a lock to Fedora's redirector. Only a
+# URL with a /fedora/linux/ path (optionally under /pub/, or the doubled
+# /fedora/fedora/linux/ some mirrors use) matches; anything else, such as
+# packages.redhat.com, is left exactly as it is.
+redirect_fedora_urls() {
+  python3 - "$1" <<'PY'
+import json, re, sys
+path = sys.argv[1]
+FEDORA_PATH = re.compile(r"^https?://[^/]+/(?:pub/)?fedora/(?:fedora/)?linux/")
+REDIRECTOR = "https://download.fedoraproject.org/pub/fedora/linux/"
+lock = json.load(open(path))
+for r in lock["buildroot"]["rpms"]:
+    r["url"] = FEDORA_PATH.sub(REDIRECTOR, r["url"], count=1)
+json.dump(lock, open(path, "w"))
+PY
+}
+
+# Hummingbird has no redirector, and packages.redhat.com sits behind Akamai
+# with max-age=86400: an edge that cached a bad answer for one RPM serves it
+# to every retry of the same URL for up to a day (48 of 52 failed builds in run
+# 44478890278 were one shadow-utils RPM with "not an RPM file (bad lead)",
+# while the same URL fetched elsewhere was fine). The origin ignores an extra
+# slash, the cache key does not, so each retry asks for a different spelling
+# of the same path. The basename -- the file name mock-hermetic-repo saves
+# and verify_hermetic_repo.py checks -- never changes, and verification is
+# by SIGMD5 against the lock whatever URL served the bytes.
+vary_hummingbird_urls() {
+  python3 - "$1" "$2" <<'PY'
+import json, re, sys
+path, attempt = sys.argv[1], int(sys.argv[2])
+PREFIX = "https://packages.redhat.com/api/pulp-content/public-hummingbird/"
+SPELLINGS = (
+    "https://packages.redhat.com/api/pulp-content/public-hummingbird//",
+    "https://packages.redhat.com/api/pulp-content//public-hummingbird/",
+    "https://packages.redhat.com/api//pulp-content/public-hummingbird/",
+)
+lock = json.load(open(path))
+HOST = "https://packages.redhat.com/"
+for r in lock["buildroot"]["rpms"]:
+    url = r["url"]
+    if not url.startswith(HOST):
+        continue
+    # Undo an earlier retry's spelling first; only this host is touched.
+    url = HOST + re.sub(r"/{2,}", "/", url[len(HOST):])
+    if url.startswith(PREFIX):
+        r["url"] = SPELLINGS[(attempt - 2) % len(SPELLINGS)] + url[len(PREFIX):]
+json.dump(lock, open(path, "w"))
+PY
+}
+
 materialize() {
   # mock-hermetic-repo downloads over HTTP(S) and saves the bootstrap image;
   # it cannot read file:// URLs, which is where the earlier stages and the
@@ -173,24 +227,59 @@ PY
   # On success three lines are enough. On failure the cause -- createrepo_c
   # naming the RPM it could not read, a download error -- sits above the
   # traceback, so show the log without the per-RPM download noise.
+  #
+  # mock-hermetic-repo keeps whatever each URL answers, and the root was
+  # resolved with gpgcheck=0, so a fetch only counts once every downloaded
+  # RPM is the one the lock names: same SIGMD5, same NEVRA, nothing missing,
+  # nothing extra (tools/verify_hermetic_repo.py). It is part of the fetch, so
+  # a mismatch is cleaned up and fetched again like a dropped connection, and
+  # every retry passes through the same check whatever URL served it.
+  # The lock names whichever Fedora mirror the metalink handed mock, so a
+  # dead mirror failed every retry. The first attempt uses the lock as
+  # resolved. Each retry points Fedora URLs at Fedora's own redirector,
+  # download.fedoraproject.org, which sends each request to a live mirror
+  # from the same MirrorManager pool the metalink draws from: no mirror list
+  # of our own, and no new host to trust. Hummingbird URLs keep their host and
+  # path but change spelling per retry (vary_hummingbird_urls); file:// URLs
+  # are never rewritten. Retry only RPMs not verified against the original lock.
+  cp "$H/lock/remote.json" "$H/lock/pending.json"
   fetch_remote() {
     fetch_log="$H/fetch.log"
     fetch_status=0
-    mock-hermetic-repo --lockfile "$H/lock/remote.json" --output-repo "$H/repo" \
+    if [ "$attempt" -gt 1 ]; then
+      # Keep verified RPMs, not the derived metadata or bootstrap image.
+      # Mock's skopeo sync refuses an existing image destination, including
+      # after an otherwise successful fetch whose RPMs failed verification.
+      if [ -d "$H/repo" ]; then
+        find "$H/repo" -mindepth 1 -maxdepth 1 -type d -exec rm -rf -- {} + || return
+      fi
+      redirect_fedora_urls "$H/lock/pending.json" || return
+      vary_hummingbird_urls "$H/lock/pending.json" "$attempt" || return
+    fi
+    mock-hermetic-repo --lockfile "$H/lock/pending.json" --output-repo "$H/repo" \
       >"$fetch_log" 2>&1 || fetch_status=$?
     if [ "$fetch_status" -eq 0 ]; then
       tail -3 "$fetch_log"
     else
       grep -vE "Downloading |urllib3" "$fetch_log" | tail -40 || true
     fi
-    return "$fetch_status"
+    verify_status=0
+    python3 /tools/verify_hermetic_repo.py --lockfile "$H/lock/remote.json" --repo "$H/repo" \
+      --retry-lockfile "$H/lock/pending.json" || verify_status=$?
+    if [ "$fetch_status" -ne 0 ]; then
+      return "$fetch_status"
+    fi
+    return "$verify_status"
   }
-  clean_repo() { rm -rf "$H/repo"; }
-  online "lock fetch" clean_repo fetch_remote
+  online "lock fetch" true fetch_remote
   while read -r path; do
     [ -n "$path" ] || continue
     cp "$path" "$H/repo/"
   done < "$H/local.txt"
+  # The repository as the offline build will see it -- downloads and the
+  # local earlier-stage and factory RPMs together -- against the whole lock.
+  # Nothing is retried here: the network is done, and a mismatch is fatal.
+  python3 /tools/verify_hermetic_repo.py --lockfile "$H/lock/buildroot_lock.json" --repo "$H/repo"
   createrepo_c -q "$H/repo"
   echo "hermetic repository: $(find "$H/repo" -maxdepth 1 -name "*.rpm" | wc -l) RPMs"
 }

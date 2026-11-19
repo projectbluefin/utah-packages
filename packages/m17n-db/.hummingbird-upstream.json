@@ -2,7 +2,7 @@
   "package": "m17n-db",
   "branch": "rawhide",
   "remote": "https://src.fedoraproject.org/rpms/m17n-db.git",
-  "commit": "5a6cf031a2048abe459f7e6e4b2288f1715282f0",
-  "tree": "f811857cc4d736d13d36419c11dd39104a00eae1",
-  "imported_at": "2026-10-27T13:50:00Z"
+  "commit": "01a319e9708c335ba5badaf39d9492f81e115bd1",
+  "tree": "ed00b6e5644b6a488b406a2a4a44fe0376753f50",
+  "imported_at": "2026-11-16T04:10:42.123777+00:00"
 }
