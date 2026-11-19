@@ -216,6 +216,15 @@ When a later stage cannot see what an earlier stage built, check in this order:
 | `nothing provides <dep> needed by <pkg> from factory` in `publish`'s Hummingbird-only transaction, where `<dep>` is a subpackage of a factory recipe that has never published (gdm's `Requires: pam_oo7` while oo7 failed on missing `crate()` providers, run 44010051148) | A recipe was changed to require a sibling's output before that sibling ever built. The gate refuses the whole candidate, so every package the run built waits, including ones unrelated to the change; re-running cannot help, and neither the mirror nor the package server is the cause even when the same run also shows timeouts | Make the provider build first, or let the consumer accept the provider that is already published as a rich dependency, `Requires: (pam_oo7 or gnome-keyring-pam)`, until it does. Before adding a `Requires` on a factory subpackage, check it is in the published repodata, not only in `packages/` |
 | `cosign verify` fails in `publish`'s "Verify and seed repository" step | The image at `:latest` (or the branch tag) is not signed by this workflow's own keyless OIDC identity -- either GHCR served a tampered image, or the certificate-identity ref (`refs/heads/main` for `latest`, the branch ref otherwise) no longer matches how `Sign the published image` signs | **Do not weaken or drop the check to unblock a run.** Confirm who/what pushed to the GHCR package outside this workflow; if the identity itself is wrong, fix the `--certificate-identity` construction, not the fact that it is enforced |
 
+### Unreadable downloads before repository verification
+
+`rpmReadPackageFile()` in the lock fetch can be a bad transfer, not a
+recipe failure: `mock-hermetic-repo` runs `createrepo_c` before it returns.
+Read the subsequent lock-verifier messages for the RPM filenames, then
+check their URLs in the lock to distinguish Hummingbird from Fedora.
+The fetch retries only missing or rejected RPMs; a successful retry still
+has to verify the whole lock before the offline build.
+
 ### A hanging test is not a starved test
 
 `%check` failures that report **no output at all** and land on the same
