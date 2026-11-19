@@ -62,7 +62,9 @@ BUILD_PATH = (
     "tools/package_cache_key.py",
     "tools/build_container.sh",
     "tools/dnf_backoff.sh",
+    "tools/check_rpm_source.sh",
     "tools/hermetic_build.sh",
+    "tools/verify_hermetic_repo.py",
     "tools/mock_config.py",
 )
 

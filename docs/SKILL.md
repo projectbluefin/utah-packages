@@ -49,6 +49,7 @@ Both are indexed below. A skill that exists but is not listed here fails
 | --- | --- |
 | What "targeting Hummingbird" means: fork scope, build root, ABI, disttag ordering | [`targeting-hummingbird.md`](targeting-hummingbird.md) |
 | Pipeline shape: imports, source verification, rebuild, publish | [`architecture.md`](architecture.md) |
+| How a Dakota BuildStream element becomes a published RPM, end to end | [`bst-to-rpm.md`](bst-to-rpm.md) |
 | How to add a package | [`contributing.md`](contributing.md) |
 | Auditing GNOME recipes against gnome-build-meta | [`audit-gnome-build-meta.md`](audit-gnome-build-meta.md) |
 | Why and how successful package builds survive failed factory runs | [`skills/package-build-cache.md`](skills/package-build-cache.md) |
