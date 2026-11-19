@@ -465,7 +465,20 @@ jobs:
             // assemble checks that every one of these left RPMs in built/.
             fs.writeFileSync('work/fetched-artifacts.json', JSON.stringify(found))
       - name: Install createrepo_c and rpm
-        run: sudo apt-get update && sudo apt-get install -y createrepo-c rpm
+        # The runner's Ubuntu mirrors fail now and then (503s from
+        # security.ubuntu.com; a list that failed to download, after which
+        # "Unable to locate package createrepo-c"). apt-get update exits 0 on a
+        # failed list unless --error-on=any, so retry the pair as one.
+        run: |
+          for attempt in 1 2 3 4; do
+            if sudo apt-get update --error-on=any -o Acquire::Retries=5 &&
+               sudo apt-get install -y -o Acquire::Retries=5 createrepo-c rpm; then
+              exit 0
+            fi
+            echo "::warning::apt attempt $attempt failed; retrying in $((attempt * 20))s"
+            sleep $((attempt * 20))
+          done
+          exit 1
       # What prepare extracted from every recipe's BuildRequires: a hold
       # follows it to what this publication built against a held build.
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
