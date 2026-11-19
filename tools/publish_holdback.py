@@ -36,14 +36,18 @@ holds those back:
   against. Held means exactly what a precedence loser means to `assemble`:
   the source keeps its previous published build, whole.
 * A new build with a Requires nothing provides is held itself.
-* A hold is transitive, and here the whole publication is judged, not only
-  what the transaction installs. Every other build in it that was built
-  against a held one is held too, so nothing ships against a library that is
-  not shipped. Two witnesses say "built against", and either is enough:
-  - the build graph (tools/build_graph.py): it BuildRequires the held
-    build, directly or through other builds in this publication. That is
-    what catches a consumer compiled against headers, a static library or
-    an unversioned soname, which leaves no trace in its Requires;
+* A hold spreads, and here the whole publication is judged, not only what
+  the transaction installs. Every other build in it that was built against a
+  held one is held too, so nothing ships against a library that is not
+  shipped. Two witnesses say "built against", and either is enough:
+  - the build graph (tools/build_graph.py): it BuildRequires the held build
+    directly. That is what catches a consumer compiled against headers, a
+    static library or an unversioned soname, which leaves no trace in its
+    Requires. Only the direct edge counts: following the graph through
+    other builds held 215 of run 44478890278's builds because one consumer
+    of abseil-cpp failed to build (abseil-cpp has 6 direct dependents and
+    126 through the graph). A dependent further out that really links what
+    only a held build provides is caught by the next witness;
   - the metadata: one of its binaries needs a capability only the held
     build's new binaries provide -- gvfs-nfs rebuilt against libnfs.so.18 --
     which also catches a runtime-only consumer the graph has no edge for.
@@ -79,7 +83,6 @@ from tools.rebuild_plan import (  # noqa: E402
     EXCLUDED_EXTERNAL,
     RPM_NS,
     provides_by_source,
-    reverse_closure,
     source_name,
 )
 
@@ -311,11 +314,10 @@ def holdback(
         for source, reasons in found.items():
             result.withheld.setdefault(source, []).extend(reasons)
         for source in sorted(found):
-            for dependent in sorted(reverse_closure({source}, inside)):
+            for dependent in sorted(inside.get(source, set())):
                 if dependent not in found:
                     result.withheld.setdefault(dependent, []).append(
-                        f"built against {source}, which is held back: it BuildRequires it, "
-                        "directly or through another build in this publication"
+                        f"built against {source}, which is held back: it BuildRequires it"
                     )
 
 
