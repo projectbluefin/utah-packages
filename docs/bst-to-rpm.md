@@ -245,9 +245,9 @@ Before it pushes, it does three steps:
   Hummingbird for the same package. A build that loses keeps its previous
   version.
 - **hold-back** (`tools/publish_holdback.py`): a build can break what Utah
-  installs. Then that build keeps its previous version. So does each build
-  in the same publication that BuildRequires it directly, or that needs what
-  only the held build's new version gives. The usual cause is a library
+  installs. Then that build keeps its previous version. Other builds in the
+  publication also keep their previous version when they BuildRequire it
+  directly. A build that needs what only the new version gives also stays. The usual cause is a library
   that changes its soname before its consumers are rebuilt. The run summary
   gives each held-back build and the reason.
 - **consumer transaction**: what Utah installs must resolve as one dnf
