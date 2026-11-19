@@ -56,6 +56,7 @@ BUILD_PATH = (
     "tools/source_pipeline.py",
     "tools/dist_bump.py",
     "tools/package_cache_key.py",
+    "tools/dnf_backoff.sh",
     "tools/build_container.sh",
     "tools/hermetic_build.sh",
     "tools/mock_config.py",
