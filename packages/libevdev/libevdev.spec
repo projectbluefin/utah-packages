@@ -1,5 +1,5 @@
 Name:           libevdev
-Version:        1.13.7
+Version:        1.14.0
 Release:        1%{?dist}
 Summary:        Kernel Evdev Device Wrapper Library
 
@@ -66,6 +66,9 @@ Utilities to handle and/or debug evdev devices.
 %{_mandir}/man1/mouse-dpi-tool.1*
 
 %changelog
+* Wed Oct 07 2026 Peter Hutterer <peter.hutterer@redhat.com> - 1.14.0-1
+- libevdev 1.14.0
+
 * Tue Aug 18 2026 Peter Hutterer <peter.hutterer@redhat.com> - 1.13.7-1
 - libevdev 1.13.7
 

@@ -127,6 +127,17 @@ a dropped connection, and again on the whole repository after the `file://`
 half is copied in. Do not move it out of the retried fetch, and do not key it
 by URL: a mirror or a redirect has to pass the same check.
 
+Retries retain verified RPMs and rebuild the derived repository metadata and
+bootstrap image. Mock accepts an existing output repository, but its image
+sync refuses to overwrite an existing bootstrap image directory.
+
+When changing fetch retries, preserve the regression tests for three boundaries:
+only lock resolution and network fetch are retried; Fedora retries use Fedora's
+redirector, not a private mirror list; and whole-lock verification runs after
+copying local RPMs but before publishing repository metadata for the offline
+build. Update assertions for changed retry mechanics without dropping those
+boundaries.
+
 The check proves the build used the root the lock phase resolved. The lock
 phase is what proves that root genuine: it installs every RPM with dnf, and
 the `fedora`, `updates` and Hummingbird repositories verify package
@@ -373,6 +384,17 @@ stream). `bluefin-artwork-logos` does this for three files of
 commit from the spec's `%global commit`, so moving the pin is one spec edit
 plus a new digest table entry, and include the upstream `LICENSE` so the
 package can ship it.
+
+When the recipe builds one subtree of a release that is published only as a
+whole (Fedora's hyperv-daemons takes the kernel's `tools/hv` as a hand-cut
+lookaside snapshot), pin the whole release's SHA-512 and cut the subtree in
+the generator. `hyperv-daemons` reads the 160 MB stable kernel `.tar.xz`
+once (about 15 s), keeps `tools/hv` plus the `tools/build` and
+`tools/scripts` makefiles its Makefile includes (the file list of Fedora's
+snapshot, which still builds at v7.3.1), and fails if any of them is
+missing. kernel.org signs only `sha256sums.asc`: check the archive against
+its line there before pinning the SHA-512. Moving to a newer kernel is the
+spec `Version:` plus a `HYPERV_KERNEL_INPUT_SHA512` entry.
 
 Rust vendor generators must read the release root's exact lock path, not
 the first archive member ending in `Cargo.lock`. For `prefixdevname`, both

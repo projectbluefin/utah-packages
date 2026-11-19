@@ -371,9 +371,9 @@ class PublishGateWorkflowTests(unittest.TestCase):
     def test_each_wave_publishes_as_it_finishes_without_waiting_for_later_ones(self):
         early = {name: job for name, job in self.workflow["jobs"].items()
                  if name.startswith("publish") and name != "publish"}
-        from tools.rebuild_plan import EARLY_PUBLICATIONS
+        from tools.rebuild_plan import EARLY_WAVES
 
-        self.assertEqual(len(early), EARLY_PUBLICATIONS)
+        self.assertEqual(sorted(early), sorted(f"publish{wave}" for wave in EARLY_WAVES))
         for name, job in early.items():
             wave = int(name.removeprefix("publish"))
             with self.subTest(job=name):
@@ -387,6 +387,58 @@ class PublishGateWorkflowTests(unittest.TestCase):
         workflow["jobs"]["publish2"]["needs"].append("rebuild5")
         with self.assertRaises(AssertionError):
             assert_gate_enforced(workflow, self.publication)
+
+    def test_the_early_slots_are_exactly_the_planned_waves_in_sequence(self):
+        # A slot prepare never names would never run; a planned wave without
+        # a slot would never publish early.
+        workflow = copy.deepcopy(self.workflow)
+        workflow["jobs"]["publish3"] = workflow["jobs"].pop("publish4")
+        with self.assertRaises(AssertionError):
+            assert_gate_enforced(workflow, self.publication)
+        # Each one seeds from the image the one before it pushed.
+        workflow = copy.deepcopy(self.workflow)
+        workflow["jobs"]["publish7"]["needs"].remove("publish4")
+        with self.assertRaises(AssertionError):
+            assert_gate_enforced(workflow, self.publication)
+        # And the final one waits for all of them.
+        workflow = copy.deepcopy(self.workflow)
+        workflow["jobs"]["publish"]["needs"].remove("publish10")
+        with self.assertRaises(AssertionError):
+            assert_gate_enforced(workflow, self.publication)
+
+    def test_what_to_hold_back_is_decided_before_the_replacement(self):
+        publication = copy.deepcopy(self.publication)
+        steps = publication["jobs"]["publish"]["steps"]
+        index = next(i for i, s in enumerate(steps) if s.get("id") == "holdback")
+        steps.insert(index + 2, steps.pop(index))  # after assemble
+        with self.assertRaises(AssertionError):
+            assert_gate_enforced(self.workflow, publication)
+        publication = copy.deepcopy(self.publication)
+        assemble_step = next(s for s in publication["jobs"]["publish"]["steps"] if s.get("id") == "assemble")
+        assemble_step["run"] = assemble_step["run"].replace("--withheld work/withheld.json", "")
+        with self.assertRaises(AssertionError):
+            assert_gate_enforced(self.workflow, publication)
+
+    def test_the_final_publication_pushes_the_rest_and_then_fails_over_a_hold(self):
+        steps = self.publication["jobs"]["publish"]["steps"]
+        names = [str(s.get("name")) for s in steps]
+        fail = steps[-1]
+        self.assertEqual(fail["name"], "Fail the final publication when builds were held back")
+        self.assertIn("inputs.final", fail["if"])
+        self.assertIn("exit 1", fail["run"])
+        # After the push, its signature and the manifest: the image is whole.
+        for earlier in ("Publish the repository as an OCI image", "Sign the published image",
+                        "Record published OCI digest in factory manifest"):
+            self.assertLess(names.index(earlier), len(steps) - 1)
+        publication = copy.deepcopy(self.publication)
+        moved = publication["jobs"]["publish"]["steps"]
+        moved.insert(0, moved.pop())
+        with self.assertRaises(AssertionError):
+            assert_gate_enforced(self.workflow, publication)
+        publication = copy.deepcopy(self.publication)
+        publication["jobs"]["publish"]["steps"][-1]["if"] = "steps.holdback.outputs.withheld != '[]'"
+        with self.assertRaises(AssertionError):
+            assert_gate_enforced(self.workflow, publication)
 
     def test_only_an_early_publication_may_carry_on_past_a_failed_transaction(self):
         validate = next(s for s in self.publication["jobs"]["publish"]["steps"]

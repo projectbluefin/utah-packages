@@ -207,27 +207,36 @@ PY
   # download.fedoraproject.org, which sends each request to a live mirror
   # from the same MirrorManager pool the metalink draws from: no mirror list
   # of our own, and no new host to trust. Hummingbird and file:// URLs are
-  # never rewritten. The marker is reset for every materialize.
-  rm -f "$H/fetch.attempted"
+  # never rewritten. Retry only RPMs not verified against the original lock.
+  cp "$H/lock/remote.json" "$H/lock/pending.json"
   fetch_remote() {
     fetch_log="$H/fetch.log"
     fetch_status=0
-    if [ -e "$H/fetch.attempted" ]; then
-      redirect_fedora_urls "$H/lock/remote.json"
+    if [ "$attempt" -gt 1 ]; then
+      # Keep verified RPMs, not the derived metadata or bootstrap image.
+      # Mock's skopeo sync refuses an existing image destination, including
+      # after an otherwise successful fetch whose RPMs failed verification.
+      if [ -d "$H/repo" ]; then
+        find "$H/repo" -mindepth 1 -maxdepth 1 -type d -exec rm -rf -- {} + || return
+      fi
+      redirect_fedora_urls "$H/lock/pending.json" || return
     fi
-    : > "$H/fetch.attempted"
-    mock-hermetic-repo --lockfile "$H/lock/remote.json" --output-repo "$H/repo" \
+    mock-hermetic-repo --lockfile "$H/lock/pending.json" --output-repo "$H/repo" \
       >"$fetch_log" 2>&1 || fetch_status=$?
     if [ "$fetch_status" -eq 0 ]; then
       tail -3 "$fetch_log"
     else
       grep -vE "Downloading |urllib3" "$fetch_log" | tail -40 || true
+    fi
+    verify_status=0
+    python3 /tools/verify_hermetic_repo.py --lockfile "$H/lock/remote.json" --repo "$H/repo" \
+      --retry-lockfile "$H/lock/pending.json" || verify_status=$?
+    if [ "$fetch_status" -ne 0 ]; then
       return "$fetch_status"
     fi
-    python3 /tools/verify_hermetic_repo.py --lockfile "$H/lock/remote.json" --repo "$H/repo"
+    return "$verify_status"
   }
-  clean_repo() { rm -rf "$H/repo"; }
-  online "lock fetch" clean_repo fetch_remote
+  online "lock fetch" true fetch_remote
   while read -r path; do
     [ -n "$path" ] || continue
     cp "$path" "$H/repo/"
