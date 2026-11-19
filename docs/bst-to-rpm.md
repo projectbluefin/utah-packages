@@ -258,10 +258,12 @@ A run publishes more than one time:
 - **early publications**: slots after waves 0, 1, 2, 4, 7 and 10
   (`publish0` … `publish10`). Thus a package can ship before the slowest
   package in the run is done. A slot runs when it has new builds and a later
-  wave has packages. An early publication that fails pushes nothing and
-  doesn't fail the run.
+  wave has packages. If an early publication fails the consumer
+  transaction, it pushes nothing and the run continues. A fetch error fails
+  the run.
 - **the final publication**: one at the end, for every wave. If it fails, the
-  run fails.
+  run fails. If it holds back a build, it pushes the builds that resolve and
+  then fails the run. Thus a red run can also publish an image.
 
 The image label `org.projectbluefin.factory.state` keeps three records: the
 inputs of each published package, the `failed` builds and the `withheld`
