@@ -1,14 +1,16 @@
 Summary: X.Org X11 libxkbfile runtime library
 Name: libxkbfile
-Version: 1.1.3
-Release: 6%{?dist}
+Version: 1.2.0
+Release: 1%{?dist}
 License: MIT-open-group AND HPND AND SMLNJ
 URL: http://www.x.org
 
 Source0: https://www.x.org/pub/individual/lib/%{name}-%{version}.tar.xz
 
-BuildRequires: make
-BuildRequires: pkgconfig(xproto) pkgconfig(x11)
+# Utah: 1.2.0 (Dakota's freedesktop-sdk components/xorg-lib-xkbfile.bst) ships
+# a meson build only; the autotools build is gone from the tarball.
+BuildRequires: meson
+BuildRequires: pkgconfig(kbproto) pkgconfig(xproto) pkgconfig(x11)
 BuildRequires: gcc
 
 %description
@@ -28,22 +30,15 @@ X.Org X11 libxkbfile development package
 # FIXME: We use -fno-strict-aliasing, to work around the following bug:
 # maprules.c:1373: warning: dereferencing type-punned pointer will break strict-aliasing rules)
 export CFLAGS="$RPM_OPT_FLAGS -fno-strict-aliasing"
-%configure --disable-static
-make %{?_smp_mflags}
+%meson
+%meson_build
 
 %install
-rm -rf $RPM_BUILD_ROOT
-
-make install DESTDIR=$RPM_BUILD_ROOT
-
-# We intentionally don't ship *.la files
-rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
-
-%ldconfig_post
-%ldconfig_postun
+%meson_install
 
 %files
-%doc COPYING ChangeLog
+%license COPYING
+%doc README.md
 %{_libdir}/libxkbfile.so.1
 %{_libdir}/libxkbfile.so.1.0.2
 
@@ -58,6 +53,10 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 %{_libdir}/pkgconfig/xkbfile.pc
 
 %changelog
+* Mon Nov 16 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 1.2.0-1
+- Update to 1.2.0
+- Build with meson; upstream dropped autotools
+
 * Thu Jul 16 2026 Fedora Release Engineering <releng@fedoraproject.org> - 1.1.3-6
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_45_Mass_Rebuild
 
