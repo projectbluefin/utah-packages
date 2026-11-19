@@ -1,3 +1,10 @@
+# Utah: Fedora 44 has no crate RPMs for formatx 0.4, gettext-rs 0.8 or
+# zgvariant 1, and Hummingbird ships none, so the Fedora model (system crates)
+# cannot resolve this commit (#1192). Fedora has no vendor tarball for oo7, so
+# tools/generated_sources.py builds Source0 as the commit archive plus a
+# vendor/ tree of every crate its Cargo.lock pins, as for gst-thumbnailers.
+%bcond bundled_rust_deps 1
+
 %global commit e91b98a7235a4971c6cbb7f0533034afc8a8f618
 %global shortcommit %{sub %{commit} 1 7}
 
@@ -31,7 +38,8 @@ License:        %{shrink:
 %global tag %{gsub %{version} ~ .}
 
 URL:            https://github.com/linux-credentials/oo7
-Source:         %{url}/archive/%{commit}/oo7-%{shortcommit}.tar.gz
+# Utah: generated from %%{url}/archive/%%{commit}/oo7-%%{shortcommit}.tar.gz
+Source:         oo7-%{commit}-vendored.tar.xz
 
 # fix invalid manifest at cli/Cargo.toml:
 # features cannot depend on features of dev-only dependencies
@@ -47,6 +55,15 @@ Patch:          0003-meson-pass-through-rpm-profile-to-cargo-build.patch
 # this avoids pulling in unused dependencies
 Patch:          0004-drop-yet-unused-Python-bindings-from-cargo-workspace.patch
 
+# Utah: upstream 7850e39, af6ceed and bb53bfd, after this commit. The pam
+# integration tests look for the PAM modules in target/<profile>/deps/, which
+# Rust 1.100 (Hummingbird's) moved to build/<crate>/<hash>/out/, so all three
+# failed. 0007 is bb53bfd's mod.rs part only: its namespace.rs is newer than
+# this commit.
+Patch:          0005-pam-tests-find-libpam_oo7.so-for-Rust-1.100.patch
+Patch:          0006-pam-fix-test-fixture-for-Rust-1.100-artifact-layout.patch
+Patch:          0007-pam-dont-assume-deps-exists-in-test-fixture.patch
+
 BuildRequires:  cargo-rpm-macros
 BuildRequires:  systemd-rpm-macros
 
@@ -56,6 +73,11 @@ BuildRequires:  gettext
 
 BuildRequires:  pkgconfig(pam)
 BuildRequires:  pkgconfig(systemd)
+%if %{with bundled_rust_deps}
+# Utah: the vendored openssl-sys crate links OpenSSL. Fedora gets it through
+# rust-openssl-sys-devel, which vendoring skips.
+BuildRequires:  pkgconfig(openssl)
+%endif
 
 %description
 Secret Service provider.
@@ -73,6 +95,9 @@ Service providing the Secret Service D-Bus API.
 %files daemon -f oo7-daemon.lang
 %license LICENSE
 %license LICENSE.dependencies
+%if %{with bundled_rust_deps}
+%license cargo-vendor.txt
+%endif
 %doc server/README.md
 %{_libexecdir}/oo7-daemon
 %{_libexecdir}/oo7-daemon-login
@@ -103,6 +128,9 @@ authentication.
 %files -n pam_oo7
 %license LICENSE
 %license LICENSE.dependencies
+%if %{with bundled_rust_deps}
+%license cargo-vendor.txt
+%endif
 %doc pam/README.md
 %{_libdir}/security/pam_oo7.so
 
@@ -120,6 +148,9 @@ An implementation of the org.freedesktop.impl.portal.Secret interface.
 %files portal
 %license LICENSE
 %license LICENSE.dependencies
+%if %{with bundled_rust_deps}
+%license cargo-vendor.txt
+%endif
 %doc portal/README.md
 %{_libexecdir}/oo7-portal
 %{_datadir}/applications/oo7-portal.desktop
@@ -146,6 +177,9 @@ A CLI application to interact with the system keyring.
 %files cli
 %license LICENSE
 %license LICENSE.dependencies
+%if %{with bundled_rust_deps}
+%license cargo-vendor.txt
+%endif
 %doc cli/README.md
 %{_bindir}/oo7-cli
 
@@ -158,6 +192,9 @@ A cargo credential provider built using oo7.
 %files -n cargo-credential-oo7
 %license LICENSE
 %license LICENSE.dependencies
+%if %{with bundled_rust_deps}
+%license cargo-vendor.txt
+%endif
 %doc cargo-credential/README.md
 %{_bindir}/cargo-credential-oo7
 
@@ -169,15 +206,25 @@ A git credential provider built using oo7.
 %files -n git-credential-oo7
 %license LICENSE
 %license LICENSE.dependencies
+%if %{with bundled_rust_deps}
+%license cargo-vendor.txt
+%endif
 %doc git-credential/README.md
 %{_bindir}/git-credential-oo7
 
 %prep
 %autosetup -C -p1
+%if %{with bundled_rust_deps}
+%cargo_prep -v vendor
+%else
+rm -rf vendor
 %cargo_prep
+%endif
 
+%if %{without bundled_rust_deps}
 %generate_buildrequires
 %cargo_generate_buildrequires -t -a
+%endif
 
 %conf
 # oo7-daemon
@@ -222,6 +269,9 @@ popd
 
 %{cargo_license_summary}
 %{cargo_license} > LICENSE.dependencies
+%if %{with bundled_rust_deps}
+%cargo_vendor_manifest
+%endif
 
 %install
 # oo7-daemon

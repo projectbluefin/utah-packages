@@ -4,57 +4,76 @@
 %global nmlibdir %{_prefix}/lib/NetworkManager
 
 Name:           nvme-cli
-Version:        2.16
-Release:        6%{?dist}
+Version:        3.1
+Release:        1%{?dist}
 Summary:        NVMe management command line interface
 
 License:        GPL-2.0-only
 URL:            https://github.com/linux-nvme/nvme-cli
 Source0:        %{url}/archive/v%{version_no_tilde}/%{name}-%{version_no_tilde}.tar.gz
-Source1:        99-nvme-nbft-connect.sh
 Source2:        99-nvme-nbft-no-ignore-carrier.conf
 
-# https://bugzilla.redhat.com/show_bug.cgi?id=2501829
-Patch0:         format-sigint.patch
-Patch1:         0001-Backport-resv-plugin-size-the-resv-report-from-the-r.patch
-
-BuildRequires:  meson >= 0.53
+BuildRequires:  meson >= 1.0.0
 BuildRequires:  gcc gcc-c++
 BuildRequires:  systemd-devel
 BuildRequires:  systemd-rpm-macros
 BuildRequires:  zlib-devel
 BuildRequires:  openssl-devel
+BuildRequires:  keyutils-libs-devel
+BuildRequires:  kmod-devel
 %if (0%{?rhel} == 0) || (0%{?rhel} > 9)
 BuildRequires:  kernel-headers
 %endif
 
-BuildRequires:  libnvme-devel >= 1.16.1
 BuildRequires:  json-c-devel >= 0.14
 
 BuildRequires:  asciidoc
 BuildRequires:  xmlto
+# libnvme's kernel-doc generates the libnvme3 API man pages
+BuildRequires:  perl-interpreter
 
 Requires:       util-linux
+Requires:       libnvme3%{?_isa} = %{version}-%{release}
 
 
 %description
 nvme-cli provides NVM-Express user space tooling for Linux.
+
+%package -n libnvme3
+Summary:        Linux-native NVMe device management library, API 3
+License:        LGPL-2.1-or-later
+
+%description -n libnvme3
+libnvme3 is the NVMe management library nvme-cli 3 carries in its own
+tree. Its API and soname (libnvme3.so.1) are separate from libnvme 1.x
+(libnvme.so.1), which stays installed for the libraries that link it.
+
+%package -n libnvme3-devel
+Summary:        Development files for libnvme3
+License:        LGPL-2.1-or-later
+Requires:       libnvme3%{?_isa} = %{version}-%{release}
+
+%description -n libnvme3-devel
+Headers, pkg-config file, API man pages and the unversioned link for
+libnvme3.
 
 %prep
 %autosetup -p1 -n %{name}-%{version_no_tilde}
 
 
 %build
-%meson -Dudevrulesdir=%{_udevrulesdir} -Dsystemddir=%{_unitdir} -Dpdc-enabled=false -Ddocs=all -Ddocs-build=true -Dhtmldir=%{_pkgdocdir}
+# nvme-cli 3 builds its in-tree libnvme as libnvme3 (headers under
+# include/libnvme3, pkg-config libnvme3), side by side with libnvme 1.x.
+# Python bindings stay with libnvme 1.x (python3-libnvme). docs=all would
+# also build libnvme's HTML reference, which needs Sphinx; man pages only.
+%meson -Dudevrulesdir=%{_udevrulesdir} -Dsystemddir=%{_unitdir} -Ddocs=man -Ddocs-build=true -Dpython=disabled -Dtests=false -Djson-c=enabled -Dopenssl=enabled -Dkeyutils=enabled -Dlibkmod=enabled
 %meson_build
 
 
 %install
 %meson_install
-%{__install} -pm 644 README.md %{buildroot}%{_pkgdocdir}
-mkdir -p $RPM_BUILD_ROOT%{nmlibdir}/dispatcher.d
+%{__install} -Dpm 644 README.md %{buildroot}%{_pkgdocdir}/README.md
 mkdir -p $RPM_BUILD_ROOT%{nmlibdir}/conf.d
-%{__install} -pm 755 %{SOURCE1} $RPM_BUILD_ROOT%{nmlibdir}/dispatcher.d/
 %{__install} -pm 644 %{SOURCE2} $RPM_BUILD_ROOT%{nmlibdir}/conf.d/
 
 # hostid and hostnqn are supposed to be unique per machine.  We obviously
@@ -66,10 +85,6 @@ rm -f %{buildroot}%{_sysconfdir}/nvme/hostnqn
 
 # Do not install the dracut rule yet.  See rhbz 1742764
 rm -f %{buildroot}/usr/lib/dracut/dracut.conf.d/70-nvmf-autoconnect.conf
-
-# Move html docs into the right place
-mv %{buildroot}%{_pkgdocdir}/nvme %{buildroot}%{_pkgdocdir}/html
-rm -rf %{buildroot}%{_pkgdocdir}/nvme
 
 
 %post
@@ -97,14 +112,15 @@ fi
 
 
 %files
-%license LICENSE
+%license LICENSE LICENSES/GPL-2.0-only.txt
 %doc %{_pkgdocdir}
 %{_sbindir}/nvme
-%{_mandir}/man1/nvme*.gz
+%{_mandir}/man1/nvme*.1*
+%{_mandir}/man5/nvme*.5*
 %{_datadir}/bash-completion/completions/nvme
 %{_datadir}/zsh/site-functions/_nvme
 %dir %{_sysconfdir}/nvme
-%config(noreplace) %{_sysconfdir}/nvme/discovery.conf
+%config(noreplace) %{_sysconfdir}/nvme/nvme-fabrics.conf.sample
 %{_unitdir}/nvmefc-boot-connections.service
 %{_unitdir}/nvmf-autoconnect.service
 %{_unitdir}/nvmf-connect.target
@@ -113,16 +129,35 @@ fi
 %{_udevrulesdir}/65-persistent-net-nbft.rules
 %{_udevrulesdir}/70-nvmf-autoconnect.rules
 %{_udevrulesdir}/70-nvmf-keys.rules
+%{_udevrulesdir}/70-nvmf-registry.rules
 %{_udevrulesdir}/71-nvmf-netapp.rules
 %{_udevrulesdir}/71-nvmf-vastdata.rules
 %{_udevrulesdir}/71-nvmf-hpe.rules
 # Do not install the dracut rule yet.  See rhbz 1742764
 # /usr/lib/dracut/dracut.conf.d/70-nvmf-autoconnect.conf
-%{nmlibdir}/dispatcher.d/99-nvme-nbft-connect.sh
+%{nmlibdir}/dispatcher.d/80-nvmf-connect-nbft.sh
 %{nmlibdir}/conf.d/99-nvme-nbft-no-ignore-carrier.conf
+
+%files -n libnvme3
+%license LICENSES/LGPL-2.1-or-later.txt
+%{_libdir}/libnvme3.so.1{,.*}
+
+%files -n libnvme3-devel
+%{_includedir}/libnvme3/
+%{_libdir}/libnvme3.so
+%{_libdir}/pkgconfig/libnvme3.pc
+%{_mandir}/man2/*-libnvme3.2*
 
 
 %changelog
+* Mon Nov 16 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 3.1-1
+- Update to 3.1 (Dakota: freedesktop-sdk-extra components/nvme-cli.bst)
+- Build the in-tree libnvme as the libnvme3 and libnvme3-devel subpackages
+- Drop the format SIGINT and resv-report backports, both in 3.1
+- Ship upstream's 80-nvmf-connect-nbft.sh NetworkManager hook instead of
+  the local 99-nvme-nbft-connect.sh, which it supersedes
+- discovery.conf is replaced by nvme-fabrics.conf; ship the sample
+
 * Tue Sep 28 2026 Jesse Taube <jtaubepe@redhat.com> - 2.16-6
 - Fix nvme resv report missing registrations
 

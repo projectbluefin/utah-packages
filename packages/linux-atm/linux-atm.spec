@@ -3,12 +3,13 @@
 # so ppp (stage 1) sees libatm.so.1.
 Summary: Tools to support ATM networking under Linux
 Name: linux-atm
-Version: 2.5.1
-Release: 47%{?dist}
+Version: 2.5.2
+Release: 1%{?dist}
 # The licensing here is a mess. This is as close to accurate as possible.
 License: GPL-2.0-only AND GPL-2.0-or-later AND LGPL-2.0-or-later
 URL: http://linux-atm.sourceforge.net/
-Source0: http://downloads.sf.net/%{name}/%{name}-%{version}.tgz
+# 2.5.2 is published as .tar.gz; 2.5.1 and earlier were .tgz.
+Source0: https://downloads.sourceforge.net/%{name}/%{name}-%{version}.tar.gz
 
 BuildRequires: automake
 BuildRequires: byacc
@@ -85,7 +86,12 @@ iconv -f iso8859-1 -t utf8 < doc/atm-linux-howto.txt > doc/atm-linux-howto.txt.1
 mv doc/atm-linux-howto.txt.1 doc/atm-linux-howto.txt
 
 %build
-./autotools
+# The SourceForge 2.5.2 release omits the autotools bootstrap script that
+# upstream ships in its source; regenerate from the patched Makefile.am.
+# The prep patches drop zntune and ilmidiag from it, but the pre-generated
+# Makefile.in still lists them, and zntune.c uses the ZATM ioctls removed in
+# kernel 5.19, so a stale configure would fail to compile.
+autoreconf -fi
 CFLAGS="%optflags -D_LINUX_TIME_H"
 %configure --disable-static
 # Drop the default RPATH
@@ -97,6 +103,9 @@ make
 %install
 #rm -rf $RPM_BUILD_ROOT _doc CVS ANS doc/{\.cvsignore,CVS} init-redhat/{CVS,\.cvsignore}
 make DESTDIR=$RPM_BUILD_ROOT install
+# Regenerating the makefiles enables upstream's firmware install hook. Keep
+# these unlisted firmware blobs out of the package, as in the existing recipe.
+rm -f "$RPM_BUILD_ROOT"/lib/firmware/{pca200e.bin,pca200e_ecd.bin2,sba200e_ecd.bin2}
 rm -f $RPM_BUILD_ROOT/%{_libdir}/libatm.{a,la}
 install -m 0644 src/config/hosts.atm $RPM_BUILD_ROOT/etc/
 # Selectively sort what we want included in %%doc
@@ -135,6 +144,9 @@ rm -rf _doc/init-redhat/{CVS,.cvsignore}
 %{_libdir}/libatm.so
 
 %changelog
+* Fri Nov 06 2026 Utah package factory <noreply@projectbluefin.io> - 2.5.2-1
+- Update to 2.5.2, published as .tar.gz (libatm soname unchanged: 1.0.0)
+
 * Sun Sep 21 2026 Utah package factory <noreply@projectbluefin.io> - 2.5.1-47
 - require kernel-headers < 7 rather than the unversioned glibc-kernheaders
   provide: ATM is gone from the kernel and kernel-headers 7 no longer ships
