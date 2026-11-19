@@ -74,6 +74,52 @@ class ChangedTests(unittest.TestCase):
         self.assertEqual(held, set())
 
 
+class WithheldTests(unittest.TestCase):
+    """A build held back so the repository resolves is retried by every run."""
+
+    DIGESTS = {"libnfs": "n2", "gvfs": "g2", "fish": "f1"}
+
+    def test_a_push_retries_a_withheld_package_even_at_its_published_digest(self) -> None:
+        # The weekly full rebuild built libnfs at n1 and held it back: inputs
+        # still say n1, so the digest alone would never select it again.
+        state = {"inputs": {"libnfs": "n2", "gvfs": "g2", "fish": "f1"},
+                 "failed": {}, "withheld": {"libnfs": "n2"}}
+        for retry in (False, True):
+            moved, held = changed(state, self.DIGESTS, retry_failed=retry)
+            self.assertEqual(moved, {"libnfs"})
+            self.assertEqual(held, set())
+
+    def test_withheld_keeps_the_previous_build_until_a_publication_replaces_it(self) -> None:
+        seed = {"inputs": {"libnfs": "n1", "gvfs": "g1"}, "failed": {"libnfs": "n2"}}
+        state = merge(seed, self.DIGESTS, trusted=[], replaced=["fish"], failed=[],
+                      pruned=[], withheld=["libnfs", "gvfs"])
+        self.assertEqual(state["inputs"]["libnfs"], "n1")
+        self.assertEqual(state["withheld"], {"gvfs": "g2", "libnfs": "n2"})
+        # It built, so it is no longer failing.
+        self.assertEqual(state["failed"], {})
+        later = merge(state, self.DIGESTS, trusted=[], replaced=["libnfs", "gvfs"],
+                      failed=[], pruned=[])
+        self.assertEqual(later["withheld"], {})
+        self.assertEqual(later["inputs"]["libnfs"], "n2")
+
+    def test_the_label_carries_withheld_from_one_publication_to_the_next(self) -> None:
+        state = merge(None, self.DIGESTS, trusted=[], replaced=[], failed=[],
+                      pruned=[], withheld=["libnfs"])
+        self.assertEqual(parse_labels({LABEL: json.dumps(state)})["withheld"], {"libnfs": "n2"})
+        # An image labelled before withheld existed reads as nothing withheld.
+        self.assertEqual(parse_labels({LABEL: json.dumps({"inputs": {}, "failed": {}})})["withheld"], {})
+
+
+    def test_a_withheld_package_that_then_fails_is_held_like_any_failure(self) -> None:
+        seed = {"inputs": {"libnfs": "n1", "gvfs": "g2", "fish": "f1"},
+                "failed": {}, "withheld": {"libnfs": "n2"}}
+        state = merge(seed, self.DIGESTS, trusted=[], replaced=[], failed=["libnfs"],
+                      pruned=[])
+        self.assertEqual(state["withheld"], {})
+        self.assertEqual(state["failed"], {"libnfs": "n2"})
+        moved, held = changed(state, self.DIGESTS, retry_failed=False)
+        self.assertEqual((moved, held), (set(), {"libnfs"}))
+
 class MergeTests(unittest.TestCase):
     DIGESTS = {"fish": "f2", "gtk4": "g2", "mutter": "m1", "libfoo": "l1", "gone": "z"}
 

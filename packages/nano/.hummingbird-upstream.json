@@ -2,7 +2,7 @@
   "package": "nano",
   "branch": "rawhide",
   "remote": "https://src.fedoraproject.org/rpms/nano.git",
-  "commit": "7d05b98e903a710b216bb2f60afd86b69dcc0af7",
-  "tree": "cf8239d78eb54169d7ba3940ccd6f5424e6ee067",
-  "imported_at": "2026-10-10T11:15:09.970931+00:00"
+  "commit": "701ecf01ef24bac2dc80e1e115add8162d5a5aee",
+  "tree": "109e2d37abc772fb294cfe7735f26206e7df036e",
+  "imported_at": "2026-11-16T04:10:44.539528+00:00"
 }

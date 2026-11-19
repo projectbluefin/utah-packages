@@ -2,7 +2,7 @@
   "package": "alsa-sof-firmware",
   "branch": "rawhide",
   "remote": "https://src.fedoraproject.org/rpms/alsa-sof-firmware.git",
-  "commit": "b66ad6304fd93bdc6b15eeb598185541ecd93dcf",
-  "tree": "0268740af31f2787f4fff17252c86646cab144d6",
-  "imported_at": "2026-09-05T06:36:54.567114+00:00"
+  "commit": "692df54204a2d269b9b46f95548c17e6f400e088",
+  "tree": "5b76cd343afe778d44decb78d3082ebd46ca8ea8",
+  "imported_at": "2026-11-16T04:10:36.535539+00:00"
 }

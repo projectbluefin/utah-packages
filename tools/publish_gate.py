@@ -15,9 +15,15 @@ build goes into the repository:
   or Hummingbird already offer (precedence) -- keeps its previously published
   build, or stays absent if it never had one. Every such package is named in
   the job summary and in a tracking issue; a failure is never silent.
-* The Hummingbird-only consumer transaction still gates the whole candidate.
-  It is what protects Utah: if the new set does not resolve, the tag does not
-  move, however many packages built.
+* A build that would leave the candidate unable to resolve -- a library whose
+  soname moved while a published consumer still needs the old one -- is held
+  back, with everything this publication built against it
+  (tools/publish_holdback.py). It keeps its previous build exactly as a failed
+  package does, is recorded as `withheld` on the image, and every run retries
+  it. The rest of the run publishes.
+* The Hummingbird-only consumer transaction still gates the whole candidate,
+  held-back builds excluded. It is what protects Utah: if that set does not
+  resolve, the tag does not move, however many packages built.
 
 This module encodes that in three forms that must agree:
 
@@ -124,6 +130,8 @@ class Assembly:
     """Failed sources that were never published and still are not."""
     losers: list[str] = field(default_factory=list)
     """Built, but did not outrank Fedora or Hummingbird: not published."""
+    withheld: dict[str, list[str]] = field(default_factory=dict)
+    """Built, but held back so the candidate resolves: source -> why."""
     remove: list[str] = field(default_factory=list)
     """Seed files to delete."""
     add: list[str] = field(default_factory=list)
@@ -136,6 +144,10 @@ class Assembly:
             "kept_previous": self.kept_previous,
             "absent": self.absent,
             "precedence_losers": self.losers,
+            "withheld": sorted(self.withheld),
+            # The first few reasons per package: the report job and the
+            # tracking issue say why without carrying every Requires.
+            "withheld_reasons": {name: reasons[:3] for name, reasons in sorted(self.withheld.items())},
         }
 
 
@@ -145,6 +157,7 @@ def assemble(
     built: dict[str, str],
     build_list: list[str],
     losers: set[str],
+    withheld: dict[str, list[str]] | None = None,
 ) -> Assembly:
     """Decide the candidate repository from file -> source-name maps.
 
@@ -156,16 +169,23 @@ def assemble(
     Replacement is by *source* name, not file name: a build that renamed or
     dropped a subpackage must take the old subpackage with it, which adding
     files on top of the seed never did.
+
+    A source in ``withheld`` built and broke nothing itself, but would leave
+    the candidate unresolvable (tools/publish_holdback.py). Like a loser it
+    keeps its previous build, whole; unlike one it is not a failure.
     """
-    accepted = set(built.values()) - losers
+    withheld = {name: reasons for name, reasons in (withheld or {}).items()
+                if name in set(built.values())}
+    accepted = set(built.values()) - losers - set(withheld)
     seeded_sources = set(seed.values())
-    failed = sorted(set(build_list) - accepted)
+    failed = sorted(set(build_list) - accepted - set(withheld))
     return Assembly(
         replaced=sorted(accepted),
         failed=failed,
         kept_previous=[name for name in failed if name in seeded_sources],
         absent=[name for name in failed if name not in seeded_sources],
         losers=sorted(losers & set(build_list)),
+        withheld=dict(sorted(withheld.items())),
         remove=sorted(path for path, source in seed.items() if source in accepted),
         add=sorted(path for path, source in built.items() if source in accepted),
     )
@@ -225,6 +245,31 @@ def infra_failures_from_artifacts(
     return sorted(infra & set(failed))
 
 
+def undownloaded(
+    artifact_names: list[str], prefix: str, wave: str, build_list: list[str],
+    sources: set[str],
+) -> list[str]:
+    """Selected packages whose RPM artifact exists in the run but not on disk.
+
+    Every source with an uploaded ``rpm-s<stage>-<package>`` artifact in the
+    waves this publication covers must have RPMs among the downloaded files.
+    Otherwise the download was cut short (download-artifact's internal
+    listing stops at 1000), and assemble would count real builds as failures
+    and publish a partial repository. ``sources`` is every source name the
+    downloaded RPMs carry, bootstrap builds included.
+    """
+    last = None if wave == "" else int(wave)
+    expected = set()
+    for name in artifact_names:
+        if not name.startswith(prefix):
+            continue
+        match = RPM_ARTIFACT.match(name[len(prefix):])
+        if match and (last is None or int(match["stage"]) <= last):
+            expected.add(match["package"])
+    covered = set(sources) | {name + "-bootstrap" for name in sources}
+    return sorted((expected & set(build_list)) - covered)
+
+
 def source_names(paths: list[Path]) -> dict[str, str]:
     """RPM path -> source package name, read from the RPM headers.
 
@@ -281,6 +326,13 @@ def summary(assembly: Assembly) -> str:
             else:
                 state = "nothing: never published"
             lines.append(f"| `{name}` | {state} |")
+    if assembly.withheld:
+        lines += ["", f"**{len(assembly.withheld)} package(s) built but are held back** "
+                  "so the repository still resolves; each keeps its previous build "
+                  "and the next run retries it:", ""]
+        lines += ["| package | why |", "| --- | --- |"]
+        for name, reasons in assembly.withheld.items():
+            lines.append(f"| `{name}` | {reasons[0] if reasons else ''} |")
     return "\n".join(lines) + "\n"
 
 
@@ -301,10 +353,17 @@ def render_report(
     kept = set((publish_report or {}).get("kept_previous", []))
     absent = set((publish_report or {}).get("absent", []))
     losers = set((publish_report or {}).get("precedence_losers", []))
+    withheld = list((publish_report or {}).get("withheld", []))
+    reasons = (publish_report or {}).get("withheld_reasons", {})
     lines = ["### Factory run report", "", f"Run: {run_url}", ""]
     if digest:
         replaced = len((publish_report or {}).get("replaced", []))
         lines.append(f"Published `{digest}`, replacing {replaced} source package(s).")
+        if withheld:
+            lines.append(
+                f"The final publication pushed that resolvable subset and then failed "
+                f"the run, because {len(withheld)} package(s) that built were held back."
+            )
     elif publish_result == "success":
         lines.append("Nothing new to publish; the published image is unchanged.")
     elif publish_result == "failure":
@@ -332,7 +391,18 @@ def render_report(
             lines.append(f"| `{name}` | {state} |")
     else:
         lines.append("Every selected package built.")
+    if withheld:
+        lines += ["", f"**{len(withheld)} package(s) built but were held back**, because "
+                  "publishing them would have left the repository unresolvable. Each "
+                  "keeps its previous build, and every run retries it until its "
+                  "consumers resolve against it:", "",
+                  "| package | why |", "| --- | --- |"]
+        for name in withheld:
+            why = "; ".join(reasons.get(name, [])) or "held back"
+            lines.append(f"| `{name}` | {why} |")
     lines += ["", f"<!-- failed: {json.dumps(failed)} -->"]
+    if withheld:
+        lines.append(f"<!-- withheld: {json.dumps(withheld)} -->")
     return "\n".join(lines) + "\n"
 
 
@@ -340,6 +410,17 @@ def failed_marker(body: str) -> list[str] | None:
     """The failed list a previous report recorded, or None."""
     match = re.search(r"<!-- failed: (\[.*?\]) -->", body or "")
     return json.loads(match.group(1)) if match else None
+
+
+def verdict_marker(body: str) -> dict:
+    """What a previous report recorded: its failed and its withheld lists.
+
+    The tracking issue comments when this changes. A body from before
+    withheld existed, or with nothing withheld, reads as an empty list.
+    """
+    match = re.search(r"<!-- withheld: (\[.*?\]) -->", body or "")
+    return {"failed": failed_marker(body),
+            "withheld": json.loads(match.group(1)) if match else []}
 
 
 # ---------------------------------------------------------------------------
@@ -415,12 +496,30 @@ def assert_gate_enforced(workflow: dict, publish_workflow: dict | None = None) -
             raise AssertionError(f"{name} must require prepare to succeed")
 
     # An early publication covers waves 0..k and must not wait for a later
-    # wave -- that is its whole point -- nor cover one.
+    # wave -- that is its whole point -- nor cover one. There is one per wave
+    # rebuild_plan.EARLY_WAVES names, which is what prepare's early_waves
+    # can switch on; a slot it never names would never run, and a wave it
+    # names without a slot would never publish early.
+    from tools.rebuild_plan import EARLY_WAVES
+
+    slots = sorted(int(m.group(1)) for name in workflow["jobs"] if (m := EARLY_JOB.match(name)))
+    if slots != sorted(EARLY_WAVES):
+        raise AssertionError(
+            f"rebuild-rpms.yml publishes early after waves {slots}, but "
+            f"rebuild_plan.EARLY_WAVES says {sorted(EARLY_WAVES)}"
+        )
+    missing = [f"publish{wave}" for wave in slots if f"publish{wave}" not in needs]
+    if missing:
+        raise AssertionError(f"the final publication must wait for every early one; missing {missing}")
     for name, job in workflow["jobs"].items():
         match = EARLY_JOB.match(name)
         if not match:
             continue
         wave = int(match.group(1))
+        # One after another: each seeds from the image the previous one pushed.
+        earlier = [f"publish{slot}" for slot in slots if slot < wave]
+        if any(slot not in job.get("needs", []) for slot in earlier):
+            raise AssertionError(f"{name} must wait for every earlier publication {earlier}")
         early_needs = job.get("needs", [])
         later = [need for need in early_needs
                  if (m := STAGE_JOB.match(need)) and int(m.group(1)) > wave]
@@ -506,6 +605,10 @@ def _assert_step_order(publish: dict) -> None:
     assemble_step = _step_index(
         names, "Replace the packages this run built", "replace only what this run built"
     )
+    holdback = _step_index(
+        names, "Hold back the builds that would break",
+        "hold back the builds that would break the consumer transaction",
+    )
     validate = _step_index(
         names, "Hummingbird-only consumer transaction",
         "validate the Hummingbird-only consumer transaction",
@@ -513,14 +616,31 @@ def _assert_step_order(publish: dict) -> None:
     publish_step = _step_index(
         names, "Publish the repository as an OCI image", "publish the repository as an OCI image"
     )
-    if not seed < assemble_step < validate < publish_step:
+    if not seed < holdback < assemble_step < validate < publish_step:
         raise AssertionError(
-            "publish must seed, then replace what this run built, then validate "
-            "the Hummingbird-only transaction, then publish -- in that order"
+            "publish must seed, then decide what to hold back, then replace what "
+            "this run built, then validate the Hummingbird-only transaction, then "
+            "publish -- in that order"
         )
+    if "tools/publish_holdback.py" not in str(steps[holdback].get("run", "")):
+        raise AssertionError("what to hold back must be decided by publish_holdback.py")
     run = str(steps[assemble_step].get("run", ""))
     if "tools/publish_gate.py assemble" not in run:
         raise AssertionError("the replacement must be decided by publish_gate.py assemble")
+    if "--withheld" not in run:
+        raise AssertionError("the replacement must leave out what is held back (--withheld)")
+    # A final publication that held builds back pushes the rest and then
+    # fails the run -- after the push, the signature and the manifest, so
+    # the image it pushed is whole.
+    fail = _step_index(
+        names, "Fail the final publication when builds were held back",
+        "fail the run when the final publication held builds back",
+    )
+    if fail != len(steps) - 1:
+        raise AssertionError("failing the run over held-back builds must be the last step")
+    condition = str(steps[fail].get("if", ""))
+    if "inputs.final" not in condition or "steps.holdback.outputs.withheld" not in condition:
+        raise AssertionError("only the final publication fails over held-back builds")
     # The validation runs whenever the publish job runs; it must not be
     # skippable, and the image step must require it to have passed. Only an
     # early publication may carry on past a failure -- publishing nothing.
@@ -543,17 +663,29 @@ def _cli_assemble(args: argparse.Namespace) -> int:
     everything = source_names(sorted(built_root.rglob("*.rpm")))
     built = publishable(everything)
     build_list = json.loads(args.build_list)
+    if args.artifacts:
+        missing = undownloaded(json.loads(args.artifacts.read_text()), args.prefix,
+                               args.wave, build_list, set(everything.values()))
+        if missing:
+            print(f"::error::{len(missing)} built package(s) have an artifact in this run "
+                  f"but no RPMs in the download, so it was cut short: {', '.join(missing)}",
+                  file=sys.stderr)
+            return 1
     # A bootstrap recipe that built is done: its output is for later waves.
     bootstrapped = sorted(
         name for name in build_list
         if name.endswith("-bootstrap") and any(
             BOOTSTRAP_RPM.search(Path(path).name) for path in everything)
     )
+    withheld = {}
+    if args.withheld:
+        withheld = json.loads(args.withheld.read_text()).get("withheld", {})
     assembly = assemble(
         seed=seed,
         built=built,
         build_list=[name for name in build_list if name not in bootstrapped],
         losers=set(json.loads(args.losers or "[]")),
+        withheld=withheld,
     )
     apply(assembly, seed_root, built_root)
     report = assembly.report()
@@ -591,6 +723,9 @@ def _cli_report(args: argparse.Namespace) -> int:
     if args.infra_failed_output:
         infra = infra_failures_from_artifacts(failed, names, args.prefix)
         args.infra_failed_output.write_text(json.dumps(infra) + "\n")
+    if args.verdict_output:
+        args.verdict_output.write_text(json.dumps(
+            verdict_marker(body), separators=(",", ":")) + "\n")
     print(body)
     return 0
 
@@ -608,6 +743,21 @@ def artifact_pattern(wave: str, prefix: str) -> str:
     return f"{prefix}rpm-s{{{','.join(str(n) for n in range(last + 1))}}}-*"
 
 
+def artifact_names(stage_map: dict[str, int], prefix: str, *,
+                   through: int | None = None, below: int | None = None) -> list[str]:
+    """Exact `rpm-s<wave>-<package>` names for tools/fetch-artifacts/fetch.mjs.
+
+    through: waves 0..through (a publication; None with below None is every
+    wave). below: waves before it (a build stage collecting earlier waves).
+    """
+    def wanted(wave: int) -> bool:
+        if below is not None:
+            return wave < below
+        return through is None or wave <= through
+    return sorted(f"{prefix}rpm-s{wave}-{name}"
+                  for name, wave in stage_map.items() if wanted(int(wave)))
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     commands = parser.add_subparsers(dest="command")
@@ -616,7 +766,14 @@ def main(argv: list[str] | None = None) -> int:
     assemble_cmd.add_argument("--built", type=Path, required=True)
     assemble_cmd.add_argument("--build-list", required=True)
     assemble_cmd.add_argument("--losers", default="[]")
+    assemble_cmd.add_argument("--withheld", type=Path,
+                              help="publish_holdback.py output: builds to hold back")
     assemble_cmd.add_argument("--report", type=Path, required=True)
+    assemble_cmd.add_argument("--artifacts", type=Path,
+                              help="JSON list of the RPM artifacts fetched into --built: "
+                                   "fail if any left no RPMs there")
+    assemble_cmd.add_argument("--prefix", default="")
+    assemble_cmd.add_argument("--wave", default="")
     failures_cmd = commands.add_parser("failures")
     failures_cmd.add_argument("--build-list", required=True)
     failures_cmd.add_argument("--artifacts", type=Path, required=True)
@@ -634,12 +791,30 @@ def main(argv: list[str] | None = None) -> int:
     report_cmd.add_argument("--output", type=Path, required=True)
     report_cmd.add_argument("--failed-output", type=Path, required=True)
     report_cmd.add_argument("--infra-failed-output", type=Path)
+    report_cmd.add_argument("--verdict-output", type=Path,
+                            help="the failed and withheld lists, as `verdict` prints them")
     marker_cmd = commands.add_parser("marker")
     marker_cmd.add_argument("body", type=Path)
+    verdict_cmd = commands.add_parser("verdict")
+    verdict_cmd.add_argument("body", type=Path)
+    names_cmd = commands.add_parser("names")
+    names_cmd.add_argument("--stage-map", required=True)
+    names_cmd.add_argument("--prefix", default="")
+    names_cmd.add_argument("--through", default="",
+                           help="last wave covered; empty for every wave")
+    names_cmd.add_argument("--below", default="",
+                           help="only waves before this one")
     pattern_cmd = commands.add_parser("pattern")
     pattern_cmd.add_argument("--wave", default="")
     pattern_cmd.add_argument("--prefix", default="")
     args = parser.parse_args(argv)
+    if args.command == "names":
+        print(json.dumps(artifact_names(
+            json.loads(args.stage_map), args.prefix,
+            through=int(args.through) if args.through != "" else None,
+            below=int(args.below) if args.below != "" else None,
+        ), separators=(",", ":")))
+        return 0
     if args.command == "pattern":
         print(f"pattern={artifact_pattern(args.wave, args.prefix)}")
         return 0
@@ -647,6 +822,9 @@ def main(argv: list[str] | None = None) -> int:
         return _cli_report(args)
     if args.command == "marker":
         print(json.dumps(failed_marker(args.body.read_text()), separators=(",", ":")))
+        return 0
+    if args.command == "verdict":
+        print(json.dumps(verdict_marker(args.body.read_text()), separators=(",", ":")))
         return 0
     if args.command == "assemble":
         return _cli_assemble(args)

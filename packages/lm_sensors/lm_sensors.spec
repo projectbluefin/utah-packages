@@ -1,6 +1,6 @@
 Name: lm_sensors
-Version: 3.6.0
-Release: 25%{?dist}
+Version: 3.6.2
+Release: 1%{?dist}
 Summary: Hardware monitoring tools
 
 %define upstream_version %(echo %{version} | sed -e 's/\\./-/g')
@@ -29,13 +29,11 @@ Source8: lm_sensors-wrapper
 # Downstream-only:
 Patch0: 0001-Revert-unnecessary-soname-bump.patch
 
-# Upstream patch:
-Patch1: 0001-Change-PIDFile-path-from-var-run-to-run.patch
-Patch2: lm_sensors-3.6.0-allow_no_sensors.patch
-# Upstream commit 5deee7d0c301df779:
-Patch3: lm_sensors-3.6.0-sensors-detect-Add-support-for-AMD-CPU-Family-19h.patch
-# rrdtool has constified all argv
-Patch4: lm_sensors-3.6.0-rrd-const-argv.patch
+# Utah: 3.6.2 (Dakota's bluefin/lm-sensors.bst, tag V3-6-2) carries Fedora's
+# four 3.6.0 upstream backports (the /run PIDFile, --allow-no-sensors, AMD
+# family 19h detection, rrdtool's const argv), so they are dropped. The soname
+# revert stays: 3.6.2 only adds symbols and enum values, so libsensors.so.4
+# keeps every existing consumer linking.
 
 Requires: /usr/sbin/modprobe
 %ifarch %{ix86} x86_64
@@ -90,12 +88,6 @@ database, and warns of sensor alarms.
 %prep
 %setup -q -n lm-sensors-%{upstream_version}
 %patch -P0 -p1
-%patch -P1 -p1
-%patch -P2 -p1
-%patch -P3 -p1
-%if 0%{?fedora} >= 40 || 0%{?rhel} >= 10
-%patch -P4 -p1
-%endif
 
 # Remove currently unused files to make sure we've got the license right
 rm -f prog/init/sysconfig-lm_sensors-convert prog/hotplug/unhide_ICH_SMBus
@@ -191,6 +183,8 @@ fi
 %{_mandir}/man1/*
 %{_mandir}/man5/*
 %{_mandir}/man8/*
+%{_datadir}/zsh/site-functions/_sensors
+%{_datadir}/zsh/site-functions/_sensors-detect
 %if "%{_sbindir}" != "%{_bindir}"
 %{_sbindir}/*
 %endif
@@ -221,6 +215,10 @@ fi
 
 
 %changelog
+* Mon Nov 16 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 3.6.2-1
+- Update to 3.6.2
+- Drop the four upstream backports 3.6.2 carries; ship its zsh completions
+
 * Thu Jul 16 2026 Fedora Release Engineering <releng@fedoraproject.org> - 3.6.0-25
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_45_Mass_Rebuild
 
