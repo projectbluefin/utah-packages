@@ -1,5 +1,5 @@
 Name:           openal-soft
-Version:        1.24.2
+Version:        1.25.2
 Release:        %autorelease
 Summary:        Software implementation of the OpenAL 3D audio API
 
@@ -59,7 +59,7 @@ VCS:            https://github.com/kcat/openal-soft
 # Run ./make_tarball.sh
 # Then don't forget to upload it with:
 # fedpkg new-sources *.tar.xz
-Source:         openal-soft-1.24.2-clean.tar.xz
+Source:         openal-soft-%{version}-clean.tar.xz
 Source:         make_tarball.sh
 # Patch to unbundle fmt
 Patch:          0001-Unbundle-fmt.diff
@@ -85,7 +85,7 @@ BuildRequires:  pkgconfig(portaudio-2.0)
 BuildRequires:  pkgconfig(libpipewire-0.3)
 %endif
 %if 0%{?fedora} || 0%{?rhel} <= 9
-BuildRequires:  pkgconfig(Qt5Widgets)
+BuildRequires:  pkgconfig(Qt6Widgets)
 %endif
 
 %description

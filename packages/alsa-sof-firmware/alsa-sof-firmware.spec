@@ -4,7 +4,7 @@
 %global _firmwarepath  /usr/lib/firmware
 %global _xz_opts -9 --check=crc32
 
-%global sof_ver 2025.12.2
+%global sof_ver 2026.09.2
 #global sof_ver_pre rc1
 %global sof_ver_rel %{?sof_ver_pre:.%{sof_ver_pre}}
 %global sof_ver_pkg0 %{sof_ver}%{?sof_ver_pre:-%{sof_ver_pre}}
@@ -18,7 +18,7 @@
 Summary:        Firmware and topology files for Sound Open Firmware project
 Name:           alsa-sof-firmware
 Version:        %{sof_ver}
-Release:        2%{?sof_ver_rel}%{?dist}
+Release:        1%{?sof_ver_rel}%{?dist}
 # See later in the spec for a breakdown of licensing
 License:        BSD-3-Clause AND Apache-2.0
 URL:            https://github.com/thesofproject/sof-bin
@@ -162,6 +162,15 @@ if st and st.type == "directory" then
 end
 
 %changelog
+* Fri Oct  9 2026 Jaroslav Kysela <perex@perex.cz> - 2025.09.2-1
+- Update to v2025.09.2
+
+* Wed Sep 23 2026 Jaroslav Kysela <perex@perex.cz> - 2025.09.1-1
+- Update to v2025.09.1
+
+* Fri Sep 18 2026 Jaroslav Kysela <perex@perex.cz> - 2025.09-1
+- Update to v2025.09
+
 * Wed Jul 15 2026 Fedora Release Engineering <releng@fedoraproject.org> - 2025.12.2-2
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_45_Mass_Rebuild
 

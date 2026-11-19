@@ -2,6 +2,7 @@
 """Which pull requests the canary has anything to prove about (#369)."""
 
 import json
+from pathlib import Path
 import subprocess
 import unittest
 from unittest import mock
@@ -145,13 +146,35 @@ class PullRequestFetchTests(unittest.TestCase):
         self.assertEqual(len(calls), 1)
 
     def test_the_command_exits_zero_when_the_canary_must_run(self):
-        for relevant, code in ((True, 0), (False, 1)):
+        for relevant, code in ((True, 0), (False, canary.NOT_RELEVANT)):
             with self.subTest(relevant=relevant), \
                     mock.patch.object(canary, "pr_relevant", return_value=relevant) as pr:
                 self.assertEqual(canary.main(["pr-relevant", "--repository", "o/r", "--pr", "7",
                                               "--set", json.dumps(SET)]), code)
                 pr.assert_called_once_with("o/r", 7, SET)
 
+
+    def test_an_api_error_is_not_a_skip(self):
+        # Run 44431682571: the files API failed, pr-relevant exited 1, and the
+        # workflow read that as "not relevant": every pass skipped, Canary green.
+        error = subprocess.CalledProcessError(1, ["gh", "api"], stderr="HTTP 403: rate limit\n")
+        with mock.patch.object(canary.subprocess, "run", side_effect=error) as run, \
+                mock.patch.object(canary.time, "sleep") as sleep, \
+                mock.patch("sys.stderr"):
+            with self.assertRaises(subprocess.CalledProcessError):
+                canary.main(["pr-relevant", "--repository", "o/r", "--pr", "7",
+                             "--set", json.dumps(SET)])
+        self.assertEqual(run.call_count, 3)
+        self.assertEqual(sleep.call_count, 2)
+        self.assertNotIn(canary.NOT_RELEVANT, (0, 1))
+
+    def test_every_workflow_skips_only_on_the_not_relevant_status(self):
+        for name in ("canary.yml", "canary-read-only.yml", "canary-fork-pr.yml"):
+            text = (Path(__file__).resolve().parent.parent / ".github/workflows" / name).read_text()
+            with self.subTest(workflow=name):
+                self.assertIn("10) relevant=false", text)
+                self.assertIn("failing rather than skipping", text)
+                self.assertNotRegex(text, r"(if|!) python3 tools/canary.py pr-relevant")
 
 QUEUE_REF = "refs/heads/gh-readonly-queue/main/pr-7-" + "c" * 40
 
