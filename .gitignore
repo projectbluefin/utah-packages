@@ -1,5 +1,9 @@
 sources/
 reports/source-pipeline/
+# Derived from config/dakota*.{json,tsv} and the recipes; every import moves
+# it (#309). CI publishes it as the dakota-audit artifact.
+reports/audit-dakota.json
+reports/audit-dakota.md
 # Scratch output of tools/source_pipeline.py --report-dir work/reports and the
 # build stages; never a tracked input.
 work/

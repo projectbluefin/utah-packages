@@ -131,7 +131,11 @@ BuildRequires: krb5-devel >= 1.11
 
 %if %{phonenum_support}
 BuildRequires: libphonenumber-devel
-BuildRequires: protobuf-devel
+# Utah: protobuf3 (3.19.6) also provides protobuf-devel. When a full
+# rebuild puts both protobuf builds in the earlier-stage repository, dnf
+# picked protobuf3's and the libphonenumber check in cmake failed (run
+# 44224171778). Ask for the current protobuf by version.
+BuildRequires: protobuf-devel >= 4
 BuildRequires: boost-devel
 BuildRequires: abseil-cpp-devel
 %endif

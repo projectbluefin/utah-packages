@@ -316,6 +316,18 @@ packages:
     downstream_package_name: braille-printer-app
     paths:
       - packages/braille-printer-app
+  brew:
+    specfile_path: brew.spec
+    upstream_package_name: brew
+    downstream_package_name: brew
+    paths:
+      - packages/brew
+  brew-tarball:
+    specfile_path: brew-tarball.spec
+    upstream_package_name: brew-tarball
+    downstream_package_name: brew-tarball
+    paths:
+      - packages/brew-tarball
   brltty:
     specfile_path: brltty.spec
     upstream_package_name: brltty
@@ -1714,6 +1726,12 @@ packages:
     downstream_package_name: json-glib
     paths:
       - packages/json-glib
+  kanata:
+    specfile_path: kanata.spec
+    upstream_package_name: kanata
+    downstream_package_name: kanata
+    paths:
+      - packages/kanata
   kde-filesystem:
     specfile_path: kde-filesystem.spec
     upstream_package_name: kde-filesystem

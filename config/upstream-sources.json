@@ -133,13 +133,13 @@
     },
     {
       "name": "abseil-cpp",
-      "version": "20260526.0",
-      "url": "https://github.com/abseil/abseil-cpp/archive/20260526.0/abseil-cpp-20260526.0.tar.gz",
-      "filename": "abseil-cpp-20260526.0.tar.gz",
+      "version": "20260817.0",
+      "url": "https://github.com/abseil/abseil-cpp/archive/20260817.0/abseil-cpp-20260817.0.tar.gz",
+      "filename": "abseil-cpp-20260817.0.tar.gz",
       "feed": "https://github.com/abseil/abseil-cpp/archive/20260526.0/abseil-cpp-20260526.0.tar.gz",
-      "sha512": "fe85ebdd451b126117df1c3a312a1d5b29fc3557d07bb248854639b2a0180e91003fd2331a0d938f4ffeae8966f1df67a488fa3bdab072e840bbfdc6e8a4f01b",
+      "sha512": "27e2db9269aff1c114c3fd26e501fcc186678102326f580a81c4c04392175523eb13967ffa36a43acfdf92498377d80d849558cf0c341fae1f83e677ab87a08e",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/abseil-cpp/abseil-cpp-20260526.0.tar.gz/sha512/fe85ebdd451b126117df1c3a312a1d5b29fc3557d07bb248854639b2a0180e91003fd2331a0d938f4ffeae8966f1df67a488fa3bdab072e840bbfdc6e8a4f01b/abseil-cpp-20260526.0.tar.gz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/abseil-cpp/abseil-cpp-20260817.0.tar.gz/sha512/27e2db9269aff1c114c3fd26e501fcc186678102326f580a81c4c04392175523eb13967ffa36a43acfdf92498377d80d849558cf0c341fae1f83e677ab87a08e/abseil-cpp-20260817.0.tar.gz"
       ]
     },
     {
@@ -442,6 +442,27 @@
       "sha512": "335348d5dc154a8114b803b97407ab6877302bef714277ebeec2590480b3159f21c4aec0a8b8f823bef3baf75615acd4eeed73fa457a63825a8073ce12767c01"
     },
     {
+      "name": "brew",
+      "version": "0^20261027git550a03e",
+      "url": "https://github.com/ublue-os/brew/archive/550a03e3d5f600282c8b4c73060bb830c91c1f74/brew-550a03e.tar.gz",
+      "filename": "brew-550a03e.tar.gz",
+      "sha512": "914f110fa921e413a26b1bf485812789300546471e16997f94e658251b7b54ae81e3eadce127f266dc1d5adda0072dcea591e6fd031b45c3fe0139c605e65e4f",
+      "fallback_urls": [
+        "https://codeload.github.com/ublue-os/brew/tar.gz/550a03e3d5f600282c8b4c73060bb830c91c1f74"
+      ]
+    },
+    {
+      "name": "brew-tarball",
+      "version": "7.0.11",
+      "filename": "homebrew-7.0.11.tar.zst",
+      "sha512": "35134f49b92cdad90ac1a4938995206f935ee6b12066306c0c569ab2847444ff425633802510f8e8085ee710cf07eb153b451c906a6d9686fd242125474f8489",
+      "generate": {
+        "script": "tools/generated_sources.py",
+        "input": "ghcr.io/ublue-os/brew@sha256:130848582eed433e85af6fa8c829ddec12ddaa6b18bc037a610b4b8da3c97458 (linux/amd64 image manifest; manifest and layers digest-pinned)",
+        "method": "copy /system_files/usr/share/homebrew.tar.zst unchanged out of the topmost image layer that carries it, as homebrew-7.0.11.tar.zst"
+      }
+    },
+    {
       "name": "brltty",
       "version": "6.9.1",
       "url": "https://brltty.app/archive/brltty-6.9.1.tar.xz",
@@ -713,10 +734,13 @@
     {
       "name": "device-mapper-persistent-data",
       "version": "1.3.3",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/device-mapper-persistent-data/v1.3.3.tar.gz/sha512/0bba8f851fdfd65751564ca65d48c3ebca7c5839258db1401003c6cf58bb6a4c79f291135a96b4151ba1118fb1c6d083f49a0a9adc1362e06264253d7180ecd2/v1.3.3.tar.gz",
+      "url": "https://github.com/jthornber/thin-provisioning-tools/archive/v1.3.3.tar.gz",
       "filename": "v1.3.3.tar.gz",
       "feed": "https://release-monitoring.org/project/5385",
-      "sha512": "0bba8f851fdfd65751564ca65d48c3ebca7c5839258db1401003c6cf58bb6a4c79f291135a96b4151ba1118fb1c6d083f49a0a9adc1362e06264253d7180ecd2"
+      "sha512": "0bba8f851fdfd65751564ca65d48c3ebca7c5839258db1401003c6cf58bb6a4c79f291135a96b4151ba1118fb1c6d083f49a0a9adc1362e06264253d7180ecd2",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/device-mapper-persistent-data/v1.3.3.tar.gz/sha512/0bba8f851fdfd65751564ca65d48c3ebca7c5839258db1401003c6cf58bb6a4c79f291135a96b4151ba1118fb1c6d083f49a0a9adc1362e06264253d7180ecd2/v1.3.3.tar.gz"
+      ]
     },
     {
       "name": "ding-libs",
@@ -2238,13 +2262,12 @@
     },
     {
       "name": "hyphen",
-      "version": "2.8.8",
-      "url": "https://downloads.sourceforge.net/hunspell/hyphen-2.8.8.tar.gz",
-      "filename": "hyphen-2.8.8.tar.gz",
-      "feed": "https://release-monitoring.org/project/229523",
-      "sha512": "ee514952be56869840b70fb74f60eba14dc4de246733ff8705492367e8cf00c485f8778a9d5a7ba374c988d4ac9fedbe75826dc559e1b62465dbfba21f6ce7de",
+      "version": "2.8.10",
+      "url": "https://github.com/hunspell/hyphen/releases/download/v2.8.10/hyphen-2.8.10.tar.gz",
+      "filename": "hyphen-2.8.10.tar.gz",
+      "sha512": "11f84b64c41f74b7ac716a0c6e06710ee14d3a61df9b64111e73765273541aff8739fe2fb1ae9a6331df8eb180c92c2304150aa67628a1c76482259e849b3d3f",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/hyphen/hyphen-2.8.8.tar.gz/md5/5ade6ae2a99bc1e9e57031ca88d36dad/hyphen-2.8.8.tar.gz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/hyphen/hyphen-2.8.10.tar.gz/sha512/11f84b64c41f74b7ac716a0c6e06710ee14d3a61df9b64111e73765273541aff8739fe2fb1ae9a6331df8eb180c92c2304150aa67628a1c76482259e849b3d3f/hyphen-2.8.10.tar.gz"
       ]
     },
     {
@@ -2599,6 +2622,17 @@
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/json-glib/json-glib-1.10.8.tar.xz/sha512/f4ba8660b586a4e738803e4dbfdfcd34fa7ceba9189e7bf3f2b50e21f4d4886f99535ceb3453c89b1d1ae8d96bf4168a135b73b7e1a2dbc46b19e9b710ad56a1/json-glib-1.10.8.tar.xz"
       ]
+    },
+    {
+      "name": "kanata",
+      "version": "1.12.0",
+      "filename": "kanata-1.12.0-vendored.tar.xz",
+      "sha512": "04cfa10f75ae1bb93bac8a6ea237d0be0c5cd71db79a55c3d9d9f560385878ccd01397d01ae30ce88afb093ce05c9eccd356a578eb409834078a4e00c335bfa6",
+      "generate": {
+        "script": "tools/generated_sources.py",
+        "input": "https://github.com/jtroo/kanata/archive/refs/tags/v1.12.0.tar.gz (sha512-pinned) and every crates.io crate its Cargo.lock pins (sha256-pinned by Cargo.lock)",
+        "method": "add vendor/<crate>-<version> for each Cargo.lock crate with .cargo-checksum.json, as cargo vendor --versioned-dirs lays it out, and repack deterministically as kanata-1.12.0-vendored.tar.xz"
+      }
     },
     {
       "name": "kde-filesystem",
@@ -3819,13 +3853,13 @@
     },
     {
       "name": "libnfs",
-      "version": "7.0.2",
-      "url": "https://github.com/sahlberg/libnfs/archive/libnfs-7.0.2/libnfs-7.0.2.tar.gz",
-      "filename": "libnfs-7.0.2.tar.gz",
+      "version": "8.0.0",
+      "url": "https://github.com/sahlberg/libnfs/archive/libnfs-8.0.0/libnfs-8.0.0.tar.gz",
+      "filename": "libnfs-8.0.0.tar.gz",
       "feed": "https://github.com/sahlberg/libnfs/archive/libnfs-7.0.0/libnfs-7.0.0.tar.gz",
-      "sha512": "722d7a65090153a9892749fc7b9513d86a75534f7ea49ad4ce18c3360c3740b0c7255e4510fd956215eb25f807fbdc668c1af0262a4cc87de678561198448f8b",
+      "sha512": "d36127b8c2683b2a80b7e7f27b7c02f58951ca27da0a5e8984c979def9ad3a5947dedb7a0f890e7013d68bf58b79b29298526013f62b430a8edbcf4c77f557e4",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/libnfs/libnfs-7.0.2.tar.gz/sha512/722d7a65090153a9892749fc7b9513d86a75534f7ea49ad4ce18c3360c3740b0c7255e4510fd956215eb25f807fbdc668c1af0262a4cc87de678561198448f8b/libnfs-7.0.2.tar.gz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libnfs/libnfs-8.0.0.tar.gz/sha512/d36127b8c2683b2a80b7e7f27b7c02f58951ca27da0a5e8984c979def9ad3a5947dedb7a0f890e7013d68bf58b79b29298526013f62b430a8edbcf4c77f557e4/libnfs-8.0.0.tar.gz"
       ]
     },
     {
@@ -4609,19 +4643,14 @@
     },
     {
       "name": "linux-atm",
-      "version": "2.5.1",
-      "url": "https://downloads.sourceforge.net/linux-atm/linux-atm-2.5.1.tgz",
-      "filename": "linux-atm-2.5.1.tgz",
+      "version": "2.5.2",
+      "url": "https://downloads.sourceforge.net/linux-atm/linux-atm-2.5.2.tar.gz",
+      "filename": "linux-atm-2.5.2.tar.gz",
       "feed": "https://release-monitoring.org/project/12599",
-      "sha512": "7a3e931c47651f7a2acc646120f9a8172c2177d1c6b2267a1a0249c0b3c97ef5c4e93c4e213c455984ec2adf3eaebaab34d489dd27161425fa1c5bcd483fa7a3",
+      "sha512": "0a50e91513e4e1f882dc6f4792dc032e89497ff745c0eaea0c0c848b0f84e40d19e038e4ab5aa70c1f915c28a9f845340c332ac5c3ae838b8f539466e10a0a08",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/linux-atm/linux-atm-2.5.1.tgz/sha512/7a3e931c47651f7a2acc646120f9a8172c2177d1c6b2267a1a0249c0b3c97ef5c4e93c4e213c455984ec2adf3eaebaab34d489dd27161425fa1c5bcd483fa7a3/linux-atm-2.5.1.tgz"
-      ],
-      "dist_bump": {
-        "count": 1,
-        "baseline": "47"
-      },
-      "rebuild_reason": "Drop the glibc-kernheaders virtual provide for kernel-headers < 7: kernel-headers 7 no longer ships linux/atmsvc.h, so the published 2.5.1-47 build is the one that failed on it and the one ppp's build root resolves linux-atm-libs-devel from. Release does not move, so without this counter the published NEVR still matches the recipe and the fix is skipped."
+        "https://src.fedoraproject.org/repo/pkgs/rpms/linux-atm/linux-atm-2.5.2.tar.gz/sha512/0a50e91513e4e1f882dc6f4792dc032e89497ff745c0eaea0c0c848b0f84e40d19e038e4ab5aa70c1f915c28a9f845340c332ac5c3ae838b8f539466e10a0a08/linux-atm-2.5.2.tar.gz"
+      ]
     },
     {
       "name": "linux-firmware",
@@ -4883,11 +4912,14 @@
     {
       "name": "mozjs140",
       "version": "140.13.0",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/mozjs140/firefox-140.13.0esr.source.tar.xz/sha512/937a4103d71c5e1e4bf051821729f6ea70b5c18d444930a487695cc23d74712a0134047248f6ac02305e01becb705426a55b9d89739f02a01eda01ecf5bc27f1/firefox-140.13.0esr.source.tar.xz",
+      "url": "https://ftp.mozilla.org/pub/firefox/releases/140.13.0esr/source/firefox-140.13.0esr.source.tar.xz",
       "filename": "firefox-140.13.0esr.source.tar.xz",
       "feed": "https://release-monitoring.org/project/379255",
       "sha512": "937a4103d71c5e1e4bf051821729f6ea70b5c18d444930a487695cc23d74712a0134047248f6ac02305e01becb705426a55b9d89739f02a01eda01ecf5bc27f1",
-      "stage": 4
+      "stage": 4,
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/mozjs140/firefox-140.13.0esr.source.tar.xz/sha512/937a4103d71c5e1e4bf051821729f6ea70b5c18d444930a487695cc23d74712a0134047248f6ac02305e01becb705426a55b9d89739f02a01eda01ecf5bc27f1/firefox-140.13.0esr.source.tar.xz"
+      ]
     },
     {
       "name": "mpage",
@@ -5080,10 +5112,10 @@
     },
     {
       "name": "nvme-cli",
-      "version": "2.16",
-      "url": "https://github.com/linux-nvme/nvme-cli/archive/v2.16/nvme-cli-2.16.tar.gz",
-      "filename": "nvme-cli-2.16.tar.gz",
-      "sha512": "507018ff41832574bef5b88ea6a17336b9792c54f8e5c619d041bce23124e1d6d5e5e824407f46d4f1b4d6899125885eb14289f3399e61c7e7a59a603f1635e2"
+      "version": "3.1",
+      "url": "https://github.com/linux-nvme/nvme-cli/archive/v3.1/nvme-cli-3.1.tar.gz",
+      "filename": "nvme-cli-3.1.tar.gz",
+      "sha512": "980a806125c75313aefe6f24aef13b850d69893407fc5ccf549b74829b1622efdb8f28f794dff6f7b258bb2a8dcd16c7fcf457a427a04eaa558ff38c954ed2e5"
     },
     {
       "name": "nvtop",
@@ -5123,9 +5155,13 @@
     {
       "name": "oo7",
       "version": "0.7.0~beta^1.e91b98a",
-      "url": "https://github.com/linux-credentials/oo7/archive/e91b98a7235a4971c6cbb7f0533034afc8a8f618/oo7-e91b98a.tar.gz",
-      "filename": "oo7-e91b98a.tar.gz",
-      "sha512": "4ebce6b36406ad1d53421269a8788226a047a4475b2e69a6d84388c6d0569fddd91357c5c38d1b1a906dc3fb51d50068930ed6ce1ad9ace51025350b6c9dbc79"
+      "filename": "oo7-e91b98a7235a4971c6cbb7f0533034afc8a8f618-vendored.tar.xz",
+      "sha512": "bf0f04bfc4cd36f592978bf3d9b2344ba38bdc695298573326260edf53dd9982e0b6c7dc1f9909d07a559edb0207b6307611a59c65f9d45e0b3dad5926f18d5a",
+      "generate": {
+        "script": "tools/generated_sources.py",
+        "input": "https://github.com/linux-credentials/oo7/archive/e91b98a7235a4971c6cbb7f0533034afc8a8f618/oo7-e91b98a.tar.gz (sha512-pinned) and every crates.io crate its Cargo.lock pins (sha256-pinned by Cargo.lock)",
+        "method": "add vendor/<crate>-<version> for each Cargo.lock crate with .cargo-checksum.json, as cargo vendor --versioned-dirs lays it out, and repack deterministically as oo7-e91b98a7235a4971c6cbb7f0533034afc8a8f618-vendored.tar.xz"
+      }
     },
     {
       "name": "open-vm-tools",
@@ -5749,7 +5785,7 @@
     {
       "name": "python-argcomplete",
       "version": "3.6.3",
-      "url": "https://files.pythonhosted.org/packages/38/61/0b9ae6399dd4a58d8c1b1dc5a27d6f2808023d0b5dd3104bb99f45a33ff6/argcomplete-3.6.3.tar.gz",
+      "url": "https://files.pythonhosted.org/packages/source/a/argcomplete/argcomplete-3.6.3.tar.gz",
       "filename": "argcomplete-3.6.3.tar.gz",
       "feed": "https://release-monitoring.org/project/3773",
       "sha512": "d07756a8439fd8f30ea2823bbbe35b102c6822af907eed5d43649a378a703d8c20394127a842c9d6ce0af50d333518450d15c29fc3471e178c681ad95fa43a0a",
@@ -5982,13 +6018,12 @@
     },
     {
       "name": "python-pam",
-      "version": "2.0.2",
-      "url": "https://pypi.python.org/packages/source/p/python-pam/python-pam-2.0.2.tar.gz",
-      "filename": "python-pam-2.0.2.tar.gz",
-      "feed": "https://release-monitoring.org/project/5725",
-      "sha512": "a33279d47de07b32c5c5cadb0f666ea18b407de061cb80e0b1d6cd7370fd70ff14af8d2802a2e4dbdaaf102efd6cac83c4f2c5673615b3d174edca20a4f8b00a",
+      "version": "2.1.1",
+      "url": "https://github.com/FirefighterBlu3/python-pam/archive/v2.1.1/python-pam-2.1.1.tar.gz",
+      "filename": "python-pam-2.1.1.tar.gz",
+      "sha512": "ef1c3f904d70dea81cb6f2c5166096db226939c657ed7bb397a100718973ca2bc0f9dad5d862f2e4b6fa57ec43ddc2bc86932a16fffa03b6f769d57f8b74fc1c",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/python-pam/python-pam-2.0.2.tar.gz/sha512/a33279d47de07b32c5c5cadb0f666ea18b407de061cb80e0b1d6cd7370fd70ff14af8d2802a2e4dbdaaf102efd6cac83c4f2c5673615b3d174edca20a4f8b00a/python-pam-2.0.2.tar.gz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/python-pam/python-pam-2.1.1.tar.gz/sha512/ef1c3f904d70dea81cb6f2c5166096db226939c657ed7bb397a100718973ca2bc0f9dad5d862f2e4b6fa57ec43ddc2bc86932a16fffa03b6f769d57f8b74fc1c/python-pam-2.1.1.tar.gz"
       ]
     },
     {
@@ -7404,12 +7439,17 @@
     },
     {
       "name": "webkitgtk",
-      "version": "2.53.91",
-      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/webkitgtk/webkitgtk-2.53.91.tar.xz/sha512/0bb5ec4c75cf0dcd4ccc46b7cf8595722d447385b75ed6ec79333b56203f681077fa355600210edb4fe6344e4af2943c7fb5b1bff6e35a7ec1ea456d891a1951/webkitgtk-2.53.91.tar.xz",
-      "filename": "webkitgtk-2.53.91.tar.xz",
+      "version": "2.54.2",
+      "url": "https://webkitgtk.org/releases/webkitgtk-2.54.2.tar.xz",
+      "filename": "webkitgtk-2.54.2.tar.xz",
       "feed": "https://release-monitoring.org/project/5355",
-      "sha512": "0bb5ec4c75cf0dcd4ccc46b7cf8595722d447385b75ed6ec79333b56203f681077fa355600210edb4fe6344e4af2943c7fb5b1bff6e35a7ec1ea456d891a1951",
-      "stage": 5
+      "sha512": "5e35d8d5d74e5e648df112db082cdb3b99949ce2a81c87af2462ebb5aba4e7e122b04ba421d826deebbffcd7fe2d620957450308539907ae2f41bdef7b5def24",
+      "stage": 5,
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/webkitgtk/webkitgtk-2.54.2.tar.xz/sha512/5e35d8d5d74e5e648df112db082cdb3b99949ce2a81c87af2462ebb5aba4e7e122b04ba421d826deebbffcd7fe2d620957450308539907ae2f41bdef7b5def24/webkitgtk-2.54.2.tar.xz"
+      ],
+      "signature_url": "https://webkitgtk.org/releases/webkitgtk-2.54.2.tar.xz.asc",
+      "gpg_key": "packages/webkitgtk/webkitgtk-keys.gpg"
     },
     {
       "name": "webrtc-audio-processing",
