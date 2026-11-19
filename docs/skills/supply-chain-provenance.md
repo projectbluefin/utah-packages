@@ -112,6 +112,38 @@ BuildRequires on top of this image, and its post-builddep `rpm -qa` is what
 the package cache key hashes. Read the snapshot as the shared base those roots
 start from.
 
+## The hermetic repository is checked against its lock
+
+`mock-hermetic-repo` saves whatever each lock URL returns, and the mock
+configuration resolves with `gpgcheck=0`. `tools/verify_hermetic_repo.py`
+therefore holds the materialized repository to `buildroot_lock.json` before
+the offline build: every locked RPM present, no other `*.rpm` anywhere in the
+tree, the MD5 of each file's header and payload equal to the lock's `sigmd5`,
+the NEVRA in that header equal to the entry, and the signing key ID equal to
+the lock's `signature` when it records one. The MD5 is computed from the
+bytes, never read from the file's own signature header. `hermetic_build.sh`
+runs it inside `fetch_remote`, so a mismatch is cleaned up and refetched like
+a dropped connection, and again on the whole repository after the `file://`
+half is copied in. Do not move it out of the retried fetch, and do not key it
+by URL: a mirror or a redirect has to pass the same check.
+
+Retries retain verified RPMs and rebuild the derived repository metadata and
+bootstrap image. Mock accepts an existing output repository, but its image
+sync refuses to overwrite an existing bootstrap image directory.
+
+When changing fetch retries, preserve the regression tests for three boundaries:
+only lock resolution and network fetch are retried; Fedora retries use Fedora's
+redirector, not a private mirror list; and whole-lock verification runs after
+copying local RPMs but before publishing repository metadata for the offline
+build. Update assertions for changed retry mechanics without dropping those
+boundaries.
+
+The check proves the build used the root the lock phase resolved; it does not
+prove that root was genuine, because the lock phase itself runs with
+`gpgcheck=0`. mock records `signature` from `%{SIGPGP}`, which current Fedora
+and Hummingbird RPMs (header-only `RSAHEADER` signatures) leave empty, so the
+key ID check rarely has anything to compare.
+
 ## The snapshot runs on the runner
 
 `rpm -qa` runs inside the build root; the JSON is assembled outside it. The
@@ -339,6 +371,22 @@ A patch that only removes dependencies (0002 drops criterion) is fine: cargo
 prunes the lock offline. To move the version, add the new release's SHA-512
 to the recipe's `*_INPUT_SHA512` table, bump the spec, regenerate, and pin the
 new digest in both `sources` and the lock.
+
+## A source published only inside a container image: copy it out by digest
+
+Some artifacts exist only as a file inside an upstream OCI image. Universal
+Blue's prebuilt Homebrew prefix (`homebrew.tar.zst`, which Dakota's
+`bluefin/brew-tarball.bst` stages) is built by `install.sh` in the
+`ghcr.io/ublue-os/brew` image and published nowhere else; its builder clones
+Homebrew and downloads portable Ruby, so it cannot be regenerated. The
+`brew-tarball` generator pins the per-architecture manifest digest Dakota
+pins, keyed by the Homebrew version inside (`git describe` of the archive's
+Homebrew checkout), fetches an anonymous pull token from `ghcr.io/token`,
+checks the manifest and each layer blob against their digests, and copies the
+member out of the topmost layer that carries it, byte for byte. Do not pin a
+tag (`latest` moves weekly) and do not repack the member. To move it, read the
+new per-arch digest from Dakota's element, add it to
+`BREW_TARBALL_MANIFESTS` under the new Homebrew version, and relock.
 
 ## A hand-repacked zstd source: generate xz, rename the Source
 

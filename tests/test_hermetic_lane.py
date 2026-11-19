@@ -142,19 +142,14 @@ class HermeticLaneTests(unittest.TestCase):
         self.assertIn("mock-hermetic-repo --lockfile", script)
 
     def test_only_the_online_steps_are_retried(self) -> None:
-        # Run 36286494799 (#287) lost mdadm and setxkbmap to a dropped
-        # connection in mock-hermetic-repo and dmidecode to one in the lock's
-        # repoquery. Both online steps go through `online`, which cleans the
-        # partial result between attempts; the offline build never does --
-        # its only retry is the deliberate %check one.
+        import re
+
         script = SCRIPT.read_text()
-        self.assertIn('online "lock resolve" clean_lock resolve_lock', script)
-        self.assertIn('online "lock fetch" clean_repo fetch_remote', script)
-        self.assertIn('clean_lock() { rm -rf "$H/lock"; }', script)
-        self.assertIn('clean_repo() { rm -rf "$H/repo"; }', script)
-        self.assertNotIn("online build_offline", script)
-        self.assertNotIn("online runuser -u mockbuilder -- mock --hermetic-build", script)
-        self.assertIn("NET_ATTEMPTS=${HERMETIC_NET_ATTEMPTS:-3}", script)
+        # The online retry wrapper must never enclose the offline build.
+        self.assertEqual(re.findall(r"^ *online .+$", script, re.M), [
+            '  online "lock resolve" clean_lock resolve_lock',
+            '  online "lock fetch" true fetch_remote',
+        ])
 
     def test_online_retries_then_gives_up_with_the_last_status(self) -> None:
         import subprocess
@@ -193,6 +188,37 @@ echo "attempts=$(cat {counter}) cleanups=$cleanups"
                                     capture_output=True, text=True)
             self.assertEqual(capped.returncode, 1)
             self.assertEqual(counter.read_text().strip(), "1")
+
+    def test_fetch_retries_use_fedoras_redirector_not_a_mirror_list(self) -> None:
+        # The first fetch uses the lock as resolved; retries send Fedora URLs to
+        # download.fedoraproject.org, never to a host list of our own, and leave
+        # Hummingbird and file:// URLs alone.
+        import json
+        import subprocess
+        import tempfile
+
+        script = SCRIPT.read_text()
+        self.assertNotRegex(script, r"(?i)fcix|servaxnet|mirror\.constant")
+        start = script.index("redirect_fedora_urls() {")
+        end = script.index("\n}\n", start) + 3
+        helper = script[start:end]
+
+        hummingbird = "https://packages.redhat.com/api/pulp-content/public-hummingbird/x86_64/Packages/e/example-1.noarch.rpm"
+        local = "file:///work/prior/local-stage-1-1.x86_64.rpm"
+        fedora = [
+            "https://mirror.acm.umn.edu/fedora/fedora/linux/updates/44/Everything/x86_64/Packages/f/f-1.noarch.rpm",
+            "http://example.org/pub/fedora/linux/releases/44/Everything/x86_64/os/Packages/g/g-1.noarch.rpm",
+        ]
+        with tempfile.TemporaryDirectory() as directory:
+            lock = Path(directory) / "remote.json"
+            lock.write_text(json.dumps({"buildroot": {"rpms": [{"url": u} for u in [hummingbird, local, *fedora]]}}))
+            subprocess.run(["bash", "-c", f"set -euo pipefail\n{helper}\nredirect_fedora_urls {lock}"], check=True)
+            urls = [r["url"] for r in json.loads(lock.read_text())["buildroot"]["rpms"]]
+        self.assertEqual(urls[:2], [hummingbird, local])
+        self.assertEqual(urls[2:], [
+            "https://download.fedoraproject.org/pub/fedora/linux/updates/44/Everything/x86_64/Packages/f/f-1.noarch.rpm",
+            "https://download.fedoraproject.org/pub/fedora/linux/releases/44/Everything/x86_64/os/Packages/g/g-1.noarch.rpm",
+        ])
 
     def test_mock_config_carries_a_ready_bootstrap_image_only_when_asked(self) -> None:
         plain = render()
