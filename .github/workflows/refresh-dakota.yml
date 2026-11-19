@@ -8,9 +8,11 @@ name: Refresh the Dakota pin
 # testing branch with its sbom-dakota and digest-default artifacts
 # (tools/dakota_repin.py resolve). When it names the pinned revision and digest
 # it stops. Otherwise it writes the new source, copies the image by digest
-# into an OCI layout, rebuilds the snapshot and the mapping with
-# `tools/audit_dakota.py --import-sbom ... --image-layout ... --refresh`, and
-# opens or updates one pull request with the two config files. The import
+# into an OCI layout, fetches Dakota, gnome-build-meta, freedesktop-sdk and
+# freedesktop-sdk-extra at the new refs, rebuilds the snapshot, the mapping and
+# the build facts with `tools/audit_dakota.py --import-sbom ... --image-layout
+# ... --refresh --import-build-facts ...`, and opens or updates one pull
+# request with the three config files. The import
 # keeps its own checks: it refuses an SBOM whose namespace is not the new
 # revision and a layout that does not hold the new digest, both read from
 # Dakota's digest-default record rather than from the SBOM or the image.
@@ -32,12 +34,24 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Fetches and parses third-party content (Dakota's SBOM and image, and four
+  # GitLab/GitHub projects whose patches audit_dakota.py `git apply`s to
+  # compare them). It holds no secret and no write token; it hands the open-pr
+  # job only the three config files and the PR body, as an artifact.
   repin:
     # App credentials are restricted to trusted default main. A schedule
     # payload carries no repository object; schedules always run on the
     # default branch, so github.ref covers it.
     if: github.repository_owner == 'projectbluefin' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      changed: ${{ steps.resolve.outputs.changed }}
+      run: ${{ steps.resolve.outputs.run }}
+      revision: ${{ steps.resolve.outputs.revision }}
+      digest: ${{ steps.resolve.outputs.digest }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -83,16 +97,64 @@ jobs:
         run: |
           set -euo pipefail
           python3 tools/dakota_repin.py apply work/repin.json
+          # The four projects at the new pin, for each element's patches and
+          # configure options (config/dakota-build-facts.json).
+          python3 tools/dakota_repin.py checkout --into work/src
           python3 tools/audit_dakota.py --import-sbom work/sbom/dakota.sbom.json \
-            --image-layout work/dakota-oci --refresh
+            --image-layout work/dakota-oci --refresh --import-build-facts \
+            --dakota-dir work/src/dakota --gbm-dir work/src/gnome-build-meta \
+            --fdsdk-dir work/src/freedesktop-sdk \
+            --fdsdk-extra-dir work/src/freedesktop-sdk-extra
           python3 tools/dakota_repin.py pr-body --before work/before.json \
             --after reports/audit-dakota.json --repin work/repin.json \
             --old-pin work/old-pin.json > work/pr-body.md
           cat work/pr-body.md >> "$GITHUB_STEP_SUMMARY"
           rm -rf work/dakota-oci
           git diff --stat
-      - name: Get repository-scoped mergeraptor token
+      - name: Hand over the re-pin
         if: steps.resolve.outputs.changed == 'true'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: dakota-repin
+          path: |
+            config/dakota.json
+            config/dakota-elements.tsv
+            config/dakota-build-facts.json
+            work/pr-body.md
+          if-no-files-found: error
+          retention-days: 7
+
+  # The only job with a write token. It starts from a fresh checkout of main
+  # and takes nothing from repin but the three config files (checked to be
+  # well-formed JSON / TSV) and the PR body.
+  open-pr:
+    needs: repin
+    if: needs.repin.outputs.changed == 'true'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: dakota-repin
+          path: ${{ runner.temp }}/repin
+      - name: Take the three config files
+        env:
+          IN: ${{ runner.temp }}/repin
+        run: |
+          set -euo pipefail
+          jq -e 'type == "object"' "$IN/config/dakota.json" > /dev/null
+          jq -e 'type == "object"' "$IN/config/dakota-build-facts.json" > /dev/null
+          awk -F'\t' 'NR == 1 { n = NF } NF != n { exit 1 }' "$IN/config/dakota-elements.tsv"
+          for f in dakota.json dakota-elements.tsv dakota-build-facts.json; do
+            install -m 0644 "$IN/config/$f" "config/$f"
+          done
+          mkdir -p work && install -m 0644 "$IN/work/pr-body.md" work/pr-body.md
+          git diff --stat
+      - name: Get repository-scoped mergeraptor token
         id: app-token
         uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3
         with:
@@ -103,7 +165,6 @@ jobs:
           permission-contents: write
           permission-pull-requests: write
       - name: Open or update the re-pin pull request
-        if: steps.resolve.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@3ffccacd46053766916f087ce41d627c0b8cf2d1 # v8
         with:
           # App-authenticated writes trigger real PR CI, including the Dakota
@@ -112,11 +173,12 @@ jobs:
           add-paths: |
             config/dakota.json
             config/dakota-elements.tsv
+            config/dakota-build-facts.json
           branch: chore/dakota-repin
           delete-branch: true
-          title: 'chore(dakota): re-pin Dakota to ${{ steps.resolve.outputs.revision }}'
+          title: 'chore(dakota): re-pin Dakota to ${{ needs.repin.outputs.revision }}'
           commit-message: |
-            chore(dakota): re-pin Dakota to ${{ steps.resolve.outputs.revision }}
+            chore(dakota): re-pin Dakota to ${{ needs.repin.outputs.revision }}
 
-            projectbluefin/dakota publish.yml run ${{ steps.resolve.outputs.run }}, image ${{ steps.resolve.outputs.digest }}.
+            projectbluefin/dakota publish.yml run ${{ needs.repin.outputs.run }}, image ${{ needs.repin.outputs.digest }}.
           body-path: work/pr-body.md
