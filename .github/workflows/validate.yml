@@ -68,6 +68,28 @@ jobs:
           name: factory-build-backlog
           path: ${{ runner.temp }}/factory-build-backlog.json
 
+  dakota-audit:
+    name: Dakota element audit
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - run: pip install --disable-pip-version-check pyyaml==6.0.3
+      # The mapping in config/dakota.json must name exactly the snapshot's
+      # elements, and every reviewer decision one of them.  Like the backlog,
+      # the report is derived and not committed: every recipe import moves
+      # it, so a tracked copy would go stale or conflict.  See #309.
+      - run: python3 tools/audit_dakota.py --check
+      - name: Publish the live Dakota audit report
+        run: |
+          python3 tools/audit_dakota.py \
+            --json-out "$RUNNER_TEMP/dakota-audit/audit-dakota.json" \
+            --markdown-out "$RUNNER_TEMP/dakota-audit/audit-dakota.md"
+          cat "$RUNNER_TEMP/dakota-audit/audit-dakota.md" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: dakota-audit
+          path: ${{ runner.temp }}/dakota-audit/
+
   tests:
     name: Unit tests
     runs-on: ubuntu-24.04

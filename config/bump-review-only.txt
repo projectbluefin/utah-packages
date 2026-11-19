@@ -15,10 +15,17 @@
 # outside what a bump may commit, so only a reviewed pull request can shorten
 # it.
 accountsservice
+# brew-setup.service runs as root and unpacks brew-tarball, a prebuilt prefix
+# copied from ghcr.io/ublue-os/brew that cannot be rebuilt from source.
+brew
+brew-tarball
 cups-browsed
 cups-filters
 fprintd
 gdm
+# The bootloader: a bad release, or replaced bytes, can leave a machine
+# unbootable. Its release-monitoring.org feed makes every 2.x a same-major update.
+grub2
 libblockdev
 libfprint
 # gvfs is linked to the libcdio 2.3 ABI; upgrades require a consumer rebuild.

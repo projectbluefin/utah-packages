@@ -17,7 +17,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from tools import audit_gnome_build_meta, package_index, rawhide_reimport
+from tools import audit_dakota, audit_gnome_build_meta, package_index, rawhide_reimport
 
 DUPLICATE = {
     "schema": 1,
@@ -65,6 +65,19 @@ class DuplicateLockRefusedTests(unittest.TestCase):
         with mock.patch.object(audit_gnome_build_meta, "_aliases", return_value={}):
             with self.assertRaisesRegex(ValueError, "duplicate source lock: jpegxl"):
                 audit_gnome_build_meta.main(argv)
+
+    def test_audit_dakota_main(self) -> None:
+        repo = Path(__file__).resolve().parents[1]
+        argv = [
+            "--pin", str(repo / "config" / "dakota.json"),
+            "--snapshot", str(repo / "config" / "dakota-elements.tsv"),
+            "--sources", str(self.lock),
+            "--packages-dir", str(self.root / "packages"),
+            "--json-out", str(self.root / "out.json"),
+            "--markdown-out", str(self.root / "out.md"),
+        ]
+        with self.assertRaisesRegex(ValueError, "duplicate source lock: jpegxl"):
+            audit_dakota.main(argv)
 
 
 if __name__ == "__main__":
