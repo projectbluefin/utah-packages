@@ -147,6 +147,8 @@ on:
 
 permissions:
   contents: read
+  # build-stage and publish-repository list this run's artifacts.
+  actions: read
   id-token: write
   packages: write
   attestations: write
