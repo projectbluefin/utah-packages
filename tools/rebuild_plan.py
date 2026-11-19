@@ -53,10 +53,16 @@ CHUNK = 250
 # The job chain in rebuild-rpms.yml is fourteen deep and GitHub needs it static.
 STAGES = 14
 
-# rebuild-rpms.yml publishes after each of the first four waves that has
-# later waves to come (publish0..publish3); the final publication covers the
-# rest. See the comment above publish0 there.
-EARLY_PUBLICATIONS = 4
+# The waves rebuild-rpms.yml can publish after while later waves still build
+# (publish<W>); the final publication covers the rest. Dense where a small
+# change and its direct dependents live, then every few waves, so a full
+# rebuild ships its middle waves hours before its last one: run 44224171778
+# finished wave 7 at 07:50 and its final wave at 12:55, and under the old
+# 0..3 slots nothing after wave 3 could publish before the end. Six, not
+# fourteen: each slot is one more expansion of publish-repository.yml in every
+# canary pass, and GitHub refused thirteen ("Maximum object size exceeded").
+# See the comment above publish0 there.
+EARLY_WAVES = (0, 1, 2, 4, 7, 10)
 
 
 def published_from_primary(primary: bytes) -> dict[str, tuple[str, str]]:
@@ -455,6 +461,15 @@ def cacheable(build: list[dict], changed: set[str], stale: set[str]) -> list[str
     recipe changes the recipe digest -- so this is belt and braces, and it keeps
     the promise legible rather than resting on the key being right.
 
+    `changed` here means the package's own inputs changed. tools/rebuild_matrix.py
+    passes it without the packages that changed only because the build root
+    moved (factory_state.shared_only): nobody edited those, so nobody is owed a
+    cache-free build, and their key carries the new build-root digest, so it
+    can only match a build made on the new root. They still rebuild -- the
+    first run after a move misses -- but what they compile is cached, and a
+    rerun before the next successful publish reuses it instead of compiling
+    every package again (issue #1207).
+
     `stale` is excluded because a stale published package is one whose binaries
     require something nothing provides any more. Its recipe may not have moved,
     so its key can hit, and hitting would hand back the very build that is
@@ -493,6 +508,10 @@ def stage_outputs(build: list[dict], waves: dict[str, int] | None = None) -> dic
 
     outputs: dict[str, str] = {
         "build_list": json.dumps([entry["name"] for entry in build]),
+        # Package -> wave, so a consumer can name each `rpm-s<wave>-<package>`
+        # artifact exactly (tools/publish_gate.py names).
+        "stage_map": json.dumps({entry["name"]: wave(entry) for entry in build},
+                                separators=(",", ":")),
     }
     for stage in range(STAGES):
         names = [entry["name"] for entry in build if wave(entry) == stage]
@@ -501,19 +520,26 @@ def stage_outputs(build: list[dict], waves: dict[str, int] | None = None) -> dic
         outputs[f"stage{stage}_chunks"] = json.dumps(
             [json.dumps(chunk) for chunk in chunks]
         )
-    # What an early publication after wave k covers, and which waves get one:
-    # every non-empty wave that has a later non-empty wave, because the final
-    # publication covers the last one anyway. rebuild-rpms.yml publishes each
-    # of those waves' successes as it finishes (publish-repository.yml).
+    # What an early publication after wave k covers (waves 0..k), and which
+    # slots run: one with something new since the previous slot -- a slot
+    # that adds nothing would republish the same packages and move the tag
+    # Utah follows for nothing -- and with a later non-empty wave, because
+    # the final publication covers the last one anyway.
     occupied = [stage for stage in range(STAGES)
                 if json.loads(outputs[f"stage{stage}"])]
-    for stage in range(EARLY_PUBLICATIONS):
+    for stage in EARLY_WAVES:
         outputs[f"through{stage}"] = json.dumps(
             [entry["name"] for entry in build if wave(entry) <= stage]
         )
-    outputs["early_waves"] = json.dumps(
-        [str(stage) for stage in occupied[:-1] if stage < EARLY_PUBLICATIONS]
-    )
+    early = []
+    previous = -1
+    for stage in EARLY_WAVES:
+        new = any(previous < wave_ <= stage for wave_ in occupied)
+        later = any(wave_ > stage for wave_ in occupied)
+        if new and later:
+            early.append(str(stage))
+        previous = stage
+    outputs["early_waves"] = json.dumps(early)
     return outputs
 
 

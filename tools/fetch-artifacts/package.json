@@ -1,0 +1,9 @@
+{
+  "name": "fetch-artifacts",
+  "private": true,
+  "description": "Download this run's artifacts by exact name through the Actions artifact service (tools/fetch-artifacts/fetch.mjs).",
+  "type": "module",
+  "dependencies": {
+    "@actions/artifact": "6.3.1"
+  }
+}

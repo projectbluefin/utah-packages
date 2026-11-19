@@ -211,10 +211,52 @@ When a later stage cannot see what an earlier stage built, check in this order:
 | Exit **125**, `manifest unknown` | A container image digest was pruned upstream (quay.io repushes `latest` and prunes old digests, several times a day for `fedora:44`) | For the build root: nothing. `prepare` pulls it once by tag and shares it as an artifact (`f1f1e4e`); a per-job registry pull is the bug, and `tests/test_buildroot_sharing.py` rejects it. For any other image still pulled by digest in a job, repin, and note that three repins died in five days before the build root moved to the shared artifact |
 | Exit **125**, log under ~1 KB (transient) | `docker run` failed before the build; infrastructure | Not the package. Re-run once at most |
 | `Signature verification failed` after a clean download | The repo's `gpgkey` is a multi-key bundle and one key in it fails to import | Point `gpgkey` at the single release key. Verify its fingerprint against the one the failing transaction named. **Keep `gpgcheck=1`** |
+| `Import of the key didn't help, wrong key?` for a Fedora or Hummingbird package, or `cannot open file: ... RPM-GPG-KEY-...` in a lock resolve | Those repos verify signatures against `config/keys/`. Either a key rotated (Fedora branched, Hummingbird added a signing key: its RPMs carry a v4 signature from Red Hat release key 2 and a v6 one from release key 4, and dnf5 needs every one trusted), or a mock caller did not install `config/keys/` into `/etc/pki/mock` | `rpmkeys --dbpath "$(mktemp -d)" --checksig -v <rpm>` names every signature and key. Pin a new key per `docs/skills/supply-chain-provenance.md`; for the file error, install the keys as `hermetic_build.sh` does. **Keep `gpgcheck=1`** |
 | `wrong key?` on a third-party repo whose content the build does not need | A repo signed by a key the image does not trust | Disable that repo for the build |
 | A package is listed in *Factory: packages failing on main*, or a `package not published` error on the `report` job | It failed this run (build, or lost precedence) and consumers still get its previous build, or nothing if it never built. The other packages published | Triage it like any build failure. It stays in the issue until a run builds it; the issue closes itself on the first run with no failures. A `Not published.` line means the Hummingbird-only transaction refused the whole candidate: fix that first, since nothing moves until it resolves |
 | `nothing provides <dep> needed by <pkg> from factory` in `publish`'s Hummingbird-only transaction, where `<dep>` is a subpackage of a factory recipe that has never published (gdm's `Requires: pam_oo7` while oo7 failed on missing `crate()` providers, run 44010051148) | A recipe was changed to require a sibling's output before that sibling ever built. The gate refuses the whole candidate, so every package the run built waits, including ones unrelated to the change; re-running cannot help, and neither the mirror nor the package server is the cause even when the same run also shows timeouts | Make the provider build first, or let the consumer accept the provider that is already published as a rich dependency, `Requires: (pam_oo7 or gnome-keyring-pam)`, until it does. Before adding a `Requires` on a factory subpackage, check it is in the published repodata, not only in `packages/` |
 | `cosign verify` fails in `publish`'s "Verify and seed repository" step | The image at `:latest` (or the branch tag) is not signed by this workflow's own keyless OIDC identity -- either GHCR served a tampered image, or the certificate-identity ref (`refs/heads/main` for `latest`, the branch ref otherwise) no longer matches how `Sign the published image` signs | **Do not weaken or drop the check to unblock a run.** Confirm who/what pushed to the GHCR package outside this workflow; if the identity itself is wrong, fix the `--certificate-identity` construction, not the fact that it is enforced |
+
+### Unreadable downloads before repository verification
+
+`rpmReadPackageFile()` in the lock fetch can be a bad transfer, not a
+recipe failure: `mock-hermetic-repo` runs `createrepo_c` before it returns.
+Read the subsequent lock-verifier messages for the RPM filenames, then
+check their URLs in the lock to distinguish Hummingbird from Fedora.
+The fetch retries only missing or rejected RPMs; a successful retry still
+has to verify the whole lock before the offline build.
+
+### Measuring package-server failures
+
+For a rebuild failure census (#1208), take the latest 20 `rebuild-rpms`
+runs and enumerate failed `build (<package>)` jobs with the paginated
+Actions jobs endpoint. Include jobs that finished before a run was cancelled;
+exclude cancelled jobs and publish, report, and preflight failures.
+
+Count each failed job once, by the first cause that prevented the build:
+
+- **Hummingbird transfer:** a terminal download error names the Hummingbird
+  host, or the rejected RPM maps to that host in the build-root lock.
+- **Other network:** the terminal error names another download host or service.
+- **Dependency cascade:** a required factory package failed earlier in the
+  same run and its missing output explains this failure.
+- **Recipe:** download and dependency setup succeeded, and the recipe's
+  build or tests failed.
+- **Unclassified:** report missing logs, ambiguous errors, and other
+  infrastructure failures separately. A retry warning that recovered is not
+  a cause, and a failed jobs page is not evidence of zero failures.
+
+Report counts by run, the sample window, and unclassified jobs. To evaluate
+the fewer-than-1-in-20 target, use a completed full rebuild after the shared
+retry policy lands; a cancelled run or a sample with missing evidence
+cannot establish the target.
+
+Do not add whole-job retries before measuring the existing package-download
+retries: a full rerun repeats work and can add load during an outage. If
+Hummingbird transfers still dominate, consider an availability-only cache
+for locked RPMs. It must preserve package verification and pinned signing
+keys, and should not be mistaken for a fallback for dependency resolution
+or repository metadata.
 
 ### A hanging test is not a starved test
 

@@ -5,16 +5,16 @@
 %endif
 
 Name:           libbluray
-Version:        1.4.0
-Release:        5%{?dist}
+Version:        1.5.1
+Release:        1%{?dist}
 Summary:        Library to access Blu-Ray disks for video playback 
 License:        LGPL-2.0-or-later
 URL:            https://www.videolan.org/developers/libbluray.html
 
-Source0:        https://download.videolan.org/pub/videolan/%{name}/%{version}/%{name}-%{version}.tar.xz
+# 1.5.1 is tagged but not on download.videolan.org; the tag archive omits the
+# contrib/libudfread submodule, which the system libudfread replaces anyway.
+Source0:        https://code.videolan.org/videolan/%{name}/-/archive/%{version}/%{name}-%{version}.tar.bz2
 Patch0:         libbluray-0.8.0-no_doxygen_timestamp.patch
-# https://code.videolan.org/videolan/libbluray/-/commit/48d76414455ab6a7d270cec96d6e83673df8a00d
-Patch1:         libbluray-1.4.0-java_23_support.patch
 
 BuildRequires:  doxygen
 BuildRequires:  fontconfig-devel
@@ -69,7 +69,6 @@ developing applications that use %{name}.
 %prep
 %setup -q
 %patch -P0 -p1 -b .no_timestamp
-%patch -P1 -p1 -b .java_23
 
 rm -rf contrib/libudfread
 
@@ -78,7 +77,6 @@ rm -rf contrib/libudfread
   --default-library=shared \
 %if %{build_bdj}
   -Dbdj_jar=enabled \
-  -Djava9=true \
   -Dbdj_type=j2se \
   -Djdk_home=%{_jvmdir}/java \
 %else
@@ -99,7 +97,7 @@ mv %{buildroot}%{_docdir}/%{name}/html .
 %files
 %license COPYING
 %doc ChangeLog README.md
-%{_libdir}/*.so.3*
+%{_libdir}/*.so.4*
 
 %if %{build_bdj}
 %files bdj
@@ -118,6 +116,10 @@ mv %{buildroot}%{_docdir}/%{name}/html .
 
 
 %changelog
+* Mon Nov 16 2026 Utah package factory <noreply@projectbluefin.io> - 1.5.1-1
+- Update to 1.5.1 (Dakota's core-deps/libbluray.bst); soname moves to .so.4
+- Drop the Java 23 patch (upstream since 1.4.1) and the removed java9 option
+
 * Fri Sep 11 2026 Zbigniew Jędrzejewski-Szmek  <zbyszek@in.waw.pl> - 1.4.0-5
 - Undo version bump and rebuild again
 

@@ -1,4 +1,4 @@
-%global version_base 4.6.0
+%global version_base 4.9.3
 %dnl %global version_pre beta.1
 %dnl %global gitnum 1
 %dnl %global githash b82d0fcbcc44eb259cf2209b04f7a41c1f324e27
@@ -30,9 +30,11 @@ Summary:        Friendly interactive shell
 License:        Apache-2.0 OR MIT and GPL-2.0-only AND LGPL-2.0-or-later AND MIT AND PSF-2.0 and Unlicense OR MIT and WTFPL and Zlib
 URL:            https://fishshell.com
 %if %{undefined gitnum}
+# The source pipeline verifies %%{name}-%%{version}.tar.xz.asc against
+# krobelus.gpg (signature_url and gpg_key in config/upstream-sources.json)
+# before staging: the factory fetches extra Source files only from Fedora's
+# lookaside, which has no signature for a release Fedora has not imported.
 Source0:        https://github.com/fish-shell/fish-shell/releases/download/%{version}/%{name}-%{version}.tar.xz
-Source1:        https://github.com/fish-shell/fish-shell/releases/download/%{version}/%{name}-%{version}.tar.xz.asc
-Source2:        https://github.com/krobelus.gpg
 %else
 Source0:        https://github.com/fish-shell/fish-shell/archive/%{githash}/%{name}-%{githash}.tar.gz
 %endif
@@ -48,6 +50,8 @@ Source10:       https://github.com/fish-shell/rust-pcre2/archive/%{rust_pcre2_fi
 Patch1001:      1001-cargo-Use-internal-copy-of-rust-pcre2-instead-of-fet.patch
 Patch1002:      1002-cmake-Use-rpm-profile-for-RelWithDebInfo.patch
 Patch1003:      1003-cargo-Drop-unneeded-dependency-on-unix_path.patch
+# fluent and fluent-syntax come from a git-only fork, fluent-ftl-tools is git-only
+Patch1004:      1004-cargo-Build-with-crates.io-fluent-and-without-the-FT.patch
 
 # Patches for bundled dependencies (10000+)
 ## For forked pcre2 crate that includes https://github.com/BurntSushi/rust-pcre2/pull/38
@@ -65,7 +69,6 @@ BuildRequires:  gettext
 BuildRequires:  git-core
 BuildRequires:  ncurses-devel
 BuildRequires:  pcre2-devel
-BuildRequires:  gnupg2
 BuildRequires:  python3-devel
 BuildRequires:  python3-pexpect
 BuildRequires:  procps-ng
@@ -95,9 +98,6 @@ highlighting, autosuggestions, and tab completions that just work, with
 nothing to learn or configure.
 
 %prep
-%if %{undefined gitnum}
-%{gpgverify} --keyring='%{SOURCE2}' --signature='%{SOURCE1}' --data='%{SOURCE0}'
-%endif
 %autosetup -N %{?gitnum:-n fish-shell-%{githash}}
 
 # For forked pcre2 crate that includes https://github.com/BurntSushi/rust-pcre2/pull/38
