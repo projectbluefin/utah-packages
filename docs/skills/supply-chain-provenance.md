@@ -306,6 +306,37 @@ transport-only migration. Also check candidate hosts against the validator's
 Fedora-host policy before editing: a project's own repository on
 `forge.fedoraproject.org` still counts as Fedora infrastructure.
 
+### A URL-only move still rebuilds the package
+
+`factory_state.input_digest` hashes the whole lock entry, so promoting `url`
+marks the package changed even though the bytes are identical, and
+`rebuild_plan.cacheable()` excludes changed packages, so it compiles for real
+instead of hitting `package_cache_key.py`'s cache (whose key does not include
+the lock). Its direct BuildRequires dependents are dragged in too, but those
+stay cacheable. Batch such moves into one pull request so they cost one
+rebuild.
+
+### Where the remaining lookaside locks come from
+
+These were checked against the locked SHA-512 (2026-11):
+
+- A release asset can be re-uploaded after the release. enchant 2.8.19's
+  GitHub asset was replaced six days after publication and no longer matches
+  the bytes Fedora fetched, so a recipe's `Source0` is not proof.
+- A release with no asset can still have a matching tag archive:
+  printer-driver-ptouch 1.7.1 has no asset, but `archive/v1.7.1` matches.
+  The reverse also happens: protobuf's `protobuf-all-3.19.6.tar.gz` asset
+  differs, while the tag archive Fedora names matches.
+- Codeberg/Forgejo tag archives (`noopenh264`, `libuser`) and some old GitHub
+  ones (`srt`, `lsof`) do not reproduce Fedora's bytes. srt's existing GitHub
+  fallback therefore fails the lock and is not a usable fallback.
+- `libmpeg2.sourceforge.io/files/` and `liba52.sourceforge.io/files/` return
+  404, even from the project's own download page, and `pagure.io` itself is
+  gone like `releases.pagure.org` (usermode, volume_key, livesys-scripts).
+- `kde-settings` matches on `forge.fedoraproject.org`, and `fdk-aac-free`
+  matches on `wtaymans.fedorapeople.org`. Both are Fedora infrastructure, so
+  they stay on the ratchet until an owner decides otherwise.
+
 ### Fork Canary approval is not a source-integrity failure
 
 A source-lock migration can require Canary even when its native package set
