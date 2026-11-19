@@ -92,7 +92,7 @@ class WorkflowTests(unittest.TestCase):
 @unittest.skipUnless(shutil.which("node"), "node is not installed")
 class FetchToolTests(unittest.TestCase):
     def test_node_suite(self) -> None:
-        result = subprocess.run(["node", "--test", "tests/js/"], cwd=ROOT,
+        result = subprocess.run(["node", "--test", "tests/js/fetch_artifacts.test.mjs"], cwd=ROOT,
                                 capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
