@@ -717,6 +717,21 @@ def artifact_pattern(wave: str, prefix: str) -> str:
     return f"{prefix}rpm-s{{{','.join(str(n) for n in range(last + 1))}}}-*"
 
 
+def artifact_names(stage_map: dict[str, int], prefix: str, *,
+                   through: int | None = None, below: int | None = None) -> list[str]:
+    """Exact `rpm-s<wave>-<package>` names for tools/fetch-artifacts/fetch.mjs.
+
+    through: waves 0..through (a publication; None with below None is every
+    wave). below: waves before it (a build stage collecting earlier waves).
+    """
+    def wanted(wave: int) -> bool:
+        if below is not None:
+            return wave < below
+        return through is None or wave <= through
+    return sorted(f"{prefix}rpm-s{wave}-{name}"
+                  for name, wave in stage_map.items() if wanted(int(wave)))
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     commands = parser.add_subparsers(dest="command")
@@ -729,8 +744,8 @@ def main(argv: list[str] | None = None) -> int:
                               help="publish_holdback.py output: builds to hold back")
     assemble_cmd.add_argument("--report", type=Path, required=True)
     assemble_cmd.add_argument("--artifacts", type=Path,
-                              help="JSON list of the run's artifact names: fail if any "
-                                   "covered RPM artifact is missing from --built")
+                              help="JSON list of the RPM artifacts fetched into --built: "
+                                   "fail if any left no RPMs there")
     assemble_cmd.add_argument("--prefix", default="")
     assemble_cmd.add_argument("--wave", default="")
     failures_cmd = commands.add_parser("failures")
@@ -755,10 +770,24 @@ def main(argv: list[str] | None = None) -> int:
     marker_cmd.add_argument("body", type=Path)
     verdict_cmd = commands.add_parser("verdict")
     verdict_cmd.add_argument("body", type=Path)
+    names_cmd = commands.add_parser("names")
+    names_cmd.add_argument("--stage-map", required=True)
+    names_cmd.add_argument("--prefix", default="")
+    names_cmd.add_argument("--through", default="",
+                           help="last wave covered; empty for every wave")
+    names_cmd.add_argument("--below", default="",
+                           help="only waves before this one")
     pattern_cmd = commands.add_parser("pattern")
     pattern_cmd.add_argument("--wave", default="")
     pattern_cmd.add_argument("--prefix", default="")
     args = parser.parse_args(argv)
+    if args.command == "names":
+        print(json.dumps(artifact_names(
+            json.loads(args.stage_map), args.prefix,
+            through=int(args.through) if args.through != "" else None,
+            below=int(args.below) if args.below != "" else None,
+        ), separators=(",", ":")))
+        return 0
     if args.command == "pattern":
         print(f"pattern={artifact_pattern(args.wave, args.prefix)}")
         return 0

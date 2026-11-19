@@ -499,6 +499,10 @@ def stage_outputs(build: list[dict], waves: dict[str, int] | None = None) -> dic
 
     outputs: dict[str, str] = {
         "build_list": json.dumps([entry["name"] for entry in build]),
+        # Package -> wave, so a consumer can name each `rpm-s<wave>-<package>`
+        # artifact exactly (tools/publish_gate.py names).
+        "stage_map": json.dumps({entry["name"]: wave(entry) for entry in build},
+                                separators=(",", ":")),
     }
     for stage in range(STAGES):
         names = [entry["name"] for entry in build if wave(entry) == stage]

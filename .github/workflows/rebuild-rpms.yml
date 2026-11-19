@@ -236,6 +236,7 @@ jobs:
       stage13: ${{ steps.matrix.outputs.stage13 }}
       stage13_chunks: ${{ steps.matrix.outputs.stage13_chunks }}
       build_list: ${{ steps.matrix.outputs.build_list }}
+      stage_map: ${{ steps.matrix.outputs.stage_map }}
       cacheable: ${{ steps.matrix.outputs.cacheable }}
       prune_sources: ${{ steps.matrix.outputs.prune_sources }}
       trusted: ${{ steps.matrix.outputs.trusted }}
@@ -618,6 +619,7 @@ jobs:
         chunk: ${{ fromJSON(needs.prepare.outputs.stage0_chunks) }}
     uses: ./.github/workflows/build-stage.yml
     with:
+      stage_map: ${{ needs.prepare.outputs.stage_map }}
       stage: '0'
       packages: ${{ matrix.chunk }}
       backend: ${{ inputs.backend || 'hermetic' }}
@@ -641,6 +643,7 @@ jobs:
         chunk: ${{ fromJSON(needs.prepare.outputs.stage1_chunks) }}
     uses: ./.github/workflows/build-stage.yml
     with:
+      stage_map: ${{ needs.prepare.outputs.stage_map }}
       stage: '1'
       packages: ${{ matrix.chunk }}
       backend: ${{ inputs.backend || 'hermetic' }}
@@ -664,6 +667,7 @@ jobs:
         chunk: ${{ fromJSON(needs.prepare.outputs.stage2_chunks) }}
     uses: ./.github/workflows/build-stage.yml
     with:
+      stage_map: ${{ needs.prepare.outputs.stage_map }}
       stage: '2'
       packages: ${{ matrix.chunk }}
       backend: ${{ inputs.backend || 'hermetic' }}
@@ -687,6 +691,7 @@ jobs:
         chunk: ${{ fromJSON(needs.prepare.outputs.stage3_chunks) }}
     uses: ./.github/workflows/build-stage.yml
     with:
+      stage_map: ${{ needs.prepare.outputs.stage_map }}
       stage: '3'
       packages: ${{ matrix.chunk }}
       backend: ${{ inputs.backend || 'hermetic' }}
@@ -710,6 +715,7 @@ jobs:
         chunk: ${{ fromJSON(needs.prepare.outputs.stage4_chunks) }}
     uses: ./.github/workflows/build-stage.yml
     with:
+      stage_map: ${{ needs.prepare.outputs.stage_map }}
       stage: '4'
       packages: ${{ matrix.chunk }}
       backend: ${{ inputs.backend || 'hermetic' }}
@@ -733,6 +739,7 @@ jobs:
         chunk: ${{ fromJSON(needs.prepare.outputs.stage5_chunks) }}
     uses: ./.github/workflows/build-stage.yml
     with:
+      stage_map: ${{ needs.prepare.outputs.stage_map }}
       stage: '5'
       packages: ${{ matrix.chunk }}
       backend: ${{ inputs.backend || 'hermetic' }}
@@ -756,6 +763,7 @@ jobs:
         chunk: ${{ fromJSON(needs.prepare.outputs.stage6_chunks) }}
     uses: ./.github/workflows/build-stage.yml
     with:
+      stage_map: ${{ needs.prepare.outputs.stage_map }}
       stage: '6'
       packages: ${{ matrix.chunk }}
       backend: ${{ inputs.backend || 'hermetic' }}
@@ -779,6 +787,7 @@ jobs:
         chunk: ${{ fromJSON(needs.prepare.outputs.stage7_chunks) }}
     uses: ./.github/workflows/build-stage.yml
     with:
+      stage_map: ${{ needs.prepare.outputs.stage_map }}
       stage: '7'
       packages: ${{ matrix.chunk }}
       backend: ${{ inputs.backend || 'hermetic' }}
@@ -802,6 +811,7 @@ jobs:
         chunk: ${{ fromJSON(needs.prepare.outputs.stage8_chunks) }}
     uses: ./.github/workflows/build-stage.yml
     with:
+      stage_map: ${{ needs.prepare.outputs.stage_map }}
       stage: '8'
       packages: ${{ matrix.chunk }}
       backend: ${{ inputs.backend || 'hermetic' }}
@@ -825,6 +835,7 @@ jobs:
         chunk: ${{ fromJSON(needs.prepare.outputs.stage9_chunks) }}
     uses: ./.github/workflows/build-stage.yml
     with:
+      stage_map: ${{ needs.prepare.outputs.stage_map }}
       stage: '9'
       packages: ${{ matrix.chunk }}
       backend: ${{ inputs.backend || 'hermetic' }}
@@ -848,6 +859,7 @@ jobs:
         chunk: ${{ fromJSON(needs.prepare.outputs.stage10_chunks) }}
     uses: ./.github/workflows/build-stage.yml
     with:
+      stage_map: ${{ needs.prepare.outputs.stage_map }}
       stage: '10'
       packages: ${{ matrix.chunk }}
       backend: ${{ inputs.backend || 'hermetic' }}
@@ -871,6 +883,7 @@ jobs:
         chunk: ${{ fromJSON(needs.prepare.outputs.stage11_chunks) }}
     uses: ./.github/workflows/build-stage.yml
     with:
+      stage_map: ${{ needs.prepare.outputs.stage_map }}
       stage: '11'
       packages: ${{ matrix.chunk }}
       backend: ${{ inputs.backend || 'hermetic' }}
@@ -894,6 +907,7 @@ jobs:
         chunk: ${{ fromJSON(needs.prepare.outputs.stage12_chunks) }}
     uses: ./.github/workflows/build-stage.yml
     with:
+      stage_map: ${{ needs.prepare.outputs.stage_map }}
       stage: '12'
       packages: ${{ matrix.chunk }}
       backend: ${{ inputs.backend || 'hermetic' }}
@@ -917,6 +931,7 @@ jobs:
         chunk: ${{ fromJSON(needs.prepare.outputs.stage13_chunks) }}
     uses: ./.github/workflows/build-stage.yml
     with:
+      stage_map: ${{ needs.prepare.outputs.stage_map }}
       stage: '13'
       packages: ${{ matrix.chunk }}
       backend: ${{ inputs.backend || 'hermetic' }}
@@ -952,6 +967,7 @@ jobs:
     if: ${{ !cancelled() && needs.prepare.result == 'success' && inputs.skip_publish != true && contains(fromJSON(needs.prepare.outputs.early_waves), '0') }}
     uses: ./.github/workflows/publish-repository.yml
     with:
+      stage_map: ${{ needs.prepare.outputs.stage_map }}
       wave: '0'
       final: false
       build_list: ${{ needs.prepare.outputs.through0 }}
@@ -966,6 +982,7 @@ jobs:
     if: ${{ !cancelled() && needs.prepare.result == 'success' && inputs.skip_publish != true && contains(fromJSON(needs.prepare.outputs.early_waves), '1') }}
     uses: ./.github/workflows/publish-repository.yml
     with:
+      stage_map: ${{ needs.prepare.outputs.stage_map }}
       wave: '1'
       final: false
       build_list: ${{ needs.prepare.outputs.through1 }}
@@ -980,6 +997,7 @@ jobs:
     if: ${{ !cancelled() && needs.prepare.result == 'success' && inputs.skip_publish != true && contains(fromJSON(needs.prepare.outputs.early_waves), '2') }}
     uses: ./.github/workflows/publish-repository.yml
     with:
+      stage_map: ${{ needs.prepare.outputs.stage_map }}
       wave: '2'
       final: false
       build_list: ${{ needs.prepare.outputs.through2 }}
@@ -994,6 +1012,7 @@ jobs:
     if: ${{ !cancelled() && needs.prepare.result == 'success' && inputs.skip_publish != true && contains(fromJSON(needs.prepare.outputs.early_waves), '4') }}
     uses: ./.github/workflows/publish-repository.yml
     with:
+      stage_map: ${{ needs.prepare.outputs.stage_map }}
       wave: '4'
       final: false
       build_list: ${{ needs.prepare.outputs.through4 }}
@@ -1008,6 +1027,7 @@ jobs:
     if: ${{ !cancelled() && needs.prepare.result == 'success' && inputs.skip_publish != true && contains(fromJSON(needs.prepare.outputs.early_waves), '7') }}
     uses: ./.github/workflows/publish-repository.yml
     with:
+      stage_map: ${{ needs.prepare.outputs.stage_map }}
       wave: '7'
       final: false
       build_list: ${{ needs.prepare.outputs.through7 }}
@@ -1022,6 +1042,7 @@ jobs:
     if: ${{ !cancelled() && needs.prepare.result == 'success' && inputs.skip_publish != true && contains(fromJSON(needs.prepare.outputs.early_waves), '10') }}
     uses: ./.github/workflows/publish-repository.yml
     with:
+      stage_map: ${{ needs.prepare.outputs.stage_map }}
       wave: '10'
       final: false
       build_list: ${{ needs.prepare.outputs.through10 }}
@@ -1046,6 +1067,7 @@ jobs:
               || needs.prepare.outputs.prune_sources != '[]') }}
     uses: ./.github/workflows/publish-repository.yml
     with:
+      stage_map: ${{ needs.prepare.outputs.stage_map }}
       final: true
       build_list: ${{ needs.prepare.outputs.build_list }}
       prune_sources: ${{ needs.prepare.outputs.prune_sources }}

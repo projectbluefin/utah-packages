@@ -6,16 +6,19 @@
 %global udev_prefix 70
 
 Name:     hyperv-daemons
-Version:  6.10
+Version:  7.3.1
 Release:  %autorelease
 Summary:  Hyper-V daemons suite
 
 License:  GPL-2.0-only
 URL:      http://www.kernel.org
 
-# Source files obtained from kernel upstream 6.10-rc4 (6ba59ff4227927d3a8530fc2973b80e94b54d58f)
-# git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
-Source0:  tools-hv-6ba59ff42279.tar.gz
+# Utah: tools/hv (plus the tools/build and tools/scripts makefiles it
+# includes) of the stable kernel release Dakota builds the daemons from
+# (bluefin/hyperv-daemons.bst, v7.3.1), cut by tools/generated_sources.py from
+# https://cdn.kernel.org/pub/linux/kernel/v7.x/linux-%{version}.tar.xz.
+# Fedora's Source0 is a hand-cut snapshot of 6.10-rc4 (6ba59ff42279).
+Source0:  tools-hv-%{version}.tar.xz
 Source1:  COPYING
 
 # HYPERV KVP DAEMON
