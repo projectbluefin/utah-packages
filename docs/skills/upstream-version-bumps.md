@@ -466,8 +466,10 @@ Constraints that shaped it, so they are not rediscovered:
   exposes them as `infra_failed`. If that list is non-empty or missing,
   `holdable` holds nothing and the comment names the outage; the next
   daily bump retries. The container helper marks only terminal download
-  errors. The hermetic helper gives dependency errors precedence over
-  transfer warnings, so a recovered download does not prevent a hold.
+  errors. The hermetic helper checks the combined log from every attempt
+  in the same step, so it still sees an early outage if the remaining
+  attempts fail on a corrupt download. Dependency errors take precedence
+  over transfer warnings, so a recovered download does not prevent a hold.
 - `upstream_bump.py` skips a proposal whose exact version is held and
   logs `held <name>`. A newer upstream release is proposed as usual, and
   applying it deletes the hold, which is why `bump-upstream-sources.yml`

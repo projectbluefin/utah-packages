@@ -44,8 +44,10 @@ NET_RETRY_PAUSE=15
 
 # Run one online step up to NET_ATTEMPTS times: `online <label> <cleanup>
 # <command...>`. cleanup runs before every retry so a half-fetched result
-# never counts as a whole one. When the last attempt fails on a download,
-# /work/reports/infra-failure records it: the build never ran, so the bump
+# never counts as a whole one. When retries are exhausted, classify all
+# attempts together. An early download failure can leave an invalid RPM
+# that later attempts reject without logging another download error.
+# /work/reports/infra-failure records the outage: the build never ran, so the bump
 # gate must not hold the package's version as broken (#1179). A lock resolve
 # that loses the repository mid-query ends `Command failed: ... repoquery`
 # with no dnf error text (#287), so that counts too unless dnf named a
@@ -65,9 +67,10 @@ online() {
   attempt=1
   mkdir -p "$REPORT_DIR"
   log=$REPORT_DIR/online.log
+  : > "$log"
   while true; do
     status=0
-    "$@" 2>&1 | tee "$log" || status=$?
+    "$@" 2>&1 | tee -a "$log" || status=$?
     if [ "$status" -eq 0 ]; then
       return 0
     fi

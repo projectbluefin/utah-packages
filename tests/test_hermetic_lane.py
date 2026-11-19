@@ -186,8 +186,12 @@ echo "attempts=$(cat {counter}) cleanups=$cleanups"
             self.assertIn("::error title=probe failed::probe: probe failed 3 times (last exit 1)", gives_up.stdout)
             self.assertFalse((reports / "infra-failure").exists())
             counter.unlink()
+            early_outage = (
+                f"flaky() {{ if [ ! -f {counter} ]; then echo 'urllib3 MaxRetryError' >&2; "
+                "else echo 'createrepo_c: not an RPM file (bad lead)' >&2; fi;"
+            )
             outage = subprocess.run(
-                ["bash", "-c", probe.replace("flaky() {", "flaky() { echo 'urllib3 IncompleteRead' >&2;")],
+                ["bash", "-c", probe.replace("flaky() {", early_outage)],
                 env={"PASS_ON": "9", "PATH": "/usr/bin:/bin"}, capture_output=True, text=True)
             self.assertEqual(outage.returncode, 1, outage.stdout + outage.stderr)
             self.assertEqual((reports / "infra-failure").read_text().strip(), "probe")
@@ -206,7 +210,10 @@ echo "attempts=$(cat {counter}) cleanups=$cleanups"
             self.assertEqual(unsatisfiable.returncode, 1, unsatisfiable.stdout + unsatisfiable.stderr)
             self.assertFalse((reports / "infra-failure").exists())
             counter.unlink()
-            recovered = "flaky() { printf '%s\\n' 'Curl error (28)' 'No match for argument: libfoo' >&2;"
+            recovered = (
+                f"flaky() {{ if [ ! -f {counter} ]; then echo 'Curl error (28)' >&2; "
+                "else echo 'No match for argument: libfoo' >&2; fi;"
+            )
             unsatisfiable_after_retry = subprocess.run(
                 ["bash", "-c", probe.replace("flaky() {", recovered)],
                 env={"PASS_ON": "9", "PATH": "/usr/bin:/bin"}, capture_output=True, text=True)
