@@ -244,7 +244,9 @@ jobs:
       through0: ${{ steps.matrix.outputs.through0 }}
       through1: ${{ steps.matrix.outputs.through1 }}
       through2: ${{ steps.matrix.outputs.through2 }}
-      through3: ${{ steps.matrix.outputs.through3 }}
+      through4: ${{ steps.matrix.outputs.through4 }}
+      through7: ${{ steps.matrix.outputs.through7 }}
+      through10: ${{ steps.matrix.outputs.through10 }}
       container_lane: ${{ steps.matrix.outputs.container_lane }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -945,14 +947,20 @@ jobs:
       container_packages: ${{ needs.prepare.outputs.container_lane }}
 
   # Each wave's successes publish as that wave finishes, while later waves
-  # still build: publish0..publish3, one per wave among the first four that
-  # has later waves still to come (see publish-repository.yml). Four, not
-  # one per wave: the canary expands this workflow six times, and GitHub
-  # refused a workflow with thirteen early publications per expansion
-  # ("Maximum object size exceeded"). The first four waves of a run are
-  # where a small change and its direct dependents live; anything later is
-  # covered by the final publication. They run one after another, and
-  # each seeds from the image the previous one pushed -- allowed because it
+  # still build: one publish<W> slot after each of waves 0, 1, 2, 4, 7 and 10
+  # (tools/rebuild_plan.py EARLY_WAVES), each covering waves 0..W. A slot
+  # runs when its waves hold something the previous slot did not and a later
+  # wave still has work (prepare's early_waves); otherwise it is skipped and
+  # costs nothing. Dense early, where a small change and its direct
+  # dependents live, then every few waves so a full rebuild ships its middle
+  # hours before its end. Not one per wave: the canary expands this workflow
+  # six times, and GitHub refused a workflow with thirteen early publications
+  # per expansion ("Maximum object size exceeded"). Each publication also
+  # pulls and pushes the whole repository image and moves the tag Utah's
+  # Renovate follows. Renovate polls every three hours and force-pushes its
+  # one open digest pull request, so a run updates Utah at most once per poll
+  # however many slots publish. They run one after another, and each
+  # seeds from the image the previous one pushed -- allowed because it
   # carries this run's id.
   publish0:
     needs: [prepare, preflight, rebuild0]
@@ -999,15 +1007,45 @@ jobs:
       artifact_prefix: ${{ inputs.artifact_prefix }}
       publish_tag: ${{ inputs.publish_tag }}
       consumer: ${{ inputs.consumer || 'contract' }}
-  publish3:
-    needs: [prepare, preflight, rebuild0, rebuild1, rebuild2, rebuild3, publish0, publish1, publish2]
-    if: ${{ !cancelled() && needs.prepare.result == 'success' && inputs.skip_publish != true && contains(fromJSON(needs.prepare.outputs.early_waves), '3') }}
+  publish4:
+    needs: [prepare, preflight, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, publish0, publish1, publish2]
+    if: ${{ !cancelled() && needs.prepare.result == 'success' && inputs.skip_publish != true && contains(fromJSON(needs.prepare.outputs.early_waves), '4') }}
     uses: ./.github/workflows/publish-repository.yml
     with:
       stage_map: ${{ needs.prepare.outputs.stage_map }}
-      wave: '3'
+      wave: '4'
       final: false
-      build_list: ${{ needs.prepare.outputs.through3 }}
+      build_list: ${{ needs.prepare.outputs.through4 }}
+      seed_image: ${{ needs.prepare.outputs.seed_image }}
+      buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
+      trusted: ${{ needs.prepare.outputs.trusted }}
+      artifact_prefix: ${{ inputs.artifact_prefix }}
+      publish_tag: ${{ inputs.publish_tag }}
+      consumer: ${{ inputs.consumer || 'contract' }}
+  publish7:
+    needs: [prepare, preflight, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, publish0, publish1, publish2, publish4]
+    if: ${{ !cancelled() && needs.prepare.result == 'success' && inputs.skip_publish != true && contains(fromJSON(needs.prepare.outputs.early_waves), '7') }}
+    uses: ./.github/workflows/publish-repository.yml
+    with:
+      stage_map: ${{ needs.prepare.outputs.stage_map }}
+      wave: '7'
+      final: false
+      build_list: ${{ needs.prepare.outputs.through7 }}
+      seed_image: ${{ needs.prepare.outputs.seed_image }}
+      buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
+      trusted: ${{ needs.prepare.outputs.trusted }}
+      artifact_prefix: ${{ inputs.artifact_prefix }}
+      publish_tag: ${{ inputs.publish_tag }}
+      consumer: ${{ inputs.consumer || 'contract' }}
+  publish10:
+    needs: [prepare, preflight, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8, rebuild9, rebuild10, publish0, publish1, publish2, publish4, publish7]
+    if: ${{ !cancelled() && needs.prepare.result == 'success' && inputs.skip_publish != true && contains(fromJSON(needs.prepare.outputs.early_waves), '10') }}
+    uses: ./.github/workflows/publish-repository.yml
+    with:
+      stage_map: ${{ needs.prepare.outputs.stage_map }}
+      wave: '10'
+      final: false
+      build_list: ${{ needs.prepare.outputs.through10 }}
       seed_image: ${{ needs.prepare.outputs.seed_image }}
       buildroot_digest: ${{ needs.prepare.outputs.buildroot_digest }}
       trusted: ${{ needs.prepare.outputs.trusted }}
@@ -1020,7 +1058,7 @@ jobs:
   # FINISH, so nothing is published around a wave that is still building,
   # and no wave's result can veto it (tools/publish_gate.py).
   publish:
-    needs: [prepare, preflight, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8, rebuild9, rebuild10, rebuild11, rebuild12, rebuild13, publish0, publish1, publish2, publish3]
+    needs: [prepare, preflight, rebuild0, rebuild1, rebuild2, rebuild3, rebuild4, rebuild5, rebuild6, rebuild7, rebuild8, rebuild9, rebuild10, rebuild11, rebuild12, rebuild13, publish0, publish1, publish2, publish4, publish7, publish10]
     if: >-
       ${{ !cancelled()
           && needs.prepare.result == 'success'
@@ -1085,11 +1123,15 @@ jobs:
             --build-list "$BUILD_LIST" --artifacts artifacts.json --prefix "$PREFIX" \
             --losers "$LOSERS" --publish-result "$PUBLISH_RESULT" \
             --publish-report "$PUBLISH_REPORT" --digest "$DIGEST" --run-url "$RUN_URL" \
-            --output report.md --failed-output failed.json > /dev/null
+            --output report.md --failed-output failed.json \
+            --verdict-output verdict.json > /dev/null
           cat report.md >> "$GITHUB_STEP_SUMMARY"
           echo "failed=$(jq -c . failed.json)" >> "$GITHUB_OUTPUT"
           for name in $(jq -r '.[]' failed.json); do
             echo "::error title=package not published::$name failed this run and was not replaced"
+          done
+          for name in $(jq -r '.withheld[]' verdict.json); do
+            echo "::error title=package held back::$name built but was held back so the repository resolves; the next run retries it"
           done
       # One issue per package Utah cannot install from the published
       # repository, opened when it appears and closed by the first run in
@@ -1160,8 +1202,9 @@ jobs:
             exit 0
           fi
           gh issue view "$number" -R "$REPOSITORY" --json body --jq .body > previous.md
-          previous=$(python3 tools/publish_gate.py marker previous.md)
+          # Both lists: a change in what is held back is news too.
+          previous=$(python3 tools/publish_gate.py verdict previous.md)
           gh issue edit "$number" -R "$REPOSITORY" --body-file report.md
-          if [ "$previous" != "$(jq -c . failed.json)" ]; then
+          if [ "$previous" != "$(jq -c . verdict.json)" ]; then
             gh issue comment "$number" -R "$REPOSITORY" --body-file report.md
           fi
