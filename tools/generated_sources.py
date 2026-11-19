@@ -49,6 +49,9 @@ that no upstream publishes verbatim:
   bundles its gtk-rs, clap and libglycin-rebind dependencies (#527)
 - tealdeer: the upstream GitHub tag archive (SHA-512-pinned) with the same
   `vendor/` tree added, for Dakota's tldr client (#1034)
+- oo7: the upstream GitHub commit archive (SHA-512-pinned, keyed by the
+  spec's commit) with the same `vendor/` tree added. Fedora 44 lacks crate
+  RPMs the commit needs, and Hummingbird ships none (#1192)
 
 For these, the source lock names this script and records the SHA-512 of the
 bytes the transformation produces. Verification re-runs the transformation
@@ -1328,12 +1331,16 @@ def _cargo_vendored_transform(source: bytes, top: str, crates: dict, mtime: int)
     return out.getvalue()
 
 
-def _cargo_vendored_generate(name: str, version: str, url: str, pin: str | None, out_dir: Path) -> Path:
+def _cargo_vendored_generate(
+    name: str, version: str, url: str, pin: str | None, out_dir: Path, top: str | None = None
+) -> Path:
     """Fetch a pinned release, then every crate its root Cargo.lock pins, and vendor them.
 
     The release is checked against its SHA-512 pin before any crate is
     downloaded, and each crate against its Cargo.lock SHA-256, so nothing
     reaches the output that was not pinned. Nothing is written on a mismatch.
+    `top` is the archive's top directory, and names the output; it defaults
+    to <name>-<version>, and a commit archive passes <name>-<commit>.
     """
     if pin is None:
         raise RuntimeError(f"no pinned input SHA-512 for {name} {version}")
@@ -1341,7 +1348,7 @@ def _cargo_vendored_generate(name: str, version: str, url: str, pin: str | None,
     actual = hashlib.sha512(archive).hexdigest()
     if actual != pin:
         raise RuntimeError(f"input archive mismatch for {url}: expected {pin}, got {actual}")
-    top = f"{name}-{version}"
+    top = top or f"{name}-{version}"
     with tarfile.open(fileobj=io.BytesIO(archive), mode="r:*") as source:
         lock_member = source.getmember(f"{top}/Cargo.lock")
         lock_text = source.extractfile(lock_member).read().decode()
@@ -1463,6 +1470,53 @@ def _gst_thumbnailers_generate(package_dir: Path, out_dir: Path) -> Path:
         _gst_thumbnailers_url(version),
         GST_THUMBNAILERS_INPUT_SHA512.get(version),
         out_dir,
+    )
+
+
+# --- oo7 -----------------------------------------------------------------------
+
+# Fedora builds oo7 against its crate RPMs. Fedora 44 lacks three that the
+# pinned commit needs (formatx 0.4, gettext-rs 0.8, zgvariant 1), and
+# Hummingbird ships no crate RPMs, so the lock step cannot resolve them (run
+# 44224171778). The commit archive carries a Cargo.lock, so the factory
+# vendors exactly that set beside it, as gst-thumbnailers does. The archive
+# is keyed by the spec's %global commit and pinned here.
+OO7_UPSTREAM_URL = "https://github.com/linux-credentials/oo7/archive/{commit}/oo7-{shortcommit}.tar.gz"
+OO7_INPUT_SHA512 = {
+    "e91b98a7235a4971c6cbb7f0533034afc8a8f618": "4ebce6b36406ad1d53421269a8788226a047a4475b2e69a6d84388c6d0569fddd91357c5c38d1b1a906dc3fb51d50068930ed6ce1ad9ace51025350b6c9dbc79",
+}
+
+
+def _oo7_commit_version(package_dir: Path) -> tuple[str, str]:
+    macros = recipe_macros((package_dir / "oo7.spec").read_text())
+    commit = macros.get("commit", "")
+    if not re.fullmatch(r"[0-9a-f]{40}", commit):
+        raise ValueError("oo7.spec must pin %global commit to a full SHA-1")
+    return commit, macros["version"].replace("%{shortcommit}", commit[:7])
+
+
+def _oo7_url(commit: str) -> str:
+    return OO7_UPSTREAM_URL.format(commit=commit, shortcommit=commit[:7])
+
+
+def _oo7_metadata(package_dir: Path) -> dict:
+    commit, version = _oo7_commit_version(package_dir)
+    return {
+        "name": "oo7",
+        "version": version,
+        "filename": f"oo7-{commit}-vendored.tar.xz",
+        "generate": {
+            "script": SCRIPT_PATH,
+            "input": f"{_oo7_url(commit)} (sha512-pinned) and every crates.io crate its Cargo.lock pins (sha256-pinned by Cargo.lock)",
+            "method": f"add vendor/<crate>-<version> for each Cargo.lock crate with .cargo-checksum.json, as cargo vendor --versioned-dirs lays it out, and repack deterministically as oo7-{commit}-vendored.tar.xz",
+        },
+    }
+
+
+def _oo7_generate(package_dir: Path, out_dir: Path) -> Path:
+    commit, version = _oo7_commit_version(package_dir)
+    return _cargo_vendored_generate(
+        "oo7", commit, _oo7_url(commit), OO7_INPUT_SHA512.get(commit), out_dir, top=f"oo7-{commit}"
     )
 
 
@@ -1616,6 +1670,7 @@ METADATA = {
     "7zip": _sevenzip_metadata,
     "bluefin-artwork-logos": _bluefin_artwork_metadata,
     "tealdeer": _tealdeer_metadata,
+    "oo7": _oo7_metadata,
 }
 
 GENERATORS = {
@@ -1635,6 +1690,7 @@ GENERATORS = {
     "7zip": _sevenzip_generate,
     "bluefin-artwork-logos": _bluefin_artwork_generate,
     "tealdeer": _tealdeer_generate,
+    "oo7": _oo7_generate,
 }
 
 
