@@ -21,7 +21,7 @@ import unittest
 from pathlib import Path
 
 from tools import verify_hermetic_repo
-from tools.verify_hermetic_repo import inspect, verify
+from tools.verify_hermetic_repo import VerifyError, inspect, verify
 
 ROOT = Path(__file__).resolve().parent.parent
 SCRIPT = ROOT / "tools" / "hermetic_build.sh"
@@ -347,6 +347,21 @@ def urlparse_path(url: str) -> str:
     from urllib.parse import unquote, urlparse
     return unquote(urlparse(url).path)
 
+
+
+class BadLeadTests(unittest.TestCase):
+    def test_a_non_rpm_names_its_size_and_first_bytes(self) -> None:
+        # #1208: a CDN error page, an empty body and a truncated download need
+        # different fixes, so the error says which one arrived.
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "shadow-utils-4.20.0-2.hum1.x86_64.rpm"
+            path.write_bytes(b"<HTML><HEAD><TITLE>Access Denied</TITLE>" + b"x" * 200)
+            with self.assertRaises(VerifyError) as caught:
+                inspect(path)
+        message = str(caught.exception)
+        self.assertIn("bad lead", message)
+        self.assertIn("240 bytes", message)
+        self.assertIn("Access Denied", message)
 
 if __name__ == "__main__":
     unittest.main()
