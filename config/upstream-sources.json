@@ -394,6 +394,17 @@
       "sha512": "c94c38564e2090f0a9e7e745f62cfb4436417d6370b5b9cb43b7aa29fc1e33aad0d9f3acef7912735f123fefdfb21678ec564fe49d606585047a00892bdfe9b9"
     },
     {
+      "name": "bluefin-wallpapers",
+      "version": "0^%{gitdate}git%{shortcommit}",
+      "filename": "bluefin-wallpapers-72c74ba.tar.xz",
+      "sha512": "c578ee20fd0eeafd6d12cbda53dc466f0e1b1f6cb6f7cf7fa7556d9f201f67d4bba4cd9a9dbe0c4eacfbfbccd872e0c1b512540b16b7f2d5678f4942c3d574f1",
+      "generate": {
+        "script": "tools/generated_sources.py",
+        "input": "the 62 files BLUEFIN_WALLPAPERS_FILES lists under https://raw.githubusercontent.com/projectbluefin/artwork/72c74badbdd7c60d006e89aca74e248316dddd54/ (each sha512-pinned)",
+        "method": "fetch each file from projectbluefin/artwork at 72c74badbdd7c60d006e89aca74e248316dddd54 and pack them at their repository paths, deterministically, as bluefin-wallpapers-72c74ba.tar.xz"
+      }
+    },
+    {
       "name": "bluez",
       "version": "5.87",
       "url": "https://www.kernel.org/pub/linux/bluetooth/bluez-5.87.tar.xz",
@@ -3140,13 +3151,13 @@
     },
     {
       "name": "libcdio",
-      "version": "2.3.0",
-      "url": "https://github.com/libcdio/libcdio/releases/download/2.3.0/libcdio-2.3.0.tar.bz2",
-      "filename": "libcdio-2.3.0.tar.bz2",
-      "sha512": "42e1659df57b558f5bfc81badf137682793070d1301fdf4926d221eca1fffc8d1b912d23ebe0a2e84a9bbd832f257033ef854b5349cf80fc8184bce759800d6c",
+      "version": "2.4.0",
+      "url": "https://github.com/libcdio/libcdio/releases/download/2.4.0/libcdio-2.4.0.tar.bz2",
+      "filename": "libcdio-2.4.0.tar.bz2",
+      "sha512": "fd7d397298ab8a8c8e8d2aab5e63d2a7da5b6bb39ab1a6176afe994f56967a0e0bd80b1ad3c8479063a6f49fc706269a76f14cee52e42b1ae5570764b4c7a148",
       "stage": 0,
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/libcdio/libcdio-2.3.0.tar.bz2/sha512/42e1659df57b558f5bfc81badf137682793070d1301fdf4926d221eca1fffc8d1b912d23ebe0a2e84a9bbd832f257033ef854b5349cf80fc8184bce759800d6c/libcdio-2.3.0.tar.bz2"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libcdio/libcdio-2.4.0.tar.bz2/sha512/fd7d397298ab8a8c8e8d2aab5e63d2a7da5b6bb39ab1a6176afe994f56967a0e0bd80b1ad3c8479063a6f49fc706269a76f14cee52e42b1ae5570764b4c7a148/libcdio-2.4.0.tar.bz2"
       ]
     },
     {
