@@ -51,6 +51,11 @@ checksums, and the fetch time with every answer.
 - Missing from repodata plus missing from Hummingbird means a factory build is
   owed (or an explicit wontfix). Missing from one but present in the other is
   a Utah-side consumption task, not a build.
+- A runtime dependency can still be absent from the consumer transaction when
+  its source package is built but not named by the runtime contract. Add
+  dependency packages explicitly to `[utah]` when the solver reports a missing
+  factory-provided library; do not treat successful factory publication alone as
+  proof that the consumer can select it.
 - Utah repo `excludepkgs`/`includepkgs` filters can hide published names
   (`grub2*` today). A name that fails the static repo filter is not
   consumable no matter what the metadata says.
