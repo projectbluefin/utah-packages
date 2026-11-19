@@ -42,7 +42,6 @@ packages/*/*.sha256sum
 packages/*/*.upstream
 
 # Lookaside payloads whose names carry no build-artifact extension.
-packages/fish/krobelus.gpg
 packages/openssh/gpgkey-*.gpg
 packages/icu/icu-config.sh
 packages/icu/metaZones.txt

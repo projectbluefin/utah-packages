@@ -2,16 +2,13 @@
 
 Name:           python-click
 Epoch:          1
-Version:        8.4.2
+Version:        8.5.1
 Release:        %autorelease
 Summary:        Simple wrapper around optparse for powerful command line utilities
 
 License:        BSD-3-Clause
 URL:            https://github.com/pallets/click
 Source:         %{url}/archive/%{version}/click-%{version}.tar.gz
-
-# Fix test compatibility with pytest >= 9.1
-Patch:          https://github.com/pallets/click/pull/3597.patch
 
 BuildArch:      noarch
 
