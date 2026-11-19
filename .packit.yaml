@@ -1570,12 +1570,6 @@ packages:
     downstream_package_name: ibus-unikey
     paths:
       - packages/ibus-unikey
-  icu:
-    specfile_path: icu.spec
-    upstream_package_name: icu
-    downstream_package_name: icu
-    paths:
-      - packages/icu
   ifuse:
     specfile_path: ifuse.spec
     upstream_package_name: ifuse
