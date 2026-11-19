@@ -135,9 +135,14 @@ after, the drift totals, the `needs_review` rows, the patch and option
 classification counts before and after, and any `contract_problems`
 (an override or alias naming an element the new snapshot dropped makes
 `just dakota-audit` fail until it is fixed on that branch). It never merges or
-arms auto-merge. The pull request is opened with the mergeraptor app token,
-like `refresh-buildroot.yml`, so its CI runs; Dakota's runs, artifacts and
-image are read with the workflow's own token, since Dakota is public.
+arms auto-merge. The work runs in two jobs. `repin` fetches and parses the
+third-party content (it `git apply`s Dakota's patches to compare them) with
+read-only permissions and no secret, then uploads only the three config files
+and the PR body. `open-pr` starts from a fresh checkout, checks that those
+files are well-formed, and is the only job that mints the mergeraptor app
+token, like `refresh-buildroot.yml`, so the pull request's CI runs. Dakota's
+runs, artifacts and image are read with the workflow's own token, since
+Dakota is public.
 `.github/workflows/audit-dakota.yml` runs the offline audit weekly (non-gating)
 and uploads the report; dispatch it with `refresh` to get a re-resolved
 `config/dakota.json` as an artifact to review and commit.

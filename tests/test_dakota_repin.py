@@ -321,7 +321,8 @@ class WorkflowTest(unittest.TestCase):
                 self.assertNotIn(forbidden, self.text.replace("never arms auto-merge", ""))
 
     def test_pull_request_carries_only_the_pin(self) -> None:
-        pr = next(s for s in self.steps if "create-pull-request" in s.get("uses", ""))
+        open_pr = self.workflow["jobs"]["open-pr"]["steps"]
+        pr = next(s for s in open_pr if "create-pull-request" in s.get("uses", ""))
         self.assertEqual(pr["with"]["add-paths"].split(),
                          ["config/dakota.json", "config/dakota-elements.tsv",
                           "config/dakota-build-facts.json"])
@@ -348,6 +349,20 @@ class WorkflowTest(unittest.TestCase):
 
     def test_only_trusted_main(self) -> None:
         self.assertIn("github.ref == 'refs/heads/main'", self.workflow["jobs"]["repin"]["if"])
+
+    def test_the_job_that_fetches_third_party_content_holds_no_secret(self) -> None:
+        # repin `git apply`s Dakota's patches from GitLab/GitHub checkouts; a
+        # write token must not exist in that job (#1212 review).
+        repin = yaml.safe_dump(self.workflow["jobs"]["repin"])
+        self.assertNotIn("secrets.", repin)
+        self.assertNotIn("create-github-app-token", repin)
+        self.assertEqual(self.workflow["jobs"]["repin"]["permissions"],
+                         {"contents": "read", "actions": "read"})
+        open_pr = self.workflow["jobs"]["open-pr"]
+        self.assertEqual(open_pr["needs"], "repin")
+        script = "\n".join(s.get("run", "") for s in open_pr["steps"])
+        self.assertNotIn("dakota_repin.py", script)
+        self.assertNotIn("audit_dakota.py", script)
 
 
 if __name__ == "__main__":
