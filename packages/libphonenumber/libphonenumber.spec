@@ -23,8 +23,13 @@ BuildRequires: gtest-devel
 BuildRequires: java-devel
 %endif
 BuildRequires: libicu-devel
-BuildRequires: protobuf-compiler
-BuildRequires: protobuf-devel
+# Utah: protobuf3 (3.19.6) also provides protobuf-devel and
+# protobuf-compiler. When a full rebuild puts both protobuf builds in the
+# earlier-stage repository, dnf picked protobuf3's (run 44224171778), and
+# evolution-data-server then failed against it. Ask for the current
+# protobuf by version.
+BuildRequires: protobuf-compiler >= 4
+BuildRequires: protobuf-devel >= 4
 BuildRequires: re2-devel
 
 %description

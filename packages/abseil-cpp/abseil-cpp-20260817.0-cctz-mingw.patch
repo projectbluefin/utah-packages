@@ -1,0 +1,13 @@
+diff -Naur a/absl/time/internal/cctz/src/time_zone_info.cc b/absl/time/internal/cctz/src/time_zone_info.cc
+--- a/absl/time/internal/cctz/src/time_zone_info.cc	2026-08-18 13:53:30.000000000 +0100
++++ b/absl/time/internal/cctz/src/time_zone_info.cc	2026-09-09 13:32:05.145326886 +0100
+@@ -413,6 +413,9 @@
+ #ifndef O_CLOEXEC
+ #define O_CLOEXEC 0
+ #endif
++#ifndef O_NONBLOCK
++#define O_NONBLOCK 0
++#endif
+   const int fd = open(path, O_RDONLY | O_NONBLOCK | O_CLOEXEC);
+   if (fd >= 0) {
+     struct stat st;

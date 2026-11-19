@@ -86,7 +86,12 @@ iconv -f iso8859-1 -t utf8 < doc/atm-linux-howto.txt > doc/atm-linux-howto.txt.1
 mv doc/atm-linux-howto.txt.1 doc/atm-linux-howto.txt
 
 %build
-./autotools
+# The SourceForge 2.5.2 release omits the autotools bootstrap script that
+# upstream ships in its source; regenerate from the patched Makefile.am.
+# The prep patches drop zntune and ilmidiag from it, but the pre-generated
+# Makefile.in still lists them, and zntune.c uses the ZATM ioctls removed in
+# kernel 5.19, so a stale configure would fail to compile.
+autoreconf -fi
 CFLAGS="%optflags -D_LINUX_TIME_H"
 %configure --disable-static
 # Drop the default RPATH
@@ -98,6 +103,9 @@ make
 %install
 #rm -rf $RPM_BUILD_ROOT _doc CVS ANS doc/{\.cvsignore,CVS} init-redhat/{CVS,\.cvsignore}
 make DESTDIR=$RPM_BUILD_ROOT install
+# Regenerating the makefiles enables upstream's firmware install hook. Keep
+# these unlisted firmware blobs out of the package, as in the existing recipe.
+rm -f "$RPM_BUILD_ROOT"/lib/firmware/{pca200e.bin,pca200e_ecd.bin2,sba200e_ecd.bin2}
 rm -f $RPM_BUILD_ROOT/%{_libdir}/libatm.{a,la}
 install -m 0644 src/config/hosts.atm $RPM_BUILD_ROOT/etc/
 # Selectively sort what we want included in %%doc

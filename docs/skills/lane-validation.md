@@ -48,7 +48,17 @@ gh workflow run canary.yml -R projectbluefin/utah-packages --ref <branch> \
     recipe, not package crates: `%bcond bundled_rust_deps 1` with Fedora's
     lookaside vendor tarball, or, when Fedora has none, a `vendor/` tree that
     `tools/generated_sources.py` adds from the release's own Cargo.lock
-    (prefixdevname, gst-thumbnailers). Never a retry.
+    (prefixdevname, gst-thumbnailers). Never a retry. A recipe pinned to a
+    commit rather than a release (oo7) vendors the commit archive: key the
+    input SHA-512 by the spec's `%global commit` and pass the archive's
+    `<name>-<commit>` top directory to `_cargo_vendored_generate`. A recipe
+    that resolves *most* crates from Fedora 44 still needs the whole lock
+    vendored: `%cargo_prep -v vendor` points cargo at that one directory.
+  - Rust tests that look for a cdylib or example in `target/<profile>/deps/`
+    fail with Hummingbird's Rust 1.100, which puts them under
+    `build/<crate>/<hash>/out/` (oo7's pam tests: "missing PAM modules").
+    Fedora's koji builds still use the old layout, so Rawhide passes. Look
+    for an upstream fix first and backport it as a patch.
   - A Rust `%check` that never finishes, with idle `cargo build --release
     --bin <name>` children → integration tests that build their own binary
     (escargot or `assert_cmd`'s `cargo_bin`) waiting on the build-directory
