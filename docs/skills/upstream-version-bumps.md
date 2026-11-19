@@ -164,6 +164,13 @@ the reference when Fedora has one. Seen so far:
   `%check` aborted with `Error spawning dbus-daemon` (gate run 40032133559).
   BuildRequire `dbus-daemon`, as ModemManager already does.
 
+- A Fedora 44 doc tool can need what Hummingbird's Python dropped.
+  Hummingbird's setuptools 83 no longer ships `pkg_resources`, so
+  Fedora 44's `python3-linuxdoc` cannot load as a Sphinx extension.
+  libfyaml 0.9.6 (Rawhide's CMake recipe) then failed in `%install` with
+  `No module named 'pkg_resources'` (run 43803033571). Drop the Sphinx
+  BuildRequires when upstream ships pre-built man pages (libfyaml's
+  `doc/canned-man`) and install those instead.
 - A detached signature the spec only lists (`Source1: ...tar.gz.asc`, never
   passed to `%{gpgverify}`) makes `check_bumpable()` refuse the bump: its
   `sources` pin is bound to the old version, and the factory fetches every
