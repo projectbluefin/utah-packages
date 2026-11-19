@@ -312,6 +312,84 @@ class SevenZipTransformTests(unittest.TestCase):
         self.assertIn("Source:         %{name}-%{version}.tar.xz", spec)
 
 
+def build_kernel_archive(version: str) -> bytes:
+    """A synthetic kernel .tar.xz with tools/hv, its build files and neighbours."""
+    top = f"linux-{version}"
+    members = {
+        f"{top}/Makefile": b"dropped: the kernel's own Makefile",
+        f"{top}/drivers/hv/vmbus_drv.c": b"dropped",
+        f"{top}/tools/hv/Makefile": b"kept",
+        f"{top}/tools/hv/hv_kvp_daemon.c": b"kept",
+        f"{top}/tools/hv/hv_set_ifconfig.sh": b"kept",
+        f"{top}/tools/perf/Makefile": b"dropped: another tool",
+        f"{top}/tools/scripts/Makefile.unrelated": b"dropped: not included by tools/hv",
+        **{f"{top}/{rel}": b"kept" for rel in generated_sources.HYPERV_TOOLS_FILES},
+    }
+    directories = {top, f"{top}/drivers", f"{top}/drivers/hv", f"{top}/tools", f"{top}/tools/hv",
+                   f"{top}/tools/perf", f"{top}/tools/build", f"{top}/tools/scripts"}
+    raw = io.BytesIO()
+    with tarfile.open(fileobj=raw, mode="w", format=tarfile.PAX_FORMAT,
+                      pax_headers={"comment": "0123456789abcdef"}) as tar:
+        for name in sorted(directories | set(members)):
+            info = tarfile.TarInfo(name)
+            info.mtime, info.uid, info.gid, info.uname, info.gname = 1777000000, 1000, 1000, "linus", "linus"
+            if name in members:
+                info.size = len(members[name])
+                info.mode = 0o755 if name.endswith(".sh") else 0o644
+                tar.addfile(info, io.BytesIO(members[name]))
+            else:
+                info.type = tarfile.DIRTYPE
+                info.mode = 0o755
+                tar.addfile(info)
+    return lzma.compress(raw.getvalue(), format=lzma.FORMAT_XZ)
+
+
+class HypervToolsTransformTests(unittest.TestCase):
+    VERSION = "7.3.1"
+
+    def members(self, payload: bytes) -> list[tarfile.TarInfo]:
+        with tarfile.open(fileobj=io.BytesIO(payload), mode="r:xz") as tar:
+            return tar.getmembers()
+
+    def test_keeps_tools_hv_and_its_build_files_under_tools(self):
+        result = generated_sources._hyperv_transform(build_kernel_archive(self.VERSION), self.VERSION)
+        names = {member.name for member in self.members(result)}
+        expected = {"tools", "tools/hv", "tools/build", "tools/scripts", "tools/hv/Makefile",
+                    "tools/hv/hv_kvp_daemon.c", "tools/hv/hv_set_ifconfig.sh",
+                    *generated_sources.HYPERV_TOOLS_FILES}
+        self.assertEqual(names, expected)
+
+    def test_transform_is_byte_reproducible_sorted_and_ownerless(self):
+        archive = build_kernel_archive(self.VERSION)
+        first = generated_sources._hyperv_transform(archive, self.VERSION)
+        self.assertEqual(first, generated_sources._hyperv_transform(archive, self.VERSION))
+        members = self.members(first)
+        self.assertEqual([m.name for m in members], sorted(m.name for m in members))
+        for member in members:
+            self.assertEqual((member.uid, member.gid, member.uname, member.gname), (0, 0, "", ""))
+            self.assertEqual(member.mtime, 1777000000)
+            self.assertNotIn("comment", member.pax_headers)
+        modes = {m.name: m.mode for m in members}
+        self.assertEqual(modes["tools/hv/hv_set_ifconfig.sh"], 0o755)
+
+    def test_a_kernel_without_the_build_files_fails(self):
+        top = f"linux-{self.VERSION}"
+        raw = io.BytesIO()
+        with tarfile.open(fileobj=raw, mode="w", format=tarfile.PAX_FORMAT) as tar:
+            info = tarfile.TarInfo(f"{top}/tools/hv/Makefile")
+            tar.addfile(info, io.BytesIO(b""))
+        with self.assertRaisesRegex(RuntimeError, "tools/build/Build"):
+            generated_sources._hyperv_transform(lzma.compress(raw.getvalue(), format=lzma.FORMAT_XZ), self.VERSION)
+
+    def test_metadata_names_the_recipe_source_and_pinned_input(self):
+        metadata = generated_sources.metadata_for("hyperv-daemons", ROOT / "packages" / "hyperv-daemons")
+        self.assertEqual(metadata["filename"], "tools-hv-7.3.1.tar.xz")
+        self.assertIn("cdn.kernel.org/pub/linux/kernel/v7.x/linux-7.3.1.tar.xz", metadata["generate"]["input"])
+        self.assertIn("7.3.1", generated_sources.HYPERV_KERNEL_INPUT_SHA512)
+        spec = (ROOT / "packages" / "hyperv-daemons" / "hyperv-daemons.spec").read_text()
+        self.assertIn("Source0:  tools-hv-%{version}.tar.xz", spec)
+
+
 def build_hplip_archive(version: str) -> bytes:
     """A synthetic upstream hplip .tar.gz carrying `locatedriver`."""
     top = f"hplip-{version}"
@@ -553,6 +631,48 @@ class BluefinArtworkTransformTests(unittest.TestCase):
         for option, style in (("distributor_logo", "light"), ("dark_mode_distributor_logo", "dark")):
             self.assertIn(f"-D{option}=%{{_datadir}}/bluefin-artwork-logos/bluefin-logo-{style}.png", consumer)
             self.assertIn(f"bluefin-logo-{style}.png", recipe)
+
+
+class BluefinWallpapersTransformTests(unittest.TestCase):
+    COMMIT = "72c74badbdd7c60d006e89aca74e248316dddd54"
+    FILES = {
+        "LICENSE": b"Apache License",
+        "package-gnome-wallpapers.sh": b"#!/usr/bin/env bash\n",
+        "wallpapers/chicken/chicken.jxl": b"jxl",
+    }
+
+    def test_files_keep_their_repository_paths(self):
+        result = generated_sources._bluefin_wallpapers_transform(self.FILES, self.COMMIT)
+        with tarfile.open(fileobj=io.BytesIO(result), mode="r:xz") as tar:
+            self.assertEqual(tar.getnames(), [
+                "bluefin-wallpapers-72c74ba",
+                "bluefin-wallpapers-72c74ba/LICENSE",
+                "bluefin-wallpapers-72c74ba/package-gnome-wallpapers.sh",
+                "bluefin-wallpapers-72c74ba/wallpapers",
+                "bluefin-wallpapers-72c74ba/wallpapers/chicken",
+                "bluefin-wallpapers-72c74ba/wallpapers/chicken/chicken.jxl",
+            ])
+            self.assertEqual(tar.extractfile("bluefin-wallpapers-72c74ba/wallpapers/chicken/chicken.jxl").read(), b"jxl")
+
+    def test_transform_is_byte_reproducible_and_ownerless(self):
+        first = generated_sources._bluefin_wallpapers_transform(self.FILES, self.COMMIT)
+        reordered = dict(reversed(list(self.FILES.items())))
+        self.assertEqual(first, generated_sources._bluefin_wallpapers_transform(reordered, self.COMMIT))
+        with tarfile.open(fileobj=io.BytesIO(first), mode="r:xz") as tar:
+            for member in tar.getmembers():
+                self.assertEqual((member.uid, member.gid, member.uname, member.gname, member.mtime), (0, 0, "", "", 0))
+
+    def test_pins_cover_the_packaging_script_and_the_lock_matches(self):
+        pins = generated_sources.BLUEFIN_WALLPAPERS_FILES[self.COMMIT]
+        self.assertIn("package-gnome-wallpapers.sh", pins)
+        self.assertIn("LICENSE", pins)
+        lock = json.loads((ROOT / "config" / "upstream-sources.json").read_text())
+        entry = next(p for p in lock["packages"] if p["name"] == "bluefin-wallpapers")
+        metadata = generated_sources.metadata_for("bluefin-wallpapers", ROOT / "packages" / "bluefin-wallpapers")
+        self.assertEqual({key: entry[key] for key in metadata}, metadata)
+        self.assertIn(f"SHA512 ({entry['filename']}) = {entry['sha512']}",
+                      (ROOT / "packages" / "bluefin-wallpapers" / "sources").read_text())
+
 
 
 class GeneratedMetadataTests(unittest.TestCase):
