@@ -1,0 +1,8 @@
+{
+  "package": "sysprof",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/sysprof.git",
+  "commit": "417262f0e8feca789e3cace1d3985d0fb56e1976",
+  "tree": "70f14765ba593e4657ce2fb173db1b3f3af95ff7",
+  "imported_at": "2026-11-20T12:15:29.797089+00:00"
+}

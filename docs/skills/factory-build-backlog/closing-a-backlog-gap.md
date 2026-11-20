@@ -516,6 +516,29 @@ the full kernel recipe, or splitting the tools out of it, is a kernel-policy
 decision that the usbip decision does not cover: keep them pending until a
 maintainer records one, even though Utah triages `kernel-tools` as `planned`.
 
+### Sysprof host daemon without kernel-tools
+
+A missing `kernel-tools` requirement does not necessarily mean importing the
+kernel recipe. For Sysprof 51.0, Fedora's `sysprof-cli` requires it solely for
+`turbostat`, the helper used by the optional RAPL energy collector. In the
+[upstream 51.0 source](https://download.gnome.org/sources/sysprof/51/sysprof-51.0.tar.xz),
+`src/sysprofd/ipc-rapl-profiler.c` checks for that helper when the collector
+starts and returns a D-Bus error if absent. `src/sysprof-cli/sysprof-cli.c`
+starts with `rapl = FALSE` and adds the energy instrument only on request.
+Daemon startup and ordinary CPU capture do not need the helper. Keep
+`kernel-tools` as a `Recommends`, not a hard `Requires`, in the factory's
+Sysprof recipe. Energy capture still needs a provider; this does not resolve
+the kernel-tools backlog or prove energy profiling works without it.
+
+Build with `-Dgtk=false -Dhelp=false -Dsysprofd=bundled` to keep the native
+host daemon, system bus and polkit policies, CLI and libraries without
+shipping a second GUI beside the Flatpak. Keep Meson's tests enabled and run
+`%meson_test`. The local release must sort above Hummingbird's
+`51.0-1.1.hum1`; otherwise the resolver can keep selecting its hard dependency.
+After hosted publication, verify `sysprof-cli` resolves against Utah's pinned
+Hummingbird and factory images without enabling Fedora at runtime, then test
+the Flatpak against the host daemon. Recipe checks alone prove neither.
+
 ### SSSD client libraries, terminal graphics and LSB query
 
 The `libsss_*` outputs (`libsss_autofs`, `libsss_certmap`, `libsss_idmap`,
