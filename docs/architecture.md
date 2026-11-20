@@ -1,5 +1,8 @@
 # Architecture
 
+For the whole path from a Dakota BuildStream element to an RPM in a Utah
+image, see [`bst-to-rpm.md`](bst-to-rpm.md).
+
 ```mermaid
 flowchart TD
   Fedora["Fedora spec + patches (recipe)"] --> Spec["RPM recipe"]
@@ -7,8 +10,8 @@ flowchart TD
   Verify --> Lock["Exact source lock"]
   Spec --> GHA["GitHub Actions\nGitHub-hosted runner"]
   Lock --> GHA
-  GHA --> Stages["build-stage.yml\ncalled once per wave, 0-4"]
-  Stages --> Binary["rpmbuild -br / -ba\nin a Fedora 44 + Hummingbird root"]
+  GHA --> Stages["build-stage.yml\ncalled once per wave"]
+  Stages --> Binary["hermetic mock build\nin the pinned utah-buildroot root"]
   Binary --> Repo["RPM overlay + repodata"]
   Repo --> GHCR["Signed, attested GHCR image"]
 ```
@@ -42,32 +45,17 @@ Package builds, generated-source reproduction, reproducibility probes, and
 environment-sensitive validation run in GitHub Actions, in a container the
 workflow starts with `docker run`.
 
-**Which container is not what `AGENTS.md` says it is, and this is a live
-contradiction rather than a nuance.** `AGENTS.md` requires the digest-pinned
-`quay.io/packit/packit` image, and forbids replacing that digest with a
-mutable tag. What actually builds every RPM is:
+Each workflow runs a digest-pinned container:
 
-| workflow | container | pinned? |
-| --- | --- | --- |
-| `build-stage.yml` — the binary lane | `quay.io/fedora/fedora:44` | no, a mutable tag |
-| `rebuild-rpms.yml` — `preflight`, `precedence` | `quay.io/fedora/fedora:44` | no, a mutable tag |
-| `packit-srpm-pilot.yml` — verification only, feeds nothing | `quay.io/packit/packit` (digest pinned in `packit-srpm-chunk.yml`) | yes |
-| `recalculate-hummingbird-gaps.yml` | `quay.io/hummingbird-community/bootc-os:latest` | no, a mutable tag |
+| workflow | container |
+| --- | --- |
+| `build-stage.yml` (package builds), `rebuild-rpms.yml` `preflight`, `publish-repository.yml` `precedence` | `ghcr.io/projectbluefin/utah-buildroot`, the factory's copy of `fedora:44`. The pin is in `config/buildroot-image`; `refresh-buildroot.yml` moves it weekly. The run pulls it once and shares the bytes with every job. |
+| `packit-srpm-chunk.yml`, `import-rawhide-package.yml` (SRPM generation and import only) | `quay.io/packit/packit`, digest pinned |
+| `recalculate-hummingbird-gaps.yml` | `quay.io/hummingbird-community/bootc-os`, digest pinned |
 
-So the only workflow honouring the rule is the one that produces nothing, and
-the rule's own prohibition — a mutable tag — describes every real build.
-
-The rule is not arbitrary and is not a leftover. `docs/superpowers/specs/`
-carries an approved design in which Packit drives Mock, and the Packit image
-was pinned precisely because it supplies `packit`, `mock` and `createrepo_c`
-in one place. What the table shows is therefore an **unfinished
-implementation**, not a wrong rule: the binary lane never got past hand-rolled
-`rpmbuild` in a Fedora image. The mutable tag, the installed-but-unused mock,
-and the hand-simulated build root are all the same gap seen from different
-angles.
-
-Whether to finish that design or supersede it is tracked in
-[#43](https://github.com/projectbluefin/utah-packages/issues/43).
+Package builds use the hermetic mock lane (default since [#264](https://github.com/projectbluefin/utah-packages/issues/264)): mock resolves
+a build-root lock, and then builds offline from exactly the locked RPMs. [#43](https://github.com/projectbluefin/utah-packages/issues/43)
+recorded this decision, and `AGENTS.md` describes the same split.
 
 `.github/workflows/packit-srpm-pilot.yml` proves the SRPM path but is
 verification-only and manual-dispatch-only: its full-inventory fan-out is not
@@ -207,16 +195,32 @@ decides the replacement (`assemble`), models the gate (`publish_allowed`) and
 checks the publish job against both; `tests/test_incremental_publish.py`
 drives them through each failure mode.
 
-Publication happens as waves finish, not once at the end. After each wave
-that has later waves still to come, `rebuild-rpms.yml` calls
-`publish-repository.yml` for waves 0..k (`publish0`..`publish3`, the first four waves), and a final
-call covers every wave. Each publication seeds from the image the previous
-one pushed, which the witness check accepts because it carries this run's id,
-and each is gated on its own Hummingbird-only transaction. An early one may
-fail it -- a library whose soname moved publishes before its consumers are
-rebuilt -- and then publishes nothing; only the final one fails the run. So a
-one-line fix to a wave-0 library publishes when wave 0 finishes, not when the
-slowest package in the same run does.
+Publication happens as waves finish, not once at the end. After waves 0, 1,
+2, 4, 7 and 10 (`publish0` to `publish10`, `EARLY_WAVES` in
+`tools/rebuild_plan.py`), `rebuild-rpms.yml` calls `publish-repository.yml`
+for waves 0..k. A slot runs only when its waves add something since the
+previous slot and a later wave still has work. A final call covers every
+wave. Each publication seeds from the image the previous one pushed, which
+the witness check accepts because it carries this run's id, and each is
+gated on its own Hummingbird-only transaction. So a one-line fix to a wave-0
+library publishes when wave 0 finishes, not when the slowest package in the
+same run does.
+
+A build that would break that transaction is held back instead of blocking
+everything (`tools/publish_holdback.py`). An example is a library whose
+soname moved while a published consumer still needs the old one. Before
+assembly, the publication compares the candidate's metadata with the seed's
+and Hummingbird's. Every new build that drops a capability a published
+package needs is held, and so is every new build whose Requires nothing
+provides. Only what the transaction installs is judged. Every other build in
+the publication that was built against a held build is held too. A build
+counts as built against a held build when it BuildRequires that build (the
+build graph), or when its binaries need what only that build provides. A held build keeps its previous published build and is
+recorded as `withheld` on the image, and every run retries it. The
+transaction then judges exactly what will be pushed. If it still fails, an
+early publication pushes nothing. The final one fails the run either way:
+when the transaction fails it pushes nothing, and when it held something
+back it first pushes the resolvable subset.
 
 A second, advisory check follows it: what Utah actually installs. The gate's
 contract is about 78 packages; Utah installs about 120 -- its base

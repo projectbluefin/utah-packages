@@ -28,6 +28,7 @@ from tools.publish_gate import (
     Assembly,
     artifact_pattern,
     failed_marker,
+    verdict_marker,
     main,
     render_report,
     summary,
@@ -166,6 +167,28 @@ class RenderReportTests(unittest.TestCase):
         self.assertIn("Every selected package built.", body)
         self.assertNotIn("| package |", body)
 
+    def test_names_each_held_back_package_and_why(self) -> None:
+        body = self.render(
+            publish_result="failure",
+            digest="sha256:" + "f" * 64,
+            publish_report={
+                "replaced": ["libass"],
+                "withheld": ["gvfs", "libnfs"],
+                "withheld_reasons": {
+                    "libnfs": ["gvfs-nfs-1.62.0-1.hum1.bfin.x86_64 needs libnfs.so.17()(64bit), "
+                               "which the new libnfs no longer provides"],
+                    "gvfs": ["built against libnfs, which is held back"],
+                },
+            },
+        )
+        # The final publication pushed what resolves, and still failed.
+        self.assertIn("Published `sha256:", body)
+        self.assertIn("pushed that resolvable subset and then failed the run", body)
+        self.assertIn("**2 package(s) built but were held back**", body)
+        self.assertIn("| `libnfs` | gvfs-nfs-1.62.0-1.hum1.bfin.x86_64 needs libnfs.so.17()(64bit)", body)
+        self.assertIn("| `gvfs` | built against libnfs, which is held back |", body)
+        self.assertEqual(verdict_marker(body), {"failed": [], "withheld": ["gvfs", "libnfs"]})
+
     def test_carries_the_run_url_so_the_issue_links_back(self) -> None:
         body = self.render(run_url="https://example.invalid/run/7")
         self.assertIn("Run: https://example.invalid/run/7", body)
@@ -195,6 +218,11 @@ class FailedMarkerTests(unittest.TestCase):
     def test_returns_none_for_an_empty_or_absent_body(self) -> None:
         self.assertIsNone(failed_marker(""))
         self.assertIsNone(failed_marker(None))
+
+    def test_the_verdict_reads_a_body_from_before_holds_existed(self) -> None:
+        # No withheld marker: nothing was held, so no spurious comment.
+        self.assertEqual(verdict_marker('<!-- failed: ["fish"] -->'),
+                         {"failed": ["fish"], "withheld": []})
 
     def test_reads_the_marker_out_of_surrounding_prose(self) -> None:
         body = 'intro\n<!-- failed: ["fish"] -->\ntrailing comment\n'

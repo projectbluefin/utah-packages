@@ -86,12 +86,12 @@ class IcuStagingTests(unittest.TestCase):
     def test_each_rebuild_still_follows_its_own_factory_dependencies(self):
         """Moving a package earlier must not outrun what it is built from.
 
-        samba BuildRequires the factory's libtevent, libtalloc, libtdb and icu.
-        (libxcrypt now comes directly from Hummingbird.) Pulling samba forward
+        samba BuildRequires the factory's libtevent, libtalloc and libtdb.
+        (libxcrypt and icu come directly from Hummingbird.) Pulling samba forward
         is only correct if the factory-owned dependencies still precede it.
         """
         required_before = {
-            "samba": ("libtevent", "libtalloc", "libtdb", "icu"),
+            "samba": ("libtevent", "libtalloc", "libtdb"),
             # gvfs moved from stage 1 to 3 to land after samba; everything else
             # it is built from is stage 0, so nothing else constrains it.
             "gvfs": ("samba", "libnfs", "libsoup3", "libsecret", "udisks2"),
@@ -110,6 +110,31 @@ class IcuStagingTests(unittest.TestCase):
     def test_libtevent_precedes_samba_and_follows_libtalloc(self):
         self.assertLess(STAGES["libtalloc"], STAGES["libtevent"])
         self.assertLess(STAGES["libtevent"], STAGES["samba"])
+
+
+class IcuComesFromHummingbirdTests(unittest.TestCase):
+    """The factory must not build ICU, so no build root can depend on the run.
+
+    A factory libicu-78.3-1.hum1.bfin and Hummingbird's libicu-78.3-9.hum1 are
+    the same ICU, and Hummingbird's has the higher release. publish-repository
+    drops the factory's from the published repository (507b2bf stopped
+    building it), so a run that built icu resolved its build roots to the
+    factory's copy from /work/prior while a run that did not resolved them to
+    Hummingbird's. The two roots hash to different package cache keys, so the
+    same unchanged recipe missed the cache depending only on what else was in
+    the run (#1214). With no factory icu there is one answer to resolve to.
+    """
+
+    def test_the_factory_has_no_icu_recipe(self):
+        for name in ("icu", "libicu"):
+            with self.subTest(name=name):
+                self.assertNotIn(name, STAGES)
+                self.assertFalse((ROOT / "packages" / name).exists())
+
+    def test_publication_still_drops_a_carried_forward_factory_icu(self):
+        publish = (ROOT / ".github/workflows/publish-repository.yml").read_text()
+        self.assertIn("libicu-*.bfin.*.rpm", publish)
+        self.assertIn("icu-*.bfin.*.rpm", publish)
 
 
 class IcuLinkerOrderingTests(unittest.TestCase):

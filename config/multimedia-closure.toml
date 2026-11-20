@@ -267,9 +267,10 @@ gstreamer1-plugins-bad-free = "gstreamer1-plugins-bad-free"
 gstreamer1-plugins-bad-free-libs = "gstreamer1-plugins-bad-free"
 gstreamer1-plugins-base = "gstreamer1-plugins-base"
 # `gstreamer1-plugin-dav1d` is not a dist-git repository under its own name;
-# the binary is the `%package -n` subpackage of the rust-gst-plugin-dav1d
-# source, which builds its Rust `dav1d` crate dependency bundled by default.
-gstreamer1-plugin-dav1d = "rust-gst-plugin-dav1d"
+# the binary is the `%package -n` subpackage of gstreamer-plugins-rs, the
+# gst-plugins-rs build Dakota ships (#1040). It replaced Fedora's
+# rust-gst-plugin-dav1d recipe, which built the same plugin from the crate.
+gstreamer1-plugin-dav1d = "gstreamer-plugins-rs"
 gstreamer1-plugins-good = "gstreamer1-plugins-good"
 # Fedora's free subset under the exact name Bluefin asks for, imported at the
 # gstreamer1 family version pinned here (1.28.6), not at Rawhide head.

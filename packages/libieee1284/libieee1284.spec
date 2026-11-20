@@ -39,6 +39,12 @@ sed -r -i 's|#include "parport.h"|#include <linux/parport.h>|' src/*.c
 autoreconf -iv
 touch doc/interface.xml
 %configure --without-python
+# Utah: Makefile.am gives every man page one rule, `$(man3_MANS):
+# interface.xml` running `xmlto man`, and that one run writes every page.
+# Under -j, make starts the rule once per page, the runs overwrite each
+# other's output in doc/, and one exits 1 with no message (run 44224171778).
+# Make one page serially first; the rest are then newer than interface.xml.
+make doc/libieee1284.3
 %make_build
 
 %install

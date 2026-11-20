@@ -97,6 +97,49 @@ Rust. While all programs have been implemented, some options might be missing or
 different behavior might be experienced.
 
 
+# Utah-local: uutils-coreutils in place of GNU coreutils, the way Project
+# Bluefin Dakota ships it (projectbluefin/dakota
+# elements/bluefin/uutils-coreutils.bst). Fedora has no such subpackage.
+#
+# Dakota links every uutils utility over its GNU name, except kill and uptime
+# (procps-ng owns them; GNU coreutils does not ship them either) and env. env
+# stays GNU because pkexec realpath()s its target and the multicall binary
+# dispatches on the executed path, so a symlinked env breaks
+# `pkexec -u <user> /usr/bin/env <cmd>`, which uupd runs. Here the links are
+# exactly GNU coreutils' own programs less env, so hostname (hostname), more
+# (util-linux) and uutils-only utilities keep their owners. env comes from
+# gnu-env, built from the GNU coreutils release on its own.
+%global gnu_utilities %{shrink:
+    [ arch b2sum base32 base64 basename basenc cat chcon chgrp chmod chown
+    chroot cksum comm cp csplit cut date dd df dir dircolors dirname du echo
+    expand expr factor false fmt fold groups head hostid id install join link
+    ln logname ls md5sum mkdir mkfifo mknod mktemp mv nice nl nohup nproc
+    numfmt od paste pathchk pinky pr printenv printf ptx pwd readlink realpath
+    rm rmdir runcon seq sha1sum sha224sum sha256sum sha384sum sha512sum shred
+    shuf sleep sort split stat stdbuf stty sum sync tac tail tee test timeout
+    touch tr true truncate tsort tty uname unexpand uniq unlink users vdir wc
+    who whoami yes
+}
+
+%package        replace
+Summary:        uutils-coreutils as the system coreutils, in place of GNU coreutils
+Requires:       %{name}%{?_isa} = %{version}-%{release}
+Requires:       gnu-env
+# Every package that requires coreutils is satisfied by the replacement. The
+# Provides carries the GNU coreutils release Hummingbird ships (gnu-env's
+# version), not uutils' own: an unversioned Provides would also match every
+# versioned Conflicts, and util-linux has `Conflicts: coreutils < 8.20`.
+Provides:       coreutils = 9.12
+Conflicts:      coreutils-single
+
+%description    replace
+Links the GNU coreutils program names in %{_bindir} to uutils-coreutils, so
+that uutils is the system's coreutils, as on Project Bluefin Dakota, and adds
+Dakota's uutils-<utility> names for every uutils utility. env stays GNU's,
+from gnu-env. Install it in place of coreutils-single with
+`dnf swap coreutils-single uutils-coreutils-replace`.
+
+
 %prep
 %autosetup -p1 -n coreutils-%{version}
 %cargo_prep
@@ -146,6 +189,23 @@ mkdir -p %{buildroot}%{zsh_completions_dir}
 cp -p data/completions/bash/* %{buildroot}%{bash_completions_dir}/
 cp -p data/completions/fish/* %{buildroot}%{fish_completions_dir}/
 cp -p data/completions/zsh/* %{buildroot}%{zsh_completions_dir}/
+# uutils-coreutils-replace: fail the build if uutils lacks a GNU program, so
+# its Provides: coreutils never drops one silently.
+target/rpm/coreutils --list > utilities.txt
+: > replace.files
+for utility in %{gnu_utilities}; do
+  grep -qxF -- "$utility" utilities.txt || {
+    echo "uutils-coreutils %{version} has no $utility" >&2
+    exit 1
+  }
+  ln -sr %{buildroot}%{_bindir}/uutils-coreutils "%{buildroot}%{_bindir}/$utility"
+  echo "%{_bindir}/$utility" >> replace.files
+done
+# Dakota's own name for each utility, beside Fedora's uu_<utility>.
+for utility in $(cat utilities.txt); do
+  ln -sr %{buildroot}%{_bindir}/uutils-coreutils "%{buildroot}%{_bindir}/uutils-$utility"
+  echo "%{_bindir}/uutils-$utility" >> replace.files
+done
 
 
 %if %{with check}
@@ -228,6 +288,8 @@ cp -p data/completions/zsh/* %{buildroot}%{zsh_completions_dir}/
 %{bash_completions_dir}/*
 %{fish_completions_dir}/*
 %{zsh_completions_dir}/*
+
+%files replace -f replace.files
 
 
 %changelog
