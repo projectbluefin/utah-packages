@@ -541,17 +541,6 @@ class GateWorkflowTests(unittest.TestCase):
         self.assertIn("steps.verdict.outputs.hold != '[]'", hold["if"])
         run = hold["run"]
         self.assertIn("tools/bump_gate.py trim", run)
-        # A held package returns to its base version, so the committed
-        # multimedia-closure report (one locked version per recipe) would go
-        # stale and fail test_the_committed_report_is_current on the next gate.
-        # Regenerate it and stage it with the trim, exactly as the initial-bump
-        # workflow does.
-        self.assertIn(
-            "python3 tools/multimedia_closure.py --output reports/multimedia-closure.json",
-            run,
-        )
-        git_add = next(line for line in run.splitlines() if line.strip().startswith("git add"))
-        self.assertIn("reports/multimedia-closure.json", git_add)
         # Fast-forward only: never a force push over a branch that moved.
         self.assertIn('git push origin "HEAD:refs/heads/bump/upstream-sources"', run)
         self.assertNotIn("--force", run)
@@ -936,6 +925,98 @@ class AddPathsExistTests(unittest.TestCase):
                     for path in paths.split():
                         with self.subTest(workflow=name, path=path):
                             self.assertTrue((root / path).exists(), path)
+
+class TrimReportTests(unittest.TestCase):
+    """trim restores a held package to its base version, so the committed
+    multimedia-closure report (one locked version per recipe) would go stale.
+    trim regenerates and stages it, exactly as the initial-bump workflow does.
+    This test exercises trim itself, not the workflow, so the fix stays off
+    .github/ and the fork-canary gate stays proofable by push."""
+
+    MANIFEST = '[multimedia_overrides]\npackages = ["glib2"]\n'
+    CLOSURE = """\
+[transaction]
+source = "https://example.invalid/03-packages.sh"
+overrides_manifest = "config/bluefin-packages.toml"
+overrides_section = "multimedia_overrides"
+codecs = []
+
+[policy]
+codec_parity = "negativo17-multimedia-rpmfusion-nonfree (target)"
+
+[upstream_spec_sources]
+glib2 = "https://github.com/negativo17/glib"
+
+[built]
+glib2 = "glib2"
+"""
+
+    def setUp(self) -> None:
+        self.tmp = Path(tempfile.mkdtemp())
+        self.addCleanup(lambda: subprocess.run(["rm", "-rf", str(self.tmp)], check=False))
+        self.git("init", "-q", "-b", "main")
+        self.git("config", "user.email", "gate@example.invalid")
+        self.git("config", "user.name", "gate")
+        # A multimedia requirement answered by the glib2 recipe, locked at the
+        # base version.
+        (self.tmp / "config").mkdir(parents=True)
+        (self.tmp / "config" / "bluefin-packages.toml").write_text(self.MANIFEST)
+        (self.tmp / "config" / "multimedia-closure.toml").write_text(self.CLOSURE)
+        (self.tmp / "packages" / "glib2").mkdir(parents=True)
+        (self.tmp / "packages" / "glib2" / "glib2.spec").write_text(
+            "Name: glib2\nVersion: 2.86.0\n")
+        (self.tmp / ".packit.yaml").write_text(
+            "packages:\n  glib2:\n    specfile_path: glib2.spec\n")
+        self.write_lock({"glib2": "2.86.0"})
+        self.git("add", "-A")
+        self.git("commit", "-q", "-m", "base")
+        self.base = self.git("rev-parse", "HEAD").strip()
+
+    def git(self, *args: str) -> str:
+        return subprocess.run(["git", *args], cwd=self.tmp, check=True,
+                              capture_output=True, text=True).stdout
+
+    def write_lock(self, versions: dict[str, str]) -> None:
+        (self.tmp / "config").mkdir(exist_ok=True)
+        (self.tmp / "config" / "upstream-sources.json").write_text(json.dumps({
+            "schema": 1,
+            "packages": [{"name": n, "version": v} for n, v in versions.items()],
+        }))
+
+    def commit(self) -> str:
+        self.git("add", "-A")
+        self.git("commit", "-q", "-m", "bump")
+        return self.git("rev-parse", "HEAD").strip()
+
+    def trim(self, head: str, hold: str) -> tuple[int, str, str]:
+        out, err = io.StringIO(), io.StringIO()
+        with mock.patch.object(bump_gate, "ROOT", self.tmp), \
+                redirect_stdout(out), redirect_stderr(err):
+            code = bump_gate.main(["trim", "--base", self.base, "--head", head,
+                                   "--hold", hold, "--run-url", "https://example.invalid/run/9"])
+        return code, out.getvalue(), err.getvalue()
+
+    def test_trim_regenerates_and_stages_the_multimedia_closure_report(self) -> None:
+        # Bump glib2 in the head lock and recipe, then hold it on trim.
+        self.write_lock({"glib2": "2.86.1"})
+        (self.tmp / "packages" / "glib2" / "glib2.spec").write_text(
+            "Name: glib2\nVersion: 2.86.1\n")
+        head = self.commit()
+        code, _, err = self.trim(head, '["glib2"]')
+        self.assertEqual(code, 0, err)
+
+        report = self.tmp / "reports" / "multimedia-closure.json"
+        self.assertTrue(report.is_file(), "trim must regenerate the report")
+        # The held package returned to its base version, so the report names
+        # the base version, not the bumped one that was staged before trim.
+        entry = next(e for e in json.loads(report.read_text())["requirements"]
+                     if e["requirement"] == "glib2")
+        self.assertEqual(entry["version"], "2.86.0")
+        # The report is staged with the trim, so the hold commit carries it.
+        staged = self.git("status", "--porcelain", "--",
+                          "reports/multimedia-closure.json").strip()
+        self.assertEqual(staged, "A  reports/multimedia-closure.json")
+
 
 if __name__ == "__main__":
     unittest.main()
