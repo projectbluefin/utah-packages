@@ -1,0 +1,8 @@
+{
+  "package": "cldr-emoji-annotation",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/cldr-emoji-annotation.git",
+  "commit": "7073d3e684fda0adb6f58d8ab6a1a0b4b4dd5891",
+  "tree": "fd2e6b46603560ceba1e7fe8584b6cf38d5a1666",
+  "imported_at": "2026-11-20T02:51:04.686672+00:00"
+}

@@ -210,6 +210,17 @@
       ]
     },
     {
+      "name": "alsa-plugins",
+      "version": "1.2.12",
+      "url": "https://www.alsa-project.org/files/pub/plugins/alsa-plugins-1.2.12.tar.bz2",
+      "filename": "alsa-plugins-1.2.12.tar.bz2",
+      "feed": "https://release-monitoring.org/project/41",
+      "sha512": "b2064eb32662662f422f6e7c71f503d82c68d7a7059c8197bdd61ee08735b3ee104c6a5f9e3451e81124634514b91fc89d05d33041d9c2bb0f55b3c2ac3271b1",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/alsa-plugins/alsa-plugins-1.2.12.tar.bz2/sha512/b2064eb32662662f422f6e7c71f503d82c68d7a7059c8197bdd61ee08735b3ee104c6a5f9e3451e81124634514b91fc89d05d33041d9c2bb0f55b3c2ac3271b1/alsa-plugins-1.2.12.tar.bz2"
+      ]
+    },
+    {
       "name": "alsa-sof-firmware",
       "version": "2026.09.2",
       "url": "https://github.com/thesofproject/sof-bin/releases/download/v2026.09.2/sof-bin-2026.09.2.tar.gz",
@@ -390,6 +401,17 @@
       }
     },
     {
+      "name": "bluefin-cli",
+      "version": "0.15.0",
+      "filename": "bluefin-cli-0.15.0-vendored.tar.xz",
+      "sha512": "a594da1baf3d0f0af3cf8a2aa1f05afbce0f701bbb8e295ccfdb62a28234f1528fb0014dd47a3423b5d2b3f04f135de14ce3d8389fab432003743cb52d359333",
+      "generate": {
+        "script": "tools/generated_sources.py",
+        "input": "https://github.com/tuna-os/bluefin-cli/archive/v0.15.0/bluefin-cli-0.15.0.tar.gz and https://github.com/tuna-os/bluefin-cli/releases/download/v0.15.0/bluefin-cli-0.15.0-vendor.tar.gz (each sha512-pinned)",
+        "method": "unpack the release's vendor/ tree into the tag archive and repack deterministically as bluefin-cli-0.15.0-vendored.tar.xz"
+      }
+    },
+    {
       "name": "bluefin-docs",
       "version": "26.11.1",
       "url": "https://github.com/projectbluefin/documentation/releases/download/26.11.1/bluefin.pdf",
@@ -555,6 +577,16 @@
       "sha512": "7b22bdd05b8e0bf8b24ab79db128dbab9f8c2c167f4b1d3073922b8ff1e0f0e8917322283d6d4091002f014f42692984f4f641761f05965d3b66fb3eca14dc46",
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/cjson/cjson-1.7.19.tar.gz/sha512/7b22bdd05b8e0bf8b24ab79db128dbab9f8c2c167f4b1d3073922b8ff1e0f0e8917322283d6d4091002f014f42692984f4f641761f05965d3b66fb3eca14dc46/cjson-1.7.19.tar.gz"
+      ]
+    },
+    {
+      "name": "cldr-emoji-annotation",
+      "version": "49",
+      "url": "https://github.com/unicode-org/cldr/releases/download/release-49/cldr-common-49.zip",
+      "filename": "cldr-common-49.zip",
+      "sha512": "c704a2baf9ce4e28f40e242f8b2fbd0123579bb2c56daaaf8a92d72abd02485a1f60095c3cc4fe89eaf2d5c9f5fd07954c2eaee88839f97e18b1ff37cd62e2d8",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/cldr-emoji-annotation/cldr-common-49.zip/sha512/c704a2baf9ce4e28f40e242f8b2fbd0123579bb2c56daaaf8a92d72abd02485a1f60095c3cc4fe89eaf2d5c9f5fd07954c2eaee88839f97e18b1ff37cd62e2d8/cldr-common-49.zip"
       ]
     },
     {
@@ -1767,6 +1799,15 @@
       "sha512": "39f9fa14b880441a94a04400ff8850efdd9474929e5501dfd05af06e7747b4d0f7cb742ac811c7026cf52d00508efb73018be4d61d63a1211de0cd931cbc473d"
     },
     {
+      "name": "gnu-env",
+      "version": "9.12",
+      "url": "https://ftp.gnu.org/gnu/coreutils/coreutils-9.12.tar.xz",
+      "filename": "coreutils-9.12.tar.xz",
+      "sha512": "f25514cf02fd25365252d9a8f6fc5f8ed063fffdcb11c7eff380e3fa632741105d11b45ded332a2af5e913f77a143b68a2bd1fbdca0085e127fb17c80c35279b",
+      "signature_url": "https://ftp.gnu.org/gnu/coreutils/coreutils-9.12.tar.xz.sig",
+      "gpg_key": "packages/gnu-env/coreutils-keyring.gpg"
+    },
+    {
       "name": "gnu-free-fonts",
       "version": "20120503",
       "url": "https://ftp.gnu.org/gnu/freefont/freefont-src-20120503.tar.gz",
@@ -1950,6 +1991,17 @@
         "method": "add vendor/<crate>-<version> for each Cargo.lock crate with .cargo-checksum.json, as cargo vendor --versioned-dirs lays it out, and repack deterministically as gst-thumbnailers-1.1.0-vendored.tar.xz"
       },
       "stage": 0
+    },
+    {
+      "name": "gstreamer-plugins-rs",
+      "version": "0.15.4",
+      "filename": "gst-plugins-rs-0.15.4-vendored.tar.xz",
+      "sha512": "3637efe0bf161f4eefe456edf933e49fef664042d0a7507e52c7fa31bf53a0936a04f3b76838556d2261ad4e5f49d43cb26fea456a74059dc14c02e456fb122f",
+      "generate": {
+        "script": "tools/generated_sources.py",
+        "input": "https://gitlab.freedesktop.org/gstreamer/gst-plugins-rs.git tag 0.15.4 (commit 1afff3711855238433862c0ce3bf34918e500386) and every crates.io crate its Cargo.lock pins after the recipe's patches (sha256-pinned by that Cargo.lock)",
+        "method": "git archive --format=tar --prefix=gst-plugins-rs-0.15.4/ of the pinned commit, add vendor/<crate>-<version> for each patched Cargo.lock crate with .cargo-checksum.json, as cargo vendor --versioned-dirs lays it out, and repack deterministically as gst-plugins-rs-0.15.4-vendored.tar.xz"
+      }
     },
     {
       "name": "gstreamer1",
@@ -2615,14 +2667,14 @@
     },
     {
       "name": "jpegxl",
-      "version": "0.11.2",
-      "url": "https://github.com/libjxl/libjxl/archive/v0.11.2/jpegxl-0.11.2.tar.gz",
-      "filename": "jpegxl-0.11.2.tar.gz",
-      "feed": "https://github.com/libjxl/libjxl/archive/v0.11.2/jpegxl-0.11.2.tar.gz",
-      "sha512": "a7e1f7d060b358f4382e84367d66aa2850aef3b4524a0fdfe3f22dd258fb9e35dda7540f859d8bf4c32f31c61a7a03db677f4490a9f472cd25869a9d00797336",
-      "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/jpegxl/jpegxl-0.11.2.tar.gz/sha512/a7e1f7d060b358f4382e84367d66aa2850aef3b4524a0fdfe3f22dd258fb9e35dda7540f859d8bf4c32f31c61a7a03db677f4490a9f472cd25869a9d00797336/jpegxl-0.11.2.tar.gz"
-      ]
+      "version": "0.12.0",
+      "filename": "jpegxl-0.12.0.tar.xz",
+      "sha512": "290b5fb69e56aa28771e66a59b7825b82606597c39a664a44649ab605b275229b4b7a2c34cc79af1627fc1ac1135a3986723af7cba832a1263392e58c694c0f2",
+      "generate": {
+        "script": "tools/generated_sources.py",
+        "input": "https://github.com/libjxl/libjxl/archive/v0.12.0/jpegxl-0.12.0.tar.gz (sha512-pinned); submodule archives (sha512-pinned): testdata https://github.com/libjxl/testdata commit 73695d303670c90e4d506ea89d9901b081385089, third_party/sjpeg https://github.com/webmproject/sjpeg commit 94e0df6d0f8b44228de5be0ff35efb9f946a13c9, third_party/skcms https://github.com/google/skcms commit 96d9171c94b937a1b5f0293de7309ac16311b722",
+        "method": "fill the release's empty sjpeg, skcms (minus profiles/, per update_third_party.sh) and testdata submodules at the tag's gitlinks and repack deterministically as jpegxl-0.12.0.tar.xz"
+      }
     },
     {
       "name": "json-glib",
@@ -2645,6 +2697,16 @@
         "input": "https://github.com/jtroo/kanata/archive/refs/tags/v1.12.0.tar.gz (sha512-pinned) and every crates.io crate its Cargo.lock pins (sha256-pinned by Cargo.lock)",
         "method": "add vendor/<crate>-<version> for each Cargo.lock crate with .cargo-checksum.json, as cargo vendor --versioned-dirs lays it out, and repack deterministically as kanata-1.12.0-vendored.tar.xz"
       }
+    },
+    {
+      "name": "kasumi",
+      "version": "2.5",
+      "url": "https://ftp.jaist.ac.jp/pub/sourceforge.jp/kasumi/41436/kasumi-2.5.tar.gz",
+      "filename": "kasumi-2.5.tar.gz",
+      "sha512": "066dda59d84b456c514a896b376bfc6df8ac64404f06fbfa8c369381acb6d260b1f22874885be2eab844f8f3776b944a5c700a966464ebef74d82c28bc97f970",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/kasumi/kasumi-2.5.tar.gz/md5/f49d010cf1fa5672b4515502b961b8c8/kasumi-2.5.tar.gz"
+      ]
     },
     {
       "name": "kde-filesystem",
@@ -5084,6 +5146,17 @@
       "sha512": "1bcc6b9ccf951c4cdaaebaf349c7c280517a50e2a4e70971cceabadbeeb33ff66f3a0d4cc77b3c2b03d8562b7a19e50d0e8cc50c5c45f392d501adf9623221c7"
     },
     {
+      "name": "nicstat",
+      "version": "1.95",
+      "url": "https://downloads.sourceforge.net/nicstat/nicstat-1.95.tar.gz",
+      "filename": "nicstat-1.95.tar.gz",
+      "feed": "https://release-monitoring.org/project/10373",
+      "sha512": "54f9136200412d41e2c21137a246221ff624f84374db67f6617296a1c3aa73a25125fab09e4ff230f64545ba026fce4806ccece196ac770c8dcf380c0571d505",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/nicstat/nicstat-1.95.tar.gz/md5/9a0b87bbc670c1e738e5b40c7afd184d/nicstat-1.95.tar.gz"
+      ]
+    },
+    {
       "name": "nilfs-utils",
       "version": "2.2.11",
       "url": "https://nilfs.sourceforge.io/download/nilfs-utils-2.2.11.tar.bz2",
@@ -6435,13 +6508,6 @@
       "fallback_urls": [
         "https://src.fedoraproject.org/repo/pkgs/rpms/runc/runc-1.5.1.tar.gz/sha512/4a96870af3146203a001e08d9a0330f6234f8f0b2efe62e123a4f9b131b73967482954f658d53258e19444630c18981b5d7ef805ab736ca16a69f783f39db182/runc-1.5.1.tar.gz"
       ]
-    },
-    {
-      "name": "rust-gst-plugin-dav1d",
-      "version": "0.15.0",
-      "url": "https://crates.io/api/v1/crates/gst-plugin-dav1d/0.15.0/download#/gst-plugin-dav1d-0.15.0.crate",
-      "filename": "gst-plugin-dav1d-0.15.0.crate",
-      "sha512": "9326a569da4ad762f743107577d4817bb28724cfb036b35eaf7d57acfb25d0b52239df86d778e519788651d867200e4c0c2a3cacf438fc3d3f3e2016e02f5cc8"
     },
     {
       "name": "rust-gst-plugin-gtk4",
