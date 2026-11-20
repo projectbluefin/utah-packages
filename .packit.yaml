@@ -394,6 +394,12 @@ packages:
     downstream_package_name: cjson
     paths:
       - packages/cjson
+  cldr-emoji-annotation:
+    specfile_path: cldr-emoji-annotation.spec
+    upstream_package_name: cldr-emoji-annotation
+    downstream_package_name: cldr-emoji-annotation
+    paths:
+      - packages/cldr-emoji-annotation
   cli11:
     specfile_path: cli11.spec
     upstream_package_name: cli11
@@ -1312,6 +1318,12 @@ packages:
     downstream_package_name: gst-thumbnailers
     paths:
       - packages/gst-thumbnailers
+  gstreamer-plugins-rs:
+    specfile_path: gstreamer-plugins-rs.spec
+    upstream_package_name: gstreamer-plugins-rs
+    downstream_package_name: gstreamer-plugins-rs
+    paths:
+      - packages/gstreamer-plugins-rs
   gstreamer1:
     specfile_path: gstreamer1.spec
     upstream_package_name: gstreamer1
@@ -1738,6 +1750,12 @@ packages:
     downstream_package_name: kanata
     paths:
       - packages/kanata
+  kasumi:
+    specfile_path: kasumi.spec
+    upstream_package_name: kasumi
+    downstream_package_name: kasumi
+    paths:
+      - packages/kasumi
   kde-filesystem:
     specfile_path: kde-filesystem.spec
     upstream_package_name: kde-filesystem
@@ -4216,12 +4234,6 @@ packages:
     downstream_package_name: runc
     paths:
       - packages/runc
-  rust-gst-plugin-dav1d:
-    specfile_path: rust-gst-plugin-dav1d.spec
-    upstream_package_name: rust-gst-plugin-dav1d
-    downstream_package_name: rust-gst-plugin-dav1d
-    paths:
-      - packages/rust-gst-plugin-dav1d
   rust-gst-plugin-gtk4:
     specfile_path: rust-gst-plugin-gtk4.spec
     upstream_package_name: rust-gst-plugin-gtk4
