@@ -244,6 +244,21 @@ now arrive only with a `qemu` rebuild, so track SeaBIOS, iPXE and EDK2 CVEs
 against `qemu`. These are Utah-local recipe edits, so the daily Rawhide
 re-import now leaves `qemu` to a hand update, which must keep them.
 
+## libvirt's QEMU driver: Dakota's feature set, not Fedora's
+
+A published package can still be uninstallable: the build root has Fedora's
+repositories, Utah's transaction has only Hummingbird and the factory. Fedora's
+`libvirt` builds the QEMU driver with numad and nbdkit (libnbd) and makes
+`libvirt-daemon-driver-qemu` require `numad`, `libnbd`, `lzop` and
+`swtpm-tools`. None of them is in Hummingbird or the factory, so
+`libvirt-daemon-kvm` did not install (#1021). Dakota's `elements/bluefin/libvirt.bst`
+configures `-Dnumad=disabled -Dnbdkit=disabled` and ships neither lzop nor
+swtpm; the recipe does the same and keeps `lzop` and `swtpm-tools` as
+`Recommends`, which a later import can satisfy. Before moving a factory
+package into Utah's contract, resolve it against the pinned image
+(`just check-repos` in Utah), not the package list. Like `qemu`, `libvirt` now
+carries Utah-local edits that a Rawhide re-import must keep.
+
 ## Checkpoint/restore package family
 
 `criu` and `criu-libs` come from one `criu` source recipe (`%package libs`);
