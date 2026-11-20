@@ -23,9 +23,11 @@
 
 Name:           uutils-coreutils
 Version:        0.7.0
-# bump release number to 9 temporarily
-# upgrade path for rust-coreutils-0.7.0-8
-Release:        %autorelease -b 9
+# Fedora bumps the release base to 9 temporarily, as the
+# upgrade path for rust-coreutils-0.7.0-8. Utah takes 10: the
+# uutils-coreutils-replace subpackage (#1234) must not share an EVR with
+# the published 0.7.0-9 build that lacks it.
+Release:        %autorelease -b 10
 Summary:        GNU coreutils reimplementation in Rust
 
 SourceLicense:  MIT
