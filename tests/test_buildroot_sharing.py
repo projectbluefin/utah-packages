@@ -19,6 +19,8 @@ from pathlib import Path
 import re
 import unittest
 
+import yaml
+
 ROOT = Path(__file__).resolve().parent.parent
 WORKFLOWS = ROOT / ".github" / "workflows"
 LOAD_ACTION = ROOT / ".github" / "actions" / "load-buildroot" / "action.yml"
@@ -224,16 +226,29 @@ class BuildRootPinTests(unittest.TestCase):
         # every weekly run.
         self.assertNotIn("github.event.repository.default_branch", refresh)
 
-    def test_the_rawhide_importer_still_dispatches_the_listener(self) -> None:
-        # bot-pr-validate.yml stays for import-rawhide-package.yml; keep its
-        # trust shape pinned (#377/#378): workflow_dispatch + pr input, no
+    def test_the_rawhide_importer_hands_off_to_real_pr_checks(self) -> None:
+        # Like the refresh: the import PR is opened with the mergeraptor App
+        # token, so pull_request workflows run on its exact head and the hive
+        # sees a trusted bot author. The workflow token can't open PRs or
+        # dispatch runs, App credentials are minted only on main, and the
+        # bot-pr-validate dispatch is gone.
+        importer = (WORKFLOWS / "import-rawhide-package.yml").read_text()
+        propose = importer.split("  propose:")[1]
+        self.assertIn("actions/create-github-app-token@", propose)
+        self.assertIn("token: ${{ steps.app-token.outputs.token }}", propose)
+        self.assertIn("github.ref == 'refs/heads/main'", propose)
+        job = yaml.safe_load(importer)["jobs"]["propose"]
+        self.assertEqual(job["permissions"], {"contents": "read"})
+        self.assertNotIn("bot-pr-validate.yml", importer)
+
+    def test_the_bot_pr_listener_keeps_its_trust_shape(self) -> None:
+        # bot-pr-validate.yml has no caller left; keep its trust shape pinned
+        # (#377/#378) while it exists: workflow_dispatch + pr input, no
         # workflow_run trigger, resolves the head via `gh pr view`.
         listener = (WORKFLOWS / "bot-pr-validate.yml").read_text()
         self.assertIn("workflow_dispatch:", listener)
         self.assertIn("pr:", listener)
         self.assertIn("python3 tools/validate.py", listener)
-        importer = (WORKFLOWS / "import-rawhide-package.yml").read_text()
-        self.assertIn("bot-pr-validate.yml", importer)
         body = "\n".join(
             line for line in listener.splitlines() if not line.lstrip().startswith("#")
         )
