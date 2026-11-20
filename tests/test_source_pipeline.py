@@ -61,7 +61,7 @@ class SourcePipelineTests(unittest.TestCase):
             with patch("tools.source_pipeline.fetch") as fetch:
                 chosen = fetch_with_fallbacks(["https://upstream.example/source", "https://mirror.example/source"], destination)
             self.assertEqual(chosen, "https://upstream.example/source")
-            fetch.assert_called_once_with("https://upstream.example/source", destination)
+            fetch.assert_called_once_with("https://upstream.example/source", destination, expected_sha512=None)
 
     def test_uses_fallback_only_after_upstream_transport_failure(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -91,7 +91,7 @@ class SourcePipelineTests(unittest.TestCase):
                 )
             )
 
-            def fetch_source(url: str, target: Path) -> None:
+            def fetch_source(url: str, target: Path, expected_sha512: str | None = None) -> None:
                 if url == upstream:
                     raise RuntimeError("upstream unavailable")
                 if url == checksum_url:
@@ -466,6 +466,30 @@ class FetchRetryTests(unittest.TestCase):
                     destination,
                 )
             self.assertEqual(chosen, "https://mirror.example/demo-1.0.tar.xz")
+
+    def test_body_matching_its_pinned_digest_skips_the_magic_check(self) -> None:
+        """vvdec's lookaside bitstreams.tar.xz is a bzip2 tarball under an .xz name."""
+        body = b"BZh91AY&SY" + b"bzip2 payload"
+        pinned = hashlib.sha512(body).hexdigest()
+        with tempfile.TemporaryDirectory() as directory:
+            destination = Path(directory) / "source"
+            response = self.typed_response(body, "application/x-xz")
+            with patch("tools.source_pipeline.urllib.request.urlopen", side_effect=[response]):
+                fetch("https://lookaside.example/bitstreams.tar.xz", destination, expected_sha512=pinned)
+            self.assertEqual(destination.read_bytes(), body)
+
+    def test_bad_magic_body_not_matching_its_pinned_digest_is_not_served(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            destination = Path(directory) / "source"
+            page = self.typed_response(b"Making sure you are not a bot", "application/octet-stream")
+            with patch("tools.source_pipeline.urllib.request.urlopen", side_effect=[page]):
+                with self.assertRaises(ChallengePage) as raised:
+                    fetch(
+                        "https://upstream.example/demo-1.0.tar.xz",
+                        destination,
+                        expected_sha512=hashlib.sha512(b"the real archive").hexdigest(),
+                    )
+            self.assertIn("not the expected archive type", str(raised.exception))
 
     def test_unknown_extension_is_not_checked_for_magic(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -1039,7 +1063,7 @@ class SourceManifestTests(unittest.TestCase):
                 target.mkdir()
                 package = {"name": "demo", "lookaside": "rpmfusion-free"}
                 with working_directory(root), patch("tools.source_pipeline.fetch") as fetched:
-                    fetched.side_effect = lambda url, path: path.write_bytes(payload)
+                    fetched.side_effect = lambda url, path, expected_sha512=None: path.write_bytes(payload)
                     if payload == b"verified test data":
                         self.assertEqual(bundled_sources(package, target, "source.tar.gz"), ["tests.tar.xz"])
                         self.assertEqual((target / "tests.tar.xz").read_bytes(), payload)
@@ -1051,7 +1075,27 @@ class SourceManifestTests(unittest.TestCase):
                 fetched.assert_called_once_with(
                     f"https://pkgs.rpmfusion.org/repo/pkgs/free/demo/tests.tar.xz/sha512/{expected}/tests.tar.xz",
                     target / "tests.tar.xz.candidate",
+                    expected_sha512=expected,
                 )
+
+    def test_pinned_lookaside_file_named_unlike_its_contents_is_accepted(self) -> None:
+        """vvdec's bitstreams.tar.xz is bzip2 (`tar -cvjf`); its pinned digest vouches for it."""
+        payload = b"BZh91AY&SY" + b"vvdec conformance bitstreams"
+        expected = hashlib.sha512(payload).hexdigest()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write_manifest(root, "demo", f"SHA512 (bitstreams.tar.xz) = {expected}\n")
+            target = root / "download"
+            target.mkdir()
+            response = io.BytesIO(payload)
+            response.headers = email.message.Message()
+            response.headers["Content-Type"] = "application/x-xz"
+            package = {"name": "demo", "lookaside": "rpmfusion-free"}
+            with working_directory(root), patch(
+                "tools.source_pipeline.urllib.request.urlopen", side_effect=[response]
+            ):
+                self.assertEqual(bundled_sources(package, target, "source.tar.gz"), ["bitstreams.tar.xz"])
+            self.assertEqual((target / "bitstreams.tar.xz").read_bytes(), payload)
 
     def test_only_well_formed_sha512_lines_are_read(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -1137,7 +1181,7 @@ class BundledSourceTests(unittest.TestCase):
 
             requested: list[str] = []
 
-            def fake_fetch(url: str, destination: Path) -> None:
+            def fake_fetch(url: str, destination: Path, expected_sha512: str | None = None) -> None:
                 requested.append(url)
                 destination.write_bytes(self.PAYLOAD)
 
@@ -1166,7 +1210,7 @@ class BundledSourceTests(unittest.TestCase):
 
             requested: list[str] = []
 
-            def fake_fetch(url: str, destination: Path) -> None:
+            def fake_fetch(url: str, destination: Path, expected_sha512: str | None = None) -> None:
                 requested.append(url)
                 destination.write_bytes(self.PAYLOAD)
 
@@ -1184,7 +1228,7 @@ class BundledSourceTests(unittest.TestCase):
             target_dir = root / "sources" / "demo"
             target_dir.mkdir(parents=True)
 
-            def fake_fetch(url: str, destination: Path) -> None:
+            def fake_fetch(url: str, destination: Path, expected_sha512: str | None = None) -> None:
                 destination.write_bytes(b"substituted bytes")
 
             with working_directory(root), patch("tools.source_pipeline.fetch", side_effect=fake_fetch):
