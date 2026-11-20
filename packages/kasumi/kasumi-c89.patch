@@ -1,0 +1,26 @@
+diff --git a/cellrendererspin.c b/cellrendererspin.c
+index 85d3bda690c90272..f68f28971f136d86 100644
+--- a/cellrendererspin.c
++++ b/cellrendererspin.c
+@@ -73,8 +73,8 @@ static GtkCellEditable *gui_cell_renderer_spin_start_editing (GtkCellRenderer
+                                                               GdkEvent             *event,
+                                                               GtkWidget            *widget,
+                                                               const gchar          *path,
+-                                                              GdkRectangle         *background_area,
+-                                                              GdkRectangle         *cell_area,
++                                                              const GdkRectangle   *background_area,
++                                                              const GdkRectangle   *cell_area,
+                                                               GtkCellRendererState  flags);
+ 
+ struct _GCRSpinInfo
+@@ -307,8 +307,8 @@ gui_cell_renderer_spin_start_editing (GtkCellRenderer      *cell,
+                                       GdkEvent             *event,
+                                       GtkWidget            *widget,
+                                       const gchar          *path,
+-                                      GdkRectangle         *background_area,
+-                                      GdkRectangle         *cell_area,
++                                      const GdkRectangle   *background_area,
++                                      const GdkRectangle   *cell_area,
+                                       GtkCellRendererState  flags)
+ {
+   GtkCellRendererText *celltext;

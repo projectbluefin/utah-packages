@@ -35,6 +35,11 @@ from tools.source_pipeline import (
 )
 
 
+# Leading bytes of real archives; fetch() rejects a body that lacks them.
+GZ = b"\x1f\x8b"
+XZ = b"\xfd7zXZ\x00"
+
+
 @contextlib.contextmanager
 def working_directory(path: Path):
     """source_manifest and bundled_sources resolve ``packages/`` from the cwd."""
@@ -130,7 +135,7 @@ class SourcePipelineTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             source = root / "upstream.tar.xz"
-            source.write_bytes(b"verified source")
+            source.write_bytes(XZ + b"verified source")
             package_dir = root / "packages" / "demo"
             package_dir.mkdir(parents=True)
             config = root / "sources.json"
@@ -169,7 +174,7 @@ class SourcePipelineTests(unittest.TestCase):
             )
 
             self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertEqual((package_dir / source.name).read_bytes(), b"verified source")
+            self.assertEqual((package_dir / source.name).read_bytes(), XZ + b"verified source")
 
     def test_rejects_source_overwritten_after_staging(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -392,7 +397,7 @@ class FetchRetryTests(unittest.TestCase):
             destination = Path(directory) / "source"
             responses = [
                 self.typed_response(b"<html>challenge</html>", "text/html"),
-                self.typed_response(b"archive bytes", "application/x-xz"),
+                self.typed_response(XZ + b"archive bytes", "application/x-xz"),
             ]
             with patch("tools.source_pipeline.urllib.request.urlopen", side_effect=responses), \
                     patch("tools.source_pipeline.time.sleep"):
@@ -401,7 +406,74 @@ class FetchRetryTests(unittest.TestCase):
                     destination,
                 )
             self.assertEqual(chosen, "https://mirror.example/demo-1.0.tar.xz")
-            self.assertEqual(destination.read_bytes(), b"archive bytes")
+            self.assertEqual(destination.read_bytes(), XZ + b"archive bytes")
+
+    def test_body_without_the_archive_magic_is_not_served(self) -> None:
+        """A challenge page sent without a text/html type must not be hashed as the archive."""
+        for url, magic in (
+            ("https://upstream.example/demo-1.0.tar.xz", XZ),
+            ("https://upstream.example/demo-1.0.tar.gz", GZ),
+            ("https://upstream.example/demo-1.0.tgz", GZ),
+            ("https://upstream.example/demo-1.0.tar.bz2", b"BZh"),
+            ("https://upstream.example/demo-1.0.tar.zst", b"\x28\xb5\x2f\xfd"),
+            ("https://upstream.example/demo-1.0.zip", b"PK\x03\x04"),
+        ):
+            with self.subTest(url=url), tempfile.TemporaryDirectory() as directory:
+                destination = Path(directory) / "source"
+                page = self.typed_response(b"Making sure you are not a bot", "application/octet-stream")
+                with patch("tools.source_pipeline.urllib.request.urlopen", side_effect=[page]) as urlopen, \
+                        patch("tools.source_pipeline.time.sleep"):
+                    with self.assertRaises(ChallengePage) as raised:
+                        fetch(url, destination)
+                self.assertIn("not the expected archive type", str(raised.exception))
+                self.assertEqual(urlopen.call_count, 1)
+                good = self.typed_response(magic + b"payload", "application/octet-stream")
+                with patch("tools.source_pipeline.urllib.request.urlopen", side_effect=[good]):
+                    fetch(url, destination)
+                self.assertEqual(destination.read_bytes(), magic + b"payload")
+
+    def test_rejected_body_is_logged_with_content_type_and_first_bytes(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            destination = Path(directory) / "source"
+            page = self.typed_response(b"<!doctype html>Checking your browser", "application/octet-stream")
+            with patch("tools.source_pipeline.urllib.request.urlopen", side_effect=[page]):
+                with self.assertRaises(ChallengePage) as raised:
+                    fetch("https://upstream.example/demo-1.0.tar.xz", destination)
+            self.assertIn("Content-Type: application/octet-stream", str(raised.exception))
+            self.assertIn(b"<!doctype html>C".hex(), str(raised.exception))
+
+    def test_html_rejection_is_logged_with_content_type_and_first_bytes(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            destination = Path(directory) / "source"
+            page = self.typed_response(b"<html>challenge</html>", "text/html; charset=utf-8")
+            with patch("tools.source_pipeline.urllib.request.urlopen", side_effect=[page]):
+                with self.assertRaises(ChallengePage) as raised:
+                    fetch("https://upstream.example/demo-1.0.tar.xz", destination)
+            self.assertIn("Content-Type: text/html", str(raised.exception))
+            self.assertIn(b"<html>challenge<".hex(), str(raised.exception))
+
+    def test_bad_magic_body_falls_back_to_the_mirror(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            destination = Path(directory) / "source"
+            responses = [
+                self.typed_response(b"not an archive", "application/octet-stream"),
+                self.typed_response(XZ + b"archive bytes", "application/x-xz"),
+            ]
+            with patch("tools.source_pipeline.urllib.request.urlopen", side_effect=responses), \
+                    patch("tools.source_pipeline.time.sleep"):
+                chosen = fetch_with_fallbacks(
+                    ["https://upstream.example/demo-1.0.tar.xz", "https://mirror.example/demo-1.0.tar.xz"],
+                    destination,
+                )
+            self.assertEqual(chosen, "https://mirror.example/demo-1.0.tar.xz")
+
+    def test_unknown_extension_is_not_checked_for_magic(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            destination = Path(directory) / "source"
+            body = self.typed_response(b"anything at all", "application/octet-stream")
+            with patch("tools.source_pipeline.urllib.request.urlopen", side_effect=[body]):
+                fetch("https://upstream.example/SHA256SUMS", destination)
+            self.assertEqual(destination.read_bytes(), b"anything at all")
 
     def test_a_challenge_page_is_not_an_outage(self) -> None:
         """The host answered, so a challenge is fatal and actionable, never ``unavailable``."""
@@ -432,9 +504,9 @@ class FetchRetryTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             good = root / "upstream.tar.gz"
-            good.write_bytes(b"upstream bytes")
+            good.write_bytes(GZ + b"upstream bytes")
             mirror = root / "mirror.tar.gz"
-            mirror.write_bytes(b"different bytes")
+            mirror.write_bytes(GZ + b"different bytes")
             package_dir = root / "packages" / "demo"
             package_dir.mkdir(parents=True)
             config = root / "sources.json"
@@ -447,7 +519,7 @@ class FetchRetryTests(unittest.TestCase):
                                 "url": good.as_uri(),
                                 "fallback_urls": [mirror.as_uri()],
                                 "filename": "demo.tar.gz",
-                                "sha512": hashlib.sha512(b"different bytes").hexdigest(),
+                                "sha512": hashlib.sha512(GZ + b"different bytes").hexdigest(),
                             }
                         ]
                     }
@@ -529,7 +601,7 @@ class UnavailableSourceTests(unittest.TestCase):
         """The real fetch path: a dead primary falls back to a reachable mirror."""
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            payload = b"mirror bytes"
+            payload = GZ + b"mirror bytes"
 
             def fake_urlopen(request, timeout=None):
                 if "dead" in request.full_url:
@@ -671,7 +743,7 @@ class UnavailableSourceTests(unittest.TestCase):
         """A signature or checksum manifest that cannot be fetched is not 'unavailable'."""
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            payload = b"real bytes"
+            payload = GZ + b"real bytes"
 
             def fake_urlopen(request, timeout=None):
                 if "SHA256SUMS" in request.full_url:
@@ -696,7 +768,7 @@ class UnavailableSourceTests(unittest.TestCase):
     def test_unreachable_bundled_source_is_fatal_and_leaves_no_final_source0(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            payload = b"real bytes"
+            payload = GZ + b"real bytes"
             (root / "packages" / "demo").mkdir(parents=True)
             (root / "packages" / "demo" / "sources").write_text(
                 f"SHA512 (extra.tar.gz) = {'1' * 128}\n"
@@ -725,7 +797,7 @@ class UnavailableSourceTests(unittest.TestCase):
         """One dead upstream does not fail a run that also has good sources."""
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            good_payload = b"real bytes"
+            good_payload = GZ + b"real bytes"
 
             def fake_urlopen(request, timeout=None):
                 url = getattr(request, "full_url", str(request))
@@ -759,7 +831,7 @@ class UnavailableSourceTests(unittest.TestCase):
     def test_integrity_failure_fails_the_run_even_with_an_unavailable_sibling(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            good_payload = b"real bytes"
+            good_payload = GZ + b"real bytes"
 
             def fake_urlopen(request, timeout=None):
                 url = getattr(request, "full_url", str(request))
@@ -1223,7 +1295,7 @@ class EntryValidationTests(unittest.TestCase):
     def test_url_template_is_resolved_from_the_pinned_version(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            payload = b"templated upstream archive"
+            payload = GZ + b"templated upstream archive"
             source = root / "demo-2.4.tar.gz"
             source.write_bytes(payload)
             template = source.as_uri().replace("demo-2.4", "demo-{version}")
@@ -1243,7 +1315,7 @@ class UpstreamChecksumManifestTests(unittest.TestCase):
     """sha256_url proves the bytes are the ones upstream published."""
 
     def run_pipeline(self, root: Path, manifest_text: str):
-        payload = b"archive covered by an upstream manifest"
+        payload = GZ + b"archive covered by an upstream manifest"
         (root / "packages" / "demo").mkdir(parents=True)
         source = root / "demo.tar.gz"
         source.write_bytes(payload)

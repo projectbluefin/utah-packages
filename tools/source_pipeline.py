@@ -56,7 +56,7 @@ def digest(path: Path, algorithm: str) -> str:
 # reported as what it is rather than as a digest mismatch.
 FETCH_ATTEMPTS = 3
 # A generated source fetches pinned upstream input and then builds an archive
-# (tailscale also vendors Go modules). The generator bounds its own network
+# (prefixdevname and gst-thumbnailers also vendor crates). The generator bounds its own network
 # calls and reports an unreachable host with EXIT_UPSTREAM_UNREACHABLE; this
 # outer bound only stops a wedged generator from hanging the job, and because
 # nothing proves such a hang is an outage, it fails the package.
@@ -88,6 +88,37 @@ class UnavailableSource(RuntimeError):
     """
 
 
+# First bytes of each archive type, keyed by the URL's file extension. A body
+# that does not start with them is not the archive, whatever its Content-Type:
+# linuxtv.org's anti-bot challenge has been seen without a text/html type, and
+# hashing it reported a SHA-512 mismatch with a different "got" every time. An
+# extension that is not listed here is not checked.
+ARCHIVE_MAGIC = (
+    ((".tar.xz", ".txz", ".xz"), b"\xfd7zXZ\x00"),
+    ((".tar.gz", ".tgz", ".gz"), b"\x1f\x8b"),
+    ((".tar.bz2", ".tbz2", ".tbz", ".bz2"), b"BZh"),
+    ((".tar.zst", ".tzst", ".zst"), b"\x28\xb5\x2f\xfd"),
+    ((".zip",), b"PK\x03\x04"),
+)
+
+
+def matches_archive_magic(path: Path, url_path: str) -> bool:
+    """False when the file's first bytes contradict the type its URL claims."""
+    lowered = url_path.lower()
+    for extensions, magic in ARCHIVE_MAGIC:
+        if lowered.endswith(extensions):
+            with path.open("rb") as handle:
+                return handle.read(len(magic)) == magic
+    return True
+
+
+def describe_body(path: Path, content_type: str) -> str:
+    """Content-Type and first 16 bytes (hex) of a rejected body, for the log."""
+    with path.open("rb") as handle:
+        head = handle.read(16)
+    return f"Content-Type: {content_type or 'unknown'}, first 16 bytes: {head.hex()}"
+
+
 def fetch(url: str, destination: Path) -> None:
     request = urllib.request.Request(url, headers={"User-Agent": "utah-packages-source-pipeline/1"})
     last: Exception | None = None
@@ -99,8 +130,13 @@ def fetch(url: str, destination: Path) -> None:
                 shutil.copyfileobj(response, output)
             if destination.stat().st_size == 0:
                 raise EmptyDownload(f"{url} returned an empty body")
-            if content_type == "text/html" and not urllib.parse.urlsplit(url).path.endswith((".html", ".htm")):
-                raise ChallengePage(f"{url} returned an HTML page instead of the file")
+            path = urllib.parse.urlsplit(url).path
+            if content_type == "text/html" and not path.endswith((".html", ".htm")):
+                raise ChallengePage(f"{url} returned an HTML page instead of the file ({describe_body(destination, content_type)})")
+            if not matches_archive_magic(destination, path):
+                raise ChallengePage(
+                    f"{url} returned bytes that are not the expected archive type ({describe_body(destination, content_type)})"
+                )
             return
         except (urllib.error.URLError, TimeoutError, ConnectionError) as error:
             if not is_transport_failure(error):

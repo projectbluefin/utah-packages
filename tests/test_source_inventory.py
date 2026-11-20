@@ -122,25 +122,12 @@ class GeneratedSourceTests(unittest.TestCase):
     def test_intel_media_driver_free_lock_regenerates_the_stripped_archive(self):
         candidate = generated_candidate(ROOT / "packages" / "intel-media-driver-free")
         self.assertEqual(candidate["name"], "intel-media-driver-free")
-        self.assertEqual(candidate["version"], "26.2.4")
+        self.assertEqual(candidate["version"], "26.3.5")
         # The recipe consumes the stripped -free archive; the unstripped
         # upstream tag archive must not be locked in its place.
-        self.assertEqual(candidate["filename"], "intel-media-26.2.4-free.tar.gz")
-        self.assertIn("intel-media-26.2.4.tar.gz", candidate["generate"]["input"])
+        self.assertEqual(candidate["filename"], "intel-media-26.3.5-free.tar.gz")
+        self.assertIn("intel-media-26.3.5.tar.gz", candidate["generate"]["input"])
         self.assert_first_party_generated(self.lock("intel-media-driver-free"))
-
-    def test_tailscale_lock_remains_lookaside_pinned_pending_go_fsdk_image(self):
-        # BLOCKED: tailscale's vendored Source0 can be regenerated
-        # deterministically (generated_candidate below stays ready), but the
-        # FSDK catalog has no Go-capable image, so the remote-cluster
-        # verification the execution-environment policy requires cannot run.
-        # The pre-existing lock stays untouched until projectbluefin/fsdk-containers
-        # ships a Go image; see the Task 2 report's Pre-review correction.
-        candidate = generated_candidate(ROOT / "packages" / "tailscale")
-        self.assertEqual(candidate["filename"], "tailscale-1.98.8-vendored.tar.xz")
-        self.assertIn("05a91829316e055517a1e84f7b00016846ef4107", candidate["generate"]["input"])
-        self.assertIn("go mod vendor", candidate["generate"]["method"])
-        self.assertNotIn("generate", self.lock("tailscale"))
 
     def test_recipe_without_generated_source0_is_rejected(self):
         with self.assertRaisesRegex(ValueError, "no generated source resolver"):

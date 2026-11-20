@@ -1,4 +1,4 @@
-%bcond tests 1
+%bcond tests %{undefined rhel}
 
 Name:           bash-color-prompt
 Version:        0.96.2

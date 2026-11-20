@@ -10,6 +10,12 @@
 # wait for webkitgtk's three hours whenever they shared a run. Every
 # publication is gated on its own transaction; only the final one fails the
 # run when it does not resolve.
+#
+# A build that would break that transaction is held back rather than
+# blocking everything (tools/publish_holdback.py): a library whose soname
+# moved keeps its previous build, with whatever this publication built
+# against it, until its consumers resolve against the new one. Run
+# 44224171778 published nothing at all over one libnfs soname.
 name: Publish the factory repository
 
 on:
@@ -51,6 +57,11 @@ on:
         required: false
         default: ''
         type: string
+      stage_map:
+        # Required: an empty map would silently name no artifacts.
+        description: JSON package -> wave from prepare (tools/rebuild_plan.py stage_outputs)
+        required: true
+        type: string
       publish_tag:
         required: false
         default: ''
@@ -71,15 +82,13 @@ on:
       losers:
         value: ${{ jobs.precedence.outputs.losers }}
 
-# A full rebuild makes ~1,700 artifacts. download-artifact's default listing
-# for the current run returns at most 1000 of them (oldest first) before a
-# pattern is applied, so the newest stages' RPMs were never downloaded:
-# publish failed its closure check (#970) and later stages built against
-# stale prior-stage RPMs. The pattern downloads below pass github-token and
-# run-id, which switches to the paginated REST listing; that listing stops
-# at ACTIONS_ARTIFACT_MAX_ARTIFACT_COUNT (default 1000), raised here.
-env:
-  ACTIONS_ARTIFACT_MAX_ARTIFACT_COUNT: '20000'
+# A full rebuild makes ~1,700 artifacts. download-artifact without a token
+# lists the run's artifacts before applying `pattern`, and that listing stops
+# at 1000 (oldest first): the newest waves' RPMs were never downloaded (#970).
+# With a token it lists over REST but then starts every download at once over
+# REST, which ran into GitHub's rate limits (run 44386298520). The RPM
+# downloads here go by exact name through the artifact service instead
+# (tools/fetch-artifacts/fetch.mjs), named from prepare's stage map.
 
 permissions:
   contents: read
@@ -116,15 +125,26 @@ jobs:
         env:
           WAVE: ${{ inputs.wave }}
           PREFIX: ${{ inputs.artifact_prefix }}
-        run: python3 tools/publish_gate.py pattern --wave "$WAVE" --prefix "$PREFIX" >> "$GITHUB_OUTPUT"
-      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+          STAGE_MAP: ${{ inputs.stage_map }}
+        run: |
+          set -euo pipefail
+          mkdir -p work built
+          python3 tools/publish_gate.py names --stage-map "$STAGE_MAP" \
+            --prefix "$PREFIX" --through "$WAVE" > work/covered-names.json
+          echo "covered: $(jq length work/covered-names.json) artifact names"
+      - name: Install the artifact client
+        run: npm ci --prefix tools/fetch-artifacts --ignore-scripts --no-audit --no-fund
+      # By exact name through the artifact service (see the comment above
+      # `env`). A name with no artifact is a build that failed; any other
+      # error fails the job.
+      - name: Download the RPMs this publication covers
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
-          pattern: ${{ steps.covered.outputs.pattern }}
-          # The run's REST listing, which pages past 1000 (see env above).
-          github-token: ${{ github.token }}
-          run-id: ${{ github.run_id }}
-          path: built
-          merge-multiple: true
+          script: |
+            const fs = require('fs')
+            const {fetchArtifacts} = await import(`${process.env.GITHUB_WORKSPACE}/tools/fetch-artifacts/fetch.mjs`)
+            const names = JSON.parse(fs.readFileSync('work/covered-names.json', 'utf8'))
+            await fetchArtifacts({names, path: `${process.env.GITHUB_WORKSPACE}/built`, core})
       - name: Assert our builds outrank Fedora and Hummingbird
         run: |
           mkdir -p work
@@ -416,32 +436,117 @@ jobs:
       # dropped one; replacement has to be by source package.
       - name: Name the artifacts this publication covers
         id: covered
+        if: inputs.build_list != '[]'
         env:
           WAVE: ${{ inputs.wave }}
           PREFIX: ${{ inputs.artifact_prefix }}
-        run: python3 tools/publish_gate.py pattern --wave "$WAVE" --prefix "$PREFIX" >> "$GITHUB_OUTPUT"
+          STAGE_MAP: ${{ inputs.stage_map }}
+        run: |
+          set -euo pipefail
+          mkdir -p work built
+          python3 tools/publish_gate.py names --stage-map "$STAGE_MAP" \
+            --prefix "$PREFIX" --through "$WAVE" > work/covered-names.json
+          echo "covered: $(jq length work/covered-names.json) artifact names"
+      - name: Install the artifact client
+        if: inputs.build_list != '[]'
+        run: npm ci --prefix tools/fetch-artifacts --ignore-scripts --no-audit --no-fund
+      # By exact name through the artifact service (see the comment above
+      # `env`). A name with no artifact is a build that failed; any other
+      # error fails the job.
+      - name: Download the RPMs this publication covers
+        if: inputs.build_list != '[]'
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const fs = require('fs')
+            const {fetchArtifacts} = await import(`${process.env.GITHUB_WORKSPACE}/tools/fetch-artifacts/fetch.mjs`)
+            const names = JSON.parse(fs.readFileSync('work/covered-names.json', 'utf8'))
+            const {found} = await fetchArtifacts({names, path: `${process.env.GITHUB_WORKSPACE}/built`, core})
+            // assemble checks that every one of these left RPMs in built/.
+            fs.writeFileSync('work/fetched-artifacts.json', JSON.stringify(found))
+      - name: Install createrepo_c and rpm
+        # The runner's Ubuntu mirrors fail now and then (503s from
+        # security.ubuntu.com; a list that failed to download, after which
+        # "Unable to locate package createrepo-c"). apt-get update exits 0 on a
+        # failed list unless --error-on=any, so retry the pair as one.
+        run: |
+          for attempt in 1 2 3 4; do
+            if sudo apt-get update --error-on=any -o Acquire::Retries=5 &&
+               sudo apt-get install -y -o Acquire::Retries=5 createrepo-c rpm; then
+              exit 0
+            fi
+            echo "::warning::apt attempt $attempt failed; retrying in $((attempt * 20))s"
+            sleep $((attempt * 20))
+          done
+          exit 1
+      # What prepare extracted from every recipe's BuildRequires: a hold
+      # follows it to what this publication built against a held build.
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         if: inputs.build_list != '[]'
+        continue-on-error: true
         with:
-          pattern: ${{ steps.covered.outputs.pattern }}
-          # The run's REST listing, which pages past 1000 (see env above).
-          github-token: ${{ github.token }}
-          run-id: ${{ github.run_id }}
-          path: built
-          merge-multiple: true
+          name: ${{ inputs.artifact_prefix }}build-graph
+          path: work/graph
+      # Which builds would leave the candidate unresolvable, decided from the
+      # metadata of the seed, of what built and of Hummingbird -- not from
+      # dnf's error text, which names only the first problem it meets. A held
+      # build keeps its previous published build, exactly as a precedence
+      # loser does, and so does every build in this publication built against
+      # a held one: it BuildRequires it (the build graph), or its binaries need
+      # what only the held build provides.
+      # The transaction below then judges exactly what will be pushed.
+      #
+      # Only what that transaction installs is judged -- the same package
+      # list the validate step below resolves -- so a break outside it holds
+      # nothing back.
+      #
+      # If Hummingbird's metadata cannot be fetched, nothing is held and the
+      # transaction decides alone, as it did before. Any other failure of the
+      # tool fails the publication: a bug here must not pass for "nothing to
+      # hold".
+      - name: Hold back the builds that would break the consumer transaction
+        id: holdback
+        env:
+          LOSERS: ${{ needs.precedence.outputs.losers || '[]' }}
+          CONSUMER: ${{ inputs.consumer || 'contract' }}
+        run: |
+          set -euo pipefail
+          mkdir -p built work/built-repo
+          createrepo_c --quiet --outputdir work/built-repo built
+          if [ "$CONSUMER" = built ]; then
+            scope=(--install-all)
+          else
+            python3 tools/runtime_contract.py \
+              config/bluefin-packages.toml config/runtime-contract.toml > work/install.txt
+            scope=(--install work/install.txt)
+          fi
+          python3 tools/publish_holdback.py \
+            --seed repository --built work/built-repo --losers "$LOSERS" \
+            --graph work/graph/rows \
+            "${scope[@]}" --output work/withheld.json | tee -a "$GITHUB_STEP_SUMMARY"
+          echo "withheld=$(jq -c '.withheld | keys' work/withheld.json)" >> "$GITHUB_OUTPUT"
+          jq -r '.withheld | to_entries[] | "::warning title=held back::\(.key): \(.value[0])"' work/withheld.json
       - name: Replace the packages this run built
         id: assemble
         env:
           BUILD_LIST: ${{ inputs.build_list }}
           LOSERS: ${{ needs.precedence.outputs.losers || '[]' }}
           PRUNE_SOURCES: ${{ inputs.prune_sources }}
+          WAVE: ${{ inputs.wave }}
+          PREFIX: ${{ inputs.artifact_prefix }}
         run: |
           set -euo pipefail
-          sudo apt-get update && sudo apt-get install -y createrepo-c rpm
-          mkdir -p built
+          # Fail closed on a short download: with hold-back, builds missing
+          # from built/ would otherwise publish as failures, silently. The
+          # fetch above already fails on any error but "no such artifact";
+          # this checks that every artifact it fetched left RPMs behind.
+          # (No download ran when nothing was selected.)
+          [ -f work/fetched-artifacts.json ] || echo '[]' > work/fetched-artifacts.json
           python3 tools/publish_gate.py assemble \
             --seed repository --built built \
             --build-list "$BUILD_LIST" --losers "$LOSERS" \
+            --withheld work/withheld.json \
+            --artifacts work/fetched-artifacts.json --prefix "$PREFIX" --wave "$WAVE" \
             --report work/publish-report.json | tee -a "$GITHUB_STEP_SUMMARY"
           replaced=$(jq '.replaced | length' work/publish-report.json)
           pruned=$(jq 'length' <<<"$PRUNE_SOURCES")
@@ -565,9 +670,9 @@ jobs:
         continue-on-error: true
         run: python3 tools/utah_install_set.py fetch --dir work/utah
       # Blocking for the final publication. An early one -- after one wave,
-      # while later waves still build -- can legitimately fail it: a library
-      # whose soname moved publishes before its consumers are rebuilt. It
-      # then publishes nothing, and the next publication tries again with
+      # while later waves still build -- can still fail it in a way the
+      # hold-back above does not model (a versioned Requires, a Conflicts).
+      # It then publishes nothing, and the next publication tries again with
       # more of the run in it.
       - name: Validate Hummingbird-only consumer transaction
         id: validate
@@ -863,6 +968,29 @@ jobs:
         with:
           name: ${{ inputs.artifact_prefix }}factory-manifest${{ inputs.wave != '' && format('-wave{0}', inputs.wave) || '' }}
           path: repository/manifest.json
+      # The final publication has pushed, signed and attested the resolvable
+      # subset by now, deliberately: holding builds back must not hold back
+      # the rest. But a held build is a package this run built and did not
+      # ship, so the final publication still fails the run -- last, after
+      # everything above, so the image it pushed is complete and verifiable
+      # as the next run's seed. An early publication only warns: the final
+      # one, or the next run, gets another chance.
+      - name: Fail the final publication when builds were held back
+        if: inputs.final && steps.holdback.outputs.withheld != '' && steps.holdback.outputs.withheld != '[]'
+        env:
+          WITHHELD: ${{ steps.holdback.outputs.withheld }}
+          DIGEST: ${{ steps.oci.outputs.digest }}
+        run: |
+          count=$(jq length <<<"$WITHHELD")
+          if [ -n "$DIGEST" ]; then
+            pushed="pushed the resolvable subset as $DIGEST"
+          else
+            pushed="pushed nothing"
+          fi
+          echo "::error title=builds held back::the final publication $pushed, and held back $count build(s) that would have left the repository unresolvable: $(jq -r 'join(", ")' <<<"$WITHHELD"). They keep their previous build; the next run retries them."
+          printf '\n**The final publication %s and fails the run:** %s build(s) were held back: %s\n' \
+            "$pushed" "$count" "$(jq -r 'map("`" + . + "`") | join(", ")' <<<"$WITHHELD")" >> "$GITHUB_STEP_SUMMARY"
+          exit 1
 
   # Names every package that did not publish, loudly, whether or not publish
   # ran: in the job summary on every run, and on main in one tracking issue

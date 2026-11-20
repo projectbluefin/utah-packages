@@ -15,7 +15,10 @@ import json
 import urllib.error
 import unittest
 from datetime import timedelta
+from pathlib import Path
 from unittest.mock import patch
+
+import yaml
 
 from tools import queue_wait as qw
 
@@ -554,6 +557,20 @@ class FetchJobsTests(unittest.TestCase):
         with patch.object(qw.urllib.request, "urlopen", side_effect=_capture):
             self.assertEqual(qw.fetch_jobs("tok", "o", "r", 1), [])
         self.assertIn(f"per_page={qw.PER_PAGE}", captured["url"])
+
+
+class WorkflowThresholdDefaultTests(unittest.TestCase):
+    """#304's maintainer ruling set the p50 alert at 1800s; the workflow must
+    apply it when the QUEUE_WAIT_THRESHOLD repo variable is unset."""
+
+    def test_threshold_defaults_to_ruling(self):
+        path = Path(__file__).resolve().parent.parent / ".github" / "workflows" / "queue-observability.yml"
+        steps = yaml.safe_load(path.read_text())["jobs"]["queue-wait"]["steps"]
+        step = next(s for s in steps if s.get("name") == "Measure queue wait for the rebuild workflow")
+        self.assertEqual(
+            step["env"]["QUEUE_WAIT_THRESHOLD"],
+            "${{ vars.QUEUE_WAIT_THRESHOLD || '1800' }}",
+        )
 
 
 if __name__ == "__main__":

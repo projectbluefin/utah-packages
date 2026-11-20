@@ -8,7 +8,13 @@ name=public-hummingbird-x86_64-rpms
 baseurl=https://packages.redhat.com/api/pulp-content/public-hummingbird/x86_64/
 enabled=1
 sslverify=1
-gpgcheck=0
+# Hummingbird's own repo file ships gpgcheck=0 for its lockfile tooling, but
+# its RPMs are signed by Red Hat release keys 2 (v4 RSA) and 4 (v6
+# ML-DSA-87+Ed448), both pinned in config/keys/; dnf5 needs both. Every
+# job that installs from this file mounts "$PWD/config:/repos"; the ones that
+# only repoquery or resolve with --assumeno never read the key.
+gpgcheck=1
+gpgkey=file:///repos/keys/RPM-GPG-KEY-redhat-release-2 file:///repos/keys/RPM-GPG-KEY-redhat-release-4
 priority=10
 zchunk=false
 excludepkgs=ruby3.3-default-gems,ruby3.4-default-gems

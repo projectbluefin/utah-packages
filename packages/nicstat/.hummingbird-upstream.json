@@ -1,0 +1,8 @@
+{
+  "package": "nicstat",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/nicstat.git",
+  "commit": "cf2f9d400482f3b142d13445ef7f9d54d1e62ba2",
+  "tree": "24c1525c55b881bf3b5f454f0d077b20731f543f",
+  "imported_at": "2026-11-16T04:23:13.011394+00:00"
+}

@@ -133,6 +133,19 @@ exclusion wide enough to remove the old major removes those dependencies
 too. `GLOBAL_EXCLUDE` is for a stale duplicate of a Hummingbird package,
 identified by exact release, never for a library at large.
 
+**The same ICU, from two repositories (#1214).** `507b2bf` stopped building icu
+and `publish-repository.yml` drops any carried-forward `libicu-*.bfin`, but the
+`icu` recipe stayed in `config/upstream-sources.json`. A run that built it
+resolved every libicu consumer's build root to the factory copy in
+`/work/prior`; a run that did not resolved it to Hummingbird's higher-release
+`libicu-78.3-9.hum1`, because nothing published carries ours. The two roots
+hash to different package cache keys, so gtk4 and eight other packages missed
+the cache depending only on what else was in the run. `priority` cannot fix
+this: it already ranks stages above the factory above Hummingbird, and the
+published repository simply has no libicu to rank. **Rule:** a package whose
+published copy is removed on purpose must not be built in the run either, or
+the build root depends on the run. `tests/test_icu_staging.py` pins it.
+
 ## 6. A re-import silently reverts every local decision
 
 **What happened.** samba's Ceph modules came back with the re-imported spec
@@ -655,6 +668,52 @@ changed), and fails the run if
 `.packit.yaml` or `config/upstream-sources.json` differ afterwards. It never
 adds a package. Keep it that way; see
 [`rawhide-recipe-reimports.md`](rawhide-recipe-reimports.md).
+
+## 24. One package that breaks the transaction must not hold back every package that resolves
+
+**What happened.** Incremental publication (mistake 15) stopped one failed
+*build* from holding back the rest, but the Hummingbird-only consumer
+transaction still judged the candidate whole. Run 35413902261 lost its
+publication after 331 green builds over one libicu soname. Run 44224171778
+built libnfs 8.0.0 (`libnfs.so.18`) in wave 0, while the published gvfs-nfs
+and qemu-block-nfs needed `libnfs.so.17`. All five of its publications failed
+on `nothing provides libnfs.so.17()(64bit) needed by gvfs-nfs`, so 491 source
+packages that broke nothing were not published. The plan state moves only on
+a publish, so the next run had to build all of them again. Replayed with all
+1,732 artifacts, the final publication still fails: gdm 51.0 needs a
+`pam_oo7` that nothing provides. dnf reports only the first problem it meets,
+so it had never named that one.
+
+**Rule.** A publication holds back what would break it and publishes the rest
+(`tools/publish_holdback.py`). The decision is made before assembly, from
+repository metadata and not from dnf's error text, which names only the first
+problem dnf meets. Only a *regression* against the seed counts, and only
+inside what the transaction installs (the contract, plus everything its
+Requires reach). There are two kinds: a capability that a published package
+needed and a new build dropped, and a Requires of a new build that nothing
+provides. A hold spreads, so nothing ships against a held library. Any
+other build in the publication that was built against a held build is held
+too. It counts as built against when it BuildRequires the held build
+directly (the build graph), or when its binaries need what only the held
+build provides. Do not follow the graph through other builds: in run
+44478890278 that held 215 builds because one consumer of abseil-cpp
+(libphonenumber) failed to build. abseil-cpp has 6 direct dependents and
+126 through the graph. The held source keeps its
+seed build whole, and that is how the old gvfs-nfs goes on resolving against
+the old libnfs. The same dnf transaction then gates exactly what will be
+pushed. Replayed with the run's own RPMs, dnf resolves both cases. Wave 0
+holds libnfs and publishes 415 sources. The whole run holds gdm, and with it
+sssd and gnome-initial-setup, which BuildRequire it directly, and publishes
+851 sources. Held builds are recorded as `withheld` in the state label
+and retried by every run, and they are named in the tracking issue. The final
+publication pushes the resolvable subset and then fails the run in its last
+step. Do not move that step before the push or the signature.
+
+The alternative was rejected: publish a build only once every in-run
+dependant of it has built, decided from the build graph alone. On run
+44224171778 it defers 225 of wave 0's 416 sources, 129 of them to the final
+publication, whether or not anything's ABI moved. It also does nothing for
+the final publication, and that is where gdm broke.
 
 ## Validate imported metadata without reformatting it
 

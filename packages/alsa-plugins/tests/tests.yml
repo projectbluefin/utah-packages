@@ -1,0 +1,11 @@
+- hosts: localhost
+  roles:
+    - role: standard-test-basic
+      tags:
+        - classic
+      required_packages:
+        - pulseaudio
+      tests:
+        - simple:
+            dir: .
+            run: ./run_tests.sh

@@ -96,10 +96,6 @@ packages = [
     "adobe-mappings-cmap",
     "adobe-mappings-cmap-deprecated",
     "adobe-mappings-pdf",
-    "cldr-emoji-annotation",
-    "cldr-emoji-annotation-dtd",
-    "kasumi-common",
-    "kasumi-unicode",
 ]
 
 [areas.ujust-deps]
@@ -590,7 +586,8 @@ packages = [
     { name = "pinentry-gnome3", pr = 524, published_run = 42559053279, published_nevra = "pinentry-gnome3-0:1.3.3-1.hum1.bfin.x86_64" },
     { name = "rpcbind", pr = 524 },
     # H.264 decode path + bad-free dep closure wave (landing PR #526).
-    # gstreamer1-plugin-dav1d is the binary subpackage of rust-gst-plugin-dav1d;
+    # gstreamer1-plugin-dav1d was the binary subpackage of rust-gst-plugin-dav1d
+    # and is now gstreamer-plugins-rs's (#1040);
     # faad2-libs is faad2.spec's %package libs.
     { name = "faad2-libs", pr = 526 },
     { name = "gstreamer1-plugin-dav1d", pr = 526 },
@@ -913,6 +910,14 @@ packages = [
     # Dakota parity (#1031): Utah adopts Dakota's uupd RPM in place of its pinned
     # release download (projectbluefin/utah#1236), reversing the #263 waiver.
     { name = "uupd", pr = 1073 },
+    # Input-method data for Utah (projectbluefin/utah#1256): kasumi-unicode is
+    # ibus-anthy's dictionary tool (the kasumi source package), and
+    # cldr-emoji-annotation is ibus-typing-booster's emoji data. Recipe import
+    # only; hosted build, publication and runtime proof remain on utah#1256.
+    { name = "cldr-emoji-annotation" },
+    { name = "cldr-emoji-annotation-dtd" },
+    { name = "kasumi-common" },
+    { name = "kasumi-unicode" },
 ]
 
 [wontfix]
