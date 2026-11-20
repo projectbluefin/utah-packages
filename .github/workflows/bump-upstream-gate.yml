@@ -228,7 +228,12 @@ jobs:
           git fetch --quiet origin main
           base=$(git merge-base origin/main "$SHA")
           python3 tools/bump_gate.py trim --base "$base" --head "$SHA" --hold "$HOLD" --run-url "$RUN_URL"
-          git add -A -- config/upstream-sources.json config/bump-holds.json packages/
+          # trim restores held packages to their base version, so the committed
+          # multimedia-closure report (one locked version per recipe) would go
+          # stale and fail the report check on the next gate. Regenerate it and
+          # stage it with the trim, exactly as the initial-bump workflow does.
+          python3 tools/multimedia_closure.py --output reports/multimedia-closure.json
+          git add -A -- config/upstream-sources.json config/bump-holds.json packages/ reports/multimedia-closure.json
           git -c user.name="github-actions[bot]" \
               -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
               commit -q -m "chore(sources): hold bumps that failed the gate: $(jq -r 'join(", ")' <<< "$HOLD")" \

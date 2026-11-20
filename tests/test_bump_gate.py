@@ -541,6 +541,17 @@ class GateWorkflowTests(unittest.TestCase):
         self.assertIn("steps.verdict.outputs.hold != '[]'", hold["if"])
         run = hold["run"]
         self.assertIn("tools/bump_gate.py trim", run)
+        # A held package returns to its base version, so the committed
+        # multimedia-closure report (one locked version per recipe) would go
+        # stale and fail test_the_committed_report_is_current on the next gate.
+        # Regenerate it and stage it with the trim, exactly as the initial-bump
+        # workflow does.
+        self.assertIn(
+            "python3 tools/multimedia_closure.py --output reports/multimedia-closure.json",
+            run,
+        )
+        git_add = next(line for line in run.splitlines() if line.strip().startswith("git add"))
+        self.assertIn("reports/multimedia-closure.json", git_add)
         # Fast-forward only: never a force push over a branch that moved.
         self.assertIn('git push origin "HEAD:refs/heads/bump/upstream-sources"', run)
         self.assertNotIn("--force", run)
