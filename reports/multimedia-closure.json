@@ -123,7 +123,7 @@
       "parity_note": "Imported from src.fedoraproject.org/rpms/mesa. The Fedora spec passes no `-Dvideo-codecs`, so the build is free-codecs-only: no H.264, H.265 or VC-1 hardware decode through the Gallium/VA-API frontends. negativo17's mesa builds the same source with the full codec list, which is the parity #230 tracks.",
       "recipe": "packages/mesa",
       "stage": 0,
-      "version": "26.2.1",
+      "version": "26.3.1",
       "nevra": null,
       "recipe_provenance": "https://src.fedoraproject.org/rpms/mesa.git"
     },
@@ -138,7 +138,7 @@
       "parity_note": "Imported from src.fedoraproject.org/rpms/mesa. The Fedora spec passes no `-Dvideo-codecs`, so the build is free-codecs-only: no H.264, H.265 or VC-1 hardware decode through the Gallium/VA-API frontends. negativo17's mesa builds the same source with the full codec list, which is the parity #230 tracks.",
       "recipe": "packages/mesa",
       "stage": 0,
-      "version": "26.2.1",
+      "version": "26.3.1",
       "nevra": null,
       "recipe_provenance": "https://src.fedoraproject.org/rpms/mesa.git"
     },
@@ -153,7 +153,7 @@
       "parity_note": "Imported from src.fedoraproject.org/rpms/mesa. The Fedora spec passes no `-Dvideo-codecs`, so the build is free-codecs-only: no H.264, H.265 or VC-1 hardware decode through the Gallium/VA-API frontends. negativo17's mesa builds the same source with the full codec list, which is the parity #230 tracks.",
       "recipe": "packages/mesa",
       "stage": 0,
-      "version": "26.2.1",
+      "version": "26.3.1",
       "nevra": null,
       "recipe_provenance": "https://src.fedoraproject.org/rpms/mesa.git"
     },
@@ -168,7 +168,7 @@
       "parity_note": "Imported from src.fedoraproject.org/rpms/mesa. The Fedora spec passes no `-Dvideo-codecs`, so the build is free-codecs-only: no H.264, H.265 or VC-1 hardware decode through the Gallium/VA-API frontends. negativo17's mesa builds the same source with the full codec list, which is the parity #230 tracks.",
       "recipe": "packages/mesa",
       "stage": 0,
-      "version": "26.2.1",
+      "version": "26.3.1",
       "nevra": null,
       "recipe_provenance": "https://src.fedoraproject.org/rpms/mesa.git"
     },
@@ -183,7 +183,7 @@
       "parity_note": "Imported from src.fedoraproject.org/rpms/mesa. The Fedora spec passes no `-Dvideo-codecs`, so the build is free-codecs-only: no H.264, H.265 or VC-1 hardware decode through the Gallium/VA-API frontends. negativo17's mesa builds the same source with the full codec list, which is the parity #230 tracks.",
       "recipe": "packages/mesa",
       "stage": 0,
-      "version": "26.2.1",
+      "version": "26.3.1",
       "nevra": null,
       "recipe_provenance": "https://src.fedoraproject.org/rpms/mesa.git"
     },
@@ -198,7 +198,7 @@
       "parity_note": "Imported from src.fedoraproject.org/rpms/mesa. The Fedora spec passes no `-Dvideo-codecs`, so the build is free-codecs-only: no H.264, H.265 or VC-1 hardware decode through the Gallium/VA-API frontends. negativo17's mesa builds the same source with the full codec list, which is the parity #230 tracks.",
       "recipe": "packages/mesa",
       "stage": 0,
-      "version": "26.2.1",
+      "version": "26.3.1",
       "nevra": null,
       "recipe_provenance": "https://src.fedoraproject.org/rpms/mesa.git"
     },
@@ -261,7 +261,7 @@
       "parity_note": null,
       "recipe": "packages/gstreamer1-plugins-bad-free",
       "stage": 4,
-      "version": "1.28.6",
+      "version": "1.28.9",
       "nevra": null,
       "recipe_provenance": "https://src.fedoraproject.org/rpms/gstreamer1-plugins-bad-free.git"
     },
@@ -276,7 +276,7 @@
       "parity_note": null,
       "recipe": "packages/gstreamer1-plugins-bad-free",
       "stage": 4,
-      "version": "1.28.6",
+      "version": "1.28.9",
       "nevra": null,
       "recipe_provenance": "https://src.fedoraproject.org/rpms/gstreamer1-plugins-bad-free.git"
     },
@@ -291,7 +291,7 @@
       "parity_note": null,
       "recipe": "packages/gstreamer1-plugins-good",
       "stage": 3,
-      "version": "1.28.6",
+      "version": "1.28.9",
       "nevra": null,
       "recipe_provenance": "https://src.fedoraproject.org/rpms/gstreamer1-plugins-good.git"
     },
@@ -306,7 +306,7 @@
       "parity_note": null,
       "recipe": "packages/gstreamer1-plugins-base",
       "stage": 0,
-      "version": "1.28.6",
+      "version": "1.28.9",
       "nevra": null,
       "recipe_provenance": "https://src.fedoraproject.org/rpms/gstreamer1-plugins-base.git"
     },
@@ -382,7 +382,7 @@
       "parity_note": null,
       "recipe": "packages/ffmpegthumbnailer",
       "stage": 4,
-      "version": "2.3.1",
+      "version": "2.4.2",
       "nevra": null,
       "recipe_provenance": "https://src.fedoraproject.org/rpms/ffmpegthumbnailer.git"
     },
@@ -475,7 +475,7 @@
       "parity_note": null,
       "recipe": "packages/gstreamer1-plugins-bad-free",
       "stage": 4,
-      "version": "1.28.6",
+      "version": "1.28.9",
       "nevra": null,
       "recipe_provenance": "https://src.fedoraproject.org/rpms/gstreamer1-plugins-bad-free.git"
     },

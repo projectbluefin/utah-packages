@@ -3,8 +3,8 @@
 
 Summary: Utilities to generate, maintain and access the AppStream database
 Name:    appstream
-Version: 1.1.3
-Release: 4%{?dist}
+Version: 1.2.3
+Release: 1%{?dist}
 
 # lib LGPLv2+, tools GPLv2+
 License: GPL-2.0-or-later AND LGPL-2.1-or-later
@@ -208,6 +208,9 @@ mv %{buildroot}%{_datadir}/metainfo/*.xml \
 
 
 %changelog
+* Fri Nov 20 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 1.2.3-1
+- Update to 1.2.3
+
 * Thu Sep 10 2026 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 1.1.3-4
 - Rebuilt for libxml-2.5.4
 

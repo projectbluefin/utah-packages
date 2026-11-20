@@ -1,6 +1,6 @@
 Name:           gflags
-Version:        2.2.2
-Release:        21%{?dist}
+Version:        2.3.1
+Release:        1%{?dist}
 Summary:        Library for commandline flag processing
 
 # Automatically converted from old format: BSD - review is highly recommended.
@@ -62,6 +62,9 @@ export CMAKE_POLICY_VERSION_MINIMUM=3.5
 %{_libdir}/cmake/%{name}
 
 %changelog
+* Fri Nov 20 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 2.3.1-1
+- Update to 2.3.1
+
 * Wed Jul 15 2026 Fedora Release Engineering <releng@fedoraproject.org> - 2.2.2-21
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_45_Mass_Rebuild
 

@@ -9,8 +9,8 @@
 
 Summary: Device-mapper Persistent Data Tools
 Name: device-mapper-persistent-data
-Version: 1.3.3
-Release: 2%{?dist}%{?release_suffix}
+Version: 1.3.4
+Release: 1%{?dist}%{?release_suffix}
 License: GPL-3.0-only AND (0BSD OR MIT OR Apache-2.0) AND Apache-2.0 AND (Apache-2.0 OR MIT) AND (Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT) AND BSD-3-Clause AND MIT AND (MIT OR Apache-2.0) AND (MIT OR Zlib OR Apache-2.0) AND (Unlicense OR MIT) AND (Zlib OR Apache-2.0 OR MIT)
 
 #ExcludeArch: %%{ix86}
@@ -131,6 +131,9 @@ echo %{version}-%{release} > VERSION
 #% {_sbindir}/thin_show_duplicates
 
 %changelog
+* Fri Nov 20 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 1.3.4
+- Update to 1.3.4
+
 * Wed Jul 15 2026 Fedora Release Engineering <releng@fedoraproject.org> - 1.3.3-2
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_45_Mass_Rebuild
 

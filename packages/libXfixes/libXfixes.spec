@@ -4,8 +4,8 @@
 
 Summary: X Fixes library
 Name: libXfixes
-Version: 6.0.1
-Release: 8%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Version: 6.0.2
+Release: 1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 License: MIT AND HPND-sell-variant
 URL: http://www.x.org
 
@@ -67,6 +67,9 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 %{_mandir}/man3/Xfixes.3*
 
 %changelog
+* Fri Nov 20 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 6.0.2
+- Update to 6.0.2
+
 * Thu Jul 16 2026 Fedora Release Engineering <releng@fedoraproject.org> - 6.0.1-8
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_45_Mass_Rebuild
 

@@ -1,6 +1,6 @@
 Summary: X.Org X11 libXfont2 runtime library
 Name: libXfont2
-Version: 2.0.9
+Version: 2.0.10
 Release: 1%{?dist}
 License: BSD-2-Clause AND BSD-4-Clause-UC AND HPND-sell-variant AND MIT-open-group AND SMLNJ AND X11
 URL: http://www.x.org
@@ -55,6 +55,9 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 %{_libdir}/pkgconfig/xfont2.pc
 
 %changelog
+* Fri Nov 20 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 2.0.10-1
+- Update to 2.0.10
+
 * Wed Aug 05 2026 Peter Hutterer <peter.hutterer@redhat.com> - 2.0.9-1
 - libXfont2 2.0.9 (CVE-2026-59679, CVE-2026-44950)
 

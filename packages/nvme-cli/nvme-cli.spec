@@ -4,7 +4,7 @@
 %global nmlibdir %{_prefix}/lib/NetworkManager
 
 Name:           nvme-cli
-Version:        3.1
+Version:        3.2
 Release:        1%{?dist}
 Summary:        NVMe management command line interface
 
@@ -150,6 +150,9 @@ fi
 
 
 %changelog
+* Fri Nov 20 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 3.2-1
+- Update to 3.2
+
 * Mon Nov 16 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 3.1-1
 - Update to 3.1 (Dakota: freedesktop-sdk-extra components/nvme-cli.bst)
 - Build the in-tree libnvme as the libnvme3 and libnvme3-devel subpackages

@@ -80,7 +80,7 @@
 
 Name:           mesa
 Summary:        Mesa graphics libraries
-Version:        26.2.1
+Version:        26.3.1
 Release:        %autorelease
 License:        MIT AND BSD-3-Clause AND SGI-B-2.0
 URL:            https://mesa3d.org

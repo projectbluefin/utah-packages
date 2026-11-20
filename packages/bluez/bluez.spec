@@ -5,8 +5,8 @@
 %endif
 
 Name:    bluez
-Version: 5.87
-Release: 7%{?dist}
+Version: 5.88
+Release: 1%{?dist}
 Summary: Bluetooth utilities
 License: GPL-2.0-or-later
 URL:     http://www.bluez.org/
@@ -346,6 +346,9 @@ install emulator/btvirt ${RPM_BUILD_ROOT}/%{_libexecdir}/bluetooth/
 %{_userunitdir}/obex.service
 
 %changelog
+* Fri Nov 20 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 5.88-1
+- Update to 5.88
+
 * Wed Aug 26 2026 Bastien Nocera <bnocera@redhat.com> - 5.87-7
 - Fix CVE-2026-80185 (Closes: #2524397)
 

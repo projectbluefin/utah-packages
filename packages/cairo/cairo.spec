@@ -3,7 +3,7 @@
 %define fontconfig_version 2.2.95
 
 Name:           cairo
-Version:        1.18.4
+Version:        1.18.6
 Release:        %autorelease
 Summary:        A 2D graphics library
 
