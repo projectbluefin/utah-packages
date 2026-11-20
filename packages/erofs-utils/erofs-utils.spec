@@ -8,7 +8,7 @@
 %bcond lzma     %[ 0%{?fedora} >= 36 || 0%{?rhel} >= 10 ]
 %bcond oci      %[ %{with curl} && %{with jsonc} ]
 %bcond openssl  1
-%bcond qpl      %[ 0%{?fedora} >= 41 && "%{_arch}" == "x86_64" ]
+%bcond qpl      0          # libqpl.so.1 is not in the hummingbird/fedora:44 buildroot (#1238); QPL-accelerated deflate is optional
 %bcond s3       %[ %{with curl} && %{with libxml2} && %{with openssl} ]
 %bcond selinux  1
 %bcond ublk     %[ 0%{?fedora} >= 35 || 0%{?rhel} >=  9 ]
