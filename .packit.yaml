@@ -394,6 +394,12 @@ packages:
     downstream_package_name: cjson
     paths:
       - packages/cjson
+  cldr-emoji-annotation:
+    specfile_path: cldr-emoji-annotation.spec
+    upstream_package_name: cldr-emoji-annotation
+    downstream_package_name: cldr-emoji-annotation
+    paths:
+      - packages/cldr-emoji-annotation
   cli11:
     specfile_path: cli11.spec
     upstream_package_name: cli11
@@ -1738,6 +1744,12 @@ packages:
     downstream_package_name: kanata
     paths:
       - packages/kanata
+  kasumi:
+    specfile_path: kasumi.spec
+    upstream_package_name: kasumi
+    downstream_package_name: kasumi
+    paths:
+      - packages/kasumi
   kde-filesystem:
     specfile_path: kde-filesystem.spec
     upstream_package_name: kde-filesystem
