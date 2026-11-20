@@ -1,5 +1,5 @@
 Name:           libmodplug
-Version:        0.8.9.2
+Version:        0.8.9.0
 Release:        %autorelease
 Epoch:          1
 Summary:        Modplug mod music file format library

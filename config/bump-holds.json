@@ -1,5 +1,13 @@
 {
   "holds": {
+    "appstream": {
+      "version": "1.2.3",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/44765133559"
+    },
+    "bluez": {
+      "version": "5.88",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/44765133559"
+    },
     "criu": {
       "version": "4.3.1",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/43384286878"
@@ -8,13 +16,37 @@
       "version": "0.11.4",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/43358822069"
     },
+    "desktop-file-utils": {
+      "version": "0.29",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/44765133559"
+    },
+    "device-mapper-persistent-data": {
+      "version": "1.3.4",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/44765133559"
+    },
     "fastfetch": {
       "version": "2.71.0",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/43358822069"
     },
+    "ffmpegthumbnailer": {
+      "version": "2.4.2",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/44765133559"
+    },
+    "flex": {
+      "version": "2.7.2",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/44765133559"
+    },
     "fribidi": {
       "version": "1.0.18",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/43358822069"
+    },
+    "fwupd": {
+      "version": "2.1.10",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/44765133559"
+    },
+    "gflags": {
+      "version": "2.3.1",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/44765133559"
     },
     "glib-networking": {
       "version": "2.90.1",
@@ -24,13 +56,29 @@
       "version": "51.1",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/42773931857"
     },
+    "grpc": {
+      "version": "1.85.3",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/44765133559"
+    },
     "gssproxy": {
       "version": "0.9.3",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/40172661348"
     },
+    "gstreamer1-plugins-bad-free": {
+      "version": "1.28.9",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/44765133559"
+    },
+    "hidapi": {
+      "version": "0.16.0",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/44765133559"
+    },
     "hunspell": {
       "version": "1.7.6",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/40833963568"
+    },
+    "igt-gpu-tools": {
+      "version": "2.6",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/44765133559"
     },
     "imath": {
       "version": "3.2.3",
@@ -43,6 +91,10 @@
     "libcamera": {
       "version": "0.8.0",
       "run": "https://github.com/projectbluefin/utah-packages/pull/942"
+    },
+    "libcue": {
+      "version": "2.4.3",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/44765133559"
     },
     "libimobiledevice-glue": {
       "version": "1.3.3",
@@ -60,13 +112,49 @@
       "version": "5.6.4",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/43384286878"
     },
+    "libmodplug": {
+      "version": "0.8.9.2",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/44765133559"
+    },
+    "librist": {
+      "version": "0.2.20",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/44765133559"
+    },
+    "libxshmfence": {
+      "version": "1.3.3",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/44765133559"
+    },
+    "marisa": {
+      "version": "0.3.1",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/44765133559"
+    },
+    "mesa": {
+      "version": "26.3.1",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/44765133559"
+    },
+    "mozjs140": {
+      "version": "140.17.0",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/44765133559"
+    },
+    "nvme-cli": {
+      "version": "3.2",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/44765133559"
+    },
     "openjph": {
       "version": "0.33.0",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/42773931857"
     },
+    "orc": {
+      "version": "0.4.44",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/44765133559"
+    },
     "pyscard": {
       "version": "2.3.2",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/40833963568"
+    },
+    "python-argcomplete": {
+      "version": "3.7.2",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/44765133559"
     },
     "python-dns": {
       "version": "2.9.2",
@@ -80,9 +168,25 @@
       "version": "1.2.3",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/40072946213"
     },
+    "python-pydantic": {
+      "version": "2.14.4",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/44765133559"
+    },
+    "rust-just": {
+      "version": "1.59.0",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/44765133559"
+    },
+    "simdutf": {
+      "version": "9.4.0",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/44765133559"
+    },
     "snowball": {
       "version": "3.2.0",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/42773931857"
+    },
+    "speex": {
+      "version": "1.2.1",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/44765133559"
     },
     "splix": {
       "version": "2.0.2",
@@ -96,6 +200,10 @@
       "version": "0.3.1",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/40833963568"
     },
+    "taglib": {
+      "version": "2.3.2",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/44765133559"
+    },
     "udisks2": {
       "version": "2.12.0",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/43384286878"
@@ -104,9 +212,25 @@
       "version": "1.91.5",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/40848781435"
     },
+    "uutils-coreutils": {
+      "version": "0.13.0",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/44765133559"
+    },
+    "vvdec": {
+      "version": "3.3.0",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/44765133559"
+    },
     "xdg-terminal-exec": {
       "version": "0.14.4",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/40833963568"
+    },
+    "xmlrpc-c": {
+      "version": "1.64.04",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/44765133559"
+    },
+    "xorg-x11-xinit": {
+      "version": "1.4.4",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/44765133559"
     }
   }
 }

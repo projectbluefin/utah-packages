@@ -6,7 +6,7 @@
 %undefine _debugsource_packages
 
 Name:           igt-gpu-tools
-Version:        2.6
+Version:        2.5
 Release:        %autorelease
 Summary:        Test suite and tools for DRM drivers
 

@@ -12,7 +12,7 @@ Speex, WavPack, TrueAudio files, as well as APE Tags.}
 
 Name:       taglib
 Summary:    Audio Meta-Data Library
-Version:    2.3.2
+Version:    2.3
 Release:    %autorelease
 
 License:    (LGPL-2.1-only OR MPL-1.1) AND BSD-2-Clause AND LGPL-2.1-only

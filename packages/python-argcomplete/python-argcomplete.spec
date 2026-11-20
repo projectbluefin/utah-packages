@@ -12,7 +12,7 @@
 
 Name:          python-argcomplete
 Summary:       Bash tab completion for argparse
-Version:       3.7.2
+Version:       3.6.3
 Release:       %autorelease
 License:       Apache-2.0
 URL:           https://github.com/kislyuk/argcomplete

@@ -1,5 +1,5 @@
 Name:		libcue
-Version:	2.4.3
+Version:	2.3.0
 Release:	%autorelease
 Summary:	Cue sheet parser library
 # Files libcue/rem.{c,h} contains a BSD-2-Clause header

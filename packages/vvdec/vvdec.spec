@@ -1,5 +1,5 @@
 %global forgeurl0 https://github.com/fraunhoferhhi/vvdec
-Version: 3.3.0
+Version: 3.2.0
 %global tag0 v%{version}
 
 %forgemeta

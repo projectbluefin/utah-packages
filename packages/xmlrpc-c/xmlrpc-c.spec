@@ -2,8 +2,8 @@
 %global _smp_mflags -j1
 
 Name:           xmlrpc-c
-Version:        1.64.04
-Release:        1%{?dist}
+Version:        1.60.04
+Release:        7%{?dist}
 Summary:        Lightweight RPC library based on XML and HTTP
 # See doc/COPYING for details.
 # The Python 1.5.2 license used by a few files is just BSD.
@@ -171,9 +171,6 @@ This package contains some handy XML-RPC demo applications.
 %{_bindir}/xmlrpc_dumpserver
 
 %changelog
-* Fri Nov 20 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 1.64.04-1
-- Update to 1.64.04
-
 * Fri Jul 17 2026 Fedora Release Engineering <releng@fedoraproject.org> - 1.60.04-7
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_45_Mass_Rebuild
 

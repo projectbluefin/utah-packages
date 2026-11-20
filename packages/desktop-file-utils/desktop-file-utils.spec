@@ -1,6 +1,6 @@
 Summary: Utilities for manipulating .desktop files
 Name: desktop-file-utils
-Version: 0.29
+Version: 0.28
 Release: %autorelease
 URL: https://www.freedesktop.org/software/desktop-file-utils
 Source0: https://www.freedesktop.org/software/desktop-file-utils/releases/%{name}-%{version}.tar.xz
