@@ -6,9 +6,10 @@ name: CI queue-observability
 # pending before its first job actually started, and reports the p50/p90/max.
 #
 # It is deliberately read-only against the pipeline: it only lists runs and
-# their jobs (actions: read). It changes nothing about how runs are scheduled;
-# merging a mitigation for the saturation itself (#1 merge queue, #2 priority
-# lane) is a maintainer decision this job does not make.
+# their jobs (actions: read). It changes nothing about how runs are scheduled.
+# The maintainer ruling on #304 chose the merge queue (#1, already live via
+# merge_group on canary.yml and validate.yml) as the primary mitigation, no
+# priority lane, and a 1800s p50 alert threshold.
 
 on:
   schedule:
@@ -41,7 +42,11 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
           # Documented repo variable is QUEUE_WAIT_THRESHOLD (#304 "Done when").
           # Passed through env, not interpolated into run:, per repo convention.
-          QUEUE_WAIT_THRESHOLD: ${{ vars.QUEUE_WAIT_THRESHOLD }}
+          # The maintainer ruling on #304 set the p50 alert at 1800s (30 min);
+          # that is the default when the variable is unset, so the agreed alert
+          # is live without an admin-only settings change. Setting the variable
+          # still overrides it.
+          QUEUE_WAIT_THRESHOLD: ${{ vars.QUEUE_WAIT_THRESHOLD || '1800' }}
         run: |
           set -euo pipefail
           threshold=()
