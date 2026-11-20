@@ -280,6 +280,12 @@ packages:
     downstream_package_name: bluefin-artwork-logos
     paths:
       - packages/bluefin-artwork-logos
+  bluefin-cli:
+    specfile_path: bluefin-cli.spec
+    upstream_package_name: bluefin-cli
+    downstream_package_name: bluefin-cli
+    paths:
+      - packages/bluefin-cli
   bluefin-docs:
     specfile_path: bluefin-docs.spec
     upstream_package_name: bluefin-docs

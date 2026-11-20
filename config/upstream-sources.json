@@ -401,6 +401,17 @@
       }
     },
     {
+      "name": "bluefin-cli",
+      "version": "0.15.0",
+      "filename": "bluefin-cli-0.15.0-vendored.tar.xz",
+      "sha512": "a594da1baf3d0f0af3cf8a2aa1f05afbce0f701bbb8e295ccfdb62a28234f1528fb0014dd47a3423b5d2b3f04f135de14ce3d8389fab432003743cb52d359333",
+      "generate": {
+        "script": "tools/generated_sources.py",
+        "input": "https://github.com/tuna-os/bluefin-cli/archive/v0.15.0/bluefin-cli-0.15.0.tar.gz and https://github.com/tuna-os/bluefin-cli/releases/download/v0.15.0/bluefin-cli-0.15.0-vendor.tar.gz (each sha512-pinned)",
+        "method": "unpack the release's vendor/ tree into the tag archive and repack deterministically as bluefin-cli-0.15.0-vendored.tar.xz"
+      }
+    },
+    {
       "name": "bluefin-docs",
       "version": "26.11.1",
       "url": "https://github.com/projectbluefin/documentation/releases/download/26.11.1/bluefin.pdf",
