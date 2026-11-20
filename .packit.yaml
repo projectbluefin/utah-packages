@@ -1318,6 +1318,12 @@ packages:
     downstream_package_name: gst-thumbnailers
     paths:
       - packages/gst-thumbnailers
+  gstreamer-plugins-rs:
+    specfile_path: gstreamer-plugins-rs.spec
+    upstream_package_name: gstreamer-plugins-rs
+    downstream_package_name: gstreamer-plugins-rs
+    paths:
+      - packages/gstreamer-plugins-rs
   gstreamer1:
     specfile_path: gstreamer1.spec
     upstream_package_name: gstreamer1
@@ -4228,12 +4234,6 @@ packages:
     downstream_package_name: runc
     paths:
       - packages/runc
-  rust-gst-plugin-dav1d:
-    specfile_path: rust-gst-plugin-dav1d.spec
-    upstream_package_name: rust-gst-plugin-dav1d
-    downstream_package_name: rust-gst-plugin-dav1d
-    paths:
-      - packages/rust-gst-plugin-dav1d
   rust-gst-plugin-gtk4:
     specfile_path: rust-gst-plugin-gtk4.spec
     upstream_package_name: rust-gst-plugin-gtk4

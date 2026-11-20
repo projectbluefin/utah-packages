@@ -56,6 +56,9 @@ that no upstream publishes verbatim:
 - gst-thumbnailers: the upstream GNOME release (SHA-512-pinned) with the same
   `vendor/` tree added. Hummingbird ships no Rust crate RPMs, so the recipe
   bundles its gtk-rs, clap and libglycin-rebind dependencies (#527)
+- gstreamer-plugins-rs: `git archive` of the gst-plugins-rs tag at a pinned
+  commit with the same `vendor/` tree, built from Cargo.lock as the recipe's
+  patches leave it: Dakota's freedesktop-sdk element patches the lock (#1040)
 - hyperv-daemons: the kernel's tools/hv and the tools/build and
   tools/scripts makefiles it includes, cut from the stable kernel release
   (SHA-512-pinned). The kernel publishes no tools/hv archive; Fedora's
@@ -1581,23 +1584,24 @@ CARGO_VENDORED_MTIME = 0
 PREFIXDEVNAME_MTIME = CARGO_VENDORED_MTIME
 
 
-def _cargo_vendored_transform(source: bytes, top: str, crates: dict, mtime: int) -> bytes:
+def _cargo_vendored_transform(source: bytes, top: str, crates: dict, mtime: int, lock_text: str | None = None) -> bytes:
     """Add a vendor/ tree to a release tarball, deterministically.
 
     The archive already lays out the source under <top>/. Its compression is
     detected, so a .tar.gz and a .tar.xz release both work.
     vendor/<crate>-<version>/ is appended for each crate the release root's
     Cargo.lock pins, with its .cargo-checksum.json, exactly as
-    `cargo vendor --versioned-dirs` lays it out. Every member is stamped with
-    a fixed mtime and zero ownership, so the same inputs always produce the
-    same bytes.
+    `cargo vendor --versioned-dirs` lays it out. A recipe that patches its
+    Cargo.lock passes the patched ``lock_text`` instead; the tree itself stays
+    as released. Every member is stamped with a fixed mtime and zero
+    ownership, so the same inputs always produce the same bytes.
     """
     raw = io.BytesIO()
     with tarfile.open(fileobj=io.BytesIO(source), mode="r:*") as src, \
             tarfile.open(fileobj=raw, mode="w", format=tarfile.PAX_FORMAT) as result:
         members = sorted(src.getmembers(), key=lambda m: m.name.rstrip("/"))
-        lock_member = src.getmember(f"{top}/Cargo.lock")
-        lock_text = src.extractfile(lock_member).read().decode()
+        if lock_text is None:
+            lock_text = src.extractfile(src.getmember(f"{top}/Cargo.lock")).read().decode()
         for member in members:
             if not (member.name == top or member.name.startswith(top + "/")):
                 raise RuntimeError(f"archive member outside {top}: {member.name}")
@@ -1914,6 +1918,26 @@ def _git_archive_metadata(name: str, package_dir: Path) -> dict:
     }
 
 
+def _git_tag_tar(name: str, remote: str, tag: str, commit: str, prefix: str, scratch: Path) -> bytes:
+    """`git archive` of ``commit`` under ``prefix``, once ``tag`` is proven to resolve to it."""
+    with tempfile.TemporaryDirectory(prefix=f"{name}-git-", dir=scratch) as tmp:
+        subprocess.run(["git", "init", "-q", tmp], check=True)
+        # Fetch only the tag: rtmpdump's repository advertises refs to the
+        # all-zero object, which a full clone refuses.
+        _git_network(
+            ["git", "-C", tmp, "fetch", "-q", "--depth", "1", remote, f"refs/tags/{tag}"],
+            remote,
+        )
+        head = subprocess.check_output(
+            ["git", "-C", tmp, "rev-parse", "FETCH_HEAD^{commit}"], text=True
+        ).strip()
+        if head != commit:
+            raise RuntimeError(f"tag {tag} moved: expected {commit}, got {head}")
+        return subprocess.check_output(
+            ["git", "-C", tmp, "archive", "--format=tar", f"--prefix={prefix}/", commit]
+        )
+
+
 def _git_archive_generate(name: str, package_dir: Path, out_dir: Path) -> Path:
     source = GIT_ARCHIVE_SOURCES[name]
     version = spec_version(package_dir, f"{name}.spec")
@@ -1921,24 +1945,92 @@ def _git_archive_generate(name: str, package_dir: Path, out_dir: Path) -> Path:
     if commit is None:
         raise RuntimeError(f"no pinned commit for {name} {version}")
     tag = source["tag"].format(version=version)
-    with tempfile.TemporaryDirectory(prefix=f"{name}-git-", dir=out_dir) as tmp:
-        subprocess.run(["git", "init", "-q", tmp], check=True)
-        # Fetch only the tag: rtmpdump's repository advertises refs to the
-        # all-zero object, which a full clone refuses.
-        _git_network(
-            ["git", "-C", tmp, "fetch", "-q", "--depth", "1", source["remote"], f"refs/tags/{tag}"],
-            source["remote"],
-        )
-        head = subprocess.check_output(
-            ["git", "-C", tmp, "rev-parse", "FETCH_HEAD^{commit}"], text=True
-        ).strip()
-        if head != commit:
-            raise RuntimeError(f"tag {tag} moved: expected {commit}, got {head}")
-        raw = subprocess.check_output(
-            ["git", "-C", tmp, "archive", "--format=tar", f"--prefix={name}-{version}/", commit]
-        )
+    raw = _git_tag_tar(name, source["remote"], tag, commit, f"{name}-{version}", out_dir)
     target = out_dir / f"{name}-{version}.tar.{source['compression']}"
     target.write_bytes(_git_archive_compress(raw, source["compression"]))
+    return target
+
+
+# --- gstreamer-plugins-rs --------------------------------------------------------
+
+# Dakota ships freedesktop-sdk's components/gstreamer-plugins-rs.bst: the
+# gst-plugins-rs tag, built for the rtp, gif, hlssink3, dav1d and spotify
+# plugins from vendored crates (#1040). The project publishes no release file,
+# so the input is `git archive` of the tag's pinned commit, as above. The
+# recipe does not build the lock as released: its patches (freedesktop-sdk's
+# move from git gtk-rs to crates.io, then the workspace cut to the five
+# plugins) change it, so every spec Patch is applied to Cargo.lock first and
+# that lock decides the vendored set. The tree stays as released; %prep
+# applies the same patches.
+GSTREAMER_PLUGINS_RS_REMOTE = "https://gitlab.freedesktop.org/gstreamer/gst-plugins-rs.git"
+GSTREAMER_PLUGINS_RS_COMMITS = {
+    "0.15.4": "1afff3711855238433862c0ce3bf34918e500386",
+}
+
+
+def recipe_patches(package_dir: Path, spec_name: str) -> list[Path]:
+    """The recipe's Patch files, in spec order."""
+    patches = []
+    for line in (package_dir / spec_name).read_text().splitlines():
+        match = re.match(r"Patch\d*\s*:\s*(\S+)\s*$", line)
+        if match:
+            if "%" in match.group(1):
+                raise ValueError(f"{spec_name}: Patch {match.group(1)} uses a macro; name the file")
+            patches.append(package_dir / match.group(1))
+    return patches
+
+
+def _patched_cargo_lock(lock_text: str, patches: list[Path], scratch: Path) -> str:
+    """Cargo.lock after every patch's Cargo.lock hunks, applied by git apply.
+
+    The scratch directory is its own repository, so git applies the paths
+    there even when the output directory sits inside a checkout.
+    """
+    with tempfile.TemporaryDirectory(prefix="cargo-lock-", dir=scratch) as tmp:
+        subprocess.run(["git", "init", "-q", tmp], check=True)
+        lock = Path(tmp) / "Cargo.lock"
+        lock.write_text(lock_text)
+        if patches:
+            subprocess.run(
+                ["git", "-C", tmp, "apply", "--include=Cargo.lock", *(str(p.resolve()) for p in patches)],
+                check=True,
+            )
+        return lock.read_text()
+
+
+def _gstreamer_plugins_rs_metadata(package_dir: Path) -> dict:
+    version = spec_version(package_dir, "gstreamer-plugins-rs.spec")
+    commit = GSTREAMER_PLUGINS_RS_COMMITS.get(version, "<unpinned>")
+    filename = f"gst-plugins-rs-{version}-vendored.tar.xz"
+    return {
+        "name": "gstreamer-plugins-rs",
+        "version": version,
+        "filename": filename,
+        "generate": {
+            "script": SCRIPT_PATH,
+            "input": f"{GSTREAMER_PLUGINS_RS_REMOTE} tag {version} (commit {commit}) and every crates.io crate its Cargo.lock pins after the recipe's patches (sha256-pinned by that Cargo.lock)",
+            "method": f"git archive --format=tar --prefix=gst-plugins-rs-{version}/ of the pinned commit, add vendor/<crate>-<version> for each patched Cargo.lock crate with .cargo-checksum.json, as cargo vendor --versioned-dirs lays it out, and repack deterministically as {filename}",
+        },
+    }
+
+
+def _gstreamer_plugins_rs_generate(package_dir: Path, out_dir: Path) -> Path:
+    version = spec_version(package_dir, "gstreamer-plugins-rs.spec")
+    commit = GSTREAMER_PLUGINS_RS_COMMITS.get(version)
+    if commit is None:
+        raise RuntimeError(f"no pinned commit for gstreamer-plugins-rs {version}")
+    patches = recipe_patches(package_dir, "gstreamer-plugins-rs.spec")
+    top = f"gst-plugins-rs-{version}"
+    archive = _git_tag_tar("gstreamer-plugins-rs", GSTREAMER_PLUGINS_RS_REMOTE, version, commit, top, out_dir)
+    with tarfile.open(fileobj=io.BytesIO(archive), mode="r:") as source:
+        released = source.extractfile(source.getmember(f"{top}/Cargo.lock")).read().decode()
+    lock_text = _patched_cargo_lock(released, patches, out_dir)
+    crates = {
+        (crate["name"], crate["version"]): _fetch(CRATE_URL.format(**crate))
+        for crate in cargo_lock_packages(lock_text)
+    }
+    target = out_dir / f"{top}-vendored.tar.xz"
+    target.write_bytes(_cargo_vendored_transform(archive, top, crates, CARGO_VENDORED_MTIME, lock_text))
     return target
 
 
@@ -1953,6 +2045,7 @@ METADATA = {
     "prefixdevname": _prefixdevname_metadata,
     "kanata": _kanata_metadata,
     "gst-thumbnailers": _gst_thumbnailers_metadata,
+    "gstreamer-plugins-rs": _gstreamer_plugins_rs_metadata,
     "freerdp": _freerdp_metadata,
     "fpaste": _fpaste_metadata,
     "7zip": _sevenzip_metadata,
@@ -1975,6 +2068,7 @@ GENERATORS = {
     "prefixdevname": _prefixdevname_generate,
     "kanata": _kanata_generate,
     "gst-thumbnailers": _gst_thumbnailers_generate,
+    "gstreamer-plugins-rs": _gstreamer_plugins_rs_generate,
     "freerdp": _freerdp_generate,
     "fpaste": _fpaste_generate,
     "7zip": _sevenzip_generate,
