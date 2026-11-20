@@ -181,7 +181,8 @@ moves a reviewer's latest review onto a later merge of `main` (stale reviews
 are not dismissed here), so `commit_id` alone is not trusted: the head must
 also have reached the pull request before the Approve, and a merge of `main`
 after it needs a new Approve. The push time is the newest `Canary (read-only)`
-pull_request run on the head, which GitHub records; the commit's own dates are
+pull_request run on the head from the pull request's own fork and branch, which
+GitHub records; the commit's own dates are
 set by its author and are not used. Only approve a fork pull request once you would have pressed the
 button for it; to approve without starting Canary, add `hold` first.
 

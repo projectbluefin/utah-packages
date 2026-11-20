@@ -147,8 +147,9 @@ def approver(
     pushed after it (seen 2026-11-20 on #978, #972 and #1230 after the hive
     updated their branches). So the head must also have reached this pull request
     before the Approve: ``head_pushed_at`` may not be later than the review. It is
-    the newest "Canary (read-only)" pull_request run on the head, a time GitHub
-    records when the commit is pushed, opened or reopened. The commit's own dates
+    the newest "Canary (read-only)" pull_request run on the head from this pull
+    request's own fork and branch, a time GitHub records when the commit is
+    pushed, opened or reopened. The commit's own dates
     are not used because the author sets them. A head pushed after the Approve
     needs a new Approve.
     """

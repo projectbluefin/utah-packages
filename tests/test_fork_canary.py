@@ -789,7 +789,12 @@ class OnApproveWorkflowTests(unittest.TestCase):
         # never from the commit's dates, which the fork's author sets.
         self.assertIn('--head-pushed-at "$pushed_at"', self.runs)
         self.assertIn("canary-read-only.yml/runs?event=pull_request&head_sha=${head}", self.runs)
-        self.assertIn("[.workflow_runs[].created_at] | max // empty", self.runs)
+        # Only this pull request's own fork and branch: a run the same commit
+        # got on another pull request must not stand in for this one's.
+        self.assertIn('select(.head_repository.full_name == $repo and .head_branch == $ref)', self.runs)
+        self.assertIn("| .created_at] | max // empty", self.runs)
+        self.assertIn("head_repo=$(jq -r .head.repo.full_name pr.json)", self.runs)
+        self.assertIn("head_ref=$(jq -r .head.ref pr.json)", self.runs)
         self.assertNotIn("committer.date", self.runs)
         self.assertNotIn("author.date", self.runs)
 

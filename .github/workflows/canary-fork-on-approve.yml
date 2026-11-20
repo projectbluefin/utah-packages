@@ -14,7 +14,8 @@
 #     review onto a later merge of main when stale reviews are not dismissed, so
 #     commit_id alone is not enough; any push after the Approve, a merge of main
 #     included, needs a new Approve. The push time is the newest "Canary
-#     (read-only)" pull_request run on the head, which GitHub records; the
+#     (read-only)" pull_request run on the head from this pull request's own
+#     fork and branch, which GitHub records; the
 #     commit's own dates are set by its author and are not used;
 #   - a standing "changes requested" from any maintainer stops it;
 #   - draft pull requests and the labels hold, sentinel-alert and do-not-merge
@@ -85,10 +86,16 @@ jobs:
             head=$(jq -r .head.sha pr.json)
             [[ "$head" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::unexpected head ${head} on #${pr}"; exit 1; }
             # When the head reached the pull request, as GitHub recorded it: every
-            # push, open and reopen runs canary-read-only.yml. Empty means no run,
+            # push, open and reopen runs canary-read-only.yml. Only runs from this
+            # pull request's own fork and branch count, so a run the same commit
+            # got elsewhere cannot stand in for one GitHub never made here (it
+            # makes none while the pull request conflicts). Empty means no run,
             # and an empty time never counts as older than an Approve.
+            head_repo=$(jq -r .head.repo.full_name pr.json)
+            head_ref=$(jq -r .head.ref pr.json)
             pushed_at=$(gh api "repos/$REPOSITORY/actions/workflows/canary-read-only.yml/runs?event=pull_request&head_sha=${head}&per_page=100" \
-              --jq '[.workflow_runs[].created_at] | max // empty')
+              | jq -r --arg repo "$head_repo" --arg ref "$head_ref" \
+                '[.workflow_runs[] | select(.head_repository.full_name == $repo and .head_branch == $ref) | .created_at] | max // empty')
             python3 tools/fork_canary.py approved --pr-json pr.json --reviews-json reviews.json \
               --permissions-json permissions.json --repository "$REPOSITORY" \
               --head-pushed-at "$pushed_at" | tee decision.txt
