@@ -1788,6 +1788,15 @@
       "sha512": "39f9fa14b880441a94a04400ff8850efdd9474929e5501dfd05af06e7747b4d0f7cb742ac811c7026cf52d00508efb73018be4d61d63a1211de0cd931cbc473d"
     },
     {
+      "name": "gnu-env",
+      "version": "9.12",
+      "url": "https://ftp.gnu.org/gnu/coreutils/coreutils-9.12.tar.xz",
+      "filename": "coreutils-9.12.tar.xz",
+      "sha512": "f25514cf02fd25365252d9a8f6fc5f8ed063fffdcb11c7eff380e3fa632741105d11b45ded332a2af5e913f77a143b68a2bd1fbdca0085e127fb17c80c35279b",
+      "signature_url": "https://ftp.gnu.org/gnu/coreutils/coreutils-9.12.tar.xz.sig",
+      "gpg_key": "packages/gnu-env/coreutils-keyring.gpg"
+    },
+    {
       "name": "gnu-free-fonts",
       "version": "20120503",
       "url": "https://ftp.gnu.org/gnu/freefont/freefont-src-20120503.tar.gz",
