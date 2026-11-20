@@ -170,6 +170,22 @@
 %endif
 %endif
 
+# Utah: Hummingbird and the factory carry neither Xen, ndctl (libdaxctl),
+# libxdp, QATzip, IGVM, libiscsi, Ceph (librados, librbd), libblkio nor
+# rutabaga-gfx, so qemu-system-x86-core, which qemu-kvm needs, and the iscsi,
+# rbd, blkio and rutabaga modules could not install (#1021).
+# freedesktop-sdk-extra's components/qemu.bst, which Dakota ships, builds with
+# none of them; do the same.
+%global have_xen 0
+%global have_daxctl 0
+%global have_xdp 0
+%global have_qatzip 0
+%global have_igvm 0
+%global have_block_iscsi 0
+%global have_block_rbd 0
+%global have_libblkio 0
+%global have_rutabaga_gfx 0
+
 %global have_nitro 0
 %ifarch x86_64 aarch64
 %global have_nitro 1
@@ -401,8 +417,9 @@ Version: 11.1.3
 %global rcstr -%{rcver}
 Release: %autorelease -p -e %{rcver}
 %else
-# Utah: -b 2 so the bundled-firmware build sorts above the published 1
-Release: %autorelease -b 2
+# Utah: -b 3 so the build without the features above sorts above the
+# published bundled-firmware build, 2
+Release: %autorelease -b 3
 %endif
 
 Epoch: 2

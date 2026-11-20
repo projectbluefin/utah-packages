@@ -241,8 +241,12 @@ Utah does not install those emulators. Shipping the blobs means shipping
 their licenses: the `License:` tag adds what Fedora's `seabios`, `ipxe` and
 `edk2` tag them with, and `edk2-licenses.txt` is `%license`. Firmware fixes
 now arrive only with a `qemu` rebuild, so track SeaBIOS, iPXE and EDK2 CVEs
-against `qemu`. These are Utah-local recipe edits, so the daily Rawhide
-re-import now leaves `qemu` to a hand update, which must keep them.
+against `qemu`. Fedora's recipe also links Xen, ndctl (`libdaxctl`), libxdp,
+QATzip, IGVM, libiscsi, Ceph, libblkio and rutabaga-gfx, none of which is in
+Hummingbird or the factory, so `qemu-system-x86-core` still did not install
+after the firmware fix; `components/qemu.bst` builds with none of them and the
+recipe turns all nine off. These are Utah-local recipe edits, so the daily
+Rawhide re-import now leaves `qemu` to a hand update, which must keep them.
 
 ## libvirt's QEMU driver: Dakota's feature set, not Fedora's
 
@@ -252,9 +256,13 @@ repositories, Utah's transaction has only Hummingbird and the factory. Fedora's
 `libvirt-daemon-driver-qemu` require `numad`, `libnbd`, `lzop` and
 `swtpm-tools`. None of them is in Hummingbird or the factory, so
 `libvirt-daemon-kvm` did not install (#1021). Dakota's `elements/bluefin/libvirt.bst`
-configures `-Dnumad=disabled -Dnbdkit=disabled` and ships neither lzop nor
-swtpm; the recipe does the same and keeps `lzop` and `swtpm-tools` as
-`Recommends`, which a later import can satisfy. Before moving a factory
+configures `-Dnumad=disabled -Dnbdkit=disabled`, disables the GlusterFS,
+iSCSI-direct (libiscsi), libxl and sanlock backends and ships neither lzop,
+swtpm nor scrub; the recipe does the same and keeps `lzop`, `swtpm-tools` and
+`scrub` as `Recommends`, which a later import can satisfy.
+`libvirt-daemon-driver-storage`, which `libvirt-daemon-kvm` requires, pulls in
+every storage backend the recipe builds, so one unsatisfiable backend is
+enough to sink the daemon. Before moving a factory
 package into Utah's contract, resolve it against the pinned image
 (`just check-repos` in Utah), not the package list. Like `qemu`, `libvirt` now
 carries Utah-local edits that a Rawhide re-import must keep.
