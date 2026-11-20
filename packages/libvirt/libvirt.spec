@@ -213,6 +213,18 @@
     %endif
 %endif
 
+# Utah: Hummingbird and the factory carry neither openwsman, Ceph (librados,
+# librbd), numad nor libnbd, so libvirt-libs, libvirt-daemon-driver-storage-rbd
+# and libvirt-daemon-driver-qemu could not install (#1021). Build without them,
+# as Dakota's elements/bluefin/libvirt.bst does: -Ddriver_hyperv=disabled
+# -Dopenwsman=disabled -Dstorage_rbd=disabled -Dnumad=disabled
+# -Dnbdkit=disabled.
+%define with_hyperv 0
+%define with_storage_rbd 0
+%define with_numad 0
+%define with_nbdkit 0
+%define with_nbdkit_config_default 0
+
 %ifarch %{arches_dmidecode}
     %define with_dmidecode 0%{!?_without_dmidecode:1}
 %endif
@@ -301,7 +313,7 @@
 Summary: Library providing a simple virtualization API
 Name: libvirt
 Version: 12.9.0
-Release: 1%{?dist}
+Release: 2%{?dist}
 License: GPL-2.0-or-later AND LGPL-2.1-only AND LGPL-2.1-or-later AND OFL-1.1
 URL: https://libvirt.org/
 
@@ -647,7 +659,9 @@ Requires: libvirt-libs = %{version}-%{release}
 Requires: systemd >= 185
 # For managing persistent mediated devices
 # Note: for nodedev-update support at least mdevctl v1.3.0 is required
-Requires: mdevctl
+# Utah: a weak dependency; mdevctl is not in Hummingbird or the factory, and
+# Dakota's libvirt ships without it (#1021).
+Recommends: mdevctl
 # for modprobe of pci devices
 Requires: module-init-tools
 
@@ -846,11 +860,14 @@ Requires: /usr/bin/qemu-img
 # For image compression
 Requires: gzip
 Requires: bzip2
-Requires: lzop
 Requires: xz
 Requires: zstd
 Requires: systemd-container
-Requires: swtpm-tools
+# Utah: lzop (the lzop save-image format) and swtpm-tools (emulated TPMs) are
+# not in Hummingbird or the factory, and Dakota's libvirt ships without both.
+# Weak dependencies, so the QEMU driver installs without them (#1021).
+Recommends: lzop
+Recommends: swtpm-tools
         %if %{with_numad}
 Requires: numad
         %endif
@@ -2749,6 +2766,10 @@ exit 0
 
 
 %changelog
+* Fri Nov 20 2026 James Reilly <jreilly1821@gmail.com> - 12.9.0-2
+- Utah: build without numad and nbdkit and make lzop and swtpm-tools weak
+  dependencies, as Dakota builds libvirt (#1021)
+
 * Mon Nov 02 2026 Cole Robinson <crobinso@redhat.com> - 12.9.0-1
 - Update to 12.9.0 release
 

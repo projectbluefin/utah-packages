@@ -1,0 +1,8 @@
+{
+  "package": "alsa-plugins",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/alsa-plugins.git",
+  "commit": "82ed9d06bd35959669a0879bf1b4440333b69712",
+  "tree": "228661a0fd3c406a28c50318d088ac9b48a7b46c",
+  "imported_at": "2026-11-16T04:23:14.246446+00:00"
+}

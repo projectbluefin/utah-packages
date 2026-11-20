@@ -1,0 +1,13 @@
+cvs-*
+*.bz2
+*.gz
+*.rpm
+kasumi-0.9.tar.gz
+kasumi-0.10.tar.gz
+kasumi-1.0.tar.gz
+kasumi-2.0.tar.gz
+kasumi-2.0.1.tar.gz
+kasumi-2.2.tar.gz
+kasumi-2.3.tar.gz
+kasumi-2.4.tar.gz
+kasumi-2.5.tar.gz

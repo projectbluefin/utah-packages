@@ -406,6 +406,33 @@ A recipe can only take one primary source from the lock; a second `sources`
 line is fetched from a dist-git lookaside — Fedora's by default, or
 `pkgs.rpmfusion.org` when the lock entry sets `lookaside: rpmfusion-free` — so
 a Utah-only recipe cannot use one.
+The same holds for a version past Fedora's: a second `sources` line named
+after the version (jpegxl's `third_party-<version>.tar.gz` and
+`testdata-<version>.tar.gz`, cut by hand from git submodules) exists in the
+lookaside only for versions Fedora built. Fold such tarballs into a
+generated primary instead: the `jpegxl` generator fills the release
+archive's empty submodule directories from the GitHub archives of the
+commits the tag's gitlinks pin (`gh api
+repos/<o>/<r>/contents/<path>?ref=<tag>` gives the commit), each archive
+SHA-512-pinned, applies the hand script's deletions (`skcms/profiles`), and
+the spec drops the extra Sources and the second `%setup`. The commits are
+pinned by hand per version; re-read the tag's gitlinks on every bump, since
+the generator cannot see them. 0.12.0 also builds with
+`-DJPEGXL_ENABLE_DEVTOOLS=OFF`, as Dakota does: its `djxl_fuzzer_corpus`
+fails to link against `libjxl_extras-internal`'s OpenEXR decoder. 0.12.0's
+`doc/` is its own CMake project, so the Doxygen HTML lands in
+`%{_vpath_builddir}/doc/html`, not `%{_vpath_builddir}/html`.
+
+A Utah-only Go recipe whose upstream publishes its `go mod vendor` tree as a
+release asset, the layout Fedora's go-vendor-tools recipes take as Source1
+(gum, glow), folds it the same way: the `bluefin-cli` generator pins the tag
+archive and `bluefin-cli-<version>-vendor.tar.gz` by SHA-512 per version
+(`BLUEFIN_CLI_INPUT_SHA512`), unpacks `vendor/` into the tag tree and repacks
+it, refusing a tag that already vendors or a vendor archive with anything
+outside `vendor/`. The spec keeps go-vendor-tools' license check with
+`go-vendor-tools.toml` as Source1. A bump adds both digests to the table
+before relocking, since the upstream bump tool cannot fetch them.
+
 When the upstream has no release and its commit archive is far larger than
 what the recipe needs, add a `tools/generated_sources.py` generator that
 fetches only the needed files at a pinned commit, checks a SHA-512 per file,
@@ -446,6 +473,24 @@ A patch that only removes dependencies (0002 drops criterion) is fine: cargo
 prunes the lock offline. To move the version, add the new release's SHA-512
 to the recipe's `*_INPUT_SHA512` table, bump the spec, regenerate, and pin the
 new digest in both `sources` and the lock.
+
+When the recipe's own patches move crate versions, the released lock is the
+wrong crate set. gstreamer-plugins-rs (#1040) carries freedesktop-sdk's patch
+that moves gtk-rs from git branches to crates.io, so its generator applies
+every spec `Patch:` to Cargo.lock (`git apply --include=Cargo.lock` in a
+scratch repository) and vendors what that lock pins; the archived tree stays
+as released and `%prep` applies the same patches. Name patch files literally:
+the generator reads them from the package directory and refuses a macro. A
+workspace member whose dependency comes from git (gst-plugins-rs' ffv1 and
+flavors) cannot be vendored, and cargo resolves every member even when it
+builds one, so cut the workspace to what the recipe builds: drop the members
+from `Cargo.toml`, run `cargo metadata` once so cargo prunes Cargo.lock
+without moving any version, and carry the result as a patch. For
+gst-plugins-rs that cut 1116 crates to 485. A version bump redoes both: pin
+the new tag's commit in `GSTREAMER_PLUGINS_RS_COMMITS`, rebase the patches,
+regenerate, and pin the digest in `sources` and the lock. The project
+publishes no release file, so the input is `git archive` of the pinned
+commit, sharing `_git_tag_tar` with `GIT_ARCHIVE_SOURCES`.
 
 ## A source published only inside a container image: copy it out by digest
 
