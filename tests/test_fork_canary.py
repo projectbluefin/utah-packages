@@ -135,8 +135,15 @@ class WorkflowTests(unittest.TestCase):
         on = self.wf.get("on", self.wf.get(True))
         self.assertEqual(set(on), {"workflow_dispatch"})
         inputs = on["workflow_dispatch"]["inputs"]
-        self.assertEqual(set(inputs), {"pr", "head_sha"})
-        self.assertTrue(all(i["required"] for i in inputs.values()))
+        self.assertEqual(set(inputs), {"pr", "head_sha", "approved_by"})
+        self.assertTrue(inputs["pr"]["required"] and inputs["head_sha"]["required"])
+        # Only names who approved, for the comment; it grants nothing.
+        self.assertFalse(inputs["approved_by"]["required"])
+
+    def test_each_run_names_its_pull_request_and_head(self):
+        # canary-fork-on-approve.yml dedupes on exactly this title.
+        self.assertEqual(self.wf["run-name"],
+                         "Canary for fork pull request #${{ inputs.pr }} at ${{ inputs.head_sha }}")
 
     def test_it_holds_no_more_than_it_needs(self):
         self.assertEqual(self.wf["permissions"],
@@ -643,3 +650,155 @@ class RefreshJobTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+ON_APPROVE = ROOT / ".github" / "workflows" / "canary-fork-on-approve.yml"
+MAINTAINERS = {"maint": "write", "admin1": "admin", "reader": "read"}
+# The head reached the pull request before the reviews below unless a test says otherwise.
+PUSHED = "2026-11-20T09:00:00Z"
+
+
+def review(login, state, sha=REVIEWED, at="2026-11-20T10:00:00Z", kind="User"):
+    return {"user": {"login": login, "type": kind}, "state": state, "commit_id": sha, "submitted_at": at}
+
+
+class ApproverTests(unittest.TestCase):
+    """An automatic start happens only where a maintainer's Approve already stands on the head."""
+
+    def approver(self, reviews, pull=None, permissions=MAINTAINERS, pushed=PUSHED):
+        return fork_canary.approver(pull or pr(), reviews, permissions, REPO, pushed)
+
+    def test_a_maintainer_approve_on_the_head_starts_it(self):
+        self.assertEqual(self.approver([review("maint", "APPROVED")]), "maint")
+        self.assertEqual(self.approver([review("admin1", "APPROVED")]), "admin1")
+
+    def test_an_approve_of_an_older_commit_does_not(self):
+        with self.assertRaisesRegex(fork_canary.Refused, "approved the current head"):
+            self.approver([review("maint", "APPROVED", sha=MOVED)])
+
+    def test_a_review_github_moved_onto_a_later_head_does_not(self):
+        # Seen on #978: approved 11-11, the hive merged main into the branch on
+        # 11-20, and GitHub reported the old Approve with the new commit_id.
+        with self.assertRaisesRegex(fork_canary.Refused, "approved the current head"):
+            self.approver([review("maint", "APPROVED", at="2026-11-11T15:04:00Z")],
+                          pushed="2026-11-20T11:48:36Z")
+        # The same Approve given after that head existed counts.
+        self.assertEqual(self.approver([review("maint", "APPROVED", at="2026-11-20T12:00:00Z")],
+                                       pushed="2026-11-20T11:48:36Z"), "maint")
+
+    def test_a_head_pushed_after_the_approve_does_not_whatever_its_commit_dates_say(self):
+        # The fork's author can backdate a commit; only GitHub's push time is read.
+        with self.assertRaisesRegex(fork_canary.Refused, "approved the current head"):
+            self.approver([review("maint", "APPROVED", at="2026-11-20T10:00:00Z")],
+                          pushed="2026-11-20T10:00:01Z")
+
+    def test_an_unreadable_or_missing_push_time_never_counts_as_older(self):
+        # Empty is what the workflow passes when the head has no read-only run.
+        for pushed in ("", "yesterday", "2026-11-20T09:00:00"):
+            with self.subTest(pushed=pushed), self.assertRaises(fork_canary.Refused):
+                self.approver([review("maint", "APPROVED")], pushed=pushed)
+        with self.assertRaises(fork_canary.Refused):
+            self.approver([review("maint", "APPROVED", at=None)])
+
+    def test_reviews_without_write_access_bots_and_the_author_do_not_count(self):
+        bot = review("hive[bot]", "APPROVED", kind="Bot")
+        author = review("someone", "APPROVED")
+        for reviews in ([review("reader", "APPROVED")], [review("stranger", "APPROVED")], [bot], [author]):
+            with self.subTest(reviews=reviews), self.assertRaises(fork_canary.Refused):
+                self.approver(reviews, pr(user={"login": "someone"}),
+                              {**MAINTAINERS, "hive[bot]": "write", "someone": "write"})
+
+    def test_a_comment_is_not_an_approve(self):
+        with self.assertRaises(fork_canary.Refused):
+            self.approver([review("maint", "COMMENTED")])
+
+    def test_a_maintainers_standing_changes_request_stops_it(self):
+        reviews = [review("maint", "APPROVED"), review("admin1", "CHANGES_REQUESTED")]
+        with self.assertRaisesRegex(fork_canary.Refused, "changes requested by admin1"):
+            self.approver(reviews)
+
+    def test_only_each_maintainers_latest_decisive_review_counts(self):
+        later = "2026-11-20T11:00:00Z"
+        # A changes request answered by a later Approve no longer blocks.
+        self.assertEqual(self.approver([review("maint", "CHANGES_REQUESTED"),
+                                        review("maint", "APPROVED", at=later)]), "maint")
+        # A dismissed Approve no longer approves.
+        with self.assertRaises(fork_canary.Refused):
+            self.approver([review("maint", "APPROVED"), review("maint", "DISMISSED", at=later)])
+        # A comment after an Approve leaves it standing.
+        self.assertEqual(self.approver([review("maint", "APPROVED"),
+                                        review("maint", "COMMENTED", at=later)]), "maint")
+
+    def test_drafts_stop_labels_and_non_fork_pull_requests_are_left_alone(self):
+        approved = [review("maint", "APPROVED")]
+        for pull in (pr(draft=True), pr(state="closed"), pr(base={"ref": "release"}),
+                     pr(head={"sha": REVIEWED, "repo": {"full_name": REPO}}),
+                     pr(head={"sha": REVIEWED, "repo": None}),
+                     *(pr(labels=[{"name": name}]) for name in sorted(fork_canary.STOP_LABELS))):
+            with self.subTest(pull=pull), self.assertRaises(fork_canary.Refused):
+                self.approver(approved, pull)
+
+    def test_the_command_prints_the_approver_or_why_not_and_never_fails(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            (tmp / "pr.json").write_text(json.dumps(pr(number=7)))
+            (tmp / "perm.json").write_text(json.dumps(MAINTAINERS))
+            for reviews, expected in (([review("maint", "APPROVED")], "approved_by=maint"),
+                                      ([], "skip: #7: no maintainer")):
+                (tmp / "reviews.json").write_text(json.dumps(reviews))
+                with self.subTest(expected=expected), mock.patch("builtins.print") as out:
+                    code = fork_canary.main(["approved", "--pr-json", str(tmp / "pr.json"),
+                                             "--reviews-json", str(tmp / "reviews.json"),
+                                             "--permissions-json", str(tmp / "perm.json"),
+                                             "--repository", REPO, "--head-pushed-at", PUSHED])
+                self.assertEqual(code, 0)
+                self.assertTrue(str(out.call_args_list[-1].args[0]).startswith(expected))
+
+
+class OnApproveWorkflowTests(unittest.TestCase):
+    """The scheduler only reads the API and presses the existing button."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.text = ON_APPROVE.read_text()
+        cls.wf = yaml.safe_load(cls.text)
+        cls.steps = cls.wf["jobs"]["start"]["steps"]
+        cls.runs = "\n".join(s.get("run", "") for s in cls.steps)
+
+    def test_it_holds_no_more_than_it_needs(self):
+        self.assertEqual(self.wf["permissions"],
+                         {"contents": "read", "pull-requests": "read", "actions": "write"})
+
+    def test_it_never_checks_out_or_runs_a_pull_request(self):
+        for step in self.steps:
+            if str(step.get("uses", "")).startswith("actions/checkout"):
+                # main's own ref, and the token is not left on disk.
+                self.assertEqual(step.get("with"), {"persist-credentials": False})
+        self.assertNotRegex(self.runs, r"git (fetch|checkout|switch|merge|push)")
+        self.assertNotRegex(self.runs, r"\b(just|make|podman|docker)\b")
+
+    def test_it_only_dispatches_the_button_from_main_with_the_approver(self):
+        dispatches = re.findall(r"gh workflow run (\S+)", self.runs)
+        self.assertEqual(dispatches, ["canary-fork-pr.yml"])
+        self.assertIn('--ref main', self.runs)
+        self.assertIn('-f approved_by="$approved_by"', self.runs)
+
+    def test_the_decision_is_the_tested_one(self):
+        self.assertIn("python3 tools/fork_canary.py approved", self.runs)
+        # It is told when the head was pushed, from GitHub's own run records,
+        # never from the commit's dates, which the fork's author sets.
+        self.assertIn('--head-pushed-at "$pushed_at"', self.runs)
+        self.assertIn("canary-read-only.yml/runs?event=pull_request&head_sha=${head}", self.runs)
+        # Only this pull request's own fork and branch: a run the same commit
+        # got on another pull request must not stand in for this one's.
+        self.assertIn('select(.head_repository.full_name == $repo and .head_branch == $ref)', self.runs)
+        self.assertIn("| .created_at] | max // empty", self.runs)
+        self.assertIn("head_repo=$(jq -r .head.repo.full_name pr.json)", self.runs)
+        self.assertIn("head_ref=$(jq -r .head.ref pr.json)", self.runs)
+        self.assertNotIn("committer.date", self.runs)
+        self.assertNotIn("author.date", self.runs)
+
+    def test_it_skips_heads_already_started_or_passed(self):
+        self.assertIn('"Canary for fork pull request #${pr} at ${head}"', self.runs)
+        self.assertIn("check_name=Canary", self.runs)
+        self.assertIn("branch=canary/pr-${pr}&head_sha=${head}", self.runs)
