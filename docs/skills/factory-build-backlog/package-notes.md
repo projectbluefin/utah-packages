@@ -237,9 +237,12 @@ configures `--disable-sdl-image`; the recipe does the same. `qemu-common`
 owns the iPXE ROMs, `qemu-system-x86-core` the BIOS images and the x86 EDK2
 builds with their `firmware/` descriptors, which libvirt's firmware
 auto-selection reads. Other architectures' EDK2 builds are still deleted:
-Utah does not install those emulators. These are Utah-local recipe edits, so
-the daily Rawhide re-import now leaves `qemu` to a hand update, which must
-keep them.
+Utah does not install those emulators. Shipping the blobs means shipping
+their licenses: the `License:` tag adds what Fedora's `seabios`, `ipxe` and
+`edk2` tag them with, and `edk2-licenses.txt` is `%license`. Firmware fixes
+now arrive only with a `qemu` rebuild, so track SeaBIOS, iPXE and EDK2 CVEs
+against `qemu`. These are Utah-local recipe edits, so the daily Rawhide
+re-import now leaves `qemu` to a hand update, which must keep them.
 
 ## Checkpoint/restore package family
 

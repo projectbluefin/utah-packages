@@ -406,19 +406,28 @@ Release: %autorelease -b 2
 %endif
 
 Epoch: 2
+# Utah: plus the licenses of the bundled firmware this recipe now ships
+# (SeaBIOS, iPXE ROMs, x86 EDK2), as Fedora's seabios, ipxe and edk2 tag them.
 License: %{shrink:
     Apache-2.0 AND
     BSD-2-Clause AND
+    (BSD-2-Clause OR GPL-2.0-or-later) AND
+    BSD-2-Clause-Patent AND
     BSD-3-Clause AND
+    BSD-4-Clause AND
     FSFAP AND
     GPL-1.0-or-later AND
     GPL-2.0-only AND
+    (GPL-2.0-only OR MPL-1.1) AND
     GPL-2.0-or-later AND
     GPL-2.0-or-later WITH GCC-exception-2.0 AND
+    GPL-2.0-or-later WITH UBDL-exception AND
+    ISC AND
     LGPL-2.0-only AND
     LGPL-2.0-or-later AND
     LGPL-2.1-only AND
     LGPL-2.1-or-later AND
+    LGPL-3.0-only AND
     MIT AND
     LicenseRef-Fedora-Public-Domain AND
     CC-BY-3.0
@@ -2121,8 +2130,9 @@ rm -rf %{buildroot}%{_datadir}/%{name}/slof.bin
 # installs QEMU's bundled iPXE ROMs, SeaBIOS/SeaVGABIOS images and x86 EDK2
 # firmware with its descriptors. Neither Hummingbird nor the factory carries
 # ipxe-roms-qemu, seabios-bin, seavgabios-bin or edk2-ovmf, so keep QEMU's
-# own copies (utah-packages#1021). Other architectures' EDK2 builds still
-# come from the edk2 packages their system-*-core subpackages require.
+# own copies (utah-packages#1021). Other architectures' EDK2 builds are still
+# deleted: aarch64, riscv64 and loongarch64 require Fedora's edk2 packages,
+# and ARM has none, as on Fedora.
 rm -f %{buildroot}%{_datadir}/%{name}/edk2-{aarch64,arm,riscv,loongarch64}-*.fd
 rm -f %{buildroot}%{_datadir}/%{name}/firmware/60-edk2-{aarch64,arm,riscv64,loongarch64}.json
 
@@ -3262,7 +3272,7 @@ popd
 %{_datadir}/%{name}/vgabios*.bin
 %{_datadir}/%{name}/edk2-i386-*.fd
 %{_datadir}/%{name}/edk2-x86_64-*.fd
-%{_datadir}/%{name}/edk2-licenses.txt
+%license %{_datadir}/%{name}/edk2-licenses.txt
 %dir %{_datadir}/%{name}/firmware/
 %{_datadir}/%{name}/firmware/*-edk2-i386*.json
 %{_datadir}/%{name}/firmware/*-edk2-x86_64*.json
