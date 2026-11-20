@@ -1,0 +1,52 @@
+diff -pruN kasumi-2.5.orig/KasumiWord.cxx kasumi-2.5/KasumiWord.cxx
+--- kasumi-2.5.orig/KasumiWord.cxx	2009-01-20 23:16:46.000000000 +0900
++++ kasumi-2.5/KasumiWord.cxx	2022-02-22 13:23:48.370368975 +0900
+@@ -188,7 +188,7 @@ void KasumiWord::setSound(const string &
+ 
+     if(invalidChar != ""){
+ 	string message;
+-	message = string(_("Sound must consist of only Hiragana characters. You have entered invalid character: "));
++	message = string(_("You have entered invalid character: "));
+ 	message += invalidChar;
+ 	throw KasumiException(message, ERR_DIALOG, ALERT_ONLY);
+     }
+@@ -211,7 +211,7 @@ void KasumiWord::setSoundByUTF8(const st
+ 
+     if(invalidChar != ""){
+ 	string message;
+-	message = string(_("Sound must consist of only Hiragana characters. You have entered invalid character: "));
++	message = string(_("You have entered invalid character: "));
+ 	message += invalidChar;
+ 	throw KasumiException(message, ERR_DIALOG, ALERT_ONLY);
+     }
+diff -pruN kasumi-2.5.orig/po/it.po kasumi-2.5/po/it.po
+--- kasumi-2.5.orig/po/it.po	2009-07-21 18:18:58.000000000 +0900
++++ kasumi-2.5/po/it.po	2022-02-22 13:27:24.171273941 +0900
+@@ -19,10 +19,10 @@ msgstr ""
+ 
+ #: KasumiWord.cxx:191 KasumiWord.cxx:214
+ msgid ""
+-"Sound must consist of only Hiragana characters. You have entered invalid "
++"You have entered invalid "
+ "character: "
+ msgstr ""
+-"Il suono deve contenere solo caratteri Hiragana. Sono stati inseriti "
++"Sono stati inseriti "
+ "caratteri non validi."
+ 
+ #: KasumiMainWindow.cxx:81
+diff -pruN kasumi-2.5.orig/po/ja.po kasumi-2.5/po/ja.po
+--- kasumi-2.5.orig/po/ja.po	2009-07-21 18:18:58.000000000 +0900
++++ kasumi-2.5/po/ja.po	2022-02-22 13:25:36.977321153 +0900
+@@ -17,9 +17,9 @@ msgstr ""
+ 
+ #: KasumiWord.cxx:191 KasumiWord.cxx:214
+ msgid ""
+-"Sound must consist of only Hiragana characters. You have entered invalid "
++"You have entered invalid "
+ "character: "
+-msgstr "読みにひらがな以外の文字を入力することはできません: "
++msgstr "無効な文字を入力しました: "
+ 
+ #: KasumiMainWindow.cxx:81
+ msgid "Kasumi"

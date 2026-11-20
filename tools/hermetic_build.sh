@@ -68,6 +68,9 @@ online() {
 
 install_tools() {
   dnf -y -q install mock createrepo_c rpm-build python3 iproute >/dev/null
+  # The keys the mock config verifies Fedora and Hummingbird with
+  # (tools/mock_config.py KEYS_DIR); mock copies them into its chroots.
+  install -D -m 0644 -t /etc/pki/mock /repos/keys/RPM-GPG-KEY-*
   # mock builds as the user who invoked it. Invoked as root, the whole
   # build ran as root, and flac's %check refused it -- "iterator claims file
   # is writable when tester thinks it should not be; are you running as
@@ -170,6 +173,39 @@ json.dump(lock, open(path, "w"))
 PY
 }
 
+# Hummingbird has no redirector, and packages.redhat.com sits behind Akamai
+# with max-age=86400: an edge that cached a bad answer for one RPM serves it
+# to every retry of the same URL for up to a day (48 of 52 failed builds in run
+# 44478890278 were one shadow-utils RPM with "not an RPM file (bad lead)",
+# while the same URL fetched elsewhere was fine). The origin ignores an extra
+# slash, the cache key does not, so each retry asks for a different spelling
+# of the same path. The basename -- the file name mock-hermetic-repo saves
+# and verify_hermetic_repo.py checks -- never changes, and verification is
+# by SIGMD5 against the lock whatever URL served the bytes.
+vary_hummingbird_urls() {
+  python3 - "$1" "$2" <<'PY'
+import json, re, sys
+path, attempt = sys.argv[1], int(sys.argv[2])
+PREFIX = "https://packages.redhat.com/api/pulp-content/public-hummingbird/"
+SPELLINGS = (
+    "https://packages.redhat.com/api/pulp-content/public-hummingbird//",
+    "https://packages.redhat.com/api/pulp-content//public-hummingbird/",
+    "https://packages.redhat.com/api//pulp-content/public-hummingbird/",
+)
+lock = json.load(open(path))
+HOST = "https://packages.redhat.com/"
+for r in lock["buildroot"]["rpms"]:
+    url = r["url"]
+    if not url.startswith(HOST):
+        continue
+    # Undo an earlier retry's spelling first; only this host is touched.
+    url = HOST + re.sub(r"/{2,}", "/", url[len(HOST):])
+    if url.startswith(PREFIX):
+        r["url"] = SPELLINGS[(attempt - 2) % len(SPELLINGS)] + url[len(PREFIX):]
+json.dump(lock, open(path, "w"))
+PY
+}
+
 materialize() {
   # mock-hermetic-repo downloads over HTTP(S) and saves the bootstrap image;
   # it cannot read file:// URLs, which is where the earlier stages and the
@@ -203,8 +239,9 @@ PY
   # resolved. Each retry points Fedora URLs at Fedora's own redirector,
   # download.fedoraproject.org, which sends each request to a live mirror
   # from the same MirrorManager pool the metalink draws from: no mirror list
-  # of our own, and no new host to trust. Hummingbird and file:// URLs are
-  # never rewritten. Retry only RPMs not verified against the original lock.
+  # of our own, and no new host to trust. Hummingbird URLs keep their host and
+  # path but change spelling per retry (vary_hummingbird_urls); file:// URLs
+  # are never rewritten. Retry only RPMs not verified against the original lock.
   cp "$H/lock/remote.json" "$H/lock/pending.json"
   fetch_remote() {
     fetch_log="$H/fetch.log"
@@ -217,6 +254,7 @@ PY
         find "$H/repo" -mindepth 1 -maxdepth 1 -type d -exec rm -rf -- {} + || return
       fi
       redirect_fedora_urls "$H/lock/pending.json" || return
+      vary_hummingbird_urls "$H/lock/pending.json" "$attempt" || return
     fi
     mock-hermetic-repo --lockfile "$H/lock/pending.json" --output-repo "$H/repo" \
       >"$fetch_log" 2>&1 || fetch_status=$?
