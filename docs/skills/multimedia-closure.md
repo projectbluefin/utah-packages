@@ -213,6 +213,15 @@ Then regenerate the report:
 python3 tools/multimedia_closure.py --output reports/multimedia-closure.json
 ```
 
+A binary can move to another source recipe without changing its name.
+`gstreamer1-plugin-dav1d` came from Fedora's rust-gst-plugin-dav1d until
+gstreamer-plugins-rs, Dakota's gst-plugins-rs build, shipped the same
+`libgstdav1d.so` (#1040). Two recipes cannot ship one file, so the new recipe
+emits the plugin as a `%package -n gstreamer1-plugin-dav1d` subpackage at a
+higher version, the old recipe and its lock are deleted, and `[built]` points
+the name at the new source. Keeping the name keeps the upgrade path, and no
+`Obsoletes` is needed.
+
 When `repomd.xml` exists, its primary metadata location is authoritative.
 A missing or malformed indexed file must fail the report rather than select
 a stale primary file left in the directory. Use an XML parser so namespace
