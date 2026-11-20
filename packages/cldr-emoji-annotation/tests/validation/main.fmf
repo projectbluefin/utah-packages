@@ -1,0 +1,6 @@
+summary: Lint check for annotation files
+test: ./test.sh
+framework: beakerlib
+require:
+    - cldr-emoji-annotation
+    - libxml2

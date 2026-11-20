@@ -96,10 +96,6 @@ packages = [
     "adobe-mappings-cmap",
     "adobe-mappings-cmap-deprecated",
     "adobe-mappings-pdf",
-    "cldr-emoji-annotation",
-    "cldr-emoji-annotation-dtd",
-    "kasumi-common",
-    "kasumi-unicode",
 ]
 
 [areas.ujust-deps]
@@ -913,6 +909,14 @@ packages = [
     # Dakota parity (#1031): Utah adopts Dakota's uupd RPM in place of its pinned
     # release download (projectbluefin/utah#1236), reversing the #263 waiver.
     { name = "uupd", pr = 1073 },
+    # Input-method data for Utah (projectbluefin/utah#1256): kasumi-unicode is
+    # ibus-anthy's dictionary tool (the kasumi source package), and
+    # cldr-emoji-annotation is ibus-typing-booster's emoji data. Recipe import
+    # only; hosted build, publication and runtime proof remain on utah#1256.
+    { name = "cldr-emoji-annotation" },
+    { name = "cldr-emoji-annotation-dtd" },
+    { name = "kasumi-common" },
+    { name = "kasumi-unicode" },
 ]
 
 [wontfix]

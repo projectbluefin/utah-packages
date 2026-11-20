@@ -347,3 +347,20 @@ reshaping feature. Re-enable `-Dlibdovi=enabled` once the dependency is
 available. Recipe coverage does not
 establish a hosted build, publication or a representative Vulkan render;
 those remain on `#475`.
+
+## Input-method data: kasumi and cldr-emoji-annotation
+
+`kasumi-unicode` and `kasumi-common` are subpackages of the `kasumi` source
+package; import `kasumi`, not the binary name, which has no dist-git. Its
+`Source0` host, OSDN's `jaist.dl.sourceforge.jp`, now answers 410 and
+`osdn.net` no longer resolves. JAIST's own OSDN mirror,
+`https://ftp.jaist.ac.jp/pub/sourceforge.jp/kasumi/41436/`, still serves the
+2009 release byte-identical to Fedora's MD5 pin: lock it as `url`, repin
+`sources` to SHA-512, and use the `/md5/<md5>/` lookaside path as the
+fallback. Under `%{fedora}` the recipe also builds the legacy-Anthy `kasumi`
+binary from Fedora 44's `anthy-devel`; Utah installs only `kasumi-unicode`
+(ibus-anthy's dictionary tool), which links the factory's `anthy-unicode`.
+
+`cldr-emoji-annotation` takes `cldr-common-<version>.zip` from Unicode's
+GitHub release, so bootstrap accepts it directly. It is
+ibus-typing-booster's emoji data (projectbluefin/utah#1256).
