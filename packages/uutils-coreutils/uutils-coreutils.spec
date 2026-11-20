@@ -126,9 +126,10 @@ Summary:        uutils-coreutils as the system coreutils, in place of GNU coreut
 Requires:       %{name}%{?_isa} = %{version}-%{release}
 Requires:       gnu-env
 # Every package that requires coreutils is satisfied by the replacement. The
-# Provides is unversioned on purpose: it matches any versioned requirement,
-# and uutils' own version numbers are not GNU's.
-Provides:       coreutils
+# Provides carries the GNU coreutils release Hummingbird ships (gnu-env's
+# version), not uutils' own: an unversioned Provides would also match every
+# versioned Conflicts, and util-linux has `Conflicts: coreutils < 8.20`.
+Provides:       coreutils = 9.12
 Conflicts:      coreutils-single
 
 %description    replace

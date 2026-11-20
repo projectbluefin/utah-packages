@@ -22,8 +22,10 @@ Source0:        https://ftp.gnu.org/gnu/coreutils/coreutils-%{version}.tar.xz
 BuildRequires:  gcc
 BuildRequires:  make
 
-# coreutils and coreutils-single own /usr/bin/env too.
-Conflicts:      coreutils
+# coreutils and coreutils-single own /usr/bin/env too. Both provide the
+# arch-qualified coreutils(<arch>); plain `coreutils` would also match
+# uutils-coreutils-replace's Provides, and that package requires this one.
+Conflicts:      coreutils%{?_isa}
 Conflicts:      coreutils-single
 
 %description

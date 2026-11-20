@@ -266,6 +266,10 @@ adds Dakota's `uutils-<utility>` names, provides `coreutils` and conflicts with
 GNU's `env` alone from the coreutils release, and the replacement requires it.
 The list of program names is explicit in the spec, and the build fails if
 uutils lacks one, so `Provides: coreutils` never drops a program silently.
+Version that Provides (the GNU release Hummingbird ships): an unversioned
+Provides also matches every versioned `Conflicts:`, and util-linux has
+`Conflicts: coreutils < 8.20`. For the same reason `gnu-env` conflicts with
+the arch-qualified `coreutils%{?_isa}`, which only GNU's packages provide.
 `bluefin/sudo-rs.bst` overwrites C sudo's `/usr/bin/sudo`, but C sudo stays
 installed for its PAM stacks and sudoers. It is protected in dnf too, so Utah
 makes that swap in its image build instead.
