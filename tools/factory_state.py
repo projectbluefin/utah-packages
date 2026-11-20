@@ -8,11 +8,18 @@ previous push forgets whatever the replaced run never built. So the answer is
 recorded where the packages are -- as a label on the published image:
 
     org.projectbluefin.factory.state = {"inputs": {name: digest},
-                                        "failed": {name: digest}}
+                                        "failed": {name: digest},
+                                        "withheld": {name: digest},
+                                        "shared": [{"digest": shared digest,
+                                                    "buildroot": pin}, ...]}
 
 `inputs` is the input digest each published build was made from; `failed`
 names packages whose latest attempt at that digest failed, and which
-therefore still carry an older build. A package is changed when its current
+therefore still carry an older build. `withheld` names packages that built
+at that digest but were held back from publication because they would have
+left the repository unresolvable (tools/publish_holdback.py) -- a library
+whose soname moved before its consumers were rebuilt. They also carry an
+older build, but nothing about them failed, so every run retries them. A package is changed when its current
 digest differs from `inputs`, which also makes a run the union of every
 change since the last publication, however many runs were skipped.
 
@@ -21,6 +28,18 @@ recipe directory does not record: its inventory entry (source URL, checksum,
 stage, dist_bump) and the build-root inputs every package shares. A change to
 the build root therefore changes every digest, which is a full rebuild --
 mostly cache misses, since the cache key carries the build root too.
+
+`shared` lists the shared-input digests recent publishes used, newest first,
+each with the build-root pin it covered. With them a run can tell a package
+whose recipe or inventory entry changed from one that changed only because
+the build root moved (`shared_only`): the second kind still rebuilds, but it
+may write the package cache and later runs may read it (tools/rebuild_plan.py
+cacheable). The cache key carries the build-root digest, so nothing built on
+the old root can be served. It is a list because a publish that replaces
+only some packages (an early stage, or a run where some failed) stamps the
+new digest while the rest keep inputs recorded under the old one. A label
+without `shared` (written before it existed) proves nothing, and every
+changed package is treated as recipe-changed.
 
 A label adds no layer: the image keeps the repodata-first two-layer layout
 Utah reads (#254).
@@ -39,6 +58,18 @@ LABEL = "org.projectbluefin.factory.state"
 
 # Shared inputs every package is built from and no recipe records.
 SHARED_INPUTS = ("config/buildroot-image", "config/hummingbird.repo")
+BUILDROOT_PIN = "config/buildroot-image"
+# How many (shared digest, build-root pin) pairs a label remembers.
+SHARED_HISTORY = 8
+
+
+def buildroot_pin(root: Path = ROOT) -> str:
+    path = root / BUILDROOT_PIN
+    return path.read_text().strip() if path.exists() else ""
+
+
+def shared_entry(root: Path = ROOT) -> dict:
+    return {"digest": shared_digest(root), "buildroot": buildroot_pin(root)}
 
 
 def shared_digest(root: Path = ROOT) -> str:
@@ -73,7 +104,19 @@ def parse_labels(labels: dict | None) -> dict | None:
     if not raw:
         return None
     state = json.loads(raw)
-    return {"inputs": dict(state.get("inputs", {})), "failed": dict(state.get("failed", {}))}
+    parsed = {
+        "inputs": dict(state.get("inputs", {})),
+        "failed": dict(state.get("failed", {})),
+        "withheld": dict(state.get("withheld", {})),
+    }
+    history = [
+        {"digest": str(item["digest"]), "buildroot": str(item.get("buildroot", ""))}
+        for item in state.get("shared") or []
+        if isinstance(item, dict) and item.get("digest") and item.get("buildroot")
+    ]
+    if history:
+        parsed["shared"] = history
+    return parsed
 
 
 def changed(
@@ -88,14 +131,52 @@ def changed(
     held: packages left out because their last attempt at this exact digest
     failed. Rebuilding an unchanged, known-failing package on every merge
     buys nothing; the scheduled and dispatched runs (retry_failed) try again.
+
+    A withheld package is retried by every run, push included: it built, and
+    what kept it out was its consumers, which a later run may well have
+    rebuilt. Its digest can match `inputs` (a full rebuild withheld it), so
+    the digest alone would never bring it back.
     """
     moved = {name for name, digest in digests.items()
              if state["inputs"].get(name) != digest}
     failing = {name for name in state["failed"] if name in digests}
+    withheld = {name for name in state.get("withheld", {}) if name in digests}
     if retry_failed:
-        return moved | failing, set()
-    held = {name for name in moved if state["failed"].get(name) == digests[name]}
-    return moved - held, held
+        return moved | failing | withheld, set()
+    held = {name for name in moved
+            if state["failed"].get(name) == digests[name] and name not in withheld}
+    return (moved - held) | withheld, held
+
+
+def shared_only(
+    root: Path, state: dict, locks: dict[str, dict], names: set[str]
+) -> set[str]:
+    """Which of `names` changed only because the build root moved.
+
+    A package qualifies when its current recipe and inventory entry, hashed
+    with a shared digest recorded on the published image, give exactly the
+    input digest recorded for its published build -- nothing of its own moved
+    since -- and that recorded digest belonged to a different build-root pin
+    than the current one, so the cache key cannot match the published build's
+    entry. A move of hummingbird.repo alone does not qualify: the cache key
+    does not carry it. Anything unproven -- an edited recipe, a new package, a
+    label without `shared` -- does not qualify, so an error here only ever
+    withholds the cache, never extends it to a recipe that changed.
+    """
+    pin = buildroot_pin(root)
+    candidates = [item["digest"] for item in state.get("shared") or []
+                  if item["buildroot"] != pin]
+    if not candidates:
+        return set()
+    qualifies = set()
+    for name in names:
+        entry = locks.get(name)
+        published = state["inputs"].get(name)
+        if entry is None or published is None:
+            continue
+        if any(input_digest(root, entry, digest) == published for digest in candidates):
+            qualifies.add(name)
+    return qualifies
 
 
 def merge(
@@ -106,6 +187,8 @@ def merge(
     replaced: list[str],
     failed: list[str],
     pruned: list[str],
+    shared: dict | None = None,
+    withheld: list[str] = (),
 ) -> dict:
     """The state to record on the image a publish is about to push.
 
@@ -113,27 +196,48 @@ def merge(
     digest (everything it did not select), which is how the first labelled
     image learns the state of packages it did not rebuild. replaced: built
     and published by this run. failed: selected but not published; they keep
-    their previous entry in `inputs` and are recorded in `failed`.
+    their previous entry in `inputs` and are recorded in `failed`. withheld:
+    built but held back from publication; they too keep their previous entry
+    in `inputs`, and are recorded in `withheld` until a publication replaces
+    them.
     """
     inputs = dict((seed or {}).get("inputs", {}))
     previous_failures = dict((seed or {}).get("failed", {}))
+    previous_withheld = dict((seed or {}).get("withheld", {}))
     for name in trusted:
         if name in digests:
             inputs.setdefault(name, digests[name])
     for name in replaced:
         inputs[name] = digests[name]
         previous_failures.pop(name, None)
+        previous_withheld.pop(name, None)
     for name in failed:
         if name in digests:
             previous_failures[name] = digests[name]
+            previous_withheld.pop(name, None)
+    for name in withheld:
+        if name in digests:
+            previous_withheld[name] = digests[name]
+            previous_failures.pop(name, None)
     for name in pruned:
         inputs.pop(name, None)
         previous_failures.pop(name, None)
+        previous_withheld.pop(name, None)
     known = set(digests)
-    return {
+    state = {
         "inputs": {k: v for k, v in sorted(inputs.items()) if k in known},
         "failed": {k: v for k, v in sorted(previous_failures.items()) if k in known},
+        "withheld": {k: v for k, v in sorted(previous_withheld.items()) if k in known},
     }
+    # The newest pair first; older ones stay while recorded inputs may still
+    # have been computed under them.
+    history = [shared] if shared else []
+    for item in (seed or {}).get("shared", []):
+        if all(item["digest"] != kept["digest"] for kept in history):
+            history.append(item)
+    if history:
+        state["shared"] = history[:SHARED_HISTORY]
+    return state
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -162,6 +266,8 @@ def main(argv: list[str] | None = None) -> int:
         replaced=report.get("replaced", []) + report.get("bootstrapped", []),
         failed=report.get("failed", []),
         pruned=json.loads(args.pruned),
+        shared=shared_entry(ROOT),
+        withheld=list(report.get("withheld", [])),
     )
     print(json.dumps(state, sort_keys=True, separators=(",", ":")))
     return 0

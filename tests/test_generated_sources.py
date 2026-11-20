@@ -312,6 +312,96 @@ class SevenZipTransformTests(unittest.TestCase):
         self.assertIn("Source:         %{name}-%{version}.tar.xz", spec)
 
 
+def _github_targz(top: str, members: dict[str, bytes], directories: set[str]) -> bytes:
+    """A GitHub-style archive: a pax global header, then `top/` and its members."""
+    raw = io.BytesIO()
+    with tarfile.open(fileobj=raw, mode="w", format=tarfile.PAX_FORMAT,
+                      pax_headers={"comment": "0123456789abcdef"}) as tar:
+        for name in sorted({top, *directories, *members}):
+            info = tarfile.TarInfo(name)
+            info.mtime, info.uid, info.gid, info.uname, info.gname = 1751000000, 1000, 1000, "gh", "gh"
+            if name in members:
+                info.size = len(members[name])
+                tar.addfile(info, io.BytesIO(members[name]))
+            else:
+                info.type = tarfile.DIRTYPE
+                tar.addfile(info)
+    return gzip.compress(raw.getvalue(), mtime=0)
+
+
+class JpegxlTransformTests(unittest.TestCase):
+    VERSION = "0.12.0"
+    SJPEG = "94e0df6d0f8b44228de5be0ff35efb9f946a13c9"
+    SKCMS = "96d9171c94b937a1b5f0293de7309ac16311b722"
+
+    def release(self, extra: dict[str, bytes] | None = None) -> bytes:
+        top = f"libjxl-{self.VERSION}"
+        members = {f"{top}/CMakeLists.txt": b"project", f"{top}/third_party/CMakeLists.txt": b"deps",
+                   **(extra or {})}
+        directories = {f"{top}/third_party", f"{top}/third_party/sjpeg", f"{top}/third_party/skcms"}
+        return _github_targz(top, members, directories)
+
+    def submodules(self) -> dict[str, tuple[str, bytes]]:
+        sjpeg = f"sjpeg-{self.SJPEG}"
+        skcms = f"skcms-{self.SKCMS}"
+        return {
+            "third_party/sjpeg": (self.SJPEG, _github_targz(sjpeg, {f"{sjpeg}/src/sjpeg.h": b"sjpeg"}, {f"{sjpeg}/src"})),
+            "third_party/skcms": (self.SKCMS, _github_targz(
+                skcms,
+                {f"{skcms}/skcms.h": b"skcms", f"{skcms}/profiles/mobile/sRGB.icc": b"dropped"},
+                {f"{skcms}/profiles", f"{skcms}/profiles/mobile"},
+            )),
+        }
+
+    def members(self, payload: bytes) -> list[tarfile.TarInfo]:
+        with tarfile.open(fileobj=io.BytesIO(payload), mode="r:xz") as tar:
+            return tar.getmembers()
+
+    def test_fills_the_submodules_and_drops_skcms_profiles(self):
+        result = generated_sources._jpegxl_transform(self.release(), self.submodules(), self.VERSION)
+        names = {m.name for m in self.members(result)}
+        top = f"libjxl-{self.VERSION}"
+        self.assertIn(f"{top}/CMakeLists.txt", names)
+        self.assertIn(f"{top}/third_party/sjpeg/src/sjpeg.h", names)
+        self.assertIn(f"{top}/third_party/skcms/skcms.h", names)
+        self.assertNotIn(f"{top}/third_party/skcms/profiles", names)
+        self.assertFalse(any("profiles" in name or self.SJPEG in name for name in names))
+
+    def test_transform_is_byte_reproducible_sorted_and_ownerless(self):
+        first = generated_sources._jpegxl_transform(self.release(), self.submodules(), self.VERSION)
+        self.assertEqual(first, generated_sources._jpegxl_transform(self.release(), self.submodules(), self.VERSION))
+        members = self.members(first)
+        self.assertEqual([m.name for m in members], sorted(m.name for m in members))
+        for member in members:
+            self.assertEqual((member.uid, member.gid, member.uname, member.gname), (0, 0, "", ""))
+            self.assertNotIn("comment", member.pax_headers)
+
+    def test_refuses_a_submodule_archive_of_another_commit(self):
+        submodules = self.submodules()
+        commit, payload = submodules["third_party/sjpeg"]
+        submodules["third_party/sjpeg"] = ("0" * 40, payload)
+        with self.assertRaisesRegex(RuntimeError, "not of commit"):
+            generated_sources._jpegxl_transform(self.release(), submodules, self.VERSION)
+
+    def test_refuses_a_release_that_already_fills_a_submodule(self):
+        release = self.release({f"libjxl-{self.VERSION}/third_party/sjpeg/src/sjpeg.h": b"vendored"})
+        with self.assertRaisesRegex(RuntimeError, "not empty"):
+            generated_sources._jpegxl_transform(release, self.submodules(), self.VERSION)
+
+    def test_metadata_names_the_recipe_source_and_pinned_inputs(self):
+        metadata = generated_sources.metadata_for("jpegxl", ROOT / "packages" / "jpegxl")
+        self.assertEqual(metadata["filename"], "jpegxl-0.12.0.tar.xz")
+        self.assertIn("libjxl/libjxl/archive/v0.12.0/jpegxl-0.12.0.tar.gz", metadata["generate"]["input"])
+        pins = generated_sources.JPEGXL_INPUTS["0.12.0"]
+        self.assertEqual(sorted(pins["submodules"]), ["testdata", "third_party/sjpeg", "third_party/skcms"])
+        for remote, commit, sha512 in pins["submodules"].values():
+            self.assertIn(commit, metadata["generate"]["input"])
+            self.assertEqual(len(sha512), 128)
+        spec = (ROOT / "packages" / "jpegxl" / "jpegxl.spec").read_text()
+        self.assertIn("Source0:        %{name}-%{version}.tar.xz", spec)
+        self.assertNotIn("Source1:", spec)
+
+
 def build_kernel_archive(version: str) -> bytes:
     """A synthetic kernel .tar.xz with tools/hv, its build files and neighbours."""
     top = f"linux-{version}"

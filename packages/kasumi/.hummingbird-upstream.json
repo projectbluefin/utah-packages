@@ -1,0 +1,8 @@
+{
+  "package": "kasumi",
+  "branch": "rawhide",
+  "remote": "https://src.fedoraproject.org/rpms/kasumi.git",
+  "commit": "1d1de239da9741bf7adb181cdf5f9278c1c2c4a7",
+  "tree": "cfb327cce4b5f0a30120b161be565bce1f5e3b4a",
+  "imported_at": "2026-11-20T02:51:01.842928+00:00"
+}

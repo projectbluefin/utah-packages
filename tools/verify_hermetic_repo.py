@@ -171,7 +171,10 @@ def inspect(path: Path) -> dict:
     """NEVRA, MD5 of header+payload, and SIGPGP key ID of one RPM file."""
     data = path.read_bytes()
     if data[:4] != LEAD_MAGIC or len(data) < LEAD_SIZE:
-        raise VerifyError("not an RPM file (bad lead)")
+        # Say what arrived instead: a CDN error page, an empty body and a
+        # truncated download need different fixes (#1208).
+        raise VerifyError(f"not an RPM file (bad lead): {len(data)} bytes, "
+                          f"starting {data[:48]!r}")
     sig_index, sig_store, sig_end = _header(data, LEAD_SIZE)
     main = sig_end + (-sig_end % 8)
     index, store, _ = _header(data, main)

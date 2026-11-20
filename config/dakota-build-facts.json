@@ -1,0 +1,4729 @@
+{
+ "schema": 1,
+ "dakota_revision": "bf271777da1808627f775f1d8816db2a89a931ea",
+ "refs": {
+  "dakota": "bf271777da1808627f775f1d8816db2a89a931ea",
+  "gnome-build-meta": "8a89846df11e86cee57c728a86a247e61d604b84",
+  "freedesktop-sdk": "114ae909ec9881958bd507c8b4414aa33f758d2b",
+  "freedesktop-sdk-extra": "7825d44d436a51dcbf7d226904348e810c63bf75"
+ },
+ "junction_patches": {
+  "gnome-build-meta": [
+   {
+    "patch": "patches/gnome-build-meta/0003-initramfs-boot-modules.patch",
+    "files": [
+     "files/gnomeos/generate-initramfs/modules/50-kmod/module.sh"
+    ]
+   },
+   {
+    "patch": "patches/gnome-build-meta/0004-recc-bounded-parallelism.patch",
+    "files": [
+     "include/recc.yml",
+     "project.conf"
+    ]
+   },
+   {
+    "patch": "patches/gnome-build-meta/0005-systemd-set-time-epoch.patch",
+    "files": [
+     "elements/core-deps/systemd-base.bst"
+    ]
+   }
+  ],
+  "freedesktop-sdk": [
+   {
+    "patch": "patches/freedesktop-sdk/0001-project.conf-Add-GNOME-CAS-servers.patch",
+    "files": [
+     "project.conf"
+    ]
+   },
+   {
+    "patch": "patches/freedesktop-sdk-dakota/0001-ghostscript-use-bundled-zlib-for-rom.patch",
+    "files": [
+     "elements/components/ghostscript.bst"
+    ]
+   },
+   {
+    "patch": "patches/freedesktop-sdk-dakota/0002-ffmpeg-enable-all-native-codecs.patch",
+    "files": [
+     "elements/components/ffmpeg.bst"
+    ]
+   }
+  ]
+ },
+ "elements": {
+  "bluefin/alsa-utils.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--sbindir=%{bindir} --with-systemdsystemunitdir=%{indep-libdir}/systemd/system --with-udev-rules-dir=%{indep-libdir}/udev/rules.d --enable-alsamixer --disable-bat --disable-alsaloop --disable-alsaconf --disable-nhlt --disable-xmlto --disable-rst2man"
+   }
+  },
+  "bluefin/bindmounts.bst": {
+   "kind": "manual"
+  },
+  "bluefin/bluefin-docs.bst": {
+   "kind": "manual"
+  },
+  "bluefin/bootc-install-config.bst": {
+   "kind": "manual"
+  },
+  "bluefin/brew-tarball.bst": {
+   "kind": "manual"
+  },
+  "bluefin/brew.bst": {
+   "kind": "manual"
+  },
+  "bluefin/brlaser.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DCMAKE_POLICY_VERSION_MINIMUM=3.5"
+   }
+  },
+  "bluefin/chairlift.bst": {
+   "kind": "manual"
+  },
+  "bluefin/common.bst": {
+   "kind": "manual",
+   "patches": [
+    {
+     "path": "patches/common/0002-ghostty-dual-theme.patch",
+     "subject": "",
+     "hunks": "6840ada1a1615810"
+    },
+    {
+     "path": "patches/common/0003-uwelcome-interactive-only.patch",
+     "subject": "",
+     "hunks": "d575b59757a3c68e"
+    },
+    {
+     "path": "patches/common/0004-policy-drop-redhat-gpg-entries.patch",
+     "subject": "",
+     "hunks": "760e29b041beafb5"
+    },
+    {
+     "path": "patches/common/0006-fastfetch-drop-weekly-stats.patch",
+     "subject": "",
+     "hunks": "e3a89597d12a1653"
+    }
+   ]
+  },
+  "bluefin/composefs-loop-udisks-ignore.bst": {
+   "kind": "manual"
+  },
+  "bluefin/distrobox.bst": {
+   "kind": "manual"
+  },
+  "bluefin/efibootmgr.bst": {
+   "kind": "make"
+  },
+  "bluefin/fastfetch.bst": {
+   "kind": "cmake"
+  },
+  "bluefin/fedora-shim.bst": {
+   "kind": "manual"
+  },
+  "bluefin/firstboot-date.bst": {
+   "kind": "manual"
+  },
+  "bluefin/firstboot-services.bst": {
+   "kind": "manual"
+  },
+  "bluefin/flatpak-apps.bst": {
+   "kind": "manual"
+  },
+  "bluefin/fprintd-fingerprint-auth.bst": {
+   "kind": "manual"
+  },
+  "bluefin/fprintd-system-auth.bst": {
+   "kind": "manual"
+  },
+  "bluefin/ghostty.bst": {
+   "kind": "manual",
+   "patches": [
+    {
+     "path": "patches/ghostty/0001-disable-resize-overlay-by-default.patch",
+     "subject": "",
+     "hunks": "a4a1869e86f3e1af"
+    }
+   ]
+  },
+  "bluefin/glog.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DBUILD_TESTING=OFF -DWITH_GFLAGS=OFF -DWITH_UNWIND=OFF"
+   }
+  },
+  "bluefin/gnome-epub-thumbnailer.bst": {
+   "kind": "meson"
+  },
+  "bluefin/gnome-ponytail-daemon.bst": {
+   "kind": "meson"
+  },
+  "bluefin/gtk4-layer-shell.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dexamples=false -Dintrospection=false -Dvapi=false"
+   }
+  },
+  "bluefin/gum.bst": {
+   "kind": "manual"
+  },
+  "bluefin/hyperv-daemons.bst": {
+   "kind": "manual"
+  },
+  "bluefin/ibus-rime.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DRIME_DATA_DIR=%{datadir}/rime-data"
+   }
+  },
+  "bluefin/ifuse.bst": {
+   "kind": "autotools"
+  },
+  "bluefin/intel-media-driver.bst": {
+   "kind": "manual"
+  },
+  "bluefin/just-overrides.bst": {
+   "kind": "manual"
+  },
+  "bluefin/kanata.bst": {
+   "kind": "manual"
+  },
+  "bluefin/kexec-disable.bst": {
+   "kind": "manual"
+  },
+  "bluefin/leveldb.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DBUILD_SHARED_LIBS=ON -DLEVELDB_BUILD_TESTS=OFF -DLEVELDB_BUILD_BENCHMARKS=OFF"
+   }
+  },
+  "bluefin/librime.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DBUILD_TEST=OFF -DBUILD_DATA=OFF -DENABLE_TIMESTAMP=OFF -DBUILD_MERGED_PLUGINS=ON"
+   }
+  },
+  "bluefin/libtracefs.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Ddoc=false -Dsamples=false -Dutest=false"
+   }
+  },
+  "bluefin/libvirt.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Drunstatedir=/run -Dapparmor=enabled -Dapparmor_profiles=enabled -Daudit=enabled -Dbash_completion=enabled -Dcapng=disabled -Dcurl=enabled -Ddriver_bhyve=disabled -Ddriver_esx=disabled -Ddriver_hyperv=disabled -Ddriver_libxl=disabled -Ddriver_lxc=disabled -Ddriver_ch=disabled -Ddriver_vz=disabled -Ddtrace=disabled -Dfuse=enabled -Dglusterfs=disabled -Dlibiscsi=disabled -Dlibpcap=enabled -Dlibssh2=enabled -Dlibssh=disabled -Dnetcf=disabled -Dnumactl=disabled -Dnumad=disabled -Dopenwsman=disabled -Dpolkit=enabled -Dsasl=enabled -Dsanlock=disabled -Dsecdriver_apparmor=enabled -Dsecdriver_selinux=disabled -Dselinux=disabled -Dstorage_disk=enabled -Dstorage_gluster=disabled -Dstorage_iscsi=enabled -Dstorage_iscsi_direct=disabled -Dstorage_rbd=disabled -Dstorage_vstorage=disabled -Dstorage_zfs=disabled -Dwireshark_dissector=disabled -Dnbdkit=disabled -Dnbdkit_config_default=disabled -Dno_git=true -Dtests=disabled -Dexpensive_tests=disabled -Dgit_werror=disabled"
+   }
+  },
+  "bluefin/lm-sensors.bst": {
+   "kind": "make"
+  },
+  "bluefin/lockdown-kargs.bst": {
+   "kind": "manual"
+  },
+  "bluefin/marisa-trie.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -DLIB_INSTALL_DIR=%{libdir} -DBUILD_TESTING=OFF -DENABLE_NATIVE_CODE=OFF"
+   }
+  },
+  "bluefin/migrate-var-home-passwd.bst": {
+   "kind": "manual"
+  },
+  "bluefin/nautilus-python.bst": {
+   "kind": "meson"
+  },
+  "bluefin/nerd-fonts-symbols.bst": {
+   "kind": "manual"
+  },
+  "bluefin/nethogs.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Denable-libnethogs=disabled -Denable-nethogs-app=enabled"
+   }
+  },
+  "bluefin/network.bst": {
+   "kind": "manual"
+  },
+  "bluefin/networkmanager-polkit.bst": {
+   "kind": "manual"
+  },
+  "bluefin/nfs-utils.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--sbindir=%{bindir} --disable-sbin-override --with-systemd=%{indep-libdir}/systemd/system --with-statedir=/var/lib/nfs --with-statdpath=/var/lib/nfs/statd --with-pluginpath=%{libdir}/libnfsidmap --with-statduser=rpcuser --with-start-statd=%{bindir}/start-statd --enable-libmount-mount --enable-mount --enable-nfsv4 --enable-uuid --enable-ipv6 --enable-tirpc --disable-gss --disable-svcgss --disable-nfsv4server --disable-nfsdctl"
+   }
+  },
+  "bluefin/nicstat.bst": {
+   "kind": "manual",
+   "patches": [
+    {
+     "path": "patches/nicstat/0001-fix-speed-highspeed.patch",
+     "subject": "",
+     "hunks": "89088fe3e77d9b70"
+    }
+   ]
+  },
+  "bluefin/nspawn.bst": {
+   "kind": "manual"
+  },
+  "bluefin/oo7-passwd-pam.bst": {
+   "kind": "manual"
+  },
+  "bluefin/open-vm-tools.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "CPPFLAGS=\"-I%{includedir}/drm\" --sbindir=%{bindir} --disable-static --without-x --disable-deploypkg --disable-vgauth --disable-containerinfo --disable-servicediscovery --disable-docs --disable-tests --enable-resolutionkms --enable-vmwgfxctrl --with-fuse=fuse3 --without-icu --with-tirpc --without-dnet --without-xmlsec1 --without-kernel-modules --with-udev-rules-dir=%{indep-libdir}/udev/rules.d"
+   },
+   "patches": [
+    {
+     "path": "patches/open-vm-tools/gcc16.patch",
+     "subject": "Fix const-qualified string search results under GCC 16 / C23",
+     "hunks": "f4c4db51fd84d4e0"
+    }
+   ]
+  },
+  "bluefin/opencc.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DUSE_SYSTEM_MARISA=ON -DLIB_INSTALL_DIR=%{libdir} -DENABLE_GTEST=OFF -DBUILD_DOCUMENTATION=OFF"
+   }
+  },
+  "bluefin/plymouth-bluefin-theme.bst": {
+   "kind": "manual"
+  },
+  "bluefin/powertop.bst": {
+   "kind": "meson"
+  },
+  "bluefin/qemu-guest-agent.bst": {
+   "kind": "manual"
+  },
+  "bluefin/rpcbind.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--sbindir=%{bindir} --enable-warmstarts --with-statedir=/run/rpcbind --with-rpcuser=rpc --with-nss-modules=\"files usrfiles\" --with-systemdsystemunitdir=%{indep-libdir}/systemd/system"
+   }
+  },
+  "bluefin/secure-boot-tools-files.bst": {
+   "kind": "filter",
+   "build": {
+    "element": "bluefin/secure-boot-tools.bst",
+    "kind": "manual"
+   }
+  },
+  "bluefin/shell-extensions/app-indicators.bst": {
+   "kind": "meson"
+  },
+  "bluefin/shell-extensions/bazaar-companion.bst": {
+   "kind": "manual"
+  },
+  "bluefin/shell-extensions/blur-my-shell.bst": {
+   "kind": "make"
+  },
+  "bluefin/shell-extensions/budslink-companion.bst": {
+   "kind": "manual",
+   "patches": [
+    {
+     "path": "patches/shell-extensions/budslink-companion-startup.patch",
+     "subject": "Handle delayed Bluetooth initialization and companion installation",
+     "hunks": "09bffdedc98bcade"
+    }
+   ]
+  },
+  "bluefin/shell-extensions/caffeine.bst": {
+   "kind": "make"
+  },
+  "bluefin/shell-extensions/custom-command-menu.bst": {
+   "kind": "manual"
+  },
+  "bluefin/shell-extensions/dash-to-dock.bst": {
+   "kind": "make"
+  },
+  "bluefin/shell-extensions/disable-ext-validator.bst": {
+   "kind": "manual"
+  },
+  "bluefin/shell-extensions/fuzzy-application-search.bst": {
+   "kind": "manual"
+  },
+  "bluefin/shell-extensions/gradia-capture.bst": {
+   "kind": "manual"
+  },
+  "bluefin/shell-extensions/gsconnect.bst": {
+   "kind": "meson"
+  },
+  "bluefin/shell-extensions/power-status-color.bst": {
+   "kind": "manual"
+  },
+  "bluefin/shell-extensions/quicksettings-audio-devices-hider.bst": {
+   "kind": "manual"
+  },
+  "bluefin/shell-extensions/quicksettings-audio-devices-renamer.bst": {
+   "kind": "manual"
+  },
+  "bluefin/shell-extensions/syncthing-toggle.bst": {
+   "kind": "manual"
+  },
+  "bluefin/shell-extensions/tailscale-qs.bst": {
+   "kind": "manual",
+   "patches": [
+    {
+     "path": "patches/shell-extensions/tailscale-setup.patch",
+     "subject": "Provide Tailscale setup and recover from unavailable or unauthorized daemon",
+     "hunks": "6bb67b782c8fdf1f"
+    }
+   ]
+  },
+  "bluefin/shell-extensions/tilingshell.bst": {
+   "kind": "manual",
+   "patches": [
+    {
+     "path": "patches/tilingshell/0001-gnome-51-support.patch",
+     "subject": "GNOME 51 support: fractional scaling detection without the removed org.gnome.mutter experimental-features key",
+     "hunks": "d2bd5491569005d0"
+    }
+   ]
+  },
+  "bluefin/signed-efi.bst": {
+   "kind": "manual",
+   "conditional_variables": true
+  },
+  "bluefin/signed-modules.bst": {
+   "kind": "manual"
+  },
+  "bluefin/sudo-linuxbrew-path.bst": {
+   "kind": "manual"
+  },
+  "bluefin/sudo-rs.bst": {
+   "kind": "make"
+  },
+  "bluefin/swapfile.bst": {
+   "kind": "manual"
+  },
+  "bluefin/syncthing.bst": {
+   "kind": "manual"
+  },
+  "bluefin/sysstat.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--disable-file-attr --disable-stripping --disable-documentation --disable-nls --disable-pcp --disable-sensors --enable-install-cron --enable-copy-only --with-systemdsystemunitdir=%{indep-libdir}/systemd/system --with-systemdsleepdir=%{indep-libdir}/systemd/system-sleep sa_lib_dir=%{indep-libdir}/sa sa_dir=%{localstatedir}/log/sa"
+   }
+  },
+  "bluefin/tailscale-setup.bst": {
+   "kind": "manual"
+  },
+  "bluefin/tailscale.bst": {
+   "kind": "manual"
+  },
+  "bluefin/tealdeer.bst": {
+   "kind": "manual"
+  },
+  "bluefin/tiptop.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "LIBS=-ltinfo"
+   }
+  },
+  "bluefin/trace-cmd.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Ddoc=false -Dpython=false -Dutest=false -Dversion-tag=3.4"
+   }
+  },
+  "bluefin/udev-groups.bst": {
+   "kind": "manual"
+  },
+  "bluefin/umotd.bst": {
+   "kind": "manual"
+  },
+  "bluefin/usbmuxd.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--sbindir=%{bindir} --localstatedir=/var --with-udevrulesdir=%{indep-libdir}/udev/rules.d --with-systemdsystemunitdir=%{indep-libdir}/systemd/system"
+   }
+  },
+  "bluefin/user-avatars.bst": {
+   "kind": "manual"
+  },
+  "bluefin/uupd.bst": {
+   "kind": "manual"
+  },
+  "bluefin/uutils-coreutils.bst": {
+   "kind": "make"
+  },
+  "bluefin/uwelcome.bst": {
+   "kind": "manual"
+  },
+  "bluefin/virtiofsd.bst": {
+   "kind": "manual"
+  },
+  "bluefin/vte.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dgtk3=true -Dgtk4=true -Ddocs=false -Dvapi=false -Dglade=false"
+   }
+  },
+  "bluefin/wallpaper-month.bst": {
+   "kind": "manual"
+  },
+  "bluefin/wallpapers.bst": {
+   "kind": "manual"
+  },
+  "bluefin/wireplumber-pcsp.bst": {
+   "kind": "manual"
+  },
+  "bluefin/xdg-terminal-exec.bst": {
+   "kind": "manual"
+  },
+  "bluefin/yaml-cpp.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DYAML_BUILD_SHARED_LIBS=ON -DYAML_CPP_BUILD_TESTS=OFF -DYAML_CPP_BUILD_TOOLS=OFF"
+   }
+  },
+  "bluefin/ydotool.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DCMAKE_INSTALL_MANDIR=%{mandir}"
+   }
+  },
+  "bluefin/zswap-config.bst": {
+   "kind": "manual"
+  },
+  "core/dnsmasq.bst": {
+   "kind": "make"
+  },
+  "core/mesa-default.bst": {
+   "kind": "manual"
+  },
+  "core/ntsync-modules-load.bst": {
+   "kind": "manual"
+  },
+  "freedesktop-sdk.bst:bootstrap/acl.bst": {
+   "kind": "autotools",
+   "conditional_variables": true
+  },
+  "freedesktop-sdk.bst:bootstrap/attr.bst": {
+   "kind": "autotools",
+   "conditional_variables": true
+  },
+  "freedesktop-sdk.bst:bootstrap/bash.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "CC_FOR_BUILD=/usr/bin/gcc --with-curses --with-installed-readline=\"/cross-installation%{prefix}\" --enable-job-control --without-bash-malloc ac_cv_rl_version=8.0 bash_cv_getcwd_malloc=yes bash_cv_job_control_missing=present bash_cv_termcap_lib=libtinfo bash_cv_dev_fd=standard bash_cv_dev_stdin=present"
+   },
+   "conditional_variables": true,
+   "patches": [
+    {
+     "path": "patches/bash/0001-bash-config.patch",
+     "subject": "",
+     "hunks": "af36525d73679826"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:bootstrap/binutils.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "CFLAGS=\"${CFLAGS}\" --disable-werror --with-lib-path=\"%{libdir}:%{indep-libdir}\" --enable-ld=default --enable-shared --enable-plugins --enable-relro=yes --enable-lto --with-system-zlib --with-debuginfod --with-zstd --enable-deterministic-archives --disable-gdb --disable-gdbserver --disable-libdecnumber --disable-readline --disable-sim host_configargs='lt_cv_sys_lib_dlsearch_path_spec=\"/usr/lib/%{gcc_triplet}\"'"
+   },
+   "conditional_variables": true,
+   "patches": [
+    {
+     "path": "patches/binutils/gprofng-examples-tgz-deterministic.patch",
+     "subject": "",
+     "hunks": "9561525e7f4c2867"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:bootstrap/bzip2.bst": {
+   "kind": "manual",
+   "conditional_variables": true,
+   "patches": [
+    {
+     "path": "patches/bzip2/soname.patch",
+     "subject": "",
+     "hunks": "418138705fcac7a1"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:bootstrap/coreutils.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--enable-install-program=hostname,arch --enable-no-install-program=kill,uptime --enable-acl ac_cv_func_chown_works=yes gl_cv_func_chown_slash_works=yes gl_cv_func_chown_ctime_works=yes gl_cv_func_chown_follows_symlink=yes"
+   },
+   "conditional_variables": true
+  },
+  "freedesktop-sdk.bst:bootstrap/debugedit.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "ac_cv_func_malloc_0_nonnull=yes ac_cv_func_realloc_0_nonnull=yes"
+   },
+   "conditional_variables": true
+  },
+  "freedesktop-sdk.bst:bootstrap/diffutils.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "gl_cv_func_getopt_gnu=yes gl_cv_func_strcasecmp_works=yes"
+   },
+   "conditional_variables": true
+  },
+  "freedesktop-sdk.bst:bootstrap/elfutils.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "utrace_cv_CC_m32=none --disable-debuginfod --enable-libdebuginfod=dummy"
+   },
+   "conditional_variables": true
+  },
+  "freedesktop-sdk.bst:bootstrap/file.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--disable-libseccomp --disable-xzlib --disable-bzlib"
+   },
+   "conditional_variables": true
+  },
+  "freedesktop-sdk.bst:bootstrap/findutils.bst": {
+   "kind": "autotools",
+   "conditional_variables": true,
+   "patches": [
+    {
+     "path": "patches/findutils/no-locate.patch",
+     "subject": "no locate",
+     "hunks": "7384755d280c2d0d"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:bootstrap/gawk.bst": {
+   "kind": "autotools",
+   "conditional_variables": true,
+   "patches": [
+    {
+     "path": "patches/gawk/0001-Workaround-fix-for-systems-without-MPFR-and-GMP.patch",
+     "subject": "Workaround fix for systems without MPFR and GMP.",
+     "hunks": "fb49f3ef1ae9d57d"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:bootstrap/glibc.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "CFLAGS=\"$CFLAGS\" \\ --with-headers=/cross-installation%{includedir}/%{gcc_triplet}:/cross-installation%{includedir} \\ --enable-stackguard-randomization \\ --enable-stack-protector=strong \\ --enable-bind-now \\ --disable-werror \\"
+   },
+   "conditional_variables": true,
+   "patches": [
+    {
+     "path": "patches/glibc/fix-dl-dst-lib.patch",
+     "subject": "",
+     "hunks": "fcfff81a2c38e67a"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:bootstrap/grep.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--enable-perl-regexp"
+   },
+   "conditional_variables": true
+  },
+  "freedesktop-sdk.bst:bootstrap/gzip.bst": {
+   "kind": "autotools",
+   "conditional_variables": true,
+   "patches": [
+    {
+     "path": "patches/gzip/0001-build-avoid-failure-to-build-on-linux-aarch64.patch",
+     "subject": "build: avoid failure to build on linux aarch64",
+     "hunks": "603821d71e3e3981"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:bootstrap/libselinux.bst": {
+   "kind": "make",
+   "conditional_variables": true
+  },
+  "freedesktop-sdk.bst:bootstrap/libsepol.bst": {
+   "kind": "make",
+   "conditional_variables": true
+  },
+  "freedesktop-sdk.bst:bootstrap/libxcrypt.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--enable-hashes=all --enable-obsolete-api=no --enable-obsolete-api-enosys=no"
+   },
+   "conditional_variables": true,
+   "patches": [
+    {
+     "path": "patches/libxcrypt/glibc243.patch",
+     "subject": "fix -Werror=discarded-qualifiers",
+     "hunks": "d4756f1d96eb6d36"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:bootstrap/linux-headers.bst": {
+   "kind": "manual",
+   "conditional_variables": true
+  },
+  "freedesktop-sdk.bst:bootstrap/make.bst": {
+   "kind": "autotools",
+   "conditional_variables": true
+  },
+  "freedesktop-sdk.bst:bootstrap/ncurses.bst": {
+   "kind": "autotools",
+   "conditional_variables": true,
+   "patches": [
+    {
+     "path": "patches/ncurses/always-cross-compile.patch",
+     "subject": "",
+     "hunks": "e1c65c6774709fbd"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:bootstrap/pcre2.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--enable-pcre2-16 --enable-pcre2-32"
+   },
+   "conditional_variables": true
+  },
+  "freedesktop-sdk.bst:bootstrap/readline.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--with-curses \\ CPPFLAGS=\"${CPPFLAGS} -I/cross-installation%{includedir}\""
+   },
+   "conditional_variables": true,
+   "patches": [
+    {
+     "path": "patches/readline/readline-disable-rpath.patch",
+     "subject": "",
+     "hunks": "837852f07390050d"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:bootstrap/sed.bst": {
+   "kind": "autotools",
+   "conditional_variables": true
+  },
+  "freedesktop-sdk.bst:bootstrap/xxhash.bst": {
+   "kind": "make",
+   "conditional_variables": true
+  },
+  "freedesktop-sdk.bst:bootstrap/xz.bst": {
+   "kind": "autotools",
+   "conditional_variables": true
+  },
+  "freedesktop-sdk.bst:bootstrap/zlib-ng.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-args": "--prefix=%{prefix} --sharedlibdir=%{libdir} --libdir=%{libdir} --zlib-compat --without-new-strategies"
+   },
+   "conditional_variables": true
+  },
+  "freedesktop-sdk.bst:bootstrap/zstd.bst": {
+   "kind": "make",
+   "conditional_variables": true
+  },
+  "freedesktop-sdk.bst:components/_private/bpf.bst": {
+   "kind": "make",
+   "patches": [
+    {
+     "path": "patches/linux/0001-riscv-sifive-fu740-cpu-1-2-3-4-set-compatible-to-sif.patch",
+     "subject": "riscv: sifive: fu740: cpu{1,2,3,4} set compatible to",
+     "hunks": "2369e00f2aff9f65"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:components/_private/gnu-efi.bst": {
+   "kind": "make"
+  },
+  "freedesktop-sdk.bst:components/_private/libsmbios.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/_private/systemd-hwdb.bst": {
+   "kind": "script"
+  },
+  "freedesktop-sdk.bst:components/aardvark-dns.bst": {
+   "kind": "make"
+  },
+  "freedesktop-sdk.bst:components/abseil-cpp.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DBUILD_SHARED_LIBS=ON -DCMAKE_SKIP_INSTALL_RPATH=ON"
+   }
+  },
+  "freedesktop-sdk.bst:components/alsa-lib.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--disable-aload --disable-alisp --disable-old-symbols --with-pythonlibs=\"-lpthread -lm -ldl -lpython3\" --with-pythonincludes=-I/usr/include/python3 --with-pcm-plugins=all"
+   },
+   "patches": [
+    {
+     "path": "patches/alsa-lib/sysconfig-ostree.patch",
+     "subject": "",
+     "hunks": "423754a5dc3cc865"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:components/alsa-plugins.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--disable-jack \\ --enable-pulseaudio \\ --disable-samplerate \\ --disable-libav \\ --with-speex=no"
+   }
+  },
+  "freedesktop-sdk.bst:components/aom.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DAOM_TARGET_CPU=\"%{aom_target}\" -DENABLE_DOCS=NO -DENABLE_NASM=YES -DBUILD_SHARED_LIBS=YES -DENABLE_EXAMPLES=NO -DENABLE_TESTDATA=NO -DENABLE_TESTS=NO"
+   },
+   "conditional_variables": true,
+   "patches": [
+    {
+     "path": "patches/aom/disable-aom-static.patch",
+     "subject": "",
+     "hunks": "b103f22d4649496f"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:components/apparmor-profiles.bst": {
+   "kind": "filter",
+   "build": {
+    "element": "freedesktop-sdk.bst:components/_private/apparmor-base.bst",
+    "kind": "autotools"
+   }
+  },
+  "freedesktop-sdk.bst:components/apparmor.bst": {
+   "kind": "filter",
+   "build": {
+    "element": "freedesktop-sdk.bst:components/_private/apparmor-base.bst",
+    "kind": "autotools"
+   }
+  },
+  "freedesktop-sdk.bst:components/appstream.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dstemming=false -Dcompose=true -Ddocs=false -Dapidocs=true -Dman=true -Dblake3-support=false"
+   }
+  },
+  "freedesktop-sdk.bst:components/asciidoc.bst": {
+   "kind": "pyproject"
+  },
+  "freedesktop-sdk.bst:components/aspell.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--enable-curses=\"-ltinfow -lncursesw\""
+   }
+  },
+  "freedesktop-sdk.bst:components/audit.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "runstatedir=/run --without-python --without-python3 --without-golang --enable-systemd --disable-zos-remote"
+   }
+  },
+  "freedesktop-sdk.bst:components/avahi-gobject.bst": {
+   "kind": "filter",
+   "build": {
+    "element": "freedesktop-sdk.bst:components/_private/avahi-base.bst",
+    "kind": "autotools",
+    "options": {
+     "conf-local": "--with-distro=none --disable-libevent --disable-qt3 --disable-qt4 --disable-qt5 --disable-gtk --disable-gtk3 --disable-python --disable-mono"
+    },
+    "patches": [
+     {
+      "path": "patches/avahi/CVE-2025-68276.patch",
+      "subject": "core: refuse to create wide-area record browsers when",
+      "hunks": "a3524ac1e987c88b"
+     },
+     {
+      "path": "patches/avahi/CVE-2025-68468.patch",
+      "subject": "core: fix DoS bug by removing incorrect assertion",
+      "hunks": "b4b1ae1e843d0695"
+     },
+     {
+      "path": "patches/avahi/CVE-2025-68471.patch",
+      "subject": "core: fix DoS bug by changing assert to return",
+      "hunks": "2fea371846698ab4"
+     },
+     {
+      "path": "patches/avahi/CVE-2026-24401.patch",
+      "subject": "core: fix uncontrolled recursion bug using a simple loop",
+      "hunks": "cb5aa0a133f025f8"
+     },
+     {
+      "path": "patches/avahi/CVE-2026-34933.patch",
+      "subject": "core: refuse to accept publish flags where both wide_area and",
+      "hunks": "23d2d655e789abc0"
+     }
+    ]
+   }
+  },
+  "freedesktop-sdk.bst:components/avahi-libs.bst": {
+   "kind": "filter",
+   "build": {
+    "element": "freedesktop-sdk.bst:components/_private/avahi-base.bst",
+    "kind": "autotools",
+    "options": {
+     "conf-local": "--with-distro=none --disable-libevent --disable-qt3 --disable-qt4 --disable-qt5 --disable-gtk --disable-gtk3 --disable-python --disable-mono"
+    },
+    "patches": [
+     {
+      "path": "patches/avahi/CVE-2025-68276.patch",
+      "subject": "core: refuse to create wide-area record browsers when",
+      "hunks": "a3524ac1e987c88b"
+     },
+     {
+      "path": "patches/avahi/CVE-2025-68468.patch",
+      "subject": "core: fix DoS bug by removing incorrect assertion",
+      "hunks": "b4b1ae1e843d0695"
+     },
+     {
+      "path": "patches/avahi/CVE-2025-68471.patch",
+      "subject": "core: fix DoS bug by changing assert to return",
+      "hunks": "2fea371846698ab4"
+     },
+     {
+      "path": "patches/avahi/CVE-2026-24401.patch",
+      "subject": "core: fix uncontrolled recursion bug using a simple loop",
+      "hunks": "cb5aa0a133f025f8"
+     },
+     {
+      "path": "patches/avahi/CVE-2026-34933.patch",
+      "subject": "core: refuse to accept publish flags where both wide_area and",
+      "hunks": "23d2d655e789abc0"
+     }
+    ]
+   }
+  },
+  "freedesktop-sdk.bst:components/avahi.bst": {
+   "kind": "filter",
+   "build": {
+    "element": "freedesktop-sdk.bst:components/_private/avahi-base.bst",
+    "kind": "autotools",
+    "options": {
+     "conf-local": "--with-distro=none --disable-libevent --disable-qt3 --disable-qt4 --disable-qt5 --disable-gtk --disable-gtk3 --disable-python --disable-mono"
+    },
+    "patches": [
+     {
+      "path": "patches/avahi/CVE-2025-68276.patch",
+      "subject": "core: refuse to create wide-area record browsers when",
+      "hunks": "a3524ac1e987c88b"
+     },
+     {
+      "path": "patches/avahi/CVE-2025-68468.patch",
+      "subject": "core: fix DoS bug by removing incorrect assertion",
+      "hunks": "b4b1ae1e843d0695"
+     },
+     {
+      "path": "patches/avahi/CVE-2025-68471.patch",
+      "subject": "core: fix DoS bug by changing assert to return",
+      "hunks": "2fea371846698ab4"
+     },
+     {
+      "path": "patches/avahi/CVE-2026-24401.patch",
+      "subject": "core: fix uncontrolled recursion bug using a simple loop",
+      "hunks": "cb5aa0a133f025f8"
+     },
+     {
+      "path": "patches/avahi/CVE-2026-34933.patch",
+      "subject": "core: refuse to accept publish flags where both wide_area and",
+      "hunks": "23d2d655e789abc0"
+     }
+    ]
+   }
+  },
+  "freedesktop-sdk.bst:components/bash-completion.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/bash-config.bst": {
+   "kind": "manual"
+  },
+  "freedesktop-sdk.bst:components/bluez-libs.bst": {
+   "kind": "filter",
+   "build": {
+    "element": "freedesktop-sdk.bst:components/_private/bluez-base.bst",
+    "kind": "autotools",
+    "options": {
+     "conf-local": "--enable-library --enable-external-ell"
+    }
+   }
+  },
+  "freedesktop-sdk.bst:components/bluez.bst": {
+   "kind": "filter",
+   "build": {
+    "element": "freedesktop-sdk.bst:components/_private/bluez-base.bst",
+    "kind": "autotools",
+    "options": {
+     "conf-local": "--enable-library --enable-external-ell"
+    }
+   }
+  },
+  "freedesktop-sdk.bst:components/brotli.bst": {
+   "kind": "cmake"
+  },
+  "freedesktop-sdk.bst:components/btrfs-progs.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/bubblewrap.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dtests=false"
+   }
+  },
+  "freedesktop-sdk.bst:components/buildbox.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DBUILD_TESTING=OFF -DCASD=ON -DCASD_BUILD_BENCHMARK=OFF -DOCI=OFF -DCAS_HTTP=ON -DRUN_USERCHROOT=OFF -DRUN_OCI=OFF -DCASD_WRAP=OFF -DCMAKE_DISABLE_PRECOMPILE_HEADERS=ON"
+   }
+  },
+  "freedesktop-sdk.bst:components/buildstream2.bst": {
+   "kind": "pyproject"
+  },
+  "freedesktop-sdk.bst:components/c-ares.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DCARES_SYMBOL_HIDING=ON -DCARES_BUILD_TOOLS=OFF"
+   }
+  },
+  "freedesktop-sdk.bst:components/ca-certificates.bst": {
+   "kind": "manual",
+   "patches": [
+    {
+     "path": "patches/ca-certificates/remove-aaa-certificate-services.patch",
+     "subject": "",
+     "hunks": "35cd64bc84bacc85"
+    },
+    {
+     "path": "patches/ca-certificates/remove-emsign-ecc-root-ca-g3.patch",
+     "subject": "",
+     "hunks": "bbcfba0c6ca885ca"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:components/catatonit.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/ccid.bst": {
+   "kind": "meson"
+  },
+  "freedesktop-sdk.bst:components/composefs.bst": {
+   "kind": "meson"
+  },
+  "freedesktop-sdk.bst:components/conmon.bst": {
+   "kind": "make"
+  },
+  "freedesktop-sdk.bst:components/containers-common.bst": {
+   "kind": "make"
+  },
+  "freedesktop-sdk.bst:components/cracklib.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--without-python"
+   }
+  },
+  "freedesktop-sdk.bst:components/crun.bst": {
+   "kind": "autotools",
+   "conditional_variables": true
+  },
+  "freedesktop-sdk.bst:components/cryptsetup.bst": {
+   "kind": "filter",
+   "build": {
+    "element": "freedesktop-sdk.bst:components/_private/cryptsetup-base.bst",
+    "kind": "autotools",
+    "options": {
+     "conf-local": "--enable-pwquality --disable-ssh-token --with-tmpfilesdir=\"%{indep-libdir}/tmpfiles.d\""
+    }
+   }
+  },
+  "freedesktop-sdk.bst:components/cups-daemon-only.bst": {
+   "kind": "filter",
+   "build": {
+    "element": "freedesktop-sdk.bst:components/_private/cups-base.bst",
+    "kind": "autotools",
+    "options": {
+     "conf-local": "--enable-debug --with-components=all --with-dbusdir=/etc/dbus-1 --with-tls=openssl --with-cups-group=lp --with-pkgconfpath=\"%{libdir}/pkgconfig\" --with-system-groups=\"root wheel\" --with-rundir=/run/cups localedir=/usr/share/locale DSOFLAGS=\"$CFLAGS $LDFLAGS\""
+    }
+   }
+  },
+  "freedesktop-sdk.bst:components/cups-filters.bst": {
+   "kind": "autotools",
+   "patches": [
+    {
+     "path": "patches/cups-filters/CVE-2025-64503.patch",
+     "subject": "rastertopclx.c: Fix infinite loop caused by crafted file",
+     "hunks": "9f469999c0ccfc1e"
+    },
+    {
+     "path": "patches/cups-filters/Fix-build-failure-with-GCC-15-and-std-c23-618.patch",
+     "subject": "Fix build failure with GCC 15 and -std=c23 (#618)",
+     "hunks": "d1e2f9d5c541e7b8"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:components/cups.bst": {
+   "kind": "filter",
+   "build": {
+    "element": "freedesktop-sdk.bst:components/_private/cups-base.bst",
+    "kind": "autotools",
+    "options": {
+     "conf-local": "--enable-debug --with-components=all --with-dbusdir=/etc/dbus-1 --with-tls=openssl --with-cups-group=lp --with-pkgconfpath=\"%{libdir}/pkgconfig\" --with-system-groups=\"root wheel\" --with-rundir=/run/cups localedir=/usr/share/locale DSOFLAGS=\"$CFLAGS $LDFLAGS\""
+    }
+   }
+  },
+  "freedesktop-sdk.bst:components/curl.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DCURL_CA_BUNDLE=none -DCURL_CA_FALLBACK=ON -DBUILD_TESTING=OFF -DUSE_NGTCP2=ON"
+   }
+  },
+  "freedesktop-sdk.bst:components/cyrus-sasl.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--with-plugindir=\"%{libdir}/sasl2\" --with-sqlite3 --with-openssl --disable-gssapi --with-dblib=gdbm --without-pam --without-opie --without-des"
+   },
+   "patches": [
+    {
+     "path": "patches/cyrus-sasl/c99.patch",
+     "subject": "Check for time.h header",
+     "hunks": "c6dfe8f9474dc9e1"
+    },
+    {
+     "path": "patches/cyrus-sasl/cyrus-sasl-2.1.28-gcc15.patch",
+     "subject": "Add compatibility for gcc 15",
+     "hunks": "b7665d4cf729df17"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:components/dav1d.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Denable_tests=false -Dxxhash_muxer=disabled"
+   }
+  },
+  "freedesktop-sdk.bst:components/dbus-tools.bst": {
+   "kind": "filter",
+   "build": {
+    "element": "freedesktop-sdk.bst:components/_private/dbus-base.bst",
+    "kind": "meson",
+    "options": {
+     "meson-local": "-Dlibaudit=disabled -Dsystem_socket=\"/run/dbus/system_bus_socket\" -Duser_session=true -Dducktype_docs=disabled -Dqt_help=disabled -Dmodular_tests=disabled -Drelocation=disabled -Dselinux=disabled -Dkqueue=disabled -Dlaunchd=disabled -Dx11_autolaunch=disabled -Ddoxygen_docs=enabled -Dxml_docs=enabled"
+    }
+   }
+  },
+  "freedesktop-sdk.bst:components/dbus.bst": {
+   "kind": "filter",
+   "build": {
+    "element": "freedesktop-sdk.bst:components/_private/dbus-base.bst",
+    "kind": "meson",
+    "options": {
+     "meson-local": "-Dlibaudit=disabled -Dsystem_socket=\"/run/dbus/system_bus_socket\" -Duser_session=true -Dducktype_docs=disabled -Dqt_help=disabled -Dmodular_tests=disabled -Drelocation=disabled -Dselinux=disabled -Dkqueue=disabled -Dlaunchd=disabled -Dx11_autolaunch=disabled -Ddoxygen_docs=enabled -Dxml_docs=enabled"
+    }
+   }
+  },
+  "freedesktop-sdk.bst:components/debuginfod.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--enable-debuginfod --enable-libdebuginfo"
+   }
+  },
+  "freedesktop-sdk.bst:components/dejavu-fonts.bst": {
+   "kind": "manual"
+  },
+  "freedesktop-sdk.bst:components/desktop-file-utils.bst": {
+   "kind": "meson"
+  },
+  "freedesktop-sdk.bst:components/dictionaries.bst": {
+   "kind": "manual"
+  },
+  "freedesktop-sdk.bst:components/dmidecode.bst": {
+   "kind": "make"
+  },
+  "freedesktop-sdk.bst:components/docbook-xml.bst": {
+   "kind": "manual"
+  },
+  "freedesktop-sdk.bst:components/docbook-xsl.bst": {
+   "kind": "manual",
+   "patches": [
+    {
+     "path": "patches/docbook-xsl/docbook-xsl-non-recursive_string_subst.patch",
+     "subject": "",
+     "hunks": "355c0897f3a4f462"
+    },
+    {
+     "path": "patches/docbook-xsl/consistent-identifiers.patch",
+     "subject": "fix issue #54 autoidx does not respect",
+     "hunks": "f55b507f31415cb6"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:components/dosfstools.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--enable-compat-symlinks"
+   }
+  },
+  "freedesktop-sdk.bst:components/doxygen.bst": {
+   "kind": "cmake"
+  },
+  "freedesktop-sdk.bst:components/dtc.bst": {
+   "kind": "make"
+  },
+  "freedesktop-sdk.bst:components/duktape.bst": {
+   "kind": "make",
+   "patches": [
+    {
+     "path": "patches/duktape/duktape-lm.patch",
+     "subject": "",
+     "hunks": "a7e55af51697b9f1"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:components/dummy-gbm.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dauto_features=disabled -Db_ndebug=true -Dvulkan-drivers=\"\" -Dgallium-drivers=\"\" -Dplatforms=\"\" -Dtools=\"\" -Dselinux=false -Dgbm=enabled -Dgbm-backends-path=\"%{libdir}/GL/lib/gbm\""
+   }
+  },
+  "freedesktop-sdk.bst:components/e2fsprogs.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--enable-elf-shlibs --disable-fuse2fs --disable-libblkid --disable-libuuid --disable-fsck --disable-uuidd"
+   }
+  },
+  "freedesktop-sdk.bst:components/efivar.bst": {
+   "kind": "make",
+   "patches": [
+    {
+     "path": "patches/efivar/0003-Unconditionally-disable-march-native.patch",
+     "subject": "Unconditionally disable -march=native",
+     "hunks": "ebe8a3758362e4d8"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:components/erofs-utils.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--enable-lzma --enable-lz4 --enable-fuse --enable-multithreading"
+   }
+  },
+  "freedesktop-sdk.bst:components/exfat-progs.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/expat.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DEXPAT_BUILD_EXAMPLES=OFF -DEXPAT_BUILD_TESTS=OFF"
+   }
+  },
+  "freedesktop-sdk.bst:components/f2fs-tools.bst": {
+   "kind": "autotools",
+   "patches": [
+    {
+     "path": "patches/f2fs-tools/android-config-filter.patch",
+     "subject": "",
+     "hunks": "8f866de2c8661858"
+    },
+    {
+     "path": "patches/f2fs-tools/f2fs-tools-use-stdbool.h-instead-of-bool.patch",
+     "subject": "f2fs-tools: use stdbool.h instead of bool",
+     "hunks": "5ece8d2f132a311b"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:components/fdsdk-lic-dedup.bst": {
+   "kind": "manual"
+  },
+  "freedesktop-sdk.bst:components/ffmpeg.bst": {
+   "kind": "make",
+   "options": {
+    "conf-local": "--prefix=\"%{prefix}\" --libdir=\"%{libdir}\" --optflags=\"${CFLAGS}\" --extra-ldflags=\"${LDFLAGS}\" --disable-stripping --disable-doc --disable-static --disable-encoders --disable-decoders --enable-shared --enable-gnutls --enable-gcrypt --enable-ladspa --enable-lcms2 --enable-libaom --enable-libdav1d --enable-libmp3lame --enable-libfontconfig --enable-libfreetype --enable-libfribidi --enable-libjxl --enable-libopus --enable-libpulse --enable-libspeex --enable-libtheora --enable-libvorbis --enable-libvpx --enable-librsvg --enable-libwebp --enable-libxml2 --enable-libopenjpeg --enable-libsvtav1 --enable-openal --enable-opengl --enable-sdl2 --enable-vulkan --enable-zlib --enable-libv4l2 --enable-libxcb --enable-vdpau --enable-vaapi --enable-pthreads --enable-libmysofa --arch=\"%{arch}\"",
+    "conf-extra": "--enable-encoders --enable-decoders"
+   },
+   "conditional_variables": true,
+   "dakota_junction_patches": [
+    "0002-ffmpeg-enable-all-native-codecs.patch"
+   ]
+  },
+  "freedesktop-sdk.bst:components/fftw.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--enable-threads --enable-openmp \\"
+   },
+   "conditional_variables": true
+  },
+  "freedesktop-sdk.bst:components/flatpak-builder.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dtests=false -Dfuse=3"
+   }
+  },
+  "freedesktop-sdk.bst:components/flatpak-xdg-utils.bst": {
+   "kind": "meson"
+  },
+  "freedesktop-sdk.bst:components/fmtlib.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DBUILD_SHARED_LIBS=ON"
+   },
+   "patches": [
+    {
+     "path": "patches/fmtlib/0001-Fix-fallback-uint128-bitwise-not-4813.patch",
+     "subject": "Fix fallback uint128 bitwise not (#4813)",
+     "hunks": "ca643f23b7e4b700"
+    },
+    {
+     "path": "patches/fmtlib/0002-Turn-libfmt-c-into-a-shared-library-4812.patch",
+     "subject": "Turn libfmt-c into a shared library (#4812)",
+     "hunks": "211f0d3f7d4d9fb2"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:components/fontconfig.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dtests=disabled -Dcache-build=disabled -Ddoc=disabled -Dtemplate-dir=\"%{sysconfdir}/fonts/conf.avail\" -Dxml-backend=\"expat\" -Dcache-dir=\"%{indep-libdir}/fontconfig/cache\""
+   }
+  },
+  "freedesktop-sdk.bst:components/foomatic-db.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/freetype.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dbrotli=enabled -Dbzip2=enabled -Dharfbuzz=enabled -Dhvf=disabled -Dpng=enabled -Dzlib=enabled"
+   },
+   "patches": [
+    {
+     "path": "patches/freetype/enable-cleartype-subpixel.patch",
+     "subject": "",
+     "hunks": "5e77ae8b4aaf2002"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:components/frei0r.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DWITHOUT_OPENCV=ON -DWITHOUT_GAVL=ON"
+   }
+  },
+  "freedesktop-sdk.bst:components/fribidi.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Ddocs=false"
+   }
+  },
+  "freedesktop-sdk.bst:components/fuse-overlayfs.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/fuse3.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Duseroot=false -Dexamples=false -Dtests=false"
+   }
+  },
+  "freedesktop-sdk.bst:components/gcc-libs.bst": {
+   "kind": "filter",
+   "build": {
+    "element": "freedesktop-sdk.bst:components/_private/gcc-base.bst",
+    "kind": "autotools",
+    "options": {
+     "conf-local": "--target=%{triplet} --disable-multilib --enable-multiarch --disable-bootstrap --enable-languages=c,c++,fortran,objc,obj-c++ --enable-default-pie --enable-default-ssp --with-isl --disable-libssp --enable-linker-build-id --disable-libstdcxx-filesystem-ts --enable-cet --with-system-zlib --with-zstd %{conf-arch}"
+    },
+    "conditional_variables": true,
+    "patches": [
+     {
+      "path": "patches/gcc/build-fix-CXXFLAGS_FOR_BUILD-passing.patch",
+      "subject": "build: fix CXXFLAGS_FOR_BUILD passing",
+      "hunks": "d00d41a05a03dd84"
+     },
+     {
+      "path": "patches/gcc/c-do-not-hash-TYPENAME_TYPEs-on-pointers-PR124811.patch",
+      "subject": "c++: do not hash TYPENAME_TYPEs on pointers [PR124811]",
+      "hunks": "c4271c95b82f6ed5"
+     },
+     {
+      "path": "patches/gcc/gcc-multiarch-enable-riscv.patch",
+      "subject": "",
+      "hunks": "c867a8b29eaa897d"
+     },
+     {
+      "path": "patches/gcc/gcc-multiarch-no-cross-structure.patch",
+      "subject": "",
+      "hunks": "b8bfb1c885958495"
+     },
+     {
+      "path": "patches/gcc/gcc-multiarch-os-dir.patch",
+      "subject": "",
+      "hunks": "df7f1a8625670165"
+     }
+    ]
+   }
+  },
+  "freedesktop-sdk.bst:components/gcc.bst": {
+   "kind": "filter",
+   "build": {
+    "element": "freedesktop-sdk.bst:components/_private/gcc-base.bst",
+    "kind": "autotools",
+    "options": {
+     "conf-local": "--target=%{triplet} --disable-multilib --enable-multiarch --disable-bootstrap --enable-languages=c,c++,fortran,objc,obj-c++ --enable-default-pie --enable-default-ssp --with-isl --disable-libssp --enable-linker-build-id --disable-libstdcxx-filesystem-ts --enable-cet --with-system-zlib --with-zstd %{conf-arch}"
+    },
+    "conditional_variables": true,
+    "patches": [
+     {
+      "path": "patches/gcc/build-fix-CXXFLAGS_FOR_BUILD-passing.patch",
+      "subject": "build: fix CXXFLAGS_FOR_BUILD passing",
+      "hunks": "d00d41a05a03dd84"
+     },
+     {
+      "path": "patches/gcc/c-do-not-hash-TYPENAME_TYPEs-on-pointers-PR124811.patch",
+      "subject": "c++: do not hash TYPENAME_TYPEs on pointers [PR124811]",
+      "hunks": "c4271c95b82f6ed5"
+     },
+     {
+      "path": "patches/gcc/gcc-multiarch-enable-riscv.patch",
+      "subject": "",
+      "hunks": "c867a8b29eaa897d"
+     },
+     {
+      "path": "patches/gcc/gcc-multiarch-no-cross-structure.patch",
+      "subject": "",
+      "hunks": "b8bfb1c885958495"
+     },
+     {
+      "path": "patches/gcc/gcc-multiarch-os-dir.patch",
+      "subject": "",
+      "hunks": "df7f1a8625670165"
+     }
+    ]
+   }
+  },
+  "freedesktop-sdk.bst:components/gdbm.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/genpeimg.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/geoclue-libs.bst": {
+   "kind": "filter",
+   "build": {
+    "element": "freedesktop-sdk.bst:components/_private/geoclue-base.bst",
+    "kind": "meson",
+    "options": {
+     "meson-local": "-D3g-source=true -Dcdma-source=true -Dmodem-gps-source=true -Ddemo-agent=false"
+    }
+   }
+  },
+  "freedesktop-sdk.bst:components/geoclue.bst": {
+   "kind": "filter",
+   "build": {
+    "element": "freedesktop-sdk.bst:components/_private/geoclue-base.bst",
+    "kind": "meson",
+    "options": {
+     "meson-local": "-D3g-source=true -Dcdma-source=true -Dmodem-gps-source=true -Ddemo-agent=false"
+    }
+   }
+  },
+  "freedesktop-sdk.bst:components/gettext.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "ac_cv_func_posix_spawn_file_actions_addchdir=yes"
+   }
+  },
+  "freedesktop-sdk.bst:components/gflags.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DLIB_INSTALL_DIR:STRING=\"%{lib}\""
+   }
+  },
+  "freedesktop-sdk.bst:components/ghostscript.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--with-drivers=ALL --with-system-libtiff=yes --with-local-zlib=yes"
+   },
+   "dakota_junction_patches": [
+    "0001-ghostscript-use-bundled-zlib-for-rom.patch"
+   ]
+  },
+  "freedesktop-sdk.bst:components/giflib.bst": {
+   "kind": "manual"
+  },
+  "freedesktop-sdk.bst:components/git-lfs.bst": {
+   "kind": "manual"
+  },
+  "freedesktop-sdk.bst:components/git.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dtests=false -Dcoccinelle=disabled -Dbenchmarks=disabled -Dgitk=disabled -Dgit_gui=disabled -Ddocs=man"
+   }
+  },
+  "freedesktop-sdk.bst:components/glibc-gconv-cache.bst": {
+   "kind": "manual"
+  },
+  "freedesktop-sdk.bst:components/glslang.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DCMAKE_SKIP_RPATH:BOOL=yes -DBUILD_SHARED_LIBS:BOOL=yes -DENABLE_OPT=\"OFF\""
+   },
+   "patches": [
+    {
+     "path": "patches/spirv-tools/Remove-libSPIRV-Tools-shared.so.patch",
+     "subject": "",
+     "hunks": "cd1a2c486530f8b2"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:components/gmp.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--enable-cxx --enable-fat"
+   },
+   "patches": [
+    {
+     "path": "patches/gmp/Complete-function-prototype-in-acinclude.m4-for-C23-.patch",
+     "subject": "Complete function prototype in acinclude.m4 for C23",
+     "hunks": "31a4543165f2dd6a"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:components/gnu-free-fonts.bst": {
+   "kind": "manual"
+  },
+  "freedesktop-sdk.bst:components/gnupg.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--enable-maintainer-mode \\ --disable-doc \\ --disable-all-tests \\ --enable-dirmngr \\ --disable-ldap"
+   },
+   "patches": [
+    {
+     "path": "patches/gnupg/gnupg-don-t-include-tests-with-tarred-data.patch",
+     "subject": "",
+     "hunks": "125f7b035bc9a647"
+    },
+    {
+     "path": "patches/gnupg/remove-Werror-from-configure.ac.patch",
+     "subject": "Remove -Werror from configure.ac This creates a dependency on",
+     "hunks": "e1f9e36938f9f6cb"
+    },
+    {
+     "path": "patches/gnupg/0001-session-env-Skip-DBUS_SESSION_BUS_ADDRESS-inside-Fla.patch",
+     "subject": "session-env: Skip DBUS_SESSION_BUS_ADDRESS inside Flatpak",
+     "hunks": "0510e20c37c80a8d"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:components/gnutls.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--disable-doc --with-default-trust-store-pkcs11=\"pkcs11:\" --disable-full-test-suite --without-nettle-mini --without-included-libtasn1"
+   },
+   "patches": [
+    {
+     "path": "patches/gnutls/cli-codegen-no-passwd.patch",
+     "subject": "",
+     "hunks": "a67a8d6ba65ed291"
+    },
+    {
+     "path": "patches/gnutls/drop-submodule.patch",
+     "subject": "",
+     "hunks": "dab6621cb3317cbd"
+    },
+    {
+     "path": "patches/gnutls/bootstrap-without-gtk-doc.patch",
+     "subject": "Allow bootstrapping with documentation disabled",
+     "hunks": "acd0b5bf60cb27b0"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:components/google-crosextra-caladea.bst": {
+   "kind": "manual"
+  },
+  "freedesktop-sdk.bst:components/google-crosextra-carlito.bst": {
+   "kind": "manual"
+  },
+  "freedesktop-sdk.bst:components/gpgme.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--enable-maintainer-mode --disable-glibtest --disable-gpgconf-test --disable-gpg-test --disable-gpgsm-test --disable-g13-test"
+   }
+  },
+  "freedesktop-sdk.bst:components/gpgmepp.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DENABLE_SHARED=ON -DBUILD_TESTING=OFF"
+   }
+  },
+  "freedesktop-sdk.bst:components/graphite2.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DCMAKE_C_FLAGS_RELEASE:STRING=-DNDEBUG -DCMAKE_CXX_FLAGS_RELEASE:STRING=-DNDEBUG -DBUILD_SHARED_LIBS:BOOL=ON -DBUILD_TESTING:BOOL=OFF -DGRAPHITE2_COMPARE_RENDERER=OFF"
+   },
+   "patches": [
+    {
+     "path": "patches/graphite2/graphite2-1.2.0-cmakepath.patch",
+     "subject": "",
+     "hunks": "51d8646fe04908ea"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:components/groff.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/grpc.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DBUILD_SHARED_LIBS=ON -DgRPC_SSL_PROVIDER=package -DgRPC_PROTOBUF_PROVIDER=package -DgRPC_ZLIB_PROVIDER=package -DgRPC_GFLAGS_PROVIDER=package -DgRPC_CARES_PROVIDER=package -DgRPC_ABSL_PROVIDER=package -DgRPC_INSTALL_LIBDIR=\"%{lib}\""
+   },
+   "patches": [
+    {
+     "path": "patches/grpc/absl.patch",
+     "subject": "",
+     "hunks": "f0cc6e2f31b0ef5f"
+    },
+    {
+     "path": "patches/grpc/unpin_cython.patch",
+     "subject": "",
+     "hunks": "eb0a15df98bf72b8"
+    },
+    {
+     "path": "patches/grpc/unvendor_absl.patch",
+     "subject": "",
+     "hunks": "ce2af10557a1965f"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:components/gstreamer-libav.bst": {
+   "kind": "meson",
+   "patches": [
+    {
+     "path": "patches/gstreamer/gst-libav-stop-caching-codecs.patch",
+     "subject": "",
+     "hunks": "699b4e5a8e8b0281"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:components/gstreamer-plugins-bad.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dauto_features=auto -Daom=enabled -Dbz2=enabled -Dcurl=enabled -Dfrei0r=enabled -Dgl=enabled -Dhls=enabled -Dintrospection=enabled -Dladspa=enabled -Dopenal=enabled -Dopus=enabled -Dorc=enabled -Dpackage-origin=\"freedesktop-sdk\" -Drsvg=enabled -Dsndfile=enabled -Dva=enabled -Dvulkan=enabled -Dv4l2codecs=enabled -Dwayland=enabled -Dwebp=enabled -Dsrtp=enabled -Dsvtav1=enabled -Dwildmidi=enabled"
+   },
+   "patches": [
+    {
+     "path": "patches/gstreamer/gst-libav-stop-caching-codecs.patch",
+     "subject": "",
+     "hunks": "699b4e5a8e8b0281"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:components/gstreamer-plugins-base.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dgl_api=opengl,gles2 -Dgl_platform=egl,glx -Dgl-graphene=enabled -Dgl-png=enabled -Dgl-jpeg=enabled -Dintrospection=enabled -Dpackage-origin=\"freedesktop-sdk\" -Dcdparanoia=disabled -Dlibvisual=disabled -Dtremor=disabled -Dexamples=disabled"
+   },
+   "conditional_variables": true,
+   "patches": [
+    {
+     "path": "patches/gstreamer/gst-libav-stop-caching-codecs.patch",
+     "subject": "",
+     "hunks": "699b4e5a8e8b0281"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:components/gstreamer-plugins-good.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dpackage-origin=\"freedesktop-sdk\" -Dv4l2-libv4l2=enabled -Dv4l2-gudev=enabled -Daalib=disabled -Djack=disabled -Dlibcaca=disabled -Ddv=disabled -Ddv1394=disabled -Dqt5=disabled -Dqt6=disabled -Dshout2=disabled -Dtwolame=disabled -Dexamples=disabled -Drpicamsrc=disabled -Dximagesrc-navigation=disabled -Damrnb=disabled -Damrwbdec=disabled -Dximagesrc=disabled"
+   },
+   "patches": [
+    {
+     "path": "patches/gstreamer/gst-libav-stop-caching-codecs.patch",
+     "subject": "",
+     "hunks": "699b4e5a8e8b0281"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:components/gstreamer-plugins-rs.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dauto_features=disabled -Dtests=disabled -Ddoc=enabled -Drtp=enabled -Dgif=enabled -Dhlssink3=enabled -Ddav1d=enabled"
+   },
+   "conditional_variables": true,
+   "patches": [
+    {
+     "path": "patches/gstreamer-plugins-rs/gst-plugins-rs-0.13.0-libsodium-sys-riscv64.patch",
+     "subject": "",
+     "hunks": "8c59dc28fffa89e1"
+    },
+    {
+     "path": "patches/gstreamer-plugins-rs/0001-Update-Cargo.lock-for-non-git-dependencies.patch",
+     "subject": "Update Cargo.lock for non-git dependencies",
+     "hunks": "fcca3fe8e251a649"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:components/gstreamer-plugins-ugly.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dauto_features=disabled -Dpackage-origin=\"freedesktop-sdk\"",
+    "meson-extra": "-Dgpl=disabled -Dx264=disabled -Dasfdemux=enabled -Ddvdlpcmdec=enabled -Ddvdsub=enabled -Drealmedia=enabled"
+   },
+   "patches": [
+    {
+     "path": "patches/gstreamer/gst-libav-stop-caching-codecs.patch",
+     "subject": "",
+     "hunks": "699b4e5a8e8b0281"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:components/gstreamer.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dexamples=disabled -Dbenchmarks=disabled -Dintrospection=enabled -Dlibunwind=enabled -Dlibdw=enabled -Ddbghelp=disabled -Dbash-completion=disabled -Dpackage-origin=\"freedesktop-sdk\""
+   },
+   "patches": [
+    {
+     "path": "patches/gstreamer/gst-libav-stop-caching-codecs.patch",
+     "subject": "",
+     "hunks": "699b4e5a8e8b0281"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:components/harfbuzz.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dcairo=disabled -Dchafa=disabled -Dgraphite2=enabled -Dtests=disabled -Dgpu_demo=disabled"
+   }
+  },
+  "freedesktop-sdk.bst:components/hicolor-icon-theme.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/hidapi.bst": {
+   "kind": "cmake"
+  },
+  "freedesktop-sdk.bst:components/highway.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DBUILD_SHARED_LIBS=ON -DBUILD_TESTING=OFF"
+   }
+  },
+  "freedesktop-sdk.bst:components/hunspell.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--with-readline \\ --with-ui"
+   }
+  },
+  "freedesktop-sdk.bst:components/hwdata.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/hyphen.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/iana-config.bst": {
+   "kind": "manual"
+  },
+  "freedesktop-sdk.bst:components/icu.bst": {
+   "kind": "autotools",
+   "patches": [
+    {
+     "path": "patches/icu/icu-fix-shared-linking.patch",
+     "subject": "",
+     "hunks": "8254583247d86c59"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:components/inih.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Ddistro_install=true"
+   }
+  },
+  "freedesktop-sdk.bst:components/iproute2.bst": {
+   "kind": "make"
+  },
+  "freedesktop-sdk.bst:components/iptables.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/iputils.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-DBUILD_MANS=false -DSKIP_TESTS=true"
+   }
+  },
+  "freedesktop-sdk.bst:components/iso-codes.bst": {
+   "kind": "meson"
+  },
+  "freedesktop-sdk.bst:components/itstool.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "PYTHON=\"/usr/bin/python3\""
+   }
+  },
+  "freedesktop-sdk.bst:components/jansson.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/jpeg.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DCMAKE_SKIP_RPATH:BOOL=YES -DENABLE_STATIC:BOOL=NO"
+   }
+  },
+  "freedesktop-sdk.bst:components/jq.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/json-c.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DBUILD_STATIC_LIBS=OFF"
+   }
+  },
+  "freedesktop-sdk.bst:components/kbd.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/keyutils.bst": {
+   "kind": "make"
+  },
+  "freedesktop-sdk.bst:components/kmod.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--with-xz --with-zlib --with-zstd --with-openssl --enable-tools"
+   }
+  },
+  "freedesktop-sdk.bst:components/ladspa-sdk.bst": {
+   "kind": "make"
+  },
+  "freedesktop-sdk.bst:components/lame.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--enable-dynamic-frontends"
+   },
+   "patches": [
+    {
+     "path": "patches/lame/lame-4.0-pkgconfig-to-get-correct-libs.patch",
+     "subject": "lame-4.0 pkgconfig to get correct libs",
+     "hunks": "93d51cdbb19aa8f4"
+    },
+    {
+     "path": "patches/lame/svn-r6562.patch",
+     "subject": "",
+     "hunks": "87927376e3de5b3a"
+    },
+    {
+     "path": "patches/lame/svn-r6564.patch",
+     "subject": "",
+     "hunks": "b0819ebed45eca60"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:components/lcms.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--with-threads --with-tiff --with-jpeg"
+   }
+  },
+  "freedesktop-sdk.bst:components/less.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/libaio.bst": {
+   "kind": "make"
+  },
+  "freedesktop-sdk.bst:components/libapparmor.bst": {
+   "kind": "filter",
+   "build": {
+    "element": "freedesktop-sdk.bst:components/_private/apparmor-base.bst",
+    "kind": "autotools"
+   }
+  },
+  "freedesktop-sdk.bst:components/libarchive.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/libassuan.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--enable-maintainer-mode"
+   }
+  },
+  "freedesktop-sdk.bst:components/libatasmart.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/libavif.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DBUILD_SHARED_LIBS=ON -DAVIF_BUILD_GDK_PIXBUF=ON -DAVIF_CODEC_AOM=SYSTEM -DAVIF_CODEC_DAV1D=SYSTEM -DAVIF_CODEC_SVT=SYSTEM -DAVIF_LIBYUV=OFF -DAVIF_BUILD_EXAMPLES=OFF -DAVIF_BUILD_APPS=OFF -DAVIF_BUILD_TESTS=OFF -DAVIF_ENABLE_GTEST=OFF"
+   }
+  },
+  "freedesktop-sdk.bst:components/libblockdev.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--without-dmraid --without-nvdimm --with-mdraid"
+   }
+  },
+  "freedesktop-sdk.bst:components/libbpf.bst": {
+   "kind": "make"
+  },
+  "freedesktop-sdk.bst:components/libbytesize.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/libcamera.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dgstreamer=enabled -Dpipelines=auto -Dudev=enabled -Dv4l2=true -Dtracing=disabled -Dtest=false -Dlc-compliance=disabled -Dqcam=disabled -Ddocumentation=disabled -Dpycamera=disabled -Dcam-output-sdl2=disabled"
+   },
+   "conditional_variables": true,
+   "patches": [
+    {
+     "path": "patches/libcamera/disable-ipa-sign.patch",
+     "subject": "",
+     "hunks": "9f99aa29076ffa2b"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:components/libcap-ng.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/libcap.bst": {
+   "kind": "make",
+   "patches": [
+    {
+     "path": "patches/libcap/libcap-disable-tests.patch",
+     "subject": "",
+     "hunks": "109bf68c6c5c697a"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:components/libcbor.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DBUILD_SHARED_LIBS:BOOL=ON"
+   }
+  },
+  "freedesktop-sdk.bst:components/libcupsfilters.bst": {
+   "kind": "autotools",
+   "patches": [
+    {
+     "path": "patches/libcupsfilters/missing-root-object.patch",
+     "subject": "",
+     "hunks": "1bd6b336c8458ef8"
+    },
+    {
+     "path": "patches/libcupsfilters/close-output-stream.patch",
+     "subject": "",
+     "hunks": "8dfca744d94b43a8"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:components/libdaemon.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/libdatrie.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/libdbus.bst": {
+   "kind": "filter",
+   "build": {
+    "element": "freedesktop-sdk.bst:components/_private/dbus-base.bst",
+    "kind": "meson",
+    "options": {
+     "meson-local": "-Dlibaudit=disabled -Dsystem_socket=\"/run/dbus/system_bus_socket\" -Duser_session=true -Dducktype_docs=disabled -Dqt_help=disabled -Dmodular_tests=disabled -Drelocation=disabled -Dselinux=disabled -Dkqueue=disabled -Dlaunchd=disabled -Dx11_autolaunch=disabled -Ddoxygen_docs=enabled -Dxml_docs=enabled"
+    }
+   }
+  },
+  "freedesktop-sdk.bst:components/libdecor.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Ddemo=false -Ddbus=disabled"
+   }
+  },
+  "freedesktop-sdk.bst:components/libdevmapper.bst": {
+   "kind": "filter",
+   "build": {
+    "element": "freedesktop-sdk.bst:components/_private/lvm2-base.bst",
+    "kind": "autotools",
+    "options": {
+     "conf-local": "--enable-dmeventd --enable-cmdlib --enable-pkgconfig --enable-udev_sync --enable-udev_rules --with-confdir=%{sysconfdir} --with-staticdir=%{sbindir} --with-usrlibdir=%{libdir} --with-usrsbindir=%{sbindir} --with-default-event-activation=0"
+    },
+    "patches": [
+     {
+      "path": "patches/lvm2/force-run-dir.patch",
+      "subject": "",
+      "hunks": "dc395003c6708570"
+     }
+    ]
+   }
+  },
+  "freedesktop-sdk.bst:components/libdrm.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dintel=disabled -Dradeon=disabled -Damdgpu=disabled -Dnouveau=disabled -Dvmwgfx=disabled -Domap=disabled -Dexynos=disabled -Dfreedreno=disabled -Dtegra=disabled -Dvc4=disabled -Detnaviv=disabled -Dcairo-tests=disabled -Dvalgrind=disabled -Dudev=false"
+   }
+  },
+  "freedesktop-sdk.bst:components/libebur128.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DCMAKE_POLICY_VERSION_MINIMUM=3.5"
+   }
+  },
+  "freedesktop-sdk.bst:components/libeconf.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DBUILD_TESTING=OFF"
+   }
+  },
+  "freedesktop-sdk.bst:components/libei.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dtests=disabled"
+   }
+  },
+  "freedesktop-sdk.bst:components/libepoxy.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Ddocs=false -Dglx=yes -Degl=yes -Dx11=true -Dtests=false"
+   }
+  },
+  "freedesktop-sdk.bst:components/liberation-fonts.bst": {
+   "kind": "manual"
+  },
+  "freedesktop-sdk.bst:components/libevdev.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dtests=disabled -Ddocumentation=enabled"
+   }
+  },
+  "freedesktop-sdk.bst:components/libevent.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/libexif.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/libffi.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--without-gcc-arch"
+   }
+  },
+  "freedesktop-sdk.bst:components/libfido2.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DBUILD_STATIC_LIBS:BOOL=FALSE"
+   }
+  },
+  "freedesktop-sdk.bst:components/libfl.bst": {
+   "kind": "filter",
+   "build": {
+    "element": "freedesktop-sdk.bst:components/_private/flex-base.bst",
+    "kind": "autotools",
+    "patches": [
+     {
+      "path": "patches/flex/flex-pie.patch",
+      "subject": "",
+      "hunks": "a0fedb657979a7c7"
+     }
+    ]
+   }
+  },
+  "freedesktop-sdk.bst:components/libflac.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--enable-cpplibs \\ --enable-ogg"
+   }
+  },
+  "freedesktop-sdk.bst:components/libfyaml.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DENABLE_NETWORK=OFF -DBUILD_TESTING=OFF -DENABLE_LIBCLANG=OFF"
+   },
+   "conditional_variables": true,
+   "patches": [
+    {
+     "path": "patches/libfyaml/i686-build-fix.patch",
+     "subject": "Fix build on i686",
+     "hunks": "8b0a59859172c4d2"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:components/libgcrypt.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--enable-maintainer-mode --disable-doc --enable-asm"
+   },
+   "conditional_variables": true
+  },
+  "freedesktop-sdk.bst:components/libglvnd.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dheaders=false -Dasm=enabled"
+   },
+   "conditional_variables": true
+  },
+  "freedesktop-sdk.bst:components/libgpg-error.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--enable-maintainer-mode \\ --disable-doc"
+   }
+  },
+  "freedesktop-sdk.bst:components/libgudev.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dtests=disabled -Dvapi=enabled -Dintrospection=enabled"
+   }
+  },
+  "freedesktop-sdk.bst:components/libgusb.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dtests=false"
+   }
+  },
+  "freedesktop-sdk.bst:components/libheif.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DCMAKE_COMPILE_WARNING_AS_ERROR=OFF -DENABLE_PLUGIN_LOADING=ON -DPLUGIN_INSTALL_DIRECTORY=\"/usr/lib/%{gcc_triplet}/codecs-extra/lib/libheif\" -DPLUGIN_DIRECTORY=\"/usr/lib/%{gcc_triplet}/codecs-extra/lib/libheif\" -DWITH_LIBDE265_PLUGIN=\"OFF\" -DWITH_X265_PLUGIN=\"OFF\" -DWITH_DAV1D=ON -DWITH_DAV1D_PLUGIN=OFF -DWITH_AOM_ENCODER=ON -DWITH_AOM_ENCODER_PLUGIN=OFF -DWITH_AOM_DECODER=ON -DWITH_AOM_DECODER_PLUGIN=OFF -DWITH_JPEG_DECODER=ON -DWITH_JPEG_DECODER_PLUGIN=OFF -DWITH_JPEG_ENCODER=ON -DWITH_JPEG_ENCODER_PLUGIN=OFF -DWITH_OpenJPEG_DECODER=ON -DWITH_OpenJPEG_DECODER_PLUGIN=OFF -DWITH_OpenJPEG_ENCODER=ON -DWITH_OpenJPEG_ENCODER_PLUGIN=OFF -DWITH_EXAMPLES=OFF -DBUILD_TESTING=OFF -DWITH_SvtEnc=ON -DWITH_SvtEnc_PLUGIN=OFF -DWITH_OpenH264_ENCODER=OFF -DWITH_OpenH264_DECODER=OFF -DWITH_X264=OFF",
+    "cmake-extra": "-DWITH_GDK_PIXBUF=OFF -DWITH_X265=OFF -DWITH_LIBDE265=OFF"
+   }
+  },
+  "freedesktop-sdk.bst:components/libidn2.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/libinput.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Ddebug-gui=false -Ddocumentation=false -Dtests=false -Dzshcompletiondir=no"
+   }
+  },
+  "freedesktop-sdk.bst:components/libjxl.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DBUILD_SHARED_LIBS=ON -DBUILD_TESTING=OFF -DJPEGXL_BUNDLE_LIBPNG=OFF -DJPEGXL_ENABLE_BENCHMARK=OFF -DJPEGXL_ENABLE_COVERAGE=OFF -DJPEGXL_ENABLE_DEVTOOLS=OFF -DJPEGXL_ENABLE_EXAMPLES=OFF -DJPEGXL_ENABLE_FUZZERS=OFF -DJPEGXL_ENABLE_JPEGLI=OFF -DJPEGXL_ENABLE_OPENEXR=OFF -DJPEGXL_ENABLE_PLUGINS=ON -DJPEGXL_ENABLE_PLUGIN_GIMP210=OFF -DJPEGXL_ENABLE_SJPEG=OFF -DJPEGXL_ENABLE_SKCMS=OFF -DJPEGXL_ENABLE_TCMALLOC=OFF -DJPEGXL_ENABLE_TOOLS=OFF -DJPEGXL_ENABLE_VIEWERS=OFF -DJPEGXL_FORCE_SYSTEM_BROTLI=ON -DJPEGXL_FORCE_SYSTEM_HWY=ON -DJPEGXL_FORCE_SYSTEM_LCMS2=ON -DJPEGXL_STATIC=OFF -DJPEGXL_TEST_TOOLS=OFF -DJPEGXL_WARNINGS_AS_ERRORS=OFF -DJPEGXL_BUNDLE_LIBPNG=OFF -DJPEGXL_ENABLE_DOXYGEN=ON"
+   },
+   "conditional_variables": true
+  },
+  "freedesktop-sdk.bst:components/libksba.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--enable-maintainer-mode"
+   }
+  },
+  "freedesktop-sdk.bst:components/liblc3.bst": {
+   "kind": "meson"
+  },
+  "freedesktop-sdk.bst:components/libmbim.bst": {
+   "kind": "meson"
+  },
+  "freedesktop-sdk.bst:components/libmicrohttpd.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--disable-examples --disable-tools --enable-https --with-gnutls --enable-largefile"
+   }
+  },
+  "freedesktop-sdk.bst:components/libmnl.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/libmysofa.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DBUILD_TESTS=OFF -DBUILD_STATIC_LIBS=OFF"
+   }
+  },
+  "freedesktop-sdk.bst:components/libndp.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/libnftnl.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/libnghttp2.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--enable-lib-only --disable-openssl"
+   }
+  },
+  "freedesktop-sdk.bst:components/libnghttp3.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DENABLE_LIB_ONLY=ON -DENABLE_STATIC_LIB=OFF -DBUILD_TESTING=OFF"
+   },
+   "patches": [
+    {
+     "path": "patches/libnghttp3/0001-lib-CMakeLists.txt-Include-GNUInstallDirs-to-use-CMA.patch",
+     "subject": "lib/CMakeLists.txt: Include GNUInstallDirs to use",
+     "hunks": "cd8b481fba69944b"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:components/libngtcp2.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DENABLE_STATIC_LIB=OFF -DENABLE_LIB_ONLY=ON -DENABLE_GNUTLS=ON -DENABLE_OPENSSL=ON -DBUILD_TESTING=OFF"
+   },
+   "patches": [
+    {
+     "path": "patches/libngtcp2/0001-lib-CMakeLists.txt-Include-GNUInstallDirs-to-use-CMA.patch",
+     "subject": "lib/CMakeLists.txt: Include GNUInstallDirs to use",
+     "hunks": "27d39c9f7a103a4c"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:components/libnice.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dgupnp=disabled -Dexamples=disabled"
+   }
+  },
+  "freedesktop-sdk.bst:components/libnl.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/libnvme.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dliburing=enabled"
+   }
+  },
+  "freedesktop-sdk.bst:components/libogg.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DBUILD_SHARED_LIBS:BOOL=ON"
+   }
+  },
+  "freedesktop-sdk.bst:components/libp11.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/libpaper.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/libpipeline.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/libpng.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/libppd.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/libproxy.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dtests=false -Drelease=true"
+   }
+  },
+  "freedesktop-sdk.bst:components/libpsl.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/libpulse.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dalsa=disabled -Dasyncns=disabled -Davahi=disabled -Dbluez5=disabled -Dfftw=disabled -Ddbus=disabled -Dsystemd=disabled -Dgtk=disabled -Dgstreamer=disabled -Djack=disabled -Delogind=disabled -Dlirc=disabled -Dorc=disabled -Dsoxr=disabled -Dspeex=disabled -Dtcpwrap=disabled -Dtests=false -Dudev=disabled -Dwebrtc-aec=disabled -Dvalgrind=disabled -Dx11=disabled -Dbluez5-gstreamer=disabled -Ddaemon=false"
+   },
+   "patches": [
+    {
+     "path": "patches/pulseaudio/meson-disable-doxygen.patch",
+     "subject": "",
+     "hunks": "6391cbb0cb1eaa93"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:components/libqmi.bst": {
+   "kind": "meson"
+  },
+  "freedesktop-sdk.bst:components/libqrtr-glib.bst": {
+   "kind": "meson"
+  },
+  "freedesktop-sdk.bst:components/libsamplerate.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--enable-sndfile"
+   }
+  },
+  "freedesktop-sdk.bst:components/libseccomp.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/libslirp.bst": {
+   "kind": "meson"
+  },
+  "freedesktop-sdk.bst:components/libsrtp2.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dtests=disabled -Dpcap-tests=disabled -Dcrypto-library=openssl -Dcrypto-library-kdf=disabled"
+   }
+  },
+  "freedesktop-sdk.bst:components/libtasn1.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/libthai.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/libtheora.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--disable-examples"
+   }
+  },
+  "freedesktop-sdk.bst:components/libtiff.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/libtirpc.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--disable-gssapi"
+   }
+  },
+  "freedesktop-sdk.bst:components/libtool.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/libtraceevent.bst": {
+   "kind": "meson"
+  },
+  "freedesktop-sdk.bst:components/libunistring.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/libunwind.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--disable-tests"
+   },
+   "patches": [
+    {
+     "path": "patches/libunwind/0001-configure-Fix-WCClinker-typo-should-be-XCClinker.patch",
+     "subject": "configure: Fix -WCClinker typo; should be -XCClinker",
+     "hunks": "2a6925d57923c4f7"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:components/liburcu.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/liburing.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-args": "--prefix=%{prefix} --includedir=%{includedir} --libdir=%{libdir} --libdevdir=%{libdir} --mandir=%{mandir} --datadir=%{datadir}"
+   }
+  },
+  "freedesktop-sdk.bst:components/libusb.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/libva.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Ddriverdir=\"%{libdir}/dri:%{libdir}/dri/intel-vaapi-driver:%{libdir}/dri/nvidia-vaapi-driver:%{libdir}/GL/lib/dri\" \\ -Dwith_glx=no \\ -Dwith_wayland=yes \\ -Dwith_x11=yes"
+   }
+  },
+  "freedesktop-sdk.bst:components/libvdpau.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dmoduledir=%{libdir}/GL/vdpau -Ddri2=true"
+   }
+  },
+  "freedesktop-sdk.bst:components/libvorbis.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/libvpx.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-args": "--prefix=\"%{prefix}\" \\ --libdir=\"%{libdir}\" \\ --enable-pic \\ --enable-optimizations \\ --target=\"%{vpxtarget}\" \\ --disable-static \\ --enable-shared \\ --enable-vp8 \\ --enable-vp9 \\ --enable-libs \\ --disable-install-docs \\ --as=nasm \\ --enable-vp9-highbitdepth"
+   },
+   "conditional_variables": true
+  },
+  "freedesktop-sdk.bst:components/libwacom.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dtests=disabled"
+   }
+  },
+  "freedesktop-sdk.bst:components/libwebp.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--disable-wic \\ --enable-jpeg \\ --enable-png \\ --enable-gif \\ --enable-tiff \\ --enable-libwebpmux \\ --enable-libwebpdemux \\ --enable-libwebpdecoder \\ --enable-threading"
+   }
+  },
+  "freedesktop-sdk.bst:components/libxkbcommon.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Denable-docs=false -Denable-x11=true -Denable-tools=false"
+   }
+  },
+  "freedesktop-sdk.bst:components/libxml2.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--with-icu --with-http --with-zlib --with-lzml --with-python CPPFLAGS=\"$(pkg-config --cflags-only-I python3)\""
+   }
+  },
+  "freedesktop-sdk.bst:components/libxmlb.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dtests=false"
+   }
+  },
+  "freedesktop-sdk.bst:components/libxslt.bst": {
+   "kind": "autotools",
+   "patches": [
+    {
+     "path": "patches/libxslt/0001-Make-PACKAGE_PREFIX_DIR-honour-arch-triplet-libdir.patch",
+     "subject": "",
+     "hunks": "418cdbda2af3cf70"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:components/libyaml.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/linux-firmware.bst": {
+   "kind": "make"
+  },
+  "freedesktop-sdk.bst:components/linux-pam-base.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dpam_lastlog=enabled -Dexamples=false -Dlogind=disabled -Dnis=disabled -Dselinux=disabled -Ddocs=disabled -Delogind=disabled -Dpwaccess=disabled"
+   }
+  },
+  "freedesktop-sdk.bst:components/linux-pam.bst": {
+   "kind": "manual"
+  },
+  "freedesktop-sdk.bst:components/locales.bst": {
+   "kind": "script"
+  },
+  "freedesktop-sdk.bst:components/lua.bst": {
+   "kind": "make"
+  },
+  "freedesktop-sdk.bst:components/lvm2.bst": {
+   "kind": "filter",
+   "build": {
+    "element": "freedesktop-sdk.bst:components/_private/lvm2-base.bst",
+    "kind": "autotools",
+    "options": {
+     "conf-local": "--enable-dmeventd --enable-cmdlib --enable-pkgconfig --enable-udev_sync --enable-udev_rules --with-confdir=%{sysconfdir} --with-staticdir=%{sbindir} --with-usrlibdir=%{libdir} --with-usrsbindir=%{sbindir} --with-default-event-activation=0"
+    },
+    "patches": [
+     {
+      "path": "patches/lvm2/force-run-dir.patch",
+      "subject": "",
+      "hunks": "dc395003c6708570"
+     }
+    ]
+   }
+  },
+  "freedesktop-sdk.bst:components/lz4.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dprograms=true"
+   }
+  },
+  "freedesktop-sdk.bst:components/lzip.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "CXXFLAGS=\"$CXXFLAGS\" \\ LDFLAGS=\"$LDFLAGS\""
+   }
+  },
+  "freedesktop-sdk.bst:components/lzo.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/man-db.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--disable-cache-owner"
+   }
+  },
+  "freedesktop-sdk.bst:components/mdadm.bst": {
+   "kind": "make"
+  },
+  "freedesktop-sdk.bst:components/modemmanager.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dudevdir='%{indep-libdir}/udev'"
+   }
+  },
+  "freedesktop-sdk.bst:components/mpfr.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/mpg123.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--with-default-audio=pulse \\ --with-audio=pulse"
+   }
+  },
+  "freedesktop-sdk.bst:components/mtdev.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/mythes.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/nano.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/netavark.bst": {
+   "kind": "make"
+  },
+  "freedesktop-sdk.bst:components/nettle.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/networkmanager.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Diwd=true -Dpolkit=true -Dppp=false -Dmodem_manager=false -Dqt=false -Dtests=no"
+   },
+   "conditional_variables": true
+  },
+  "freedesktop-sdk.bst:components/newt.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/nftables.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--with-cli=readline --with-json"
+   }
+  },
+  "freedesktop-sdk.bst:components/noto-emoji.bst": {
+   "kind": "manual"
+  },
+  "freedesktop-sdk.bst:components/npth.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/nspr.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": ""
+   },
+   "conditional_variables": true
+  },
+  "freedesktop-sdk.bst:components/nss.bst": {
+   "kind": "manual",
+   "conditional_variables": true,
+   "patches": [
+    {
+     "path": "patches/nss/pkg-config-libdir.patch",
+     "subject": "",
+     "hunks": "b967303f66d93aa8"
+    },
+    {
+     "path": "patches/nss/glibc243.patch",
+     "subject": "Bug 2012313 - fix build with glibc-2.43 assignment discards",
+     "hunks": "f18c46aa074d7903"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:components/open-iscsi.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Discsi_sbindir=\"%{sbindir}\""
+   }
+  },
+  "freedesktop-sdk.bst:components/open-isns.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dslp=disabled -Dsystemddir=\"%{indep-libdir}/systemd\""
+   }
+  },
+  "freedesktop-sdk.bst:components/openal.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DALSOFT_EXAMPLES=OFF"
+   },
+   "conditional_variables": true
+  },
+  "freedesktop-sdk.bst:components/opencl.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--enable-custom-vendordir=\"%{libdir}/GL/OpenCL/vendors\" --disable-update-database"
+   }
+  },
+  "freedesktop-sdk.bst:components/openjpeg.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DBUILD_SHARED_LIBS=ON -DBUILD_STATIC_LIBS=OFF -DOPENJPEG_INSTALL_LIB_DIR=%{lib}"
+   }
+  },
+  "freedesktop-sdk.bst:components/openssh-systemd.bst": {
+   "kind": "manual"
+  },
+  "freedesktop-sdk.bst:components/openssh.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--with-mantype=man --with-pam --with-pam-service=sshd --without-zlib-version-check --with-pid-dir=/run --with-security-key-builtin"
+   },
+   "conditional_variables": true
+  },
+  "freedesktop-sdk.bst:components/openssl.bst": {
+   "kind": "autotools",
+   "conditional_variables": true
+  },
+  "freedesktop-sdk.bst:components/opus.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DBUILD_SHARED_LIBS=ON -DBUILD_TESTING=OFF -DOPUS_DNN=OFF -DOPUS_DEEP_PLC=OFF -DOPUS_DRED=OFF -DOPUS_OSCE=OFF -DOPUS_CUSTOM_MODES=ON"
+   },
+   "conditional_variables": true
+  },
+  "freedesktop-sdk.bst:components/opusfile.bst": {
+   "kind": "autotools",
+   "patches": [
+    {
+     "path": "patches/opusfile/CVE-2022-40320.patch",
+     "subject": "Propagate allocation failure from ogg_sync_buffer.",
+     "hunks": "910ecbf6476c38b7"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:components/orc.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dorc-test=disabled -Dexamples=disabled -Dbenchmarks=disabled -Dtests=disabled -Dhotdoc=disabled"
+   }
+  },
+  "freedesktop-sdk.bst:components/ostree.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--with-dracut --with-libsystemd --with-systemd --with-libarchive --with-avahi --with-curl --without-soup"
+   }
+  },
+  "freedesktop-sdk.bst:components/p11-kit.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dsystemd=disabled -Dbash_completion=disabled -Dtrust_paths=%{sysconfdir}/pki/ca-trust/source:%{datadir}/pki/ca-trust-source"
+   }
+  },
+  "freedesktop-sdk.bst:components/parted.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/passt.bst": {
+   "kind": "make"
+  },
+  "freedesktop-sdk.bst:components/pciutils.bst": {
+   "kind": "make"
+  },
+  "freedesktop-sdk.bst:components/pcsc-lite.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dsystemdunit=\"system\""
+   }
+  },
+  "freedesktop-sdk.bst:components/pdfio.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/perl-sasl.bst": {
+   "kind": "makemaker"
+  },
+  "freedesktop-sdk.bst:components/perl-ssl.bst": {
+   "kind": "makemaker"
+  },
+  "freedesktop-sdk.bst:components/perl-ssleay.bst": {
+   "kind": "makemaker"
+  },
+  "freedesktop-sdk.bst:components/perl.bst": {
+   "kind": "make",
+   "patches": [
+    {
+     "path": "patches/perl/no-rpath-libpath.patch",
+     "subject": "",
+     "hunks": "84ba832d5905a61a"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:components/pipewire-daemon.bst": {
+   "kind": "filter",
+   "build": {
+    "element": "freedesktop-sdk.bst:components/_private/pipewire-base.bst",
+    "kind": "meson",
+    "options": {
+     "meson-local": "-Daudiotestsrc=disabled -Djack=disabled -Droc=disabled -Dvideotestsrc=disabled -Dvolume=disabled -Dvulkan=disabled -Ddocs=enabled -Dman=enabled -Dbluez5-codec-ldac=disabled -Dbluez5-codec-aptx=disabled -Dbluez5-codec-aac=disabled -Dlibcamera=enabled -Dpipewire-v4l2=disabled -Dlibcanberra=disabled -Dbluez5-codec-lc3plus=disabled -Dlv2=disabled -Dlibjack-path=%{libdir} -Djack-devel=true -Dudevrulesdir=$(pkg-config --variable=udevdir udev)/rules.d -Dsession-managers=[] -Dlibffado=disabled -Dsdl2=disabled -Dsnap=disabled -Dfftw=enabled -Dbluez5-codec-ldac-dec=disabled -Dbluez5-plc-spandsp=disabled -Donnxruntime=disabled"
+    }
+   }
+  },
+  "freedesktop-sdk.bst:components/pipewire.bst": {
+   "kind": "filter",
+   "build": {
+    "element": "freedesktop-sdk.bst:components/_private/pipewire-base.bst",
+    "kind": "meson",
+    "options": {
+     "meson-local": "-Daudiotestsrc=disabled -Djack=disabled -Droc=disabled -Dvideotestsrc=disabled -Dvolume=disabled -Dvulkan=disabled -Ddocs=enabled -Dman=enabled -Dbluez5-codec-ldac=disabled -Dbluez5-codec-aptx=disabled -Dbluez5-codec-aac=disabled -Dlibcamera=enabled -Dpipewire-v4l2=disabled -Dlibcanberra=disabled -Dbluez5-codec-lc3plus=disabled -Dlv2=disabled -Dlibjack-path=%{libdir} -Djack-devel=true -Dudevrulesdir=$(pkg-config --variable=udevdir udev)/rules.d -Dsession-managers=[] -Dlibffado=disabled -Dsdl2=disabled -Dsnap=disabled -Dfftw=enabled -Dbluez5-codec-ldac-dec=disabled -Dbluez5-plc-spandsp=disabled -Donnxruntime=disabled"
+    }
+   }
+  },
+  "freedesktop-sdk.bst:components/pixman.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dtests=disabled -Ddemos=disabled -Dauto_features=auto -Drvv=disabled"
+   }
+  },
+  "freedesktop-sdk.bst:components/podman.bst": {
+   "kind": "make"
+  },
+  "freedesktop-sdk.bst:components/polkit-gobject.bst": {
+   "kind": "filter",
+   "build": {
+    "element": "freedesktop-sdk.bst:components/_private/polkit-base.bst",
+    "kind": "meson",
+    "options": {
+     "meson-local": "-Dsession_tracking=logind"
+    }
+   }
+  },
+  "freedesktop-sdk.bst:components/polkit.bst": {
+   "kind": "filter",
+   "build": {
+    "element": "freedesktop-sdk.bst:components/_private/polkit-base.bst",
+    "kind": "meson",
+    "options": {
+     "meson-local": "-Dsession_tracking=logind"
+    }
+   }
+  },
+  "freedesktop-sdk.bst:components/poppler.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DENABLE_QT5=OFF -DENABLE_QT6=OFF -DENABLE_BOOST=OFF"
+   }
+  },
+  "freedesktop-sdk.bst:components/popt.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/procps.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--with-ncurses --with-systemd"
+   }
+  },
+  "freedesktop-sdk.bst:components/protobuf.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-Dprotobuf_BUILD_TESTS:BOOL=OFF -Dprotobuf_ABSL_PROVIDER=package -DCMAKE_POSITION_INDEPENDENT_CODE=ON -Dprotobuf_BUILD_SHARED_LIBS=ON"
+   }
+  },
+  "freedesktop-sdk.bst:components/pwquality.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--with-python-binary=python3 --with-securedir=%{libdir}/security"
+   },
+   "patches": [
+    {
+     "path": "patches/pwquality/setuptools80.patch",
+     "subject": "",
+     "hunks": "9fff49a08237e9ff"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:components/pycairo.bst": {
+   "kind": "meson"
+  },
+  "freedesktop-sdk.bst:components/python3-arpy.bst": {
+   "kind": "pyproject"
+  },
+  "freedesktop-sdk.bst:components/python3-attrs.bst": {
+   "kind": "pyproject"
+  },
+  "freedesktop-sdk.bst:components/python3-blessings.bst": {
+   "kind": "pyproject"
+  },
+  "freedesktop-sdk.bst:components/python3-certifi.bst": {
+   "kind": "pyproject"
+  },
+  "freedesktop-sdk.bst:components/python3-chardet.bst": {
+   "kind": "pyproject",
+   "patches": [
+    {
+     "path": "patches/python3-chardet/0001-version.py-Remove-dev0-from-version-string.patch",
+     "subject": "version.py: Remove `dev0` from version string",
+     "hunks": "6ac928834a2634aa"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:components/python3-charset-normalizer.bst": {
+   "kind": "pyproject"
+  },
+  "freedesktop-sdk.bst:components/python3-click.bst": {
+   "kind": "pyproject"
+  },
+  "freedesktop-sdk.bst:components/python3-dbus.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dtests=false"
+   }
+  },
+  "freedesktop-sdk.bst:components/python3-dulwich.bst": {
+   "kind": "pyproject"
+  },
+  "freedesktop-sdk.bst:components/python3-grpcio.bst": {
+   "kind": "pyproject",
+   "patches": [
+    {
+     "path": "patches/grpc/absl.patch",
+     "subject": "",
+     "hunks": "f0cc6e2f31b0ef5f"
+    },
+    {
+     "path": "patches/grpc/unpin_cython.patch",
+     "subject": "",
+     "hunks": "eb0a15df98bf72b8"
+    },
+    {
+     "path": "patches/grpc/unvendor_absl.patch",
+     "subject": "",
+     "hunks": "ce2af10557a1965f"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:components/python3-idna.bst": {
+   "kind": "pyproject"
+  },
+  "freedesktop-sdk.bst:components/python3-jinja2.bst": {
+   "kind": "pyproject"
+  },
+  "freedesktop-sdk.bst:components/python3-lxml.bst": {
+   "kind": "pyproject",
+   "patches": [
+    {
+     "path": "patches/python3-lxml/0001-Revert-Avoid-Cython-3.3-for-lxml-6.1.x.patch",
+     "subject": "Revert \"Avoid Cython 3.3 for lxml 6.1.x.\"",
+     "hunks": "e1b71419d4a41adb"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:components/python3-mako.bst": {
+   "kind": "pyproject"
+  },
+  "freedesktop-sdk.bst:components/python3-markdown.bst": {
+   "kind": "pyproject"
+  },
+  "freedesktop-sdk.bst:components/python3-markupsafe.bst": {
+   "kind": "pyproject"
+  },
+  "freedesktop-sdk.bst:components/python3-nftables.bst": {
+   "kind": "pyproject"
+  },
+  "freedesktop-sdk.bst:components/python3-packaging.bst": {
+   "kind": "filter",
+   "build": {
+    "element": "freedesktop-sdk.bst:components/_private/python3-packaging.bst",
+    "kind": "pyproject"
+   }
+  },
+  "freedesktop-sdk.bst:components/python3-pil.bst": {
+   "kind": "pyproject",
+   "patches": [
+    {
+     "path": "patches/python3-pil/drop-pybind.patch",
+     "subject": "Drop pybind11",
+     "hunks": "c9c642a02b8296e3"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:components/python3-pluginbase.bst": {
+   "kind": "pyproject"
+  },
+  "freedesktop-sdk.bst:components/python3-ply.bst": {
+   "kind": "pyproject"
+  },
+  "freedesktop-sdk.bst:components/python3-protobuf.bst": {
+   "kind": "pyproject",
+   "conditional_variables": true
+  },
+  "freedesktop-sdk.bst:components/python3-psutil.bst": {
+   "kind": "pyproject"
+  },
+  "freedesktop-sdk.bst:components/python3-pyroaring.bst": {
+   "kind": "pyproject"
+  },
+  "freedesktop-sdk.bst:components/python3-pyyaml.bst": {
+   "kind": "pyproject"
+  },
+  "freedesktop-sdk.bst:components/python3-requests.bst": {
+   "kind": "pyproject"
+  },
+  "freedesktop-sdk.bst:components/python3-ruamel-yaml-clib.bst": {
+   "kind": "pyproject"
+  },
+  "freedesktop-sdk.bst:components/python3-ruamel-yaml.bst": {
+   "kind": "pyproject"
+  },
+  "freedesktop-sdk.bst:components/python3-setuptools.bst": {
+   "kind": "filter",
+   "build": {
+    "element": "freedesktop-sdk.bst:components/_private/python3-setuptools.bst",
+    "kind": "pyproject"
+   }
+  },
+  "freedesktop-sdk.bst:components/python3-typing-extensions.bst": {
+   "kind": "pyproject"
+  },
+  "freedesktop-sdk.bst:components/python3-ujson.bst": {
+   "kind": "pyproject"
+  },
+  "freedesktop-sdk.bst:components/python3-urllib3.bst": {
+   "kind": "pyproject",
+   "patches": [
+    {
+     "path": "patches/python3-urllib3/version.patch",
+     "subject": "Set only-version version scheme",
+     "hunks": "9f40a733e72a15c4"
+    },
+    {
+     "path": "patches/python3-urllib3/setuptools_scm_version.patch",
+     "subject": "Relax setuptools-scm constraint",
+     "hunks": "3710dc1ce727528e"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:components/python3.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--enable-shared --without-ensurepip --with-system-expat --with-system-ffi --enable-loadable-sqlite-extensions --with-dbmliborder=gdbm --with-lto --with-conf-includedir=\"%{includedir}/%{gcc_triplet}\" --without-static-libpython --with-platlibdir=lib"
+   },
+   "patches": [
+    {
+     "path": "patches/python3/python3-multiarch-include.patch",
+     "subject": "",
+     "hunks": "c3d9262ae79056b1"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:components/rsync.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--without-included-zlib --disable-zstd --disable-simd --disable-md2man"
+   }
+  },
+  "freedesktop-sdk.bst:components/rtkit.bst": {
+   "kind": "meson"
+  },
+  "freedesktop-sdk.bst:components/sbc.bst": {
+   "kind": "autotools",
+   "patches": [
+    {
+     "path": "patches/sbc/only-run-x86-code-on-x86.patch",
+     "subject": "Only run x86 code on x86",
+     "hunks": "e0dd47cd071d818a"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:components/sdl2-compat.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DSDL2COMPAT_TESTS:BOOL=OFF"
+   }
+  },
+  "freedesktop-sdk.bst:components/sdl3-image.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DSDLIMAGE_DEPS_SHARED:BOOL=OFF -DSDLIMAGE_TIF:BOOL=ON -DSDLIMAGE_WEBP:BOOL=ON -DSDLIMAGE_AVIF:BOOL=ON -DSDLIMAGE_JXL:BOOL=ON"
+   }
+  },
+  "freedesktop-sdk.bst:components/sdl3-mixer.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DBUILD_SHARED_LIBS=ON -DSDLMIXER_INSTALL=ON -DSDLMIXER_INSTALL_MAN=ON -DSDLMIXER_DEPS_SHARED=ON -DSDLMIXER_VENDORED=OFF -DSDLMIXER_STRICT=ON -DSDLMIXER_TESTS=OFF -DSDLMIXER_EXAMPLES=OFF -DSDLMIXER_EXAMPLES_INSTALL=OFF -DSDLMIXER_GME=OFF -DSDLMIXER_MOD_XMP=OFF -DSDLMIXER_MIDI_FLUIDSYNTH=OFF"
+   }
+  },
+  "freedesktop-sdk.bst:components/sdl3-net.bst": {
+   "kind": "cmake"
+  },
+  "freedesktop-sdk.bst:components/sdl3-ttf.bst": {
+   "kind": "cmake"
+  },
+  "freedesktop-sdk.bst:components/sdl3.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DBUILD_SHARED_LIBS:BOOL=ON -DSDL_TEST_LIBRARY:BOOL=OFF -DSDL_TESTS:BOOL=OFF -DSDL_EXAMPLES:BOOL=OFF -DSDL_ALSA:BOOL=OFF -DSDL_OSS:BOOL=OFF -DSDL_SNDIO:BOOL=OFF -DSDL_WAYLAND:BOOL=ON -DSDL_WAYLAND_SHARED:BOOL=OFF -DSDL_RPATH:BOOL=OFF -DSDL_WAYLAND_LIBDECOR=ON -DSDL_PIPEWIRE_SHARED:BOOL=ON -DSDL_X11_XSCRNSAVER:BOOL=OFF -DSDL_X11_XTEST:BOOL=OFF"
+   }
+  },
+  "freedesktop-sdk.bst:components/shaderc.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-Dglslang_SOURCE_DIR=\"%{includedir}/glslang\" -DSHADERC_SKIP_TESTS:BOOL=YES -DSHADERC_SKIP_EXAMPLES:BOOL=ON"
+   },
+   "patches": [
+    {
+     "path": "patches/shaderc/what-a-mess.patch",
+     "subject": "shaderc: Use system libraries",
+     "hunks": "0372e05470271d2a"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:components/shadow.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--with-libpam --without-selinux --without-libbsd --enable-man --disable-logind"
+   }
+  },
+  "freedesktop-sdk.bst:components/shared-mime-info.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dbuild-tests=false"
+   }
+  },
+  "freedesktop-sdk.bst:components/skopeo.bst": {
+   "kind": "make"
+  },
+  "freedesktop-sdk.bst:components/slang.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/sndfile.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DBUILD_SHARED_LIBS=ON -DENABLE_EXTERNAL_LIBS=ON -DBUILD_TESTING=OFF -DBUILD_PROGRAMS=OFF -DBUILD_EXAMPLES=OFF"
+   },
+   "patches": [
+    {
+     "path": "patches/sndfile/CVE-2024-50612-Update-mpeg_l3_encode.c.patch",
+     "subject": "Update mpeg_l3_encode.c",
+     "hunks": "891a4ffc457c838d"
+    },
+    {
+     "path": "patches/sndfile/CVE-2025-56226-src-ogg-better-error-checking-for-vorbis.-Fixes-1035.patch",
+     "subject": "src/ogg: better error checking for vorbis. Fixes #1035",
+     "hunks": "b16fcdcac15134e5"
+    },
+    {
+     "path": "patches/sndfile/CVE-2026-37555-ima_adpcm-fix-int-overflow-in-ima_reader_init.patch",
+     "subject": "ima_adpcm: fix int overflow in ima_reader_init()",
+     "hunks": "bac228708be7013c"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:components/sof-firmware.bst": {
+   "kind": "manual"
+  },
+  "freedesktop-sdk.bst:components/speex.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--enable-binaries"
+   }
+  },
+  "freedesktop-sdk.bst:components/speexdsp.bst": {
+   "kind": "autotools",
+   "conditional_variables": true
+  },
+  "freedesktop-sdk.bst:components/sqlite.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--fts5 --rtree --geopoly --soname=legacy CFLAGS=\"${CFLAGS} -DSQLITE_ENABLE_COLUMN_METADATA=1 -DSQLITE_SECURE_DELETE=1 -DSQLITE_ENABLE_FTS3=1 -DSQLITE_ENABLE_UNLOCK_NOTIFY=1 -DSQLITE_ENABLE_DBSTAT_VTAB=1\""
+   }
+  },
+  "freedesktop-sdk.bst:components/squashfs-tools.bst": {
+   "kind": "make"
+  },
+  "freedesktop-sdk.bst:components/steam-devices.bst": {
+   "kind": "manual"
+  },
+  "freedesktop-sdk.bst:components/sudo.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/svt-av1.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DREPRODUCIBLE_BUILDS=1 -DBUILD_SHARED_LIBS=ON -DBUILD_TESTING=OFF -DUSE_CPUINFO=OFF"
+   }
+  },
+  "freedesktop-sdk.bst:components/taglib.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DBUILD_SHARED_LIBS=ON -DBUILD_TESTING=OFF -DBUILD_EXAMPLES=OFF"
+   }
+  },
+  "freedesktop-sdk.bst:components/tar.bst": {
+   "kind": "autotools",
+   "patches": [
+    {
+     "path": "patches/tar/0001-Avoid-acl_-prefix-for-functions.patch",
+     "subject": "Avoid acl_ prefix for functions",
+     "hunks": "f943a35ed2a15208"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:components/tex-gyre-fonts.bst": {
+   "kind": "manual"
+  },
+  "freedesktop-sdk.bst:components/tomlplusplus.bst": {
+   "kind": "meson"
+  },
+  "freedesktop-sdk.bst:components/tpm2-tss.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--runstatedir=/run --with-sysusersdir=\"$(pkg-config --variable=sysusersdir systemd)\" --with-tmpfilesdir=\"$(pkg-config --variable=tmpfilesdir systemd)\" --with-udevrulesdir=\"$(pkg-config --variable=udevdir udev)/rules.d\""
+   }
+  },
+  "freedesktop-sdk.bst:components/tzdata.bst": {
+   "kind": "make"
+  },
+  "freedesktop-sdk.bst:components/usbutils.bst": {
+   "kind": "meson"
+  },
+  "freedesktop-sdk.bst:components/utf-locale.bst": {
+   "kind": "script"
+  },
+  "freedesktop-sdk.bst:components/util-linux-full.bst": {
+   "kind": "filter",
+   "build": {
+    "element": "freedesktop-sdk.bst:components/_private/util-linux-base.bst",
+    "kind": "meson",
+    "options": {
+     "meson-local": "-Dncurses=disabled -Dlibuser=disabled -Dlibutempter=disabled -Dsystemd=disabled -Dbuild-login=disabled -Dbuild-chfn-chsh=disabled -Dbuild-su=disabled -Dbuild-runuser=disabled -Dcryptsetup=disabled -Dbuild-pam-lastlog2=disabled -Dbuild-kill=disabled -Dbuild-wall=disabled -Dbuild-nologin=disabled -Dbuild-line=disabled -Dbuild-newgrp=disabled -Dbuild-pg=disabled -Dbuild-tunelp=disabled -Dbuild-vipw=disabled -Dbuild-write=disabled -Dbuild-python=disabled -Dvendordir=\"%{indep-libdir}\" -Dprogram-tests=false"
+    }
+   }
+  },
+  "freedesktop-sdk.bst:components/util-linux-libfdisk.bst": {
+   "kind": "filter",
+   "build": {
+    "element": "freedesktop-sdk.bst:components/_private/util-linux-base.bst",
+    "kind": "meson",
+    "options": {
+     "meson-local": "-Dncurses=disabled -Dlibuser=disabled -Dlibutempter=disabled -Dsystemd=disabled -Dbuild-login=disabled -Dbuild-chfn-chsh=disabled -Dbuild-su=disabled -Dbuild-runuser=disabled -Dcryptsetup=disabled -Dbuild-pam-lastlog2=disabled -Dbuild-kill=disabled -Dbuild-wall=disabled -Dbuild-nologin=disabled -Dbuild-line=disabled -Dbuild-newgrp=disabled -Dbuild-pg=disabled -Dbuild-tunelp=disabled -Dbuild-vipw=disabled -Dbuild-write=disabled -Dbuild-python=disabled -Dvendordir=\"%{indep-libdir}\" -Dprogram-tests=false"
+    }
+   }
+  },
+  "freedesktop-sdk.bst:components/util-linux-libs.bst": {
+   "kind": "filter",
+   "build": {
+    "element": "freedesktop-sdk.bst:components/_private/util-linux-base.bst",
+    "kind": "meson",
+    "options": {
+     "meson-local": "-Dncurses=disabled -Dlibuser=disabled -Dlibutempter=disabled -Dsystemd=disabled -Dbuild-login=disabled -Dbuild-chfn-chsh=disabled -Dbuild-su=disabled -Dbuild-runuser=disabled -Dcryptsetup=disabled -Dbuild-pam-lastlog2=disabled -Dbuild-kill=disabled -Dbuild-wall=disabled -Dbuild-nologin=disabled -Dbuild-line=disabled -Dbuild-newgrp=disabled -Dbuild-pg=disabled -Dbuild-tunelp=disabled -Dbuild-vipw=disabled -Dbuild-write=disabled -Dbuild-python=disabled -Dvendordir=\"%{indep-libdir}\" -Dprogram-tests=false"
+    }
+   }
+  },
+  "freedesktop-sdk.bst:components/util-linux.bst": {
+   "kind": "filter",
+   "build": {
+    "element": "freedesktop-sdk.bst:components/_private/util-linux-base.bst",
+    "kind": "meson",
+    "options": {
+     "meson-local": "-Dncurses=disabled -Dlibuser=disabled -Dlibutempter=disabled -Dsystemd=disabled -Dbuild-login=disabled -Dbuild-chfn-chsh=disabled -Dbuild-su=disabled -Dbuild-runuser=disabled -Dcryptsetup=disabled -Dbuild-pam-lastlog2=disabled -Dbuild-kill=disabled -Dbuild-wall=disabled -Dbuild-nologin=disabled -Dbuild-line=disabled -Dbuild-newgrp=disabled -Dbuild-pg=disabled -Dbuild-tunelp=disabled -Dbuild-vipw=disabled -Dbuild-write=disabled -Dbuild-python=disabled -Dvendordir=\"%{indep-libdir}\" -Dprogram-tests=false"
+    }
+   }
+  },
+  "freedesktop-sdk.bst:components/v4l-utils.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dudevdir=$(pkg-config --variable=udevdir udev) -Dqvidcap=disabled -Dqv4l2=disabled -Dgconv=disabled -Dv4l2-tracer=disabled"
+   }
+  },
+  "freedesktop-sdk.bst:components/vim.bst": {
+   "kind": "autotools",
+   "patches": [
+    {
+     "path": "patches/vim/vim-not-show-in-gnome.patch",
+     "subject": "",
+     "hunks": "10b6217283d4045c"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:components/volume-key.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--without-python --with-python3"
+   },
+   "patches": [
+    {
+     "path": "patches/volume-key/Replace-removed-SWIG-Python-2-compatibility-macros.patch",
+     "subject": "Replace removed SWIG Python 2 compatibility macros",
+     "hunks": "a6104c47c0c47b80"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:components/vulkan-icd-loader.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DCMAKE_SKIP_RPATH:BOOL=yes -DCMAKE_INSTALL_SYSCONFDIR:PATH=%{sysconfdir} -DBUILD_TESTS=OFF -DBUILD_WSI_XCB_SUPPORT=On -DBUILD_WSI_XLIB_SUPPORT=On -DBUILD_WSI_WAYLAND_SUPPORT=On"
+   },
+   "patches": [
+    {
+     "path": "patches/spirv-tools/Remove-libSPIRV-Tools-shared.so.patch",
+     "subject": "",
+     "hunks": "cd1a2c486530f8b2"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:components/wavpack.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/wayland-protocols.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dtests=false"
+   }
+  },
+  "freedesktop-sdk.bst:components/wayland.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Ddocumentation=false -Dtests=false"
+   }
+  },
+  "freedesktop-sdk.bst:components/webrtc-audio-processing.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dcpp_std=c++20"
+   },
+   "conditional_variables": true,
+   "patches": [
+    {
+     "path": "patches/webrtc-audio-processing/gcc15.patch",
+     "subject": "",
+     "hunks": "3594616ecce8407f"
+    },
+    {
+     "path": "patches/webrtc-audio-processing/0001-Fix-build-with-abseil-cpp-202508.patch",
+     "subject": "Fix build with abseil-cpp 202508",
+     "hunks": "a7061c446964794b"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:components/wget2.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--disable-rpath --with-ssl=openssl"
+   }
+  },
+  "freedesktop-sdk.bst:components/which.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/wildmidi.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DBUILD_SHARED_LIBS=ON -DWANT_PLAYER=OFF"
+   }
+  },
+  "freedesktop-sdk.bst:components/wireless-regdb-bin.bst": {
+   "kind": "manual"
+  },
+  "freedesktop-sdk.bst:components/wireplumber.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dsystem-lua=true -Delogind=disabled -Ddoc=disabled"
+   }
+  },
+  "freedesktop-sdk.bst:components/wpa-supplicant.bst": {
+   "kind": "make"
+  },
+  "freedesktop-sdk.bst:components/xcb-util-cursor.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--with-cursorpath=~/.icons:/app/share/icons:%{datadir}/icons:%{datadir}/pixmaps:%{datadir}/runtime/share/icons:/run/host/user-share/icons:/run/host/share/icons"
+   }
+  },
+  "freedesktop-sdk.bst:components/xcb-util-image.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/xcb-util-keysyms.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/xcb-util-renderutil.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/xcb-util-wm.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/xcb-util.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/xdg-dbus-proxy.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dman=disabled"
+   }
+  },
+  "freedesktop-sdk.bst:components/xdg-portal-interfaces.bst": {
+   "kind": "filter",
+   "build": {
+    "element": "freedesktop-sdk.bst:components/_private/xdg-desktop-portal-base.bst",
+    "kind": "meson",
+    "options": {
+     "meson-local": "-Dtests=disabled -Ddocumentation=disabled -Dman-pages=disabled"
+    }
+   }
+  },
+  "freedesktop-sdk.bst:components/xdg-user-dirs.bst": {
+   "kind": "meson"
+  },
+  "freedesktop-sdk.bst:components/xfsprogs.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/xmlto.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/xorg-app-xkbcomp.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/xorg-data-xkeyboard-config.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dcompat-rules=true -Dxorg-rules-symlinks=true"
+   }
+  },
+  "freedesktop-sdk.bst:components/xorg-font-util.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/xorg-lib-fontenc.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/xorg-lib-ice.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/xorg-lib-pciaccess.bst": {
+   "kind": "meson"
+  },
+  "freedesktop-sdk.bst:components/xorg-lib-sm.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/xorg-lib-x11.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/xorg-lib-xau.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/xorg-lib-xcb.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--enable-xkb \\ --disable-xprint"
+   }
+  },
+  "freedesktop-sdk.bst:components/xorg-lib-xcomposite.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/xorg-lib-xcursor.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--with-cursorpath=~/.icons:/app/share/icons:%{datadir}/icons:%{datadir}/pixmaps:%{datadir}/runtime/share/icons:/run/host/user-share/icons:/run/host/share/icons"
+   }
+  },
+  "freedesktop-sdk.bst:components/xorg-lib-xcvt.bst": {
+   "kind": "meson"
+  },
+  "freedesktop-sdk.bst:components/xorg-lib-xdamage.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/xorg-lib-xdmcp.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/xorg-lib-xext.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/xorg-lib-xfixes.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/xorg-lib-xfont2.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/xorg-lib-xft.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/xorg-lib-xi.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--disable-specs"
+   }
+  },
+  "freedesktop-sdk.bst:components/xorg-lib-xinerama.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/xorg-lib-xkbfile.bst": {
+   "kind": "meson"
+  },
+  "freedesktop-sdk.bst:components/xorg-lib-xpm.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--disable-open-zfile"
+   }
+  },
+  "freedesktop-sdk.bst:components/xorg-lib-xrandr.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/xorg-lib-xrender.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/xorg-lib-xscrnsaver.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/xorg-lib-xshmfence.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/xorg-lib-xt.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/xorg-lib-xtrans.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/xorg-lib-xtst.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/xorg-lib-xv.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/xorg-lib-xxf86vm.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/xorg-proto-xorgproto.bst": {
+   "kind": "meson"
+  },
+  "freedesktop-sdk.bst:components/xwayland.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dxvfb=false -Dxwayland_ei=portal"
+   }
+  },
+  "freedesktop-sdk.bst:components/xz-docs.bst": {
+   "kind": "autotools"
+  },
+  "freedesktop-sdk.bst:components/zip.bst": {
+   "kind": "make",
+   "patches": [
+    {
+     "path": "patches/zip/0001-zip-3.0-currdir.patch",
+     "subject": "",
+     "hunks": "b2ec474143667044"
+    },
+    {
+     "path": "patches/zip/0002-zip-3.0-exec-shield.patch",
+     "subject": "",
+     "hunks": "84f49b5a1f359b3c"
+    },
+    {
+     "path": "patches/zip/0003-zip-3.0-format-security.patch",
+     "subject": "",
+     "hunks": "14db57836671c186"
+    },
+    {
+     "path": "patches/zip/0004-zipnote.patch",
+     "subject": "",
+     "hunks": "0c0d07c3f7f3db2d"
+    },
+    {
+     "path": "patches/zip/zip-gnu89-build.patch",
+     "subject": "",
+     "hunks": "e06b042c3c84ca54"
+    }
+   ]
+  },
+  "freedesktop-sdk.bst:extensions/mesa/libclc.bst": {
+   "kind": "cmake"
+  },
+  "freedesktop-sdk.bst:extensions/mesa/libdrm.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dtegra=enabled -Dcairo-tests=disabled -Dman-pages=disabled -Dvalgrind=disabled -Dudev=false -Dtests=false"
+   }
+  },
+  "freedesktop-sdk.bst:extensions/mesa/llvm.bst": {
+   "kind": "manual"
+  },
+  "freedesktop-sdk.bst:extensions/mesa/mesa-extra.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Db_ndebug=true -Degl=enabled -Dgallium-drivers=%{gallium_drivers} -Dgallium-rusticl=true -Dgallium-va=enabled -Dgallium-mediafoundation=disabled -Dgallium-rusticl-enable-drivers=%{rusticl_enabled} -Dgbm=enabled -Dgbm-backends-path=\"/usr/lib/%{gcc_triplet}/GL/lib/gbm\" -Dgles1=disabled -Dgles2=enabled -Dglvnd=enabled -Dglx=auto -Dlibunwind=%{libunwind} -Dllvm=enabled -Dlmsensors=disabled -Dmicrosoft-clc=disabled -Dandroid-libbacktrace=disabled -Dplatforms=x11,wayland -Dvalgrind=disabled -Dvulkan-layers=device-select,overlay,intel-nullhw,screenshot,anti-lag -Dvulkan-drivers=%{vulkan_drivers} -Dvulkan-icd-dir=\"%{libdir}/vulkan/icd.d\" -Dxlib-lease=enabled -Dzstd=enabled -Dvideo-codecs=all -Drust_std=2021 -Dintel-rt=disabled -Dteflon=true -Ddisplay-info=disabled -Damdgpu-virtio=true"
+   },
+   "conditional_variables": true
+  },
+  "freedesktop-sdk.bst:extensions/platform-vaapi-intel/gmmlib.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DCMAKE_INSTALL_LIBDIR=\"%{libdir}/dri/intel-vaapi-driver/lib\" -DRUN_TEST_SUITE:BOOL=OFF"
+   }
+  },
+  "freedesktop-sdk.bst:extensions/platform-vaapi-intel/intel-media-driver.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DCMAKE_INSTALL_LIBDIR=\"%{libdir}/dri/intel-vaapi-driver/lib\" -DLIBVA_DRIVERS_PATH=\"%{libdir}/dri/intel-vaapi-driver\" -DMEDIA_BUILD_FATAL_WARNINGS=OFF"
+   },
+   "conditional_variables": true
+  },
+  "freedesktop-sdk.bst:integration/ldconfig.bst": {
+   "kind": "manual"
+  },
+  "freedesktop-sdk.bst:vm/config/sudo.bst": {
+   "kind": "manual"
+  },
+  "freedesktop-sdk.bst:vm/config/useradd-default.bst": {
+   "kind": "manual"
+  },
+  "gnome-build-meta.bst:core-deps/LibVNCServer.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DCMAKE_POLICY_VERSION_MINIMUM=3.5"
+   }
+  },
+  "gnome-build-meta.bst:core-deps/NetworkManager.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dmore_asserts=no -Dcrypto=gnutls -Dintrospection=true -Dvapi=true -Ddocs=true -Dtests=no -Dlibaudit=no -Dnmtui=false -Dselinux=false -Dqt=false -Dovs=false -Dnm_cloud_setup=false -Dclat=false"
+   },
+   "conditional_variables": true
+  },
+  "gnome-build-meta.bst:core-deps/boltd.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:core-deps/brltty.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--with-api-socket-path=/run/BrlAPI --with-tables-directory=%{datadir}/brltty --disable-stripping --without-curses --disable-java-bindings --disable-ocaml-bindings --disable-tcl-bindings --disable-emacs-bindings --disable-lisp-bindings --disable-lua-bindings --disable-speech-support --disable-x --without-pcm-package --without-midi-package --without-fm-package"
+   }
+  },
+  "gnome-build-meta.bst:core-deps/cjson.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DCMAKE_POLICY_VERSION_MINIMUM=3.5"
+   }
+  },
+  "gnome-build-meta.bst:core-deps/colord-gtk.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dman=false -Dvapi=true"
+   }
+  },
+  "gnome-build-meta.bst:core-deps/colord.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dargyllcms_sensor=false -Dbash_completion=false -Dlibcolordcompat=false -Dman=false -Dvapi=true -Ddocs=false"
+   }
+  },
+  "gnome-build-meta.bst:core-deps/cups-pk-helper.bst": {
+   "kind": "meson",
+   "patches": [
+    {
+     "path": "patches/cups-pk-helper/cups-pk-helper-g-variant.patch",
+     "subject": "",
+     "hunks": "b6cae24ee8e9b96e"
+    }
+   ]
+  },
+  "gnome-build-meta.bst:core-deps/dasbus.bst": {
+   "kind": "pyproject"
+  },
+  "gnome-build-meta.bst:core-deps/dconf.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dbash_completion=false"
+   }
+  },
+  "gnome-build-meta.bst:core-deps/ebtables.bst": {
+   "kind": "autotools"
+  },
+  "gnome-build-meta.bst:core-deps/evolution-data-server.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DLIB_INSTALL_DIR=%{libdir} -DSYSCONF_INSTALL_DIR=%{sysconfdir} -DENABLE_GTK=ON -DENABLE_OAUTH2_WEBKITGTK=OFF -DENABLE_GTK4=ON -DENABLE_INTROSPECTION=ON -DENABLE_VALA_BINDINGS=ON -DENABLE_UOA=OFF -DENABLE_GOOGLE_AUTH=OFF -DWITH_GWEATHER4=ON -DWITH_LIBDB=OFF -DENABLE_GOOGLE=OFF"
+   }
+  },
+  "gnome-build-meta.bst:core-deps/exempi.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--disable-unittest"
+   }
+  },
+  "gnome-build-meta.bst:core-deps/exiv2.bst": {
+   "kind": "cmake"
+  },
+  "gnome-build-meta.bst:core-deps/fdk-aac-free.bst": {
+   "kind": "autotools"
+  },
+  "gnome-build-meta.bst:core-deps/flatpak.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dgtkdoc=disabled -Dsystem_bubblewrap=bwrap -Ddconf=disabled -Dmalcontent=disabled -Dselinux_module=disabled -Dtests=false -Dsystem_dbus_proxy=xdg-dbus-proxy"
+   }
+  },
+  "gnome-build-meta.bst:core-deps/freerdp.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DRDTK_FORCE_STATIC_BUILD=ON -DUWAC_FORCE_STATIC_BUILD=ON -DWITH_ADD=ON -DWITH_BINARY_VERSIONING=ON -DWITH_CHANNELS=ON -DWITH_CLIENT_CHANNELS=ON -DWITH_CUPS=ON -DWITH_DSP_FFMPEG=ON -DWITH_FFMPEG=ON -DWITH_JPEG=ON -DWITH_MANPAGES=ON -DWITH_PCSC=ON -DWITH_PKCS11=ON -DWITH_PULSE=ON -DWITH_SERVER_CHANNELS=ON -DWITH_SERVER=ON -DPKG_CONFIG_RELOCATABLE=OFF -DWITH_ALSA=OFF -DWITH_CLIENT_SDL=OFF -DWITH_FUSE=OFF -DWITH_SAMPLE=OFF -DWITH_X11=OFF"
+   }
+  },
+  "gnome-build-meta.bst:core-deps/fwupd-efi.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Defi_sbat_distro_id=\"gnome-os\" -Defi_sbat_distro_pkgname=\"fwupd-efi\""
+   }
+  },
+  "gnome-build-meta.bst:core-deps/fwupd.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Defi_binary=false -Dhsi=disabled -Dvendor_ids_dir='%{datadir}/hwdata' -Dumockdev_tests=disabled -Defi_os_dir=org.gnome.os"
+   },
+   "conditional_variables": true
+  },
+  "gnome-build-meta.bst:core-deps/geocode-glib.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dsoup2=false"
+   }
+  },
+  "gnome-build-meta.bst:core-deps/gexiv2.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:core-deps/gnome-autoar.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dvapi=true"
+   }
+  },
+  "gnome-build-meta.bst:core-deps/gnome-online-accounts.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:core-deps/gsound.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dgtk_doc=true"
+   }
+  },
+  "gnome-build-meta.bst:core-deps/gssdp.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dsniffer=false -Dmanpages=false"
+   }
+  },
+  "gnome-build-meta.bst:core-deps/gst-editing-services.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Ddoc=disabled -Dbash-completion=disabled -Dxptv=disabled -Dpython=disabled -Dvalidate=disabled"
+   }
+  },
+  "gnome-build-meta.bst:core-deps/gupnp-av.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:core-deps/gupnp-dlna.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:core-deps/gupnp.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dcontext_manager=network-manager"
+   }
+  },
+  "gnome-build-meta.bst:core-deps/gweather-locations.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:core-deps/ibus-daemon.bst": {
+   "kind": "filter",
+   "build": {
+    "element": "gnome-build-meta.bst:sdk-deps/ibus.bst",
+    "kind": "autotools",
+    "options": {
+     "conf-local": "--enable-dconf --enable-memconf --disable-appindicator --disable-emoji-dict --enable-engine --disable-tests --disable-gconf --disable-gtk2 --disable-gtk-doc --disable-glibtest --disable-libnotify --disable-python2 --disable-schema-compile --disable-setup --disable-ui --disable-unicode-dict --with-python=python3 --enable-wayland --enable-introspection --enable-vala --enable-gtk4 --enable-systemd"
+    }
+   }
+  },
+  "gnome-build-meta.bst:core-deps/libbluray.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dbdj_jar=disabled -Denable_docs=true"
+   }
+  },
+  "gnome-build-meta.bst:core-deps/libcanberra.bst": {
+   "kind": "autotools"
+  },
+  "gnome-build-meta.bst:core-deps/libcdio-paranoia.bst": {
+   "kind": "autotools"
+  },
+  "gnome-build-meta.bst:core-deps/libcdio.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--without-cdda-player"
+   }
+  },
+  "gnome-build-meta.bst:core-deps/libcloudproviders.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:core-deps/libcue.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DBUILD_SHARED_LIBS=ON -DCMAKE_POLICY_VERSION_MINIMUM=3.5"
+   }
+  },
+  "gnome-build-meta.bst:core-deps/libdisplay-info.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:core-deps/libdvdcss.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Denable_docs=true"
+   }
+  },
+  "gnome-build-meta.bst:core-deps/libdvdread.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Denable_docs=true"
+   }
+  },
+  "gnome-build-meta.bst:core-deps/libgsf.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--without-bonobo --without-gnome-vfs --enable-introspection"
+   }
+  },
+  "gnome-build-meta.bst:core-deps/libgsystemservice.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:core-deps/libgtop.bst": {
+   "kind": "autotools"
+  },
+  "gnome-build-meta.bst:core-deps/libgweather.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:core-deps/libgxps.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Denable-test=false"
+   }
+  },
+  "gnome-build-meta.bst:core-deps/libhandy.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dgtk_doc=true -Dvapi=true -Dtests=true -Dexamples=false -Dglade_catalog=disabled"
+   }
+  },
+  "gnome-build-meta.bst:core-deps/libical3.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DGOBJECT_INTROSPECTION=ON -DENABLE_GTK_DOC=OFF -DICAL_GLIB=ON -DICAL_GLIB_VAPI=ON"
+   }
+  },
+  "gnome-build-meta.bst:core-deps/libimobiledevice-glue.bst": {
+   "kind": "autotools"
+  },
+  "gnome-build-meta.bst:core-deps/libimobiledevice.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--without-cython --disable-openssl"
+   }
+  },
+  "gnome-build-meta.bst:core-deps/libmediaart.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dimage_library=gdk-pixbuf"
+   }
+  },
+  "gnome-build-meta.bst:core-deps/libmtp.bst": {
+   "kind": "autotools"
+  },
+  "gnome-build-meta.bst:core-deps/libnfs.bst": {
+   "kind": "autotools"
+  },
+  "gnome-build-meta.bst:core-deps/libnma.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dlibnma_gtk4=true"
+   }
+  },
+  "gnome-build-meta.bst:core-deps/libosinfo.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Denable-tests=false"
+   },
+   "patches": [
+    {
+     "path": "patches/libosinfo/attribute-unused.patch",
+     "subject": "",
+     "hunks": "b5892a8c39ad32a8"
+    },
+    {
+     "path": "patches/libosinfo/0001-build-Avoid-hardcoded-werror.patch",
+     "subject": "build: Avoid hardcoded werror",
+     "hunks": "7c5d5ffdc38c2ed4"
+    }
+   ]
+  },
+  "gnome-build-meta.bst:core-deps/libplist.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--without-cython"
+   }
+  },
+  "gnome-build-meta.bst:core-deps/librest.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dsoup2=false"
+   }
+  },
+  "gnome-build-meta.bst:core-deps/libspelling.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:core-deps/libtatsu.bst": {
+   "kind": "autotools"
+  },
+  "gnome-build-meta.bst:core-deps/libusbmuxd.bst": {
+   "kind": "autotools"
+  },
+  "gnome-build-meta.bst:core-deps/libzip.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DCMAKE_POLICY_VERSION_MINIMUM=3.5"
+   }
+  },
+  "gnome-build-meta.bst:core-deps/localsearch.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Diptc=disabled"
+   }
+  },
+  "gnome-build-meta.bst:core-deps/malcontent.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:core-deps/mobile-broadband-provider-info.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:core-deps/msgraph.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dtests=false"
+   }
+  },
+  "gnome-build-meta.bst:core-deps/oo7-daemon.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:core-deps/oo7-pam.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:core-deps/oo7-portal.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:core-deps/osinfo-db-tools.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:core-deps/passim.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:core-deps/phodav.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:core-deps/plymouth.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dgtk=disabled"
+   }
+  },
+  "gnome-build-meta.bst:core-deps/power-profiles-daemon.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dbashcomp=disabled -Dgtk_doc=true -Dmanpage=disabled -Dpylint=disabled"
+   }
+  },
+  "gnome-build-meta.bst:core-deps/protobuf-c.bst": {
+   "kind": "autotools",
+   "patches": [
+    {
+     "path": "patches/protobuf-c/compatibility_with_protobuf_34.x.patch",
+     "subject": "",
+     "hunks": "8a7ee47e4e8c8cd1"
+    }
+   ]
+  },
+  "gnome-build-meta.bst:core-deps/pyatspi.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:core-deps/pycups.bst": {
+   "kind": "pyproject"
+  },
+  "gnome-build-meta.bst:core-deps/simdutf.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DCMAKE_POSITION_INDEPENDENT_CODE=TRUE -DCMAKE_CXX_VISIBILITY_PRESET=hidden -DCMAKE_VISIBILITY_INLINES_HIDDEN=TRUE"
+   }
+  },
+  "gnome-build-meta.bst:core-deps/slirp-helper.bst": {
+   "kind": "cargo"
+  },
+  "gnome-build-meta.bst:core-deps/startup-notification.bst": {
+   "kind": "autotools"
+  },
+  "gnome-build-meta.bst:core-deps/system-config-printer.bst": {
+   "kind": "autotools"
+  },
+  "gnome-build-meta.bst:core-deps/systemd-libs.bst": {
+   "kind": "filter",
+   "build": {
+    "element": "freedesktop-sdk.bst:components/_private/systemd-base.bst",
+    "kind": "meson",
+    "options": {
+     "meson-local": "-Dmode=release -Dsysvinit-path=%{sysconfdir}/init.d -Daudit=enabled -Dseccomp=enabled -Dsystem-uid-max=999 -Dsystem-gid-max=999 -Dusers-gid=100 -Dopenssl=enabled -Dpam=enabled -Dbootloader=false -Defi=false -Dfirstboot=true -Dzlib=enabled -Dzstd=enabled -Dbzip2=enabled -Dxz=enabled -Dlz4=enabled -Ddefault-dnssec=no -Didn=true -Drepart=enabled -Dman=enabled -Dhtml=enabled -Dlibcryptsetup=enabled -Dlibcryptsetup-plugins=enabled -Dp11kit=enabled -Dlibfido2=enabled -Dapparmor=enabled -Dtpm=true -Dtpm2=enabled -Dsbat-distro=freedesktop-sdk -Dsbat-distro-generation=1 -Dsbat-distro-summary=\"Freedesktop SDK\" -Dsbat-distro-url=https://gitlab.com/freedesktop-sdk/freedesktop-sdk/ -Dversion-tag=\"$(git describe --abbrev=7 | sed \"s/^v//\")\" -Dqrencode=enabled -Dxkbcommon=enabled -Dlibidn2=enabled -Dlibiptc=enabled -Dxenctrl=disabled -Dbpf-framework=disabled -Dgnutls=disabled -Dglib=disabled -Ddbus=disabled -Dukify=false -Dkernel-install=true -Dvmlinux-h=provided -Dvmlinux-h-path='%{includedir}/%{gcc_triplet}/linux/vmlinux.h' -Dselinux=disabled -Dsysupdated=enabled"
+    },
+    "conditional_variables": true
+   }
+  },
+  "gnome-build-meta.bst:core-deps/systemd.bst": {
+   "kind": "filter",
+   "build": {
+    "element": "freedesktop-sdk.bst:components/_private/systemd-base.bst",
+    "kind": "meson",
+    "options": {
+     "meson-local": "-Dmode=release -Dsysvinit-path=%{sysconfdir}/init.d -Daudit=enabled -Dseccomp=enabled -Dsystem-uid-max=999 -Dsystem-gid-max=999 -Dusers-gid=100 -Dopenssl=enabled -Dpam=enabled -Dbootloader=false -Defi=false -Dfirstboot=true -Dzlib=enabled -Dzstd=enabled -Dbzip2=enabled -Dxz=enabled -Dlz4=enabled -Ddefault-dnssec=no -Didn=true -Drepart=enabled -Dman=enabled -Dhtml=enabled -Dlibcryptsetup=enabled -Dlibcryptsetup-plugins=enabled -Dp11kit=enabled -Dlibfido2=enabled -Dapparmor=enabled -Dtpm=true -Dtpm2=enabled -Dsbat-distro=freedesktop-sdk -Dsbat-distro-generation=1 -Dsbat-distro-summary=\"Freedesktop SDK\" -Dsbat-distro-url=https://gitlab.com/freedesktop-sdk/freedesktop-sdk/ -Dversion-tag=\"$(git describe --abbrev=7 | sed \"s/^v//\")\" -Dqrencode=enabled -Dxkbcommon=enabled -Dlibidn2=enabled -Dlibiptc=enabled -Dxenctrl=disabled -Dbpf-framework=disabled -Dgnutls=disabled -Dglib=disabled -Ddbus=disabled -Dukify=false -Dkernel-install=true -Dvmlinux-h=provided -Dvmlinux-h-path='%{includedir}/%{gcc_triplet}/linux/vmlinux.h' -Dselinux=disabled -Dsysupdated=enabled"
+    },
+    "conditional_variables": true
+   }
+  },
+  "gnome-build-meta.bst:core-deps/totem-pl-parser.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:core-deps/udisks2.bst": {
+   "kind": "autotools"
+  },
+  "gnome-build-meta.bst:core-deps/upower.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:core-deps/xdg-desktop-portal-gnome.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dlibgxdp:tests=false"
+   }
+  },
+  "gnome-build-meta.bst:core-deps/xdg-desktop-portal-gtk.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dappchooser=disabled -Dlockdown=disabled -Dsettings=disabled -Dwallpaper=disabled"
+   }
+  },
+  "gnome-build-meta.bst:core-deps/xdg-desktop-portal.bst": {
+   "kind": "filter",
+   "build": {
+    "element": "freedesktop-sdk.bst:components/_private/xdg-desktop-portal-base.bst",
+    "kind": "meson",
+    "options": {
+     "meson-local": "-Dtests=disabled -Ddocumentation=disabled -Dman-pages=disabled"
+    }
+   }
+  },
+  "gnome-build-meta.bst:core-deps/xdg-sound-theme.bst": {
+   "kind": "autotools"
+  },
+  "gnome-build-meta.bst:core-deps/xdg-user-dirs-gtk.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:core/baobab.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:core/gdm.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Ddefault-pam-config=none -Dlibaudit=disabled -Dplymouth=enabled -Drun-dir=/run/gdm -Dselinux=disabled"
+   }
+  },
+  "gnome-build-meta.bst:core/gnome-backgrounds.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:core/gnome-bluetooth.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dgtk_doc=true"
+   }
+  },
+  "gnome-build-meta.bst:core/gnome-color-manager.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:core/gnome-control-center.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Ddocumentation=true -Dmalcontent=true"
+   }
+  },
+  "gnome-build-meta.bst:core/gnome-desktop.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dgtk_doc=true -Dinstalled_tests=true"
+   }
+  },
+  "gnome-build-meta.bst:core/gnome-disk-utility.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:core/gnome-initial-setup.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dparental_controls=enabled"
+   }
+  },
+  "gnome-build-meta.bst:core/gnome-menus.bst": {
+   "kind": "autotools"
+  },
+  "gnome-build-meta.bst:core/gnome-remote-desktop.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dtests=false"
+   }
+  },
+  "gnome-build-meta.bst:core/gnome-session.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dmimeapps=false"
+   }
+  },
+  "gnome-build-meta.bst:core/gnome-settings-daemon.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:core/gnome-shell.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dextensions-tool:bash_completion=disabled"
+   }
+  },
+  "gnome-build-meta.bst:core/gnome-tour.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:core/gnome-user-docs.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:core/gnome-user-share.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:core/gst-thumbnailers.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:core/gvfs-daemon.bst": {
+   "kind": "filter",
+   "build": {
+    "element": "gnome-build-meta.bst:sdk-deps/gvfs.bst",
+    "kind": "meson",
+    "options": {
+     "meson-local": "-Dgoogle=false"
+    }
+   }
+  },
+  "gnome-build-meta.bst:core/mutter.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dxwayland_initfd=enabled -Dprofiler=true"
+   }
+  },
+  "gnome-build-meta.bst:core/nautilus.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dselinux=false"
+   }
+  },
+  "gnome-build-meta.bst:core/orca.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dmathcat=false"
+   }
+  },
+  "gnome-build-meta.bst:core/papers.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dcomics=disabled -Ddjvu=disabled -Dnautilus=true"
+   }
+  },
+  "gnome-build-meta.bst:core/rygel.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:core/sushi.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:core/sysprof-app.bst": {
+   "kind": "filter",
+   "build": {
+    "element": "gnome-build-meta.bst:sdk-deps/sysprof.bst",
+    "kind": "meson",
+    "options": {
+     "meson-local": "-Dgtk=true -Dsysprofd=bundled -Dlibsysprof=true -Dtools=true -Dtests=true -Dexamples=true"
+    }
+   }
+  },
+  "gnome-build-meta.bst:core/systemd-presets.bst": {
+   "kind": "import"
+  },
+  "gnome-build-meta.bst:core/tecla.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/accountsservice.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/android-udev-rules.bst": {
+   "kind": "manual"
+  },
+  "gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/distrobox.bst": {
+   "kind": "manual"
+  },
+  "gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/dotconf.bst": {
+   "kind": "autotools"
+  },
+  "gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/espeak-ng.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DFETCHCONTENT_FULLY_DISCONNECTED=ON -DBUILD_SHARED_LIBS=ON -DESPEAK_COMPAT=ON"
+   }
+  },
+  "gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/fish.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DCMAKE_INSTALL_SYSCONFDIR=%{sysconfdir} -DCURSES_NEED_NCURSES=TRUE -DWITH_MESSAGE_LOCALIZATION=ON"
+   }
+  },
+  "gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/graphviz.bst": {
+   "kind": "autotools"
+  },
+  "gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/just.bst": {
+   "kind": "cargo"
+  },
+  "gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/libcacard.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Ddisable_tests=true"
+   }
+  },
+  "gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/libgphoto2.bst": {
+   "kind": "autotools"
+  },
+  "gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/libpcap.bst": {
+   "kind": "autotools"
+  },
+  "gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/libsass.bst": {
+   "kind": "autotools"
+  },
+  "gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/libssh2.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DBUILD_SHARED_LIBS=1"
+   }
+  },
+  "gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/mokutil.bst": {
+   "kind": "autotools"
+  },
+  "gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/nss-mdns.bst": {
+   "kind": "autotools"
+  },
+  "gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/numactl.bst": {
+   "kind": "autotools"
+  },
+  "gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/nvme-cli.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/openldap.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--disable-slapd"
+   }
+  },
+  "gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/opensc.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--disable-strict"
+   }
+  },
+  "gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/pkcs11-helper.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--enable-doc"
+   }
+  },
+  "gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/ppp.bst": {
+   "kind": "autotools"
+  },
+  "gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/qemu.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--disable-werror --enable-system --disable-user --enable-spice --enable-smartcard --enable-usb-redir --enable-gtk --enable-sdl --disable-sdl-image --enable-virglrenderer --enable-slirp --enable-pa --enable-pipewire --enable-linux-io-uring",
+    "conf-args": "%{targets} --prefix=\"%{prefix}\" --bindir=\"%{bindir}\" --sbindir=\"%{sbindir}\" --sysconfdir=\"%{sysconfdir}\" --datadir=\"%{datadir}\" --includedir=\"%{includedir}\" --libdir=\"%{libdir}\" --libexecdir=\"%{libexecdir}\" --sharedstatedir=\"%{sharedstatedir}\" --mandir=\"%{mandir}\" --infodir=\"%{infodir}\" --localstatedir=/ --host=%{triplet} --build=%{triplet} --disable-werror --enable-system --disable-user --enable-spice --enable-smartcard --enable-usb-redir --enable-gtk --enable-sdl --disable-sdl-image --enable-virglrenderer --enable-slirp --enable-pa --enable-pipewire --enable-linux-io-uring"
+   },
+   "conditional_variables": true
+  },
+  "gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/rpcsvc-proto.bst": {
+   "kind": "autotools"
+  },
+  "gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/samba.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--enable-fhs --without-ad-dc --without-json --without-ldb-lmdb --with-system-mitkrb5"
+   },
+   "patches": [
+    {
+     "path": "patches/samba/fix-root-build.patch",
+     "subject": "",
+     "hunks": "2337d62a672f853f"
+    }
+   ]
+  },
+  "gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/sassc.bst": {
+   "kind": "autotools"
+  },
+  "gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/sonic.bst": {
+   "kind": "make",
+   "patches": [
+    {
+     "path": "patches/sonic/add-libdir.patch",
+     "subject": "",
+     "hunks": "3e3ea9f7658dc5de"
+    }
+   ]
+  },
+  "gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/speech-dispatcher.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "PKG_CONFIG_PATH=/usr/lib/pkgconfig --enable-python --with-espeak-ng --with-pulse --with-oss=no"
+   }
+  },
+  "gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/spice-protocol.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/spice-vdagent.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--with-session-info=systemd --with-init-script=systemd"
+   }
+  },
+  "gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/spice.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dgstreamer=1.0 -Dtests=false"
+   }
+  },
+  "gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/toolbox.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/usbredir.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dgit_werror=disabled -Dfuzzing=disabled"
+   }
+  },
+  "gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/virglrenderer.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dvenus=true"
+   }
+  },
+  "gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/wl-clipboard.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/words.bst": {
+   "kind": "manual"
+  },
+  "gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/zram-generator.bst": {
+   "kind": "make"
+  },
+  "gnome-build-meta.bst:gnomeos-deps/NetworkManager-openconnect.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--with-gtk4"
+   },
+   "patches": [
+    {
+     "path": "patches/NetworkManager-openconnect/0001-build-Require-webkitgtk-only-if-with-authdlg.patch",
+     "subject": "build: Require webkitgtk only if --with-authdlg",
+     "hunks": "e19bf0592d867f91"
+    },
+    {
+     "path": "patches/NetworkManager-openconnect/0002-auth-dlg-Switch-to-gtk4-and-webkitgtk-6.patch",
+     "subject": "auth-dlg: Switch to gtk4 and webkitgtk 6",
+     "hunks": "a0ddeced5f3b3d85"
+    }
+   ]
+  },
+  "gnome-build-meta.bst:gnomeos-deps/NetworkManager-openvpn.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--with-gtk4"
+   }
+  },
+  "gnome-build-meta.bst:gnomeos-deps/NetworkManager-vpnc.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--without-libnm-glib --with-gtk4"
+   }
+  },
+  "gnome-build-meta.bst:gnomeos-deps/alsa-ucm-conf.bst": {
+   "kind": "manual"
+  },
+  "gnome-build-meta.bst:gnomeos-deps/anthy.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Demacs=disabled"
+   }
+  },
+  "gnome-build-meta.bst:gnomeos-deps/bindfs.bst": {
+   "kind": "autotools"
+  },
+  "gnome-build-meta.bst:gnomeos-deps/bpftop.bst": {
+   "kind": "cargo"
+  },
+  "gnome-build-meta.bst:gnomeos-deps/debuginfod-config.bst": {
+   "kind": "import"
+  },
+  "gnome-build-meta.bst:gnomeos-deps/disable-iscsi.bst": {
+   "kind": "import"
+  },
+  "gnome-build-meta.bst:gnomeos-deps/firewalld.bst": {
+   "kind": "autotools"
+  },
+  "gnome-build-meta.bst:gnomeos-deps/flathub-config.bst": {
+   "kind": "import"
+  },
+  "gnome-build-meta.bst:gnomeos-deps/fprintd.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dpam_modules_dir='%{libdir}/security'"
+   }
+  },
+  "gnome-build-meta.bst:gnomeos-deps/gnome-mimeapps.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:gnomeos-deps/hidraw-udev.bst": {
+   "kind": "manual"
+  },
+  "gnome-build-meta.bst:gnomeos-deps/ibus-anthy.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--enable-private-png=yes --with-python=python3"
+   }
+  },
+  "gnome-build-meta.bst:gnomeos-deps/ibus-hangul.bst": {
+   "kind": "autotools"
+  },
+  "gnome-build-meta.bst:gnomeos-deps/ibus-libpinyin.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--disable-lua-extension --with-python=python3"
+   }
+  },
+  "gnome-build-meta.bst:gnomeos-deps/ibus-typing-booster.bst": {
+   "kind": "autotools"
+  },
+  "gnome-build-meta.bst:gnomeos-deps/iio-sensor-proxy.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:gnomeos-deps/journald-config.bst": {
+   "kind": "manual"
+  },
+  "gnome-build-meta.bst:gnomeos-deps/kmscon.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:gnomeos-deps/kyotocabinet.bst": {
+   "kind": "autotools",
+   "patches": [
+    {
+     "path": "patches/kyotocabinet/0010-Reenable-debug-symbol.patch",
+     "subject": "Reenable debug symbol",
+     "hunks": "9ffab315789712da"
+    },
+    {
+     "path": "patches/kyotocabinet/configure-disable-march-native-agressive-m64.patch",
+     "subject": "configure: disable march native, agressive -m64",
+     "hunks": "ac725f5d87a88b4e"
+    }
+   ]
+  },
+  "gnome-build-meta.bst:gnomeos-deps/ld-config.bst": {
+   "kind": "manual"
+  },
+  "gnome-build-meta.bst:gnomeos-deps/libfprint.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:gnomeos-deps/libhangul.bst": {
+   "kind": "autotools"
+  },
+  "gnome-build-meta.bst:gnomeos-deps/libpinyin.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--with-dbm=KyotoCabinet"
+   }
+  },
+  "gnome-build-meta.bst:gnomeos-deps/libssc.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:gnomeos-deps/libtsm.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:gnomeos-deps/m17n-db.bst": {
+   "kind": "autotools"
+  },
+  "gnome-build-meta.bst:gnomeos-deps/m17n-lib.bst": {
+   "kind": "autotools"
+  },
+  "gnome-build-meta.bst:gnomeos-deps/modprobe-config.bst": {
+   "kind": "manual"
+  },
+  "gnome-build-meta.bst:gnomeos-deps/nano-default-editor.bst": {
+   "kind": "manual"
+  },
+  "gnome-build-meta.bst:gnomeos-deps/nm-connectivity-config.bst": {
+   "kind": "import"
+  },
+  "gnome-build-meta.bst:gnomeos-deps/noise-suppression-for-voice.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DBUILD_VST_PLUGIN:BOOL=OFF -DBUILD_VST3_PLUGIN:BOOL=OFF -DBUILD_LV2_PLUGIN:BOOL=OFF -DBUILD_AU_PLUGIN:BOOL=OFF -DBUILD_AUV3_PLUGIN:BOOL=OFF"
+   }
+  },
+  "gnome-build-meta.bst:gnomeos-deps/noto-cjk.bst": {
+   "kind": "manual"
+  },
+  "gnome-build-meta.bst:gnomeos-deps/oo7-cli.bst": {
+   "kind": "cargo"
+  },
+  "gnome-build-meta.bst:gnomeos-deps/openconnect.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--with-vpnc-script=/usr/share/vpnc-scripts"
+   }
+  },
+  "gnome-build-meta.bst:gnomeos-deps/openvpn.bst": {
+   "kind": "autotools"
+  },
+  "gnome-build-meta.bst:gnomeos-deps/pam-pkcs11.bst": {
+   "kind": "autotools"
+  },
+  "gnome-build-meta.bst:gnomeos-deps/pcrlock-config.bst": {
+   "kind": "import"
+  },
+  "gnome-build-meta.bst:gnomeos-deps/preset-all.bst": {
+   "kind": "import"
+  },
+  "gnome-build-meta.bst:gnomeos-deps/snapd.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--enable-merged-usr --enable-apparmor --disable-selinux --with-snap-mount-dir=\"/snap\" --without-unit-tests"
+   }
+  },
+  "gnome-build-meta.bst:gnomeos-deps/switcheroo-control.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dgtk_doc=true -Dtests=true"
+   }
+  },
+  "gnome-build-meta.bst:gnomeos-deps/sysext-utils.bst": {
+   "kind": "pyproject"
+  },
+  "gnome-build-meta.bst:gnomeos-deps/sysupdate-config.bst": {
+   "kind": "import"
+  },
+  "gnome-build-meta.bst:gnomeos-deps/thermald.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--with-systemdsystemunitdir=%{indep-libdir}/systemd/system"
+   }
+  },
+  "gnome-build-meta.bst:gnomeos-deps/udev-hide-usr.bst": {
+   "kind": "manual"
+  },
+  "gnome-build-meta.bst:gnomeos-deps/uinput.bst": {
+   "kind": "import"
+  },
+  "gnome-build-meta.bst:gnomeos-deps/uresourced.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:gnomeos-deps/vpnc-scripts.bst": {
+   "kind": "manual"
+  },
+  "gnome-build-meta.bst:gnomeos-deps/vpnc.bst": {
+   "kind": "make"
+  },
+  "gnome-build-meta.bst:gnomeos-deps/vte-config.bst": {
+   "kind": "manual"
+  },
+  "gnome-build-meta.bst:gnomeos-deps/wpa-supplicant-config.bst": {
+   "kind": "manual"
+  },
+  "gnome-build-meta.bst:gnomeos-deps/wsdd.bst": {
+   "kind": "manual"
+  },
+  "gnome-build-meta.bst:gnomeos/ldconfig-always.bst": {
+   "kind": "import"
+  },
+  "gnome-build-meta.bst:oci/initramfs/image.bst": {
+   "kind": "manual"
+  },
+  "gnome-build-meta.bst:oci/integration/bootc-config.bst": {
+   "kind": "manual"
+  },
+  "gnome-build-meta.bst:sdk-deps/libpanel.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:sdk/adwaita-fonts.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:sdk/adwaita-icon-theme.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:sdk/at-spi2-core.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Ddocs=true"
+   }
+  },
+  "gnome-build-meta.bst:sdk/blueprint-compiler.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:sdk/cairo.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dspectre=disabled -Dsymbol-lookup=disabled -Dtests=disabled"
+   }
+  },
+  "gnome-build-meta.bst:sdk/cantarell-fonts.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Duseprebuilt=true"
+   }
+  },
+  "gnome-build-meta.bst:sdk/enchant-2.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--with-hunspell --with-hunspell-dir=/usr/share/myspell --with-nuspell"
+   }
+  },
+  "gnome-build-meta.bst:sdk/fcitx5-gtk.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DENABLE_GIR=Off -DENABLE_GTK4_IM_MODULE=On -DENABLE_GTK3_IM_MODULE=On -DENABLE_GTK2_IM_MODULE=Off"
+   }
+  },
+  "gnome-build-meta.bst:sdk/gcab.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:sdk/gcr.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:sdk/gdk-pixbuf.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dgtk_doc=true -Dman=false -Dbuiltin_loaders='glycin' -Dthumbnailer=disabled -Dpng=disabled -Dtiff=disabled -Djpeg=disabled -Dgif=disabled -Dandroid=disabled -Dtests=false"
+   }
+  },
+  "gnome-build-meta.bst:sdk/gjs.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dprofiler=enabled -Db_pch=false"
+   }
+  },
+  "gnome-build-meta.bst:sdk/glib-networking.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dinstalled_tests=true"
+   }
+  },
+  "gnome-build-meta.bst:sdk/glib.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Ddocumentation=true -Ddtrace=disabled -Dglib_debug=\"enabled\" -Dinstalled_tests=true -Dintrospection=enabled -Dselinux=disabled -Dsysprof=enabled -Dsystemtap=disabled"
+   },
+   "conditional_variables": true
+  },
+  "gnome-build-meta.bst:sdk/glycin.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dlibglycin=false -Dlibglycin-gtk4=false -Dtests=false"
+   }
+  },
+  "gnome-build-meta.bst:sdk/gobject-introspection.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dcairo=disabled -Ddoctool=enabled -Dgtk_doc=true"
+   }
+  },
+  "gnome-build-meta.bst:sdk/graphene.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:sdk/gsettings-desktop-schemas.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:sdk/gssproxy.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--enable-always-interpose --enable-only-gss-module --with-gpp-default-behavior=REMOTE_FIRST --with-initscript=none --with-manpages=no --with-socket-name=/run/flatpak/gssproxy/default.sock"
+   }
+  },
+  "gnome-build-meta.bst:sdk/gst-plugin-gtk4.bst": {
+   "kind": "manual"
+  },
+  "gnome-build-meta.bst:sdk/gtk+-3.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dbroadway_backend=true -Dinstalled_tests=true -Dtests=false -Dx11_backend=true -Dwayland_backend=true -Dgtk_doc=true -Dman=true -Dintrospection=true -Dtracker3=true -Dprofiler=false"
+   }
+  },
+  "gnome-build-meta.bst:sdk/gtk.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dbroadway-backend=true -Ddocumentation=true -Dman-pages=true -Dsysprof=enabled"
+   }
+  },
+  "gnome-build-meta.bst:sdk/gtksourceview.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dinstall-tests=true -Ddocumentation=true -Dsysprof=true"
+   }
+  },
+  "gnome-build-meta.bst:sdk/gvfs-client.bst": {
+   "kind": "filter",
+   "build": {
+    "element": "gnome-build-meta.bst:sdk-deps/gvfs.bst",
+    "kind": "meson",
+    "options": {
+     "meson-local": "-Dgoogle=false"
+    }
+   }
+  },
+  "gnome-build-meta.bst:sdk/json-glib.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dgtk_doc=enabled"
+   }
+  },
+  "gnome-build-meta.bst:sdk/krb5.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--runstatedir=%{runstatedir} --disable-rpath --with-system-et --with-system-ss --with-keyutils"
+   },
+   "patches": [
+    {
+     "path": "patches/krb5/fix-strchr-conformance-to-c23.patch",
+     "subject": "",
+     "hunks": "66b91f11d8bde6f5"
+    },
+    {
+     "path": "patches/krb5/make-configure.ac-work-with-autoconf-2.73.patch",
+     "subject": "",
+     "hunks": "d7b146ed6bac9cbf"
+    }
+   ]
+  },
+  "gnome-build-meta.bst:sdk/libadwaita.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dprofiling=true -Dgtk_doc=true"
+   }
+  },
+  "gnome-build-meta.bst:sdk/libdex.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Ddocs=true -Dsysprof=true"
+   }
+  },
+  "gnome-build-meta.bst:sdk/libgee.bst": {
+   "kind": "autotools"
+  },
+  "gnome-build-meta.bst:sdk/libglycin-gtk4.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dlibglycin-gtk4=true -Dlibglycin=false -Dglycin-thumbnailer=false -Dglycin-loaders=false"
+   }
+  },
+  "gnome-build-meta.bst:sdk/libglycin.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dlibglycin-gtk4=false -Dglycin-thumbnailer=false -Dglycin-loaders=false"
+   }
+  },
+  "gnome-build-meta.bst:sdk/libibus.bst": {
+   "kind": "filter",
+   "build": {
+    "element": "gnome-build-meta.bst:sdk-deps/ibus.bst",
+    "kind": "autotools",
+    "options": {
+     "conf-local": "--enable-dconf --enable-memconf --disable-appindicator --disable-emoji-dict --enable-engine --disable-tests --disable-gconf --disable-gtk2 --disable-gtk-doc --disable-glibtest --disable-libnotify --disable-python2 --disable-schema-compile --disable-setup --disable-ui --disable-unicode-dict --with-python=python3 --enable-wayland --enable-introspection --enable-vala --enable-gtk4 --enable-systemd"
+    }
+   }
+  },
+  "gnome-build-meta.bst:sdk/libmanette-0.2.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Ddoc=true"
+   }
+  },
+  "gnome-build-meta.bst:sdk/libnotify.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Ddocbook_docs=disabled -Dman=false -Dtests=false"
+   }
+  },
+  "gnome-build-meta.bst:sdk/libportal.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dbackend-qt5=disabled -Dbackend-qt6=disabled"
+   }
+  },
+  "gnome-build-meta.bst:sdk/librsvg.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dpkgconfig.relocatable=false -Dpixbuf-loader=disabled"
+   }
+  },
+  "gnome-build-meta.bst:sdk/libsecret.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:sdk/libsoup.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dautobahn=disabled -Dinstalled_tests=true -Dntlm=disabled -Dsysprof=enabled -Dtls_check=false"
+   }
+  },
+  "gnome-build-meta.bst:sdk/ministream.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Das-compare=disabled"
+   }
+  },
+  "gnome-build-meta.bst:sdk/mozjs.bst": {
+   "kind": "manual",
+   "patches": [
+    {
+     "path": "patches/mozjs/bmo1973994-fix-os-dependent-headers.patch",
+     "subject": "Bug 1973994 - mozjs-140.pc does not contain -DXP_UNIX on",
+     "hunks": "2378baefa03cbbe6"
+    },
+    {
+     "path": "patches/mozjs/python-3.14.patch",
+     "subject": "",
+     "hunks": "2563795f3ffcb186"
+    }
+   ]
+  },
+  "gnome-build-meta.bst:sdk/nuspell.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DBUILD_DOCS=OFF -DBUILD_TESTING=OFF"
+   }
+  },
+  "gnome-build-meta.bst:sdk/pango.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Dgtk_doc=true -Dxft=disabled"
+   }
+  },
+  "gnome-build-meta.bst:sdk/pinentry.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--enable-maintainer-mode --enable-pinentry-gnome3 --enable-fallback-curses --disable-pinentry-curses --disable-pinentry-qt --disable-pinentry-gtk2 --disable-pinentry-fltk --enable-libsecret"
+   }
+  },
+  "gnome-build-meta.bst:sdk/pygobject.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:sdk/tinysparql.bst": {
+   "kind": "meson",
+   "options": {
+    "meson-local": "-Davahi=disabled -Dunicode_support=icu -Dstemmer=disabled"
+   }
+  },
+  "gnome-build-meta.bst:sdk/vala.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--enable-unversioned --disable-valadoc"
+   }
+  },
+  "gnome-build-meta.bst:sdk/webkit2gtk-4.1.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DPORT=GTK -DENABLE_SPEECH_SYNTHESIS=OFF -DENABLE_WEBDRIVER=OFF -DUSE_LIBBACKTRACE=OFF -DUSE_GTK4=OFF -DCMAKE_DISABLE_PRECOMPILE_HEADERS=ON"
+   },
+   "conditional_variables": true
+  },
+  "gnome-build-meta.bst:sdk/webkitgtk-6.0.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DPORT=GTK -DENABLE_SPEECH_SYNTHESIS=OFF -DUSE_GTK4=ON -DUSE_LIBBACKTRACE=OFF -DCMAKE_DISABLE_PRECOMPILE_HEADERS=ON"
+   },
+   "conditional_variables": true
+  },
+  "gnome-build-meta.bst:sdk/woff2.bst": {
+   "kind": "cmake",
+   "options": {
+    "cmake-local": "-DCMAKE_POLICY_VERSION_MINIMUM=3.5"
+   },
+   "patches": [
+    {
+     "path": "patches/woff2/gcc15.patch",
+     "subject": "",
+     "hunks": "ad35f91351ec42ba"
+    }
+   ]
+  },
+  "gnome-build-meta.bst:sdk/yelp-tools.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:sdk/yelp-xsl.bst": {
+   "kind": "meson"
+  },
+  "gnome-build-meta.bst:sdk/yelp.bst": {
+   "kind": "meson"
+  },
+  "gnomeos-deps/bootc.bst": {
+   "kind": "make"
+  },
+  "oci/os-release.bst": {
+   "kind": "manual",
+   "conditional_variables": true
+  }
+ }
+}

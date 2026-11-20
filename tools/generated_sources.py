@@ -25,6 +25,11 @@ that no upstream publishes verbatim:
   prefix the recipe's `%autosetup` expects. The recipe's Source0 host
   (pagure.io) was sunset in 2026 and the project publishes no release
   tarball; Fedora's lookaside copy is a hand-made tarball of the same tree
+- jpegxl: the upstream libjxl release with the three git submodules the
+  recipe builds and tests from (sjpeg, skcms without its ICC profiles,
+  testdata) filled in at the commits the release tag pins. The release
+  archive leaves submodules empty; Fedora's update_third_party.sh tars them
+  up by hand as two extra lookaside sources, which a bump cannot produce
 - bluefin-artwork-logos: the Bluefin logo SVGs and the license from
   projectbluefin/artwork at a pinned commit. The repository publishes no
   release, and its archive carries every wallpaper (well over 100 MB) for
@@ -51,6 +56,9 @@ that no upstream publishes verbatim:
 - gst-thumbnailers: the upstream GNOME release (SHA-512-pinned) with the same
   `vendor/` tree added. Hummingbird ships no Rust crate RPMs, so the recipe
   bundles its gtk-rs, clap and libglycin-rebind dependencies (#527)
+- gstreamer-plugins-rs: `git archive` of the gst-plugins-rs tag at a pinned
+  commit with the same `vendor/` tree, built from Cargo.lock as the recipe's
+  patches leave it: Dakota's freedesktop-sdk element patches the lock (#1040)
 - hyperv-daemons: the kernel's tools/hv and the tools/build and
   tools/scripts makefiles it includes, cut from the stable kernel release
   (SHA-512-pinned). The kernel publishes no tools/hv archive; Fedora's
@@ -60,6 +68,10 @@ that no upstream publishes verbatim:
 - oo7: the upstream GitHub commit archive (SHA-512-pinned, keyed by the
   spec's commit) with the same `vendor/` tree added. Fedora 44 lacks crate
   RPMs the commit needs, and Hummingbird ships none (#1192)
+- bluefin-cli: the upstream GitHub tag archive with the `vendor/` tree of
+  the release's own bluefin-cli-<version>-vendor.tar.gz unpacked into it,
+  both SHA-512-pinned. Fedora has no recipe, and the vendor archive is a
+  release asset no lookaside carries, so it cannot be a second `sources` line
 
 For these, the source lock names this script and records the SHA-512 of the
 bytes the transformation produces. Verification re-runs the transformation
@@ -660,6 +672,121 @@ def _sevenzip_generate(package_dir: Path, out_dir: Path) -> Path:
         raise RuntimeError(f"input archive mismatch for {url}: expected {pin}, got {actual}")
     target = out_dir / f"7zip-{version}.tar.xz"
     target.write_bytes(_sevenzip_transform(payload, version))
+    return target
+
+
+# --- jpegxl --------------------------------------------------------------------
+
+JPEGXL_UPSTREAM_URL = "https://github.com/libjxl/libjxl/archive/v{version}/jpegxl-{version}.tar.gz"
+
+# Per release: the SHA-512 of the libjxl tag archive, and for each submodule
+# the recipe needs, the commit the tag's gitlink pins (GitHub contents API,
+# `repos/libjxl/libjxl/contents/<path>?ref=v<version>`) and the SHA-512 of
+# that commit's GitHub archive.
+JPEGXL_INPUTS = {
+    "0.12.0": {
+        "sha512": "71d45123e47588c8028c0e01a7820c7a18d98df05c29b5318ab6858eaff5f249879763907201ba19a93f817c6ef75c393c1974d2a0cc8e461c4e2709ca6fa45f",
+        "submodules": {
+            "third_party/sjpeg": ("https://github.com/webmproject/sjpeg", "94e0df6d0f8b44228de5be0ff35efb9f946a13c9", "d3e175628fff9e3a2adb300d760a5eb686080eb7681d95215f89c8c94c6ea7b07b74b0c8eed396d01505977e6dbf3a401d1ee5e93ecce2f9e7671042bd12316e"),
+            "third_party/skcms": ("https://github.com/google/skcms", "96d9171c94b937a1b5f0293de7309ac16311b722", "63dc75a2898e848ec0c68d06ea5b13e65304088ab205ceef8c5d36aacf233a6478158653f6da0ab417671fa00d08e66bffe593caa351a5802fc1129553e70f43"),
+            "testdata": ("https://github.com/libjxl/testdata", "73695d303670c90e4d506ea89d9901b081385089", "8c02a1b7752da9ec93c228436c4bbcdafb5b655e6386a76cf9ccfc4b1c5d4614d9ec3b9931281a57a5348720d4641ff518cb6ed9e06a5dcb0725fd9fda138618"),
+        },
+    },
+}
+
+# update_third_party.sh deletes these from the trees it packs.
+JPEGXL_DROPPED = ("third_party/skcms/profiles",)
+
+
+def _jpegxl_dropped(rel: str) -> bool:
+    return any(rel == path or rel.startswith(path + "/") for path in JPEGXL_DROPPED)
+
+
+def _jpegxl_transform(archive: bytes, submodules: dict[str, tuple[str, bytes]], version: str) -> bytes:
+    """Fill the release archive's empty submodule directories.
+
+    `submodules` maps a path inside the release (`third_party/sjpeg`) to the
+    commit and the GitHub archive of that commit, whose `<repo>-<commit>/`
+    top level is renamed to `libjxl-<version>/<path>/`. Members keep their
+    archives' modes and mtimes and are sorted by name with ownership zeroed,
+    as one xz stream.
+    """
+    top = f"libjxl-{version}"
+    kept: dict[str, tuple[tarfile.TarInfo, bytes | None]] = {}
+
+    def take(source: tarfile.TarFile, prefix: str, target: str) -> None:
+        for member in source:
+            name = member.name.rstrip("/")
+            if name != prefix and not name.startswith(prefix + "/"):
+                continue
+            rel = (target + name[len(prefix):]).lstrip("/")
+            if _jpegxl_dropped(rel):
+                continue
+            if not (member.isdir() or member.isreg() or member.issym()):
+                raise RuntimeError(f"unexpected member type in {member.name}")
+            payload = source.extractfile(member).read() if member.isreg() else None
+            kept[f"{top}/{rel}" if rel else top] = (member, payload)
+
+    with tarfile.open(fileobj=io.BytesIO(archive), mode="r:gz") as source:
+        take(source, top, "")
+    for path, (commit, payload) in sorted(submodules.items()):
+        if any(name.startswith(f"{top}/{path}/") for name in kept):
+            raise RuntimeError(f"submodule {path} is not empty in the release archive")
+        with tarfile.open(fileobj=io.BytesIO(payload), mode="r:gz") as source:
+            first = next(iter(source.getmembers()), None)
+            if first is None or not first.name.rstrip("/").endswith(f"-{commit}"):
+                raise RuntimeError(f"archive for {path} is not of commit {commit}")
+            take(source, first.name.rstrip("/"), path)
+    raw = io.BytesIO()
+    with tarfile.open(fileobj=raw, mode="w", format=tarfile.PAX_FORMAT) as result:
+        for name in sorted(kept):
+            member, payload = kept[name]
+            member.name = name
+            member.uid = member.gid = 0
+            member.uname = member.gname = ""
+            member.pax_headers = {}
+            result.addfile(member, io.BytesIO(payload) if payload is not None else None)
+    out = io.BytesIO()
+    _xz_compress_stream(iter([raw.getvalue()]), out)
+    return out.getvalue()
+
+
+def _jpegxl_metadata(package_dir: Path) -> dict:
+    version = spec_version(package_dir, "jpegxl.spec")
+    pins = JPEGXL_INPUTS.get(version, {}).get("submodules", {})
+    parts = ", ".join(f"{path} {remote} commit {commit}" for path, (remote, commit, _) in sorted(pins.items()))
+    return {
+        "name": "jpegxl",
+        "version": version,
+        "filename": f"jpegxl-{version}.tar.xz",
+        "generate": {
+            "script": SCRIPT_PATH,
+            "input": f"{JPEGXL_UPSTREAM_URL.format(version=version)} (sha512-pinned); submodule archives (sha512-pinned): {parts}",
+            "method": f"fill the release's empty sjpeg, skcms (minus profiles/, per update_third_party.sh) and testdata submodules at the tag's gitlinks and repack deterministically as jpegxl-{version}.tar.xz",
+        },
+    }
+
+
+def _jpegxl_generate(package_dir: Path, out_dir: Path) -> Path:
+    version = spec_version(package_dir, "jpegxl.spec")
+    pins = JPEGXL_INPUTS.get(version)
+    if pins is None:
+        raise RuntimeError(f"no pinned inputs for jpegxl {version}")
+
+    def fetch(url: str, pin: str) -> bytes:
+        payload = _fetch(url)
+        actual = hashlib.sha512(payload).hexdigest()
+        if actual != pin:
+            raise RuntimeError(f"input archive mismatch for {url}: expected {pin}, got {actual}")
+        return payload
+
+    archive = fetch(JPEGXL_UPSTREAM_URL.format(version=version), pins["sha512"])
+    submodules = {
+        path: (commit, fetch(f"{remote}/archive/{commit}.tar.gz", pin))
+        for path, (remote, commit, pin) in pins["submodules"].items()
+    }
+    target = out_dir / f"jpegxl-{version}.tar.xz"
+    target.write_bytes(_jpegxl_transform(archive, submodules, version))
     return target
 
 
@@ -1461,23 +1588,24 @@ CARGO_VENDORED_MTIME = 0
 PREFIXDEVNAME_MTIME = CARGO_VENDORED_MTIME
 
 
-def _cargo_vendored_transform(source: bytes, top: str, crates: dict, mtime: int) -> bytes:
+def _cargo_vendored_transform(source: bytes, top: str, crates: dict, mtime: int, lock_text: str | None = None) -> bytes:
     """Add a vendor/ tree to a release tarball, deterministically.
 
     The archive already lays out the source under <top>/. Its compression is
     detected, so a .tar.gz and a .tar.xz release both work.
     vendor/<crate>-<version>/ is appended for each crate the release root's
     Cargo.lock pins, with its .cargo-checksum.json, exactly as
-    `cargo vendor --versioned-dirs` lays it out. Every member is stamped with
-    a fixed mtime and zero ownership, so the same inputs always produce the
-    same bytes.
+    `cargo vendor --versioned-dirs` lays it out. A recipe that patches its
+    Cargo.lock passes the patched ``lock_text`` instead; the tree itself stays
+    as released. Every member is stamped with a fixed mtime and zero
+    ownership, so the same inputs always produce the same bytes.
     """
     raw = io.BytesIO()
     with tarfile.open(fileobj=io.BytesIO(source), mode="r:*") as src, \
             tarfile.open(fileobj=raw, mode="w", format=tarfile.PAX_FORMAT) as result:
         members = sorted(src.getmembers(), key=lambda m: m.name.rstrip("/"))
-        lock_member = src.getmember(f"{top}/Cargo.lock")
-        lock_text = src.extractfile(lock_member).read().decode()
+        if lock_text is None:
+            lock_text = src.extractfile(src.getmember(f"{top}/Cargo.lock")).read().decode()
         for member in members:
             if not (member.name == top or member.name.startswith(top + "/")):
                 raise RuntimeError(f"archive member outside {top}: {member.name}")
@@ -1725,6 +1853,109 @@ def _tealdeer_generate(package_dir: Path, out_dir: Path) -> Path:
     )
 
 
+# --- bluefin-cli ---------------------------------------------------------------
+
+# Utah's terminal experience (shell tools, prompt hooks, MOTD) from
+# tuna-os/bluefin-cli. Fedora has no recipe. Each release publishes, beside its
+# tag, bluefin-cli-<version>-vendor.tar.gz: the `go mod vendor` tree of every
+# module go.sum pins (scripts/vendor-archive.sh upstream). The lock takes one
+# primary source and a second `sources` line resolves only from a dist-git
+# lookaside, so both release files are SHA-512-pinned here and the vendor tree
+# is unpacked into the tag archive, which builds offline as gum's Source0 and
+# Source1 do together.
+BLUEFIN_CLI_UPSTREAM_URL = "https://github.com/tuna-os/bluefin-cli/archive/v{version}/bluefin-cli-{version}.tar.gz"
+BLUEFIN_CLI_VENDOR_URL = (
+    "https://github.com/tuna-os/bluefin-cli/releases/download/v{version}/bluefin-cli-{version}-vendor.tar.gz"
+)
+# version -> (tag archive SHA-512, vendor archive SHA-512)
+BLUEFIN_CLI_INPUT_SHA512: dict[str, tuple[str, str]] = {
+    "0.15.0": (
+        "540be790f92d45ac61526c6437be74f47ed0353e047768d7577ac54833e51a88cd5937571472a2952cb07fe79af2b9c1611bb75b7a0dcac5d97530e1b1644256",
+        "731b2b5954672d2b2f5e824ed1d71ebf93b912276df7aab060cb2a011e7ef7a552a9ae323fb77bf6536cef29a71320a0f74ff99c57b1d01956f2117b74a847a9",
+    ),
+}
+BLUEFIN_CLI_MTIME = 0
+
+
+def _normalized(member: tarfile.TarInfo, name: str, mtime: int) -> tarfile.TarInfo:
+    member.name = name
+    member.uid = member.gid = 0
+    member.uname = member.gname = ""
+    member.pax_headers = {}
+    member.mtime = mtime
+    return member
+
+
+def _bluefin_cli_transform(source: bytes, vendor: bytes, version: str) -> bytes:
+    """Unpack the release's vendor/ tree into its tag archive, deterministically.
+
+    Every member of both archives is renamed under bluefin-cli-<version>/,
+    sorted, owned by root with no names, and stamped with a fixed mtime, so the
+    same two inputs always give the same bytes. A tag archive that already
+    carries vendor/, or a vendor archive with anything outside vendor/, is
+    refused rather than merged.
+    """
+    top = f"bluefin-cli-{version}"
+    members: dict[str, tuple[tarfile.TarInfo, bytes | None]] = {}
+    with tarfile.open(fileobj=io.BytesIO(source), mode="r:*") as src:
+        for member in src.getmembers():
+            name = member.name.rstrip("/")
+            if not (name == top or name.startswith(top + "/")):
+                raise RuntimeError(f"archive member outside {top}: {member.name}")
+            if name == f"{top}/vendor" or name.startswith(f"{top}/vendor/"):
+                raise RuntimeError(f"tag archive already carries {name}")
+            data = src.extractfile(member).read() if member.isreg() else None
+            members[name] = (_normalized(member, name, BLUEFIN_CLI_MTIME), data)
+    with tarfile.open(fileobj=io.BytesIO(vendor), mode="r:*") as src:
+        for member in src.getmembers():
+            name = member.name.rstrip("/").removeprefix("./")
+            if not (name == "vendor" or name.startswith("vendor/")):
+                raise RuntimeError(f"vendor archive member outside vendor/: {member.name}")
+            data = src.extractfile(member).read() if member.isreg() else None
+            members[f"{top}/{name}"] = (_normalized(member, f"{top}/{name}", BLUEFIN_CLI_MTIME), data)
+    raw = io.BytesIO()
+    with tarfile.open(fileobj=raw, mode="w", format=tarfile.PAX_FORMAT) as result:
+        for name in sorted(members):
+            info, data = members[name]
+            result.addfile(info, io.BytesIO(data) if data is not None else None)
+    out = io.BytesIO()
+    _xz_compress_stream(iter([raw.getvalue()]), out)
+    return out.getvalue()
+
+
+def _bluefin_cli_metadata(package_dir: Path) -> dict:
+    version = spec_version(package_dir, "bluefin-cli.spec")
+    return {
+        "name": "bluefin-cli",
+        "version": version,
+        "filename": f"bluefin-cli-{version}-vendored.tar.xz",
+        "generate": {
+            "script": SCRIPT_PATH,
+            "input": f"{BLUEFIN_CLI_UPSTREAM_URL.format(version=version)} and "
+                     f"{BLUEFIN_CLI_VENDOR_URL.format(version=version)} (each sha512-pinned)",
+            "method": f"unpack the release's vendor/ tree into the tag archive and repack deterministically as bluefin-cli-{version}-vendored.tar.xz",
+        },
+    }
+
+
+def _bluefin_cli_generate(package_dir: Path, out_dir: Path) -> Path:
+    version = spec_version(package_dir, "bluefin-cli.spec")
+    pins = BLUEFIN_CLI_INPUT_SHA512.get(version)
+    if pins is None:
+        raise RuntimeError(f"no pinned input SHA-512 for bluefin-cli {version}")
+    payloads = []
+    for url, pin in zip((BLUEFIN_CLI_UPSTREAM_URL.format(version=version),
+                         BLUEFIN_CLI_VENDOR_URL.format(version=version)), pins):
+        payload = _fetch(url)
+        actual = hashlib.sha512(payload).hexdigest()
+        if actual != pin:
+            raise RuntimeError(f"input archive mismatch for {url}: expected {pin}, got {actual}")
+        payloads.append(payload)
+    target = out_dir / f"bluefin-cli-{version}-vendored.tar.xz"
+    target.write_bytes(_bluefin_cli_transform(*payloads, version))
+    return target
+
+
 # --- git-archive tag sources -----------------------------------------------------
 
 # Recipes whose Source0 is `git archive` of an upstream tag: the project
@@ -1794,6 +2025,26 @@ def _git_archive_metadata(name: str, package_dir: Path) -> dict:
     }
 
 
+def _git_tag_tar(name: str, remote: str, tag: str, commit: str, prefix: str, scratch: Path) -> bytes:
+    """`git archive` of ``commit`` under ``prefix``, once ``tag`` is proven to resolve to it."""
+    with tempfile.TemporaryDirectory(prefix=f"{name}-git-", dir=scratch) as tmp:
+        subprocess.run(["git", "init", "-q", tmp], check=True)
+        # Fetch only the tag: rtmpdump's repository advertises refs to the
+        # all-zero object, which a full clone refuses.
+        _git_network(
+            ["git", "-C", tmp, "fetch", "-q", "--depth", "1", remote, f"refs/tags/{tag}"],
+            remote,
+        )
+        head = subprocess.check_output(
+            ["git", "-C", tmp, "rev-parse", "FETCH_HEAD^{commit}"], text=True
+        ).strip()
+        if head != commit:
+            raise RuntimeError(f"tag {tag} moved: expected {commit}, got {head}")
+        return subprocess.check_output(
+            ["git", "-C", tmp, "archive", "--format=tar", f"--prefix={prefix}/", commit]
+        )
+
+
 def _git_archive_generate(name: str, package_dir: Path, out_dir: Path) -> Path:
     source = GIT_ARCHIVE_SOURCES[name]
     version = spec_version(package_dir, f"{name}.spec")
@@ -1801,24 +2052,92 @@ def _git_archive_generate(name: str, package_dir: Path, out_dir: Path) -> Path:
     if commit is None:
         raise RuntimeError(f"no pinned commit for {name} {version}")
     tag = source["tag"].format(version=version)
-    with tempfile.TemporaryDirectory(prefix=f"{name}-git-", dir=out_dir) as tmp:
-        subprocess.run(["git", "init", "-q", tmp], check=True)
-        # Fetch only the tag: rtmpdump's repository advertises refs to the
-        # all-zero object, which a full clone refuses.
-        _git_network(
-            ["git", "-C", tmp, "fetch", "-q", "--depth", "1", source["remote"], f"refs/tags/{tag}"],
-            source["remote"],
-        )
-        head = subprocess.check_output(
-            ["git", "-C", tmp, "rev-parse", "FETCH_HEAD^{commit}"], text=True
-        ).strip()
-        if head != commit:
-            raise RuntimeError(f"tag {tag} moved: expected {commit}, got {head}")
-        raw = subprocess.check_output(
-            ["git", "-C", tmp, "archive", "--format=tar", f"--prefix={name}-{version}/", commit]
-        )
+    raw = _git_tag_tar(name, source["remote"], tag, commit, f"{name}-{version}", out_dir)
     target = out_dir / f"{name}-{version}.tar.{source['compression']}"
     target.write_bytes(_git_archive_compress(raw, source["compression"]))
+    return target
+
+
+# --- gstreamer-plugins-rs --------------------------------------------------------
+
+# Dakota ships freedesktop-sdk's components/gstreamer-plugins-rs.bst: the
+# gst-plugins-rs tag, built for the rtp, gif, hlssink3, dav1d and spotify
+# plugins from vendored crates (#1040). The project publishes no release file,
+# so the input is `git archive` of the tag's pinned commit, as above. The
+# recipe does not build the lock as released: its patches (freedesktop-sdk's
+# move from git gtk-rs to crates.io, then the workspace cut to the five
+# plugins) change it, so every spec Patch is applied to Cargo.lock first and
+# that lock decides the vendored set. The tree stays as released; %prep
+# applies the same patches.
+GSTREAMER_PLUGINS_RS_REMOTE = "https://gitlab.freedesktop.org/gstreamer/gst-plugins-rs.git"
+GSTREAMER_PLUGINS_RS_COMMITS = {
+    "0.15.4": "1afff3711855238433862c0ce3bf34918e500386",
+}
+
+
+def recipe_patches(package_dir: Path, spec_name: str) -> list[Path]:
+    """The recipe's Patch files, in spec order."""
+    patches = []
+    for line in (package_dir / spec_name).read_text().splitlines():
+        match = re.match(r"Patch\d*\s*:\s*(\S+)\s*$", line)
+        if match:
+            if "%" in match.group(1):
+                raise ValueError(f"{spec_name}: Patch {match.group(1)} uses a macro; name the file")
+            patches.append(package_dir / match.group(1))
+    return patches
+
+
+def _patched_cargo_lock(lock_text: str, patches: list[Path], scratch: Path) -> str:
+    """Cargo.lock after every patch's Cargo.lock hunks, applied by git apply.
+
+    The scratch directory is its own repository, so git applies the paths
+    there even when the output directory sits inside a checkout.
+    """
+    with tempfile.TemporaryDirectory(prefix="cargo-lock-", dir=scratch) as tmp:
+        subprocess.run(["git", "init", "-q", tmp], check=True)
+        lock = Path(tmp) / "Cargo.lock"
+        lock.write_text(lock_text)
+        if patches:
+            subprocess.run(
+                ["git", "-C", tmp, "apply", "--include=Cargo.lock", *(str(p.resolve()) for p in patches)],
+                check=True,
+            )
+        return lock.read_text()
+
+
+def _gstreamer_plugins_rs_metadata(package_dir: Path) -> dict:
+    version = spec_version(package_dir, "gstreamer-plugins-rs.spec")
+    commit = GSTREAMER_PLUGINS_RS_COMMITS.get(version, "<unpinned>")
+    filename = f"gst-plugins-rs-{version}-vendored.tar.xz"
+    return {
+        "name": "gstreamer-plugins-rs",
+        "version": version,
+        "filename": filename,
+        "generate": {
+            "script": SCRIPT_PATH,
+            "input": f"{GSTREAMER_PLUGINS_RS_REMOTE} tag {version} (commit {commit}) and every crates.io crate its Cargo.lock pins after the recipe's patches (sha256-pinned by that Cargo.lock)",
+            "method": f"git archive --format=tar --prefix=gst-plugins-rs-{version}/ of the pinned commit, add vendor/<crate>-<version> for each patched Cargo.lock crate with .cargo-checksum.json, as cargo vendor --versioned-dirs lays it out, and repack deterministically as {filename}",
+        },
+    }
+
+
+def _gstreamer_plugins_rs_generate(package_dir: Path, out_dir: Path) -> Path:
+    version = spec_version(package_dir, "gstreamer-plugins-rs.spec")
+    commit = GSTREAMER_PLUGINS_RS_COMMITS.get(version)
+    if commit is None:
+        raise RuntimeError(f"no pinned commit for gstreamer-plugins-rs {version}")
+    patches = recipe_patches(package_dir, "gstreamer-plugins-rs.spec")
+    top = f"gst-plugins-rs-{version}"
+    archive = _git_tag_tar("gstreamer-plugins-rs", GSTREAMER_PLUGINS_RS_REMOTE, version, commit, top, out_dir)
+    with tarfile.open(fileobj=io.BytesIO(archive), mode="r:") as source:
+        released = source.extractfile(source.getmember(f"{top}/Cargo.lock")).read().decode()
+    lock_text = _patched_cargo_lock(released, patches, out_dir)
+    crates = {
+        (crate["name"], crate["version"]): _fetch(CRATE_URL.format(**crate))
+        for crate in cargo_lock_packages(lock_text)
+    }
+    target = out_dir / f"{top}-vendored.tar.xz"
+    target.write_bytes(_cargo_vendored_transform(archive, top, crates, CARGO_VENDORED_MTIME, lock_text))
     return target
 
 
@@ -1833,14 +2152,17 @@ METADATA = {
     "prefixdevname": _prefixdevname_metadata,
     "kanata": _kanata_metadata,
     "gst-thumbnailers": _gst_thumbnailers_metadata,
+    "gstreamer-plugins-rs": _gstreamer_plugins_rs_metadata,
     "freerdp": _freerdp_metadata,
     "fpaste": _fpaste_metadata,
     "7zip": _sevenzip_metadata,
+    "jpegxl": _jpegxl_metadata,
     "hyperv-daemons": _hyperv_metadata,
     "bluefin-artwork-logos": _bluefin_artwork_metadata,
     "bluefin-wallpapers": _bluefin_wallpapers_metadata,
     "tealdeer": _tealdeer_metadata,
     "oo7": _oo7_metadata,
+    "bluefin-cli": _bluefin_cli_metadata,
 }
 
 GENERATORS = {
@@ -1854,14 +2176,17 @@ GENERATORS = {
     "prefixdevname": _prefixdevname_generate,
     "kanata": _kanata_generate,
     "gst-thumbnailers": _gst_thumbnailers_generate,
+    "gstreamer-plugins-rs": _gstreamer_plugins_rs_generate,
     "freerdp": _freerdp_generate,
     "fpaste": _fpaste_generate,
     "7zip": _sevenzip_generate,
+    "jpegxl": _jpegxl_generate,
     "hyperv-daemons": _hyperv_generate,
     "bluefin-artwork-logos": _bluefin_artwork_generate,
     "bluefin-wallpapers": _bluefin_wallpapers_generate,
     "tealdeer": _tealdeer_generate,
     "oo7": _oo7_generate,
+    "bluefin-cli": _bluefin_cli_generate,
 }
 
 
