@@ -1204,6 +1204,12 @@ packages:
     downstream_package_name: gnu-efi
     paths:
       - packages/gnu-efi
+  gnu-env:
+    specfile_path: gnu-env.spec
+    upstream_package_name: gnu-env
+    downstream_package_name: gnu-env
+    paths:
+      - packages/gnu-env
   gnu-free-fonts:
     specfile_path: gnu-free-fonts.spec
     upstream_package_name: gnu-free-fonts

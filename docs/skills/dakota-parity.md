@@ -249,6 +249,31 @@ config packages deliberately exclude gets a `not-applicable` or `structural`
 override saying why (a file another package owns, a GNOME OS image mechanism,
 a parity issue), so it leaves the gap list.
 
+## Elements that overwrite another element's files
+
+A BuildStream compose keeps whichever element stages last, so Dakota replaces
+a component by overwriting its paths (`overlap-whitelist`). RPM cannot: two
+packages may not own one path with different content. Carry such an element as
+a `-replace` subpackage that owns the overwritten paths, `Provides:` what the
+replaced package provides and `Conflicts:` with it, so dnf swaps them in one
+transaction (`dnf swap`, or Utah's `[swap]` table). Whatever Dakota keeps from
+the overwritten element needs its own package.
+
+`bluefin/uutils-coreutils.bst` is the example. `uutils-coreutils-replace`
+links GNU coreutils' programs (the names in `coreutils-single`) to uutils,
+adds Dakota's `uutils-<utility>` names, provides `coreutils` and conflicts with
+`coreutils-single`. Dakota keeps GNU's `env` for pkexec, so `gnu-env` builds
+GNU's `env` alone from the coreutils release, and the replacement requires it.
+The list of program names is explicit in the spec, and the build fails if
+uutils lacks one, so `Provides: coreutils` never drops a program silently.
+Version that Provides (the GNU release Hummingbird ships): an unversioned
+Provides also matches every versioned `Conflicts:`, and util-linux has
+`Conflicts: coreutils < 8.20`. For the same reason `gnu-env` conflicts with
+the arch-qualified `coreutils%{?_isa}`, which only GNU's packages provide.
+`bluefin/sudo-rs.bst` overwrites C sudo's `/usr/bin/sudo`, but C sudo stays
+installed for its PAM stacks and sudoers. It is protected in dnf too, so Utah
+makes that swap in its image build instead.
+
 ## Pitfalls
 
 - The SBOM's element list (`elements.tsv` in Utah's baselines) has empty
