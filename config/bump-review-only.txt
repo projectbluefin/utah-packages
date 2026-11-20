@@ -22,6 +22,7 @@ brew-tarball
 cups-browsed
 cups-filters
 fprintd
+fwupd
 gdm
 # The bootloader: a bad release, or replaced bytes, can leave a machine
 # unbootable. Its release-monitoring.org feed makes every 2.x a same-major update.
