@@ -9,7 +9,6 @@
 %global libusbx_version 1.0.23
 %global meson_version 0.61.3
 %global usbredir_version 0.7.1
-%global ipxe_version 20200823-5.git4bd064de
 
 %global have_vmsr_helper 0
 %global have_memlock_limits 0
@@ -110,7 +109,10 @@
 %endif
 
 %global have_gvnc_devel %{defined fedora}
-%global have_sdl_image %{defined fedora}
+# Utah: freedesktop-sdk-extra's components/qemu.bst, which Dakota ships,
+# configures --disable-sdl-image; neither Hummingbird nor the factory carries
+# SDL2_image, so the SDL UI goes without it (utah-packages#1021).
+%global have_sdl_image 0
 %global have_brlapi 1
 %global have_daxctl 1
 %global have_fdt 1
@@ -399,7 +401,8 @@ Version: 11.1.3
 %global rcstr -%{rcver}
 Release: %autorelease -p -e %{rcver}
 %else
-Release: %autorelease
+# Utah: -b 2 so the bundled-firmware build sorts above the published 1
+Release: %autorelease -b 2
 %endif
 
 Epoch: 2
@@ -689,7 +692,6 @@ Requires(post): /usr/sbin/groupadd
 Requires(post): /usr/sbin/useradd
 %{obsoletes_some_modules}
 
-Requires: ipxe-roms-qemu >= %{ipxe_version}
 %description common
 %{name} is an open source virtualizer that provides hardware emulation for
 the KVM hypervisor.
@@ -1540,9 +1542,6 @@ platform.
 %package system-x86-core
 Summary: QEMU system emulator for x86
 Requires: %{name}-common = %{evr}
-Requires: seabios-bin
-Requires: seavgabios-bin
-Requires: edk2-ovmf
 %description system-x86-core
 This package provides the QEMU system emulator for x86. When being run in a x86
 machine that supports it, this package also provides the KVM virtualization
@@ -2118,16 +2117,14 @@ rm -rf %{buildroot}%{_datadir}/%{name}/openbios-sparc32
 rm -rf %{buildroot}%{_datadir}/%{name}/openbios-sparc64
 # Provided by package SLOF
 rm -rf %{buildroot}%{_datadir}/%{name}/slof.bin
-# Provided by package ipxe
-rm -rf %{buildroot}%{_datadir}/%{name}/pxe*rom
-rm -rf %{buildroot}%{_datadir}/%{name}/efi*rom
-# Provided by package seavgabios
-rm -rf %{buildroot}%{_datadir}/%{name}/vgabios*bin
-# Provided by package seabios
-rm -rf %{buildroot}%{_datadir}/%{name}/bios*.bin
-# Provided by edk2
-rm -rf %{buildroot}%{_datadir}/%{name}/edk2*
-rm -rf %{buildroot}%{_datadir}/%{name}/firmware
+# Utah: freedesktop-sdk-extra's components/qemu.bst, which Dakota ships,
+# installs QEMU's bundled iPXE ROMs, SeaBIOS/SeaVGABIOS images and x86 EDK2
+# firmware with its descriptors. Neither Hummingbird nor the factory carries
+# ipxe-roms-qemu, seabios-bin, seavgabios-bin or edk2-ovmf, so keep QEMU's
+# own copies (utah-packages#1021). Other architectures' EDK2 builds still
+# come from the edk2 packages their system-*-core subpackages require.
+rm -f %{buildroot}%{_datadir}/%{name}/edk2-{aarch64,arm,riscv,loongarch64}-*.fd
+rm -f %{buildroot}%{_datadir}/%{name}/firmware/60-edk2-{aarch64,arm,riscv64,loongarch64}.json
 
 
 # Fedora specific stuff below
@@ -2473,6 +2470,8 @@ popd
 %{_datadir}/icons/*
 %{_datadir}/%{name}/keymaps/
 %attr(4755, -, -) %{_libexecdir}/qemu-bridge-helper
+%{_datadir}/%{name}/pxe-*.rom
+%{_datadir}/%{name}/efi-*.rom
 %dir %{_libdir}/%{name}/
 %{_mandir}/man1/%{name}.1*
 %{_mandir}/man1/qemu-vnc.1*
@@ -3257,6 +3256,16 @@ popd
 %{_datadir}/%{name}/multiboot_dma.bin
 %{_datadir}/%{name}/pvh.bin
 %{_datadir}/%{name}/qboot.rom
+%{_datadir}/%{name}/bios.bin
+%{_datadir}/%{name}/bios-256k.bin
+%{_datadir}/%{name}/bios-microvm.bin
+%{_datadir}/%{name}/vgabios*.bin
+%{_datadir}/%{name}/edk2-i386-*.fd
+%{_datadir}/%{name}/edk2-x86_64-*.fd
+%{_datadir}/%{name}/edk2-licenses.txt
+%dir %{_datadir}/%{name}/firmware/
+%{_datadir}/%{name}/firmware/*-edk2-i386*.json
+%{_datadir}/%{name}/firmware/*-edk2-x86_64*.json
 %{_bindir}/qemu-system-x86_64
 %{_datadir}/systemtap/tapset/qemu-system-x86_64.stp
 %{_datadir}/systemtap/tapset/qemu-system-x86_64-log.stp

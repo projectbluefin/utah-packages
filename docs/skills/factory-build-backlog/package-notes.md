@@ -223,6 +223,24 @@ then destroy the set. A version or help command does not exercise that path.
 
 `jbig2dec-libs` is an output of the `jbig2dec` source recipe, not a separate source. Ghostscript currently builds its bundled copy, so that does not establish availability of the separate library. The upstream recipe warns that consumers of its shared library must be rebuilt together on version changes; verify the hosted build, dependency transaction, and representative decoding before claiming runtime closure.
 
+## QEMU firmware and the SDL UI: follow Dakota, not Fedora's split
+
+Fedora's `qemu` recipe deletes QEMU's bundled iPXE ROMs, SeaBIOS/SeaVGABIOS
+images and EDK2 builds and requires `ipxe-roms-qemu`, `seabios-bin`,
+`seavgabios-bin` and `edk2-ovmf` instead; its SDL UI links `SDL2_image`.
+Hummingbird and the factory carry none of those five, so `qemu-common`,
+`qemu-system-x86-core` and `qemu-ui-sdl` did not install and `virtiofsd` and
+`qemu-kvm` fell out of Utah's transaction (#1021). Do not import the Fedora
+firmware packages: EDK2 alone is a cross-toolchain build. freedesktop-sdk-extra's
+`components/qemu.bst`, which Dakota ships, installs QEMU's own blobs and
+configures `--disable-sdl-image`; the recipe does the same. `qemu-common`
+owns the iPXE ROMs, `qemu-system-x86-core` the BIOS images and the x86 EDK2
+builds with their `firmware/` descriptors, which libvirt's firmware
+auto-selection reads. Other architectures' EDK2 builds are still deleted:
+Utah does not install those emulators. These are Utah-local recipe edits, so
+the daily Rawhide re-import now leaves `qemu` to a hand update, which must
+keep them.
+
 ## Checkpoint/restore package family
 
 `criu` and `criu-libs` come from one `criu` source recipe (`%package libs`);
