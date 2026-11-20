@@ -21,7 +21,7 @@ Both are indexed below. A skill that exists but is not listed here fails
 | --- | --- |
 | Work out why a rebuild job failed, and whose bug it is | [`.agents/skills/build-failure-triage/SKILL.md`](../.agents/skills/build-failure-triage/SKILL.md) |
 | Query Hummingbird's image catalog, tags, CVEs, or SBOMs | [`.agents/skills/hummingbird/SKILL.md`](../.agents/skills/hummingbird/SKILL.md) |
-| Verify buildroot lock or recipe provenance contracts, or the name order of `config/upstream-sources.json` | [`skills/supply-chain-provenance.md`](skills/supply-chain-provenance.md) |
+| Verify buildroot lock or recipe provenance contracts, pinned package signature keys, or the name order of `config/upstream-sources.json` | [`skills/supply-chain-provenance.md`](skills/supply-chain-provenance.md) |
 | Change unit-test coverage instrumentation or its CI floor | [`skills/test-coverage.md`](skills/test-coverage.md) |
 | Finish a task and decide what learning to write back | [`skills/skill-improvement.md`](skills/skill-improvement.md) |
 | Measure CI queue wait, keep armed auto-merge PRs current, or understand runner-saturation policy boundaries (issue #304) | [`skills/queue-observability.md`](skills/queue-observability.md) |
@@ -37,6 +37,7 @@ Both are indexed below. A skill that exists but is not listed here fails
 | Interpret or regenerate the GNOME-vs-gnome-build-meta audit | [`skills/gnome-build-meta-audit.md`](skills/gnome-build-meta-audit.md) |
 | Diff a GNOME source version, patch line, feature flag, or dependency edge against BuildStream intent | [`skills/gnome-build-meta-audit.md`](skills/gnome-build-meta-audit.md) |
 | Package a Dakota or gnome-build-meta configuration element as a `dakota-config` or `gnome-os-config` subpackage, or move their pinned commits | [`skills/config-packages.md`](skills/config-packages.md) |
+| Map Dakota's BuildStream elements to RPMs, work the Dakota import queue (Fedora-importable and new-spec elements), decide an element's disposition, or re-pin the Dakota revision | [`skills/dakota-parity.md`](skills/dakota-parity.md) |
 | Change the GitHub Pages package catalog, its data source, or its styling | [`skills/package-catalog.md`](skills/package-catalog.md) |
 | Track the factory build backlog from issue #308 (live totals from `just factory-build-backlog`; never committed), or close a backlog gap | [`skills/factory-build-backlog.md`](skills/factory-build-backlog.md) |
 | Answer what the factory or Hummingbird currently publishes, with snapshot evidence, or judge installability | [`skills/repo-inspection.md`](skills/repo-inspection.md) |
@@ -48,6 +49,7 @@ Both are indexed below. A skill that exists but is not listed here fails
 | --- | --- |
 | What "targeting Hummingbird" means: fork scope, build root, ABI, disttag ordering | [`targeting-hummingbird.md`](targeting-hummingbird.md) |
 | Pipeline shape: imports, source verification, rebuild, publish | [`architecture.md`](architecture.md) |
+| How a Dakota BuildStream element becomes a published RPM, end to end | [`bst-to-rpm.md`](bst-to-rpm.md) |
 | How to add a package | [`contributing.md`](contributing.md) |
 | Auditing GNOME recipes against gnome-build-meta | [`audit-gnome-build-meta.md`](audit-gnome-build-meta.md) |
 | Why and how successful package builds survive failed factory runs | [`skills/package-build-cache.md`](skills/package-build-cache.md) |

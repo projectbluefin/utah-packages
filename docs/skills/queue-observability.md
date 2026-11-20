@@ -59,13 +59,20 @@ Semantics worth pinning (they are unit-tested in `tests/test_queue_wait.py`):
 
 - The job is **read-only**: `permissions: actions: read`. It lists runs and
   jobs and changes nothing about scheduling.
-- The **metric is always produced** (`reports/queue-wait.json`); the **alert is
-  opt-in** via the `QUEUE_WAIT_THRESHOLD` repo variable. The agreed threshold
-  is a maintainer decision (#304 "Done when"), so the workflow does not hardcode
-  one. The tool exits 1 when p50 exceeds the threshold, which is how the
-  daily job alerts — it goes red. Any Actions API failure (auth, permissions,
-  rate limit, 5xx) or missing token exits 2, so it is never mistaken for the
-  alert.
+- The **metric is always produced** (`reports/queue-wait.json`). The **alert
+  threshold is 1800s p50** (30 min), the value the maintainer ruling on #304
+  chose; the workflow uses it whenever the `QUEUE_WAIT_THRESHOLD` repo variable
+  is unset, and the variable still overrides it. Do not change the default
+  without a new maintainer ruling. The ruling also settled the mitigation: the
+  merge queue (`merge_group` on `canary.yml` and `validate.yml`) is primary and
+  there is no priority lane; revisit only if p90 keeps growing. #304 closes
+  after two weeks of daily reports under the threshold. `tests/test_queue_wait.py`
+  pins the default. The tool exits 1 when p50 exceeds the threshold, which is
+  how the daily job alerts — it goes red. Each API call retries 500/502/503/504 and
+  connection errors three times (2s, 4s, 8s back-off) so one GitHub blip does
+  not lose the daily report; 401, 403, 404 and rate limits are never retried.
+  Any Actions API failure that survives that (auth, permissions, rate limit,
+  5xx) or a missing token exits 2, so it is never mistaken for the alert.
 - Splitting long poles, priority lanes and merge-queue batching are out of scope
   for a contributable PR. When a task asks for one of those, the shippable part
   is the measurement that would prove it works; the policy change stays a

@@ -1,5 +1,5 @@
 Name:		libnfs
-Version:	7.0.2
+Version:	8.0.0
 Release:	1%{?dist}
 Summary:	Client library for accessing NFS shares over a network
 # The library is licensed as LGPL-2.1-or-later
@@ -68,7 +68,7 @@ rm -f %{buildroot}%{_libdir}/*.la
 %ldconfig_scriptlets
 
 %files
-%{_libdir}/libnfs.so.17*
+%{_libdir}/libnfs.so.18*
 %doc README
 %license COPYING
 %license LICENCE-*.txt
@@ -84,6 +84,9 @@ rm -f %{buildroot}%{_libdir}/*.la
 %{_mandir}/man1/nfs-*.1*
 
 %changelog
+* Mon Nov 16 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 8.0.0-1
+- Update to 8.0.0
+
 * Thu Oct 29 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 7.0.2-1
 - Update to 7.0.2
 

@@ -89,9 +89,18 @@ jobs:
           # the same rule canary.yml applies (tools/canary.py pipeline_relevant),
           # with the set read from the trusted canary.yml on main.
           CANARY_SET=$(python3 -c "import yaml; print(yaml.safe_load(open('.github/workflows/canary.yml'))['env']['CANARY_SET'])")
-          if [ "$action" = copy ] && ! python3 tools/canary.py pr-relevant --repository "$REPOSITORY" --pr "$PR" --set "$CANARY_SET"; then
-            echo "::notice title=fork canary::no pipeline path changed; its own Canary run already passes"
-            action=skip
+          if [ "$action" = copy ]; then
+            rc=0
+            python3 tools/canary.py pr-relevant --repository "$REPOSITORY" --pr "$PR" --set "$CANARY_SET" || rc=$?
+            case "$rc" in
+              0) relevant=true ;;
+              10) relevant=false ;;
+              *) echo "::error title=canary::could not judge the pull request's files (exit $rc); failing rather than skipping"; exit 1 ;;
+            esac
+            if [ "$relevant" = false ]; then
+              echo "::notice title=fork canary::no pipeline path changed; its own Canary run already passes"
+              action=skip
+            fi
           fi
           echo "action=$action" >> "$GITHUB_OUTPUT"
       - name: Copy the reviewed commit into this repository

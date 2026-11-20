@@ -148,6 +148,12 @@ packages:
     downstream_package_name: alsa-firmware
     paths:
       - packages/alsa-firmware
+  alsa-plugins:
+    specfile_path: alsa-plugins.spec
+    upstream_package_name: alsa-plugins
+    downstream_package_name: alsa-plugins
+    paths:
+      - packages/alsa-plugins
   alsa-sof-firmware:
     specfile_path: alsa-sof-firmware.spec
     upstream_package_name: alsa-sof-firmware
@@ -280,6 +286,12 @@ packages:
     downstream_package_name: bluefin-docs
     paths:
       - packages/bluefin-docs
+  bluefin-wallpapers:
+    specfile_path: bluefin-wallpapers.spec
+    upstream_package_name: bluefin-wallpapers
+    downstream_package_name: bluefin-wallpapers
+    paths:
+      - packages/bluefin-wallpapers
   bluez:
     specfile_path: bluez.spec
     upstream_package_name: bluez
@@ -316,6 +328,18 @@ packages:
     downstream_package_name: braille-printer-app
     paths:
       - packages/braille-printer-app
+  brew:
+    specfile_path: brew.spec
+    upstream_package_name: brew
+    downstream_package_name: brew
+    paths:
+      - packages/brew
+  brew-tarball:
+    specfile_path: brew-tarball.spec
+    upstream_package_name: brew-tarball
+    downstream_package_name: brew-tarball
+    paths:
+      - packages/brew-tarball
   brltty:
     specfile_path: brltty.spec
     upstream_package_name: brltty
@@ -1558,12 +1582,6 @@ packages:
     downstream_package_name: ibus-unikey
     paths:
       - packages/ibus-unikey
-  icu:
-    specfile_path: icu.spec
-    upstream_package_name: icu
-    downstream_package_name: icu
-    paths:
-      - packages/icu
   ifuse:
     specfile_path: ifuse.spec
     upstream_package_name: ifuse
@@ -1720,6 +1738,12 @@ packages:
     downstream_package_name: json-glib
     paths:
       - packages/json-glib
+  kanata:
+    specfile_path: kanata.spec
+    upstream_package_name: kanata
+    downstream_package_name: kanata
+    paths:
+      - packages/kanata
   kde-filesystem:
     specfile_path: kde-filesystem.spec
     upstream_package_name: kde-filesystem
@@ -3268,6 +3292,12 @@ packages:
     downstream_package_name: nfs-utils
     paths:
       - packages/nfs-utils
+  nicstat:
+    specfile_path: nicstat.spec
+    upstream_package_name: nicstat
+    downstream_package_name: nicstat
+    paths:
+      - packages/nicstat
   nilfs-utils:
     specfile_path: nilfs-utils.spec
     upstream_package_name: nilfs-utils
@@ -4546,6 +4576,12 @@ packages:
     downstream_package_name: tcpdump
     paths:
       - packages/tcpdump
+  tealdeer:
+    specfile_path: tealdeer.spec
+    upstream_package_name: tealdeer
+    downstream_package_name: tealdeer
+    paths:
+      - packages/tealdeer
   tecla:
     specfile_path: tecla.spec
     upstream_package_name: tecla

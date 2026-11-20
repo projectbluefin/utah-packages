@@ -1,0 +1,252 @@
+From ad4923928450862c32f9b049381070387f67c7dd Mon Sep 17 00:00:00 2001
+From: Utah package factory <noreply@projectbluefin.io>
+Date: Mon, 16 Nov 2026 04:25:27 +0000
+Subject: [PATCH 1004/1004] cargo: Build with crates.io fluent and without the
+ FTL tooling
+
+fish pins a fork of fluent-rs and fluent-ftl-tools, which exist only as
+git repositories. The fork's single change makes fluent_syntax's Parser
+public for fluent-ftl-tools; fish itself builds against crates.io fluent
+0.17.0. fluent-ftl-tools only serves the fluent-extract feature (the
+fluent-extraction proc-macro), the xtask fluent and FTL-format commands
+and one FTL consistency test, so drop those.
+---
+ Cargo.toml                 | 12 +++---------
+ crates/fluent/Cargo.toml   |  5 -----
+ crates/fluent/src/lib.rs   | 23 -----------------------
+ crates/xtask/Cargo.toml    |  2 --
+ crates/xtask/src/format.rs | 26 --------------------------
+ crates/xtask/src/lib.rs    |  1 -
+ crates/xtask/src/main.rs   |  6 +-----
+ 7 files changed, 4 insertions(+), 71 deletions(-)
+
+diff --git a/Cargo.toml b/Cargo.toml
+index fa2283a..24a6b0b 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -1,5 +1,7 @@
+ [workspace]
+ members = ["crates/*", "third-party-forks/rust-pcre2", "third-party-forks/rust-pcre2/pcre2-sys"]
++# Depends on fluent-ftl-tools, a git-only crate, and serves only the fluent-extract feature.
++exclude = ["crates/fluent-extraction"]
+ 
+ [workspace.package]
+ edition = "2024"
+@@ -25,7 +27,6 @@ fish-common = { path = "crates/common" }
+ fish-fallback = { path = "crates/fallback" }
+ fish-feature-flags = { path = "crates/feature-flags" }
+ fish-fluent = { path = "crates/fluent" }
+-fish-fluent-extraction = { path = "crates/fluent-extraction" }
+ fish-gettext = { path = "crates/gettext" }
+ fish-gettext-extraction = { path = "crates/gettext-extraction" }
+ fish-gettext-maps = { path = "crates/gettext-maps" }
+@@ -39,9 +40,7 @@ fish-wcstringutil = { path = "crates/wcstringutil" }
+ fish-wgetopt = { path = "crates/wgetopt" }
+ fish-widecharwidth = { path = "crates/widecharwidth" }
+ fish-widestring = { path = "crates/widestring" }
+-fluent = { git = "https://github.com/danielrainer/fluent-rs", rev = "cf712bced280b217b6307edabc2089b3e57204ab" }
+-fluent-ftl-tools = { git = "https://codeberg.org/danielrainer/fluent-ftl-tools", rev = "5917664c8f2e4928ef1e480ff5c13bbe1e226066" }
+-fluent-syntax = { git = "https://github.com/danielrainer/fluent-rs", rev = "cf712bced280b217b6307edabc2089b3e57204ab" }
++fluent = "0.17.0"
+ ignore = "0.4.25"
+ itertools = "0.14.0"
+ libc = "0.2.183"
+@@ -122,7 +121,6 @@ fish-common.workspace = true
+ fish-fallback.workspace = true
+ fish-feature-flags.workspace = true
+ fish-fluent.workspace = true
+-fish-fluent-extraction = { workspace = true, optional = true }
+ fish-gettext = { workspace = true, optional = true }
+ fish-gettext-extraction = { workspace = true, optional = true }
+ fish-localization = { workspace = true, optional = true }
+@@ -194,10 +192,6 @@ path = "src/bin/fish_key_reader.rs"
+ default = ["embed-manpages", "localize-messages"]
+ benchmark = []
+ embed-manpages = ["dep:fish-build-man-pages"]
+-# This feature is used to enable extracting Fluent IDs from the source code for localization check.
+-# For normal builds, it should be disabled.
+-# It only needs to be enabled if checking Fluent Translation List (FTL) files is desired.
+-fluent-extract = ["fish-fluent/fluent-extract", "dep:fish-fluent-extraction"]
+ # This feature is used to enable extracting messages from the source code for localization.
+ # It only needs to be enabled if updating these messages (and the corresponding PO files) is
+ # desired. This happens for the `gettext` xtask, which is also invoked via `cargo xtask check`.
+diff --git a/crates/fluent/Cargo.toml b/crates/fluent/Cargo.toml
+index 80db5c5..94f1861 100644
+--- a/crates/fluent/Cargo.toml
++++ b/crates/fluent/Cargo.toml
+@@ -10,7 +10,6 @@ license.workspace = true
+ cfg-if.workspace = true
+ fish-build-helper.workspace = true
+ fish-localization.workspace = true
+-fish-fluent-extraction = { workspace = true, optional = true }
+ fluent.workspace = true
+ rust-embed.workspace = true
+ unic-langid.workspace = true
+@@ -19,11 +18,7 @@ widestring.workspace = true
+ [build-dependencies]
+ fish-build-helper.workspace = true
+ 
+-[dev-dependencies]
+-fluent-ftl-tools.workspace = true
+-
+ [features]
+-fluent-extract = ["dep:fish-fluent-extraction"]
+ localize-messages = []
+ 
+ [lints]
+diff --git a/crates/fluent/src/lib.rs b/crates/fluent/src/lib.rs
+index 359eb23..87ae3a4 100644
+--- a/crates/fluent/src/lib.rs
++++ b/crates/fluent/src/lib.rs
+@@ -14,9 +14,6 @@ use fluent::{
+ };
+ use rust_embed::RustEmbed;
+ 
+-#[cfg(feature = "fluent-extract")]
+-pub extern crate fish_fluent_extraction;
+-
+ use unic_langid::LanguageIdentifier;
+ 
+ type Bundle = &'static FluentBundle<FluentResource>;
+@@ -215,8 +212,6 @@ macro_rules! localize {
+     ($id:literal = $message:literal $(, $key:ident = $value:expr)* $(,)?) => {
+         {
+             use $crate::ToFluentValue as _;
+-            #[cfg(feature = "fluent-extract")]
+-            fish_fluent_extraction::fluent_extract!($id = $message $(, $key)*);
+             let mut args = fluent::FluentArgs::new();
+             $(
+                 args.set(stringify!($key), $value.to_fluent_value());
+@@ -330,10 +325,6 @@ impl<'a> ToFluentValue<'a> for &widestring::Utf32Str {
+ 
+ #[cfg(test)]
+ mod tests {
+-    use super::{DEFAULT_LANGUAGE, FtlFiles};
+-    use crate::read_ftl_file;
+-    use fluent_ftl_tools::consistency::check_all_resources;
+-
+     #[test]
+     fn test_simple_message() {
+         let message_key_value = localize!(
+@@ -343,18 +334,4 @@ mod tests {
+         );
+         assert_eq!(message_key_value, "Two arguments: foo, 42");
+     }
+-
+-    #[test]
+-    fn check_ftl_files() {
+-        let default_resource_name = format!("{DEFAULT_LANGUAGE}.ftl");
+-        let default_string = read_ftl_file(&default_resource_name);
+-        let other_resources = FtlFiles::iter()
+-            .map(|file_path| {
+-                let file_string = read_ftl_file(&file_path);
+-                (file_path.to_string(), file_string)
+-            })
+-            .collect::<Vec<_>>();
+-        check_all_resources((&default_resource_name, default_string), other_resources)
+-            .unwrap_or_else(|e| panic!("FTL resource checks failed:\n{e}"));
+-    }
+ }
+diff --git a/crates/xtask/Cargo.toml b/crates/xtask/Cargo.toml
+index b6d5177..dbe2f14 100644
+--- a/crates/xtask/Cargo.toml
++++ b/crates/xtask/Cargo.toml
+@@ -14,8 +14,6 @@ fish-build-helper.workspace = true
+ fish-common.workspace = true
+ fish-tempfile.workspace = true
+ fish-widestring.workspace = true
+-fluent-ftl-tools.workspace = true
+-fluent-syntax.workspace = true
+ ignore.workspace = true
+ pcre2.workspace = true
+ walkdir.workspace = true
+diff --git a/crates/xtask/src/format.rs b/crates/xtask/src/format.rs
+index c644362..cd290ac 100644
+--- a/crates/xtask/src/format.rs
++++ b/crates/xtask/src/format.rs
+@@ -71,7 +71,6 @@ pub fn format(args: FormatArgs) -> Result<()> {
+         }
+     }
+     format_fish(&args)?;
+-    format_fluent(&args)?;
+     format_python(&args)?;
+     format_rust(&args)?;
+     Ok(())
+@@ -128,31 +127,6 @@ fn format_fish(args: &FormatArgs) -> Result<()> {
+     run_formatter(&mut formatter, "fish_indent")
+ }
+ 
+-fn format_fluent(args: &FormatArgs) -> Result<()> {
+-    println!("=== Running {GREEN}Fluent FTL formatter (built-in){GREEN:#}");
+-    let mut ftl_files = files_with_extension(&args.paths, "ftl")?;
+-    if args.all {
+-        ftl_files.extend(files_with_extension([fish_build_helper::ftl_dir()], "ftl")?);
+-    }
+-    let mode = if args.check {
+-        fluent_ftl_tools::format::FormattingMode::Check
+-    } else {
+-        fluent_ftl_tools::format::FormattingMode::Rewrite
+-    };
+-    let errors = ftl_files
+-        .iter()
+-        .filter_map(|path| fluent_ftl_tools::format::format_path(path, mode).err())
+-        .collect::<Vec<anyhow::Error>>();
+-    if !errors.is_empty() {
+-        let mut error_message = String::from("Found these errors:\n");
+-        for e in errors {
+-            error_message.push_str(&format!("{e}\n"));
+-        }
+-        bail!("{error_message}");
+-    }
+-    Ok(())
+-}
+-
+ fn format_python(args: &FormatArgs) -> Result<()> {
+     let mut formatter = Command::new("ruff");
+     formatter.arg("format");
+diff --git a/crates/xtask/src/lib.rs b/crates/xtask/src/lib.rs
+index 665dba1..1c4ad90 100644
+--- a/crates/xtask/src/lib.rs
++++ b/crates/xtask/src/lib.rs
+@@ -8,7 +8,6 @@ use std::{
+ use anyhow::{Context, Result, bail};
+ use walkdir::WalkDir;
+ 
+-pub mod fluent;
+ pub mod format;
+ pub mod gettext;
+ pub mod shellcheck;
+diff --git a/crates/xtask/src/main.rs b/crates/xtask/src/main.rs
+index 4de261b..fef92b6 100644
+--- a/crates/xtask/src/main.rs
++++ b/crates/xtask/src/main.rs
+@@ -4,7 +4,7 @@ use clap_complete::CompleteEnv;
+ use fish_build_helper::as_os_strs;
+ use std::{path::PathBuf, process::Command};
+ use xtask::{
+-    CommandExt, cargo, fluent::FluentCommandArgs, format::FormatArgs, gettext::GettextArgs,
++    CommandExt, cargo, format::FormatArgs, gettext::GettextArgs,
+     shellcheck::shellcheck,
+ };
+ 
+@@ -23,9 +23,6 @@ struct Cli {
+ enum Task {
+     /// Run various checks on the repo.
+     Check,
+-    /// Run Fluent-related tools.
+-    #[command(subcommand)]
+-    Fluent(FluentCommandArgs),
+     /// Format files or check if they are correctly formatted.
+     Format(FormatArgs),
+     /// Work on the gettext PO files.
+@@ -69,7 +66,6 @@ fn main() -> Result<()> {
+     let cli = Cli::parse();
+     match cli.task {
+         Task::Check => run_checks(),
+-        Task::Fluent(fluent_command_args) => xtask::fluent::fluent(fluent_command_args),
+         Task::Format(format_args) => xtask::format::format(format_args),
+         Task::Gettext(gettext_args) => xtask::gettext::gettext(gettext_args),
+         Task::HtmlDocs { fish_indent } => build_html_docs(fish_indent),
+-- 
+2.43.0
+

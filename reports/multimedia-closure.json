@@ -108,7 +108,7 @@
       "parity_note": "Imported from src.fedoraproject.org/rpms/intel-media-driver-free, the free variant: the restricted-codec entrypoints Fedora cannot ship are compiled out, so VA-API hardware decode of H.264/H.265 is absent. negativo17's intel-media-driver is the full build.",
       "recipe": "packages/intel-media-driver-free",
       "stage": 0,
-      "version": "26.2.4",
+      "version": "26.3.5",
       "nevra": null,
       "recipe_provenance": "https://src.fedoraproject.org/rpms/intel-media-driver-free.git"
     },
@@ -367,7 +367,7 @@
       "parity_note": null,
       "recipe": "packages/jpegxl",
       "stage": 0,
-      "version": "0.11.2",
+      "version": "0.12.0",
       "nevra": null,
       "recipe_provenance": "https://src.fedoraproject.org/rpms/jpegxl.git"
     },

@@ -1,5 +1,9 @@
 sources/
 reports/source-pipeline/
+# Derived from config/dakota*.{json,tsv} and the recipes; every import moves
+# it (#309). CI publishes it as the dakota-audit artifact.
+reports/audit-dakota.json
+reports/audit-dakota.md
 # Scratch output of tools/source_pipeline.py --report-dir work/reports and the
 # build stages; never a tracked input.
 work/
@@ -38,7 +42,6 @@ packages/*/*.sha256sum
 packages/*/*.upstream
 
 # Lookaside payloads whose names carry no build-artifact extension.
-packages/fish/krobelus.gpg
 packages/openssh/gpgkey-*.gpg
 packages/icu/icu-config.sh
 packages/icu/metaZones.txt
@@ -52,3 +55,6 @@ site/packages.json
 # Leftovers from patch / git apply --reject; never a tracked input.
 *.orig
 *.rej
+
+# npm ci --prefix tools/fetch-artifacts
+tools/fetch-artifacts/node_modules/

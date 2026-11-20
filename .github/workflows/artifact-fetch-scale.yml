@@ -1,0 +1,69 @@
+name: Artifact fetch at scale
+
+# tools/fetch-artifacts/fetch.mjs fetches RPM artifacts by exact name so a run
+# with more than 1000 artifacts loses none of them (the listing cap, #970) and
+# spends no REST budget (run 44386298520). This makes a run with 1,200 tiny
+# artifacts and fetches every one by name, including the newest, which a
+# capped listing would miss. Minutes, not a full rebuild.
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - tools/fetch-artifacts/**
+      - .github/workflows/artifact-fetch-scale.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: artifact-fetch-scale-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  upload:
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - run: npm ci --prefix tools/fetch-artifacts --ignore-scripts --no-audit --no-fund
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          SHARD: ${{ matrix.shard }}
+        with:
+          script: |
+            const fs = require('fs')
+            const {DefaultArtifactClient} = await import(`${process.env.GITHUB_WORKSPACE}/tools/fetch-artifacts/node_modules/@actions/artifact/lib/artifact.js`)
+            const client = new DefaultArtifactClient()
+            const shard = Number(process.env.SHARD)
+            fs.mkdirSync('payload', {recursive: true})
+            for (let i = 0; i < 100; i++) {
+              const n = shard * 100 + i
+              const file = `payload/scale-${n}.txt`
+              fs.writeFileSync(file, `${n}\n`)
+              await client.uploadArtifact(`scale-${n}`, [file], 'payload', {retentionDays: 1})
+            }
+  fetch:
+    needs: upload
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - run: npm ci --prefix tools/fetch-artifacts --ignore-scripts --no-audit --no-fund
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const fs = require('fs')
+            const {fetchArtifacts} = await import(`${process.env.GITHUB_WORKSPACE}/tools/fetch-artifacts/fetch.mjs`)
+            const names = Array.from({length: 1200}, (_, n) => `scale-${n}`).concat(['scale-missing'])
+            const path = `${process.env.GITHUB_WORKSPACE}/got`
+            const {found, missing} = await fetchArtifacts({names, path, core})
+            const files = fs.readdirSync(path)
+            if (found.length !== 1200 || missing.join() !== 'scale-missing' || files.length !== 1200) {
+              core.setFailed(`found ${found.length}, files ${files.length}, missing ${missing}`)
+            }

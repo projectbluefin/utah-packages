@@ -110,6 +110,55 @@ class RenderTests(unittest.TestCase):
         self.assertIn("dnf.conf", namespace["config_opts"])
 
 
+class RepositoryPrecedenceTests(unittest.TestCase):
+    """What wins when two repositories offer the same package name (#1214).
+
+    A factory build such as libicu-78.3-1.hum1.bfin competes with Hummingbird's
+    libicu-78.3-9.hum1, which has the higher release. dnf's `priority` (lower
+    number wins) is what keeps the higher release from deciding it, so the
+    order must be stages, then the factory, then Hummingbird, and Fedora must
+    not answer for a name Hummingbird ships newer.
+    """
+
+    @staticmethod
+    def priorities(config: str) -> dict[str, int]:
+        found: dict[str, int] = {}
+        for section in re.split(r"^\[", config, flags=re.MULTILINE)[1:]:
+            name = section.split("]", 1)[0]
+            match = re.search(r"^priority=(\d+)$", section, re.MULTILINE)
+            if match:
+                found[name] = int(match.group(1))
+        return found
+
+    def test_stages_beat_the_factory_which_beats_hummingbird(self) -> None:
+        found = self.priorities(
+            render(factory_repo="file:///work/factory", stages_dir="/work/prior")
+        )
+        self.assertLess(found["stages"], found["factory"])
+        self.assertLess(found["factory"], found["public-hummingbird-x86_64-rpms"])
+
+    def test_the_factory_beats_hummingbird_without_a_stages_repository(self) -> None:
+        found = self.priorities(render(factory_repo="file:///work/factory"))
+        self.assertLess(found["factory"], found["public-hummingbird-x86_64-rpms"])
+
+    def test_hummingbird_is_not_outranked_by_fedora(self) -> None:
+        config = render()
+        self.assertNotIn("priority", config.split("[fedora]")[1].split("[updates]")[0])
+        self.assertIn(
+            "libicu", config.split("[fedora]")[1].split("[updates]")[0]
+        )
+
+    def test_the_container_lane_uses_the_same_priorities(self) -> None:
+        found = self.priorities(
+            render(factory_repo="file:///work/factory", stages_dir="/work/prior")
+        )
+        text = BUILD_STAGE.read_text()
+        stages = re.search(r"\[stages\].*?priority=(\d+)", text, re.DOTALL)
+        factory = re.search(r"\[factory\].*?priority=(\d+)", text, re.DOTALL)
+        self.assertEqual(int(stages.group(1)), found["stages"])
+        self.assertEqual(int(factory.group(1)), found["factory"])
+
+
 class BestTests(unittest.TestCase):
     def test_the_mock_root_resolves_like_the_container_lane(self) -> None:
         # best=1 refused Hummingbird's superseded-but-consistent sets

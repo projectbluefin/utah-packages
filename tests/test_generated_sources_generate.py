@@ -310,7 +310,7 @@ class SevenZipGenerateTests(PackageDirMixin, unittest.TestCase):
 
 
 class OpenALSoftGenerateTests(PackageDirMixin, unittest.TestCase):
-    VERSION = "1.24.2"
+    VERSION = "1.25.2"
     URL = f"https://openal-soft.org/openal-releases/openal-soft-{VERSION}.tar.bz2"
 
     def setUp(self):
@@ -343,31 +343,80 @@ class OpenALSoftGenerateTests(PackageDirMixin, unittest.TestCase):
         self.assertEqual([url for url, _, _ in fetch.requests], [self.URL])
 
 
-class TailscaleGenerateTests(PackageDirMixin, unittest.TestCase):
-    VERSION = "1.98.8"
+class BrewTarballGenerateTests(PackageDirMixin, unittest.TestCase):
+    """The Homebrew archive is copied out of a digest-pinned image (#1039)."""
+
+    VERSION = "7.0.11"
+    REGISTRY = "https://ghcr.io"
+    TOKEN_URL = f"{REGISTRY}/token?scope=repository:ublue-os/brew:pull"
+    MEMBER = "system_files/usr/share/homebrew.tar.zst"
 
     def setUp(self):
         super().setUp()
-        self.write_spec("tailscale.spec", self.VERSION)
-        self.out_dir.mkdir(parents=True)
+        self.write_spec("brew-tarball.spec", self.VERSION)
+        self.archive = b"zstd homebrew prefix"
+        self.files_layer = targz({"system_files/etc/profile.d/brew.sh": b"#!/bin/sh"})
+        self.tarball_layer = targz({self.MEMBER: self.archive})
+        self.layer_digests = [
+            "sha256:" + hashlib.sha256(layer).hexdigest() for layer in (self.files_layer, self.tarball_layer)
+        ]
+        self.manifest = json.dumps({"layers": [{"digest": digest} for digest in self.layer_digests]}).encode()
+        self.manifest_digest = "sha256:" + hashlib.sha256(self.manifest).hexdigest()
 
-    def test_an_unpinned_version_fails_before_looking_for_go(self):
-        self.write_spec("tailscale.spec", "1.0.0")
-        with patch("shutil.which") as which:
-            with self.assertRaisesRegex(RuntimeError, "no pinned commit for tailscale 1.0.0"):
-                generated_sources.generate("tailscale", self.package_dir, self.out_dir)
-        which.assert_not_called()
+    def payloads(self, tarball_layer: bytes | None = None) -> dict[str, bytes]:
+        base = f"{self.REGISTRY}/v2/ublue-os/brew"
+        return {
+            self.TOKEN_URL: b'{"token": "anonymous"}',
+            f"{base}/manifests/{self.manifest_digest}": self.manifest,
+            f"{base}/blobs/{self.layer_digests[0]}": self.files_layer,
+            f"{base}/blobs/{self.layer_digests[1]}": tarball_layer or self.tarball_layer,
+        }
 
-    def test_a_moved_tag_fails_closed_before_vendoring(self):
-        runs = []
-        with patch("shutil.which", return_value="/usr/bin/go"), \
-                patch.object(generated_sources.subprocess, "run", side_effect=lambda cmd, **_: runs.append(cmd)), \
-                patch.object(generated_sources.subprocess, "check_output", return_value="f" * 40 + "\n"):
-            with self.assertRaisesRegex(RuntimeError, f"tag v{self.VERSION} moved: expected 05a9"):
-                generated_sources.generate("tailscale", self.package_dir, self.out_dir)
-        self.assertEqual(len(runs), 1)
-        self.assertEqual(runs[0][:6], ["git", "clone", "-q", "--branch", f"v{self.VERSION}", "--depth"])
-        self.assertFalse((self.out_dir / f"tailscale-{self.VERSION}-vendored.tar.xz").exists())
+    def test_metadata_names_the_archive_and_the_pinned_manifest(self):
+        entry = generated_sources.metadata_for("brew-tarball", self.package_dir)
+        self.assertEqual(entry["filename"], f"homebrew-{self.VERSION}.tar.zst")
+        self.assertIn(
+            f"ghcr.io/ublue-os/brew@{generated_sources.BREW_TARBALL_MANIFESTS[self.VERSION]}",
+            entry["generate"]["input"],
+        )
+
+    def test_an_unpinned_version_fails_before_any_download(self):
+        self.write_spec("brew-tarball.spec", "0.0.1")
+        with patch.object(generated_sources.urllib.request, "urlopen") as urlopen:
+            with self.assertRaisesRegex(RuntimeError, "no pinned image manifest for brew-tarball 0.0.1"):
+                generated_sources.generate("brew-tarball", self.package_dir, self.out_dir)
+        urlopen.assert_not_called()
+
+    def test_the_member_is_copied_unchanged_from_the_topmost_layer(self):
+        fetch = UrlopenRecorder(self.payloads())
+        with patch.object(generated_sources.urllib.request, "urlopen", fetch), \
+                patch.dict(generated_sources.BREW_TARBALL_MANIFESTS, {self.VERSION: self.manifest_digest}):
+            target = generated_sources.generate("brew-tarball", self.package_dir, self.out_dir)
+        self.assertEqual(target.name, f"homebrew-{self.VERSION}.tar.zst")
+        self.assertEqual(target.read_bytes(), self.archive)
+        # The topmost layer carries the member, so the lower one is never fetched.
+        self.assertNotIn(
+            f"{self.REGISTRY}/v2/ublue-os/brew/blobs/{self.layer_digests[0]}",
+            [url for url, _, _ in fetch.requests],
+        )
+
+    def test_a_moved_manifest_fails_closed(self):
+        fetch = UrlopenRecorder(self.payloads())
+        pinned = "sha256:" + "0" * 64
+        fetch.payloads[f"{self.REGISTRY}/v2/ublue-os/brew/manifests/{pinned}"] = self.manifest
+        with patch.object(generated_sources.urllib.request, "urlopen", fetch), \
+                patch.dict(generated_sources.BREW_TARBALL_MANIFESTS, {self.VERSION: pinned}):
+            with self.assertRaisesRegex(RuntimeError, f"image manifest: expected {pinned}"):
+                generated_sources.generate("brew-tarball", self.package_dir, self.out_dir)
+        self.assertFalse(self.out_dir.exists() and any(self.out_dir.iterdir()))
+
+    def test_a_substituted_layer_fails_closed(self):
+        fetch = UrlopenRecorder(self.payloads(tarball_layer=targz({self.MEMBER: b"evil"})))
+        with patch.object(generated_sources.urllib.request, "urlopen", fetch), \
+                patch.dict(generated_sources.BREW_TARBALL_MANIFESTS, {self.VERSION: self.manifest_digest}):
+            with self.assertRaisesRegex(RuntimeError, f"layer {self.layer_digests[1]}: expected"):
+                generated_sources.generate("brew-tarball", self.package_dir, self.out_dir)
+        self.assertFalse(self.out_dir.exists() and any(self.out_dir.iterdir()))
 
 
 class GitArchiveGenerateTests(PackageDirMixin, unittest.TestCase):
@@ -609,6 +658,51 @@ class PrefixdevnameGenerateTests(PackageDirMixin, unittest.TestCase):
         self.assertEqual(list(self.out_dir.iterdir()), [])
 
 
+class KanataGenerateTests(PackageDirMixin, unittest.TestCase):
+    """Dakota's keyboard remapper, vendored from its GitHub tag archive (utah#1222)."""
+
+    VERSION = "1.12.0"
+    TOP = f"kanata-{VERSION}"
+    ARCHIVE_URL = f"https://github.com/jtroo/kanata/archive/refs/tags/v{VERSION}.tar.gz"
+
+    def setUp(self):
+        super().setUp()
+        self.write_spec("kanata.spec", self.VERSION)
+        self.crate = targz({"tinycrate-1.0.0/src/lib.rs": b"//"})
+        # Workspace members are path sources: no `source`, nothing to fetch.
+        lock = (
+            f'[[package]]\nname = "kanata"\nversion = "{self.VERSION}"\n\n'
+            '[[package]]\nname = "kanata-parser"\nversion = "0.1.0"\n\n'
+            f'[[package]]\nname = "tinycrate"\nversion = "1.0.0"\nsource = "{CRATES_IO}"\n'
+            f'checksum = "{hashlib.sha256(self.crate).hexdigest()}"\n'
+        )
+        self.archive = targz({f"{self.TOP}/Cargo.lock": lock.encode(), f"{self.TOP}/parser/Cargo.toml": b"[x]"})
+        self.crate_url = "https://static.crates.io/crates/tinycrate/tinycrate-1.0.0.crate"
+
+    def test_metadata_names_the_generated_vendored_archive(self):
+        entry = generated_sources.metadata_for("kanata", self.package_dir)
+        self.assertEqual(entry["filename"], f"{self.TOP}-vendored.tar.xz")
+        self.assertIn(self.ARCHIVE_URL, entry["generate"]["input"])
+
+    def test_an_unpinned_version_fails_before_any_download(self):
+        self.write_spec("kanata.spec", "0.0.1")
+        with patch.object(generated_sources, "_fetch") as fetch:
+            with self.assertRaisesRegex(RuntimeError, "no pinned input SHA-512 for kanata 0.0.1"):
+                generated_sources.generate("kanata", self.package_dir, self.out_dir)
+        fetch.assert_not_called()
+
+    def test_registry_crates_are_vendored_and_workspace_members_are_not_fetched(self):
+        fetch = UrlopenRecorder({self.ARCHIVE_URL: self.archive, self.crate_url: self.crate})
+        with patch.object(generated_sources.urllib.request, "urlopen", fetch), \
+                patch.dict(generated_sources.KANATA_INPUT_SHA512, {self.VERSION: sha512(self.archive)}):
+            target = generated_sources.generate("kanata", self.package_dir, self.out_dir)
+        self.assertEqual([url for url, _, _ in fetch.requests], [self.ARCHIVE_URL, self.crate_url])
+        with tarfile.open(fileobj=io.BytesIO(lzma.decompress(target.read_bytes()))) as archive:
+            names = archive.getnames()
+        self.assertIn(f"{self.TOP}/parser/Cargo.toml", names)
+        self.assertIn(f"{self.TOP}/vendor/tinycrate-1.0.0/src/lib.rs", names)
+
+
 
 def tarxz(members: dict[str, bytes]) -> bytes:
     raw = io.BytesIO()
@@ -792,6 +886,99 @@ class GstreamerPluginsRsGenerateTests(PackageDirMixin, unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "gitcrate 0.1.0 comes from git"):
                 generated_sources.generate("gstreamer-plugins-rs", self.package_dir, self.out_dir)
         fetch.assert_not_called()
+
+
+class TealdeerGenerateTests(PackageDirMixin, unittest.TestCase):
+    """Dakota's tldr client, vendored from its GitHub tag archive (#1034)."""
+
+    VERSION = "1.8.1"
+    TOP = f"tealdeer-{VERSION}"
+    ARCHIVE_URL = f"https://github.com/tealdeer-rs/tealdeer/archive/refs/tags/v{VERSION}.tar.gz"
+
+    def setUp(self):
+        super().setUp()
+        self.write_spec("tealdeer.spec", self.VERSION)
+        self.crate = targz({"tinycrate-1.0.0/src/lib.rs": b"//"})
+        lock = (
+            f'[[package]]\nname = "tealdeer"\nversion = "{self.VERSION}"\n\n'
+            f'[[package]]\nname = "tinycrate"\nversion = "1.0.0"\nsource = "{CRATES_IO}"\n'
+            f'checksum = "{hashlib.sha256(self.crate).hexdigest()}"\n'
+        )
+        self.archive = targz({f"{self.TOP}/Cargo.lock": lock.encode(), f"{self.TOP}/Cargo.toml": b"[x]"})
+        self.crate_url = "https://static.crates.io/crates/tinycrate/tinycrate-1.0.0.crate"
+
+    def test_metadata_names_the_generated_vendored_archive(self):
+        entry = generated_sources.metadata_for("tealdeer", self.package_dir)
+        self.assertEqual(entry["filename"], f"{self.TOP}-vendored.tar.xz")
+        self.assertIn(self.ARCHIVE_URL, entry["generate"]["input"])
+
+    def test_an_unpinned_version_fails_before_any_download(self):
+        self.write_spec("tealdeer.spec", "0.0.1")
+        with patch.object(generated_sources, "_fetch") as fetch:
+            with self.assertRaisesRegex(RuntimeError, "no pinned input SHA-512 for tealdeer 0.0.1"):
+                generated_sources.generate("tealdeer", self.package_dir, self.out_dir)
+        fetch.assert_not_called()
+
+    def test_the_pinned_archive_and_its_locked_crates_are_vendored(self):
+        fetch = UrlopenRecorder({self.ARCHIVE_URL: self.archive, self.crate_url: self.crate})
+        with patch.object(generated_sources.urllib.request, "urlopen", fetch), \
+                patch.dict(generated_sources.TEALDEER_INPUT_SHA512, {self.VERSION: sha512(self.archive)}):
+            target = generated_sources.generate("tealdeer", self.package_dir, self.out_dir)
+        self.assertEqual(target.name, f"{self.TOP}-vendored.tar.xz")
+        with tarfile.open(fileobj=io.BytesIO(lzma.decompress(target.read_bytes()))) as archive:
+            self.assertIn(f"{self.TOP}/vendor/tinycrate-1.0.0/src/lib.rs", archive.getnames())
+
+
+class Oo7GenerateTests(PackageDirMixin, unittest.TestCase):
+    """oo7 at a pinned commit, vendored from its GitHub commit archive (#1192)."""
+
+    COMMIT = "e91b98a7235a4971c6cbb7f0533034afc8a8f618"
+    TOP = f"oo7-{COMMIT}"
+    ARCHIVE_URL = f"https://github.com/linux-credentials/oo7/archive/{COMMIT}/oo7-e91b98a.tar.gz"
+
+    def write_oo7_spec(self, commit: str) -> None:
+        (self.package_dir / "oo7.spec").write_text(
+            f"%global commit {commit}\nName: oo7\nVersion:        0.7.0~beta^1.%{{shortcommit}}\nRelease: 1\n"
+        )
+
+    def setUp(self):
+        super().setUp()
+        self.write_oo7_spec(self.COMMIT)
+        self.crate = targz({"tinycrate-1.0.0/src/lib.rs": b"//"})
+        lock = (
+            '[[package]]\nname = "oo7"\nversion = "0.7.0-alpha"\n\n'
+            f'[[package]]\nname = "tinycrate"\nversion = "1.0.0"\nsource = "{CRATES_IO}"\n'
+            f'checksum = "{hashlib.sha256(self.crate).hexdigest()}"\n'
+        )
+        self.archive = targz({f"{self.TOP}/Cargo.lock": lock.encode(), f"{self.TOP}/Cargo.toml": b"[x]"})
+        self.crate_url = "https://static.crates.io/crates/tinycrate/tinycrate-1.0.0.crate"
+
+    def test_metadata_expands_the_commit_into_version_and_filename(self):
+        entry = generated_sources.metadata_for("oo7", self.package_dir)
+        self.assertEqual(entry["version"], "0.7.0~beta^1.e91b98a")
+        self.assertEqual(entry["filename"], f"{self.TOP}-vendored.tar.xz")
+        self.assertIn(self.ARCHIVE_URL, entry["generate"]["input"])
+
+    def test_an_unpinned_commit_fails_before_any_download(self):
+        self.write_oo7_spec("0" * 40)
+        with patch.object(generated_sources, "_fetch") as fetch:
+            with self.assertRaisesRegex(RuntimeError, "no pinned input SHA-512 for oo7"):
+                generated_sources.generate("oo7", self.package_dir, self.out_dir)
+        fetch.assert_not_called()
+
+    def test_a_short_commit_is_refused(self):
+        self.write_oo7_spec("e91b98a")
+        with self.assertRaisesRegex(ValueError, "full SHA-1"):
+            generated_sources.metadata_for("oo7", self.package_dir)
+
+    def test_the_pinned_archive_and_its_locked_crates_are_vendored(self):
+        fetch = UrlopenRecorder({self.ARCHIVE_URL: self.archive, self.crate_url: self.crate})
+        with patch.object(generated_sources.urllib.request, "urlopen", fetch), \
+                patch.dict(generated_sources.OO7_INPUT_SHA512, {self.COMMIT: sha512(self.archive)}):
+            target = generated_sources.generate("oo7", self.package_dir, self.out_dir)
+        self.assertEqual(target.name, f"{self.TOP}-vendored.tar.xz")
+        with tarfile.open(fileobj=io.BytesIO(lzma.decompress(target.read_bytes()))) as archive:
+            self.assertIn(f"{self.TOP}/vendor/tinycrate-1.0.0/src/lib.rs", archive.getnames())
 
 
 class CliTests(unittest.TestCase):
