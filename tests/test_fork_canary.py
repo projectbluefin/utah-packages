@@ -654,8 +654,8 @@ if __name__ == "__main__":
 
 ON_APPROVE = ROOT / ".github" / "workflows" / "canary-fork-on-approve.yml"
 MAINTAINERS = {"maint": "write", "admin1": "admin", "reader": "read"}
-# The head commit is older than the reviews below unless a test says otherwise.
-COMMITTED = "2026-11-20T09:00:00Z"
+# The head reached the pull request before the reviews below unless a test says otherwise.
+PUSHED = "2026-11-20T09:00:00Z"
 
 
 def review(login, state, sha=REVIEWED, at="2026-11-20T10:00:00Z", kind="User"):
@@ -665,8 +665,8 @@ def review(login, state, sha=REVIEWED, at="2026-11-20T10:00:00Z", kind="User"):
 class ApproverTests(unittest.TestCase):
     """An automatic start happens only where a maintainer's Approve already stands on the head."""
 
-    def approver(self, reviews, pull=None, permissions=MAINTAINERS, committed=COMMITTED):
-        return fork_canary.approver(pull or pr(), reviews, permissions, REPO, committed)
+    def approver(self, reviews, pull=None, permissions=MAINTAINERS, pushed=PUSHED):
+        return fork_canary.approver(pull or pr(), reviews, permissions, REPO, pushed)
 
     def test_a_maintainer_approve_on_the_head_starts_it(self):
         self.assertEqual(self.approver([review("maint", "APPROVED")]), "maint")
@@ -681,15 +681,22 @@ class ApproverTests(unittest.TestCase):
         # 11-20, and GitHub reported the old Approve with the new commit_id.
         with self.assertRaisesRegex(fork_canary.Refused, "approved the current head"):
             self.approver([review("maint", "APPROVED", at="2026-11-11T15:04:00Z")],
-                          committed="2026-11-20T11:48:29Z")
+                          pushed="2026-11-20T11:48:36Z")
         # The same Approve given after that head existed counts.
         self.assertEqual(self.approver([review("maint", "APPROVED", at="2026-11-20T12:00:00Z")],
-                                       committed="2026-11-20T11:48:29Z"), "maint")
+                                       pushed="2026-11-20T11:48:36Z"), "maint")
 
-    def test_an_unreadable_date_never_counts_as_older(self):
-        for committed in ("", "yesterday", "2026-11-20T09:00:00"):
-            with self.subTest(committed=committed), self.assertRaises(fork_canary.Refused):
-                self.approver([review("maint", "APPROVED")], committed=committed)
+    def test_a_head_pushed_after_the_approve_does_not_whatever_its_commit_dates_say(self):
+        # The fork's author can backdate a commit; only GitHub's push time is read.
+        with self.assertRaisesRegex(fork_canary.Refused, "approved the current head"):
+            self.approver([review("maint", "APPROVED", at="2026-11-20T10:00:00Z")],
+                          pushed="2026-11-20T10:00:01Z")
+
+    def test_an_unreadable_or_missing_push_time_never_counts_as_older(self):
+        # Empty is what the workflow passes when the head has no read-only run.
+        for pushed in ("", "yesterday", "2026-11-20T09:00:00"):
+            with self.subTest(pushed=pushed), self.assertRaises(fork_canary.Refused):
+                self.approver([review("maint", "APPROVED")], pushed=pushed)
         with self.assertRaises(fork_canary.Refused):
             self.approver([review("maint", "APPROVED", at=None)])
 
@@ -743,7 +750,7 @@ class ApproverTests(unittest.TestCase):
                     code = fork_canary.main(["approved", "--pr-json", str(tmp / "pr.json"),
                                              "--reviews-json", str(tmp / "reviews.json"),
                                              "--permissions-json", str(tmp / "perm.json"),
-                                             "--repository", REPO, "--head-committed-at", COMMITTED])
+                                             "--repository", REPO, "--head-pushed-at", PUSHED])
                 self.assertEqual(code, 0)
                 self.assertTrue(str(out.call_args_list[-1].args[0]).startswith(expected))
 
@@ -778,9 +785,13 @@ class OnApproveWorkflowTests(unittest.TestCase):
 
     def test_the_decision_is_the_tested_one(self):
         self.assertIn("python3 tools/fork_canary.py approved", self.runs)
-        # It is told when the head was committed, from the commits API.
-        self.assertIn('--head-committed-at "$committed_at"', self.runs)
-        self.assertIn(".commit.committer.date", self.runs)
+        # It is told when the head was pushed, from GitHub's own run records,
+        # never from the commit's dates, which the fork's author sets.
+        self.assertIn('--head-pushed-at "$pushed_at"', self.runs)
+        self.assertIn("canary-read-only.yml/runs?event=pull_request&head_sha=${head}", self.runs)
+        self.assertIn("[.workflow_runs[].created_at] | max // empty", self.runs)
+        self.assertNotIn("committer.date", self.runs)
+        self.assertNotIn("author.date", self.runs)
 
     def test_it_skips_heads_already_started_or_passed(self):
         self.assertIn('"Canary for fork pull request #${pr} at ${head}"', self.runs)

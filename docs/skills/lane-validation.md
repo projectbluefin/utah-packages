@@ -179,8 +179,10 @@ request and head). A failed run is not retried. Every refusal in the button
 itself still applies, so `.github/` changes are still pushed by hand. GitHub
 moves a reviewer's latest review onto a later merge of `main` (stale reviews
 are not dismissed here), so `commit_id` alone is not trusted: the head must
-also be older than the Approve, and a merge of `main` after it needs a new
-Approve. Only approve a fork pull request once you would have pressed the
+also have reached the pull request before the Approve, and a merge of `main`
+after it needs a new Approve. The push time is the newest `Canary (read-only)`
+pull_request run on the head, which GitHub records; the commit's own dates are
+set by its author and are not used. Only approve a fork pull request once you would have pressed the
 button for it; to approve without starting Canary, add `hold` first.
 
 Fork dispatches may run concurrently for different PRs. Each cleans copies

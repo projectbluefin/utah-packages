@@ -130,7 +130,7 @@ def _when(value: object) -> datetime | None:
 
 
 def approver(
-    pr: dict, reviews: list[dict], permissions: dict[str, str], repository: str, head_committed_at: str,
+    pr: dict, reviews: list[dict], permissions: dict[str, str], repository: str, head_pushed_at: str,
 ) -> str:
     """The maintainer whose GitHub Approve of the current head starts the fork Canary.
 
@@ -145,9 +145,12 @@ def approver(
     ``commit_id`` alone does not prove what was reviewed: with stale reviews not
     dismissed, GitHub moves a reviewer's latest review onto a merge of main
     pushed after it (seen 2026-11-20 on #978, #972 and #1230 after the hive
-    updated their branches). So the head must also be older than the Approve:
-    ``head_committed_at``, the head commit's committer date, may not be later
-    than the review. A head pushed after the Approve needs a new Approve.
+    updated their branches). So the head must also have reached this pull request
+    before the Approve: ``head_pushed_at`` may not be later than the review. It is
+    the newest "Canary (read-only)" pull_request run on the head, a time GitHub
+    records when the commit is pushed, opened or reopened. The commit's own dates
+    are not used because the author sets them. A head pushed after the Approve
+    needs a new Approve.
     """
     if pr.get("state") != "open":
         raise Refused(f"pull request is {pr.get('state')}, not open")
@@ -184,15 +187,15 @@ def approver(
     blocking = sorted(login for login, review in latest.items() if review["state"] == "CHANGES_REQUESTED")
     if blocking:
         raise Refused(f"changes requested by {', '.join(blocking)}")
-    committed = _when(head_committed_at)
+    pushed = _when(head_pushed_at)
     approvals = [
         (review.get("submitted_at") or "", login)
         for login, review in latest.items()
         if review["state"] == "APPROVED"
         and review.get("commit_id") == sha
-        and committed is not None
+        and pushed is not None
         and (submitted := _when(review.get("submitted_at"))) is not None
-        and committed <= submitted
+        and pushed <= submitted
     ]
     if not approvals:
         raise Refused(f"no maintainer has approved the current head {sha[:12]} since it was pushed")
@@ -362,14 +365,15 @@ def approved_main(argv: list[str]) -> int:
     parser.add_argument("--permissions-json", required=True, type=Path,
                         help="each reviewer's repository permission, {login: permission}")
     parser.add_argument("--repository", required=True)
-    parser.add_argument("--head-committed-at", required=True,
-                        help="the head commit's committer date, as the commits API gives it")
+    parser.add_argument("--head-pushed-at", required=True,
+                        help="when the head reached the pull request: the newest canary-read-only.yml "
+                             "pull_request run on it (empty when there is none)")
     args = parser.parse_args(argv)
     pr = json.loads(args.pr_json.read_text())
     try:
         login = approver(pr, json.loads(args.reviews_json.read_text()),
                          json.loads(args.permissions_json.read_text()), args.repository,
-                         args.head_committed_at)
+                         args.head_pushed_at)
     except Refused as refusal:
         # Not an error: most open fork pull requests are simply not approved yet.
         print(f"skip: #{pr.get('number')}: {refusal}")

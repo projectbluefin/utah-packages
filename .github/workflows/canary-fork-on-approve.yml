@@ -10,10 +10,12 @@
 # It starts only what that maintainer could have started by hand
 # (tools/fork_canary.py approver):
 #   - the Approve must be on the exact head commit (commit_id) AND the head
-#     must be older than the Approve. GitHub moves a review onto a later merge
-#     of main when stale reviews are not dismissed, so commit_id alone is not
-#     enough; any push after the Approve, a merge of main included, needs a new
-#     Approve;
+#     must have reached the pull request before the Approve. GitHub moves a
+#     review onto a later merge of main when stale reviews are not dismissed, so
+#     commit_id alone is not enough; any push after the Approve, a merge of main
+#     included, needs a new Approve. The push time is the newest "Canary
+#     (read-only)" pull_request run on the head, which GitHub records; the
+#     commit's own dates are set by its author and are not used;
 #   - a standing "changes requested" from any maintainer stops it;
 #   - draft pull requests and the labels hold, sentinel-alert and do-not-merge
 #     stop it;
@@ -82,10 +84,14 @@ jobs:
             done
             head=$(jq -r .head.sha pr.json)
             [[ "$head" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::unexpected head ${head} on #${pr}"; exit 1; }
-            committed_at=$(gh api "repos/$REPOSITORY/commits/$head" --jq .commit.committer.date)
+            # When the head reached the pull request, as GitHub recorded it: every
+            # push, open and reopen runs canary-read-only.yml. Empty means no run,
+            # and an empty time never counts as older than an Approve.
+            pushed_at=$(gh api "repos/$REPOSITORY/actions/workflows/canary-read-only.yml/runs?event=pull_request&head_sha=${head}&per_page=100" \
+              --jq '[.workflow_runs[].created_at] | max // empty')
             python3 tools/fork_canary.py approved --pr-json pr.json --reviews-json reviews.json \
               --permissions-json permissions.json --repository "$REPOSITORY" \
-              --head-committed-at "$committed_at" | tee decision.txt
+              --head-pushed-at "$pushed_at" | tee decision.txt
             approved_by=$(sed -n 's/^approved_by=//p' decision.txt)
             [ -n "$approved_by" ] || continue
             if grep -Fxq "Canary for fork pull request #${pr} at ${head}" started.txt; then
