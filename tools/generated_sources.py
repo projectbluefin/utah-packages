@@ -25,6 +25,11 @@ that no upstream publishes verbatim:
   prefix the recipe's `%autosetup` expects. The recipe's Source0 host
   (pagure.io) was sunset in 2026 and the project publishes no release
   tarball; Fedora's lookaside copy is a hand-made tarball of the same tree
+- jpegxl: the upstream libjxl release with the three git submodules the
+  recipe builds and tests from (sjpeg, skcms without its ICC profiles,
+  testdata) filled in at the commits the release tag pins. The release
+  archive leaves submodules empty; Fedora's update_third_party.sh tars them
+  up by hand as two extra lookaside sources, which a bump cannot produce
 - bluefin-artwork-logos: the Bluefin logo SVGs and the license from
   projectbluefin/artwork at a pinned commit. The repository publishes no
   release, and its archive carries every wallpaper (well over 100 MB) for
@@ -660,6 +665,121 @@ def _sevenzip_generate(package_dir: Path, out_dir: Path) -> Path:
         raise RuntimeError(f"input archive mismatch for {url}: expected {pin}, got {actual}")
     target = out_dir / f"7zip-{version}.tar.xz"
     target.write_bytes(_sevenzip_transform(payload, version))
+    return target
+
+
+# --- jpegxl --------------------------------------------------------------------
+
+JPEGXL_UPSTREAM_URL = "https://github.com/libjxl/libjxl/archive/v{version}/jpegxl-{version}.tar.gz"
+
+# Per release: the SHA-512 of the libjxl tag archive, and for each submodule
+# the recipe needs, the commit the tag's gitlink pins (GitHub contents API,
+# `repos/libjxl/libjxl/contents/<path>?ref=v<version>`) and the SHA-512 of
+# that commit's GitHub archive.
+JPEGXL_INPUTS = {
+    "0.12.0": {
+        "sha512": "71d45123e47588c8028c0e01a7820c7a18d98df05c29b5318ab6858eaff5f249879763907201ba19a93f817c6ef75c393c1974d2a0cc8e461c4e2709ca6fa45f",
+        "submodules": {
+            "third_party/sjpeg": ("https://github.com/webmproject/sjpeg", "94e0df6d0f8b44228de5be0ff35efb9f946a13c9", "d3e175628fff9e3a2adb300d760a5eb686080eb7681d95215f89c8c94c6ea7b07b74b0c8eed396d01505977e6dbf3a401d1ee5e93ecce2f9e7671042bd12316e"),
+            "third_party/skcms": ("https://github.com/google/skcms", "96d9171c94b937a1b5f0293de7309ac16311b722", "63dc75a2898e848ec0c68d06ea5b13e65304088ab205ceef8c5d36aacf233a6478158653f6da0ab417671fa00d08e66bffe593caa351a5802fc1129553e70f43"),
+            "testdata": ("https://github.com/libjxl/testdata", "73695d303670c90e4d506ea89d9901b081385089", "8c02a1b7752da9ec93c228436c4bbcdafb5b655e6386a76cf9ccfc4b1c5d4614d9ec3b9931281a57a5348720d4641ff518cb6ed9e06a5dcb0725fd9fda138618"),
+        },
+    },
+}
+
+# update_third_party.sh deletes these from the trees it packs.
+JPEGXL_DROPPED = ("third_party/skcms/profiles",)
+
+
+def _jpegxl_dropped(rel: str) -> bool:
+    return any(rel == path or rel.startswith(path + "/") for path in JPEGXL_DROPPED)
+
+
+def _jpegxl_transform(archive: bytes, submodules: dict[str, tuple[str, bytes]], version: str) -> bytes:
+    """Fill the release archive's empty submodule directories.
+
+    `submodules` maps a path inside the release (`third_party/sjpeg`) to the
+    commit and the GitHub archive of that commit, whose `<repo>-<commit>/`
+    top level is renamed to `libjxl-<version>/<path>/`. Members keep their
+    archives' modes and mtimes and are sorted by name with ownership zeroed,
+    as one xz stream.
+    """
+    top = f"libjxl-{version}"
+    kept: dict[str, tuple[tarfile.TarInfo, bytes | None]] = {}
+
+    def take(source: tarfile.TarFile, prefix: str, target: str) -> None:
+        for member in source:
+            name = member.name.rstrip("/")
+            if name != prefix and not name.startswith(prefix + "/"):
+                continue
+            rel = (target + name[len(prefix):]).lstrip("/")
+            if _jpegxl_dropped(rel):
+                continue
+            if not (member.isdir() or member.isreg() or member.issym()):
+                raise RuntimeError(f"unexpected member type in {member.name}")
+            payload = source.extractfile(member).read() if member.isreg() else None
+            kept[f"{top}/{rel}" if rel else top] = (member, payload)
+
+    with tarfile.open(fileobj=io.BytesIO(archive), mode="r:gz") as source:
+        take(source, top, "")
+    for path, (commit, payload) in sorted(submodules.items()):
+        if any(name.startswith(f"{top}/{path}/") for name in kept):
+            raise RuntimeError(f"submodule {path} is not empty in the release archive")
+        with tarfile.open(fileobj=io.BytesIO(payload), mode="r:gz") as source:
+            first = next(iter(source.getmembers()), None)
+            if first is None or not first.name.rstrip("/").endswith(f"-{commit}"):
+                raise RuntimeError(f"archive for {path} is not of commit {commit}")
+            take(source, first.name.rstrip("/"), path)
+    raw = io.BytesIO()
+    with tarfile.open(fileobj=raw, mode="w", format=tarfile.PAX_FORMAT) as result:
+        for name in sorted(kept):
+            member, payload = kept[name]
+            member.name = name
+            member.uid = member.gid = 0
+            member.uname = member.gname = ""
+            member.pax_headers = {}
+            result.addfile(member, io.BytesIO(payload) if payload is not None else None)
+    out = io.BytesIO()
+    _xz_compress_stream(iter([raw.getvalue()]), out)
+    return out.getvalue()
+
+
+def _jpegxl_metadata(package_dir: Path) -> dict:
+    version = spec_version(package_dir, "jpegxl.spec")
+    pins = JPEGXL_INPUTS.get(version, {}).get("submodules", {})
+    parts = ", ".join(f"{path} {remote} commit {commit}" for path, (remote, commit, _) in sorted(pins.items()))
+    return {
+        "name": "jpegxl",
+        "version": version,
+        "filename": f"jpegxl-{version}.tar.xz",
+        "generate": {
+            "script": SCRIPT_PATH,
+            "input": f"{JPEGXL_UPSTREAM_URL.format(version=version)} (sha512-pinned); submodule archives (sha512-pinned): {parts}",
+            "method": f"fill the release's empty sjpeg, skcms (minus profiles/, per update_third_party.sh) and testdata submodules at the tag's gitlinks and repack deterministically as jpegxl-{version}.tar.xz",
+        },
+    }
+
+
+def _jpegxl_generate(package_dir: Path, out_dir: Path) -> Path:
+    version = spec_version(package_dir, "jpegxl.spec")
+    pins = JPEGXL_INPUTS.get(version)
+    if pins is None:
+        raise RuntimeError(f"no pinned inputs for jpegxl {version}")
+
+    def fetch(url: str, pin: str) -> bytes:
+        payload = _fetch(url)
+        actual = hashlib.sha512(payload).hexdigest()
+        if actual != pin:
+            raise RuntimeError(f"input archive mismatch for {url}: expected {pin}, got {actual}")
+        return payload
+
+    archive = fetch(JPEGXL_UPSTREAM_URL.format(version=version), pins["sha512"])
+    submodules = {
+        path: (commit, fetch(f"{remote}/archive/{commit}.tar.gz", pin))
+        for path, (remote, commit, pin) in pins["submodules"].items()
+    }
+    target = out_dir / f"jpegxl-{version}.tar.xz"
+    target.write_bytes(_jpegxl_transform(archive, submodules, version))
     return target
 
 
@@ -1836,6 +1956,7 @@ METADATA = {
     "freerdp": _freerdp_metadata,
     "fpaste": _fpaste_metadata,
     "7zip": _sevenzip_metadata,
+    "jpegxl": _jpegxl_metadata,
     "hyperv-daemons": _hyperv_metadata,
     "bluefin-artwork-logos": _bluefin_artwork_metadata,
     "bluefin-wallpapers": _bluefin_wallpapers_metadata,
@@ -1857,6 +1978,7 @@ GENERATORS = {
     "freerdp": _freerdp_generate,
     "fpaste": _fpaste_generate,
     "7zip": _sevenzip_generate,
+    "jpegxl": _jpegxl_generate,
     "hyperv-daemons": _hyperv_generate,
     "bluefin-artwork-logos": _bluefin_artwork_generate,
     "bluefin-wallpapers": _bluefin_wallpapers_generate,
