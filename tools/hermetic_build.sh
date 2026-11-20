@@ -206,6 +206,34 @@ json.dump(lock, open(path, "w"))
 PY
 }
 
+# Some Akamai edges in front of packages.redhat.com answer with
+# Content-Encoding: gzip, and mock-hermetic-repo saves response.raw, the body
+# still encoded. The "not an RPM file (bad lead)" shadow-utils in run
+# 44735693275 was 1381217 bytes starting 1f8b; gzip -6 of the real
+# 1523508-byte RPM is 1381142. A changed URL spelling gets the same encoding,
+# so undo it here: an .rpm that is a gzip stream around an RPM lead becomes
+# that RPM. Nothing is trusted for it -- verify_hermetic_repo.py still checks
+# every file's SIGMD5 against the lock -- and createrepo_c, which failed on
+# the encoded file, runs again on the next attempt with nothing left to fetch.
+unwrap_gzip_rpms() {
+  python3 - "$1" <<'PY'
+import gzip, sys
+from pathlib import Path
+for rpm in sorted(Path(sys.argv[1]).glob("*.rpm")):
+    with rpm.open("rb") as handle:
+        if handle.read(2) != b"\x1f\x8b":
+            continue
+    try:
+        body = gzip.decompress(rpm.read_bytes())
+    except (OSError, EOFError):
+        continue
+    if body[:4] != b"\xed\xab\xee\xdb":
+        continue
+    rpm.write_bytes(body)
+    print(f"{rpm.name}: removed a gzip Content-Encoding the download kept ({len(body)} bytes)")
+PY
+}
+
 materialize() {
   # mock-hermetic-repo downloads over HTTP(S) and saves the bootstrap image;
   # it cannot read file:// URLs, which is where the earlier stages and the
@@ -262,6 +290,9 @@ PY
       tail -3 "$fetch_log"
     else
       grep -vE "Downloading |urllib3" "$fetch_log" | tail -40 || true
+    fi
+    if [ -d "$H/repo" ]; then
+      unwrap_gzip_rpms "$H/repo" || return
     fi
     verify_status=0
     python3 /tools/verify_hermetic_repo.py --lockfile "$H/lock/remote.json" --repo "$H/repo" \
