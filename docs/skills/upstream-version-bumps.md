@@ -222,16 +222,18 @@ the bump's parent instead of a merge base:
 ```sh
 python3 tools/bump_gate.py trim --base <bump-commit>^ --head HEAD \
   --hold '["<name>", ...]' --run-url <failing run>
-python3 tools/multimedia_closure.py --output reports/multimedia-closure.json
 ```
 
 `trim` restores each recipe directory and lock entry byte for byte and holds
 the failed version, so later bumps skip it until the next upstream release.
 Check first that nothing after the bump touched those recipes
 (`git log <bump-commit>.. -- packages/<name>`); `trim` would drop that work
-too. The closure report records codec versions, so regenerate it whenever a
-held package is one of them (ffmpegthumbnailer here). Moving a held package
-forward is then an ordinary `fix/recipe-<name>` pull request, as above.
+too. `trim` now regenerates and stages the multimedia-closure report after
+restoring each held package to its base version, so the report stays current
+without a separate step (its recipe records codec versions, and a held codec
+like ffmpegthumbnailer would otherwise make the next gate fail its report
+check). Moving a held package forward is then an ordinary
+`fix/recipe-<name>` pull request, as above.
 
 ## GNOME locks follow GNOME's newest stable release
 
