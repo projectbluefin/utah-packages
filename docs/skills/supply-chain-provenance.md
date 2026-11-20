@@ -566,7 +566,10 @@ next configured URL is tried, and if none serves the file the package is
 `rejected`; add a verified mirror to `fallback_urls`. A body whose leading
 bytes do not match the URL's archive extension (`ARCHIVE_MAGIC` in
 `tools/source_pipeline.py`: `.tar.xz`, `.tar.gz`, `.tar.bz2` and so on) is
-treated as the same `ChallengePage` case, not as a digest mismatch.
+treated as the same `ChallengePage` case, not as a digest mismatch, unless
+the body already hashes to its pinned SHA-512: then it is the pinned file,
+whatever its name says (vvdec's lookaside `bitstreams.tar.xz` is a bzip2
+tarball, made with `tar -cvjf`).
 
 ## The scheduled verification run is never cancelled
 
