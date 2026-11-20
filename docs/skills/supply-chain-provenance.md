@@ -423,6 +423,16 @@ fails to link against `libjxl_extras-internal`'s OpenEXR decoder. 0.12.0's
 `doc/` is its own CMake project, so the Doxygen HTML lands in
 `%{_vpath_builddir}/doc/html`, not `%{_vpath_builddir}/html`.
 
+A Utah-only Go recipe whose upstream publishes its `go mod vendor` tree as a
+release asset, the layout Fedora's go-vendor-tools recipes take as Source1
+(gum, glow), folds it the same way: the `bluefin-cli` generator pins the tag
+archive and `bluefin-cli-<version>-vendor.tar.gz` by SHA-512 per version
+(`BLUEFIN_CLI_INPUT_SHA512`), unpacks `vendor/` into the tag tree and repacks
+it, refusing a tag that already vendors or a vendor archive with anything
+outside `vendor/`. The spec keeps go-vendor-tools' license check with
+`go-vendor-tools.toml` as Source1. A bump adds both digests to the table
+before relocking, since the upstream bump tool cannot fetch them.
+
 When the upstream has no release and its commit archive is far larger than
 what the recipe needs, add a `tools/generated_sources.py` generator that
 fetches only the needed files at a pinned commit, checks a SHA-512 per file,

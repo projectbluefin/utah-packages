@@ -68,6 +68,10 @@ that no upstream publishes verbatim:
 - oo7: the upstream GitHub commit archive (SHA-512-pinned, keyed by the
   spec's commit) with the same `vendor/` tree added. Fedora 44 lacks crate
   RPMs the commit needs, and Hummingbird ships none (#1192)
+- bluefin-cli: the upstream GitHub tag archive with the `vendor/` tree of
+  the release's own bluefin-cli-<version>-vendor.tar.gz unpacked into it,
+  both SHA-512-pinned. Fedora has no recipe, and the vendor archive is a
+  release asset no lookaside carries, so it cannot be a second `sources` line
 
 For these, the source lock names this script and records the SHA-512 of the
 bytes the transformation produces. Verification re-runs the transformation
@@ -1849,6 +1853,109 @@ def _tealdeer_generate(package_dir: Path, out_dir: Path) -> Path:
     )
 
 
+# --- bluefin-cli ---------------------------------------------------------------
+
+# Utah's terminal experience (shell tools, prompt hooks, MOTD) from
+# tuna-os/bluefin-cli. Fedora has no recipe. Each release publishes, beside its
+# tag, bluefin-cli-<version>-vendor.tar.gz: the `go mod vendor` tree of every
+# module go.sum pins (scripts/vendor-archive.sh upstream). The lock takes one
+# primary source and a second `sources` line resolves only from a dist-git
+# lookaside, so both release files are SHA-512-pinned here and the vendor tree
+# is unpacked into the tag archive, which builds offline as gum's Source0 and
+# Source1 do together.
+BLUEFIN_CLI_UPSTREAM_URL = "https://github.com/tuna-os/bluefin-cli/archive/v{version}/bluefin-cli-{version}.tar.gz"
+BLUEFIN_CLI_VENDOR_URL = (
+    "https://github.com/tuna-os/bluefin-cli/releases/download/v{version}/bluefin-cli-{version}-vendor.tar.gz"
+)
+# version -> (tag archive SHA-512, vendor archive SHA-512)
+BLUEFIN_CLI_INPUT_SHA512: dict[str, tuple[str, str]] = {
+    "0.15.0": (
+        "540be790f92d45ac61526c6437be74f47ed0353e047768d7577ac54833e51a88cd5937571472a2952cb07fe79af2b9c1611bb75b7a0dcac5d97530e1b1644256",
+        "731b2b5954672d2b2f5e824ed1d71ebf93b912276df7aab060cb2a011e7ef7a552a9ae323fb77bf6536cef29a71320a0f74ff99c57b1d01956f2117b74a847a9",
+    ),
+}
+BLUEFIN_CLI_MTIME = 0
+
+
+def _normalized(member: tarfile.TarInfo, name: str, mtime: int) -> tarfile.TarInfo:
+    member.name = name
+    member.uid = member.gid = 0
+    member.uname = member.gname = ""
+    member.pax_headers = {}
+    member.mtime = mtime
+    return member
+
+
+def _bluefin_cli_transform(source: bytes, vendor: bytes, version: str) -> bytes:
+    """Unpack the release's vendor/ tree into its tag archive, deterministically.
+
+    Every member of both archives is renamed under bluefin-cli-<version>/,
+    sorted, owned by root with no names, and stamped with a fixed mtime, so the
+    same two inputs always give the same bytes. A tag archive that already
+    carries vendor/, or a vendor archive with anything outside vendor/, is
+    refused rather than merged.
+    """
+    top = f"bluefin-cli-{version}"
+    members: dict[str, tuple[tarfile.TarInfo, bytes | None]] = {}
+    with tarfile.open(fileobj=io.BytesIO(source), mode="r:*") as src:
+        for member in src.getmembers():
+            name = member.name.rstrip("/")
+            if not (name == top or name.startswith(top + "/")):
+                raise RuntimeError(f"archive member outside {top}: {member.name}")
+            if name == f"{top}/vendor" or name.startswith(f"{top}/vendor/"):
+                raise RuntimeError(f"tag archive already carries {name}")
+            data = src.extractfile(member).read() if member.isreg() else None
+            members[name] = (_normalized(member, name, BLUEFIN_CLI_MTIME), data)
+    with tarfile.open(fileobj=io.BytesIO(vendor), mode="r:*") as src:
+        for member in src.getmembers():
+            name = member.name.rstrip("/").removeprefix("./")
+            if not (name == "vendor" or name.startswith("vendor/")):
+                raise RuntimeError(f"vendor archive member outside vendor/: {member.name}")
+            data = src.extractfile(member).read() if member.isreg() else None
+            members[f"{top}/{name}"] = (_normalized(member, f"{top}/{name}", BLUEFIN_CLI_MTIME), data)
+    raw = io.BytesIO()
+    with tarfile.open(fileobj=raw, mode="w", format=tarfile.PAX_FORMAT) as result:
+        for name in sorted(members):
+            info, data = members[name]
+            result.addfile(info, io.BytesIO(data) if data is not None else None)
+    out = io.BytesIO()
+    _xz_compress_stream(iter([raw.getvalue()]), out)
+    return out.getvalue()
+
+
+def _bluefin_cli_metadata(package_dir: Path) -> dict:
+    version = spec_version(package_dir, "bluefin-cli.spec")
+    return {
+        "name": "bluefin-cli",
+        "version": version,
+        "filename": f"bluefin-cli-{version}-vendored.tar.xz",
+        "generate": {
+            "script": SCRIPT_PATH,
+            "input": f"{BLUEFIN_CLI_UPSTREAM_URL.format(version=version)} and "
+                     f"{BLUEFIN_CLI_VENDOR_URL.format(version=version)} (each sha512-pinned)",
+            "method": f"unpack the release's vendor/ tree into the tag archive and repack deterministically as bluefin-cli-{version}-vendored.tar.xz",
+        },
+    }
+
+
+def _bluefin_cli_generate(package_dir: Path, out_dir: Path) -> Path:
+    version = spec_version(package_dir, "bluefin-cli.spec")
+    pins = BLUEFIN_CLI_INPUT_SHA512.get(version)
+    if pins is None:
+        raise RuntimeError(f"no pinned input SHA-512 for bluefin-cli {version}")
+    payloads = []
+    for url, pin in zip((BLUEFIN_CLI_UPSTREAM_URL.format(version=version),
+                         BLUEFIN_CLI_VENDOR_URL.format(version=version)), pins):
+        payload = _fetch(url)
+        actual = hashlib.sha512(payload).hexdigest()
+        if actual != pin:
+            raise RuntimeError(f"input archive mismatch for {url}: expected {pin}, got {actual}")
+        payloads.append(payload)
+    target = out_dir / f"bluefin-cli-{version}-vendored.tar.xz"
+    target.write_bytes(_bluefin_cli_transform(*payloads, version))
+    return target
+
+
 # --- git-archive tag sources -----------------------------------------------------
 
 # Recipes whose Source0 is `git archive` of an upstream tag: the project
@@ -2055,6 +2162,7 @@ METADATA = {
     "bluefin-wallpapers": _bluefin_wallpapers_metadata,
     "tealdeer": _tealdeer_metadata,
     "oo7": _oo7_metadata,
+    "bluefin-cli": _bluefin_cli_metadata,
 }
 
 GENERATORS = {
@@ -2078,6 +2186,7 @@ GENERATORS = {
     "bluefin-wallpapers": _bluefin_wallpapers_generate,
     "tealdeer": _tealdeer_generate,
     "oo7": _oo7_generate,
+    "bluefin-cli": _bluefin_cli_generate,
 }
 
 

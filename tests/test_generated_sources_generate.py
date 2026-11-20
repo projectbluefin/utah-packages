@@ -703,6 +703,75 @@ class KanataGenerateTests(PackageDirMixin, unittest.TestCase):
         self.assertIn(f"{self.TOP}/vendor/tinycrate-1.0.0/src/lib.rs", names)
 
 
+class BluefinCliGenerateTests(PackageDirMixin, unittest.TestCase):
+    """The tag archive plus the release's vendor/ tree, both pinned (utah's terminal experience)."""
+
+    VERSION = "0.12.0"
+    TOP = f"bluefin-cli-{VERSION}"
+    ARCHIVE_URL = f"https://github.com/tuna-os/bluefin-cli/archive/v{VERSION}/bluefin-cli-{VERSION}.tar.gz"
+    VENDOR_URL = (f"https://github.com/tuna-os/bluefin-cli/releases/download/v{VERSION}/"
+                  f"bluefin-cli-{VERSION}-vendor.tar.gz")
+
+    def setUp(self):
+        super().setUp()
+        self.write_spec("bluefin-cli.spec", self.VERSION)
+        self.archive = targz({f"{self.TOP}/go.mod": b"module x\n", f"{self.TOP}/main.go": b"package main\n"})
+        self.vendor = targz({"vendor/modules.txt": b"# example.com/m v1.0.0\n",
+                             "vendor/example.com/m/m.go": b"package m\n"})
+        self.pins = {self.VERSION: (sha512(self.archive), sha512(self.vendor))}
+
+    def generate(self, payloads: dict[str, bytes]) -> tuple[Path, UrlopenRecorder]:
+        fetch = UrlopenRecorder(payloads)
+        with patch.object(generated_sources.urllib.request, "urlopen", fetch), \
+                patch.dict(generated_sources.BLUEFIN_CLI_INPUT_SHA512, self.pins):
+            return generated_sources.generate("bluefin-cli", self.package_dir, self.out_dir), fetch
+
+    def test_metadata_names_both_pinned_inputs(self):
+        entry = generated_sources.metadata_for("bluefin-cli", self.package_dir)
+        self.assertEqual(entry["filename"], f"{self.TOP}-vendored.tar.xz")
+        self.assertIn(self.ARCHIVE_URL, entry["generate"]["input"])
+        self.assertIn(self.VENDOR_URL, entry["generate"]["input"])
+
+    def test_an_unpinned_version_fails_before_any_download(self):
+        self.write_spec("bluefin-cli.spec", "0.0.1")
+        with patch.object(generated_sources, "_fetch") as fetch:
+            with self.assertRaisesRegex(RuntimeError, "no pinned input SHA-512 for bluefin-cli 0.0.1"):
+                generated_sources.generate("bluefin-cli", self.package_dir, self.out_dir)
+        fetch.assert_not_called()
+
+    def test_the_vendor_tree_lands_inside_the_tag_archive_reproducibly(self):
+        target, fetch = self.generate({self.ARCHIVE_URL: self.archive, self.VENDOR_URL: self.vendor})
+        self.assertEqual([url for url, _, _ in fetch.requests], [self.ARCHIVE_URL, self.VENDOR_URL])
+        first = target.read_bytes()
+        with tarfile.open(fileobj=io.BytesIO(lzma.decompress(first))) as archive:
+            members = archive.getmembers()
+        names = [member.name for member in members]
+        self.assertEqual(names, sorted(names))
+        self.assertIn(f"{self.TOP}/main.go", names)
+        self.assertIn(f"{self.TOP}/vendor/modules.txt", names)
+        self.assertIn(f"{self.TOP}/vendor/example.com/m/m.go", names)
+        self.assertEqual({(m.mtime, m.uid, m.gid, m.uname) for m in members}, {(0, 0, 0, "")})
+        target.unlink()
+        again, _ = self.generate({self.ARCHIVE_URL: self.archive, self.VENDOR_URL: self.vendor})
+        self.assertEqual(again.read_bytes(), first)
+
+    def test_a_substituted_vendor_archive_fails_closed(self):
+        evil = targz({"vendor/modules.txt": b"evil"})
+        with self.assertRaisesRegex(RuntimeError, f"input archive mismatch for {self.VENDOR_URL}"):
+            self.generate({self.ARCHIVE_URL: self.archive, self.VENDOR_URL: evil})
+        self.assertEqual(list(self.out_dir.iterdir()), [])
+
+    def test_a_vendor_member_outside_vendor_is_refused(self):
+        vendor = targz({"vendor/modules.txt": b"", "main.go": b"package evil\n"})
+        with self.assertRaisesRegex(RuntimeError, "vendor archive member outside vendor/: main.go"):
+            generated_sources._bluefin_cli_transform(self.archive, vendor, self.VERSION)
+
+    def test_a_tag_archive_that_already_vendors_is_refused(self):
+        archive = targz({f"{self.TOP}/vendor/modules.txt": b""})
+        with self.assertRaisesRegex(RuntimeError, "tag archive already carries"):
+            generated_sources._bluefin_cli_transform(archive, self.vendor, self.VERSION)
+
+
 
 def tarxz(members: dict[str, bytes]) -> bytes:
     raw = io.BytesIO()
