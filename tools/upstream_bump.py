@@ -1188,7 +1188,8 @@ def plan(
             "kind": "note",
             "current": entry.get("version", "unknown"),
             "reason": "no supported upstream release feed; not scanned for updates. "
-                      "Configure a feed or document why this lock stays pinned",
+                      "Configure a feed, or leave it pinned if intentional "
+                      "(docs/skills/upstream-version-bumps.md, 'Locks left without a feed')",
         })
 
     for name, entry, feed in tracked:
