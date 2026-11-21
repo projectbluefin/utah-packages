@@ -60,15 +60,22 @@ under rootless podman). Its unpinned `fedora:rawhide` predecessor had to
 `gpgkey` it never mounted, and queried a repository id (`tunaos-hummingbird`)
 the file no longer defines; the job failed every run.
 
+[`bootstrap-direct-sources.yml`](../../.github/workflows/bootstrap-direct-sources.yml)
+carried the same three faults until #1272. It now runs in the factory build
+root, pulled by the digest in `config/buildroot-image`, installs `rpm-build`
+from Fedora before it adds the Hummingbird repo file, and mounts `config/` at
+`/repos` so the file's `gpgkey` paths resolve. A dnf `--repo` in any workflow
+must name a section `config/hummingbird.repo` defines;
+`tests/test_workflow_repo_ids.py` fails the next rename that leaves one behind.
+
 No RHHI image replaces the others, so do not swap them:
 
 | Image | Why it stays |
 | --- | --- |
-| `ghcr.io/projectbluefin/utah-buildroot` (`fedora:44` mirror), also mock's bootstrap image | The build root is Fedora 44 paired with the Hummingbird repo, as Hummingbird pairs them in `images/variables.yml`; RHHI has no RPM build root, and a runtime image is not one |
+| `ghcr.io/projectbluefin/utah-buildroot` (`fedora:44` mirror), also mock's bootstrap image and `bootstrap-direct-sources.yml`'s `rpmspec` | The build root is Fedora 44 paired with the Hummingbird repo, as Hummingbird pairs them in `images/variables.yml`; RHHI has no RPM build root, and a runtime image is not one. `rpmspec` over Fedora recipes needs `rpm-build` with Fedora's macros, which no RHHI image ships |
 | `quay.io/packit/packit` | Packit and its SRPM toolchain; RHHI has no packit image |
 | `quay.io/hummingbird-community/bootc-os` (gap report, runtime contract, publish fallback base) | The bootc base Utah consumes; community image, not in `/hi` |
 | `fedora:rawhide` in `detect-rawhide-updates.yml`, `import-bluefin-rawhide.yml` | They query Fedora Rawhide's own repositories; RHHI images carry only Hummingbird's |
-| `fedora:rawhide` in `bootstrap-direct-sources.yml` | `rpmspec` over Fedora recipes needs `rpm-build` with Fedora's macros, which no RHHI image ships |
 | cosign (canary, publish, `load-factory-repo`) | A checksum-pinned v2.4.1 release binary, not an image; RHHI's `cosign` is v3, whose signing defaults (bundle format) are a separate decision for the signature Utah verifies |
 
 ## The buildroot lock
