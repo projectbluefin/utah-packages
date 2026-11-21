@@ -1204,12 +1204,6 @@ packages:
     downstream_package_name: gnome-user-share
     paths:
       - packages/gnome-user-share
-  gnu-cp:
-    specfile_path: gnu-cp.spec
-    upstream_package_name: gnu-cp
-    downstream_package_name: gnu-cp
-    paths:
-      - packages/gnu-cp
   gnu-efi:
     specfile_path: gnu-efi.spec
     upstream_package_name: gnu-efi
