@@ -129,10 +129,41 @@ def _when(value: object) -> datetime | None:
     return moment if moment.tzinfo else None
 
 
+def head_at(pushes: Sequence[dict], moment: datetime) -> str | None:
+    """The pull request's head at ``moment``: the commit of the newest push at or before it.
+
+    ``pushes`` are the "Canary (read-only)" pull_request runs from the pull
+    request's own fork and branch, each a ``created_at`` GitHub recorded when the
+    commit reached the pull request and its ``head_sha``. None when there is none,
+    or a time cannot be read.
+    """
+    newest: tuple[datetime, str] | None = None
+    for push in pushes:
+        when, sha = _when(push.get("created_at")), push.get("head_sha")
+        if when is None or not isinstance(sha, str) or not FULL_SHA.fullmatch(sha):
+            return None
+        if when <= moment and (newest is None or when > newest[0]):
+            newest = (when, sha)
+    return newest[1] if newest else None
+
+
 def approver(
     pr: dict, reviews: list[dict], permissions: dict[str, str], repository: str, head_pushed_at: str,
 ) -> str:
-    """The maintainer whose GitHub Approve of the current head starts the fork Canary.
+    """The maintainer whose Approve of the exact current head starts the fork Canary."""
+    return approval(pr, reviews, permissions, repository, head_pushed_at)[0]
+
+
+def approval(
+    pr: dict,
+    reviews: list[dict],
+    permissions: dict[str, str],
+    repository: str,
+    head_pushed_at: str,
+    pushes: Sequence[dict] = (),
+    merged_only: Callable[[str, str], str | None] | None = None,
+) -> tuple[str, str]:
+    """The maintainer whose GitHub Approve starts the fork Canary, and the commit they approved.
 
     ``canary-fork-on-approve.yml`` presses the button for a maintainer who has
     approved, so it starts only what that maintainer could have started: an open,
@@ -151,7 +182,17 @@ def approver(
     request's own fork and branch, a time GitHub records when the commit is
     pushed, opened or reopened. The commit's own dates
     are not used because the author sets them. A head pushed after the Approve
-    needs a new Approve.
+    needs a new Approve, unless it only merged main into the approved commit.
+
+    That is the one exception: when main changes the pipeline, every fork branch
+    has to merge it and run Canary again, and asking each maintainer to approve
+    again after every merge of main (seen three times on 2026-11-20 for #972 and
+    #1230) is what kept the start manual. So an Approve also covers a later head
+    when ``merged_only(approved, head)`` (``merge_only_problem``) finds nothing in
+    the head but clean merges of main into the commit that was the head when the
+    maintainer approved, read from ``pushes`` (``head_at``), never from the
+    review's ``commit_id``. The review's ``commit_id`` must still be that commit
+    or the current head, where GitHub moves it. Anything else needs a new Approve.
     """
     if pr.get("state") != "open":
         raise Refused(f"pull request is {pr.get('state')}, not open")
@@ -189,18 +230,30 @@ def approver(
     if blocking:
         raise Refused(f"changes requested by {', '.join(blocking)}")
     pushed = _when(head_pushed_at)
-    approvals = [
-        (review.get("submitted_at") or "", login)
-        for login, review in latest.items()
-        if review["state"] == "APPROVED"
-        and review.get("commit_id") == sha
-        and pushed is not None
-        and (submitted := _when(review.get("submitted_at"))) is not None
-        and pushed <= submitted
-    ]
+    approvals: list[tuple[str, str, str]] = []
+    problems: list[str] = []
+    for login, review in latest.items():
+        submitted = _when(review.get("submitted_at"))
+        if review["state"] != "APPROVED" or submitted is None:
+            continue
+        if review.get("commit_id") == sha and pushed is not None and pushed <= submitted:
+            approvals.append((review["submitted_at"], login, sha))
+            continue
+        if merged_only is None:
+            continue
+        approved = head_at(pushes, submitted)
+        if approved is None or approved == sha or review.get("commit_id") not in (approved, sha):
+            continue
+        problem = merged_only(approved, sha)
+        if problem is None:
+            approvals.append((review["submitted_at"], login, approved))
+        else:
+            problems.append(f"{login}'s Approve of {approved[:12]} does not cover it: {problem}")
     if not approvals:
-        raise Refused(f"no maintainer has approved the current head {sha[:12]} since it was pushed")
-    return max(approvals)[1]
+        why = f"; {'; '.join(problems)}" if problems else ""
+        raise Refused(f"no maintainer has approved the current head {sha[:12]} since it was pushed{why}")
+    _, login, approved = max(approvals)
+    return login, approved
 
 
 def proven_heads(runs: list[dict], pr: int) -> list[str]:
@@ -263,32 +316,29 @@ def pipeline_changes(names: Sequence[str], canary_set: Sequence[str]) -> list[st
     return sorted({name for name in names if name and not inert(name)})
 
 
-def carry_problem(
-    proven: str, head: str, canary_set: Sequence[str], base: str = BASE_GIT_REF, git: Git = _git,
-) -> str | None:
-    """Why a Canary that passed on ``proven`` does not prove ``head``; None when it does.
+def merge_only_problem(earlier: str, head: str, base: str = BASE_GIT_REF, git: Git = _git) -> str | None:
+    """Why ``head`` adds more than clean merges of ``base`` to ``earlier``; None when it does not.
 
-    It does only when every commit ``head`` adds after ``proven`` that is not on
-    ``base`` is a merge of ``base`` that git makes by itself: two parents, one on
-    ``base``, the other ``proven`` or another such merge, and a tree identical to
-    ``git merge-tree`` of the two, so no conflict was resolved and nothing was
-    edited in the merge. The pull request's own diff must then be unchanged. That
-    leaves nothing the maintainer did not review: the rest is main's. And what
-    main brought in, between the two heads' merge bases, must touch no pipeline
-    path: the Canary built the proven head with main's pipeline as it was then.
+    Every commit ``head`` adds after ``earlier`` that is not on ``base`` must be a
+    merge of ``base`` that git makes by itself: two parents, one on ``base``, the
+    other ``earlier`` or another such merge, and a tree identical to ``git
+    merge-tree`` of the two, so no conflict was resolved and nothing was edited in
+    the merge. The pull request's own diff must then be unchanged, and touch no
+    ``.github/`` path. That leaves nothing in ``head`` that whoever reviewed
+    ``earlier`` did not see: the rest is main's.
     """
-    if git(["rev-list", "--max-count=1", proven, f"^{head}"]).strip():
-        return f"{head[:12]} does not contain {proven[:12]}: it is older, or the branch was rewritten"
+    if git(["rev-list", "--max-count=1", earlier, f"^{head}"]).strip():
+        return f"{head[:12]} does not contain {earlier[:12]}: it is older, or the branch was rewritten"
     added: dict[str, list[str]] = {}
-    for line in git(["rev-list", "--parents", head, f"^{proven}", f"^{base}"]).splitlines():
+    for line in git(["rev-list", "--parents", head, f"^{earlier}", f"^{base}"]).splitlines():
         commit, *parents = line.split()
         added[commit] = parents
     for commit, parents in added.items():
         on_base = [p for p in parents if not git(["rev-list", "--max-count=1", p, f"^{base}"]).strip()]
         others = [p for p in parents if p not in on_base]
-        if len(parents) != 2 or len(on_base) != 1 or (others[0] != proven and others[0] not in added):
+        if len(parents) != 2 or len(on_base) != 1 or (others[0] != earlier and others[0] not in added):
             return (
-                f"{commit[:12]} is not a merge of {BASE_REF} into the branch at {proven[:12]}; "
+                f"{commit[:12]} is not a merge of {BASE_REF} into the branch at {earlier[:12]}; "
                 "every other commit needs a new review"
             )
         try:
@@ -299,12 +349,28 @@ def carry_problem(
             return f"{commit[:12]} resolved a conflict with {BASE_REF}; the resolution needs a new review"
         if merged != git(["rev-parse", f"{commit}^{{tree}}"]).strip():
             return f"{commit[:12]} changes more than merging {BASE_REF} does; that change needs a new review"
-    if pr_patch(head, base, git) != pr_patch(proven, base, git):
-        return f"the pull request's own diff at {head[:12]} differs from the one proven at {proven[:12]}"
+    if pr_patch(head, base, git) != pr_patch(earlier, base, git):
+        return f"the pull request's own diff at {head[:12]} differs from the one at {earlier[:12]}"
     names = git(["diff", "--no-renames", "--name-only", "-z", f"{base}...{head}"]).split("\0")
     protected = sorted(name for name in names if name.startswith(PROTECTED_PREFIX))
     if protected:
         return f"it changes {', '.join(protected)}, which never carries over; a maintainer pushes it by hand"
+    return None
+
+
+def carry_problem(
+    proven: str, head: str, canary_set: Sequence[str], base: str = BASE_GIT_REF, git: Git = _git,
+) -> str | None:
+    """Why a Canary that passed on ``proven`` does not prove ``head``; None when it does.
+
+    It does only when ``head`` adds nothing but clean merges of ``base`` to
+    ``proven`` (``merge_only_problem``), and what main brought in, between the two
+    heads' merge bases, touches no pipeline path: the Canary built the proven head
+    with main's pipeline as it was then.
+    """
+    problem = merge_only_problem(proven, head, base, git)
+    if problem:
+        return problem
     moved = git(["diff", "--no-renames", "--name-only", "-z",
                  git(["merge-base", base, proven]).strip(), git(["merge-base", base, head]).strip()])
     pipeline = pipeline_changes(moved.split("\0"), canary_set)
@@ -359,7 +425,7 @@ def proof_main(argv: list[str], git: Git = _git) -> int:
     return 1
 
 
-def approved_main(argv: list[str]) -> int:
+def approved_main(argv: list[str], git: Git = _git) -> int:
     parser = argparse.ArgumentParser(prog="fork_canary.py approved")
     parser.add_argument("--pr-json", required=True, type=Path)
     parser.add_argument("--reviews-json", required=True, type=Path)
@@ -369,16 +435,29 @@ def approved_main(argv: list[str]) -> int:
     parser.add_argument("--head-pushed-at", required=True,
                         help="when the head reached the pull request: the newest canary-read-only.yml "
                              "pull_request run on it (empty when there is none)")
+    parser.add_argument("--pushes-json", type=Path,
+                        help="every canary-read-only.yml pull_request run from the pull request's own fork "
+                             "and branch, [{created_at, head_sha}]; with it, an Approve also covers a later "
+                             "head that only merged main, checked in this checkout's history")
     args = parser.parse_args(argv)
     pr = json.loads(args.pr_json.read_text())
+    pushes = json.loads(args.pushes_json.read_text()) if args.pushes_json else []
+
+    def merged_only(approved: str, head: str) -> str | None:
+        try:
+            return merge_only_problem(approved, head, BASE_GIT_REF, git)
+        except (subprocess.CalledProcessError, OSError) as error:
+            return f"git could not compare the two commits ({error})"
+
     try:
-        login = approver(pr, json.loads(args.reviews_json.read_text()),
-                         json.loads(args.permissions_json.read_text()), args.repository,
-                         args.head_pushed_at)
+        login, approved = approval(pr, json.loads(args.reviews_json.read_text()),
+                                   json.loads(args.permissions_json.read_text()), args.repository,
+                                   args.head_pushed_at, pushes, merged_only if args.pushes_json else None)
     except Refused as refusal:
         # Not an error: most open fork pull requests are simply not approved yet.
         print(f"skip: #{pr.get('number')}: {refusal}")
         return 0
+    print(f"approved_head={approved}")
     print(f"approved_by={login}")
     return 0
 
