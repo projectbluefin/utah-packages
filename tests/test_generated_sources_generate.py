@@ -24,9 +24,10 @@ import tarfile
 import tempfile
 import unittest
 import urllib.error
+import urllib.request
 from unittest.mock import patch
 
-from tools import generated_sources
+from tools import generated_sources, generated_sources_archives, generated_sources_vendored
 
 from tests.test_generated_sources import build_fpaste_archive, build_gpm_archive, build_input_archive, build_openal_soft_archive, build_sevenzip_archive, read_archive
 
@@ -129,21 +130,21 @@ class IntelMediaGenerateTests(PackageDirMixin, unittest.TestCase):
     def test_an_unpinned_version_fails_before_any_download(self):
         self.write_spec("intel-media-driver-free.spec", "99.0.0")
         fetch = UrlopenRecorder({})
-        with patch.object(generated_sources.urllib.request, "urlopen", fetch):
+        with patch.object(urllib.request, "urlopen", fetch):
             with self.assertRaisesRegex(RuntimeError, "no pinned input SHA-512 for intel-media 99.0.0"):
                 generated_sources.generate("intel-media-driver-free", self.package_dir, self.out_dir)
         self.assertEqual(fetch.requests, [])
 
     def test_a_rerolled_upstream_archive_fails_closed_and_writes_nothing(self):
         fetch = UrlopenRecorder({self.URL: self.payload})
-        with patch.object(generated_sources.urllib.request, "urlopen", fetch):
+        with patch.object(urllib.request, "urlopen", fetch):
             with self.assertRaisesRegex(RuntimeError, "input archive mismatch"):
                 generated_sources.generate("intel-media-driver-free", self.package_dir, self.out_dir)
         self.assertEqual(list(self.out_dir.iterdir()), [])
 
     def test_the_pinned_archive_is_transformed_into_the_named_target(self):
         fetch = UrlopenRecorder({self.URL: self.payload})
-        with patch.object(generated_sources.urllib.request, "urlopen", fetch), \
+        with patch.object(urllib.request, "urlopen", fetch), \
                 patch.dict(generated_sources.INTEL_MEDIA_INPUT_SHA512, {self.VERSION: sha512(self.payload)}):
             target = generated_sources.generate("intel-media-driver-free", self.package_dir, self.out_dir)
         self.assertEqual(target, self.out_dir / f"intel-media-{self.VERSION}-free.tar.gz")
@@ -164,21 +165,21 @@ class GpmGenerateTests(PackageDirMixin, unittest.TestCase):
     def test_an_unpinned_version_fails_before_any_download(self):
         self.write_spec("gpm.spec", "2.0")
         fetch = UrlopenRecorder({})
-        with patch.object(generated_sources.urllib.request, "urlopen", fetch):
+        with patch.object(urllib.request, "urlopen", fetch):
             with self.assertRaisesRegex(RuntimeError, "no pinned input SHA-512 for gpm 2.0"):
                 generated_sources.generate("gpm", self.package_dir, self.out_dir)
         self.assertEqual(fetch.requests, [])
 
     def test_a_rerolled_upstream_archive_fails_closed_and_writes_nothing(self):
         fetch = UrlopenRecorder({self.URL: self.payload})
-        with patch.object(generated_sources.urllib.request, "urlopen", fetch):
+        with patch.object(urllib.request, "urlopen", fetch):
             with self.assertRaisesRegex(RuntimeError, f"input archive mismatch for {self.URL}"):
                 generated_sources.generate("gpm", self.package_dir, self.out_dir)
         self.assertEqual(list(self.out_dir.iterdir()), [])
 
     def test_the_pinned_archive_is_transformed_into_the_named_target(self):
         fetch = UrlopenRecorder({self.URL: self.payload})
-        with patch.object(generated_sources.urllib.request, "urlopen", fetch), \
+        with patch.object(urllib.request, "urlopen", fetch), \
                 patch.dict(generated_sources.GPM_INPUT_SHA512, {self.VERSION: sha512(self.payload)}):
             target = generated_sources.generate("gpm", self.package_dir, self.out_dir)
         self.assertEqual(target.name, f"gpm-{self.VERSION}.tar.xz")
@@ -198,21 +199,21 @@ class FpasteGenerateTests(PackageDirMixin, unittest.TestCase):
     def test_an_unpinned_version_fails_before_any_download(self):
         self.write_spec("fpaste.spec", "0.6.0.0")
         fetch = UrlopenRecorder({})
-        with patch.object(generated_sources.urllib.request, "urlopen", fetch):
+        with patch.object(urllib.request, "urlopen", fetch):
             with self.assertRaisesRegex(RuntimeError, "no pinned input SHA-512 for fpaste 0.6.0.0"):
                 generated_sources.generate("fpaste", self.package_dir, self.out_dir)
         self.assertEqual(fetch.requests, [])
 
     def test_a_rerolled_upstream_archive_fails_closed_and_writes_nothing(self):
         fetch = UrlopenRecorder({self.URL: self.payload})
-        with patch.object(generated_sources.urllib.request, "urlopen", fetch):
+        with patch.object(urllib.request, "urlopen", fetch):
             with self.assertRaisesRegex(RuntimeError, f"input archive mismatch for {self.URL}"):
                 generated_sources.generate("fpaste", self.package_dir, self.out_dir)
         self.assertEqual(list(self.out_dir.iterdir()), [])
 
     def test_the_pinned_archive_is_transformed_into_the_named_target(self):
         fetch = UrlopenRecorder({self.URL: self.payload})
-        with patch.object(generated_sources.urllib.request, "urlopen", fetch), \
+        with patch.object(urllib.request, "urlopen", fetch), \
                 patch.dict(generated_sources.FPASTE_INPUT_SHA512, {self.VERSION: sha512(self.payload)}):
             target = generated_sources.generate("fpaste", self.package_dir, self.out_dir)
         self.assertEqual(target.name, f"fpaste-{self.VERSION}.tar.gz")
@@ -242,7 +243,7 @@ class BluefinArtworkGenerateTests(PackageDirMixin, unittest.TestCase):
 
     def test_an_unpinned_commit_fails_before_any_download(self):
         fetch = UrlopenRecorder({})
-        with patch.object(generated_sources.urllib.request, "urlopen", fetch), \
+        with patch.object(urllib.request, "urlopen", fetch), \
                 patch.dict(generated_sources.BLUEFIN_ARTWORK_FILES, {}, clear=True):
             with self.assertRaisesRegex(RuntimeError, f"no pinned file SHA-512s for projectbluefin/artwork {self.COMMIT}"):
                 generated_sources.generate("bluefin-artwork-logos", self.package_dir, self.out_dir)
@@ -251,7 +252,7 @@ class BluefinArtworkGenerateTests(PackageDirMixin, unittest.TestCase):
     def test_a_changed_file_fails_closed_and_writes_nothing(self):
         self.pins[self.COMMIT]["LICENSE"] = sha512(b"something else")
         fetch = UrlopenRecorder(self.payloads)
-        with patch.object(generated_sources.urllib.request, "urlopen", fetch), \
+        with patch.object(urllib.request, "urlopen", fetch), \
                 patch.dict(generated_sources.BLUEFIN_ARTWORK_FILES, self.pins, clear=True):
             with self.assertRaisesRegex(RuntimeError, "input file mismatch for .*/LICENSE"):
                 generated_sources.generate("bluefin-artwork-logos", self.package_dir, self.out_dir)
@@ -259,7 +260,7 @@ class BluefinArtworkGenerateTests(PackageDirMixin, unittest.TestCase):
 
     def test_the_pinned_files_are_packed_into_the_named_target(self):
         fetch = UrlopenRecorder(self.payloads)
-        with patch.object(generated_sources.urllib.request, "urlopen", fetch), \
+        with patch.object(urllib.request, "urlopen", fetch), \
                 patch.dict(generated_sources.BLUEFIN_ARTWORK_FILES, self.pins, clear=True):
             target = generated_sources.generate("bluefin-artwork-logos", self.package_dir, self.out_dir)
         self.assertEqual(target.name, "bluefin-artwork-logos-9ab493b.tar.xz")
@@ -279,21 +280,21 @@ class SevenZipGenerateTests(PackageDirMixin, unittest.TestCase):
     def test_an_unpinned_version_fails_before_any_download(self):
         self.write_spec("7zip.spec", "1.00")
         fetch = UrlopenRecorder({})
-        with patch.object(generated_sources.urllib.request, "urlopen", fetch):
+        with patch.object(urllib.request, "urlopen", fetch):
             with self.assertRaisesRegex(RuntimeError, "no pinned input SHA-512 for 7zip 1.00"):
                 generated_sources.generate("7zip", self.package_dir, self.out_dir)
         self.assertEqual(fetch.requests, [])
 
     def test_a_rerolled_upstream_archive_fails_closed_and_writes_nothing(self):
         fetch = UrlopenRecorder({self.URL: self.payload})
-        with patch.object(generated_sources.urllib.request, "urlopen", fetch):
+        with patch.object(urllib.request, "urlopen", fetch):
             with self.assertRaisesRegex(RuntimeError, f"input archive mismatch for {self.URL}"):
                 generated_sources.generate("7zip", self.package_dir, self.out_dir)
         self.assertEqual(list(self.out_dir.iterdir()), [])
 
     def test_the_pinned_archive_is_transformed_into_the_named_target(self):
         fetch = UrlopenRecorder({self.URL: self.payload})
-        with patch.object(generated_sources.urllib.request, "urlopen", fetch), \
+        with patch.object(urllib.request, "urlopen", fetch), \
                 patch.dict(generated_sources.SEVENZIP_INPUT_SHA512, {self.VERSION: sha512(self.payload)}):
             target = generated_sources.generate("7zip", self.package_dir, self.out_dir)
         self.assertEqual(target.name, f"7zip-{self.VERSION}.tar.xz")
@@ -302,7 +303,7 @@ class SevenZipGenerateTests(PackageDirMixin, unittest.TestCase):
 
     def test_an_unreachable_upstream_is_classified_as_unavailable(self):
         outage = urllib.error.URLError(ConnectionRefusedError("connection refused"))
-        with patch.object(generated_sources.urllib.request, "urlopen", side_effect=outage), \
+        with patch.object(urllib.request, "urlopen", side_effect=outage), \
                 patch.dict(generated_sources.SEVENZIP_INPUT_SHA512, {self.VERSION: sha512(self.payload)}):
             with self.assertRaisesRegex(generated_sources.UpstreamUnreachable, "github.com/ip7z/7zip"):
                 generated_sources.generate("7zip", self.package_dir, self.out_dir)
@@ -321,21 +322,21 @@ class OpenALSoftGenerateTests(PackageDirMixin, unittest.TestCase):
     def test_an_unpinned_version_fails_before_any_download(self):
         self.write_spec("openal-soft.spec", "1.0.0")
         fetch = UrlopenRecorder({})
-        with patch.object(generated_sources.urllib.request, "urlopen", fetch):
+        with patch.object(urllib.request, "urlopen", fetch):
             with self.assertRaisesRegex(RuntimeError, "no pinned input SHA-512 for openal-soft 1.0.0"):
                 generated_sources.generate("openal-soft", self.package_dir, self.out_dir)
         self.assertEqual(fetch.requests, [])
 
     def test_a_rerolled_upstream_archive_fails_closed_and_writes_nothing(self):
         fetch = UrlopenRecorder({self.URL: self.payload})
-        with patch.object(generated_sources.urllib.request, "urlopen", fetch):
+        with patch.object(urllib.request, "urlopen", fetch):
             with self.assertRaisesRegex(RuntimeError, f"input archive mismatch for {self.URL}"):
                 generated_sources.generate("openal-soft", self.package_dir, self.out_dir)
         self.assertEqual(list(self.out_dir.iterdir()), [])
 
     def test_the_pinned_archive_is_transformed_into_the_named_target(self):
         fetch = UrlopenRecorder({self.URL: self.payload})
-        with patch.object(generated_sources.urllib.request, "urlopen", fetch), \
+        with patch.object(urllib.request, "urlopen", fetch), \
                 patch.dict(generated_sources.OPENAL_SOFT_INPUT_SHA512, {self.VERSION: sha512(self.payload)}):
             target = generated_sources.generate("openal-soft", self.package_dir, self.out_dir)
         self.assertEqual(target.name, f"openal-soft-{self.VERSION}-clean.tar.xz")
@@ -382,14 +383,14 @@ class BrewTarballGenerateTests(PackageDirMixin, unittest.TestCase):
 
     def test_an_unpinned_version_fails_before_any_download(self):
         self.write_spec("brew-tarball.spec", "0.0.1")
-        with patch.object(generated_sources.urllib.request, "urlopen") as urlopen:
+        with patch.object(urllib.request, "urlopen") as urlopen:
             with self.assertRaisesRegex(RuntimeError, "no pinned image manifest for brew-tarball 0.0.1"):
                 generated_sources.generate("brew-tarball", self.package_dir, self.out_dir)
         urlopen.assert_not_called()
 
     def test_the_member_is_copied_unchanged_from_the_topmost_layer(self):
         fetch = UrlopenRecorder(self.payloads())
-        with patch.object(generated_sources.urllib.request, "urlopen", fetch), \
+        with patch.object(urllib.request, "urlopen", fetch), \
                 patch.dict(generated_sources.BREW_TARBALL_MANIFESTS, {self.VERSION: self.manifest_digest}):
             target = generated_sources.generate("brew-tarball", self.package_dir, self.out_dir)
         self.assertEqual(target.name, f"homebrew-{self.VERSION}.tar.zst")
@@ -404,7 +405,7 @@ class BrewTarballGenerateTests(PackageDirMixin, unittest.TestCase):
         fetch = UrlopenRecorder(self.payloads())
         pinned = "sha256:" + "0" * 64
         fetch.payloads[f"{self.REGISTRY}/v2/ublue-os/brew/manifests/{pinned}"] = self.manifest
-        with patch.object(generated_sources.urllib.request, "urlopen", fetch), \
+        with patch.object(urllib.request, "urlopen", fetch), \
                 patch.dict(generated_sources.BREW_TARBALL_MANIFESTS, {self.VERSION: pinned}):
             with self.assertRaisesRegex(RuntimeError, f"image manifest: expected {pinned}"):
                 generated_sources.generate("brew-tarball", self.package_dir, self.out_dir)
@@ -412,7 +413,7 @@ class BrewTarballGenerateTests(PackageDirMixin, unittest.TestCase):
 
     def test_a_substituted_layer_fails_closed(self):
         fetch = UrlopenRecorder(self.payloads(tarball_layer=targz({self.MEMBER: b"evil"})))
-        with patch.object(generated_sources.urllib.request, "urlopen", fetch), \
+        with patch.object(urllib.request, "urlopen", fetch), \
                 patch.dict(generated_sources.BREW_TARBALL_MANIFESTS, {self.VERSION: self.manifest_digest}):
             with self.assertRaisesRegex(RuntimeError, f"layer {self.layer_digests[1]}: expected"):
                 generated_sources.generate("brew-tarball", self.package_dir, self.out_dir)
@@ -458,7 +459,7 @@ class GitArchiveGenerateTests(PackageDirMixin, unittest.TestCase):
     def test_an_unpinned_version_fails_before_running_git(self):
         with self.source("libslirp", "xz"):
             self.write_spec("libslirp.spec", "9.9")
-            with patch.object(generated_sources.subprocess, "run") as run:
+            with patch.object(subprocess, "run") as run:
                 with self.assertRaisesRegex(RuntimeError, "no pinned commit for libslirp 9.9"):
                     generated_sources.generate("libslirp", self.package_dir, self.out_dir)
         run.assert_not_called()
@@ -569,14 +570,14 @@ class PydanticCoreGenerateTests(PackageDirMixin, unittest.TestCase):
 
     def test_an_unpinned_version_fails_before_any_download(self):
         self.write_spec("python-pydantic-core.spec", "0.0.1")
-        with patch.object(generated_sources, "_fetch") as fetch:
+        with patch.object(generated_sources_archives, "_fetch") as fetch:
             with self.assertRaisesRegex(RuntimeError, "no pinned input SHA-512 for pydantic_core 0.0.1"):
                 generated_sources.generate("python-pydantic-core", self.package_dir, self.out_dir)
         fetch.assert_not_called()
 
     def test_a_rerolled_sdist_fails_closed_before_any_crate_download(self):
         fetch = UrlopenRecorder({self.SDIST_URL: self.sdist})
-        with patch.object(generated_sources.urllib.request, "urlopen", fetch):
+        with patch.object(urllib.request, "urlopen", fetch):
             with self.assertRaisesRegex(RuntimeError, f"input archive mismatch for {self.SDIST_URL}"):
                 generated_sources.generate("python-pydantic-core", self.package_dir, self.out_dir)
         self.assertEqual([url for url, _, _ in fetch.requests], [self.SDIST_URL])
@@ -584,7 +585,7 @@ class PydanticCoreGenerateTests(PackageDirMixin, unittest.TestCase):
 
     def test_the_pinned_sdist_and_its_locked_crates_are_vendored(self):
         fetch = UrlopenRecorder({self.SDIST_URL: self.sdist, self.crate_url: self.crate})
-        with patch.object(generated_sources.urllib.request, "urlopen", fetch), \
+        with patch.object(urllib.request, "urlopen", fetch), \
                 patch.dict(generated_sources.PYDANTIC_CORE_INPUT_SHA512, {self.VERSION: sha512(self.sdist)}):
             target = generated_sources.generate("python-pydantic-core", self.package_dir, self.out_dir)
         self.assertEqual(target.name, f"{self.TOP}-vendored.tar.xz")
@@ -594,7 +595,7 @@ class PydanticCoreGenerateTests(PackageDirMixin, unittest.TestCase):
 
     def test_a_substituted_crate_download_fails_closed(self):
         fetch = UrlopenRecorder({self.SDIST_URL: self.sdist, self.crate_url: targz({"tinycrate-1.0.0/x": b"evil"})})
-        with patch.object(generated_sources.urllib.request, "urlopen", fetch), \
+        with patch.object(urllib.request, "urlopen", fetch), \
                 patch.dict(generated_sources.PYDANTIC_CORE_INPUT_SHA512, {self.VERSION: sha512(self.sdist)}):
             with self.assertRaisesRegex(RuntimeError, "crate tinycrate 1.0.0: expected sha256"):
                 generated_sources.generate("python-pydantic-core", self.package_dir, self.out_dir)
@@ -626,14 +627,14 @@ class PrefixdevnameGenerateTests(PackageDirMixin, unittest.TestCase):
 
     def test_an_unpinned_version_fails_before_any_download(self):
         self.write_spec("prefixdevname.spec", "0.0.1")
-        with patch.object(generated_sources, "_fetch") as fetch:
+        with patch.object(generated_sources_vendored, "_fetch") as fetch:
             with self.assertRaisesRegex(RuntimeError, "no pinned input SHA-512 for prefixdevname 0.0.1"):
                 generated_sources.generate("prefixdevname", self.package_dir, self.out_dir)
         fetch.assert_not_called()
 
     def test_a_rerolled_archive_fails_closed_before_any_crate_download(self):
         fetch = UrlopenRecorder({self.ARCHIVE_URL: self.archive})
-        with patch.object(generated_sources.urllib.request, "urlopen", fetch):
+        with patch.object(urllib.request, "urlopen", fetch):
             with self.assertRaisesRegex(RuntimeError, f"input archive mismatch for {self.ARCHIVE_URL}"):
                 generated_sources.generate("prefixdevname", self.package_dir, self.out_dir)
         self.assertEqual([url for url, _, _ in fetch.requests], [self.ARCHIVE_URL])
@@ -641,7 +642,7 @@ class PrefixdevnameGenerateTests(PackageDirMixin, unittest.TestCase):
 
     def test_the_pinned_archive_and_its_locked_crates_are_vendored(self):
         fetch = UrlopenRecorder({self.ARCHIVE_URL: self.archive, self.crate_url: self.crate})
-        with patch.object(generated_sources.urllib.request, "urlopen", fetch), \
+        with patch.object(urllib.request, "urlopen", fetch), \
                 patch.dict(generated_sources.PREFIXDEVNAME_INPUT_SHA512, {self.VERSION: sha512(self.archive)}):
             target = generated_sources.generate("prefixdevname", self.package_dir, self.out_dir)
         self.assertEqual(target.name, f"{self.TOP}-vendored.tar.xz")
@@ -651,7 +652,7 @@ class PrefixdevnameGenerateTests(PackageDirMixin, unittest.TestCase):
 
     def test_a_substituted_crate_download_fails_closed(self):
         fetch = UrlopenRecorder({self.ARCHIVE_URL: self.archive, self.crate_url: targz({"tinycrate-1.0.0/x": b"evil"})})
-        with patch.object(generated_sources.urllib.request, "urlopen", fetch), \
+        with patch.object(urllib.request, "urlopen", fetch), \
                 patch.dict(generated_sources.PREFIXDEVNAME_INPUT_SHA512, {self.VERSION: sha512(self.archive)}):
             with self.assertRaisesRegex(RuntimeError, "crate tinycrate 1.0.0: expected sha256"):
                 generated_sources.generate("prefixdevname", self.package_dir, self.out_dir)
@@ -686,14 +687,14 @@ class KanataGenerateTests(PackageDirMixin, unittest.TestCase):
 
     def test_an_unpinned_version_fails_before_any_download(self):
         self.write_spec("kanata.spec", "0.0.1")
-        with patch.object(generated_sources, "_fetch") as fetch:
+        with patch.object(generated_sources_vendored, "_fetch") as fetch:
             with self.assertRaisesRegex(RuntimeError, "no pinned input SHA-512 for kanata 0.0.1"):
                 generated_sources.generate("kanata", self.package_dir, self.out_dir)
         fetch.assert_not_called()
 
     def test_registry_crates_are_vendored_and_workspace_members_are_not_fetched(self):
         fetch = UrlopenRecorder({self.ARCHIVE_URL: self.archive, self.crate_url: self.crate})
-        with patch.object(generated_sources.urllib.request, "urlopen", fetch), \
+        with patch.object(urllib.request, "urlopen", fetch), \
                 patch.dict(generated_sources.KANATA_INPUT_SHA512, {self.VERSION: sha512(self.archive)}):
             target = generated_sources.generate("kanata", self.package_dir, self.out_dir)
         self.assertEqual([url for url, _, _ in fetch.requests], [self.ARCHIVE_URL, self.crate_url])
@@ -722,7 +723,7 @@ class BluefinCliGenerateTests(PackageDirMixin, unittest.TestCase):
 
     def generate(self, payloads: dict[str, bytes]) -> tuple[Path, UrlopenRecorder]:
         fetch = UrlopenRecorder(payloads)
-        with patch.object(generated_sources.urllib.request, "urlopen", fetch), \
+        with patch.object(urllib.request, "urlopen", fetch), \
                 patch.dict(generated_sources.BLUEFIN_CLI_INPUT_SHA512, self.pins):
             return generated_sources.generate("bluefin-cli", self.package_dir, self.out_dir), fetch
 
@@ -734,7 +735,7 @@ class BluefinCliGenerateTests(PackageDirMixin, unittest.TestCase):
 
     def test_an_unpinned_version_fails_before_any_download(self):
         self.write_spec("bluefin-cli.spec", "0.0.1")
-        with patch.object(generated_sources, "_fetch") as fetch:
+        with patch.object(generated_sources_vendored, "_fetch") as fetch:
             with self.assertRaisesRegex(RuntimeError, "no pinned input SHA-512 for bluefin-cli 0.0.1"):
                 generated_sources.generate("bluefin-cli", self.package_dir, self.out_dir)
         fetch.assert_not_called()
@@ -811,14 +812,14 @@ class GstThumbnailersGenerateTests(PackageDirMixin, unittest.TestCase):
 
     def test_an_unpinned_version_fails_before_any_download(self):
         self.write_spec("gst-thumbnailers.spec", "0.0.1")
-        with patch.object(generated_sources, "_fetch") as fetch:
+        with patch.object(generated_sources_vendored, "_fetch") as fetch:
             with self.assertRaisesRegex(RuntimeError, "no pinned input SHA-512 for gst-thumbnailers 0.0.1"):
                 generated_sources.generate("gst-thumbnailers", self.package_dir, self.out_dir)
         fetch.assert_not_called()
 
     def test_a_rerolled_release_fails_closed_before_any_crate_download(self):
         fetch = UrlopenRecorder({self.ARCHIVE_URL: self.archive})
-        with patch.object(generated_sources.urllib.request, "urlopen", fetch):
+        with patch.object(urllib.request, "urlopen", fetch):
             with self.assertRaisesRegex(RuntimeError, f"input archive mismatch for {self.ARCHIVE_URL}"):
                 generated_sources.generate("gst-thumbnailers", self.package_dir, self.out_dir)
         self.assertEqual([url for url, _, _ in fetch.requests], [self.ARCHIVE_URL])
@@ -826,7 +827,7 @@ class GstThumbnailersGenerateTests(PackageDirMixin, unittest.TestCase):
 
     def test_the_pinned_release_and_its_locked_crates_are_vendored(self):
         fetch = UrlopenRecorder({self.ARCHIVE_URL: self.archive, self.crate_url: self.crate})
-        with patch.object(generated_sources.urllib.request, "urlopen", fetch), \
+        with patch.object(urllib.request, "urlopen", fetch), \
                 patch.dict(generated_sources.GST_THUMBNAILERS_INPUT_SHA512, {self.VERSION: sha512(self.archive)}):
             target = generated_sources.generate("gst-thumbnailers", self.package_dir, self.out_dir)
         self.assertEqual(target.name, f"{self.TOP}-vendored.tar.xz")
@@ -842,7 +843,7 @@ class GstThumbnailersGenerateTests(PackageDirMixin, unittest.TestCase):
         outputs = []
         for run in range(2):
             fetch = UrlopenRecorder({self.ARCHIVE_URL: self.archive, self.crate_url: self.crate})
-            with patch.object(generated_sources.urllib.request, "urlopen", fetch), \
+            with patch.object(urllib.request, "urlopen", fetch), \
                     patch.dict(generated_sources.GST_THUMBNAILERS_INPUT_SHA512, {self.VERSION: sha512(self.archive)}):
                 target = generated_sources.generate("gst-thumbnailers", self.package_dir, self.out_dir / str(run))
             outputs.append(target.read_bytes())
@@ -850,7 +851,7 @@ class GstThumbnailersGenerateTests(PackageDirMixin, unittest.TestCase):
 
     def test_a_substituted_crate_download_fails_closed(self):
         fetch = UrlopenRecorder({self.ARCHIVE_URL: self.archive, self.crate_url: targz({"tinycrate-1.0.0/x": b"evil"})})
-        with patch.object(generated_sources.urllib.request, "urlopen", fetch), \
+        with patch.object(urllib.request, "urlopen", fetch), \
                 patch.dict(generated_sources.GST_THUMBNAILERS_INPUT_SHA512, {self.VERSION: sha512(self.archive)}):
             with self.assertRaisesRegex(RuntimeError, "crate tinycrate 1.0.0: expected sha256"):
                 generated_sources.generate("gst-thumbnailers", self.package_dir, self.out_dir)
@@ -926,7 +927,7 @@ class GstreamerPluginsRsGenerateTests(PackageDirMixin, unittest.TestCase):
 
     def test_an_unpinned_version_fails_before_running_git(self):
         self.write_recipe("", version="9.9")
-        with patch.object(generated_sources.subprocess, "run") as run:
+        with patch.object(subprocess, "run") as run:
             with self.assertRaisesRegex(RuntimeError, "no pinned commit for gstreamer-plugins-rs 9.9"):
                 generated_sources.generate("gstreamer-plugins-rs", self.package_dir, self.out_dir)
         run.assert_not_called()
@@ -938,7 +939,7 @@ class GstreamerPluginsRsGenerateTests(PackageDirMixin, unittest.TestCase):
 
     def test_the_patched_lock_decides_the_vendored_crates(self):
         fetch = UrlopenRecorder({self.crate_url: self.crate})
-        with self.pinned(), patch.object(generated_sources.urllib.request, "urlopen", fetch):
+        with self.pinned(), patch.object(urllib.request, "urlopen", fetch):
             target = generated_sources.generate("gstreamer-plugins-rs", self.package_dir, self.out_dir)
         self.assertEqual(target.name, f"{self.TOP}-vendored.tar.xz")
         self.assertEqual([url for url, _, _ in fetch.requests], [self.crate_url])
@@ -951,7 +952,7 @@ class GstreamerPluginsRsGenerateTests(PackageDirMixin, unittest.TestCase):
 
     def test_without_the_lock_patch_the_git_crate_is_refused(self):
         self.write_recipe("")
-        with self.pinned(), patch.object(generated_sources, "_fetch") as fetch:
+        with self.pinned(), patch.object(generated_sources_vendored, "_fetch") as fetch:
             with self.assertRaisesRegex(RuntimeError, "gitcrate 0.1.0 comes from git"):
                 generated_sources.generate("gstreamer-plugins-rs", self.package_dir, self.out_dir)
         fetch.assert_not_called()
@@ -983,14 +984,14 @@ class TealdeerGenerateTests(PackageDirMixin, unittest.TestCase):
 
     def test_an_unpinned_version_fails_before_any_download(self):
         self.write_spec("tealdeer.spec", "0.0.1")
-        with patch.object(generated_sources, "_fetch") as fetch:
+        with patch.object(generated_sources_vendored, "_fetch") as fetch:
             with self.assertRaisesRegex(RuntimeError, "no pinned input SHA-512 for tealdeer 0.0.1"):
                 generated_sources.generate("tealdeer", self.package_dir, self.out_dir)
         fetch.assert_not_called()
 
     def test_the_pinned_archive_and_its_locked_crates_are_vendored(self):
         fetch = UrlopenRecorder({self.ARCHIVE_URL: self.archive, self.crate_url: self.crate})
-        with patch.object(generated_sources.urllib.request, "urlopen", fetch), \
+        with patch.object(urllib.request, "urlopen", fetch), \
                 patch.dict(generated_sources.TEALDEER_INPUT_SHA512, {self.VERSION: sha512(self.archive)}):
             target = generated_sources.generate("tealdeer", self.package_dir, self.out_dir)
         self.assertEqual(target.name, f"{self.TOP}-vendored.tar.xz")
@@ -1030,7 +1031,7 @@ class Oo7GenerateTests(PackageDirMixin, unittest.TestCase):
 
     def test_an_unpinned_commit_fails_before_any_download(self):
         self.write_oo7_spec("0" * 40)
-        with patch.object(generated_sources, "_fetch") as fetch:
+        with patch.object(generated_sources_vendored, "_fetch") as fetch:
             with self.assertRaisesRegex(RuntimeError, "no pinned input SHA-512 for oo7"):
                 generated_sources.generate("oo7", self.package_dir, self.out_dir)
         fetch.assert_not_called()
@@ -1042,7 +1043,7 @@ class Oo7GenerateTests(PackageDirMixin, unittest.TestCase):
 
     def test_the_pinned_archive_and_its_locked_crates_are_vendored(self):
         fetch = UrlopenRecorder({self.ARCHIVE_URL: self.archive, self.crate_url: self.crate})
-        with patch.object(generated_sources.urllib.request, "urlopen", fetch), \
+        with patch.object(urllib.request, "urlopen", fetch), \
                 patch.dict(generated_sources.OO7_INPUT_SHA512, {self.COMMIT: sha512(self.archive)}):
             target = generated_sources.generate("oo7", self.package_dir, self.out_dir)
         self.assertEqual(target.name, f"{self.TOP}-vendored.tar.xz")
@@ -1150,7 +1151,7 @@ class UpstreamReachabilityTests(PackageDirMixin, unittest.TestCase):
             if "fetch" in command:
                 raise subprocess.CalledProcessError(128, command, output="", stderr=self.FFMPEG_DOWN)
 
-        with patch.object(generated_sources.subprocess, "run", side_effect=run):
+        with patch.object(subprocess, "run", side_effect=run):
             with self.assertRaisesRegex(generated_sources.UpstreamUnreachable, "git.ffmpeg.org"):
                 generated_sources.generate("rtmpdump", self.package_dir, self.out_dir)
 
@@ -1162,7 +1163,7 @@ class UpstreamReachabilityTests(PackageDirMixin, unittest.TestCase):
             if "fetch" in command:
                 raise subprocess.TimeoutExpired(command, kwargs["timeout"])
 
-        with patch.object(generated_sources.subprocess, "run", side_effect=run):
+        with patch.object(subprocess, "run", side_effect=run):
             with self.assertRaises(generated_sources.UpstreamUnreachable):
                 generated_sources.generate("rtmpdump", self.package_dir, self.out_dir)
 
@@ -1177,11 +1178,11 @@ class UpstreamReachabilityTests(PackageDirMixin, unittest.TestCase):
 
     def test_http_fetch_outage_is_unreachable_but_a_404_is_not(self):
         outage = urllib.error.URLError(ConnectionRefusedError("connection refused"))
-        with patch.object(generated_sources.urllib.request, "urlopen", side_effect=outage):
+        with patch.object(urllib.request, "urlopen", side_effect=outage):
             with self.assertRaises(generated_sources.UpstreamUnreachable):
                 generated_sources._fetch("https://down.example/x")
         gone = urllib.error.HTTPError("https://gone.example/x", 404, "Not Found", {}, None)
-        with patch.object(generated_sources.urllib.request, "urlopen", side_effect=gone):
+        with patch.object(urllib.request, "urlopen", side_effect=gone):
             with self.assertRaises(urllib.error.HTTPError):
                 generated_sources._fetch("https://gone.example/x")
 
