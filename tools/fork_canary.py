@@ -19,7 +19,7 @@ import json
 import re
 import subprocess
 import sys
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Collection, Sequence
 from datetime import datetime
 from pathlib import Path
 
@@ -162,6 +162,7 @@ def approval(
     head_pushed_at: str,
     pushes: Sequence[dict] = (),
     merged_only: Callable[[str, str], str | None] | None = None,
+    merge_path: Callable[[str, str], Collection[str]] | None = None,
 ) -> tuple[str, str]:
     """The maintainer whose GitHub Approve starts the fork Canary, and the commit they approved.
 
@@ -191,8 +192,12 @@ def approval(
     when ``merged_only(approved, head)`` (``merge_only_problem``) finds nothing in
     the head but clean merges of main into the commit that was the head when the
     maintainer approved, read from ``pushes`` (``head_at``), never from the
-    review's ``commit_id``. The review's ``commit_id`` must still be that commit
-    or the current head, where GitHub moves it. Anything else needs a new Approve.
+    review's ``commit_id``. The review's ``commit_id`` must still be that commit,
+    or a commit GitHub moved it onto: the current head, or one of the merges of
+    main between the two (``merge_path``). On #972 (2026-11-20) GitHub moved an
+    Approve onto a merge of main that three later merges then left behind. A
+    ``commit_id`` older than the approved commit means the reviewer looked at
+    something earlier, and anything else needs a new Approve too.
     """
     if pr.get("state") != "open":
         raise Refused(f"pull request is {pr.get('state')}, not open")
@@ -242,13 +247,20 @@ def approval(
         if merged_only is None:
             continue
         approved = head_at(pushes, submitted)
-        if approved is None or approved == sha or review.get("commit_id") not in (approved, sha):
+        if approved is None or approved == sha:
             continue
         problem = merged_only(approved, sha)
-        if problem is None:
-            approvals.append((review["submitted_at"], login, approved))
-        else:
+        if problem is not None:
             problems.append(f"{login}'s Approve of {approved[:12]} does not cover it: {problem}")
+            continue
+        named = review.get("commit_id")
+        if named not in (approved, sha) and (merge_path is None or named not in merge_path(approved, sha)):
+            problems.append(
+                f"{login}'s Approve names {str(named or '')[:12]}, which is neither {approved[:12]}, "
+                "the head when they approved, nor a merge of main after it"
+            )
+            continue
+        approvals.append((review["submitted_at"], login, approved))
     if not approvals:
         why = f"; {'; '.join(problems)}" if problems else ""
         raise Refused(f"no maintainer has approved the current head {sha[:12]} since it was pushed{why}")
@@ -358,6 +370,15 @@ def merge_only_problem(earlier: str, head: str, base: str = BASE_GIT_REF, git: G
     return None
 
 
+def merged_commits(earlier: str, head: str, base: str = BASE_GIT_REF, git: Git = _git) -> set[str]:
+    """The commits ``head`` adds after ``earlier`` that are not on ``base``.
+
+    When ``merge_only_problem`` passes, these are exactly the clean merges of
+    ``base`` between the two.
+    """
+    return set(git(["rev-list", head, f"^{earlier}", f"^{base}"]).split())
+
+
 def carry_problem(
     proven: str, head: str, canary_set: Sequence[str], base: str = BASE_GIT_REF, git: Git = _git,
 ) -> str | None:
@@ -449,10 +470,17 @@ def approved_main(argv: list[str], git: Git = _git) -> int:
         except (subprocess.CalledProcessError, OSError) as error:
             return f"git could not compare the two commits ({error})"
 
+    def merge_path(approved: str, head: str) -> set[str]:
+        try:
+            return merged_commits(approved, head, BASE_GIT_REF, git)
+        except (subprocess.CalledProcessError, OSError):
+            return set()
+
     try:
         login, approved = approval(pr, json.loads(args.reviews_json.read_text()),
                                    json.loads(args.permissions_json.read_text()), args.repository,
-                                   args.head_pushed_at, pushes, merged_only if args.pushes_json else None)
+                                   args.head_pushed_at, pushes, merged_only if args.pushes_json else None,
+                                   merge_path if args.pushes_json else None)
     except Refused as refusal:
         # Not an error: most open fork pull requests are simply not approved yet.
         print(f"skip: #{pr.get('number')}: {refusal}")

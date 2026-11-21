@@ -480,6 +480,13 @@ class CarryOverTests(unittest.TestCase):
         self.assertRegex(fork_canary.merge_only_problem(self.proven, head, "main", self.git),
                          "is not a merge of main")
 
+    def test_the_merges_between_two_heads_are_listed(self):
+        first = self.merge_main()
+        self.main_changes("packages/baz/baz.spec", ["Name: baz"])
+        second = self.merge_main()
+        self.assertEqual(fork_canary.merged_commits(self.proven, second, "main", self.git), {first, second})
+        self.assertEqual(fork_canary.merged_commits(self.proven, self.proven, "main", self.git), set())
+
     def test_main_changing_only_recipes_docs_and_tests_carries_over(self):
         # setUp's main already changed docs/ and a recipe outside the canary set.
         self.main_changes("README.md", ["readme"])
@@ -758,13 +765,15 @@ class ApproverTests(unittest.TestCase):
             with self.subTest(pull=pull), self.assertRaises(fork_canary.Refused):
                 self.approver(approved, pull)
 
-    def carried(self, reviews, merged_only, pushes=None, pull=None, pushed="2026-11-20T11:48:36Z"):
+    def carried(self, reviews, merged_only, pushes=None, pull=None, pushed="2026-11-20T11:48:36Z",
+                merge_path=None):
         # The head (REVIEWED) was pushed at 11:48; MOVED was the head before it.
         pushes = pushes if pushes is not None else [
             {"created_at": "2026-11-20T09:00:00Z", "head_sha": MOVED},
             {"created_at": pushed, "head_sha": REVIEWED},
         ]
-        return fork_canary.approval(pull or pr(), reviews, MAINTAINERS, REPO, pushed, pushes, merged_only)
+        return fork_canary.approval(pull or pr(), reviews, MAINTAINERS, REPO, pushed, pushes, merged_only,
+                                    merge_path)
 
     def test_an_approve_covers_a_later_head_that_only_merged_main(self):
         # #1230 on 2026-11-20: approved at 10:42 UTC, main merged in at 00:04,
@@ -797,8 +806,6 @@ class ApproverTests(unittest.TestCase):
         never = lambda approved, head: self.fail("must not compare")
         other = "c" * 40
         cases = {
-            # The review names a commit that was neither the head then nor now.
-            "foreign commit_id": ([review("maint", "APPROVED", sha=other, at="2026-11-20T10:00:00Z")], None),
             # No push is recorded before the Approve, so nothing says what was reviewed.
             "no earlier push": ([review("maint", "APPROVED", sha=MOVED, at="2026-11-20T08:00:00Z")], None),
             # A push time that cannot be read voids the record rather than guessing.
@@ -810,6 +817,37 @@ class ApproverTests(unittest.TestCase):
         for name, (reviews, pushes) in cases.items():
             with self.subTest(name), self.assertRaisesRegex(fork_canary.Refused, "approved the current head"):
                 self.carried(reviews, never, pushes)
+
+    def test_an_approve_github_moved_onto_an_earlier_merge_of_main_still_covers(self):
+        # #972 on 2026-11-20: Danathar approved 02b4e85b at 10:42 UTC; GitHub
+        # reported the Approve on 2948165c, a merge of main that later merges
+        # then left behind, so it was neither the approved commit nor the head.
+        between = "d" * 40
+        clean = lambda approved, head: None
+        path = lambda approved, head: {between, head}
+        approve = review("maint", "APPROVED", sha=between, at="2026-11-20T10:00:00Z")
+        self.assertEqual(self.carried([approve], clean, merge_path=path), ("maint", MOVED))
+        # Without the merge path the same Approve is refused, and says why.
+        with self.assertRaisesRegex(fork_canary.Refused, "maint's Approve names dddddddddddd, which is neither "
+                                    "bbbbbbbbbbbb, the head when they approved, nor a merge of main after it"):
+            self.carried([approve], clean)
+
+    def test_a_review_naming_any_other_commit_is_refused(self):
+        clean = lambda approved, head: None
+        path = lambda approved, head: {"d" * 40, head}
+        # A commit outside the merges, such as one older than the approved
+        # commit (the reviewer looked at an earlier page), or none at all.
+        for named in ("c" * 40, None):
+            approve = review("maint", "APPROVED", sha=named, at="2026-11-20T10:00:00Z")
+            with self.subTest(named=named), self.assertRaisesRegex(fork_canary.Refused, "maint's Approve names"):
+                self.carried([approve], clean, merge_path=path)
+
+    def test_the_commit_check_comes_after_the_merge_check(self):
+        # A head that is not only merges is refused for that, whatever the review names.
+        approve = review("maint", "APPROVED", sha="c" * 40, at="2026-11-20T10:00:00Z")
+        with self.assertRaisesRegex(fork_canary.Refused, "does not cover it: c0ffee is not a merge of main"):
+            self.carried([approve], lambda approved, head: "c0ffee is not a merge of main",
+                         merge_path=lambda approved, head: self.fail("must not list merges"))
 
     def test_the_head_at_an_approve_is_the_newest_push_before_it(self):
         pushes = [{"created_at": "2026-11-20T09:00:00Z", "head_sha": MOVED},
