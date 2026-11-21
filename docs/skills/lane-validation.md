@@ -192,11 +192,14 @@ such merge kept the start manual (on 2026-11-20, #972 and #1230 each needed a
 hand-started run three times). So the workflow fetches the pull request's
 commits as history (never checked out) and reads every push GitHub recorded on
 the branch. The commit that was the head when the maintainer approved is the
-newest push at or before the Approve, never the review's `commit_id`, which
-must still be that commit or the current head. The Approve covers the current
-head when `tools/fork_canary.py merge_only_problem` finds nothing between the
-two but clean merges of `main`: every rule of the carry-over below except the
-last. Whether `main` changed the pipeline does not matter here, since that is
+newest push at or before the Approve, never the review's `commit_id`. The
+Approve covers the current head when `tools/fork_canary.py merge_only_problem`
+finds nothing between the two but clean merges of `main`: every rule of the
+carry-over below except the last. The review's `commit_id` must then be the
+approved commit or one GitHub moved the review onto: the current head or one
+of those merges (on #972, GitHub left an Approve on a merge that two later
+merges had passed). A `commit_id` anywhere else, such as a commit older than
+the approved one, needs a new Approve, and the skip line says so. Whether `main` changed the pipeline does not matter here, since that is
 why Canary has to run again, not something to review. A
 merge that resolved a conflict, any other commit, or a rewritten branch still
 needs a new Approve. The comment on the pull request then names the commit
