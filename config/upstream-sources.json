@@ -7472,23 +7472,17 @@
     {
       "name": "vulkan-headers",
       "version": "1.4.350.0",
-      "url": "https://github.com/KhronosGroup/Vulkan-Headers/archive/vulkan-sdk-1.4.350.0.tar.gz",
+      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/vulkan-headers/Vulkan-Headers-sdk-1.4.350.0.tar.gz/sha512/b7987072292d81bae34d28878b3cc12845db0a51710b4d5c21cf804d7c593b1db9ee736f10b8d7696150a25d9e8e2d3d1e17e670c6cca029858de027d5df08ea/Vulkan-Headers-sdk-1.4.350.0.tar.gz",
       "filename": "Vulkan-Headers-sdk-1.4.350.0.tar.gz",
       "sha512": "b7987072292d81bae34d28878b3cc12845db0a51710b4d5c21cf804d7c593b1db9ee736f10b8d7696150a25d9e8e2d3d1e17e670c6cca029858de027d5df08ea",
-      "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/vulkan-headers/Vulkan-Headers-sdk-1.4.350.0.tar.gz/sha512/b7987072292d81bae34d28878b3cc12845db0a51710b4d5c21cf804d7c593b1db9ee736f10b8d7696150a25d9e8e2d3d1e17e670c6cca029858de027d5df08ea/Vulkan-Headers-sdk-1.4.350.0.tar.gz"
-      ],
       "stage": 0
     },
     {
       "name": "vulkan-loader",
       "version": "1.4.350.0",
-      "url": "https://github.com/KhronosGroup/Vulkan-Loader/archive/vulkan-sdk-1.4.350.0.tar.gz",
+      "url": "https://src.fedoraproject.org/repo/pkgs/rpms/vulkan-loader/Vulkan-Loader-sdk-1.4.350.0.tar.gz/sha512/5d9829bed6e166b598e6769b6263c0d0408ba578c3e99b460e1ca2a5b13bd0ea38f315953f6ad74567fbd7025143050704b87e2ea11e6689c41675220e115ce1/Vulkan-Loader-sdk-1.4.350.0.tar.gz",
       "filename": "Vulkan-Loader-sdk-1.4.350.0.tar.gz",
       "sha512": "5d9829bed6e166b598e6769b6263c0d0408ba578c3e99b460e1ca2a5b13bd0ea38f315953f6ad74567fbd7025143050704b87e2ea11e6689c41675220e115ce1",
-      "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/vulkan-loader/Vulkan-Loader-sdk-1.4.350.0.tar.gz/sha512/5d9829bed6e166b598e6769b6263c0d0408ba578c3e99b460e1ca2a5b13bd0ea38f315953f6ad74567fbd7025143050704b87e2ea11e6689c41675220e115ce1/Vulkan-Loader-sdk-1.4.350.0.tar.gz"
-      ],
       "stage": 4
     },
     {

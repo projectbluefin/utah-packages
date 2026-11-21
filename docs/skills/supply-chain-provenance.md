@@ -298,12 +298,16 @@ transport-only migration. Preserve all existing fallbacks as well as the
 former primary, and remove exactly the promoted names from the ratchet.
 
 The fixed native Canary set (libical, vulkan-headers, vulkan-loader, and the
-python-typing-inspection perturbation package) fetches from GitHub or PyPI
-with the lookaside in `fallback_urls`, and `tests/test_canary.py` pins that
-shape. A digest mismatch fails closed without trying a fallback, so a Canary
-primary must be a host that serves runners the locked bytes (a release asset,
-a tag archive, a PyPI sdist), never a project mirror like samba.org; the
-lookaside only covers outages. Also check candidate hosts against the
+python-typing-inspection perturbation package) must fetch bytes that never
+change, and `tests/test_canary.py` pins that: a Canary primary is either the
+lookaside or a fixed upload (a GitHub release asset or a PyPI sdist) with the
+lookaside in `fallback_urls`. A digest mismatch fails closed without trying a
+fallback, so a Canary primary is never a project mirror like samba.org, nor
+a generated GitHub tag archive, which GitHub can regenerate with different
+bytes; the lookaside only covers outages. libical and
+python-typing-inspection use their release asset and sdist; Khronos
+publishes the Vulkan pair only as tags, so they stay on the lookaside and on
+the ratchet. Also check candidate hosts against the
 validator's Fedora-host policy before editing: a project's own repository on
 `forge.fedoraproject.org` still counts as Fedora infrastructure.
 

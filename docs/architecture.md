@@ -290,8 +290,10 @@ hours into a full run. It calls `rebuild-rpms.yml` itself through
 `workflow_call`, so it runs the real jobs, over a fixed set: `libical` and
 `vulkan-headers` at stage 0 and `vulkan-loader` at stage 4, which
 BuildRequires `vulkan-headers = %{version}` -- only stage 0's output satisfies
-it. Every source in the set is on the Fedora lookaside, so the canary fails on
-the pipeline and not on a flaky upstream host.
+it. Every source in the set serves fixed bytes -- the Fedora lookaside, or a
+GitHub release asset or PyPI sdist with the lookaside in `fallback_urls` for
+outages -- so the canary fails on the pipeline and not on a flaky upstream
+host.
 
 | pass | what it proves |
 | --- | --- |

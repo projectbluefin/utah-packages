@@ -39,13 +39,15 @@
 # in pass1, and one that does not reuses the previous canary's builds.
 # Dispatch with compile=true to force a compile regardless.
 #
-# Every source in the set is locked on GitHub or PyPI, with the Fedora
-# lookaside as its fallback. The first set used samba.org, which answered a
-# GitHub runner with bytes that did not match the lock while serving the
-# right tarball elsewhere; the source pipeline rightly refuses that, and a
-# canary must fail on the pipeline, not on a flaky upstream host. A wrong
-# digest fails closed without trying a fallback, so the primary must be a
-# host that serves runners the locked bytes; the lookaside covers outages.
+# Every source in the set serves fixed bytes: the Fedora lookaside, or a
+# GitHub release asset or PyPI sdist with the lookaside as its fallback. The
+# first set used samba.org, which answered a GitHub runner with bytes that
+# did not match the lock while serving the right tarball elsewhere; the
+# source pipeline rightly refuses that, and a canary must fail on the
+# pipeline, not on a flaky upstream host. A wrong digest fails closed
+# without trying a fallback, so a generated tag archive, which GitHub may
+# regenerate with different bytes, is never a canary primary; the Vulkan
+# pair, which Khronos publishes only as tags, stays on the lookaside.
 #
 # The job named "Canary" is the required check. It always runs, and passes
 # without building anything when a pull request touches no pipeline path.

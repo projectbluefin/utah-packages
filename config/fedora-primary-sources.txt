@@ -24,6 +24,8 @@ spandsp
 srt
 usermode
 volume_key
+vulkan-headers
+vulkan-loader
 words
 xevd
 xeve

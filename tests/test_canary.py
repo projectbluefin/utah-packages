@@ -432,23 +432,28 @@ class WorkflowShapeTests(unittest.TestCase):
         self.assertRegex(spec, r"(?m)^BuildRequires:\s+vulkan-headers = %\{version\}$")
         self.assertLess(stages["vulkan-headers"], stages["vulkan-loader"])
 
-    def test_every_canary_source_has_a_stable_primary_and_the_lookaside(self) -> None:
+    def test_every_canary_source_serves_fixed_bytes(self) -> None:
         from tools.package_inventory import source_locks
 
+        lookaside = "https://src.fedoraproject.org/repo/pkgs/"
+        fixed_upload = re.compile(
+            r"^https://(github\.com/[^/]+/[^/]+/releases/download/|files\.pythonhosted\.org/)"
+        )
         locks = source_locks(ROOT)
         members = json.loads(self.workflow["env"]["CANARY_SET"]) + ["python-typing-inspection"]
         for name in members:
             with self.subTest(name=name):
                 lock = locks[name]
-                self.assertTrue(
-                    lock["url"].startswith(("https://github.com/", "https://files.pythonhosted.org/")),
-                    "a canary primary must be a host that serves the same bytes to a runner",
+                if lock["url"].startswith(lookaside):
+                    continue
+                self.assertRegex(
+                    lock["url"],
+                    fixed_upload,
+                    "a canary primary must be a fixed upload; a generated tag archive can "
+                    "change bytes, and a digest mismatch never reaches the fallback",
                 )
                 self.assertTrue(
-                    any(
-                        url.startswith("https://src.fedoraproject.org/repo/pkgs/")
-                        for url in lock.get("fallback_urls", [])
-                    ),
+                    any(url.startswith(lookaside) for url in lock.get("fallback_urls", [])),
                     "a canary must survive an upstream outage through the lookaside",
                 )
 
