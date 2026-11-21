@@ -162,6 +162,8 @@ gpgkey={hummingbird_gpgkey}
 priority=10
 zchunk=false
 excludepkgs={hummingbird_repo_excludes}
+minrate=1
+timeout=300
 {extra_repos}\"\"\"
 """
 

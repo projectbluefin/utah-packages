@@ -67,6 +67,22 @@ Hummingbird's repodata is fetched over HTTPS: save `repomd.xml` plus the full
 label the result with the fetch timestamp. Never present a Hummingbird answer
 without one — the repository moves under you.
 
+`packages.redhat.com` also stalls mid-download. A build log showing
+`Curl error (28) ... Less than 1000 bytes/sec` then `All mirrors were tried`
+is that stall, not a recipe bug, and every later stage needing the package
+fails as `No match for argument: <name> = <version>`. Both the container
+repository file and the mock template therefore set `minrate=1` and
+`timeout=300` on the Hummingbird repository; keep them in step.
+
+It also answers `Status code: 503` for a minute at a time, and librepo's own
+retries all land inside that minute. In the container lane every dnf call that
+must succeed (base install, the libxml2 split upgrade, builddep) goes through
+`with_backoff` from `tools/dnf_backoff.sh`, which waits 5, 15 and 45 seconds
+between attempts. Both `tools/build_container.sh` and the "Resolve the package
+cache key" step in `build-stage.yml` source it; that step installs the same
+build root first, so a 503 there fails the build just the same. A new required
+dnf call in either goes through it too.
+
 ## Libraries loaded at runtime
 
 A package-name dependency can be essential even when no ELF SONAME edge
