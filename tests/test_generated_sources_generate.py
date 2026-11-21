@@ -905,7 +905,7 @@ class GstreamerPluginsRsGenerateTests(PackageDirMixin, unittest.TestCase):
 
     def pinned(self):
         return patch.multiple(
-            generated_sources,
+            generated_sources_vendored,
             GSTREAMER_PLUGINS_RS_REMOTE=str(self.repo),
             GSTREAMER_PLUGINS_RS_COMMITS={self.VERSION: self.commit},
         )
