@@ -21,8 +21,11 @@ ROOT = Path(__file__).resolve().parent.parent
 WORKFLOWS = ROOT / ".github" / "workflows"
 RENOVATE = ROOT / "renovate.json"
 
-# Any quay.io image pinned by digest, tagged or not.
-ANY_PINNED_IMAGE = re.compile(r"(quay\.io/[^\s@:]+)(:[^\s@]+)?@sha256:[a-f0-9]{64}")
+# Any quay.io or Red Hat Hardened Images registry image pinned by digest,
+# tagged or not.
+ANY_PINNED_IMAGE = re.compile(
+    r"((?:quay\.io|registry\.access\.redhat\.com)/[^\s@:]+)(:[^\s@]+)?@sha256:[a-f0-9]{64}"
+)
 
 # The bootc-os pin is deliberately excluded: its own comment ties it to
 # runtime-contract.toml's BASE_IMAGE, the image Utah consumes, so it must move
@@ -79,6 +82,16 @@ class RenovateCoverageTests(unittest.TestCase):
         # mirrors it (refresh-buildroot.yml, config/buildroot-image).
         self.assertIn("quay.io/packit/packit", found)
 
+    def test_the_manager_tracks_the_red_hat_hardened_image(self) -> None:
+        # The gap report's repoquery runs in Red Hat's builder image; a digest
+        # nothing moves is the untracked pin this file exists to prevent.
+        pattern = manager_pattern(build_root_manager())
+        gaps = (WORKFLOWS / "recalculate-hummingbird-gaps.yml").read_text()
+        found = {m.group("depName"): m.group("currentValue") for m in pattern.finditer(gaps)}
+        self.assertEqual(
+            found.get("registry.access.redhat.com/hi/core-runtime"), "latest-builder"
+        )
+
     def test_the_fedora_build_root_tracks_a_release_not_latest(self) -> None:
         # Following :latest here would carry the factory to a new Fedora major
         # on somebody else's schedule. The build root is a deliberate choice.
@@ -101,7 +114,8 @@ class RenovateCoverageTests(unittest.TestCase):
         pattern = manager_pattern(build_root_manager())
         gaps = (WORKFLOWS / "recalculate-hummingbird-gaps.yml").read_text()
         self.assertIn("bootc-os@sha256:", gaps)
-        self.assertIsNone(pattern.search(gaps))
+        tracked = {m.group("depName") for m in pattern.finditer(gaps)}
+        self.assertNotIn("quay.io/hummingbird-community/bootc-os", tracked)
 
     def test_a_digest_update_may_land_without_a_human(self) -> None:
         # The replacement is whatever the pinned tag already resolves to, and a

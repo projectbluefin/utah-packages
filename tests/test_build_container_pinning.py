@@ -124,6 +124,21 @@ class BuildContainerPinningTests(unittest.TestCase):
         assert result.returncode == 0, result.stderr
         assert "checked 3 workflows" in result.stdout
 
+    def test_fails_a_red_hat_hardened_image_by_a_mutable_tag(self) -> None:
+        result = self.run_guard(
+            {
+                "recalculate-hummingbird-gaps.yml": (
+                    "jobs:\n"
+                    "  m:\n"
+                    "    env:\n"
+                    "      REPOQUERY_IMAGE: registry.access.redhat.com/hi/core-runtime:latest-builder\n"
+                ),
+            }
+        )
+        assert result.returncode == 1
+        assert "recalculate-hummingbird-gaps.yml:4" in result.stderr
+        assert "hi/core-runtime:latest-builder" in result.stderr
+
     def test_the_committed_workflows_pass_their_own_guard(self) -> None:
         result = subprocess.run(
             [sys.executable, str(GUARD)],
@@ -132,7 +147,7 @@ class BuildContainerPinningTests(unittest.TestCase):
             check=False,
         )
         assert result.returncode == 0, result.stdout + result.stderr
-        assert "every quay.io build image is digest-pinned" in result.stdout
+        assert "registry.access.redhat.com image is digest-pinned" in result.stdout
 
 
 if __name__ == "__main__":
