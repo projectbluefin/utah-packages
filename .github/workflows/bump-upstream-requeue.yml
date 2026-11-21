@@ -1,0 +1,107 @@
+name: Re-gate a daily bump the merge queue dropped
+
+# A gated daily bump can still be dropped by the merge queue: when main
+# changes a pipeline path after the gate's Canary ran, the queue's Canary
+# refuses the group ("main or another member changed a pipeline path. Update
+# the branch so Canary proves the merged pipeline, then queue it again").
+# bump-upstream-enqueue.yml queues a built head once, so until the next daily
+# run nothing updated the branch or gated it again. utah-packages#1259 sat
+# like that from 3:29 AM EST on 2026-11-21 until main was merged into it and
+# the gate dispatched by hand.
+#
+# This does those two steps, and nothing else. It merges main into the bump
+# branch (update-branch, pinned to the head it read) and dispatches
+# bump-upstream-gate.yml on the new head. The gate then decides everything
+# again -- plan, build, Canary, handoff -- and only the trusted
+# bump-upstream-enqueue.yml lands it. This workflow never merges, enqueues or
+# mints an App token, and it runs nothing from the bump branch: it checks out
+# main only for tools/bump_gate.py, which makes the decision.
+#
+# tools/bump_gate.py requeue acts only when the open same-repository bump was
+# last removed from the queue for failed checks, no gate run is in progress or
+# has started since that removal, and main is ahead of the branch. Any other
+# drop, or a branch already up to date with main, is left for a person or the
+# next daily bump. One re-gate per drop: the dispatched gate run is newer than
+# the removal, so the next tick does nothing until the queue drops it again,
+# and a further re-gate also needs main to have moved again.
+
+on:
+  schedule:
+    # Every two hours, away from the top of the hour.
+    - cron: '23 */2 * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: bump-upstream-requeue
+  cancel-in-progress: false
+
+jobs:
+  requeue:
+    if: github.repository_owner == 'projectbluefin' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        # The branches bump-upstream-gate.yml merges by itself.
+        branch: [bump/upstream-sources, bump/rawhide-imports]
+    permissions:
+      # update-branch: merge main into the bump branch.
+      contents: write
+      pull-requests: write
+      # gh workflow run: dispatch the gate, and read its runs.
+      actions: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: main
+          persist-credentials: false
+      - name: Merge main into a dropped bump and gate it again
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          BRANCH: ${{ matrix.branch }}
+          QUERY: 'query($owner: String!, $name: String!, $pr: Int!) { repository(owner: $owner, name: $name) { pullRequest(number: $pr) { headRefOid mergeQueueEntry { id } timelineItems(last: 20, itemTypes: [ADDED_TO_MERGE_QUEUE_EVENT, REMOVED_FROM_MERGE_QUEUE_EVENT]) { nodes { __typename ... on AddedToMergeQueueEvent { createdAt } ... on RemovedFromMergeQueueEvent { createdAt reason } } } } } }'
+        run: |
+          set -euo pipefail
+          gh pr list -R "$REPOSITORY" --state open --base main --head "$BRANCH" \
+            --json number,state,baseRefName,headRefName,headRefOid,isCrossRepository > prs.json
+          if [ "$(jq length prs.json)" -eq 0 ]; then
+            echo "no open $BRANCH pull request"
+            exit 0
+          fi
+          pr=$(jq -r '.[0].number' prs.json)
+          head=$(jq -r '.[0].headRefOid' prs.json)
+          [[ "$pr" =~ ^[0-9]+$ ]]
+          [[ "$head" =~ ^[0-9a-f]{40}$ ]]
+          gh api graphql -f owner="${REPOSITORY%/*}" -f name="${REPOSITORY#*/}" -F pr="$pr" \
+            -f query="$QUERY" --jq .data.repository.pullRequest > pull.json
+          branch_uri=$(jq -rn --arg branch "$BRANCH" '$branch | @uri')
+          gh api "repos/$REPOSITORY/actions/workflows/bump-upstream-gate.yml/runs?branch=$branch_uri&per_page=30" \
+            --jq .workflow_runs > runs.json
+          behind=$(gh api "repos/$REPOSITORY/compare/main...$head" --jq .behind_by)
+          [[ "$behind" =~ ^[0-9]+$ ]]
+          if ! python3 tools/bump_gate.py requeue --branch "$BRANCH" \
+              --prs prs.json --pull pull.json --runs runs.json --behind "$behind"; then
+            exit 0
+          fi
+          # expected_head_sha: GitHub refuses if the branch moved since it
+          # was read, so this never merges main into a head nobody judged.
+          if ! gh api --method PUT "repos/$REPOSITORY/pulls/$pr/update-branch" \
+              -f expected_head_sha="$head" > /dev/null; then
+            echo "::warning title=bump requeue::could not merge main into $BRANCH at $head (a conflict, or the branch moved); the next daily bump rebuilds the branch"
+            exit 0
+          fi
+          new="$head"
+          for _ in $(seq 1 30); do
+            new=$(gh pr view "$pr" -R "$REPOSITORY" --json headRefOid --jq .headRefOid)
+            [ "$new" != "$head" ] && break
+            sleep 5
+          done
+          if [ "$new" = "$head" ]; then
+            echo "::error title=bump requeue::main was merged into $BRANCH but its head did not move from $head within 150s; not dispatching the gate" >&2
+            exit 1
+          fi
+          gh workflow run bump-upstream-gate.yml -R "$REPOSITORY" --ref "$BRANCH" -f pr="$pr"
+          echo "merged main into $BRANCH ($head -> $new) and dispatched the bump gate for pull request $pr"

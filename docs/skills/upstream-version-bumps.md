@@ -498,6 +498,18 @@ Constraints that shaped it, so they are not rediscovered:
   the head commit), and a moved head is a notice in the run. The next
   daily bump re-dispatches the gate even when nothing new moved, which
   retries a flaky build.
+- A merge queue drop is gated again, once per drop. The queue's Canary
+  refuses a group whose pipeline differs from the pull request head, so a
+  gated bump is dropped (`failed_checks`) when main changes a pipeline
+  path after the gate's Canary ran (utah-packages#1259). Every two hours
+  `.github/workflows/bump-upstream-requeue.yml` asks
+  `bump_gate.py requeue` whether the open bump was last removed from the queue for
+  failed checks, with no gate running or started since and main ahead of
+  the branch. If so, it merges main into the branch (`update-branch`
+  pinned to the head it read) and dispatches the gate, which decides
+  everything again. It never merges, enqueues or mints the App token, and
+  runs only main's code. Any other drop, or a branch already up to date
+  with main, is left for a person or the next daily bump.
 - A `target-cycle` (GNOME-next) run is never gated; it stays a human merge.
 - GitHub does create `pull_request` runs for the bot-opened PR, parked in
   `action_required`; their pending `Canary` blocked the first gated merge
