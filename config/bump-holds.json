@@ -32,6 +32,10 @@
       "version": "2.4.2",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/44765133559"
     },
+    "flex": {
+      "version": "2.7.3",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/44881585786"
+    },
     "fribidi": {
       "version": "1.0.18",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/43358822069"
@@ -51,6 +55,10 @@
     "gnome-keyring": {
       "version": "51.1",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/42773931857"
+    },
+    "grpc": {
+      "version": "1.85.4",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/44881585786"
     },
     "gssproxy": {
       "version": "0.9.3",

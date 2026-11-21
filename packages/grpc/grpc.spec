@@ -105,7 +105,7 @@
 # documentation. Instead, we have just dropped all documentation.
 
 Name:           grpc
-Version:        1.85.4
+Version:        1.75.1
 Release:        %autorelease
 Summary:        High performance, open source universal RPC framework
 
