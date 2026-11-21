@@ -10,7 +10,7 @@
 %global libsystemd_version 220
 %global pango_version 1.22.0
 %global pcre2_version 10.21
-%global simdutf_version 7.2.1
+%global simdutf_version 9.3.3
 
 %if 0%{?rhel}
 %bcond bundled_fast_float 1

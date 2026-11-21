@@ -45,6 +45,10 @@ packages = [
   "gnome-shell",
   "gsettings-desktop-schemas",
   "gtk4",
+  # Utah installs Ptyxis, whose runtime closure reaches vte291-gtk4. Name the
+  # consumer here so its generated Requires, including the simdutf soname, is
+  # checked before publication (utah-packages#1228).
+  "ptyxis",
   "libadwaita",
   "mutter",
   "tailscale",

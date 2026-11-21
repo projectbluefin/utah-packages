@@ -4116,13 +4116,13 @@
     },
     {
       "name": "libplist",
-      "version": "2.8.1",
-      "url": "https://github.com/libimobiledevice/libplist/releases/download/2.8.1/libplist-2.8.1.tar.bz2",
-      "filename": "libplist-2.8.1.tar.bz2",
+      "version": "2.7.0",
+      "url": "https://github.com/libimobiledevice/libplist/releases/download/2.7.0/libplist-2.7.0.tar.bz2",
+      "filename": "libplist-2.7.0.tar.bz2",
       "feed": "https://github.com/libimobiledevice/libplist/releases/download/2.7.0/libplist-2.7.0.tar.bz2",
-      "sha512": "5fac7f1a947b73053f41c6765e3225e822cf64a1defe73ffcadeec21c3af2b048de5a3981ccae44ef617932fe56778a470159d09b85ef0d196da160c70b2470f",
+      "sha512": "83d0398b75ea9e610e49b4b96a7675b854c7551d4faf3e82e74c5c45cf04bbd95478cc40688f0995742e6a50601744d2a36641d0673aa7cc413f5ce2ec42f2d4",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/libplist/libplist-2.8.1.tar.bz2/sha512/5fac7f1a947b73053f41c6765e3225e822cf64a1defe73ffcadeec21c3af2b048de5a3981ccae44ef617932fe56778a470159d09b85ef0d196da160c70b2470f/libplist-2.8.1.tar.bz2"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libplist/libplist-2.7.0.tar.bz2/sha512/83d0398b75ea9e610e49b4b96a7675b854c7551d4faf3e82e74c5c45cf04bbd95478cc40688f0995742e6a50601744d2a36641d0673aa7cc413f5ce2ec42f2d4/libplist-2.7.0.tar.bz2"
       ]
     },
     {
@@ -4235,14 +4235,14 @@
     },
     {
       "name": "librsvg2",
-      "version": "2.62.3",
-      "url": "https://download.gnome.org/sources/librsvg/2.62/librsvg-2.62.3.tar.xz",
-      "filename": "librsvg-2.62.3.tar.xz",
-      "feed": "https://download.gnome.org/sources/librsvg/2.62/librsvg-2.62.3.tar.xz",
-      "sha512": "c2c0f28268e47ec78f98d86cd2536be3e0c3706039b04ac2286d87a6ac7ee0dfb75a4adc4f8bd9c3b6b1f5c94fecafc6d84dfe67f7e4ebfad59f7227e509300d",
+      "version": "2.63.2",
+      "url": "https://download.gnome.org/sources/librsvg/2.63/librsvg-2.63.2.tar.xz",
+      "filename": "librsvg-2.63.2.tar.xz",
+      "feed": "https://download.gnome.org/sources/librsvg/2.63/librsvg-2.63.2.tar.xz",
+      "sha512": "2d4d48d3cf8db34ecc8a26ce689bc2662d9d909e796299602e81c907e9b72a14a865cbd82c58d498316e73001e2242b44a56e52e57c0b38bbee74e38c0e314a9",
       "stage": 1,
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/librsvg2/librsvg-2.62.3.tar.xz/sha512/c2c0f28268e47ec78f98d86cd2536be3e0c3706039b04ac2286d87a6ac7ee0dfb75a4adc4f8bd9c3b6b1f5c94fecafc6d84dfe67f7e4ebfad59f7227e509300d/librsvg-2.62.3.tar.xz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/librsvg2/librsvg-2.63.2.tar.xz/sha512/2d4d48d3cf8db34ecc8a26ce689bc2662d9d909e796299602e81c907e9b72a14a865cbd82c58d498316e73001e2242b44a56e52e57c0b38bbee74e38c0e314a9/librsvg-2.63.2.tar.xz"
       ]
     },
     {

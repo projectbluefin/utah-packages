@@ -21,7 +21,14 @@ brew
 brew-tarball
 cups-browsed
 cups-filters
+# thin_check/thin_repair run as root on block devices, and the vendored crate
+# tarball (dmpd133-vendor.tar.gz) does not carry the version, so a bump would
+# build the new release against the old vendor tree.
+device-mapper-persistent-data
 fprintd
+# Ships fusermount setuid root.
+fuse
+fwupd
 gdm
 # The bootloader: a bad release, or replaced bytes, can leave a machine
 # unbootable. Its release-monitoring.org feed makes every 2.x a same-major update.
@@ -31,6 +38,9 @@ libfprint
 # libjwt 1.18 moves the soname to libjwt.so.2 (sso-mib-tool links .so.1);
 # Fedora Rawhide stays on 1.12.1. Move it by hand with its consumers.
 libjwt
+# libplist 2.8 drops libplist-2.0.so.4, which gvfs-afc still needs.
+# Upgrade only with a compatible gvfs-afc dependency stack.
+libplist
 microcode_ctl
 plymouth
 ppp

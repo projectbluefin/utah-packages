@@ -134,6 +134,9 @@ dependency actually changed.
 - Keep the dependency-resolution probe aligned with the actual container build
   policy. A repository, exclusion, stage-input or disttag change belongs in
   both paths and in a regression test.
+- Add helpers sourced by the build scripts or cache-key step to `BUILD_PATH`
+  in `tools/canary.py`. Otherwise a helper-only change can restore pass 1
+  cache hits without exercising the changed code.
 - The mock backend is not cache-enabled until it records and keys its own mock
   root. A container-lane entry must not be reused by mock merely because the
   source recipe matches. The hermetic lane does record its root -- the

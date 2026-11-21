@@ -1178,7 +1178,21 @@ def plan(
                 })
         return loaded["stable"]
 
-    for name, entry, feed in candidates(locks, only):
+    tracked = candidates(locks, only)
+    tracked_names = {name for name, _, _ in tracked}
+    for name, entry in sorted(locks.items()):
+        if (only and name != only) or name in tracked_names:
+            continue
+        proposals.append({
+            "name": name,
+            "kind": "note",
+            "current": entry.get("version", "unknown"),
+            "reason": "no supported upstream release feed; not scanned for updates. "
+                      "Configure a feed, or leave it pinned if intentional "
+                      "(docs/skills/upstream-version-bumps.md, 'Locks left without a feed')",
+        })
+
+    for name, entry, feed in tracked:
         if feed["forge"] != "gnome":
             proposal = forge_proposal(name, entry, feed, opener=opener)
             if proposal.get("kind") == "update" and not primary_tracks_forge(entry):
@@ -1496,7 +1510,7 @@ def main() -> int:
         (args.root / HOLDS).write_text(dump_holds(holds))
 
     if not finals:
-        print("no lock is behind the newest release it may move to")
+        print("no automatic update proposed; review notes and skipped feeds above")
     elif args.apply and not applied:
         print("every proposed bump failed to apply", file=sys.stderr)
         return 1

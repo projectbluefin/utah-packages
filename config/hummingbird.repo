@@ -18,3 +18,9 @@ gpgkey=file:///repos/keys/RPM-GPG-KEY-redhat-release-2 file:///repos/keys/RPM-GP
 priority=10
 zchunk=false
 excludepkgs=ruby3.3-default-gems,ruby3.4-default-gems
+# packages.redhat.com stalls mid-download under load. dnf's default aborts a
+# transfer below 1000 B/s for 30 s and, with this single baseurl, then reports
+# "All mirrors were tried": vulkan-headers lost glibc-minimal-langpack that
+# way and took vulkan-loader with it (issue #1160). Wait out the stall instead.
+minrate=1
+timeout=300

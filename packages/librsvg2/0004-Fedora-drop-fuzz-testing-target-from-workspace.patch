@@ -1,0 +1,24 @@
+From 93a2ff917496cc1fcc3431871d06c89f6f5ac995 Mon Sep 17 00:00:00 2001
+From: Fabio Valentini <decathorpe@gmail.com>
+Date: Tue, 15 Sep 2026 20:11:46 +0200
+Subject: [PATCH 4/5] Fedora: drop fuzz testing target from workspace
+
+---
+ Cargo.toml | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/Cargo.toml b/Cargo.toml
+index 2e4617e..0c7d5ab 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -21,7 +21,6 @@ overflow-checks = true
+ [workspace]
+ members = [
+     "ci",
+-    "fuzz",
+     "gdk-pixbuf-loader",
+     "librsvg-c",
+     "librsvg-rebind/librsvg-rebind",
+-- 
+2.55.0
+
