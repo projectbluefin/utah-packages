@@ -318,7 +318,13 @@ rebuild.
 
 ### Where the remaining lookaside locks come from
 
-These were checked against the locked SHA-512 (2026-11):
+`words` was re-pointed off the ratchet to
+`https://web.archive.org/web/20060527013227/http://www.dcs.shef.ac.uk/research/ilash/Moby/mwords.tar.Z`
+— the recipe's own `Source0`, the only surviving copy of the Moby dictionary
+after the Sheffield host was retired — whose bytes hash exactly to the locked
+SHA-512, so the digest is unchanged and the Fedora lookaside now lives in
+`fallback_urls`. Several others were checked against the locked SHA-512
+(2026-11) but stayed on the ratchet:
 
 - A release asset can be re-uploaded after the release. enchant 2.8.19's
   GitHub asset was replaced six days after publication and no longer matches
@@ -336,6 +342,18 @@ These were checked against the locked SHA-512 (2026-11):
 - `kde-settings` matches on `forge.fedoraproject.org`, and `fdk-aac-free`
   matches on `wtaymans.fedorapeople.org`. Both are Fedora infrastructure, so
   they stay on the ratchet until an owner decides otherwise.
+- `foo2zjs` — its `foo2zjs.zharving.ca` mirror no longer resolves, so the
+  archive is unreachable.
+- `foomatic-db` — the `openprinting.org/download/foomatic/` snapshot path 404s
+  and the freedesktop mirror carries no matching snapshot.
+- `mozc` — the locked `2.29.5111.102` is not a GitHub tag (only newer 2.29.x
+  exist), and the release list is empty.
+- `spandsp` — the locked `0.0.6-clean.tar.gz` is not published by
+  `jart/spandsp` or `freeswitch/spandsp`, both of which only carry v3.x.
+- `xevd` and `xeve` — the locked `-free` tarballs are generated from
+  `github.com/mpeg5/{xevd,xeve}` archives (the recipe's gen script strips
+  `src_main` and repacks), so no single download serves the locked bytes; they
+  need a generator, not a URL re-point.
 
 ### Fork Canary approval is not a source-integrity failure
 
