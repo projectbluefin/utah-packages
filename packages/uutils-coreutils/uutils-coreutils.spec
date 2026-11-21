@@ -139,7 +139,7 @@ Requires:       gnu-env
 Provides:       coreutils = 9.12
 Conflicts:      coreutils-single
 # This package owns %{_bindir}/cp again; gnu-cp, which briefly held it, is gone.
-Obsoletes:      gnu-cp < 9.12-1
+Obsoletes:      gnu-cp < 9.12-2
 
 %description    replace
 Links the GNU coreutils program names in %{_bindir} to uutils-coreutils, so
