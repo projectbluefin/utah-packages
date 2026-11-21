@@ -135,10 +135,18 @@ class WorkflowTests(unittest.TestCase):
         on = self.wf.get("on", self.wf.get(True))
         self.assertEqual(set(on), {"workflow_dispatch"})
         inputs = on["workflow_dispatch"]["inputs"]
-        self.assertEqual(set(inputs), {"pr", "head_sha", "approved_by"})
+        self.assertEqual(set(inputs), {"pr", "head_sha", "approved_by", "approved_head"})
         self.assertTrue(inputs["pr"]["required"] and inputs["head_sha"]["required"])
-        # Only names who approved, for the comment; it grants nothing.
+        # Only name who approved and what, for the comment; they grant nothing.
         self.assertFalse(inputs["approved_by"]["required"])
+        self.assertFalse(inputs["approved_head"]["required"])
+
+    def test_the_comment_says_when_an_approve_of_an_earlier_commit_started_it(self):
+        tell = next(s for s in self.steps if s.get("name") == "Tell the pull request")
+        self.assertEqual(tell["env"]["APPROVED_HEAD"], "${{ inputs.approved_head }}")
+        # Validated before it reaches the comment, and only used next to approved_by.
+        self.assertIn('[[ "$APPROVED_HEAD" =~ ^[0-9a-f]{40}$ ]]', tell["run"])
+        self.assertIn("and this head only merges \\`main\\` into it cleanly", tell["run"])
 
     def test_each_run_names_its_pull_request_and_head(self):
         # canary-fork-on-approve.yml dedupes on exactly this title.
@@ -460,6 +468,18 @@ class CarryOverTests(unittest.TestCase):
         self.proven = self.commit("a workflow change")
         self.assertRegex(self.problem(self.merge_main()), r"\.github/workflows/x\.yml")
 
+    def test_an_approve_covers_a_merge_of_main_even_when_the_proof_does_not(self):
+        # The Approve is about the pull request's own change; main's pipeline
+        # moving is why Canary must run again, not a reason to review again.
+        self.main_changes("tools/canary.py", ["changed"])
+        head = self.merge_main()
+        self.assertRegex(self.problem(head), "changed pipeline paths")
+        self.assertIsNone(fork_canary.merge_only_problem(self.proven, head, "main", self.git))
+        self.write("packages/foo/foo.spec", ["Name: foo", "Version: 2"])
+        head = self.commit("an unreviewed change")
+        self.assertRegex(fork_canary.merge_only_problem(self.proven, head, "main", self.git),
+                         "is not a merge of main")
+
     def test_main_changing_only_recipes_docs_and_tests_carries_over(self):
         # setUp's main already changed docs/ and a recipe outside the canary set.
         self.main_changes("README.md", ["readme"])
@@ -738,6 +758,85 @@ class ApproverTests(unittest.TestCase):
             with self.subTest(pull=pull), self.assertRaises(fork_canary.Refused):
                 self.approver(approved, pull)
 
+    def carried(self, reviews, merged_only, pushes=None, pull=None, pushed="2026-11-20T11:48:36Z"):
+        # The head (REVIEWED) was pushed at 11:48; MOVED was the head before it.
+        pushes = pushes if pushes is not None else [
+            {"created_at": "2026-11-20T09:00:00Z", "head_sha": MOVED},
+            {"created_at": pushed, "head_sha": REVIEWED},
+        ]
+        return fork_canary.approval(pull or pr(), reviews, MAINTAINERS, REPO, pushed, pushes, merged_only)
+
+    def test_an_approve_covers_a_later_head_that_only_merged_main(self):
+        # #1230 on 2026-11-20: approved at 10:42 UTC, main merged in at 00:04,
+        # and GitHub moved the Approve's commit_id onto the merge.
+        seen = []
+
+        def clean(approved, head):
+            seen.append((approved, head))
+            return None
+
+        for commit_id in (MOVED, REVIEWED):
+            with self.subTest(commit_id=commit_id):
+                approve = review("maint", "APPROVED", sha=commit_id, at="2026-11-20T10:00:00Z")
+                self.assertEqual(self.carried([approve], clean), ("maint", MOVED))
+        # The merge check compared the commit that was the head at the Approve.
+        self.assertEqual(seen, [(MOVED, REVIEWED)] * 2)
+
+    def test_an_approve_of_the_exact_head_reports_that_head(self):
+        self.assertEqual(self.carried([review("maint", "APPROVED", at="2026-11-20T12:00:00Z")],
+                                      lambda approved, head: self.fail("no merge check needed")),
+                         ("maint", REVIEWED))
+
+    def test_anything_but_clean_merges_of_main_still_needs_a_new_approve(self):
+        approve = review("maint", "APPROVED", sha=MOVED, at="2026-11-20T10:00:00Z")
+        with self.assertRaisesRegex(fork_canary.Refused, "maint's Approve of bbbbbbbbbbbb does not cover it: "
+                                    "c0ffee is not a merge of main"):
+            self.carried([approve], lambda approved, head: "c0ffee is not a merge of main")
+
+    def test_the_approved_commit_comes_from_push_records_not_from_the_review(self):
+        never = lambda approved, head: self.fail("must not compare")
+        other = "c" * 40
+        cases = {
+            # The review names a commit that was neither the head then nor now.
+            "foreign commit_id": ([review("maint", "APPROVED", sha=other, at="2026-11-20T10:00:00Z")], None),
+            # No push is recorded before the Approve, so nothing says what was reviewed.
+            "no earlier push": ([review("maint", "APPROVED", sha=MOVED, at="2026-11-20T08:00:00Z")], None),
+            # A push time that cannot be read voids the record rather than guessing.
+            "unreadable push": ([review("maint", "APPROVED", sha=MOVED, at="2026-11-20T10:00:00Z")],
+                                [{"created_at": "yesterday", "head_sha": MOVED},
+                                 {"created_at": "2026-11-20T11:48:36Z", "head_sha": REVIEWED}]),
+            "no pushes at all": ([review("maint", "APPROVED", sha=MOVED, at="2026-11-20T10:00:00Z")], []),
+        }
+        for name, (reviews, pushes) in cases.items():
+            with self.subTest(name), self.assertRaisesRegex(fork_canary.Refused, "approved the current head"):
+                self.carried(reviews, never, pushes)
+
+    def test_the_head_at_an_approve_is_the_newest_push_before_it(self):
+        pushes = [{"created_at": "2026-11-20T09:00:00Z", "head_sha": MOVED},
+                  {"created_at": "2026-11-20T11:00:00Z", "head_sha": REVIEWED},
+                  {"created_at": "2026-11-20T10:00:00Z", "head_sha": "c" * 40}]
+        at = fork_canary._when
+        self.assertEqual(fork_canary.head_at(pushes, at("2026-11-20T10:30:00Z")), "c" * 40)
+        self.assertEqual(fork_canary.head_at(pushes, at("2026-11-20T10:00:00Z")), "c" * 40)
+        self.assertEqual(fork_canary.head_at(pushes, at("2026-11-20T12:00:00Z")), REVIEWED)
+        self.assertIsNone(fork_canary.head_at(pushes, at("2026-11-20T08:00:00Z")))
+        self.assertIsNone(fork_canary.head_at([*pushes, {"created_at": "2026-11-20T09:30:00Z",
+                                                         "head_sha": "short"}], at("2026-11-20T12:00:00Z")))
+
+    def test_stops_still_apply_to_a_carried_approve(self):
+        clean = lambda approved, head: None
+        approve = review("maint", "APPROVED", sha=MOVED, at="2026-11-20T10:00:00Z")
+        with self.assertRaisesRegex(fork_canary.Refused, "changes requested by admin1"):
+            self.carried([approve, review("admin1", "CHANGES_REQUESTED")], clean)
+        for pull in (pr(draft=True), pr(labels=[{"name": "hold"}])):
+            with self.subTest(pull=pull), self.assertRaises(fork_canary.Refused):
+                self.carried([approve], clean, pull=pull)
+
+    def test_without_a_merge_check_nothing_carries(self):
+        approve = review("maint", "APPROVED", sha=MOVED, at="2026-11-20T10:00:00Z")
+        with self.assertRaisesRegex(fork_canary.Refused, "approved the current head"):
+            self.carried([approve], None)
+
     def test_the_command_prints_the_approver_or_why_not_and_never_fails(self):
         with tempfile.TemporaryDirectory() as tmp:
             tmp = Path(tmp)
@@ -753,6 +852,15 @@ class ApproverTests(unittest.TestCase):
                                              "--repository", REPO, "--head-pushed-at", PUSHED])
                 self.assertEqual(code, 0)
                 self.assertTrue(str(out.call_args_list[-1].args[0]).startswith(expected))
+            (tmp / "reviews.json").write_text(json.dumps([review("maint", "APPROVED")]))
+            (tmp / "pushes.json").write_text(json.dumps([{"created_at": PUSHED, "head_sha": REVIEWED}]))
+            with mock.patch("builtins.print") as out:
+                fork_canary.main(["approved", "--pr-json", str(tmp / "pr.json"),
+                                  "--reviews-json", str(tmp / "reviews.json"),
+                                  "--permissions-json", str(tmp / "perm.json"), "--repository", REPO,
+                                  "--head-pushed-at", PUSHED, "--pushes-json", str(tmp / "pushes.json")])
+            self.assertEqual([call.args[0] for call in out.call_args_list],
+                             [f"approved_head={REVIEWED}", "approved_by=maint"])
 
 
 class OnApproveWorkflowTests(unittest.TestCase):
@@ -772,10 +880,25 @@ class OnApproveWorkflowTests(unittest.TestCase):
     def test_it_never_checks_out_or_runs_a_pull_request(self):
         for step in self.steps:
             if str(step.get("uses", "")).startswith("actions/checkout"):
-                # main's own ref, and the token is not left on disk.
-                self.assertEqual(step.get("with"), {"persist-credentials": False})
-        self.assertNotRegex(self.runs, r"git (fetch|checkout|switch|merge|push)")
+                # main's own ref with its history, and the token is not left on disk.
+                self.assertEqual(step.get("with"),
+                                 {"persist-credentials": False, "fetch-depth": 0, "filter": "blob:none"})
+        self.assertNotRegex(self.runs, r"git (checkout|switch|merge|push|reset|worktree)")
         self.assertNotRegex(self.runs, r"\b(just|make|podman|docker)\b")
+        # The one fetch brings the pull request's commits in as history only,
+        # under a ref of their own; nothing is checked out from them.
+        self.assertEqual(re.findall(r"git fetch[^\n]*", self.runs), [
+            'git fetch --no-tags --quiet --filter=blob:none origin "+refs/pull/${pr}/head:refs/remotes/pull/${pr}"; then'])
+
+    def test_an_approve_carries_over_merges_of_main_only_through_the_tested_check(self):
+        self.assertIn('--pushes-json pushes.json', self.runs)
+        # The branch name is the fork author's: it is URL-encoded, and compared
+        # in jq, never spliced into a program.
+        self.assertIn("ref_uri=$(jq -rn --arg ref \"$head_ref\" '$ref | @uri')", self.runs)
+        self.assertIn("branch=${ref_uri}", self.runs)
+        self.assertIn("select(.head_repository.full_name == $repo and .head_branch == $ref) | {created_at, head_sha}",
+                      self.runs)
+        self.assertIn('-f approved_head="$approved_head"', self.runs)
 
     def test_it_only_dispatches_the_button_from_main_with_the_approver(self):
         dispatches = re.findall(r"gh workflow run (\S+)", self.runs)

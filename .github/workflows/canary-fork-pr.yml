@@ -54,6 +54,10 @@ on:
         description: Set by canary-fork-on-approve.yml to the maintainer whose Approve started this; leave empty
         required: false
         type: string
+      approved_head:
+        description: Set by canary-fork-on-approve.yml to the commit that maintainer approved; leave empty
+        required: false
+        type: string
 
 permissions:
   contents: write
@@ -141,6 +145,7 @@ jobs:
           HEAD_SHA: ${{ inputs.head_sha }}
           ACTOR: ${{ github.actor }}
           APPROVED_BY: ${{ inputs.approved_by }}
+          APPROVED_HEAD: ${{ inputs.approved_head }}
           REPOSITORY: ${{ github.repository }}
         run: |
           set -euo pipefail
@@ -148,6 +153,10 @@ jobs:
           if [ -n "$APPROVED_BY" ]; then
             [[ "$APPROVED_BY" =~ ^[A-Za-z0-9-]+$ ]] || { echo "::error::unexpected approved_by"; exit 1; }
             who="automatically because @${APPROVED_BY} approved this exact commit"
+            if [ -n "$APPROVED_HEAD" ] && [ "$APPROVED_HEAD" != "$HEAD_SHA" ]; then
+              [[ "$APPROVED_HEAD" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::unexpected approved_head"; exit 1; }
+              who="automatically because @${APPROVED_BY} approved \`${APPROVED_HEAD}\` and this head only merges \`main\` into it cleanly"
+            fi
           fi
           gh pr comment "$PR" -R "$REPOSITORY" --body "Canary was run on this pull request at \`${HEAD_SHA}\` ${who}, from the in-repository copy \`canary/pr-${PR}\`: https://github.com/${REPOSITORY}/actions/workflows/canary.yml?query=branch%3Acanary%2Fpr-${PR}. When that run passes, this pull request's own \`Canary\` check is re-run and turns green by itself. Merging \`main\` into the branch keeps the proof while the merge is clean, the pull request's own diff stays the same, and \`main\` changed no pipeline path; anything else needs a new review and a new run."
       # The copies are only needed while their pull request is open.

@@ -12,11 +12,18 @@
 #   - the Approve must be on the exact head commit (commit_id) AND the head
 #     must have reached the pull request before the Approve. GitHub moves a
 #     review onto a later merge of main when stale reviews are not dismissed, so
-#     commit_id alone is not enough; any push after the Approve, a merge of main
-#     included, needs a new Approve. The push time is the newest "Canary
-#     (read-only)" pull_request run on the head from this pull request's own
-#     fork and branch, which GitHub records; the
+#     commit_id alone is not enough; any push after the Approve needs a new
+#     Approve, except one that only merges main. The push time is the newest
+#     "Canary (read-only)" pull_request run on the head from this pull request's
+#     own fork and branch, which GitHub records; the
 #     commit's own dates are set by its author and are not used;
+#   - an Approve also covers a later head that adds nothing but clean merges of
+#     main to the commit that was the head when the maintainer approved
+#     (tools/fork_canary.py merge_only_problem, the check a carried Canary proof
+#     already uses). Without it, every pipeline change on main meant a new
+#     Approve on every fork pull request before Canary could run again. A merge
+#     that resolved a conflict, any other commit, or a rewritten branch still
+#     needs a new Approve;
 #   - a standing "changes requested" from any maintainer stops it;
 #   - draft pull requests and the labels hold, sentinel-alert and do-not-merge
 #     stop it;
@@ -30,9 +37,10 @@
 # dispatched for (its run-name names the head). A failed run is not retried; a
 # maintainer decides what happens next.
 #
-# This workflow executes nothing from any pull request. It reads the API and
-# dispatches a workflow on main, so it needs actions: write and nothing else
-# beyond reads.
+# This workflow executes nothing from any pull request. It reads the API,
+# fetches each fork pull request's commits as history for git to compare (never
+# checked out), and dispatches a workflow on main, so it needs actions: write and
+# nothing else beyond reads.
 name: Start fork Canary on a maintainer's approval
 
 on:
@@ -54,10 +62,14 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
-      # Trusted code only: this workflow's own ref, which is main's tooling.
+      # Trusted code only: this workflow's own ref, which is main's tooling. The
+      # full, blobless history of main is what merge_only_problem compares a
+      # pull request's commits against.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
+          fetch-depth: 0
+          filter: blob:none
       - name: Dispatch the fork Canary for approved heads
         env:
           GH_TOKEN: ${{ github.token }}
@@ -96,10 +108,22 @@ jobs:
             pushed_at=$(gh api "repos/$REPOSITORY/actions/workflows/canary-read-only.yml/runs?event=pull_request&head_sha=${head}&per_page=100" \
               | jq -r --arg repo "$head_repo" --arg ref "$head_ref" \
                 '[.workflow_runs[] | select(.head_repository.full_name == $repo and .head_branch == $ref) | .created_at] | max // empty')
+            # Every push of this branch GitHub recorded the same way, so the
+            # decision can tell which commit was the head when each maintainer
+            # approved. The head's commits are fetched only as history for git to
+            # compare; nothing from them is checked out or run.
+            ref_uri=$(jq -rn --arg ref "$head_ref" '$ref | @uri')
+            gh api --paginate "repos/$REPOSITORY/actions/workflows/canary-read-only.yml/runs?event=pull_request&branch=${ref_uri}&per_page=100" \
+              | jq -s --arg repo "$head_repo" --arg ref "$head_ref" \
+                '[.[].workflow_runs[] | select(.head_repository.full_name == $repo and .head_branch == $ref) | {created_at, head_sha}]' > pushes.json
+            if ! git fetch --no-tags --quiet --filter=blob:none origin "+refs/pull/${pr}/head:refs/remotes/pull/${pr}"; then
+              echo "::warning title=fork canary::could not fetch #${pr}'s commits; only an Approve of its exact head counts"
+            fi
             python3 tools/fork_canary.py approved --pr-json pr.json --reviews-json reviews.json \
               --permissions-json permissions.json --repository "$REPOSITORY" \
-              --head-pushed-at "$pushed_at" | tee decision.txt
+              --head-pushed-at "$pushed_at" --pushes-json pushes.json | tee decision.txt
             approved_by=$(sed -n 's/^approved_by=//p' decision.txt)
+            approved_head=$(sed -n 's/^approved_head=//p' decision.txt)
             [ -n "$approved_by" ] || continue
             if grep -Fxq "Canary for fork pull request #${pr} at ${head}" started.txt; then
               echo "#$pr: already dispatched for $head"; continue
@@ -116,5 +140,5 @@ jobs:
             fi
             echo "::notice title=fork canary::#$pr approved by $approved_by at $head; starting Canary for a fork pull request"
             gh workflow run canary-fork-pr.yml -R "$REPOSITORY" --ref main \
-              -f pr="$pr" -f head_sha="$head" -f approved_by="$approved_by"
+              -f pr="$pr" -f head_sha="$head" -f approved_by="$approved_by" -f approved_head="$approved_head"
           done 3< forks.txt
