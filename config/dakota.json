@@ -380,7 +380,7 @@
     "bluefin/uutils-coreutils.bst": {
       "disposition": "structural",
       "issue": "#1229",
-      "reason": "uutils coreutils next to GNU coreutils",
+      "reason": "uutils over the GNU coreutils names: uutils-coreutils-replace replaces coreutils-single; env from gnu-env",
       "rpm": "uutils-coreutils"
     },
     "bluefin/wallpaper-month.bst": {
@@ -3310,7 +3310,7 @@
       "evidence": "rawhide source; dist-git rpms/setup exists"
     },
     "freedesktop-sdk.bst:components/icu.bst": {
-      "disposition": "factory",
+      "disposition": "hummingbird",
       "rpm": "icu",
       "fedora": "icu",
       "hummingbird": true,

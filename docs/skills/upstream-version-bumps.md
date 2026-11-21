@@ -114,6 +114,18 @@ glycin 2.2~beta -> 2.2.2 (Rawhide `f3250ea`) took this path. The vendor
 tarball was cut after Fedora's patch 0001, so take Rawhide's patch set as
 it is: 2.2.2 dropped the gufo backport (0005) that 2.2~beta needed.
 
+Check that the bcond really is local before relying on it: librsvg2 up to
+2.62.3 carried Fedora's `%if 0%{?rhel}` switch unchanged, and the build root
+leaves `%rhel` undefined, so it built against Fedora 44's crate RPMs. The
+2.63.2 re-import (Rawhide `59329d8`) pins `%global bundled_rust_deps 1`
+instead. On that path `%autosetup -N` applies none of Fedora's crate patches
+(they only adapt to system crates) and the crate RPMs no longer pull in
+`pkgconfig(dav1d)` for the AVIF feature, so the recipe BuildRequires it.
+Fedora ties its bundled branch to `BuildRequires: rust-toolset`, a RHEL-only
+package: the build root has none, and the lock resolve fails with `No match
+for argument: rust-toolset` (run 43803193911). Key that line on `%{?rhel}`
+and keep `cargo-rpm-macros` otherwise, as glycin does.
+
 ## When a bumped recipe fails
 
 `--apply` moves the version only; the recipe can still need the change a new
@@ -222,16 +234,18 @@ the bump's parent instead of a merge base:
 ```sh
 python3 tools/bump_gate.py trim --base <bump-commit>^ --head HEAD \
   --hold '["<name>", ...]' --run-url <failing run>
-python3 tools/multimedia_closure.py --output reports/multimedia-closure.json
 ```
 
 `trim` restores each recipe directory and lock entry byte for byte and holds
 the failed version, so later bumps skip it until the next upstream release.
 Check first that nothing after the bump touched those recipes
 (`git log <bump-commit>.. -- packages/<name>`); `trim` would drop that work
-too. The closure report records codec versions, so regenerate it whenever a
-held package is one of them (ffmpegthumbnailer here). Moving a held package
-forward is then an ordinary `fix/recipe-<name>` pull request, as above.
+too. `trim` now regenerates and stages the multimedia-closure report after
+restoring each held package to its base version, so the report stays current
+without a separate step (its recipe records codec versions, and a held codec
+like ffmpegthumbnailer would otherwise make the next gate fail its report
+check). Moving a held package forward is then an ordinary
+`fix/recipe-<name>` pull request, as above.
 
 ## GNOME locks follow GNOME's newest stable release
 
@@ -690,6 +704,16 @@ lookaside fallback in `planned_entry`'s form, and the spec's `Version:` and
   its next release, so each webkitgtk move stays a hand move like this one.
 
 ### Locks left without a feed
+
+A successful daily run is not proof that every carried package was checked.
+`plan()` reports each lock without a supported feed as a `note` saying
+`not scanned for updates`; it does not guess a GNOME module during full scans.
+These notes are not update proposals and never change a source lock. Review
+notes, feed errors, review-only proposals and holds before claiming the set is
+current. The final `no automatic update proposed` message describes only the
+automatic proposals, not upstream freshness. To investigate an omitted lock,
+follow the explicit-feed procedure above; an intentional compat or generated
+pin should stay pinned rather than receive a guessed feed.
 
 Left without a feed on purpose (2026-10-03): git snapshots (aribb24),
 sources with no upstream release (color-filesystem, kde-filesystem,

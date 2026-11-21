@@ -367,7 +367,7 @@
       "parity_note": null,
       "recipe": "packages/jpegxl",
       "stage": 0,
-      "version": "0.11.2",
+      "version": "0.12.0",
       "nevra": null,
       "recipe_provenance": "https://src.fedoraproject.org/rpms/jpegxl.git"
     },
@@ -438,16 +438,16 @@
       "requirement": "gstreamer1-plugin-dav1d",
       "origin": "comps-group:@multimedia",
       "status": "built",
-      "factory_source": "rust-gst-plugin-dav1d",
+      "factory_source": "gstreamer-plugins-rs",
       "factory_binary": "gstreamer1-plugin-dav1d",
       "upstream_spec_source": null,
       "codec_parity": null,
       "parity_note": null,
-      "recipe": "packages/rust-gst-plugin-dav1d",
+      "recipe": "packages/gstreamer-plugins-rs",
       "stage": 0,
-      "version": "0.15.0",
+      "version": "0.15.4",
       "nevra": null,
-      "recipe_provenance": "https://src.fedoraproject.org/rpms/rust-gst-plugin-dav1d.git"
+      "recipe_provenance": "https://gitlab.freedesktop.org/gstreamer/gst-plugins-rs"
     },
     {
       "requirement": "gstreamer1-plugin-libav",

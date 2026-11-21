@@ -230,29 +230,50 @@ root, and the disttag
 ## Step 6: publish
 
 `publish-repository.yml` starts from the previous published repository and
-replaces each rebuilt source package as a whole. Before it pushes, it runs
-two checks:
+replaces each rebuilt source package as a whole.
 
-- **precedence**: the factory's builds must outrank Fedora's and
-  Hummingbird's for the same package;
+It fetches each RPM artifact by its exact name, `rpm-s<wave>-<package>`, with
+`tools/fetch-artifacts/fetch.mjs`. The names come from the `stage_map` that
+prepare writes. A name with no artifact is a failed build. Any other fetch
+error fails the publication. An artifact that gives no RPMs also fails it, so
+a short download can't pass for a complete one. Each build stage gets the RPMs
+of the earlier waves in the same way.
+
+Before it pushes, it does three steps:
+
+- **precedence**: the factory's builds must outrank the builds of Fedora and
+  Hummingbird for the same package. A build that loses keeps its previous
+  version.
+- **hold-back** (`tools/publish_holdback.py`): a build can break what Utah
+  installs. Then that build keeps its previous version. Other builds in the
+  publication also keep their previous version when they BuildRequire it
+  directly. A build that needs what only the new version gives also stays. The usual cause is a library
+  that changes its soname before its consumers are rebuilt. The run summary
+  gives each held-back build and the reason.
 - **consumer transaction**: what Utah installs must resolve as one dnf
-  transaction against this repository and Hummingbird ("Validate
-  Hummingbird-only consumer transaction").
+  transaction. The transaction uses the repository that the job pushes, plus
+  Hummingbird (step "Validate Hummingbird-only consumer transaction").
 
-A run publishes more than once:
+A run publishes more than one time:
 
-- **early publications**: up to four (`publish0`–`publish3`), each after one
-  of the first waves, so a package can ship before the slowest package in the
-  run is done.
-  An early publication that fails the consumer transaction pushes nothing
-  and doesn't fail the run. For example, a library can move its soname
-  before its consumers are rebuilt. The next publication tries again;
-- **the final publication**: one at the end, covering every wave. If it fails
-  the consumer transaction, the run fails.
+- **early publications**: slots after waves 0, 1, 2, 4, 7 and 10
+  (`publish0` … `publish10`). Thus a package can ship before the slowest
+  package in the run is done. A slot runs when it has new builds and a later
+  wave has packages. If an early publication fails the consumer
+  transaction, it pushes nothing and the run continues. A fetch error fails
+  the run.
+- **the final publication**: one at the end, for every wave. If it fails, the
+  run fails. If it holds back a build, it pushes the builds that resolve and
+  then fails the run. Thus a red run can also publish an image.
 
-A publication that passes signs the repository metadata, then pushes the
-repository as an OCI image, `ghcr.io/projectbluefin/utah-packages`. The image
-is signed with cosign and has a build provenance attestation.
+The image label `org.projectbluefin.factory.state` keeps three records: the
+inputs of each published package, the `failed` builds and the `withheld`
+builds. The next run, push runs too, tries each withheld build again, because
+its consumers can be rebuilt by then.
+
+A publication that passes signs the repository metadata. Then it pushes the
+repository as an OCI image, `ghcr.io/projectbluefin/utah-packages`. cosign
+signs the image, and the image has a build provenance attestation.
 
 ## Step 7: Utah consumes it
 
@@ -275,8 +296,6 @@ to an exact package set.
 
 Each has a tracking issue with the current state:
 
-- Full rebuilds can't publish: the artifact download misses the newest
-  waves ([#970](https://github.com/projectbluefin/utah-packages/issues/970)).
 - Full rebuilds take 7–10 hours, so a merge can take most of a day to
   publish ([#1207](https://github.com/projectbluefin/utah-packages/issues/1207)).
 - Hummingbird's package server causes most failed builds in large runs

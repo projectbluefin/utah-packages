@@ -165,6 +165,43 @@ The canary run builds the fork's code with `packages: write`, so the review is
 the security boundary, exactly as it was when a maintainer pushed the branch by
 hand.
 
+A maintainer's GitHub **Approve** now presses that button too.
+`canary-fork-on-approve.yml` runs every 15 minutes (or by hand from the
+Actions tab). It dispatches `canary-fork-pr.yml` for an open, non-draft fork
+pull request when someone with write access approved its exact current head
+commit after that commit was pushed, no maintainer's latest review requests
+changes, and it has none of the labels `hold`, `sentinel-alert` or
+`do-not-merge` (`tools/fork_canary.py approver`). Reviews by bots and by the
+author never count, and neither do comments. It starts each head once: it
+skips a head whose `Canary` already passes, one with a maintainer-run Canary,
+and one already dispatched (`canary-fork-pr.yml`'s run name names the pull
+request and head). A failed run is not retried. Every refusal in the button
+itself still applies, so `.github/` changes are still pushed by hand. GitHub
+moves a reviewer's latest review onto a later merge of `main` (stale reviews
+are not dismissed here), so `commit_id` alone is not trusted: the head must
+also have reached the pull request before the Approve. The push time is the
+newest `Canary (read-only)` pull_request run on the head from the pull
+request's own fork and branch, which GitHub records; the commit's own dates are
+set by its author and are not used. Only approve a fork pull request once you would have pressed the
+button for it; to approve without starting Canary, add `hold` first.
+
+An Approve also covers a later head that only merged `main` into the approved
+commit. When `main` changes a pipeline path, every fork branch has to merge it
+and run Canary again, and asking each maintainer to approve again after every
+such merge kept the start manual (on 2026-11-20, #972 and #1230 each needed a
+hand-started run three times). So the workflow fetches the pull request's
+commits as history (never checked out) and reads every push GitHub recorded on
+the branch. The commit that was the head when the maintainer approved is the
+newest push at or before the Approve, never the review's `commit_id`, which
+must still be that commit or the current head. The Approve covers the current
+head when `tools/fork_canary.py merge_only_problem` finds nothing between the
+two but clean merges of `main`: every rule of the carry-over below except the
+last. Whether `main` changed the pipeline does not matter here, since that is
+why Canary has to run again, not something to review. A
+merge that resolved a conflict, any other commit, or a rewritten branch still
+needs a new Approve. The comment on the pull request then names the commit
+that was approved.
+
 Fork dispatches may run concurrently for different PRs. Each cleans copies
 of closed PRs, so two dispatches can list the same copy before either deletes
 it. GitHub then returns `404` or `422 Reference does not exist` to the second
@@ -225,7 +262,8 @@ unbuilt between the two:
   directly under `packages/`, and the canary set's own recipes. Otherwise the
   notice says "main changed pipeline paths since … was built (…) … A maintainer
   must dispatch 'Canary for a fork pull request' again with head …": do that,
-  with the new head.
+  with the new head, or let `canary-fork-on-approve.yml` do it when a
+  maintainer's Approve covers the new head (above).
 
 The `canary` job's checkout fetches the full, blobless history for this and
 executes nothing from it. When `main` was merged while the maintainer-run

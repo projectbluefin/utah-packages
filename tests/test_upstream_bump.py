@@ -793,18 +793,45 @@ class PlanTests(unittest.TestCase):
         self.assertEqual(len(proposals), 1)
         self.assertIn("error", proposals[0])
 
-    def test_full_runs_skip_lookaside_locks_but_package_runs_surface_them(self) -> None:
-        # A lock on Fedora's lookaside is out of scope for a full scan even
-        # though nautilus is a GNOME module sitting on a prerelease; naming
-        # it explicitly offers the GNOME relock instead (and an unreachable
-        # module reports an error rather than vanishing).
+    def test_coverage_notes_do_not_include_tracked_or_unselected_locks(self) -> None:
+        entries = [
+            dict(LOOKASIDE_NAUTILUS),
+            {"name": "generated", "generate": {"kind": "test"}},
+            {"name": "gnome-shell", "version": "51.0",
+             "url": "https://download.gnome.org/sources/gnome-shell/51/gnome-shell-51.0.tar.xz"},
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "config").mkdir()
+            (root / "config" / "upstream-sources.json").write_text(
+                json.dumps({"packages": entries})
+            )
+            opener = fake_opener({
+                "https://download.gnome.org/sources/gnome-shell/cache.json":
+                    json.dumps(GNOME_SHELL_CACHE).encode(),
+            })
+            proposals = plan(root, None, opener=opener)
+            self.assertEqual([p["name"] for p in proposals], ["generated", "nautilus"])
+            self.assertTrue(all(p["kind"] == "note" for p in proposals))
+            self.assertEqual(proposals[0]["current"], "unknown")
+            self.assertEqual(plan(root, "gnome-shell", opener=opener), [])
+
+    def test_full_runs_report_untracked_locks_but_package_runs_probe_them(self) -> None:
+        # Do not guess a feed during a full scan, but do not silently omit a
+        # lock either. An explicit package run still offers the GNOME relock.
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             (root / "config").mkdir()
             (root / "config" / "upstream-sources.json").write_text(
                 json.dumps({"packages": [LOOKASIDE_NAUTILUS]}, indent=2) + "\n"
             )
-            self.assertEqual(plan(root, None, opener=fake_opener({})), [])
+            proposals = plan(root, None, opener=fake_opener({}))
+            self.assertEqual(len(proposals), 1)
+            self.assertEqual(proposals[0]["name"], "nautilus")
+            self.assertEqual(proposals[0]["kind"], "note")
+            self.assertEqual(proposals[0]["current"], "51~beta")
+            self.assertIn("not scanned for updates", proposals[0]["reason"])
+            self.assertNotIn("latest", proposals[0])
             proposals = plan(root, only="nautilus", opener=fake_opener({}))
             self.assertEqual(len(proposals), 1)
             self.assertIn("error", proposals[0])

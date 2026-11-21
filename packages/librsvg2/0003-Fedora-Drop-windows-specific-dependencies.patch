@@ -1,7 +1,7 @@
-From 34fa62d22787fa16a1cabafbf85a954c767f1b69 Mon Sep 17 00:00:00 2001
+From c163d5a4287e38ab3a4e5dfe2cb2c9cb4c1b93f4 Mon Sep 17 00:00:00 2001
 From: Fabio Valentini <decathorpe@gmail.com>
 Date: Thu, 12 Mar 2026 20:15:02 +0100
-Subject: [PATCH 3/3] Fedora: Drop windows-specific dependencies
+Subject: [PATCH 3/5] Fedora: Drop windows-specific dependencies
 
 ---
  Cargo.toml              | 1 -
@@ -9,10 +9,10 @@ Subject: [PATCH 3/3] Fedora: Drop windows-specific dependencies
  2 files changed, 4 deletions(-)
 
 diff --git a/Cargo.toml b/Cargo.toml
-index c30a3d6..0208376 100644
+index 276ab8b..2e4617e 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -52,7 +52,6 @@ gdk-pixbuf = "0.22.0"
+@@ -53,7 +53,6 @@ gdk-pixbuf = "0.22.0"
  gdk-pixbuf-sys = "0.22.0"
  gio = "0.22.0"
  gio-unix = "0.22.0"
@@ -35,5 +35,5 @@ index f40b3d3..efe7e21 100644
  assert_cmd.workspace = true
  predicates.workspace = true
 -- 
-2.53.0
+2.55.0
 

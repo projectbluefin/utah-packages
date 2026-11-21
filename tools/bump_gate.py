@@ -347,6 +347,17 @@ def trim(base: str, head: str, held: list[str], run_url: str) -> dict[str, dict]
     for name in held:
         holds[name] = {"version": head_entries[name]["version"], "run": run_url}
     (ROOT / HOLDS).write_text(dump_holds(holds))
+    # A held package returns to its base version, so the committed
+    # multimedia-closure report (one locked version per recipe) would go stale
+    # and fail the report check on the next gate. Regenerate it and stage it
+    # with the trim, exactly as the initial-bump workflow does.
+    if (ROOT / "config" / "multimedia-closure.toml").is_file():
+        subprocess.run(
+            ["python3", str(Path(__file__).resolve().parent / "multimedia_closure.py"),
+             "--root", str(ROOT), "--output", str(ROOT / MULTIMEDIA_REPORT)],
+            check=True, cwd=ROOT,
+        )
+        _git("add", "--", MULTIMEDIA_REPORT)
     return holds
 
 

@@ -258,6 +258,71 @@ echo "attempts=$(cat {counter}) cleanups=$cleanups"
             "https://download.fedoraproject.org/pub/fedora/linux/releases/44/Everything/x86_64/os/Packages/g/g-1.noarch.rpm",
         ])
 
+    def test_each_retry_asks_hummingbird_for_a_different_spelling_of_the_same_file(self) -> None:
+        # Akamai caches a bad answer per URL (run 44478890278: 48 of 52 failed
+        # builds were one shadow-utils RPM). Each retry changes the cache key,
+        # never the host, the file name, or a Fedora or file:// URL.
+        import json
+        import os
+        import subprocess
+        import tempfile
+
+        script = SCRIPT.read_text()
+        start = script.index("vary_hummingbird_urls() {")
+        helper = script[start:script.index("\n}\n", start) + 3]
+        self.assertIn('vary_hummingbird_urls "$H/lock/pending.json" "$attempt"', script)
+        hb = "https://packages.redhat.com/api/pulp-content/public-hummingbird/x86_64/Packages/s/shadow-utils-4.20.0-2.hum1.x86_64.rpm"
+        others = ["file:///work/prior/x-1-1.x86_64.rpm",
+                  "https://download.fedoraproject.org/pub/fedora/linux/updates/44/Everything/x86_64/Packages/f/f-1.noarch.rpm"]
+        seen = []
+        with tempfile.TemporaryDirectory() as directory:
+            lock = Path(directory) / "pending.json"
+            lock.write_text(json.dumps({"buildroot": {"rpms": [{"url": u} for u in [hb, *others]]}}))
+            for attempt in (2, 3, 4, 5):
+                subprocess.run(["bash", "-c", f"set -euo pipefail\n{helper}\nvary_hummingbird_urls {lock} {attempt}"],
+                               check=True)
+                urls = [r["url"] for r in json.loads(lock.read_text())["buildroot"]["rpms"]]
+                self.assertEqual(urls[1:], others)
+                self.assertTrue(urls[0].startswith("https://packages.redhat.com/api/"))
+                self.assertEqual(os.path.basename(urls[0]), os.path.basename(hb))
+                self.assertEqual(urls[0].replace("//", "/").replace("https:/", "https://"), hb)
+                seen.append(urls[0])
+        self.assertEqual(len(set(seen[:3])), 3)
+        self.assertNotIn(hb, seen)
+        self.assertEqual(seen[3], seen[0])
+
+    def test_a_gzip_encoded_rpm_download_is_unwrapped_before_verification(self) -> None:
+        # An Akamai edge answered with Content-Encoding: gzip and
+        # mock-hermetic-repo kept the encoded body (run 44735693275: shadow-utils,
+        # 1381217 bytes starting 1f8b). Only a gzip stream around an RPM lead is
+        # unwrapped; SIGMD5 verification still decides whether it is the RPM.
+        import gzip
+        import subprocess
+        import tempfile
+
+        script = SCRIPT.read_text()
+        start = script.index("unwrap_gzip_rpms() {")
+        helper = script[start:script.index("\n}\n", start) + 3]
+        fetch = script[script.index("mock-hermetic-repo --lockfile"):script.index("verify_hermetic_repo.py --lockfile")]
+        self.assertIn('unwrap_gzip_rpms "$H/repo"', fetch)
+        rpm = b"\xed\xab\xee\xdb" + b"rpm header and payload" * 64
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Path(directory)
+            (repo / "encoded-1-1.x86_64.rpm").write_bytes(gzip.compress(rpm))
+            (repo / "plain-1-1.x86_64.rpm").write_bytes(rpm)
+            # Compressed once: gzip.compress stamps the current second into the
+            # header, so compressing again for the comparison can differ by a tick.
+            page = gzip.compress(b"<html>not an rpm</html>")
+            truncated = gzip.compress(rpm)[:40]
+            (repo / "page-1-1.x86_64.rpm").write_bytes(page)
+            (repo / "truncated-1-1.x86_64.rpm").write_bytes(truncated)
+            subprocess.run(["bash", "-c", f"set -euo pipefail\n{helper}\nunwrap_gzip_rpms {repo}"], check=True,
+                           capture_output=True)
+            self.assertEqual((repo / "encoded-1-1.x86_64.rpm").read_bytes(), rpm)
+            self.assertEqual((repo / "plain-1-1.x86_64.rpm").read_bytes(), rpm)
+            self.assertEqual((repo / "page-1-1.x86_64.rpm").read_bytes(), page)
+            self.assertEqual((repo / "truncated-1-1.x86_64.rpm").read_bytes(), truncated)
+
     def test_mock_config_carries_a_ready_bootstrap_image_only_when_asked(self) -> None:
         plain = render()
         self.assertNotIn("bootstrap_image", plain)

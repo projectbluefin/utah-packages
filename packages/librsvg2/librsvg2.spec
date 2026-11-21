@@ -1,18 +1,17 @@
 %bcond check 1
 
-# Use bundled deps as we don't ship the exact right versions for all the
-# required rust libraries
-%if 0%{?rhel}
+# Hummingbird has no Rust crate RPMs, so the Fedora model (system crates)
+# depends on whichever crate versions the Fedora build root happens to carry.
+# Always build from Fedora's vendor tarball (in the lookaside), as RHEL does
+# and as glycin does here: it holds exactly the crates upstream's Cargo.lock
+# pins, the set gnome-build-meta's sdk/librsvg.bst vendors.
 %global bundled_rust_deps 1
-%else
-%global bundled_rust_deps 0
-%endif
 
 %global cairo_version 1.18.0
 
 Name:           librsvg2
 Summary:        An SVG library based on cairo
-Version:        2.62.3
+Version:        2.63.2
 Release:        %autorelease
 
 # librsvg itself is LGPL-2.1-or-later
@@ -58,6 +57,8 @@ Source1:        librsvg-%{version}-vendor.tar.xz
 Patch:          0001-Fedora-Drop-dependencies-required-for-benchmarking.patch
 Patch:          0002-Fedora-Drop-dependencies-and-references-to-mutation-.patch
 Patch:          0003-Fedora-Drop-windows-specific-dependencies.patch
+Patch:          0004-Fedora-drop-fuzz-testing-target-from-workspace.patch
+Patch:          0005-Fedora-relax-version-ranges-for-some-dependencies.patch
 
 BuildRequires:  gcc
 BuildRequires:  meson >= 1.3.0
@@ -77,10 +78,17 @@ BuildRequires:  pkgconfig(pangocairo)
 BuildRequires:  pkgconfig(pangoft2)
 BuildRequires:  vala
 BuildRequires:  /usr/bin/rst2man
-%if 0%{?bundled_rust_deps}
+# rust-toolset is RHEL's package; the Fedora build root has cargo-rpm-macros
+# on both paths (as glycin does).
+%if 0%{?rhel}
 BuildRequires:  rust-toolset
 %else
 BuildRequires:  cargo-rpm-macros
+%endif
+%if 0%{?bundled_rust_deps}
+# The vendored dav1d-sys links the system libdav1d (the crate RPMs pull it in
+# on the unbundled path). AVIF stays on, as gnome-build-meta links dav1d.
+BuildRequires:  pkgconfig(dav1d) >= 1.3.0
 %endif
 
 Requires:       cairo%{?_isa} >= %{cairo_version}

@@ -9,7 +9,6 @@
 %global libusbx_version 1.0.23
 %global meson_version 0.61.3
 %global usbredir_version 0.7.1
-%global ipxe_version 20200823-5.git4bd064de
 
 %global have_vmsr_helper 0
 %global have_memlock_limits 0
@@ -110,7 +109,10 @@
 %endif
 
 %global have_gvnc_devel %{defined fedora}
-%global have_sdl_image %{defined fedora}
+# Utah: freedesktop-sdk-extra's components/qemu.bst, which Dakota ships,
+# configures --disable-sdl-image; neither Hummingbird nor the factory carries
+# SDL2_image, so the SDL UI goes without it (utah-packages#1021).
+%global have_sdl_image 0
 %global have_brlapi 1
 %global have_daxctl 1
 %global have_fdt 1
@@ -167,6 +169,22 @@
 %global have_igvm 1
 %endif
 %endif
+
+# Utah: Hummingbird and the factory carry neither Xen, ndctl (libdaxctl),
+# libxdp, QATzip, IGVM, libiscsi, Ceph (librados, librbd), libblkio nor
+# rutabaga-gfx, so qemu-system-x86-core, which qemu-kvm needs, and the iscsi,
+# rbd, blkio and rutabaga modules could not install (#1021).
+# freedesktop-sdk-extra's components/qemu.bst, which Dakota ships, builds with
+# none of them; do the same.
+%global have_xen 0
+%global have_daxctl 0
+%global have_xdp 0
+%global have_qatzip 0
+%global have_igvm 0
+%global have_block_iscsi 0
+%global have_block_rbd 0
+%global have_libblkio 0
+%global have_rutabaga_gfx 0
 
 %global have_nitro 0
 %ifarch x86_64 aarch64
@@ -399,23 +417,34 @@ Version: 11.1.3
 %global rcstr -%{rcver}
 Release: %autorelease -p -e %{rcver}
 %else
-Release: %autorelease
+# Utah: -b 3 so the build without the features above sorts above the
+# published bundled-firmware build, 2
+Release: %autorelease -b 3
 %endif
 
 Epoch: 2
+# Utah: plus the licenses of the bundled firmware this recipe now ships
+# (SeaBIOS, iPXE ROMs, x86 EDK2), as Fedora's seabios, ipxe and edk2 tag them.
 License: %{shrink:
     Apache-2.0 AND
     BSD-2-Clause AND
+    (BSD-2-Clause OR GPL-2.0-or-later) AND
+    BSD-2-Clause-Patent AND
     BSD-3-Clause AND
+    BSD-4-Clause AND
     FSFAP AND
     GPL-1.0-or-later AND
     GPL-2.0-only AND
+    (GPL-2.0-only OR MPL-1.1) AND
     GPL-2.0-or-later AND
     GPL-2.0-or-later WITH GCC-exception-2.0 AND
+    GPL-2.0-or-later WITH UBDL-exception AND
+    ISC AND
     LGPL-2.0-only AND
     LGPL-2.0-or-later AND
     LGPL-2.1-only AND
     LGPL-2.1-or-later AND
+    LGPL-3.0-only AND
     MIT AND
     LicenseRef-Fedora-Public-Domain AND
     CC-BY-3.0
@@ -689,7 +718,6 @@ Requires(post): /usr/sbin/groupadd
 Requires(post): /usr/sbin/useradd
 %{obsoletes_some_modules}
 
-Requires: ipxe-roms-qemu >= %{ipxe_version}
 %description common
 %{name} is an open source virtualizer that provides hardware emulation for
 the KVM hypervisor.
@@ -1540,9 +1568,6 @@ platform.
 %package system-x86-core
 Summary: QEMU system emulator for x86
 Requires: %{name}-common = %{evr}
-Requires: seabios-bin
-Requires: seavgabios-bin
-Requires: edk2-ovmf
 %description system-x86-core
 This package provides the QEMU system emulator for x86. When being run in a x86
 machine that supports it, this package also provides the KVM virtualization
@@ -2118,16 +2143,15 @@ rm -rf %{buildroot}%{_datadir}/%{name}/openbios-sparc32
 rm -rf %{buildroot}%{_datadir}/%{name}/openbios-sparc64
 # Provided by package SLOF
 rm -rf %{buildroot}%{_datadir}/%{name}/slof.bin
-# Provided by package ipxe
-rm -rf %{buildroot}%{_datadir}/%{name}/pxe*rom
-rm -rf %{buildroot}%{_datadir}/%{name}/efi*rom
-# Provided by package seavgabios
-rm -rf %{buildroot}%{_datadir}/%{name}/vgabios*bin
-# Provided by package seabios
-rm -rf %{buildroot}%{_datadir}/%{name}/bios*.bin
-# Provided by edk2
-rm -rf %{buildroot}%{_datadir}/%{name}/edk2*
-rm -rf %{buildroot}%{_datadir}/%{name}/firmware
+# Utah: freedesktop-sdk-extra's components/qemu.bst, which Dakota ships,
+# installs QEMU's bundled iPXE ROMs, SeaBIOS/SeaVGABIOS images and x86 EDK2
+# firmware with its descriptors. Neither Hummingbird nor the factory carries
+# ipxe-roms-qemu, seabios-bin, seavgabios-bin or edk2-ovmf, so keep QEMU's
+# own copies (utah-packages#1021). Other architectures' EDK2 builds are still
+# deleted: aarch64, riscv64 and loongarch64 require Fedora's edk2 packages,
+# and ARM has none, as on Fedora.
+rm -f %{buildroot}%{_datadir}/%{name}/edk2-{aarch64,arm,riscv,loongarch64}-*.fd
+rm -f %{buildroot}%{_datadir}/%{name}/firmware/60-edk2-{aarch64,arm,riscv64,loongarch64}.json
 
 
 # Fedora specific stuff below
@@ -2473,6 +2497,8 @@ popd
 %{_datadir}/icons/*
 %{_datadir}/%{name}/keymaps/
 %attr(4755, -, -) %{_libexecdir}/qemu-bridge-helper
+%{_datadir}/%{name}/pxe-*.rom
+%{_datadir}/%{name}/efi-*.rom
 %dir %{_libdir}/%{name}/
 %{_mandir}/man1/%{name}.1*
 %{_mandir}/man1/qemu-vnc.1*
@@ -3257,6 +3283,16 @@ popd
 %{_datadir}/%{name}/multiboot_dma.bin
 %{_datadir}/%{name}/pvh.bin
 %{_datadir}/%{name}/qboot.rom
+%{_datadir}/%{name}/bios.bin
+%{_datadir}/%{name}/bios-256k.bin
+%{_datadir}/%{name}/bios-microvm.bin
+%{_datadir}/%{name}/vgabios*.bin
+%{_datadir}/%{name}/edk2-i386-*.fd
+%{_datadir}/%{name}/edk2-x86_64-*.fd
+%license %{_datadir}/%{name}/edk2-licenses.txt
+%dir %{_datadir}/%{name}/firmware/
+%{_datadir}/%{name}/firmware/*-edk2-i386*.json
+%{_datadir}/%{name}/firmware/*-edk2-x86_64*.json
 %{_bindir}/qemu-system-x86_64
 %{_datadir}/systemtap/tapset/qemu-system-x86_64.stp
 %{_datadir}/systemtap/tapset/qemu-system-x86_64-log.stp

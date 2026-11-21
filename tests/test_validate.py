@@ -71,6 +71,9 @@ class ValidateScriptTests(unittest.TestCase):
         buildroot_pin=DEFAULT_BUILDROOT_PIN,
         source_urls=None,
         source_fallbacks=None,
+        source_templates=None,
+        source_sha256_urls=None,
+        source_signature_urls=None,
         fedora_baseline=None,
         review_only=None,
         sources_files=None,
@@ -94,6 +97,12 @@ class ValidateScriptTests(unittest.TestCase):
         for entry in locks:
             if entry["name"] in (source_urls or {}):
                 entry["url"] = source_urls[entry["name"]]
+            if entry["name"] in (source_templates or {}):
+                entry["url_template"] = source_templates[entry["name"]]
+            if entry["name"] in (source_sha256_urls or {}):
+                entry["sha256_url"] = source_sha256_urls[entry["name"]]
+            if entry["name"] in (source_signature_urls or {}):
+                entry["signature_url"] = source_signature_urls[entry["name"]]
             if entry["name"] in (source_fallbacks or {}):
                 entry["fallback_urls"] = list(source_fallbacks[entry["name"]])
         (root / "config" / "upstream-sources.json").write_text(
@@ -417,6 +426,90 @@ class ValidateScriptTests(unittest.TestCase):
         )
         assert result.returncode != 0
         assert "takes its payload from Fedora" in result.stderr
+
+    def test_rejects_a_fedora_url_in_the_url_template_position(self) -> None:
+        # source_pipeline.py builds the payload from `url_template` when there is
+        # no `url`, so a Fedora URL there pulls from the lookaside just the same.
+        result = self.check(
+            source_templates={
+                "example": "https://src.fedoraproject.org/repo/pkgs/example/example-{version}.tar.xz"
+            },
+        )
+        assert result.returncode != 0
+        assert "takes its payload from Fedora, not upstream: example" in result.stderr
+
+    def test_rejects_a_fedora_url_in_the_sha256_url_position(self) -> None:
+        # The checksum manifest is fetched from `sha256_url`; a Fedora host there
+        # is still the factory reading its bytes off Fedora infrastructure.
+        result = self.check(
+            source_sha256_urls={
+                "example": "https://src.fedoraproject.org/repo/pkgs/example/example.sha256"
+            },
+        )
+        assert result.returncode != 0
+        assert "takes its payload from Fedora, not upstream: example" in result.stderr
+
+    def test_rejects_a_fedora_url_in_the_signature_url_position(self) -> None:
+        # source_pipeline.py verifies the payload against the signature fetched
+        # from `signature_url`; a Fedora host there reads that signature off the
+        # lookaside just the same, so it is a Fedora-primary fetch too.
+        result = self.check(
+            source_signature_urls={
+                "example": "https://src.fedoraproject.org/repo/pkgs/example/example.asc"
+            },
+        )
+        assert result.returncode != 0
+        assert "takes its payload from Fedora, not upstream: example" in result.stderr
+        assert "example (signature_url)" in result.stderr
+
+    def test_the_fedora_sha256_url_remediation_names_the_upstream_manifest(self) -> None:
+        # The ratchet must not tell a sha256_url offender to keep the Fedora host
+        # in fallback_urls -- a checksum manifest is not a fallback payload, and
+        # that old remediation was wrong for this position.
+        result = self.check(
+            source_sha256_urls={
+                "example": "https://src.fedoraproject.org/repo/pkgs/example/example.sha256"
+            },
+        )
+        assert result.returncode != 0
+        assert "takes its payload from Fedora, not upstream: example" in result.stderr
+        assert "example (sha256_url)" in result.stderr
+        assert "upstream's own checksum manifest" in result.stderr
+        assert "fallback_urls" not in result.stderr
+
+    def test_the_fedora_url_remediation_points_at_upstream_and_keeps_the_fedora_host_in_fallback_urls(self) -> None:
+        # Only a primary `url`/`url_template` can keep the Fedora host in a
+        # fallback; the remediation must still tell the reader to re-point the
+        # primary field at the upstream release first, or a reader could move the
+        # URL into `fallback_urls` and leave no primary `url` at all.
+        result = self.check(source_urls={"example": LOOKASIDE_URL})
+        assert result.returncode != 0
+        assert "example (url)" in result.stderr
+        assert "point `url` at the project's own release" in result.stderr
+        assert "fallback_urls" in result.stderr
+
+    def test_reports_every_fedora_field_on_one_entry(self) -> None:
+        # The ratchet must name every offending field in one pass, not stop at
+        # the first; a second Fedora field would otherwise fail only on the next
+        # run. `offending_names` is a set, so a repeated name is harmless.
+        result = self.check(
+            source_urls={"example": LOOKASIDE_URL},
+            source_sha256_urls={
+                "example": "https://src.fedoraproject.org/repo/pkgs/example/example.sha256"
+            },
+        )
+        assert result.returncode != 0
+        assert "takes its payload from Fedora, not upstream: example" in result.stderr
+        # offenders are sorted, so the fields print alphabetically in one pass.
+        assert "example (sha256_url, url)" in result.stderr
+
+    def test_accepts_a_non_fedora_url_in_the_url_template_position(self) -> None:
+        result = self.check(
+            source_templates={
+                "example": "https://github.com/example/example/releases/v{version}.tar.xz"
+            },
+        )
+        assert result.returncode == 0, result.stdout + result.stderr
 
     def test_rejects_a_source_lock_that_fetches_over_plain_http(self) -> None:
         # upstream_bump.py pins the SHA-512 of whatever the primary url serves

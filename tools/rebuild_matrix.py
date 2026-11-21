@@ -205,6 +205,14 @@ def main() -> int:
         changed = changed_recipes(os.environ.get("BASE_SHA", ""))
         mode = "diff"
     print(f"change detection: {mode}; changed: {', '.join(sorted(changed)) or 'none'}")
+    # Changed only because the build root moved: still
+    # rebuilt, but not owed a cache-free build, so the RPMs it compiles are
+    # cached and a rerun before the next publish reuses them (issue #1207).
+    root_only = (
+        factory_state.shared_only(ROOT, state, locks, changed) if state is not None else set()
+    )
+    if root_only:
+        print(f"changed only by the build root (cacheable): {len(root_only)} packages")
     for name in sorted(held):
         print(f"hold {name}: its last build at these exact inputs failed; "
               "the scheduled run retries it")
@@ -270,6 +278,8 @@ def main() -> int:
         elif name in stale:
             missing = ", ".join(sorted(stale[name])[:3])
             reasons[name] = f"published build requires {missing}, which nothing provides"
+        elif name in root_only:
+            reasons[name] = "the build root changed since the published build"
         elif name in changed:
             reasons[name] = "changed since the published build"
         elif name not in direct:
@@ -297,7 +307,7 @@ def main() -> int:
         )
 
     outputs = stage_outputs(build, solved)
-    outputs["cacheable"] = json.dumps(cacheable(build, changed, set(stale)))
+    outputs["cacheable"] = json.dumps(cacheable(build, changed - root_only, set(stale)))
     outputs["prune_sources"] = json.dumps(
         prunable_sources(published, hummingbird_owned)
     )

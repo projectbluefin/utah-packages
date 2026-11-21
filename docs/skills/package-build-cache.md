@@ -89,6 +89,27 @@ lookup. Two selected classes must compile:
   now provides. Its recipe may be unchanged, so an old cache entry can match;
   restoring it would reproduce the defect the run is trying to repair.
 
+A package changed only because the build root moved is not a directly changed
+recipe. After a build-root merge every package's state digest changes, but
+`tools/factory_state.shared_only()` recomputes each digest with the shared
+digests recorded on the published image (the label's `shared` list, each with
+the build-root pin it covered). A package whose recipe and inventory entry
+reproduce its published input digest under a recorded digest for a different
+build-root pin is cacheable. It compiles on the first run, because its key
+carries the new build-root digest, and it writes the cache, so a rerun before
+the next successful publish restores instead of compiling. Before #1207 these
+packages were excluded, nothing was cached, and a failed publish after a move
+cost a second full cold rebuild (run 44309582836: 850 packages, 36.8
+compile-hours).
+
+The list keeps several entries because publishes that replace only some
+packages (early stages, or a run with failures) stamp the new digest while
+the rest keep inputs recorded under the old one. A change to
+`config/hummingbird.repo` alone does not qualify: the cache key does not carry
+it. A label without `shared`, a new package, or an edited recipe or inventory
+entry does not qualify either, so the classification can only withhold the
+cache.
+
 Dependency-closure rebuilds may use the cache only when their full key matches.
 The resolved earlier-stage RPMs change the root portion of the key when the
 dependency actually changed.
@@ -98,6 +119,10 @@ dependency actually changed.
 - Never share the consumer image's tag namespace with cache entries.
 - Never seed the final repository directly from the package cache.
 - Never let cache presence decide the rebuild plan.
+- Never treat a package as changed only by the build root unless its current
+  recipe and inventory entry reproduce its published input digest under a
+  recorded shared digest for a different build-root pin. Without that proof,
+  it is a directly changed recipe.
 - Never restore stale or directly changed packages.
 - Never compute a key before dependency resolution or from an empty root.
 - Never omit recipe paths, the build-root digest, resolved NEVRAs, or disttag
@@ -109,8 +134,9 @@ dependency actually changed.
 - Keep the dependency-resolution probe aligned with the actual container build
   policy. A repository, exclusion, stage-input or disttag change belongs in
   both paths and in a regression test.
-- Keep shared build inputs such as `tools/dnf_backoff.sh` in the canary
-  build salt so changes to them force a real pass1 build.
+- Add helpers sourced by the build scripts or cache-key step to `BUILD_PATH`
+  in `tools/canary.py`. Otherwise a helper-only change can restore pass 1
+  cache hits without exercising the changed code.
 - The mock backend is not cache-enabled until it records and keys its own mock
   root. A container-lane entry must not be reused by mock merely because the
   source recipe matches. The hermetic lane does record its root -- the
