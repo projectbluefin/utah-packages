@@ -406,8 +406,9 @@ SHA-512, so the digest is unchanged and the Fedora lookaside now lives in
   did not match the lock (see `canary.yml`).
 - `vulkan-headers` and `vulkan-loader` match Khronos's generated
   `archive/vulkan-sdk-<version>` tag archives (verified 2026-11), but they
-  are Canary members, and a generated tag archive is not a fixed upload, so
-  they stay on the lookaside per the Canary contract above.
+  are Canary members, which `tests/test_canary.py` keeps on the lookaside, and
+  a generated tag archive can change bytes, so it is not a safe Canary
+  primary; they stay.
 
 ### Fork Canary approval is not a source-integrity failure
 
