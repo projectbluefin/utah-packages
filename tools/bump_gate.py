@@ -41,6 +41,14 @@ are tested rather than restated in shell:
         exit 0 when a comment with this exact verdict was already posted.
         Reads the pull request's comment bodies as raw text on stdin.
 
+    bump_gate.py requeue --branch BRANCH --prs FILE --pull FILE --runs FILE
+                         --behind N
+        exit 0 when bump-upstream-requeue.yml should merge main into the
+        daily bump's branch and gate it again: the merge queue dropped the
+        open bump for failed checks, no gate is running or has started since,
+        and main has moved on. Otherwise exit 1 and say why. It decides only
+        whether to gate again; the gate still decides whether to merge.
+
 Fail closed throughout: anything the gate cannot account for -- a missing
 output, a skipped build, a package that was never selected -- is a reason
 not to merge.
@@ -54,6 +62,7 @@ import re
 import subprocess
 import sys
 from dataclasses import dataclass, field
+from datetime import datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -297,6 +306,68 @@ def comment(result: Verdict, sha: str, run_url: str, held: list[str] | None = No
     return "\n".join(lines) + "\n"
 
 
+# The branches bump-upstream-gate.yml merges by itself (its plan job's if).
+GATED_BRANCHES = ("bump/upstream-sources", "bump/rawhide-imports")
+
+
+def _when(stamp: object) -> datetime | None:
+    if not isinstance(stamp, str):
+        return None
+    try:
+        return datetime.fromisoformat(stamp.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+
+
+def requeue(branch: str, prs: object, pull: object, runs: object, behind: int) -> tuple[bool, str]:
+    """Whether a daily bump the merge queue dropped should be gated again.
+
+    The queue drops a gated bump when main changed a pipeline path after the
+    gate's Canary ran: the queue's Canary refuses a group whose pipeline
+    differs from the pull request head, and asks for the branch to be
+    updated (utah-packages#1259). Merging main into the branch and gating it
+    again is the fix. Anything else is left for a person or the next daily
+    bump: a drop for another reason, a gate already running or started since
+    the drop, and a branch already up to date with main, where updating
+    cannot change what the queue saw.
+    """
+    if branch not in GATED_BRANCHES:
+        return False, f"{branch} is not a branch the gate merges"
+    if not isinstance(prs, list) or len(prs) != 1 or not isinstance(prs[0], dict):
+        return False, f"there is not exactly one open {branch} pull request"
+    pr = prs[0]
+    if (pr.get("state") != "OPEN" or pr.get("baseRefName") != "main"
+            or pr.get("headRefName") != branch or pr.get("isCrossRepository") is not False):
+        return False, f"pull request {pr.get('number')} is not the open same-repository {branch} bump into main"
+    if not isinstance(pull, dict) or pull.get("headRefOid") != pr.get("headRefOid"):
+        return False, "the pull request moved while it was read"
+    if pull.get("mergeQueueEntry") is not None:
+        return False, "the pull request is in the merge queue"
+    events = [node for node in (pull.get("timelineItems") or {}).get("nodes") or []
+              if isinstance(node, dict) and _when(node.get("createdAt"))]
+    events.sort(key=lambda node: _when(node["createdAt"]))
+    if not events or events[-1].get("__typename") != "RemovedFromMergeQueueEvent":
+        return False, "the merge queue has not dropped the pull request since it was last queued"
+    dropped = events[-1]
+    if str(dropped.get("reason") or "").lower() != "failed_checks":
+        return False, f"the merge queue dropped it for {dropped.get('reason') or 'no stated reason'}, not failed checks"
+    if not isinstance(runs, list):
+        return False, "the gate's runs could not be read"
+    removed_at = _when(dropped["createdAt"])
+    for run in runs:
+        if not isinstance(run, dict):
+            return False, "the gate's runs could not be read"
+        if run.get("status") != "completed":
+            return False, f"gate run {run.get('id')} is still {run.get('status')}"
+        started = _when(run.get("created_at"))
+        if started is None or started >= removed_at:
+            return False, f"gate run {run.get('id')} started after the drop"
+    if behind <= 0:
+        return False, "the branch is up to date with main; updating it cannot change the queue's verdict"
+    return True, (f"the merge queue dropped pull request {pr['number']} for failed checks "
+                  f"and main is {behind} commit(s) ahead; gating it again")
+
+
 def _git(*args: str) -> str:
     return subprocess.run(["git", *args], cwd=ROOT, check=True,
                           capture_output=True, text=True).stdout
@@ -440,6 +511,18 @@ def _cli_trim(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cli_requeue(args: argparse.Namespace) -> int:
+    try:
+        documents = [json.loads(path.read_text()) for path in (args.prs, args.pull, args.runs)]
+    except (OSError, json.JSONDecodeError) as error:
+        print(f"not gating again: {error}")
+        return 1
+    prs, pull, runs = documents
+    act, reason = requeue(args.branch, prs, pull, runs, args.behind)
+    print(reason if act else f"not gating again: {reason}")
+    return 0 if act else 1
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     commands = parser.add_subparsers(dest="command", required=True)
@@ -466,6 +549,12 @@ def main(argv: list[str] | None = None) -> int:
     seen_cmd = commands.add_parser("seen")
     seen_cmd.add_argument("--sha", required=True)
     seen_cmd.add_argument("--failed", required=True)
+    requeue_cmd = commands.add_parser("requeue")
+    requeue_cmd.add_argument("--branch", required=True)
+    requeue_cmd.add_argument("--prs", type=Path, required=True)
+    requeue_cmd.add_argument("--pull", type=Path, required=True)
+    requeue_cmd.add_argument("--runs", type=Path, required=True)
+    requeue_cmd.add_argument("--behind", type=int, required=True)
     args = parser.parse_args(argv)
     if args.command == "plan":
         return _cli_plan(args)
@@ -473,6 +562,8 @@ def main(argv: list[str] | None = None) -> int:
         return _cli_decide(args)
     if args.command == "trim":
         return _cli_trim(args)
+    if args.command == "requeue":
+        return _cli_requeue(args)
     return 0 if already_posted(sys.stdin.read(), args.sha, json.loads(args.failed)) else 1
 
 

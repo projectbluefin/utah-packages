@@ -24,6 +24,7 @@ import yaml
 
 from tools import bump_gate
 from tools.bump_gate import (
+    GATED_BRANCHES,
     HOLDS,
     LOCK,
     REVIEW_ONLY,
@@ -39,6 +40,7 @@ from tools.bump_gate import (
     marker,
     parse_holds,
     parse_review_only,
+    requeue,
     verdict,
 )
 
@@ -1060,6 +1062,252 @@ glib2 = "glib2"
         staged = self.git("status", "--porcelain", "--",
                           "reports/multimedia-closure.json").strip()
         self.assertEqual(staged, "A  reports/multimedia-closure.json")
+
+
+DROPPED_AT = "2026-11-21T08:29:47Z"
+
+
+def requeue_inputs(**overrides):
+    """One open daily bump the queue dropped for failed checks, behind main."""
+    pr = {"number": 1259, "state": "OPEN", "baseRefName": "main",
+          "headRefName": "bump/upstream-sources", "headRefOid": SHA,
+          "isCrossRepository": False}
+    pull = {"headRefOid": SHA, "mergeQueueEntry": None, "timelineItems": {"nodes": [
+        {"__typename": "AddedToMergeQueueEvent", "createdAt": "2026-11-21T08:28:58Z"},
+        {"__typename": "RemovedFromMergeQueueEvent", "createdAt": DROPPED_AT,
+         "reason": "failed_checks"},
+    ]}}
+    runs = [{"id": 1, "status": "completed", "created_at": "2026-11-21T08:02:00Z"}]
+    values = {"branch": "bump/upstream-sources", "prs": [pr], "pull": pull,
+              "runs": runs, "behind": 3}
+    values.update(overrides)
+    return values
+
+
+class RequeueDecisionTests(unittest.TestCase):
+    def decide(self, **overrides):
+        return requeue(**requeue_inputs(**overrides))
+
+    def test_a_drift_drop_behind_main_is_gated_again(self) -> None:
+        act, reason = self.decide()
+        self.assertTrue(act, reason)
+        self.assertIn("1259", reason)
+
+    def test_only_the_branches_the_gate_merges(self) -> None:
+        self.assertEqual(set(GATED_BRANCHES), {"bump/upstream-sources", "bump/rawhide-imports"})
+        self.assertFalse(self.decide(branch="bump/upstream-sources-cycle-52")[0])
+
+    def test_needs_exactly_one_open_same_repository_bump_into_main(self) -> None:
+        pr = requeue_inputs()["prs"][0]
+        self.assertFalse(self.decide(prs=[])[0])
+        self.assertFalse(self.decide(prs=[pr, dict(pr, number=1260)])[0])
+        for change in ({"isCrossRepository": True}, {"baseRefName": "next"},
+                       {"state": "CLOSED"}, {"headRefName": "bump/rawhide-imports"}):
+            with self.subTest(change=change):
+                self.assertFalse(self.decide(prs=[dict(pr, **change)])[0])
+
+    def test_a_head_that_moved_between_reads_is_left_alone(self) -> None:
+        pull = dict(requeue_inputs()["pull"], headRefOid="f" * 40)
+        self.assertFalse(self.decide(pull=pull)[0])
+
+    def test_a_queued_bump_is_left_alone(self) -> None:
+        pull = dict(requeue_inputs()["pull"], mergeQueueEntry={"id": "MQE_1"})
+        self.assertFalse(self.decide(pull=pull)[0])
+
+    def test_requeued_since_the_drop_is_left_alone(self) -> None:
+        pull = requeue_inputs()["pull"]
+        nodes = pull["timelineItems"]["nodes"] + [
+            {"__typename": "AddedToMergeQueueEvent", "createdAt": "2026-11-21T09:00:00Z"}]
+        self.assertFalse(self.decide(pull=dict(pull, timelineItems={"nodes": nodes}))[0])
+
+    def test_never_queued_is_left_alone(self) -> None:
+        pull = dict(requeue_inputs()["pull"], timelineItems={"nodes": []})
+        self.assertFalse(self.decide(pull=pull)[0])
+
+    def test_only_a_drop_for_failed_checks(self) -> None:
+        pull = requeue_inputs()["pull"]
+        for reason in ("merge_conflict", "manually_removed", None):
+            nodes = [dict(pull["timelineItems"]["nodes"][1], reason=reason)]
+            with self.subTest(reason=reason):
+                self.assertFalse(self.decide(pull=dict(pull, timelineItems={"nodes": nodes}))[0])
+
+    def test_events_are_read_by_time_not_by_order(self) -> None:
+        pull = requeue_inputs()["pull"]
+        nodes = list(reversed(pull["timelineItems"]["nodes"]))
+        self.assertTrue(self.decide(pull=dict(pull, timelineItems={"nodes": nodes}))[0])
+
+    def test_a_running_gate_is_left_alone(self) -> None:
+        for status in ("queued", "in_progress", "waiting", "pending", "requested"):
+            runs = [{"id": 2, "status": status, "created_at": "2026-11-21T08:00:00Z"}]
+            with self.subTest(status=status):
+                self.assertFalse(self.decide(runs=runs)[0])
+
+    def test_one_re_gate_per_drop(self) -> None:
+        runs = requeue_inputs()["runs"] + [
+            {"id": 3, "status": "completed", "created_at": "2026-11-21T12:08:07Z"}]
+        act, reason = self.decide(runs=runs)
+        self.assertFalse(act)
+        self.assertIn("after the drop", reason)
+
+    def test_unreadable_runs_fail_closed(self) -> None:
+        self.assertFalse(self.decide(runs=None)[0])
+        self.assertFalse(self.decide(runs=["x"])[0])
+        self.assertFalse(self.decide(runs=[{"id": 4, "status": "completed"}])[0])
+
+    def test_up_to_date_with_main_is_left_for_a_person(self) -> None:
+        act, reason = self.decide(behind=0)
+        self.assertFalse(act)
+        self.assertIn("up to date", reason)
+
+    def test_command_line_exit_codes(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            values = requeue_inputs()
+            for name in ("prs", "pull", "runs"):
+                (root / f"{name}.json").write_text(json.dumps(values[name]))
+            argv = ["requeue", "--branch", "bump/upstream-sources", "--prs", str(root / "prs.json"),
+                    "--pull", str(root / "pull.json"), "--runs", str(root / "runs.json")]
+            with redirect_stdout(io.StringIO()):
+                self.assertEqual(bump_gate.main([*argv, "--behind", "3"]), 0)
+                self.assertEqual(bump_gate.main([*argv, "--behind", "0"]), 1)
+            (root / "runs.json").write_text("not json")
+            with redirect_stdout(io.StringIO()):
+                self.assertEqual(bump_gate.main([*argv, "--behind", "3"]), 1)
+
+
+class RequeueWorkflowTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.text = (WORKFLOWS / "bump-upstream-requeue.yml").read_text()
+        cls.workflow = yaml.safe_load(cls.text)
+        cls.job = cls.workflow["jobs"]["requeue"]
+        cls.script = cls.job["steps"][1]["run"]
+
+    def test_runs_on_a_schedule_or_by_hand_on_this_organization_main(self) -> None:
+        self.assertEqual(set(on(self.workflow)), {"schedule", "workflow_dispatch"})
+        self.assertIn("github.repository_owner == 'projectbluefin'", self.job["if"])
+        self.assertIn("github.ref == 'refs/heads/main'", self.job["if"])
+        self.assertFalse(self.workflow["concurrency"]["cancel-in-progress"])
+
+    def test_covers_exactly_the_branches_the_gate_merges(self) -> None:
+        self.assertEqual(self.job["strategy"]["matrix"]["branch"], list(GATED_BRANCHES))
+        gate = yaml.safe_load((WORKFLOWS / "bump-upstream-gate.yml").read_text())
+        for branch in GATED_BRANCHES:
+            self.assertIn(f"refs/heads/{branch}", gate["jobs"]["plan"]["if"])
+
+    def test_least_privilege_and_no_app_token(self) -> None:
+        self.assertEqual(self.workflow["permissions"], {})
+        self.assertEqual(self.job["permissions"],
+                         {"contents": "write", "pull-requests": "write", "actions": "write"})
+        self.assertNotIn("secrets.", self.text)
+        self.assertNotIn("create-github-app-token", self.text)
+
+    def test_runs_main_code_only(self) -> None:
+        checkout = self.job["steps"][0]
+        self.assertTrue(checkout["uses"].startswith("actions/checkout@"))
+        self.assertEqual(checkout["with"], {"ref": "main", "persist-credentials": False})
+
+    def test_only_updates_the_branch_and_dispatches_the_gate(self) -> None:
+        self.assertIn("tools/bump_gate.py requeue", self.script)
+        self.assertIn('/update-branch"', self.script)
+        self.assertIn('-f expected_head_sha="$head"', self.script)
+        self.assertIn("gh workflow run bump-upstream-gate.yml", self.script)
+        for forbidden in ("enqueuePullRequest", "/merge\"", "gh pr merge", "--auto"):
+            self.assertNotIn(forbidden, self.script)
+
+
+class RequeueBehaviorTests(unittest.TestCase):
+    """The step's script, run against a stubbed gh."""
+
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+        self.bin = self.root / "bin"
+        self.bin.mkdir()
+        # The step writes its JSON into the working directory; keep that out
+        # of the checkout, with main's tools beside it as on the runner.
+        self.work = self.root / "work"
+        self.work.mkdir()
+        (self.work / "tools").symlink_to(ROOT / "tools")
+        gh = self.bin / "gh"
+        gh.write_text(
+            "#!/usr/bin/env python3\n"
+            "import json, os, pathlib, sys\n"
+            "root = pathlib.Path(os.environ['FIXTURES'])\n"
+            "args = sys.argv[1:]\n"
+            "with (root / 'calls.jsonl').open('a') as f:\n"
+            "    f.write(json.dumps(args) + '\\n')\n"
+            "if args[:2] == ['pr', 'list']:\n"
+            "    print((root / 'prs.json').read_text()); sys.exit(0)\n"
+            "if args[:2] == ['pr', 'view']:\n"
+            "    print(os.environ['NEW_HEAD']); sys.exit(0)\n"
+            "if args[:2] == ['workflow', 'run']:\n"
+            "    sys.exit(0)\n"
+            "if args[:2] == ['api', 'graphql']:\n"
+            "    print((root / 'pull.json').read_text()); sys.exit(0)\n"
+            "if any('/update-branch' in a for a in args):\n"
+            "    sys.exit(int(os.environ.get('UPDATE_EXIT', '0')))\n"
+            "if any('/runs?' in a for a in args):\n"
+            "    print((root / 'runs.json').read_text()); sys.exit(0)\n"
+            "if any('/compare/' in a for a in args):\n"
+            "    print(os.environ['BEHIND']); sys.exit(0)\n"
+            "sys.exit('unexpected gh command: ' + repr(args))\n")
+        gh.chmod(0o755)
+        workflow = yaml.safe_load((WORKFLOWS / "bump-upstream-requeue.yml").read_text())
+        self.script = workflow["jobs"]["requeue"]["steps"][1]["run"]
+        self.env = {**os.environ, "PATH": f"{self.bin}:{os.environ['PATH']}",
+                    "FIXTURES": str(self.root), "GH_TOKEN": "github-token",
+                    "REPOSITORY": "projectbluefin/utah-packages",
+                    "BRANCH": "bump/upstream-sources", "QUERY": "query",
+                    "BEHIND": "3", "NEW_HEAD": "f" * 40}
+        values = requeue_inputs()
+        for name in ("prs", "pull", "runs"):
+            (self.root / f"{name}.json").write_text(json.dumps(values[name]))
+
+    def tearDown(self) -> None:
+        self.tmp.cleanup()
+
+    def run_step(self, **env: str) -> subprocess.CompletedProcess:
+        return subprocess.run(["bash", "-c", self.script], cwd=self.work,
+                              env={**self.env, **env}, capture_output=True, text=True)
+
+    def calls(self) -> list[list[str]]:
+        path = self.root / "calls.jsonl"
+        return [json.loads(line) for line in path.read_text().splitlines()] if path.exists() else []
+
+    def test_a_dropped_bump_gets_main_and_a_new_gate(self) -> None:
+        result = self.run_step()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        calls = self.calls()
+        update = next(c for c in calls if any("/update-branch" in a for a in c))
+        self.assertIn("repos/projectbluefin/utah-packages/pulls/1259/update-branch", update)
+        self.assertIn(f"expected_head_sha={SHA}", update)
+        self.assertEqual(calls[-1][:3], ["workflow", "run", "bump-upstream-gate.yml"])
+        self.assertIn("--ref", calls[-1])
+        self.assertIn("bump/upstream-sources", calls[-1])
+        self.assertIn("pr=1259", calls[-1])
+        self.assertLess(calls.index(update), len(calls) - 1)
+        runs = next(c for c in calls if any("/runs?" in a for a in c))
+        self.assertIn("branch=bump%2Fupstream-sources", " ".join(runs))
+
+    def test_a_skip_touches_nothing(self) -> None:
+        result = self.run_step(BEHIND="0")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("up to date", result.stdout)
+        flat = [" ".join(c) for c in self.calls()]
+        self.assertFalse(any("update-branch" in c or c.startswith("workflow run") for c in flat))
+
+    def test_no_open_bump_reads_nothing_else(self) -> None:
+        (self.root / "prs.json").write_text("[]")
+        result = self.run_step()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(len(self.calls()), 1)
+
+    def test_a_refused_update_dispatches_no_gate(self) -> None:
+        result = self.run_step(UPDATE_EXIT="1")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("could not merge main", result.stdout)
+        self.assertFalse(any(c[:2] == ["workflow", "run"] for c in self.calls()))
 
 
 if __name__ == "__main__":
