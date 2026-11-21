@@ -468,6 +468,22 @@ Constraints that shaped it, so they are not rediscovered:
   merges after Canary. Each round removes at least one package, so this
   converges. The dispatched run cancels the trimming run through the
   concurrency group, so the trimming run can show as cancelled.
+- A download outage is not a failure to hold. A version that never got a
+  build proved nothing, and a held version is never proposed again: run
+  43825333649 held 16 good bumps while the Hummingbird package server was
+  down (#1179). When a lane's online step (hermetic `online`, container
+  `with_backoff` in `tools/dnf_backoff.sh`) runs out of retries with a
+  download error in its output,
+  it writes `work/reports/infra-failure`; `build-stage.yml` uploads it as
+  `infra-s<stage>-<package>`, `publish_gate.py report
+  --infra-failed-output` names those packages, and `rebuild-rpms.yml`
+  exposes them as `infra_failed`. If that list is non-empty or missing,
+  `holdable` holds nothing and the comment names the outage; the next
+  daily bump retries. The container helper marks only terminal download
+  errors. The hermetic helper checks the combined log from every attempt
+  in the same step, so it still sees an early outage if the remaining
+  attempts fail on a corrupt download. Dependency errors take precedence
+  over transfer warnings, so a recovered download does not prevent a hold.
 - `upstream_bump.py` skips a proposal whose exact version is held and
   logs `held <name>`. A newer upstream release is proposed as usual, and
   applying it deletes the hold, which is why `bump-upstream-sources.yml`

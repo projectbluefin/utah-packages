@@ -44,19 +44,41 @@ NET_RETRY_PAUSE=15
 
 # Run one online step up to NET_ATTEMPTS times: `online <label> <cleanup>
 # <command...>`. cleanup runs before every retry so a half-fetched result
-# never counts as a whole one.
+# never counts as a whole one. When retries are exhausted, classify all
+# attempts together. An early download failure can leave an invalid RPM
+# that later attempts reject without logging another download error.
+# /work/reports/infra-failure records the outage: the build never ran, so the bump
+# gate must not hold the package's version as broken (#1179). A lock resolve
+# that loses the repository mid-query ends `Command failed: ... repoquery`
+# with no dnf error text (#287), so that counts too unless dnf named a
+# dependency problem. A dependency error takes precedence over earlier
+# transfer warnings from downloads that recovered.
+NET_ERRORS='All mirrors were tried|No more mirrors to try|Curl error|Cannot download|Status code: 5[0-9][0-9]|IncompleteRead|Connection reset|ConnectionResetError|Connection aborted|RemoteDisconnected|Read timed out|MaxRetryError'
+SILENT_RESOLVE='Command failed: .*repoquery'
+DEP_ERRORS='No match for argument|Failed to resolve the transaction|nothing provides|Problem: |conflicting requests|none of the providers can be installed'
+infra_failed() {
+  grep -qE "$DEP_ERRORS" "$1" && return 1
+  grep -qE "$NET_ERRORS|$SILENT_RESOLVE" "$1"
+}
+REPORT_DIR=${REPORT_DIR:-/work/reports}
 online() {
   label=$1 cleanup=$2
   shift 2
   attempt=1
+  mkdir -p "$REPORT_DIR"
+  log=$REPORT_DIR/online.log
+  : > "$log"
   while true; do
     status=0
-    "$@" || status=$?
+    "$@" 2>&1 | tee -a "$log" || status=$?
     if [ "$status" -eq 0 ]; then
       return 0
     fi
     if [ "$attempt" -ge "$NET_ATTEMPTS" ]; then
       echo "::error title=$label failed::$PACKAGE: $label failed $attempt times (last exit $status)"
+      if infra_failed "$log"; then
+        echo "$label" > "$REPORT_DIR/infra-failure"
+      fi
       return "$status"
     fi
     echo "::warning title=$label retry::$PACKAGE: $label failed (exit $status); attempt $((attempt + 1)) of $NET_ATTEMPTS in ${NET_RETRY_PAUSE}s"
@@ -290,6 +312,9 @@ PY
       tail -3 "$fetch_log"
     else
       grep -vE "Downloading |urllib3" "$fetch_log" | tail -40 || true
+      # The filter above hides urllib3's outage lines (IncompleteRead, resets)
+      # that `online` must still see to tell an outage from a bad lock.
+      grep -E "urllib3" "$fetch_log" | grep -E "$NET_ERRORS" | tail -5 || true
     fi
     if [ -d "$H/repo" ]; then
       unwrap_gzip_rpms "$H/repo" || return

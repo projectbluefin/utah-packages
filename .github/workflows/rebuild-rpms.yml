@@ -141,6 +141,9 @@ on:
       failed:
         description: JSON names of the selected packages that did not publish
         value: ${{ jobs.report.outputs.failed }}
+      infra_failed:
+        description: JSON names of the failed packages whose build root could not be downloaded, so no build ran
+        value: ${{ jobs.report.outputs.infra_failed }}
       utah_report:
         description: JSON verdict of resolving what Utah installs against the candidate
         value: ${{ jobs.publish.outputs.utah_report }}
@@ -1109,6 +1112,7 @@ jobs:
       issues: write
     outputs:
       failed: ${{ steps.name.outputs.failed }}
+      infra_failed: ${{ steps.name.outputs.infra_failed }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Name every package that did not publish
@@ -1133,9 +1137,11 @@ jobs:
             --losers "$LOSERS" --publish-result "$PUBLISH_RESULT" \
             --publish-report "$PUBLISH_REPORT" --digest "$DIGEST" --run-url "$RUN_URL" \
             --output report.md --failed-output failed.json \
+            --infra-failed-output infra-failed.json \
             --verdict-output verdict.json > /dev/null
           cat report.md >> "$GITHUB_STEP_SUMMARY"
           echo "failed=$(jq -c . failed.json)" >> "$GITHUB_OUTPUT"
+          echo "infra_failed=$(jq -c . infra-failed.json)" >> "$GITHUB_OUTPUT"
           for name in $(jq -r '.[]' failed.json); do
             echo "::error title=package not published::$name failed this run and was not replaced"
           done
