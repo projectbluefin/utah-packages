@@ -214,16 +214,23 @@
 %endif
 
 # Utah: Hummingbird and the factory carry neither openwsman, Ceph (librados,
-# librbd), numad nor libnbd, so libvirt-libs, libvirt-daemon-driver-storage-rbd
-# and libvirt-daemon-driver-qemu could not install (#1021). Build without them,
+# librbd), numad, libnbd, GlusterFS, libiscsi, Xen nor sanlock, so
+# libvirt-libs, the rbd, gluster and iscsi-direct storage backends (which
+# libvirt-daemon-driver-storage, and so libvirt-daemon-kvm, requires) and
+# libvirt-daemon-driver-qemu could not install (#1021). Build without them,
 # as Dakota's elements/bluefin/libvirt.bst does: -Ddriver_hyperv=disabled
 # -Dopenwsman=disabled -Dstorage_rbd=disabled -Dnumad=disabled
-# -Dnbdkit=disabled.
+# -Dnbdkit=disabled -Dstorage_gluster=disabled -Dstorage_iscsi_direct=disabled
+# -Dlibiscsi=disabled -Ddriver_libxl=disabled -Dsanlock=disabled.
 %define with_hyperv 0
 %define with_storage_rbd 0
 %define with_numad 0
 %define with_nbdkit 0
 %define with_nbdkit_config_default 0
+%define with_storage_gluster 0
+%define with_storage_iscsi_direct 0
+%define with_libxl 0
+%define with_sanlock 0
 
 %ifarch %{arches_dmidecode}
     %define with_dmidecode 0%{!?_without_dmidecode:1}
@@ -313,7 +320,7 @@
 Summary: Library providing a simple virtualization API
 Name: libvirt
 Version: 12.9.0
-Release: 2%{?dist}
+Release: 3%{?dist}
 License: GPL-2.0-or-later AND LGPL-2.1-only AND LGPL-2.1-or-later AND OFL-1.1
 URL: https://libvirt.org/
 
@@ -698,8 +705,9 @@ Requires: libvirt-libs = %{version}-%{release}
 Recommends: nfs-utils
 # For mkfs and mount/umount
 Requires: util-linux
-# For storage wiping with different algorithms
-Requires: scrub
+# For storage wiping with different algorithms. Utah: a weak dependency; scrub
+# is not in Hummingbird or the factory, and Dakota's libvirt ships without it.
+Recommends: scrub
     %if %{with_qemu}
 # From QEMU RPMs
 Requires: /usr/bin/qemu-img
@@ -2766,6 +2774,10 @@ exit 0
 
 
 %changelog
+* Fri Nov 20 2026 James Reilly <jreilly1821@gmail.com> - 12.9.0-3
+- Utah: build without the GlusterFS, iSCSI-direct, libxl and sanlock backends
+  and make scrub a weak dependency, as Dakota builds libvirt (#1021)
+
 * Fri Nov 20 2026 James Reilly <jreilly1821@gmail.com> - 12.9.0-2
 - Utah: build without numad and nbdkit and make lzop and swtpm-tools weak
   dependencies, as Dakota builds libvirt (#1021)

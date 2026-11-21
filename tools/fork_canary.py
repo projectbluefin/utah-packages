@@ -20,6 +20,7 @@ import re
 import subprocess
 import sys
 from collections.abc import Callable, Sequence
+from datetime import datetime
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -106,6 +107,100 @@ def decide(pr: dict, files: list[str], repository: str, reviewed_sha: str) -> st
             "maintainer must review them and push the branch by hand"
         )
     return "copy"
+
+
+# Who may start a fork Canary by approving: the people who may press the button,
+# that is anyone with write access ("maintain" reads as "write" in this API).
+MAINTAINER_PERMISSIONS = frozenset({"admin", "write"})
+# Labels that stop an automatic start; a maintainer can still press the button.
+STOP_LABELS = frozenset({"hold", "sentinel-alert", "do-not-merge"})
+# The review states that decide; a COMMENTED review neither approves nor blocks.
+DECISIVE = frozenset({"APPROVED", "CHANGES_REQUESTED", "DISMISSED"})
+
+
+def _when(value: object) -> datetime | None:
+    """A GitHub timestamp, or None when it is missing or unreadable."""
+    if not isinstance(value, str) or not value:
+        return None
+    try:
+        moment = datetime.fromisoformat(value)
+    except ValueError:
+        return None
+    return moment if moment.tzinfo else None
+
+
+def approver(
+    pr: dict, reviews: list[dict], permissions: dict[str, str], repository: str, head_pushed_at: str,
+) -> str:
+    """The maintainer whose GitHub Approve of the current head starts the fork Canary.
+
+    ``canary-fork-on-approve.yml`` presses the button for a maintainer who has
+    approved, so it starts only what that maintainer could have started: an open,
+    non-draft fork pull request against main with no stop label, and an Approve
+    bound to the exact head commit by someone with write access whose latest
+    decisive review it is. Any maintainer's standing "changes requested" stops it.
+    ``decide`` still runs in the button itself, so the .github/ and file-count
+    refusals apply unchanged. Raises ``Refused`` with the reason otherwise.
+
+    ``commit_id`` alone does not prove what was reviewed: with stale reviews not
+    dismissed, GitHub moves a reviewer's latest review onto a merge of main
+    pushed after it (seen 2026-11-20 on #978, #972 and #1230 after the hive
+    updated their branches). So the head must also have reached this pull request
+    before the Approve: ``head_pushed_at`` may not be later than the review. It is
+    the newest "Canary (read-only)" pull_request run on the head from this pull
+    request's own fork and branch, a time GitHub records when the commit is
+    pushed, opened or reopened. The commit's own dates
+    are not used because the author sets them. A head pushed after the Approve
+    needs a new Approve.
+    """
+    if pr.get("state") != "open":
+        raise Refused(f"pull request is {pr.get('state')}, not open")
+    if pr.get("draft"):
+        raise Refused("pull request is a draft")
+    if (pr.get("base") or {}).get("ref") != BASE_REF:
+        raise Refused("pull request does not target main")
+    head = pr.get("head") or {}
+    repo = head.get("repo")
+    if repo is None:
+        raise Refused("the fork this pull request came from was deleted")
+    if repo.get("full_name") == repository:
+        raise Refused("pull request is from this repository; Canary already runs on it")
+    sha = head.get("sha")
+    if not isinstance(sha, str) or not FULL_SHA.fullmatch(sha):
+        raise Refused(f"unexpected head {sha!r}")
+    stopped = sorted({label.get("name") for label in pr.get("labels") or []} & STOP_LABELS)
+    if stopped:
+        raise Refused(f"pull request is labelled {', '.join(stopped)}")
+    author = (pr.get("user") or {}).get("login")
+    latest: dict[str, dict] = {}
+    for review in sorted(reviews, key=lambda review: review.get("submitted_at") or ""):
+        user = review.get("user") or {}
+        login = user.get("login")
+        if (
+            not login
+            or login == author
+            or user.get("type") == "Bot"
+            or review.get("state") not in DECISIVE
+            or permissions.get(login) not in MAINTAINER_PERMISSIONS
+        ):
+            continue
+        latest[login] = review
+    blocking = sorted(login for login, review in latest.items() if review["state"] == "CHANGES_REQUESTED")
+    if blocking:
+        raise Refused(f"changes requested by {', '.join(blocking)}")
+    pushed = _when(head_pushed_at)
+    approvals = [
+        (review.get("submitted_at") or "", login)
+        for login, review in latest.items()
+        if review["state"] == "APPROVED"
+        and review.get("commit_id") == sha
+        and pushed is not None
+        and (submitted := _when(review.get("submitted_at"))) is not None
+        and pushed <= submitted
+    ]
+    if not approvals:
+        raise Refused(f"no maintainer has approved the current head {sha[:12]} since it was pushed")
+    return max(approvals)[1]
 
 
 def proven_heads(runs: list[dict], pr: int) -> list[str]:
@@ -264,12 +359,38 @@ def proof_main(argv: list[str], git: Git = _git) -> int:
     return 1
 
 
+def approved_main(argv: list[str]) -> int:
+    parser = argparse.ArgumentParser(prog="fork_canary.py approved")
+    parser.add_argument("--pr-json", required=True, type=Path)
+    parser.add_argument("--reviews-json", required=True, type=Path)
+    parser.add_argument("--permissions-json", required=True, type=Path,
+                        help="each reviewer's repository permission, {login: permission}")
+    parser.add_argument("--repository", required=True)
+    parser.add_argument("--head-pushed-at", required=True,
+                        help="when the head reached the pull request: the newest canary-read-only.yml "
+                             "pull_request run on it (empty when there is none)")
+    args = parser.parse_args(argv)
+    pr = json.loads(args.pr_json.read_text())
+    try:
+        login = approver(pr, json.loads(args.reviews_json.read_text()),
+                         json.loads(args.permissions_json.read_text()), args.repository,
+                         args.head_pushed_at)
+    except Refused as refusal:
+        # Not an error: most open fork pull requests are simply not approved yet.
+        print(f"skip: #{pr.get('number')}: {refusal}")
+        return 0
+    print(f"approved_by={login}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     # Called with no argument it is the command line; tests pass the list.
     if argv is None:
         argv = sys.argv[1:]
     if argv and argv[0] == "proof":
         return proof_main(argv[1:])
+    if argv and argv[0] == "approved":
+        return approved_main(argv[1:])
     parser = argparse.ArgumentParser()
     parser.add_argument("--pr-json", required=True, type=Path)
     parser.add_argument("--files", required=True, type=Path)

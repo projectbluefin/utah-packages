@@ -131,10 +131,16 @@ separate package-write `GITHUB_TOKEN`.
 App-authenticated PR creation and updates hand off to the normal
 `pull_request` workflows. This is required for the real **Canary**, **Unit
 tests** and **Runtime contract** checks, not merely a successful workflow
-whose job happens to be called `validate`. `bot-pr-validate.yml` remains for
-the Rawhide import caller and retains its exact-head, same-repository,
+whose job happens to be called `validate`.
+
+`import-rawhide-package.yml` opens its `import/rawhide-<package>` PR the same
+way: its `propose` job runs only on this organization's `main`, its workflow
+token only reads, and the mergeraptor App token (contents and pull-request
+write) opens the PR, so the normal checks run on its exact head and the hive
+sees a trusted bot author. Neither caller dispatches `bot-pr-validate.yml` any
+more. The listener still exists with its exact-head, same-repository,
 bot-author trust checks; it performs static validation, not equivalent
-runtime acceptance. Buildroot refresh no longer dispatches it. Keep both the
+runtime acceptance. While it exists, keep both the
 Python trust guard and the failure-report shell guard restricted to
 `import/rawhide-*`; `chore/buildroot-mirror` belongs to the App-created PR
 path and must be rejected even with otherwise matching bot PR metadata.

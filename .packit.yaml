@@ -4570,6 +4570,12 @@ packages:
     downstream_package_name: syncthing
     paths:
       - packages/syncthing
+  sysprof:
+    specfile_path: sysprof.spec
+    upstream_package_name: sysprof
+    downstream_package_name: sysprof
+    paths:
+      - packages/sysprof
   sysstat:
     specfile_path: sysstat.spec
     upstream_package_name: sysstat

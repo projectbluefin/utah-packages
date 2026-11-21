@@ -379,7 +379,8 @@ A required queue changes how merges happen, and these automations merge:
 | --- | --- | --- |
 | `bump-upstream-gate.yml` and trusted `bump-upstream-enqueue.yml` receiver | Scoped App token, one-shot SHA-pinned merge without a queue, or `enqueuePullRequest(expectedHeadOid)` with a queue | Queue admission never dispatches publication; only the eventual App/queue push to `main` publishes RPMs |
 | Renovate (`renovate.json`: `upstream-source` and `build-root-image` digests) | `platformAutomerge`: GitHub auto-merge, as `renovate[bot]` (a GitHub App) | Works: auto-merge enqueues, and App events start `merge_group` runs. Needs "Allow auto-merge" on |
-| Pull requests opened by `import-rawhide-package.yml`, `import-bluefin-rawhide.yml`, `refresh-buildroot.yml` | Not merged by automation | A maintainer enqueues them like any other pull request |
+| Pull requests opened by `import-bluefin-rawhide.yml` | Not merged by automation | A maintainer enqueues them like any other pull request |
+| Pull requests opened by `import-rawhide-package.yml`, `refresh-buildroot.yml` | Opened with the scoped mergeraptor App token; the Hive reviews and merges them as trusted bot PRs | Same path as the Hive row below |
 | Hive (`hivecommons-hive` App) | Deployed Hive policy, outside this repository | Its native-queue handoff must be deployed and explicitly enabled for this repository and `main`; installed App access alone does not enable it |
 
 Keep strict freshness until the selected admission path is configured and an
