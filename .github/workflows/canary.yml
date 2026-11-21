@@ -556,7 +556,11 @@ jobs:
             exit 0
           fi
           if [ "$FORK" = true ]; then
-            gh api "repos/$REPO/actions/workflows/canary.yml/runs?event=workflow_dispatch&status=completed&branch=canary/pr-${PR}&per_page=100" > proof.json
+            # No status filter on purpose: GitHub's status=completed filter can hide a
+            # just-completed run for a long time (issue #1254), so the proof lookup would
+            # miss the maintainer-run Canary that just finished. proven_heads re-checks
+            # status==completed and conclusion==success on the returned runs.
+            gh api "repos/$REPO/actions/workflows/canary.yml/runs?event=workflow_dispatch&branch=canary/pr-${PR}&per_page=100" > proof.json
             if python3 tools/fork_canary.py proof --runs-json proof.json --pr "$PR" --head-sha "$HEAD_SHA" --base-ref "$BASE_REF" --set "$CANARY_SET"; then
               exit 0
             fi
