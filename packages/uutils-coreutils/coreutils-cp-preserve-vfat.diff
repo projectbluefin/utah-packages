@@ -1,0 +1,36 @@
+diff --git a/src/uu/cp/src/cp.rs b/src/uu/cp/src/cp.rs
+index fa6ddcf..6f24aab 100644
+--- a/src/uu/cp/src/cp.rs
++++ b/src/uu/cp/src/cp.rs
+@@ -922,12 +922,14 @@ impl Attributes {
+     };
+ 
+     // TODO: ownership is required if the user is root, for non-root users it's not required.
++    // -p is mode,ownership,timestamps, as in GNU cp and later uutils
++    // (uutils/coreutils#9704): copying every xattr fails on vfat with
++    // EOPNOTSUPP.
+     pub const DEFAULT: Self = Self {
+         #[cfg(unix)]
+         ownership: Preserve::Yes { required: true },
+         mode: Preserve::Yes { required: true },
+         timestamps: Preserve::Yes { required: true },
+-        xattr: Preserve::Yes { required: true },
+         ..Self::NONE
+     };
+ 
+@@ -1827,10 +1829,12 @@ pub(crate) fn copy_attributes(
+             fs::set_permissions(dest, source_metadata.permissions())
+                 .map_err(|e| CpError::IoErrContext(e, context.to_owned()))?;
+             // FIXME: Implement this for windows as well
++            // Best-effort, as in uutils 0.10.0 (uutils/coreutils#13626): a
++            // filesystem without ACLs (vfat) rejects setfacl with EOPNOTSUPP,
++            // and GNU cp keeps the chmod above instead of failing.
+             #[cfg(feature = "feat_acl")]
+-            exacl::getfacl(source, None)
+-                .and_then(|acl| exacl::setfacl(&[dest], &acl, None))
+-                .map_err(|err| CpError::Error(err.to_string()))?;
++            let _ = exacl::getfacl(source, None)
++                .and_then(|acl| exacl::setfacl(&[dest], &acl, None));
+         }
+ 
+         Ok(())
