@@ -114,6 +114,18 @@ glycin 2.2~beta -> 2.2.2 (Rawhide `f3250ea`) took this path. The vendor
 tarball was cut after Fedora's patch 0001, so take Rawhide's patch set as
 it is: 2.2.2 dropped the gufo backport (0005) that 2.2~beta needed.
 
+Check that the bcond really is local before relying on it: librsvg2 up to
+2.62.3 carried Fedora's `%if 0%{?rhel}` switch unchanged, and the build root
+leaves `%rhel` undefined, so it built against Fedora 44's crate RPMs. The
+2.63.2 re-import (Rawhide `59329d8`) pins `%global bundled_rust_deps 1`
+instead. On that path `%autosetup -N` applies none of Fedora's crate patches
+(they only adapt to system crates) and the crate RPMs no longer pull in
+`pkgconfig(dav1d)` for the AVIF feature, so the recipe BuildRequires it.
+Fedora ties its bundled branch to `BuildRequires: rust-toolset`, a RHEL-only
+package: the build root has none, and the lock resolve fails with `No match
+for argument: rust-toolset` (run 43803193911). Key that line on `%{?rhel}`
+and keep `cargo-rpm-macros` otherwise, as glycin does.
+
 ## When a bumped recipe fails
 
 `--apply` moves the version only; the recipe can still need the change a new
