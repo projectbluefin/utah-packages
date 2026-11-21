@@ -223,6 +223,50 @@ then destroy the set. A version or help command does not exercise that path.
 
 `jbig2dec-libs` is an output of the `jbig2dec` source recipe, not a separate source. Ghostscript currently builds its bundled copy, so that does not establish availability of the separate library. The upstream recipe warns that consumers of its shared library must be rebuilt together on version changes; verify the hosted build, dependency transaction, and representative decoding before claiming runtime closure.
 
+## QEMU firmware and the SDL UI: follow Dakota, not Fedora's split
+
+Fedora's `qemu` recipe deletes QEMU's bundled iPXE ROMs, SeaBIOS/SeaVGABIOS
+images and EDK2 builds and requires `ipxe-roms-qemu`, `seabios-bin`,
+`seavgabios-bin` and `edk2-ovmf` instead; its SDL UI links `SDL2_image`.
+Hummingbird and the factory carry none of those five, so `qemu-common`,
+`qemu-system-x86-core` and `qemu-ui-sdl` did not install and `virtiofsd` and
+`qemu-kvm` fell out of Utah's transaction (#1021). Do not import the Fedora
+firmware packages: EDK2 alone is a cross-toolchain build. freedesktop-sdk-extra's
+`components/qemu.bst`, which Dakota ships, installs QEMU's own blobs and
+configures `--disable-sdl-image`; the recipe does the same. `qemu-common`
+owns the iPXE ROMs, `qemu-system-x86-core` the BIOS images and the x86 EDK2
+builds with their `firmware/` descriptors, which libvirt's firmware
+auto-selection reads. Other architectures' EDK2 builds are still deleted:
+Utah does not install those emulators. Shipping the blobs means shipping
+their licenses: the `License:` tag adds what Fedora's `seabios`, `ipxe` and
+`edk2` tag them with, and `edk2-licenses.txt` is `%license`. Firmware fixes
+now arrive only with a `qemu` rebuild, so track SeaBIOS, iPXE and EDK2 CVEs
+against `qemu`. Fedora's recipe also links Xen, ndctl (`libdaxctl`), libxdp,
+QATzip, IGVM, libiscsi, Ceph, libblkio and rutabaga-gfx, none of which is in
+Hummingbird or the factory, so `qemu-system-x86-core` still did not install
+after the firmware fix; `components/qemu.bst` builds with none of them and the
+recipe turns all nine off. These are Utah-local recipe edits, so the daily
+Rawhide re-import now leaves `qemu` to a hand update, which must keep them.
+
+## libvirt's QEMU driver: Dakota's feature set, not Fedora's
+
+A published package can still be uninstallable: the build root has Fedora's
+repositories, Utah's transaction has only Hummingbird and the factory. Fedora's
+`libvirt` builds the QEMU driver with numad and nbdkit (libnbd) and makes
+`libvirt-daemon-driver-qemu` require `numad`, `libnbd`, `lzop` and
+`swtpm-tools`. None of them is in Hummingbird or the factory, so
+`libvirt-daemon-kvm` did not install (#1021). Dakota's `elements/bluefin/libvirt.bst`
+configures `-Dnumad=disabled -Dnbdkit=disabled`, disables the GlusterFS,
+iSCSI-direct (libiscsi), libxl and sanlock backends and ships neither lzop,
+swtpm nor scrub; the recipe does the same and keeps `lzop`, `swtpm-tools` and
+`scrub` as `Recommends`, which a later import can satisfy.
+`libvirt-daemon-driver-storage`, which `libvirt-daemon-kvm` requires, pulls in
+every storage backend the recipe builds, so one unsatisfiable backend is
+enough to sink the daemon. Before moving a factory
+package into Utah's contract, resolve it against the pinned image
+(`just check-repos` in Utah), not the package list. Like `qemu`, `libvirt` now
+carries Utah-local edits that a Rawhide re-import must keep.
+
 ## Checkpoint/restore package family
 
 `criu` and `criu-libs` come from one `criu` source recipe (`%package libs`);
@@ -347,3 +391,20 @@ reshaping feature. Re-enable `-Dlibdovi=enabled` once the dependency is
 available. Recipe coverage does not
 establish a hosted build, publication or a representative Vulkan render;
 those remain on `#475`.
+
+## Input-method data: kasumi and cldr-emoji-annotation
+
+`kasumi-unicode` and `kasumi-common` are subpackages of the `kasumi` source
+package; import `kasumi`, not the binary name, which has no dist-git. Its
+`Source0` host, OSDN's `jaist.dl.sourceforge.jp`, now answers 410 and
+`osdn.net` no longer resolves. JAIST's own OSDN mirror,
+`https://ftp.jaist.ac.jp/pub/sourceforge.jp/kasumi/41436/`, still serves the
+2009 release byte-identical to Fedora's MD5 pin: lock it as `url`, repin
+`sources` to SHA-512, and use the `/md5/<md5>/` lookaside path as the
+fallback. Under `%{fedora}` the recipe also builds the legacy-Anthy `kasumi`
+binary from Fedora 44's `anthy-devel`; Utah installs only `kasumi-unicode`
+(ibus-anthy's dictionary tool), which links the factory's `anthy-unicode`.
+
+`cldr-emoji-annotation` takes `cldr-common-<version>.zip` from Unicode's
+GitHub release, so bootstrap accepts it directly. It is
+ibus-typing-booster's emoji data (projectbluefin/utah#1256).

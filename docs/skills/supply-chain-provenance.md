@@ -1,9 +1,9 @@
 ---
 name: supply-chain-provenance
 description: >-
-  Buildroot locking, live package NEVRA snapshots, recipe provenance
-  validation, source-lock name order, and the factory manifest published
-  beside the OCI digest.
+  Buildroot locking, pinned package signature keys, live package NEVRA
+  snapshots, recipe provenance validation, source-lock name order, and the
+  factory manifest published beside the OCI digest.
 metadata:
   type: procedure
 ---
@@ -114,8 +114,8 @@ start from.
 
 ## The hermetic repository is checked against its lock
 
-`mock-hermetic-repo` saves whatever each lock URL returns, and the mock
-configuration resolves with `gpgcheck=0`. `tools/verify_hermetic_repo.py`
+`mock-hermetic-repo` saves whatever each lock URL returns, and the offline
+repository it builds is installed with `gpgcheck=0`. `tools/verify_hermetic_repo.py`
 therefore holds the materialized repository to `buildroot_lock.json` before
 the offline build: every locked RPM present, no other `*.rpm` anywhere in the
 tree, the MD5 of each file's header and payload equal to the lock's `sigmd5`,
@@ -127,11 +127,68 @@ a dropped connection, and again on the whole repository after the `file://`
 half is copied in. Do not move it out of the retried fetch, and do not key it
 by URL: a mirror or a redirect has to pass the same check.
 
-The check proves the build used the root the lock phase resolved; it does not
-prove that root was genuine, because the lock phase itself runs with
-`gpgcheck=0`. mock records `signature` from `%{SIGPGP}`, which current Fedora
-and Hummingbird RPMs (header-only `RSAHEADER` signatures) leave empty, so the
-key ID check rarely has anything to compare.
+Retries retain verified RPMs and rebuild the derived repository metadata and
+bootstrap image. Mock accepts an existing output repository, but its image
+sync refuses to overwrite an existing bootstrap image directory.
+
+When changing fetch retries, preserve the regression tests for three boundaries:
+only lock resolution and network fetch are retried; Fedora retries use Fedora's
+redirector, not a private mirror list; and whole-lock verification runs after
+copying local RPMs but before publishing repository metadata for the offline
+build. Update assertions for changed retry mechanics without dropping those
+boundaries.
+
+The check proves the build used the root the lock phase resolved. The lock
+phase is what proves that root genuine: it installs every RPM with dnf, and
+the `fedora`, `updates` and Hummingbird repositories verify package
+signatures against keys pinned in the repository (next section). mock
+records `signature` from `%{SIGPGP}`, which current Fedora and Hummingbird
+RPMs (header-only `RSAHEADER` signatures) leave empty, so the key ID check
+rarely has anything to compare; the SIGMD5 check ties the offline repository
+to the RPMs the lock phase verified.
+
+## Package signatures are checked against pinned keys
+
+`config/keys/` pins the public keys, each with its source, full fingerprint
+and how it was cross-checked in the file's preamble;
+`tools/mock_config.py` `KEYS` records the fingerprints, and
+`tests/test_package_keys.py` parses each file and fails if it is not the key
+named there.
+
+- Fedora 44: `RPM-GPG-KEY-fedora-44-primary`, fingerprint
+  `36F612DCF27F7D1A48A835E4DBFCF71C6D9F90A6`.
+- Hummingbird: Red Hat release key 2 (v4 RSA,
+  `567E347AD0044ADE55BA8A5F199E2F91FD431D51`) and release key 4 (v6
+  ML-DSA-87+Ed448,
+  `FCD355B305707A62DA143AB6E422397E50FE8467A2A95343D246D6276AFEDF8F`).
+  Every Hummingbird RPM carries a header signature from each, and dnf5 fails
+  the transaction ("Import of the key didn't help, wrong key?") unless it
+  trusts both, so `gpgkey` names both files. Hummingbird's own
+  `yum-repos/hummingbird.repo` sets `gpgcheck=0` for its lockfile tooling;
+  that is not a sign its RPMs are unsigned.
+
+Where the keys are read from:
+
+- mock: dnf runs in the bootstrap chroot, which sees no host path except
+  repository baseurls. mock copies `/etc/pki/mock/RPM-GPG-KEY-*` into each
+  chroot, so `hermetic_build.sh` (`install_tools`) and the mock lane in
+  `build-stage.yml` install `config/keys/` there, and the rendered config
+  names `file:///etc/pki/mock/...`. A `gpgkey` under `/repos` fails with
+  "cannot open file".
+- Container lane: `config/hummingbird.repo` names
+  `file:///repos/keys/...`, the `config/` mount every installing job uses.
+  Fedora comes from the build-root image's own repository files
+  (`gpgcheck=1`, the image's `fedora-gpg-keys`, byte-identical to the pinned
+  Fedora key).
+- `stages` and `factory` stay `gpgcheck=0`: their RPMs are this factory's
+  own output, nothing signs them with an RPM key, and the factory image that
+  carries the published repository is cosign-signed.
+
+When Fedora branches or Hummingbird rotates a key: fetch the new key from
+the official source, cross-check its fingerprint against a second source,
+add it to `config/keys/` with that record and to `KEYS`, and prove it with a
+real `dnf install` from each repository. `rpmkeys --checksig -v` against a
+temporary `--dbpath` names every signature an RPM carries.
 
 ## The snapshot runs on the runner
 
@@ -249,6 +306,37 @@ transport-only migration. Also check candidate hosts against the validator's
 Fedora-host policy before editing: a project's own repository on
 `forge.fedoraproject.org` still counts as Fedora infrastructure.
 
+### A URL-only move still rebuilds the package
+
+`factory_state.input_digest` hashes the whole lock entry, so promoting `url`
+marks the package changed even though the bytes are identical, and
+`rebuild_plan.cacheable()` excludes changed packages, so it compiles for real
+instead of hitting `package_cache_key.py`'s cache (whose key does not include
+the lock). Its direct BuildRequires dependents are dragged in too, but those
+stay cacheable. Batch such moves into one pull request so they cost one
+rebuild.
+
+### Where the remaining lookaside locks come from
+
+These were checked against the locked SHA-512 (2026-11):
+
+- A release asset can be re-uploaded after the release. enchant 2.8.19's
+  GitHub asset was replaced six days after publication and no longer matches
+  the bytes Fedora fetched, so a recipe's `Source0` is not proof.
+- A release with no asset can still have a matching tag archive:
+  printer-driver-ptouch 1.7.1 has no asset, but `archive/v1.7.1` matches.
+  The reverse also happens: protobuf's `protobuf-all-3.19.6.tar.gz` asset
+  differs, while the tag archive Fedora names matches.
+- Codeberg/Forgejo tag archives (`noopenh264`, `libuser`) and some old GitHub
+  ones (`srt`, `lsof`) do not reproduce Fedora's bytes. srt's existing GitHub
+  fallback therefore fails the lock and is not a usable fallback.
+- `libmpeg2.sourceforge.io/files/` and `liba52.sourceforge.io/files/` return
+  404, even from the project's own download page, and `pagure.io` itself is
+  gone like `releases.pagure.org` (usermode, volume_key, livesys-scripts).
+- `kde-settings` matches on `forge.fedoraproject.org`, and `fdk-aac-free`
+  matches on `wtaymans.fedorapeople.org`. Both are Fedora infrastructure, so
+  they stay on the ratchet until an owner decides otherwise.
+
 ### Fork Canary approval is not a source-integrity failure
 
 A source-lock migration can require Canary even when its native package set
@@ -318,6 +406,33 @@ A recipe can only take one primary source from the lock; a second `sources`
 line is fetched from a dist-git lookaside — Fedora's by default, or
 `pkgs.rpmfusion.org` when the lock entry sets `lookaside: rpmfusion-free` — so
 a Utah-only recipe cannot use one.
+The same holds for a version past Fedora's: a second `sources` line named
+after the version (jpegxl's `third_party-<version>.tar.gz` and
+`testdata-<version>.tar.gz`, cut by hand from git submodules) exists in the
+lookaside only for versions Fedora built. Fold such tarballs into a
+generated primary instead: the `jpegxl` generator fills the release
+archive's empty submodule directories from the GitHub archives of the
+commits the tag's gitlinks pin (`gh api
+repos/<o>/<r>/contents/<path>?ref=<tag>` gives the commit), each archive
+SHA-512-pinned, applies the hand script's deletions (`skcms/profiles`), and
+the spec drops the extra Sources and the second `%setup`. The commits are
+pinned by hand per version; re-read the tag's gitlinks on every bump, since
+the generator cannot see them. 0.12.0 also builds with
+`-DJPEGXL_ENABLE_DEVTOOLS=OFF`, as Dakota does: its `djxl_fuzzer_corpus`
+fails to link against `libjxl_extras-internal`'s OpenEXR decoder. 0.12.0's
+`doc/` is its own CMake project, so the Doxygen HTML lands in
+`%{_vpath_builddir}/doc/html`, not `%{_vpath_builddir}/html`.
+
+A Utah-only Go recipe whose upstream publishes its `go mod vendor` tree as a
+release asset, the layout Fedora's go-vendor-tools recipes take as Source1
+(gum, glow), folds it the same way: the `bluefin-cli` generator pins the tag
+archive and `bluefin-cli-<version>-vendor.tar.gz` by SHA-512 per version
+(`BLUEFIN_CLI_INPUT_SHA512`), unpacks `vendor/` into the tag tree and repacks
+it, refusing a tag that already vendors or a vendor archive with anything
+outside `vendor/`. The spec keeps go-vendor-tools' license check with
+`go-vendor-tools.toml` as Source1. A bump adds both digests to the table
+before relocking, since the upstream bump tool cannot fetch them.
+
 When the upstream has no release and its commit archive is far larger than
 what the recipe needs, add a `tools/generated_sources.py` generator that
 fetches only the needed files at a pinned commit, checks a SHA-512 per file,
@@ -327,6 +442,17 @@ stream). `bluefin-artwork-logos` does this for three files of
 commit from the spec's `%global commit`, so moving the pin is one spec edit
 plus a new digest table entry, and include the upstream `LICENSE` so the
 package can ship it.
+
+When the recipe builds one subtree of a release that is published only as a
+whole (Fedora's hyperv-daemons takes the kernel's `tools/hv` as a hand-cut
+lookaside snapshot), pin the whole release's SHA-512 and cut the subtree in
+the generator. `hyperv-daemons` reads the 160 MB stable kernel `.tar.xz`
+once (about 15 s), keeps `tools/hv` plus the `tools/build` and
+`tools/scripts` makefiles its Makefile includes (the file list of Fedora's
+snapshot, which still builds at v7.3.1), and fails if any of them is
+missing. kernel.org signs only `sha256sums.asc`: check the archive against
+its line there before pinning the SHA-512. Moving to a newer kernel is the
+spec `Version:` plus a `HYPERV_KERNEL_INPUT_SHA512` entry.
 
 Rust vendor generators must read the release root's exact lock path, not
 the first archive member ending in `Cargo.lock`. For `prefixdevname`, both
@@ -347,6 +473,24 @@ A patch that only removes dependencies (0002 drops criterion) is fine: cargo
 prunes the lock offline. To move the version, add the new release's SHA-512
 to the recipe's `*_INPUT_SHA512` table, bump the spec, regenerate, and pin the
 new digest in both `sources` and the lock.
+
+When the recipe's own patches move crate versions, the released lock is the
+wrong crate set. gstreamer-plugins-rs (#1040) carries freedesktop-sdk's patch
+that moves gtk-rs from git branches to crates.io, so its generator applies
+every spec `Patch:` to Cargo.lock (`git apply --include=Cargo.lock` in a
+scratch repository) and vendors what that lock pins; the archived tree stays
+as released and `%prep` applies the same patches. Name patch files literally:
+the generator reads them from the package directory and refuses a macro. A
+workspace member whose dependency comes from git (gst-plugins-rs' ffv1 and
+flavors) cannot be vendored, and cargo resolves every member even when it
+builds one, so cut the workspace to what the recipe builds: drop the members
+from `Cargo.toml`, run `cargo metadata` once so cargo prunes Cargo.lock
+without moving any version, and carry the result as a patch. For
+gst-plugins-rs that cut 1116 crates to 485. A version bump redoes both: pin
+the new tag's commit in `GSTREAMER_PLUGINS_RS_COMMITS`, rebase the patches,
+regenerate, and pin the digest in `sources` and the lock. The project
+publishes no release file, so the input is `git archive` of the pinned
+commit, sharing `_git_tag_tar` with `GIT_ARCHIVE_SOURCES`.
 
 ## A source published only inside a container image: copy it out by digest
 
@@ -419,7 +563,13 @@ unknown generator or git error, and an unfetchable signature, SHA-256
 manifest or bundled source. An anti-bot HTML page served for an archive URL
 (`ChallengePage`, #889) is not an outage either: the host answered, so the
 next configured URL is tried, and if none serves the file the package is
-`rejected`; add a verified mirror to `fallback_urls`.
+`rejected`; add a verified mirror to `fallback_urls`. A body whose leading
+bytes do not match the URL's archive extension (`ARCHIVE_MAGIC` in
+`tools/source_pipeline.py`: `.tar.xz`, `.tar.gz`, `.tar.bz2` and so on) is
+treated as the same `ChallengePage` case, not as a digest mismatch, unless
+the body already hashes to its pinned SHA-512: then it is the pinned file,
+whatever its name says (vvdec's lookaside `bitstreams.tar.xz` is a bzip2
+tarball, made with `tar -cvjf`).
 
 ## The scheduled verification run is never cancelled
 

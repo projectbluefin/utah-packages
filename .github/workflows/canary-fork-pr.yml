@@ -36,6 +36,8 @@
 # not carry workflow changes, and those workflows hold this repository's
 # credentials, so a maintainer must push those by hand.
 name: Canary for a fork pull request
+# canary-fork-on-approve.yml reads this to see which heads already have a run.
+run-name: "Canary for fork pull request #${{ inputs.pr }} at ${{ inputs.head_sha }}"
 
 on:
   workflow_dispatch:
@@ -47,6 +49,10 @@ on:
       head_sha:
         description: Full 40-character head commit you reviewed
         required: true
+        type: string
+      approved_by:
+        description: Set by canary-fork-on-approve.yml to the maintainer whose Approve started this; leave empty
+        required: false
         type: string
 
 permissions:
@@ -89,9 +95,18 @@ jobs:
           # the same rule canary.yml applies (tools/canary.py pipeline_relevant),
           # with the set read from the trusted canary.yml on main.
           CANARY_SET=$(python3 -c "import yaml; print(yaml.safe_load(open('.github/workflows/canary.yml'))['env']['CANARY_SET'])")
-          if [ "$action" = copy ] && ! python3 tools/canary.py pr-relevant --repository "$REPOSITORY" --pr "$PR" --set "$CANARY_SET"; then
-            echo "::notice title=fork canary::no pipeline path changed; its own Canary run already passes"
-            action=skip
+          if [ "$action" = copy ]; then
+            rc=0
+            python3 tools/canary.py pr-relevant --repository "$REPOSITORY" --pr "$PR" --set "$CANARY_SET" || rc=$?
+            case "$rc" in
+              0) relevant=true ;;
+              10) relevant=false ;;
+              *) echo "::error title=canary::could not judge the pull request's files (exit $rc); failing rather than skipping"; exit 1 ;;
+            esac
+            if [ "$relevant" = false ]; then
+              echo "::notice title=fork canary::no pipeline path changed; its own Canary run already passes"
+              action=skip
+            fi
           fi
           echo "action=$action" >> "$GITHUB_OUTPUT"
       - name: Copy the reviewed commit into this repository
@@ -125,10 +140,16 @@ jobs:
           PR: ${{ inputs.pr }}
           HEAD_SHA: ${{ inputs.head_sha }}
           ACTOR: ${{ github.actor }}
+          APPROVED_BY: ${{ inputs.approved_by }}
           REPOSITORY: ${{ github.repository }}
         run: |
           set -euo pipefail
-          gh pr comment "$PR" -R "$REPOSITORY" --body "Canary was run on this pull request at \`${HEAD_SHA}\` by @${ACTOR} after review, from the in-repository copy \`canary/pr-${PR}\`: https://github.com/${REPOSITORY}/actions/workflows/canary.yml?query=branch%3Acanary%2Fpr-${PR}. When that run passes, this pull request's own \`Canary\` check is re-run and turns green by itself. Merging \`main\` into the branch keeps the proof while the merge is clean, the pull request's own diff stays the same, and \`main\` changed no pipeline path; anything else needs a new review and a new run."
+          who="by @${ACTOR} after review"
+          if [ -n "$APPROVED_BY" ]; then
+            [[ "$APPROVED_BY" =~ ^[A-Za-z0-9-]+$ ]] || { echo "::error::unexpected approved_by"; exit 1; }
+            who="automatically because @${APPROVED_BY} approved this exact commit"
+          fi
+          gh pr comment "$PR" -R "$REPOSITORY" --body "Canary was run on this pull request at \`${HEAD_SHA}\` ${who}, from the in-repository copy \`canary/pr-${PR}\`: https://github.com/${REPOSITORY}/actions/workflows/canary.yml?query=branch%3Acanary%2Fpr-${PR}. When that run passes, this pull request's own \`Canary\` check is re-run and turns green by itself. Merging \`main\` into the branch keeps the proof while the merge is clean, the pull request's own diff stays the same, and \`main\` changed no pipeline path; anything else needs a new review and a new run."
       # The copies are only needed while their pull request is open.
       - name: Delete copies of closed pull requests
         env:

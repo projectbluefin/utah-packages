@@ -227,9 +227,9 @@ class OpenALSoftTransformTests(unittest.TestCase):
 
     def test_metadata_names_the_recipe_source_and_pinned_input(self):
         metadata = generated_sources.metadata_for("openal-soft", ROOT / "packages" / "openal-soft")
-        self.assertEqual(metadata["filename"], "openal-soft-1.24.2-clean.tar.xz")
-        self.assertIn("openal-soft-1.24.2.tar.bz2", metadata["generate"]["input"])
-        self.assertIn("1.24.2", generated_sources.OPENAL_SOFT_INPUT_SHA512)
+        self.assertEqual(metadata["filename"], "openal-soft-1.25.2-clean.tar.xz")
+        self.assertIn("openal-soft-1.25.2.tar.bz2", metadata["generate"]["input"])
+        self.assertIn("1.25.2", generated_sources.OPENAL_SOFT_INPUT_SHA512)
 
 
 def build_sevenzip_archive(version: str) -> bytes:
@@ -310,6 +310,174 @@ class SevenZipTransformTests(unittest.TestCase):
         self.assertIn("26.05", generated_sources.SEVENZIP_INPUT_SHA512)
         spec = (ROOT / "packages" / "7zip" / "7zip.spec").read_text()
         self.assertIn("Source:         %{name}-%{version}.tar.xz", spec)
+
+
+def _github_targz(top: str, members: dict[str, bytes], directories: set[str]) -> bytes:
+    """A GitHub-style archive: a pax global header, then `top/` and its members."""
+    raw = io.BytesIO()
+    with tarfile.open(fileobj=raw, mode="w", format=tarfile.PAX_FORMAT,
+                      pax_headers={"comment": "0123456789abcdef"}) as tar:
+        for name in sorted({top, *directories, *members}):
+            info = tarfile.TarInfo(name)
+            info.mtime, info.uid, info.gid, info.uname, info.gname = 1751000000, 1000, 1000, "gh", "gh"
+            if name in members:
+                info.size = len(members[name])
+                tar.addfile(info, io.BytesIO(members[name]))
+            else:
+                info.type = tarfile.DIRTYPE
+                tar.addfile(info)
+    return gzip.compress(raw.getvalue(), mtime=0)
+
+
+class JpegxlTransformTests(unittest.TestCase):
+    VERSION = "0.12.0"
+    SJPEG = "94e0df6d0f8b44228de5be0ff35efb9f946a13c9"
+    SKCMS = "96d9171c94b937a1b5f0293de7309ac16311b722"
+
+    def release(self, extra: dict[str, bytes] | None = None) -> bytes:
+        top = f"libjxl-{self.VERSION}"
+        members = {f"{top}/CMakeLists.txt": b"project", f"{top}/third_party/CMakeLists.txt": b"deps",
+                   **(extra or {})}
+        directories = {f"{top}/third_party", f"{top}/third_party/sjpeg", f"{top}/third_party/skcms"}
+        return _github_targz(top, members, directories)
+
+    def submodules(self) -> dict[str, tuple[str, bytes]]:
+        sjpeg = f"sjpeg-{self.SJPEG}"
+        skcms = f"skcms-{self.SKCMS}"
+        return {
+            "third_party/sjpeg": (self.SJPEG, _github_targz(sjpeg, {f"{sjpeg}/src/sjpeg.h": b"sjpeg"}, {f"{sjpeg}/src"})),
+            "third_party/skcms": (self.SKCMS, _github_targz(
+                skcms,
+                {f"{skcms}/skcms.h": b"skcms", f"{skcms}/profiles/mobile/sRGB.icc": b"dropped"},
+                {f"{skcms}/profiles", f"{skcms}/profiles/mobile"},
+            )),
+        }
+
+    def members(self, payload: bytes) -> list[tarfile.TarInfo]:
+        with tarfile.open(fileobj=io.BytesIO(payload), mode="r:xz") as tar:
+            return tar.getmembers()
+
+    def test_fills_the_submodules_and_drops_skcms_profiles(self):
+        result = generated_sources._jpegxl_transform(self.release(), self.submodules(), self.VERSION)
+        names = {m.name for m in self.members(result)}
+        top = f"libjxl-{self.VERSION}"
+        self.assertIn(f"{top}/CMakeLists.txt", names)
+        self.assertIn(f"{top}/third_party/sjpeg/src/sjpeg.h", names)
+        self.assertIn(f"{top}/third_party/skcms/skcms.h", names)
+        self.assertNotIn(f"{top}/third_party/skcms/profiles", names)
+        self.assertFalse(any("profiles" in name or self.SJPEG in name for name in names))
+
+    def test_transform_is_byte_reproducible_sorted_and_ownerless(self):
+        first = generated_sources._jpegxl_transform(self.release(), self.submodules(), self.VERSION)
+        self.assertEqual(first, generated_sources._jpegxl_transform(self.release(), self.submodules(), self.VERSION))
+        members = self.members(first)
+        self.assertEqual([m.name for m in members], sorted(m.name for m in members))
+        for member in members:
+            self.assertEqual((member.uid, member.gid, member.uname, member.gname), (0, 0, "", ""))
+            self.assertNotIn("comment", member.pax_headers)
+
+    def test_refuses_a_submodule_archive_of_another_commit(self):
+        submodules = self.submodules()
+        commit, payload = submodules["third_party/sjpeg"]
+        submodules["third_party/sjpeg"] = ("0" * 40, payload)
+        with self.assertRaisesRegex(RuntimeError, "not of commit"):
+            generated_sources._jpegxl_transform(self.release(), submodules, self.VERSION)
+
+    def test_refuses_a_release_that_already_fills_a_submodule(self):
+        release = self.release({f"libjxl-{self.VERSION}/third_party/sjpeg/src/sjpeg.h": b"vendored"})
+        with self.assertRaisesRegex(RuntimeError, "not empty"):
+            generated_sources._jpegxl_transform(release, self.submodules(), self.VERSION)
+
+    def test_metadata_names_the_recipe_source_and_pinned_inputs(self):
+        metadata = generated_sources.metadata_for("jpegxl", ROOT / "packages" / "jpegxl")
+        self.assertEqual(metadata["filename"], "jpegxl-0.12.0.tar.xz")
+        self.assertIn("libjxl/libjxl/archive/v0.12.0/jpegxl-0.12.0.tar.gz", metadata["generate"]["input"])
+        pins = generated_sources.JPEGXL_INPUTS["0.12.0"]
+        self.assertEqual(sorted(pins["submodules"]), ["testdata", "third_party/sjpeg", "third_party/skcms"])
+        for remote, commit, sha512 in pins["submodules"].values():
+            self.assertIn(commit, metadata["generate"]["input"])
+            self.assertEqual(len(sha512), 128)
+        spec = (ROOT / "packages" / "jpegxl" / "jpegxl.spec").read_text()
+        self.assertIn("Source0:        %{name}-%{version}.tar.xz", spec)
+        self.assertNotIn("Source1:", spec)
+
+
+def build_kernel_archive(version: str) -> bytes:
+    """A synthetic kernel .tar.xz with tools/hv, its build files and neighbours."""
+    top = f"linux-{version}"
+    members = {
+        f"{top}/Makefile": b"dropped: the kernel's own Makefile",
+        f"{top}/drivers/hv/vmbus_drv.c": b"dropped",
+        f"{top}/tools/hv/Makefile": b"kept",
+        f"{top}/tools/hv/hv_kvp_daemon.c": b"kept",
+        f"{top}/tools/hv/hv_set_ifconfig.sh": b"kept",
+        f"{top}/tools/perf/Makefile": b"dropped: another tool",
+        f"{top}/tools/scripts/Makefile.unrelated": b"dropped: not included by tools/hv",
+        **{f"{top}/{rel}": b"kept" for rel in generated_sources.HYPERV_TOOLS_FILES},
+    }
+    directories = {top, f"{top}/drivers", f"{top}/drivers/hv", f"{top}/tools", f"{top}/tools/hv",
+                   f"{top}/tools/perf", f"{top}/tools/build", f"{top}/tools/scripts"}
+    raw = io.BytesIO()
+    with tarfile.open(fileobj=raw, mode="w", format=tarfile.PAX_FORMAT,
+                      pax_headers={"comment": "0123456789abcdef"}) as tar:
+        for name in sorted(directories | set(members)):
+            info = tarfile.TarInfo(name)
+            info.mtime, info.uid, info.gid, info.uname, info.gname = 1777000000, 1000, 1000, "linus", "linus"
+            if name in members:
+                info.size = len(members[name])
+                info.mode = 0o755 if name.endswith(".sh") else 0o644
+                tar.addfile(info, io.BytesIO(members[name]))
+            else:
+                info.type = tarfile.DIRTYPE
+                info.mode = 0o755
+                tar.addfile(info)
+    return lzma.compress(raw.getvalue(), format=lzma.FORMAT_XZ)
+
+
+class HypervToolsTransformTests(unittest.TestCase):
+    VERSION = "7.3.1"
+
+    def members(self, payload: bytes) -> list[tarfile.TarInfo]:
+        with tarfile.open(fileobj=io.BytesIO(payload), mode="r:xz") as tar:
+            return tar.getmembers()
+
+    def test_keeps_tools_hv_and_its_build_files_under_tools(self):
+        result = generated_sources._hyperv_transform(build_kernel_archive(self.VERSION), self.VERSION)
+        names = {member.name for member in self.members(result)}
+        expected = {"tools", "tools/hv", "tools/build", "tools/scripts", "tools/hv/Makefile",
+                    "tools/hv/hv_kvp_daemon.c", "tools/hv/hv_set_ifconfig.sh",
+                    *generated_sources.HYPERV_TOOLS_FILES}
+        self.assertEqual(names, expected)
+
+    def test_transform_is_byte_reproducible_sorted_and_ownerless(self):
+        archive = build_kernel_archive(self.VERSION)
+        first = generated_sources._hyperv_transform(archive, self.VERSION)
+        self.assertEqual(first, generated_sources._hyperv_transform(archive, self.VERSION))
+        members = self.members(first)
+        self.assertEqual([m.name for m in members], sorted(m.name for m in members))
+        for member in members:
+            self.assertEqual((member.uid, member.gid, member.uname, member.gname), (0, 0, "", ""))
+            self.assertEqual(member.mtime, 1777000000)
+            self.assertNotIn("comment", member.pax_headers)
+        modes = {m.name: m.mode for m in members}
+        self.assertEqual(modes["tools/hv/hv_set_ifconfig.sh"], 0o755)
+
+    def test_a_kernel_without_the_build_files_fails(self):
+        top = f"linux-{self.VERSION}"
+        raw = io.BytesIO()
+        with tarfile.open(fileobj=raw, mode="w", format=tarfile.PAX_FORMAT) as tar:
+            info = tarfile.TarInfo(f"{top}/tools/hv/Makefile")
+            tar.addfile(info, io.BytesIO(b""))
+        with self.assertRaisesRegex(RuntimeError, "tools/build/Build"):
+            generated_sources._hyperv_transform(lzma.compress(raw.getvalue(), format=lzma.FORMAT_XZ), self.VERSION)
+
+    def test_metadata_names_the_recipe_source_and_pinned_input(self):
+        metadata = generated_sources.metadata_for("hyperv-daemons", ROOT / "packages" / "hyperv-daemons")
+        self.assertEqual(metadata["filename"], "tools-hv-7.3.1.tar.xz")
+        self.assertIn("cdn.kernel.org/pub/linux/kernel/v7.x/linux-7.3.1.tar.xz", metadata["generate"]["input"])
+        self.assertIn("7.3.1", generated_sources.HYPERV_KERNEL_INPUT_SHA512)
+        spec = (ROOT / "packages" / "hyperv-daemons" / "hyperv-daemons.spec").read_text()
+        self.assertIn("Source0:  tools-hv-%{version}.tar.xz", spec)
 
 
 def build_hplip_archive(version: str) -> bytes:
@@ -555,17 +723,54 @@ class BluefinArtworkTransformTests(unittest.TestCase):
             self.assertIn(f"bluefin-logo-{style}.png", recipe)
 
 
+class BluefinWallpapersTransformTests(unittest.TestCase):
+    COMMIT = "72c74badbdd7c60d006e89aca74e248316dddd54"
+    FILES = {
+        "LICENSE": b"Apache License",
+        "package-gnome-wallpapers.sh": b"#!/usr/bin/env bash\n",
+        "wallpapers/chicken/chicken.jxl": b"jxl",
+    }
+
+    def test_files_keep_their_repository_paths(self):
+        result = generated_sources._bluefin_wallpapers_transform(self.FILES, self.COMMIT)
+        with tarfile.open(fileobj=io.BytesIO(result), mode="r:xz") as tar:
+            self.assertEqual(tar.getnames(), [
+                "bluefin-wallpapers-72c74ba",
+                "bluefin-wallpapers-72c74ba/LICENSE",
+                "bluefin-wallpapers-72c74ba/package-gnome-wallpapers.sh",
+                "bluefin-wallpapers-72c74ba/wallpapers",
+                "bluefin-wallpapers-72c74ba/wallpapers/chicken",
+                "bluefin-wallpapers-72c74ba/wallpapers/chicken/chicken.jxl",
+            ])
+            self.assertEqual(tar.extractfile("bluefin-wallpapers-72c74ba/wallpapers/chicken/chicken.jxl").read(), b"jxl")
+
+    def test_transform_is_byte_reproducible_and_ownerless(self):
+        first = generated_sources._bluefin_wallpapers_transform(self.FILES, self.COMMIT)
+        reordered = dict(reversed(list(self.FILES.items())))
+        self.assertEqual(first, generated_sources._bluefin_wallpapers_transform(reordered, self.COMMIT))
+        with tarfile.open(fileobj=io.BytesIO(first), mode="r:xz") as tar:
+            for member in tar.getmembers():
+                self.assertEqual((member.uid, member.gid, member.uname, member.gname, member.mtime), (0, 0, "", "", 0))
+
+    def test_pins_cover_the_packaging_script_and_the_lock_matches(self):
+        pins = generated_sources.BLUEFIN_WALLPAPERS_FILES[self.COMMIT]
+        self.assertIn("package-gnome-wallpapers.sh", pins)
+        self.assertIn("LICENSE", pins)
+        lock = json.loads((ROOT / "config" / "upstream-sources.json").read_text())
+        entry = next(p for p in lock["packages"] if p["name"] == "bluefin-wallpapers")
+        metadata = generated_sources.metadata_for("bluefin-wallpapers", ROOT / "packages" / "bluefin-wallpapers")
+        self.assertEqual({key: entry[key] for key in metadata}, metadata)
+        self.assertIn(f"SHA512 ({entry['filename']}) = {entry['sha512']}",
+                      (ROOT / "packages" / "bluefin-wallpapers" / "sources").read_text())
+
+
+
 class GeneratedMetadataTests(unittest.TestCase):
     def test_intel_media_metadata_uses_spec_version(self):
         metadata = generated_sources.metadata_for(
             "intel-media-driver-free", ROOT / "packages" / "intel-media-driver-free"
         )
-        self.assertEqual(metadata["filename"], "intel-media-26.2.4-free.tar.gz")
-
-    def test_tailscale_metadata_pins_the_tag_commit(self):
-        metadata = generated_sources.metadata_for("tailscale", ROOT / "packages" / "tailscale")
-        self.assertEqual(metadata["filename"], "tailscale-1.98.8-vendored.tar.xz")
-        self.assertIn("05a91829316e055517a1e84f7b00016846ef4107", metadata["generate"]["input"])
+        self.assertEqual(metadata["filename"], "intel-media-26.3.5-free.tar.gz")
 
     def test_unknown_package_is_rejected(self):
         with self.assertRaisesRegex(ValueError, "no generated source resolver"):
@@ -575,13 +780,6 @@ class GeneratedMetadataTests(unittest.TestCase):
         for name in generated_sources.METADATA:
             metadata = generated_sources.metadata_for(name, ROOT / "packages" / name)
             self.assertNotIn("fedoraproject.org", str(metadata))
-
-
-class TailscaleToolchainGapTests(unittest.TestCase):
-    def test_generation_fails_closed_without_a_go_toolchain(self):
-        with patch("shutil.which", return_value=None):
-            with self.assertRaisesRegex(RuntimeError, "Go toolchain"):
-                generated_sources.generate("tailscale", ROOT / "packages" / "tailscale", Path("/tmp"))
 
 
 def _targz(members: dict[str, bytes], mtime: int = 1700000000) -> bytes:

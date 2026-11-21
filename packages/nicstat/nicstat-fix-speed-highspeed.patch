@@ -1,0 +1,65 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Tomasz Torcz <ttorcz@fedoraproject.org>
+Date: Tue, 27 May 2026 14:00:00 +0200
+Subject: [PATCH] Fix incorrect utilization on high-speed (10G+) interfaces
+
+get_speed_duplex() reads interface speed via ETHTOOL_GSET ioctl into
+struct ethtool_cmd.  The assignment:
+
+    nicp->speed = edata.speed * 1000000;
+
+has two bugs affecting interfaces faster than 1 GbE:
+
+1. Integer overflow: edata.speed is __u16 (Mbps).  The multiplication is
+   evaluated as 32-bit signed arithmetic before assignment to the uint64_t
+   nicp->speed.  For 10 GbE (edata.speed = 10000):
+
+       10000 * 1000000 = 10,000,000,000 > INT32_MAX (2,147,483,647)
+
+   The result wraps to 1,410,065,408, making utilization calculations
+   wildly wrong.  1 GbE (1000 * 1000000 = 1,000,000,000) fits within
+   32 bits and was never affected.
+
+2. Truncated speed on 100G+: The ethtool_cmd.speed field is only 16 bits
+   wide (max 65,535 Mbps).  Since Linux 2.6.27 (2009), the kernel stores
+   speeds above 65,535 Mbps split across speed (low 16 bits) and speed_hi
+   (high 16 bits).  Reading only edata.speed for a 100 GbE interface
+   (100,000 Mbps) yields 100000 & 0xFFFF = 34,464 Mbps — roughly a third
+   of the true speed — causing utilization to appear ~2.9x higher than
+   actual even without the overflow.
+
+The fix replaces the bare field access with ethtool_cmd_speed(&edata),
+a static inline introduced in Linux 2.6.27 that combines speed and
+speed_hi into a correct __u32, covering interfaces up to ~4 Tbps.
+The explicit (uint64_t) cast ensures the subsequent * 1000000
+multiplication is done in 64-bit arithmetic, eliminating the overflow.
+
+A partial fix casting to (long long) without using ethtool_cmd_speed()
+was applied in the scotte/nicstat community fork:
+https://github.com/scotte/nicstat/commit/3bd58668
+That fix resolves the overflow for 10G/25G/50G but still reads the wrong
+speed for 100G+ because it does not consume speed_hi.
+
+Upstream bug report: https://sourceforge.net/p/nicstat/bugs/1/
+Fedora bug: https://bugzilla.redhat.com/show_bug.cgi?id=2145035
+
+Reported-by: Honggang LI <honggangli@163.com>
+---
+ nicstat.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/nicstat.c b/nicstat.c
+index 0000000..0000001 100644
+--- a/nicstat.c
++++ b/nicstat.c
+@@ -1609,7 +1609,7 @@ get_speed_duplex(nicdata_t *nicp)
+ 		get_speed_duplex(nicp);
+ 		return;
+ 	}
+-	nicp->speed = edata.speed * 1000000;
++	nicp->speed = (uint64_t) ethtool_cmd_speed(&edata) * 1000000;
+ 	nicp->duplex = edata.duplex;
+ }
+ #endif /* OS_LINUX */
+--
+2.49.0

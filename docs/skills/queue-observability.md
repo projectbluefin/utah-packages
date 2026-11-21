@@ -59,11 +59,16 @@ Semantics worth pinning (they are unit-tested in `tests/test_queue_wait.py`):
 
 - The job is **read-only**: `permissions: actions: read`. It lists runs and
   jobs and changes nothing about scheduling.
-- The **metric is always produced** (`reports/queue-wait.json`); the **alert is
-  opt-in** via the `QUEUE_WAIT_THRESHOLD` repo variable. The agreed threshold
-  is a maintainer decision (#304 "Done when"), so the workflow does not hardcode
-  one. The tool exits 1 when p50 exceeds the threshold, which is how the
-  daily job alerts — it goes red. Each API call retries 500/502/503/504 and
+- The **metric is always produced** (`reports/queue-wait.json`). The **alert
+  threshold is 1800s p50** (30 min), the value the maintainer ruling on #304
+  chose; the workflow uses it whenever the `QUEUE_WAIT_THRESHOLD` repo variable
+  is unset, and the variable still overrides it. Do not change the default
+  without a new maintainer ruling. The ruling also settled the mitigation: the
+  merge queue (`merge_group` on `canary.yml` and `validate.yml`) is primary and
+  there is no priority lane; revisit only if p90 keeps growing. #304 closes
+  after two weeks of daily reports under the threshold. `tests/test_queue_wait.py`
+  pins the default. The tool exits 1 when p50 exceeds the threshold, which is
+  how the daily job alerts — it goes red. Each API call retries 500/502/503/504 and
   connection errors three times (2s, 4s, 8s back-off) so one GitHub blip does
   not lose the daily report; 401, 403, 404 and rate limits are never retried.
   Any Actions API failure that survives that (auth, permissions, rate limit,
@@ -126,10 +131,16 @@ separate package-write `GITHUB_TOKEN`.
 App-authenticated PR creation and updates hand off to the normal
 `pull_request` workflows. This is required for the real **Canary**, **Unit
 tests** and **Runtime contract** checks, not merely a successful workflow
-whose job happens to be called `validate`. `bot-pr-validate.yml` remains for
-the Rawhide import caller and retains its exact-head, same-repository,
+whose job happens to be called `validate`.
+
+`import-rawhide-package.yml` opens its `import/rawhide-<package>` PR the same
+way: its `propose` job runs only on this organization's `main`, its workflow
+token only reads, and the mergeraptor App token (contents and pull-request
+write) opens the PR, so the normal checks run on its exact head and the hive
+sees a trusted bot author. Neither caller dispatches `bot-pr-validate.yml` any
+more. The listener still exists with its exact-head, same-repository,
 bot-author trust checks; it performs static validation, not equivalent
-runtime acceptance. Buildroot refresh no longer dispatches it. Keep both the
+runtime acceptance. While it exists, keep both the
 Python trust guard and the failure-report shell guard restricted to
 `import/rawhide-*`; `chore/buildroot-mirror` belongs to the App-created PR
 path and must be rejected even with otherwise matching bot PR metadata.

@@ -171,7 +171,10 @@ def inspect(path: Path) -> dict:
     """NEVRA, MD5 of header+payload, and SIGPGP key ID of one RPM file."""
     data = path.read_bytes()
     if data[:4] != LEAD_MAGIC or len(data) < LEAD_SIZE:
-        raise VerifyError("not an RPM file (bad lead)")
+        # Say what arrived instead: a CDN error page, an empty body and a
+        # truncated download need different fixes (#1208).
+        raise VerifyError(f"not an RPM file (bad lead): {len(data)} bytes, "
+                          f"starting {data[:48]!r}")
     sig_index, sig_store, sig_end = _header(data, LEAD_SIZE)
     main = sig_end + (-sig_end % 8)
     index, store, _ = _header(data, main)
@@ -211,6 +214,10 @@ def nevra(entry: dict) -> str:
 
 def verify(lock: dict, repo: Path) -> list[str]:
     """Every mismatch between the lock and the repository; empty when none."""
+    return _verify(lock, repo, set())
+
+
+def _verify(lock: dict, repo: Path, verified: set[str]) -> list[str]:
     errors: list[str] = []
     expected: dict[str, dict] = {}
     for entry in lock["buildroot"]["rpms"]:
@@ -246,6 +253,7 @@ def verify(lock: dict, repo: Path) -> list[str]:
         if actual["sigmd5"] != sigmd5:
             errors.append(f"{name}: SIGMD5 {actual['sigmd5']} does not match the locked {sigmd5}")
             continue
+        previous_errors = len(errors)
         for field in ("name", "epoch", "version", "release", "arch"):
             locked = entry.get(field)
             locked = None if locked in (None, "", "(none)") else str(locked)
@@ -255,6 +263,8 @@ def verify(lock: dict, repo: Path) -> list[str]:
         locked_key = entry.get("signature")
         if locked_key and actual["signature"] != str(locked_key).lower()[-8:]:
             errors.append(f"{name}: signed by key ID {actual['signature']} but the lock records {locked_key}")
+        if len(errors) == previous_errors:
+            verified.add(name)
     return errors
 
 
@@ -262,11 +272,25 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--lockfile", required=True, type=Path)
     parser.add_argument("--repo", required=True, type=Path)
+    parser.add_argument("--retry-lockfile", type=Path,
+                        help="Remove rejected downloads and write a lock containing only pending RPMs")
     args = parser.parse_args(argv)
     lock = json.loads(args.lockfile.read_text())
-    errors = verify(lock, args.repo)
+    verified: set[str] = set()
+    errors = _verify(lock, args.repo, verified)
     for error in errors:
         print(f"::error title=hermetic repository does not match the lock::{error}")
+    if args.retry_lockfile:
+        rpms = lock["buildroot"]["rpms"]
+        pending = [entry for entry in rpms if file_name(entry.get("url") or "") not in verified]
+        for entry in pending:
+            name = file_name(entry.get("url") or "")
+            if name.endswith(".rpm"):
+                path = args.repo / name
+                if path.is_symlink() or path.is_file():
+                    path.unlink()
+        retry_lock = {**lock, "buildroot": {**lock["buildroot"], "rpms": pending}}
+        args.retry_lockfile.write_text(json.dumps(retry_lock))
     if errors:
         print(f"{args.repo}: {len(errors)} mismatch(es) against {args.lockfile}; refusing to build from it",
               file=sys.stderr)

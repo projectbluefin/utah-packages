@@ -219,6 +219,7 @@ against the `projectbluefin/common` commit recorded in
 | Repository rules, commands, boundaries | This file |
 | Task → skill routing | [`docs/SKILL.md`](docs/SKILL.md) |
 | Fork scope, build root, disttag ordering | [`docs/targeting-hummingbird.md`](docs/targeting-hummingbird.md) |
+| Dakota element to published RPM, end to end | [`docs/bst-to-rpm.md`](docs/bst-to-rpm.md) |
 | Pipeline shape | [`docs/architecture.md`](docs/architecture.md) |
 | Adding a package | [`docs/contributing.md`](docs/contributing.md) |
 | Writing learning back | [`docs/skills/skill-improvement.md`](docs/skills/skill-improvement.md) |

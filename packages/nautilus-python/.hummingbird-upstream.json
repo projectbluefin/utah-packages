@@ -2,7 +2,7 @@
   "package": "nautilus-python",
   "branch": "rawhide",
   "remote": "https://src.fedoraproject.org/rpms/nautilus-python.git",
-  "commit": "0648df8ffc199ae6341b7776383a5ce17519fcb4",
-  "tree": "bb6566cbdb92cb1cc0a7f43b59a36b0cffdaf15c",
-  "imported_at": "2026-08-30T15:47:32.433681+00:00"
+  "commit": "cbc07468fb1d2086a82a3e1cfb0f09926d3f9d8a",
+  "tree": "864521989600b09c075669bcb02ea0918e7fb9fb",
+  "imported_at": "2026-11-16T04:10:37.701282+00:00"
 }

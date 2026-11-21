@@ -1,0 +1,25 @@
+diff -pruN kasumi-2.5.orig/kasumi.1 kasumi-2.5/kasumi.1
+--- kasumi-2.5.orig/kasumi.1	2009-06-25 17:46:31.000000000 +0900
++++ kasumi-2.5/kasumi.1	2012-08-31 11:14:19.000000000 +0900
+@@ -52,6 +52,10 @@ Run Kasumi in Manage mode\&. You may abb
+ Run Kasumi in Add mode\&.
+ 
+ .TP
++\fB\-e\fR \fB\-\-exclusive\fR
++Run Kasumi in Exclusive mode\&.
++
++.TP
+ \fB\-\-sound val\fR
+ Set default sound entry (only in Add mode)
+ 
+@@ -71,6 +75,10 @@ Import selected text as a spelling
+ \fB\-I\fR \fB\-\-ignore\fR
+ Ignore selected text
+ 
++.TP
++\fB\-E\fR \fB\-\-eucjp\fR
++Use EUC-JP encoding for dictionary
++
+ .SH "AUTHOR"
+ 
+ .PP

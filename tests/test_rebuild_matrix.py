@@ -500,6 +500,52 @@ class MainTest(unittest.TestCase):
         # An author who just edited a recipe is owed a real build.
         self.assertEqual(json.loads(outputs["cacheable"]), ["gnome-shell"])
 
+    def test_a_build_root_move_alone_rebuilds_but_may_use_the_cache(self):
+        # Issue #1207: after a build-root move every package is "changed", and
+        # excluding them all from the cache meant a failed publish forced a
+        # second full cold rebuild. A package whose own inputs did not move
+        # still compiles, but writes the cache, and a rerun reads it. An
+        # edited recipe keeps its cache-free build.
+        from tools import factory_state
+        from tools.package_inventory import source_locks
+
+        write_root(self.root, self.PACKAGES)
+        (self.root / "config" / "buildroot-image").write_text("ghcr.io/x@sha256:1\n")
+        locks = source_locks(self.root)
+        # The label as publish writes it, spelled out so this test needs
+        # nothing new from factory_state to set it up.
+        old_shared = factory_state.shared_digest(self.root)
+        state = {
+            "inputs": factory_state.current(self.root, locks),
+            "failed": {},
+            "shared": [{"digest": old_shared, "buildroot": "ghcr.io/x@sha256:1"}],
+        }
+        labels = self.root / "labels.json"
+        labels.write_text(json.dumps({factory_state.LABEL: json.dumps(state)}))
+        (self.root / "config" / "buildroot-image").write_text("ghcr.io/x@sha256:2\n")
+        (self.root / "packages" / "mozc" / "fix.patch").write_text("--- a\n")
+        environ = {
+            "GITHUB_OUTPUT": str(self.output),
+            "FACTORY_REPO": "file:///repo/",
+            "FACTORY_LABELS": str(labels),
+        }
+        out = io.StringIO()
+        with mock.patch.object(rebuild_matrix, "ROOT", self.root), mock.patch.dict(
+            os.environ, environ, clear=True
+        ), mock.patch.object(rebuild_matrix, "fetch_primary", return_value=b""):
+            with redirect_stdout(out), redirect_stderr(io.StringIO()):
+                self.assertEqual(rebuild_matrix.main(), 0)
+        outputs = dict(
+            line.split("=", 1) for line in self.output.read_text().splitlines() if "=" in line
+        )
+        self.assertIn("change detection: state; changed: gnome-shell, mozc", out.getvalue())
+        self.assertEqual(json.loads(outputs["build_list"]), ["mozc", "gnome-shell"])
+        self.assertIn(
+            "rebuild gnome-shell: the build root changed since the published build",
+            out.getvalue(),
+        )
+        self.assertEqual(json.loads(outputs["cacheable"]), ["gnome-shell"])
+
     def test_no_changed_recipes_is_reported_as_none(self):
         code, out, outputs = self.run_main(env={})
         self.assertIn("change detection: diff; changed: none", out)

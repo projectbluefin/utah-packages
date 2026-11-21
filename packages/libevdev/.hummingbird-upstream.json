@@ -2,7 +2,7 @@
   "package": "libevdev",
   "branch": "rawhide",
   "remote": "https://src.fedoraproject.org/rpms/libevdev.git",
-  "commit": "80db954bca98b986e4808fa8d9857fa399640211",
-  "tree": "0bb1c557a37a7b30a0917836421252ad83b7fe58",
-  "imported_at": "2026-08-30T15:47:21.206013+00:00"
+  "commit": "4e9b4ac72763eae0cc55c5d7fd66bc8439d64967",
+  "tree": "b47cff6411638d1425fd2cb475d80268edd718b5",
+  "imported_at": "2026-11-16T04:10:40.325165+00:00"
 }

@@ -142,19 +142,14 @@ class HermeticLaneTests(unittest.TestCase):
         self.assertIn("mock-hermetic-repo --lockfile", script)
 
     def test_only_the_online_steps_are_retried(self) -> None:
-        # Run 36286494799 (#287) lost mdadm and setxkbmap to a dropped
-        # connection in mock-hermetic-repo and dmidecode to one in the lock's
-        # repoquery. Both online steps go through `online`, which cleans the
-        # partial result between attempts; the offline build never does --
-        # its only retry is the deliberate %check one.
+        import re
+
         script = SCRIPT.read_text()
-        self.assertIn('online "lock resolve" clean_lock resolve_lock', script)
-        self.assertIn('online "lock fetch" clean_repo fetch_remote', script)
-        self.assertIn('clean_lock() { rm -rf "$H/lock"; }', script)
-        self.assertIn('clean_repo() { rm -rf "$H/repo"; }', script)
-        self.assertNotIn("online build_offline", script)
-        self.assertNotIn("online runuser -u mockbuilder -- mock --hermetic-build", script)
-        self.assertIn("NET_ATTEMPTS=${HERMETIC_NET_ATTEMPTS:-3}", script)
+        # The online retry wrapper must never enclose the offline build.
+        self.assertEqual(re.findall(r"^ *online .+$", script, re.M), [
+            '  online "lock resolve" clean_lock resolve_lock',
+            '  online "lock fetch" true fetch_remote',
+        ])
 
     def test_online_retries_then_gives_up_with_the_last_status(self) -> None:
         import subprocess
@@ -199,18 +194,14 @@ echo "attempts=$(cat {counter}) cleanups=$cleanups"
         # download.fedoraproject.org, never to a host list of our own, and leave
         # Hummingbird and file:// URLs alone.
         import json
-        import re
         import subprocess
         import tempfile
 
         script = SCRIPT.read_text()
+        self.assertNotRegex(script, r"(?i)fcix|servaxnet|mirror\.constant")
         start = script.index("redirect_fedora_urls() {")
         end = script.index("\n}\n", start) + 3
         helper = script[start:end]
-        fetch = script[script.index("  fetch_remote() {"):script.index("  clean_repo()")]
-        self.assertLess(fetch.index('if [ -e "$H/fetch.attempted" ]'), fetch.index(': > "$H/fetch.attempted"'))
-        self.assertIn('rm -f "$H/fetch.attempted"', script[:script.index("  fetch_remote() {")])
-        self.assertNotRegex(script, re.compile(r"fcix|servaxnet|mirror\.constant", re.I))
 
         hummingbird = "https://packages.redhat.com/api/pulp-content/public-hummingbird/x86_64/Packages/e/example-1.noarch.rpm"
         local = "file:///work/prior/local-stage-1-1.x86_64.rpm"
@@ -228,6 +219,71 @@ echo "attempts=$(cat {counter}) cleanups=$cleanups"
             "https://download.fedoraproject.org/pub/fedora/linux/updates/44/Everything/x86_64/Packages/f/f-1.noarch.rpm",
             "https://download.fedoraproject.org/pub/fedora/linux/releases/44/Everything/x86_64/os/Packages/g/g-1.noarch.rpm",
         ])
+
+    def test_each_retry_asks_hummingbird_for_a_different_spelling_of_the_same_file(self) -> None:
+        # Akamai caches a bad answer per URL (run 44478890278: 48 of 52 failed
+        # builds were one shadow-utils RPM). Each retry changes the cache key,
+        # never the host, the file name, or a Fedora or file:// URL.
+        import json
+        import os
+        import subprocess
+        import tempfile
+
+        script = SCRIPT.read_text()
+        start = script.index("vary_hummingbird_urls() {")
+        helper = script[start:script.index("\n}\n", start) + 3]
+        self.assertIn('vary_hummingbird_urls "$H/lock/pending.json" "$attempt"', script)
+        hb = "https://packages.redhat.com/api/pulp-content/public-hummingbird/x86_64/Packages/s/shadow-utils-4.20.0-2.hum1.x86_64.rpm"
+        others = ["file:///work/prior/x-1-1.x86_64.rpm",
+                  "https://download.fedoraproject.org/pub/fedora/linux/updates/44/Everything/x86_64/Packages/f/f-1.noarch.rpm"]
+        seen = []
+        with tempfile.TemporaryDirectory() as directory:
+            lock = Path(directory) / "pending.json"
+            lock.write_text(json.dumps({"buildroot": {"rpms": [{"url": u} for u in [hb, *others]]}}))
+            for attempt in (2, 3, 4, 5):
+                subprocess.run(["bash", "-c", f"set -euo pipefail\n{helper}\nvary_hummingbird_urls {lock} {attempt}"],
+                               check=True)
+                urls = [r["url"] for r in json.loads(lock.read_text())["buildroot"]["rpms"]]
+                self.assertEqual(urls[1:], others)
+                self.assertTrue(urls[0].startswith("https://packages.redhat.com/api/"))
+                self.assertEqual(os.path.basename(urls[0]), os.path.basename(hb))
+                self.assertEqual(urls[0].replace("//", "/").replace("https:/", "https://"), hb)
+                seen.append(urls[0])
+        self.assertEqual(len(set(seen[:3])), 3)
+        self.assertNotIn(hb, seen)
+        self.assertEqual(seen[3], seen[0])
+
+    def test_a_gzip_encoded_rpm_download_is_unwrapped_before_verification(self) -> None:
+        # An Akamai edge answered with Content-Encoding: gzip and
+        # mock-hermetic-repo kept the encoded body (run 44735693275: shadow-utils,
+        # 1381217 bytes starting 1f8b). Only a gzip stream around an RPM lead is
+        # unwrapped; SIGMD5 verification still decides whether it is the RPM.
+        import gzip
+        import subprocess
+        import tempfile
+
+        script = SCRIPT.read_text()
+        start = script.index("unwrap_gzip_rpms() {")
+        helper = script[start:script.index("\n}\n", start) + 3]
+        fetch = script[script.index("mock-hermetic-repo --lockfile"):script.index("verify_hermetic_repo.py --lockfile")]
+        self.assertIn('unwrap_gzip_rpms "$H/repo"', fetch)
+        rpm = b"\xed\xab\xee\xdb" + b"rpm header and payload" * 64
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Path(directory)
+            (repo / "encoded-1-1.x86_64.rpm").write_bytes(gzip.compress(rpm))
+            (repo / "plain-1-1.x86_64.rpm").write_bytes(rpm)
+            # Compressed once: gzip.compress stamps the current second into the
+            # header, so compressing again for the comparison can differ by a tick.
+            page = gzip.compress(b"<html>not an rpm</html>")
+            truncated = gzip.compress(rpm)[:40]
+            (repo / "page-1-1.x86_64.rpm").write_bytes(page)
+            (repo / "truncated-1-1.x86_64.rpm").write_bytes(truncated)
+            subprocess.run(["bash", "-c", f"set -euo pipefail\n{helper}\nunwrap_gzip_rpms {repo}"], check=True,
+                           capture_output=True)
+            self.assertEqual((repo / "encoded-1-1.x86_64.rpm").read_bytes(), rpm)
+            self.assertEqual((repo / "plain-1-1.x86_64.rpm").read_bytes(), rpm)
+            self.assertEqual((repo / "page-1-1.x86_64.rpm").read_bytes(), page)
+            self.assertEqual((repo / "truncated-1-1.x86_64.rpm").read_bytes(), truncated)
 
     def test_mock_config_carries_a_ready_bootstrap_image_only_when_asked(self) -> None:
         plain = render()

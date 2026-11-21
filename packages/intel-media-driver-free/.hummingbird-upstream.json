@@ -2,7 +2,7 @@
   "package": "intel-media-driver-free",
   "branch": "rawhide",
   "remote": "https://src.fedoraproject.org/rpms/intel-media-driver-free.git",
-  "commit": "cc2ecfab70e6e3d6067080b9e0ea77558517d208",
-  "tree": "33e3da79b2c1f7a677d4b31a64849e0230272555",
-  "imported_at": "2026-08-29T06:02:44.395468+00:00"
+  "commit": "f1b60768d7f19fe27cf3aad3020c5eb939cdb3e1",
+  "tree": "2f89108816d39c50604b244607e691470f9c66a5",
+  "imported_at": "2026-11-16T04:10:38.510775+00:00"
 }
