@@ -22,13 +22,13 @@
 %global _smp_tasksize_proc 8192
 
 Name:           uutils-coreutils
-Version:        0.10.0
+Version:        0.7.0
 # Fedora bumps the release base to 9 temporarily, as the
 # upgrade path for rust-coreutils-0.7.0-8. Utah takes 10 for the
 # uutils-coreutils-replace subpackage (#1234), which the published 0.7.0-9
-# build lacks, 11 for the replacement that left cp to gnu-cp, and 12 for 0.10.0
-# with cp linked back to uutils: each must not share an EVR with the build
-# before it.
+# build lacks, 11 for the replacement that left cp to gnu-cp, and 12 for cp
+# linked back to uutils with the ACL copy made best-effort: each must not share
+# an EVR with the build before it.
 Release:        %autorelease -b 12
 Summary:        GNU coreutils reimplementation in Rust
 
@@ -76,11 +76,21 @@ License:        %{shrink:
 
 URL:            https://uutils.github.io/coreutils/
 Source:         https://github.com/uutils/coreutils/archive/%{version}/%{name}-%{version}.tar.gz
-# disable benchmarks (drop divan and the uucore benchmark feature)
+# disable benchmarks
 # loosen notify version bound from =8.2.0 to 8.2.0 and drop macos_kqueue feature
+# loosen selinux version bound from =0.6.0 to 0.6.0
+# update clap_mangen to 0.3:
+#   https://github.com/uutils/coreutils/commit/9397a9c09332dd4a701f344be58d0d59782b2d91
 # update zip to 9: https://github.com/uutils/coreutils/commit/33a2889a6
-# (0.10.0 already carries ctor 1, clap_mangen 0.3 and a loose selinux bound)
 Patch:          coreutils-fix-metadata.diff
+# bump ctor from 0.6 to 1
+Patch:          coreutils-ctor-1_x.diff
+# cp -p: copy the POSIX ACL best-effort, as uutils 0.10.0 does
+# (uutils/coreutils#13626), instead of failing on a filesystem without ACLs.
+# 0.10.0 itself needs crate releases neither Fedora nor the factory packages
+# (parse_datetime 0.15, phf 0.14, sm3 0.5, string-interner 0.20,
+# uutils_term_grid 0.8).
+Patch:          coreutils-cp-acl-best-effort.diff
 
 # leaf package, SIGABRT on compile
 ExcludeArch:    %{ix86}
@@ -114,8 +124,8 @@ different behavior might be experienced.
 # source's POSIX ACL with exacl::setfacl and failed outright with EOPNOTSUPP on
 # a filesystem without ACLs, which broke bootupd's `cp -rp --reflink=auto` onto
 # the vfat ESP (projectbluefin/utah Post-Testing E2E luks), so cp was GNU's for
-# a while (gnu-cp). uutils made the ACL copy best-effort in 0.10.0
-# (uutils/coreutils#13626), which this recipe now carries.
+# a while (gnu-cp). coreutils-cp-acl-best-effort.diff makes the ACL copy
+# best-effort, the fix uutils shipped in 0.10.0 (uutils/coreutils#13626).
 %global gnu_utilities %{shrink:
     [ arch b2sum base32 base64 basename basenc cat chcon chgrp chmod chown
     chroot cksum comm cp csplit cut date dd df dir dircolors dirname du echo

@@ -274,8 +274,14 @@ the arch-qualified `coreutils%{?_isa}`, which only GNU's packages provide.
 0.7.0's `cp -p` copied the source's POSIX ACL and failed with EOPNOTSUPP on a
 filesystem without ACLs, so bootupd's `cp -rp` onto the vfat ESP failed every
 Utah bootc install and `cp` was GNU's for a while (a `gnu-cp` package). The
-recipe carries uutils 0.10.0, whose ACL copy is best-effort
-(uutils/coreutils#13626), so `gnu-cp` is retired. Before dropping a
+recipe carries the fix uutils shipped in 0.10.0 (uutils/coreutils#13626) as
+`coreutils-cp-acl-best-effort.diff` on 0.7.0, so `gnu-cp` is retired. 0.10.0
+itself does not build here: its generated BuildRequires want crate releases
+neither Fedora nor the factory packages (parse_datetime 0.15, phf 0.14, sm3
+0.5, string-interner 0.20, uutils_term_grid 0.8), and the hermetic lock
+resolve fails. A Canary that does not list the recipe never builds it, so
+dispatch `rebuild-rpms.yml` with `packages` on the branch before merging a
+uutils version bump. Before dropping a
 GNU program from the list, check the image's callers that write to a vfat or
 other ACL-less filesystem, not only the shell. Bump the `%autorelease -b`
 base with every change to the replacement's file list, as #1245 did: the new
