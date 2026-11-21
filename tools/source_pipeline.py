@@ -92,7 +92,9 @@ class UnavailableSource(RuntimeError):
 # that does not start with them is not the archive, whatever its Content-Type:
 # linuxtv.org's anti-bot challenge has been seen without a text/html type, and
 # hashing it reported a SHA-512 mismatch with a different "got" every time. An
-# extension that is not listed here is not checked.
+# extension that is not listed here is not checked. A body that already hashes
+# to its pinned SHA-512 is the pinned file whatever it starts with: vvdec's
+# lookaside bitstreams.tar.xz is a bzip2 tarball under an .xz name.
 ARCHIVE_MAGIC = (
     ((".tar.xz", ".txz", ".xz"), b"\xfd7zXZ\x00"),
     ((".tar.gz", ".tgz", ".gz"), b"\x1f\x8b"),
@@ -119,7 +121,7 @@ def describe_body(path: Path, content_type: str) -> str:
     return f"Content-Type: {content_type or 'unknown'}, first 16 bytes: {head.hex()}"
 
 
-def fetch(url: str, destination: Path) -> None:
+def fetch(url: str, destination: Path, expected_sha512: str | None = None) -> None:
     request = urllib.request.Request(url, headers={"User-Agent": "utah-packages-source-pipeline/1"})
     last: Exception | None = None
     for attempt in range(1, FETCH_ATTEMPTS + 1):
@@ -133,7 +135,9 @@ def fetch(url: str, destination: Path) -> None:
             path = urllib.parse.urlsplit(url).path
             if content_type == "text/html" and not path.endswith((".html", ".htm")):
                 raise ChallengePage(f"{url} returned an HTML page instead of the file ({describe_body(destination, content_type)})")
-            if not matches_archive_magic(destination, path):
+            if not matches_archive_magic(destination, path) and not (
+                expected_sha512 and digest(destination, "sha512") == expected_sha512
+            ):
                 raise ChallengePage(
                     f"{url} returned bytes that are not the expected archive type ({describe_body(destination, content_type)})"
                 )
@@ -152,7 +156,7 @@ def fetch(url: str, destination: Path) -> None:
     raise UnavailableSource(f"failed to fetch {url} after {FETCH_ATTEMPTS} attempts: {last}") from last
 
 
-def fetch_required(url: str, destination: Path, what: str) -> None:
+def fetch_required(url: str, destination: Path, what: str, expected_sha512: str | None = None) -> None:
     """Fetch an input that verification depends on; an outage here is fatal.
 
     A signature, checksum manifest or bundled source that cannot be fetched
@@ -160,12 +164,12 @@ def fetch_required(url: str, destination: Path, what: str) -> None:
     merely unavailable.
     """
     try:
-        fetch(url, destination)
+        fetch(url, destination, expected_sha512=expected_sha512)
     except UnavailableSource as error:
         raise RuntimeError(f"{what} could not be fetched: {error}") from error
 
 
-def fetch_with_fallbacks(urls: list[str], destination: Path) -> str:
+def fetch_with_fallbacks(urls: list[str], destination: Path, expected_sha512: str | None = None) -> str:
     """Fetch the upstream source first, falling back on any fetch failure.
 
     A fallback is an availability mirror, never a replacement for integrity:
@@ -181,7 +185,7 @@ def fetch_with_fallbacks(urls: list[str], destination: Path) -> str:
     all_unavailable = True
     for url in urls:
         try:
-            fetch(url, destination)
+            fetch(url, destination, expected_sha512=expected_sha512)
             return url
         except RuntimeError as error:
             all_unavailable = all_unavailable and isinstance(error, UnavailableSource)
@@ -292,7 +296,7 @@ def bundled_sources(package: dict, target_dir: Path, already: str) -> list[str]:
         url = template.format(pkg=package.get("dist_git_name", package["name"]),
                               name=filename, hash=expected)
         candidate = target_dir / f"{filename}.candidate"
-        fetch_required(url, candidate, f"bundled source {filename}")
+        fetch_required(url, candidate, f"bundled source {filename}", expected_sha512=expected)
         actual = digest(candidate, "sha512")
         if actual != expected:
             candidate.unlink(missing_ok=True)
@@ -446,7 +450,7 @@ def main() -> int:
                 produced.replace(candidate)
                 resolved_url = f"generated:{generate['script']}"
             else:
-                resolved_url = fetch_with_fallbacks([url, *fallback_urls], candidate)
+                resolved_url = fetch_with_fallbacks([url, *fallback_urls], candidate, expected_sha512=expected)
             actual = digest(candidate, "sha512")
             if actual != expected:
                 raise ValueError(f"SHA-512 mismatch: expected {expected}, got {actual}")
