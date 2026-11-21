@@ -1,8 +1,24 @@
 diff --git a/src/uu/cp/src/cp.rs b/src/uu/cp/src/cp.rs
-index fa6ddcf..c115c77 100644
+index fa6ddcf..6f24aab 100644
 --- a/src/uu/cp/src/cp.rs
 +++ b/src/uu/cp/src/cp.rs
-@@ -1827,10 +1827,12 @@ pub(crate) fn copy_attributes(
+@@ -922,12 +922,14 @@ impl Attributes {
+     };
+ 
+     // TODO: ownership is required if the user is root, for non-root users it's not required.
++    // -p is mode,ownership,timestamps, as in GNU cp and later uutils
++    // (uutils/coreutils#9704): copying every xattr fails on vfat with
++    // EOPNOTSUPP.
+     pub const DEFAULT: Self = Self {
+         #[cfg(unix)]
+         ownership: Preserve::Yes { required: true },
+         mode: Preserve::Yes { required: true },
+         timestamps: Preserve::Yes { required: true },
+-        xattr: Preserve::Yes { required: true },
+         ..Self::NONE
+     };
+ 
+@@ -1827,10 +1829,12 @@ pub(crate) fn copy_attributes(
              fs::set_permissions(dest, source_metadata.permissions())
                  .map_err(|e| CpError::IoErrContext(e, context.to_owned()))?;
              // FIXME: Implement this for windows as well

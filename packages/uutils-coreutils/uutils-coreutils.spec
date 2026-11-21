@@ -85,12 +85,13 @@ Source:         https://github.com/uutils/coreutils/archive/%{version}/%{name}-%
 Patch:          coreutils-fix-metadata.diff
 # bump ctor from 0.6 to 1
 Patch:          coreutils-ctor-1_x.diff
-# cp -p: copy the POSIX ACL best-effort, as uutils 0.10.0 does
-# (uutils/coreutils#13626), instead of failing on a filesystem without ACLs.
-# 0.10.0 itself needs crate releases neither Fedora nor the factory packages
-# (parse_datetime 0.15, phf 0.14, sm3 0.5, string-interner 0.20,
-# uutils_term_grid 0.8).
-Patch:          coreutils-cp-acl-best-effort.diff
+# cp -p onto a filesystem without ACLs or xattrs (vfat), as uutils 0.10.0
+# behaves: copy the POSIX ACL best-effort (uutils/coreutils#13626), and leave
+# xattrs out of -p, which is mode,ownership,timestamps as in GNU cp
+# (uutils/coreutils#9704). 0.10.0 itself needs crate releases neither Fedora
+# nor the factory packages (parse_datetime 0.15, phf 0.14, sm3 0.5,
+# string-interner 0.20, uutils_term_grid 0.8).
+Patch:          coreutils-cp-preserve-vfat.diff
 
 # leaf package, SIGABRT on compile
 ExcludeArch:    %{ix86}
@@ -121,11 +122,11 @@ different behavior might be experienced.
 # gnu-env, built from the GNU coreutils release on its own.
 #
 # cp is linked to uutils, as on Dakota. uutils 0.7.0's `cp -p` copied the
-# source's POSIX ACL with exacl::setfacl and failed outright with EOPNOTSUPP on
-# a filesystem without ACLs, which broke bootupd's `cp -rp --reflink=auto` onto
-# the vfat ESP (projectbluefin/utah Post-Testing E2E luks), so cp was GNU's for
-# a while (gnu-cp). coreutils-cp-acl-best-effort.diff makes the ACL copy
-# best-effort, the fix uutils shipped in 0.10.0 (uutils/coreutils#13626).
+# source's POSIX ACL with exacl::setfacl, then every xattr, and failed outright
+# with EOPNOTSUPP on a filesystem without them, which broke bootupd's
+# `cp -rp --reflink=auto` onto the vfat ESP (projectbluefin/utah Post-Testing
+# E2E luks), so cp was GNU's for a while (gnu-cp).
+# coreutils-cp-preserve-vfat.diff carries 0.10.0's behaviour instead.
 %global gnu_utilities %{shrink:
     [ arch b2sum base32 base64 basename basenc cat chcon chgrp chmod chown
     chroot cksum comm cp csplit cut date dd df dir dircolors dirname du echo
