@@ -677,6 +677,16 @@ lookaside fallback in `planned_entry`'s form, and the spec's `Version:` and
 
 ### Locks left without a feed
 
+A successful daily run is not proof that every carried package was checked.
+`plan()` reports each lock without a supported feed as a `note` saying
+`not scanned for updates`; it does not guess a GNOME module during full scans.
+These notes are not update proposals and never change a source lock. Review
+notes, feed errors, review-only proposals and holds before claiming the set is
+current. The final `no automatic update proposed` message describes only the
+automatic proposals, not upstream freshness. To investigate an omitted lock,
+follow the explicit-feed procedure above; an intentional compat or generated
+pin should stay pinned rather than receive a guessed feed.
+
 Left without a feed on purpose (2026-10-03): git snapshots (aribb24),
 sources with no upstream release (color-filesystem, kde-filesystem,
 kde-settings, kf5), generated sources whose `generate.input` the tool does
