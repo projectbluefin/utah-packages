@@ -380,7 +380,7 @@
     "bluefin/uutils-coreutils.bst": {
       "disposition": "structural",
       "issue": "#1229",
-      "reason": "uutils over the GNU coreutils names: uutils-coreutils-replace replaces coreutils-single; env from gnu-env",
+      "reason": "uutils over the GNU coreutils names: uutils-coreutils-replace replaces coreutils-single; env from gnu-env, cp from gnu-cp",
       "rpm": "uutils-coreutils"
     },
     "bluefin/wallpaper-month.bst": {

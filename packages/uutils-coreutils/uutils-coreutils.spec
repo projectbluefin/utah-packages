@@ -24,10 +24,11 @@
 Name:           uutils-coreutils
 Version:        0.7.0
 # Fedora bumps the release base to 9 temporarily, as the
-# upgrade path for rust-coreutils-0.7.0-8. Utah takes 10: the
-# uutils-coreutils-replace subpackage (#1234) must not share an EVR with
-# the published 0.7.0-9 build that lacks it.
-Release:        %autorelease -b 10
+# upgrade path for rust-coreutils-0.7.0-8. Utah takes 10 for the
+# uutils-coreutils-replace subpackage (#1234), which the published 0.7.0-9
+# build lacks, and 11 for the replacement that leaves cp to gnu-cp: each must
+# not share an EVR with the build before it.
+Release:        %autorelease -b 11
 Summary:        GNU coreutils reimplementation in Rust
 
 SourceLicense:  MIT
@@ -108,12 +109,20 @@ different behavior might be experienced.
 # stays GNU because pkexec realpath()s its target and the multicall binary
 # dispatches on the executed path, so a symlinked env breaks
 # `pkexec -u <user> /usr/bin/env <cmd>`, which uupd runs. Here the links are
-# exactly GNU coreutils' own programs less env, so hostname (hostname), more
-# (util-linux) and uutils-only utilities keep their owners. env comes from
+# exactly GNU coreutils' own programs less env and cp, so hostname (hostname),
+# more (util-linux) and uutils-only utilities keep their owners. env comes from
 # gnu-env, built from the GNU coreutils release on its own.
+#
+# cp stays GNU too, unlike on Dakota: 0.7.0's `cp -p` copies the source's
+# POSIX ACL with exacl::setfacl and fails outright with EOPNOTSUPP on a
+# filesystem without ACLs, where GNU cp falls back to chmod. bootupd installs
+# the EFI files with `cp -rp --reflink=auto` onto the vfat ESP, so every
+# bootc install failed (projectbluefin/utah Post-Testing E2E luks). uutils
+# made the ACL copy best-effort in 0.10.0 (uutils/coreutils#13626); link cp
+# back to uutils once this recipe carries that release. cp comes from gnu-cp.
 %global gnu_utilities %{shrink:
     [ arch b2sum base32 base64 basename basenc cat chcon chgrp chmod chown
-    chroot cksum comm cp csplit cut date dd df dir dircolors dirname du echo
+    chroot cksum comm csplit cut date dd df dir dircolors dirname du echo
     expand expr factor false fmt fold groups head hostid id install join link
     ln logname ls md5sum mkdir mkfifo mknod mktemp mv nice nl nohup nproc
     numfmt od paste pathchk pinky pr printenv printf ptx pwd readlink realpath
@@ -127,6 +136,7 @@ different behavior might be experienced.
 Summary:        uutils-coreutils as the system coreutils, in place of GNU coreutils
 Requires:       %{name}%{?_isa} = %{version}-%{release}
 Requires:       gnu-env
+Requires:       gnu-cp
 # Every package that requires coreutils is satisfied by the replacement. The
 # Provides carries the GNU coreutils release Hummingbird ships (gnu-env's
 # version), not uutils' own: an unversioned Provides would also match every
@@ -137,8 +147,8 @@ Conflicts:      coreutils-single
 %description    replace
 Links the GNU coreutils program names in %{_bindir} to uutils-coreutils, so
 that uutils is the system's coreutils, as on Project Bluefin Dakota, and adds
-Dakota's uutils-<utility> names for every uutils utility. env stays GNU's,
-from gnu-env. Install it in place of coreutils-single with
+Dakota's uutils-<utility> names for every uutils utility. env and cp stay
+GNU's, from gnu-env and gnu-cp. Install it in place of coreutils-single with
 `dnf swap coreutils-single uutils-coreutils-replace`.
 
 
