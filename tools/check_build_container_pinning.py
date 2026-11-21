@@ -8,10 +8,11 @@ every quay.io build image to the digest its tag resolves to. This guard stops
 anyone swapping a digest back for a tag, which is the exact regression #43
 reports: a silent, non-reproducible build.
 
-It checks the registry AGENTS.md names, quay.io. Bare `fedora:rawhide` refs and
-the ghcr `:latest` publication tag are a separate concern (same commit) and are
-deliberately out of scope here -- pinning them is a build-root decision, not a
-tag-pinning one.
+It checks the registries workflows run containers from by tag: quay.io, which
+AGENTS.md names, and registry.access.redhat.com, which serves the Red Hat
+Hardened Images (/hi/). Bare `fedora:rawhide` refs and the ghcr `:latest`
+publication tag are a separate concern (same commit) and are deliberately out
+of scope here -- pinning them is a build-root decision, not a tag-pinning one.
 """
 
 from __future__ import annotations
@@ -21,10 +22,10 @@ import sys
 from collections.abc import Iterable
 from pathlib import Path
 
-# A registry image reference: quay.io/<path> optionally followed by @sha256:<d>
-# or :<tag>. Stops at whitespace, quotes, or a comment marker so it captures the
-# image token, not the shell that follows it.
-IMAGE_REF = re.compile(r"quay\.io/[^\s\"'`#]+")
+# A registry image reference: quay.io/<path> or registry.access.redhat.com/<path>
+# optionally followed by @sha256:<d> or :<tag>. Stops at whitespace, quotes, or
+# a comment marker so it captures the image token, not the shell that follows.
+IMAGE_REF = re.compile(r"(?:quay\.io|registry\.access\.redhat\.com)/[^\s\"'`#]+")
 
 # The one place a moving tag is the point. refresh-buildroot.yml copies the
 # current fedora:44 into the factory's own never-pruned mirror so builds can pin
@@ -34,7 +35,7 @@ EXEMPT = {("refresh-buildroot.yml", "quay.io/fedora/fedora:44")}
 
 
 def unpinned_refs(workflows: Iterable[Path]) -> list[tuple[str, int, str]]:
-    """Return (workflow, line, ref) for quay.io images not pinned by digest."""
+    """Return (workflow, line, ref) for registry images not pinned by digest."""
     offenders: list[tuple[str, int, str]] = []
     for workflow in workflows:
         for number, line in enumerate(workflow.read_text().splitlines(), start=1):
@@ -55,7 +56,7 @@ def main(workflows_dir: Path | None = None) -> int:
     offenders = unpinned_refs(workflows)
     if offenders:
         print(
-            "A quay.io build-toolchain image is referenced by a mutable tag. "
+            "A quay.io or registry.access.redhat.com image is referenced by a mutable tag. "
             "AGENTS.md requires a digest pin; swap the tag for @sha256:...:",
             file=sys.stderr,
         )
@@ -69,7 +70,8 @@ def main(workflows_dir: Path | None = None) -> int:
         return 1
 
     print(
-        f"checked {len(workflows)} workflows: every quay.io build image is digest-pinned"
+        f"checked {len(workflows)} workflows: every quay.io and "
+        "registry.access.redhat.com image is digest-pinned"
     )
     return 0
 

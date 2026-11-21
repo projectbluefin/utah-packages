@@ -51,7 +51,7 @@ Each workflow runs a digest-pinned container:
 | --- | --- |
 | `build-stage.yml` (package builds), `rebuild-rpms.yml` `preflight`, `publish-repository.yml` `precedence` | `ghcr.io/projectbluefin/utah-buildroot`, the factory's copy of `fedora:44`. The pin is in `config/buildroot-image`; `refresh-buildroot.yml` moves it weekly. The run pulls it once and shares the bytes with every job. |
 | `packit-srpm-chunk.yml`, `import-rawhide-package.yml` (SRPM generation and import only) | `quay.io/packit/packit`, digest pinned |
-| `recalculate-hummingbird-gaps.yml` | `quay.io/hummingbird-community/bootc-os`, digest pinned |
+| `recalculate-hummingbird-gaps.yml` | `quay.io/hummingbird-community/bootc-os`, digest pinned, for the installed set; `registry.access.redhat.com/hi/core-runtime:latest-builder`, a signed Red Hat Hardened Image, digest pinned and Renovate-tracked, for the Hummingbird repoquery |
 
 Package builds use the hermetic mock lane (default since [#264](https://github.com/projectbluefin/utah-packages/issues/264)): mock resolves
 a build-root lock, and then builds offline from exactly the locked RPMs. [#43](https://github.com/projectbluefin/utah-packages/issues/43)
