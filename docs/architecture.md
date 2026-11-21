@@ -276,8 +276,10 @@ union. The daily run moved off `06:41 UTC`, where it collided with
 `bump-upstream-sources.yml`. The daily bump pull request is gated by
 `bump-upstream-gate.yml`, which builds exactly the bumped recipes (publishing
 nothing). A trusted default-branch receiver validates the successful gate
-and uses an App token to enqueue or merge only that built head. The actual
-App/queue push to `main` starts factory publication; see
+and uses an App token to enqueue or merge only that built head. When the
+merge queue drops that head because main changed a pipeline path,
+`bump-upstream-requeue.yml` merges main into the branch and gates it again.
+The actual App/queue push to `main` starts factory publication; see
 [`docs/skills/upstream-version-bumps.md`](skills/upstream-version-bumps.md#the-bump-gate).
 Other pull requests run validation and the canary, never the factory.
 The rationale is part of the cache contract in
@@ -377,7 +379,7 @@ A required queue changes how merges happen, and these automations merge:
 
 | Automation | How it merges | Under a required merge queue |
 | --- | --- | --- |
-| `bump-upstream-gate.yml` and trusted `bump-upstream-enqueue.yml` receiver | Scoped App token, one-shot SHA-pinned merge without a queue, or `enqueuePullRequest(expectedHeadOid)` with a queue | Queue admission never dispatches publication; only the eventual App/queue push to `main` publishes RPMs |
+| `bump-upstream-gate.yml` and trusted `bump-upstream-enqueue.yml` receiver | Scoped App token, one-shot SHA-pinned merge without a queue, or `enqueuePullRequest(expectedHeadOid)` with a queue | Queue admission never dispatches publication; only the eventual App/queue push to `main` publishes RPMs. A head the queue drops for failed checks while main moved on is updated and gated again by `bump-upstream-requeue.yml`, which never merges or enqueues itself |
 | Renovate (`renovate.json`: `upstream-source` and `build-root-image` digests) | `platformAutomerge`: GitHub auto-merge, as `renovate[bot]` (a GitHub App) | Works: auto-merge enqueues, and App events start `merge_group` runs. Needs "Allow auto-merge" on |
 | Pull requests opened by `import-bluefin-rawhide.yml` | Not merged by automation | A maintainer enqueues them like any other pull request |
 | Pull requests opened by `import-rawhide-package.yml`, `refresh-buildroot.yml` | Opened with the scoped mergeraptor App token; the Hive reviews and merges them as trusted bot PRs | Same path as the Hive row below |
