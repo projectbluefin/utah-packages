@@ -154,6 +154,7 @@ class Verdict:
     ok: bool
     failed: list[str] = field(default_factory=list)
     reasons: list[str] = field(default_factory=list)
+    outage: list[str] = field(default_factory=list)
 
 
 def _names(raw: str) -> list[str] | None:
@@ -167,11 +168,13 @@ def _names(raw: str) -> list[str] | None:
     return value
 
 
-def verdict(bumped_raw: str, build_list_raw: str, failed_raw: str, result: str) -> Verdict:
+def verdict(bumped_raw: str, build_list_raw: str, failed_raw: str, result: str,
+            infra_failed_raw: str = "[]") -> Verdict:
     """Merge only when every bumped package was built by a successful run."""
     wanted = _names(bumped_raw)
     build_list = _names(build_list_raw)
     failed = _names(failed_raw)
+    infra = _names(infra_failed_raw)
     reasons = []
     if not wanted:
         reasons.append("no bumped packages were named, so there is nothing the build proved")
@@ -181,11 +184,20 @@ def verdict(bumped_raw: str, build_list_raw: str, failed_raw: str, result: str) 
         reasons.append("the build did not report which packages it selected")
     if failed is None:
         reasons.append("the build did not report which packages failed")
-    names = sorted(set(failed or []) & set(wanted or [])) if failed else []
+    if infra is None:
+        reasons.append("the build did not report which packages failed on the network")
+    outage = sorted(set(infra or []))
+    if outage:
+        reasons.append(
+            "packages failed downloading their build root, before any build ran -- "
+            "a package-server outage, not a recipe failure: "
+            + ", ".join(f"`{n}`" for n in outage)
+        )
+    names = sorted((set(failed or []) - set(outage)) & set(wanted or [])) if failed else []
     if names:
         reasons.append("bumped packages failed to build: " + ", ".join(f"`{n}`" for n in names))
     if failed:
-        other = sorted(set(failed) - set(wanted or []))
+        other = sorted(set(failed) - set(wanted or []) - set(outage))
         if other:
             reasons.append("other packages failed in the same run: " + ", ".join(f"`{n}`" for n in other))
     if wanted and build_list is not None:
@@ -195,7 +207,7 @@ def verdict(bumped_raw: str, build_list_raw: str, failed_raw: str, result: str) 
                 "bumped packages were not selected, so nothing built them: "
                 + ", ".join(f"`{n}`" for n in missing)
             )
-    return Verdict(ok=not reasons, failed=sorted(failed or []), reasons=reasons)
+    return Verdict(ok=not reasons, failed=sorted(failed or []), reasons=reasons, outage=outage)
 
 
 def holds_only_verdict(bumped_raw: str, result: str) -> Verdict:
@@ -208,19 +220,23 @@ def holds_only_verdict(bumped_raw: str, result: str) -> Verdict:
     return Verdict(ok=not reasons, reasons=reasons)
 
 
-def holdable(bumped_raw: str, build_list_raw: str, failed_raw: str, result: str) -> list[str]:
+def holdable(bumped_raw: str, build_list_raw: str, failed_raw: str, result: str,
+             infra_failed_raw: str = "[]") -> list[str]:
     """The bumped packages to hold so the rest can merge, or [] to hold none.
 
     Only when the failure is fully accounted for: the build ran to a verdict
-    (success or failure, not cancelled or skipped), reported both outputs,
+    (success or failure, not cancelled or skipped), reported every output,
     selected every bumped package, and every failure is a bumped package
-    while at least one other bumped package built. Anything else stays the
-    old fail-closed verdict, with no trimming, for a human.
+    while at least one other bumped package built. A package that failed on
+    the network never got a build, so its version proved nothing: if any did,
+    hold nothing and let the next daily bump retry (#1179). Anything else
+    stays the old fail-closed verdict, with no trimming, for a human.
     """
     wanted = _names(bumped_raw)
     build_list = _names(build_list_raw)
     failed = _names(failed_raw)
-    if not wanted or build_list is None or failed is None:
+    infra = _names(infra_failed_raw)
+    if not wanted or build_list is None or failed is None or infra is None or infra:
         return []
     if result not in ("success", "failure"):
         return []
@@ -252,6 +268,13 @@ def comment(result: Verdict, sha: str, run_url: str, held: list[str] | None = No
             "A held version is not proposed again; a newer upstream release "
             "retries it, and deleting its entry (in a pull request that also "
             "fixes the recipe) releases it sooner."
+        )
+    elif result.outage:
+        after = (
+            "Nothing was merged, published or held. The package server was not "
+            "answering, so the packages above never got a build and nothing is "
+            "known about their new versions. The next daily bump retries them; "
+            "nothing needs fixing in their recipes for that."
         )
     else:
         after = (
@@ -386,8 +409,10 @@ def _cli_decide(args: argparse.Namespace) -> int:
         result = holds_only_verdict(args.bumped, args.result)
         held: list[str] = []
     else:
-        result = verdict(args.bumped, args.build_list, args.failed, args.result)
-        held = holdable(args.bumped, args.build_list, args.failed, args.result)
+        result = verdict(args.bumped, args.build_list, args.failed, args.result,
+                         args.infra_failed)
+        held = holdable(args.bumped, args.build_list, args.failed, args.result,
+                        args.infra_failed)
     if result.ok:
         print("only holds changed; nothing to build" if args.holds_only
               else f"every bumped package built: {args.bumped}")
@@ -425,6 +450,7 @@ def main(argv: list[str] | None = None) -> int:
     decide_cmd.add_argument("--bumped", required=True)
     decide_cmd.add_argument("--build-list", default="")
     decide_cmd.add_argument("--failed", default="")
+    decide_cmd.add_argument("--infra-failed", default="[]")
     decide_cmd.add_argument("--result", default="")
     decide_cmd.add_argument("--sha", required=True)
     decide_cmd.add_argument("--run-url", required=True)

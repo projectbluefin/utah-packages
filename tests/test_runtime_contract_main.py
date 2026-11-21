@@ -271,5 +271,13 @@ class CommittedConfigurationTests(MainTestCase):
         self.assertTrue(packages)
 
 
+    def test_the_committed_contract_names_the_terminal_consumer(self) -> None:
+        result = self.run_main(str(self.BLUEFIN_CONFIG), str(self.POLICY_CONFIG))
+        self.assertEqual(result.status, 0, result.stderr)
+        packages = result.stdout.splitlines()
+        self.assertIn("ptyxis", packages)
+        self.assertNotIn("simdutf", packages)
+
+
 if __name__ == "__main__":
     unittest.main()

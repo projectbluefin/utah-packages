@@ -26,6 +26,8 @@ fi
 # codec, never a build requirement, and Fedora own noopenh264 provides
 # the same libopenh264.so.8 soname, so disabling the repo resolves.
 disable=--disablerepo=fedora-cisco-openh264
+# with_backoff: wait out a refused Hummingbird download; see the file.
+. /tools/dnf_backoff.sh
 # The Fedora container images set tsflags=nodocs, so every %doc file is
 # dropped at install time. rand_core ships its crate docs that way and
 # its lib.rs does #![doc = include_str!("../README.md")], so rust-just
@@ -63,7 +65,7 @@ cp /repos/hummingbird.repo /etc/yum.repos.d/
 # of the 51.beta stage 0 had just built. createrepo_c itself walks
 # the tree, so only the test needed fixing.
 if [ -n "$(find /work/prior -name "*.rpm" -print -quit 2>/dev/null)" ]; then
-  dnf -y $disable install createrepo_c
+  with_backoff dnf -y $disable install createrepo_c
   createrepo_c /work/prior
   printf "[stages]\nname=stages\nbaseurl=file:///work/prior\nenabled=1\ngpgcheck=0\npriority=1\n" \
     > /etc/yum.repos.d/stages.repo
@@ -157,7 +159,7 @@ fi
 # installs, so /usr/bin/echo and friends are missing. Most packages pull
 # them in transitively; squashfs-tools calls echo directly from its
 # manpage installer and fails without it.
-dnf -y $disable install dnf-plugins-core mock rpm-build @buildsys-build
+with_backoff dnf -y $disable install dnf-plugins-core mock rpm-build @buildsys-build
 # Hummingbird split libxml2 at 2.15.4-1.1: the library moved to a
 # new libxml2-16 package and libxml2 kept only xmllint. The new
 # package neither Obsoletes nor Conflicts the old one, and the
@@ -176,7 +178,7 @@ dnf -y $disable install dnf-plugins-core mock rpm-build @buildsys-build
 # before anything else asks for it.
 for split in libxml2; do
   rpm -q "$split" >/dev/null 2>&1 || continue
-  dnf -y $disable upgrade "$split"
+  with_backoff dnf -y $disable upgrade "$split"
 done
 rpm -q --qf "buildroot libxml2: %{NAME}-%{VERSION}-%{RELEASE}\n" libxml2 libxml2-16 || true
 rpm -q --qf "buildroot openssl: %{VERSION}-%{RELEASE}\n" openssl-libs || true
@@ -252,43 +254,13 @@ export USER="${USER:-root}"
 export LOGNAME="${LOGNAME:-$USER}"
 spec=$(find "/packages/$PACKAGE" -maxdepth 1 -name "*.spec" -print -quit)
 test -n "$spec"
-# The Hummingbird repository is one host with no mirrors, so a bad
-# minute there is a failed build. retries=10 and timeout=120 in
-# dnf.conf cover a slow transfer, which is what Curl error 28 was,
-# but not a refusal: snowball died on the S3 backend answering
-#
-#   Status code: 503 for .../python3-setuptools-83.0.0-2.1.hum1.rpm
-#   No more mirrors to try - All mirrors were already tried
-#
-# after four attempts inside one second. librepo retries with no
-# backoff, so all four hit the same bad moment. Waiting between
-# attempts is the part that was missing. This retries resolution
-# only, never the build, and an unsatisfiable graph still fails
-# every attempt and then fails the job.
 builddep_attempt() {
   dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} \
     ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} \
     ${HB_REPO_EXCLUDE:+--setopt=public-hummingbird-x86_64-rpms.excludepkgs="$HB_REPO_EXCLUDE"} \
     builddep -D "_sourcedir /packages/$PACKAGE" "$1"
 }
-with_backoff() {
-  delay=5
-  for attempt in 1 2 3 4; do
-    status=0
-    builddep_attempt "$1" || status=$?
-    if [ "$status" -eq 0 ]; then
-      return 0
-    fi
-    if [ "$attempt" -eq 4 ]; then
-      echo "builddep failed after 4 attempts" >&2
-      return "$status"
-    fi
-    echo "::warning title=builddep retry::attempt $attempt failed, waiting ${delay}s" >&2
-    sleep "$delay"
-    delay=$((delay * 3))
-  done
-}
-with_backoff "$spec"
+with_backoff builddep_attempt "$spec"
 # An imported spec keeps its dist-git PatchN and auxiliary SourceN
 # files next to itself, while the verified upstream archive lands in
 # /work/sources. rpmbuild takes a single _sourcedir, so stage both:
@@ -373,7 +345,7 @@ for _ in 1 2 3 4 5; do
        --define "dist $DISTTAG"; then break; fi
   generated=$(ls /builddir/rpmbuild/SRPMS/*.buildreqs.nosrc.rpm 2>/dev/null | head -1)
   test -n "$generated"
-  with_backoff "$generated"
+  with_backoff builddep_attempt "$generated"
 done
 # A %check that fails takes its evidence down with it. The test
 # binaries run inside /builddir, which is not a mounted volume, so

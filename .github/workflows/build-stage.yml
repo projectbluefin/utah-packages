@@ -320,12 +320,14 @@ jobs:
             -v "$PWD/work:/work:Z" \
             -v "$PWD/packages:/packages:ro,Z" \
             -v "$PWD/config:/repos:ro,Z" \
+            -v "$PWD/tools:/tools:ro,Z" \
             utah-buildroot:run bash -exc '
               disable=--disablerepo=fedora-cisco-openh264
+              . /tools/dnf_backoff.sh
               sed -i "/^tsflags=nodocs/d" /etc/dnf/dnf.conf
               cp /repos/hummingbird.repo /etc/yum.repos.d/
               if [ -n "$(find /work/prior -name "*.rpm" -print -quit 2>/dev/null)" ]; then
-                dnf -y $disable install createrepo_c
+                with_backoff dnf -y $disable install createrepo_c
                 createrepo_c /work/prior
                 EXCLUDE=$(find /work/prior -name "*.rpm" -type f -print0 | xargs -0 -r rpm -qp --qf "%{NAME}\n" | sort -u | paste -sd, -)
                 printf "[stages]\nname=stages\nbaseurl=file:///work/prior\nenabled=1\ngpgcheck=0\npriority=1\n" > /etc/yum.repos.d/stages.repo
@@ -336,17 +338,17 @@ jobs:
               if [ -n "${FACTORY_REPO:-}" ]; then
                 printf "[factory]\nname=factory\nbaseurl=%s\nenabled=1\ngpgcheck=0\npriority=5\n" "$FACTORY_REPO" > /etc/yum.repos.d/factory.repo
               fi
-              dnf -y $disable install dnf-plugins-core mock rpm-build @buildsys-build
+              with_backoff dnf -y $disable install dnf-plugins-core mock rpm-build @buildsys-build
               # Same upgrade as the build step below; see the comment there.
               for split in libxml2; do
                 rpm -q "$split" >/dev/null 2>&1 || continue
-                dnf -y $disable upgrade "$split"
+                with_backoff dnf -y $disable upgrade "$split"
               done
               dnf -y $disable swap sqlite-libs sqlite-libs --allowerasing || true
               DISTTAG=".$(rpm -qa --qf "%{RELEASE}\n" | grep -oE "hum[0-9]+$" | sort -u | head -n1).bfin${DIST_BUMP:-}"
               test "$DISTTAG" != ".bfin"
               spec=$(find "/packages/$PACKAGE" -maxdepth 1 -name "*.spec" -print -quit)
-              dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} ${HB_REPO_EXCLUDE:+--setopt=public-hummingbird-x86_64-rpms.excludepkgs="$HB_REPO_EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$spec"
+              with_backoff dnf -y $disable ${EXCLUDE:+--setopt=fedora.excludepkgs="$EXCLUDE"} ${EXCLUDE:+--setopt=updates.excludepkgs="$EXCLUDE"} ${HB_REPO_EXCLUDE:+--setopt=public-hummingbird-x86_64-rpms.excludepkgs="$HB_REPO_EXCLUDE"} builddep -D "_sourcedir /packages/$PACKAGE" "$spec"
               rpm -qa --qf "%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n" | sort -u > /work/cache/root
               printf "%s\n" "$DISTTAG" > /work/cache/disttag
             '
@@ -598,6 +600,17 @@ jobs:
         with:
           name: ${{ inputs.artifact_prefix }}check-s${{ inputs.stage }}-${{ matrix.package }}
           path: work/reports/check/**
+          if-no-files-found: ignore
+          retention-days: 7
+      # The lane's online step ran out of retries on a download: the build
+      # never ran. publish_gate.py report reads this name to keep a
+      # package-server outage from being held as a broken version (#1179).
+      - name: Record a failure on the network
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: ${{ inputs.artifact_prefix }}infra-s${{ inputs.stage }}-${{ matrix.package }}
+          path: work/reports/infra-failure
           if-no-files-found: ignore
           retention-days: 7
 

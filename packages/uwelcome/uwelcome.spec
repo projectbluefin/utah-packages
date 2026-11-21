@@ -13,7 +13,7 @@
 %global __strip /bin/true
 
 Name:           uwelcome
-Version:        0.4.1
+Version:        0.5.1
 Release:        1%{?dist}
 Summary:        Configurable terminal welcome banner for Universal Blue systems
 
@@ -48,5 +48,8 @@ test "$(%{buildroot}%{_bindir}/uwelcome version)" = "%{version}"
 %{_bindir}/uwelcome
 
 %changelog
+* Fri Nov 20 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 0.5.1-1
+- Update to 0.5.1
+
 * Mon Nov 16 2026 Utah Packages <packages@projectbluefin.io> - 0.4.1-1
 - Initial recipe: Dakota's uwelcome release binary (bluefin/uwelcome.bst)

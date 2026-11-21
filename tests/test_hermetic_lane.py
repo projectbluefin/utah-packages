@@ -161,9 +161,11 @@ class HermeticLaneTests(unittest.TestCase):
         helper = script[start:end].replace("sleep \"$NET_RETRY_PAUSE\"", "true")
         with tempfile.TemporaryDirectory() as directory:
             counter = Path(directory) / "count"
+            reports = Path(directory) / "reports"
             probe = f"""
 set -euo pipefail
 PACKAGE=probe
+REPORT_DIR={reports}
 {helper}
 cleanups=0
 cleanup() {{ cleanups=$((cleanups + 1)); }}
@@ -182,6 +184,42 @@ echo "attempts=$(cat {counter}) cleanups=$cleanups"
             self.assertEqual(gives_up.returncode, 1, gives_up.stdout + gives_up.stderr)
             self.assertEqual(counter.read_text().strip(), "3")
             self.assertIn("::error title=probe failed::probe: probe failed 3 times (last exit 1)", gives_up.stdout)
+            self.assertFalse((reports / "infra-failure").exists())
+            counter.unlink()
+            early_outage = (
+                f"flaky() {{ if [ ! -f {counter} ]; then echo 'urllib3 MaxRetryError' >&2; "
+                "else echo 'createrepo_c: not an RPM file (bad lead)' >&2; fi;"
+            )
+            outage = subprocess.run(
+                ["bash", "-c", probe.replace("flaky() {", early_outage)],
+                env={"PASS_ON": "9", "PATH": "/usr/bin:/bin"}, capture_output=True, text=True)
+            self.assertEqual(outage.returncode, 1, outage.stdout + outage.stderr)
+            self.assertEqual((reports / "infra-failure").read_text().strip(), "probe")
+            counter.unlink()
+            (reports / "infra-failure").unlink()
+            silent = "flaky() { echo 'ERROR: Command failed: # /usr/bin/dnf5 repoquery -q --location' >&2;"
+            dropped = subprocess.run(["bash", "-c", probe.replace("flaky() {", silent)],
+                                     env={"PASS_ON": "9", "PATH": "/usr/bin:/bin"}, capture_output=True, text=True)
+            self.assertEqual(dropped.returncode, 1, dropped.stdout + dropped.stderr)
+            self.assertEqual((reports / "infra-failure").read_text().strip(), "probe")
+            (reports / "infra-failure").unlink()
+            counter.unlink()
+            unsatisfiable = subprocess.run(
+                ["bash", "-c", probe.replace("flaky() {", silent + " echo 'No match for argument: libfoo' >&2;")],
+                env={"PASS_ON": "9", "PATH": "/usr/bin:/bin"}, capture_output=True, text=True)
+            self.assertEqual(unsatisfiable.returncode, 1, unsatisfiable.stdout + unsatisfiable.stderr)
+            self.assertFalse((reports / "infra-failure").exists())
+            counter.unlink()
+            recovered = (
+                f"flaky() {{ if [ ! -f {counter} ]; then echo 'Curl error (28)' >&2; "
+                "else echo 'No match for argument: libfoo' >&2; fi;"
+            )
+            unsatisfiable_after_retry = subprocess.run(
+                ["bash", "-c", probe.replace("flaky() {", recovered)],
+                env={"PASS_ON": "9", "PATH": "/usr/bin:/bin"}, capture_output=True, text=True)
+            self.assertEqual(unsatisfiable_after_retry.returncode, 1,
+                             unsatisfiable_after_retry.stdout + unsatisfiable_after_retry.stderr)
+            self.assertFalse((reports / "infra-failure").exists())
             counter.unlink()
             capped = subprocess.run(["bash", "-c", probe],
                                     env={"PASS_ON": "9", "HERMETIC_NET_ATTEMPTS": "1", "PATH": "/usr/bin:/bin"},

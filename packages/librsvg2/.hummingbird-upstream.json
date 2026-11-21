@@ -2,7 +2,7 @@
   "package": "librsvg2",
   "branch": "rawhide",
   "remote": "https://src.fedoraproject.org/rpms/librsvg2.git",
-  "commit": "8d5d40a67d8ad60f8dccea716efc030ac8f1c929",
-  "tree": "6625f705971584a6f6d02a7389e554c66f236594",
-  "imported_at": "2026-08-30T15:47:30.501058+00:00"
+  "commit": "59329d8e04d991a673ed4df0d9bba5b8e683f50a",
+  "tree": "ce8fc15bbfbfc7ece24b5e27d5f05776920fbc44",
+  "imported_at": "2026-11-16T04:08:56.672207+00:00"
 }

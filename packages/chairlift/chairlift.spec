@@ -18,7 +18,7 @@
 %global __strip /bin/true
 
 Name:           chairlift
-Version:        26.11.2
+Version:        26.11.9
 Release:        1%{?dist}
 Summary:        Privileged helper, polkit actions and schemas for ChairLift
 
@@ -67,5 +67,8 @@ grep -q '<annotate key="org.freedesktop.policykit.exec.path">%{_bindir}/chairlif
 %{_datadir}/glib-2.0/schemas/io.projectbluefin.chairlift.firstrun.gschema.xml
 
 %changelog
+* Fri Nov 20 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 26.11.9-1
+- Update to 26.11.9
+
 * Mon Nov 16 2026 Utah Packages <packages@projectbluefin.io> - 26.11.2-1
 - Initial recipe: Dakota's ChairLift system files (bluefin/chairlift.bst)

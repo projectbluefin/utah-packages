@@ -10,7 +10,7 @@
 %endif
 
 Name:     opus
-Version:  1.6
+Version:  1.6.1
 Release:  %autorelease
 Summary:  An audio codec for use in low-delay speech and audio communication
 License:  BSD-3-Clause AND BSD-2-Clause

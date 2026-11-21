@@ -1,5 +1,5 @@
 Name:           libgtop2
-Version:        2.41.3
+Version:        2.41.4
 Release:        %autorelease
 Summary:        LibGTop library (version 2)
 

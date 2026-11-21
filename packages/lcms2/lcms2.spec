@@ -1,5 +1,5 @@
 Name:           lcms2
-Version:        2.19.1
+Version:        2.20
 Release:        %autorelease
 Summary:        Color Management Engine
 # part of src/cmssm.c is softsurf (no SPDX yet) see https://gitlab.com/fedora/legal/fedora-license-data/-/issues/469

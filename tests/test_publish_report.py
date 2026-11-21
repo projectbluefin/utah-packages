@@ -327,6 +327,22 @@ class CommandLineTests(unittest.TestCase):
         self.assertIn("Run: https://example.invalid/run/9", body)
         self.assertEqual(failed_marker(body), ["gtk4"])
 
+    def test_report_separates_failures_on_the_network_from_build_failures(self) -> None:
+        # Run 43825333649: a package-server outage and a compile error both
+        # leave no RPM artifact; only the infra marker tells them apart.
+        with tempfile.TemporaryDirectory() as tmp:
+            infra_output = Path(tmp) / "infra.json"
+            _, failed = self.run_report(
+                Path(tmp),
+                build_list=["fish", "gtk4", "umotd"],
+                artifacts=["rpm-s0-fish", "infra-s0-umotd", "infra-s1-fish"],
+                infra_failed_output=str(infra_output),
+            )
+            infra = json.loads(infra_output.read_text())
+        self.assertEqual(failed, ["gtk4", "umotd"])
+        # fish built, so a stray marker for it is not a failure at all.
+        self.assertEqual(infra, ["umotd"])
+
     def test_report_uses_the_publish_report_to_say_what_consumers_get(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             body, _ = self.run_report(

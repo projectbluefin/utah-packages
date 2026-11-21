@@ -4,8 +4,8 @@
 
 Summary: X.Org X11 libXxf86vm runtime library
 Name: libXxf86vm
-Version: 1.1.6
-Release: 5%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Version: 1.1.7
+Release: 1%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 License: X11-distribute-modifications-variant
 URL: http://www.x.org
 
@@ -63,6 +63,9 @@ find $RPM_BUILD_ROOT -name '*.la' -exec rm -f {} ';'
 %{_includedir}/X11/extensions/xf86vmode.h
 
 %changelog
+* Fri Nov 20 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 1.1.7
+- Update to 1.1.7
+
 * Thu Jul 16 2026 Fedora Release Engineering <releng@fedoraproject.org> - 1.1.6-5
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_45_Mass_Rebuild
 

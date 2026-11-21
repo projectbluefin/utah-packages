@@ -12,8 +12,8 @@
 %bcond_with unwind
 
 Name:           gstreamer1
-Version:        1.28.6
-Release:        2%{?dist}
+Version:        1.28.9
+Release:        1%{?dist}
 Summary:        GStreamer streaming media framework runtime
 
 License:        LGPL-2.1-or-later
@@ -205,6 +205,9 @@ install -m0644 -D %{SOURCE2} $RPM_BUILD_ROOT%{_rpmconfigdir}/fileattrs/gstreamer
 
 
 %changelog
+* Fri Nov 20 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 1.28.9-1
+- Update to 1.28.9
+
 * Fri Aug 21 2026 Arjun Shankar <arjun@redhat.com> - 1.28.6-2
 - Build without libunwind by default
 

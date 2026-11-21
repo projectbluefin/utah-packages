@@ -169,6 +169,7 @@ jobs:
           HOLDS_ONLY: ${{ needs.plan.outputs.holds_only }}
           BUILD_LIST: ${{ needs.build.outputs.build_list }}
           FAILED: ${{ needs.build.outputs.failed }}
+          INFRA_FAILED: ${{ needs.build.outputs.infra_failed }}
           RESULT: ${{ needs.build.result }}
           SHA: ${{ github.sha }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
@@ -178,7 +179,8 @@ jobs:
           flags=()
           if [ "$HOLDS_ONLY" = true ]; then flags+=(--holds-only); fi
           if python3 tools/bump_gate.py decide --bumped "$BUMPED" "${flags[@]}" \
-              --build-list "$BUILD_LIST" --failed "$FAILED" --result "$RESULT" \
+              --build-list "$BUILD_LIST" --failed "$FAILED" --infra-failed "$INFRA_FAILED" \
+              --result "$RESULT" \
               --sha "$SHA" --run-url "$RUN_URL" \
               --comment comment.md --failed-output failed.json --hold-output hold.json; then
             echo "ok=true" >> "$GITHUB_OUTPUT"
