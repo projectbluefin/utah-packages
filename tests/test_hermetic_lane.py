@@ -272,15 +272,18 @@ echo "attempts=$(cat {counter}) cleanups=$cleanups"
             repo = Path(directory)
             (repo / "encoded-1-1.x86_64.rpm").write_bytes(gzip.compress(rpm))
             (repo / "plain-1-1.x86_64.rpm").write_bytes(rpm)
-            (repo / "page-1-1.x86_64.rpm").write_bytes(gzip.compress(b"<html>not an rpm</html>"))
-            (repo / "truncated-1-1.x86_64.rpm").write_bytes(gzip.compress(rpm)[:40])
+            # Compressed once: gzip.compress stamps the current second into the
+            # header, so compressing again for the comparison can differ by a tick.
+            page = gzip.compress(b"<html>not an rpm</html>")
+            truncated = gzip.compress(rpm)[:40]
+            (repo / "page-1-1.x86_64.rpm").write_bytes(page)
+            (repo / "truncated-1-1.x86_64.rpm").write_bytes(truncated)
             subprocess.run(["bash", "-c", f"set -euo pipefail\n{helper}\nunwrap_gzip_rpms {repo}"], check=True,
                            capture_output=True)
             self.assertEqual((repo / "encoded-1-1.x86_64.rpm").read_bytes(), rpm)
             self.assertEqual((repo / "plain-1-1.x86_64.rpm").read_bytes(), rpm)
-            self.assertEqual((repo / "page-1-1.x86_64.rpm").read_bytes(),
-                             gzip.compress(b"<html>not an rpm</html>"))
-            self.assertEqual((repo / "truncated-1-1.x86_64.rpm").read_bytes(), gzip.compress(rpm)[:40])
+            self.assertEqual((repo / "page-1-1.x86_64.rpm").read_bytes(), page)
+            self.assertEqual((repo / "truncated-1-1.x86_64.rpm").read_bytes(), truncated)
 
     def test_mock_config_carries_a_ready_bootstrap_image_only_when_asked(self) -> None:
         plain = render()
