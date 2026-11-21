@@ -195,7 +195,7 @@ def approval(
     review's ``commit_id``. The review's ``commit_id`` must still be that commit,
     or a commit GitHub moved it onto: the current head, or one of the merges of
     main between the two (``merge_path``). On #972 (2026-11-20) GitHub moved an
-    Approve onto a merge of main that two later merges then left behind. A
+    Approve onto a merge of main that three later merges then left behind. A
     ``commit_id`` older than the approved commit means the reviewer looked at
     something earlier, and anything else needs a new Approve too.
     """
