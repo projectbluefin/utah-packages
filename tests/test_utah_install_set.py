@@ -133,6 +133,56 @@ class VerdictTests(unittest.TestCase):
         self.assertEqual(list(report["unresolved"]), ["(the set together)"])
 
 
+class SwapTests(unittest.TestCase):
+    """Utah removes coreutils-single in the same transaction that installs
+    uutils-coreutils-replace; the check has to do the same (#1255, #1256)."""
+
+    CONFLICT = "installed package coreutils-single-9.12-1.1.hum1.x86_64 conflicts with coreutils-single"
+
+    def test_removals_become_a_dnf5_do_transaction(self) -> None:
+        self.assertEqual(uis.transaction(["a", "b"]), ["install", "a", "b"])
+        self.assertEqual(
+            uis.transaction(["a", "b"], ("coreutils-single",)),
+            ["do", "--action=install", "a", "b", "--action=remove", "coreutils-single"])
+
+    def test_the_whole_set_is_resolved_with_the_swap(self) -> None:
+        calls = []
+
+        def attempt(packages, repos, removals=()):
+            calls.append((list(packages), removals))
+            return True, "Transaction Summary:\n"
+        with mock.patch.object(uis, "attempt", side_effect=attempt):
+            report = uis.resolve(["gnu-env", "uutils-coreutils-replace"], ("utah-packages",),
+                                 {"coreutils-single": "uutils-coreutils-replace"},
+                                 ("coreutils-single",))
+        self.assertTrue(report["resolved"])
+        self.assertEqual(calls, [(["gnu-env", "uutils-coreutils-replace"], ("coreutils-single",))])
+
+    def test_a_package_that_conflicts_alone_is_retried_with_the_swap(self) -> None:
+        def attempt(packages, repos, removals=()):
+            if len(packages) > 2:
+                return False, "nothing provides libexif.so.12"
+            if packages == ["libgphoto2"]:
+                return False, "nothing provides libexif.so.12"
+            if removals:
+                return packages != ["libgphoto2", "uutils-coreutils-replace"], ""
+            return packages != ["gnu-env"], self.CONFLICT
+        with mock.patch.object(uis, "attempt", side_effect=attempt):
+            report = uis.resolve(["gnu-env", "libgphoto2", "fish"], ("utah-packages",),
+                                 {"coreutils-single": "uutils-coreutils-replace"},
+                                 ("coreutils-single",))
+        self.assertEqual(list(report["unresolved"]), ["libgphoto2"])
+
+    def test_a_swap_does_not_hide_a_real_gap(self) -> None:
+        def attempt(packages, repos, removals=()):
+            return "libgphoto2" not in packages, "nothing provides libexif.so.12"
+        with mock.patch.object(uis, "attempt", side_effect=attempt):
+            report = uis.resolve(["gnu-env", "libgphoto2"], ("utah-packages",),
+                                 {"coreutils-single": "uutils-coreutils-replace"},
+                                 ("coreutils-single",))
+        self.assertEqual(list(report["unresolved"]), ["libgphoto2"])
+
+
 class AttemptTests(unittest.TestCase):
     """attempt() is the verdict: dnf --assumeno exits 1 on a valid transaction."""
 

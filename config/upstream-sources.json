@@ -1792,15 +1792,6 @@
       "sha512": "21fcac0d49d1a1ec0d30c68e3cc0ba6bc88cefef7114adacaf65cf4fb3b52c89e4f71ea2d7a7685b44bd7a0573f56e44c0a4516389245969f472f71097a6bf00"
     },
     {
-      "name": "gnu-cp",
-      "version": "9.12",
-      "url": "https://ftp.gnu.org/gnu/coreutils/coreutils-9.12.tar.xz",
-      "filename": "coreutils-9.12.tar.xz",
-      "sha512": "f25514cf02fd25365252d9a8f6fc5f8ed063fffdcb11c7eff380e3fa632741105d11b45ded332a2af5e913f77a143b68a2bd1fbdca0085e127fb17c80c35279b",
-      "signature_url": "https://ftp.gnu.org/gnu/coreutils/coreutils-9.12.tar.xz.sig",
-      "gpg_key": "packages/gnu-cp/coreutils-keyring.gpg"
-    },
-    {
       "name": "gnu-efi",
       "version": "3.0.18",
       "url": "https://sourceforge.net/projects/gnu-efi/files/gnu-efi-3.0.18.tar.bz2",
@@ -7364,10 +7355,10 @@
     },
     {
       "name": "uutils-coreutils",
-      "version": "0.7.0",
-      "url": "https://github.com/uutils/coreutils/archive/0.7.0/uutils-coreutils-0.7.0.tar.gz",
-      "filename": "uutils-coreutils-0.7.0.tar.gz",
-      "sha512": "e6d01d9320050efaa64ac261d86fddbb79895a0768c388248b412be571989ec4fc78c094e9606d56154abab06b3f66bd4784c55dbf8129db183e78df4bd7c43c"
+      "version": "0.10.0",
+      "url": "https://github.com/uutils/coreutils/archive/0.10.0/uutils-coreutils-0.10.0.tar.gz",
+      "filename": "uutils-coreutils-0.10.0.tar.gz",
+      "sha512": "cd5bc2b491ad36e559678aa45578c1646d48f4421abb1944195282acea4e5c6c1f9556c3fd2758cc7e37a1995fd5e2e1b94dfb91b6826f4e4c9bf8ddb7e50fd8"
     },
     {
       "name": "uvg266",

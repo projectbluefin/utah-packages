@@ -135,12 +135,34 @@ def dnf() -> str:
     return found
 
 
-def attempt(packages: list[str], repos: tuple[str, ...]) -> tuple[bool, str]:
+def transaction(packages: list[str], removals: tuple[str, ...] = ()) -> list[str]:
+    """The dnf subcommand and arguments, as Utah's installer builds them: with
+    removals, dnf5 `do` removes them in the same transaction."""
+    if not removals:
+        return ["install", *packages]
+    return ["do", "--action=install", *packages, "--action=remove", *removals]
+
+
+def swap_removals(installer: Path) -> tuple[dict[str, str], tuple[str, ...]]:
+    """Utah's [swap] table and the swapped-out packages this image has.
+
+    Utah installs uutils-coreutils-replace and removes coreutils-single in the
+    same transaction. A resolution that only installs reports the packages
+    that conflict with coreutils-single (gnu-env, the replacement) as
+    unresolvable.
+    """
+    module = installer_module(installer)
+    swaps = module.swaps(installer.parent / "utah.toml")
+    return swaps, tuple(module.installed(list(swaps)))
+
+
+def attempt(packages: list[str], repos: tuple[str, ...],
+            removals: tuple[str, ...] = ()) -> tuple[bool, str]:
     """Resolve without installing, the way Utah's --resolve does."""
     result = subprocess.run(
         [dnf(), "--assumeno", "--disablerepo=*",
          *(f"--enablerepo={repo}" for repo in repos),
-         "-x", "PackageKit*", "install", *packages],
+         "-x", "PackageKit*", *transaction(packages, removals)],
         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
         env={**os.environ, "LC_ALL": "C"}, check=False,
     )
@@ -172,8 +194,18 @@ def first_problem(output: str) -> str:
     return lines[-1][:300] if lines else "no output"
 
 
-def resolve(packages: list[str], repos: tuple[str, ...]) -> dict:
-    ok, output = attempt(packages, repos)
+def resolve(packages: list[str], repos: tuple[str, ...],
+            swaps: dict[str, str] | None = None,
+            removals: tuple[str, ...] = ()) -> dict:
+    """`removals` are the installed packages Utah's [swap] table replaces, and
+    `swaps` maps each to its replacement. They are removed in the whole-set
+    transaction; a package that fails alone is retried with its swap, since
+    what conflicts with a swapped-out package needs the replacement, which
+    Provides what the removal takes away."""
+    def run(group: list[str]) -> tuple[bool, str]:
+        return attempt(group, repos, removals) if removals else attempt(group, repos)
+
+    ok, output = run(packages)
     report = {"requested": len(packages), "resolved": ok, "unresolved": {}}
     if ok:
         return report
@@ -181,6 +213,9 @@ def resolve(packages: list[str], repos: tuple[str, ...]) -> dict:
     # package names every one, which is what an issue per package needs.
     for package in packages:
         single_ok, single = attempt([package], repos)
+        if not single_ok and removals:
+            with_swap = list(dict.fromkeys([package, *(swaps or {}).values()]))
+            single_ok, single = attempt(with_swap, repos, removals)
         if not single_ok:
             report["unresolved"][package] = first_problem(single)
     if not report["unresolved"]:
@@ -242,7 +277,8 @@ def main(argv: list[str] | None = None) -> int:
             shutil.copy(key, "/etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release-2")
         repos = tuple(installer_module(args.dir / "install-packages.py").install_repos(repos_dir))
         print(f"resolving {len(packages)} packages from {', '.join(repos)}")
-        report = resolve(packages, repos)
+        swaps, removals = swap_removals(args.dir / "install-packages.py")
+        report = resolve(packages, repos, swaps, removals)
         args.report.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n")
         print(summary(report))
         return 0
