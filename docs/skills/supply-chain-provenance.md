@@ -297,13 +297,18 @@ objects after editing: only `url` and `fallback_urls` should change in a
 transport-only migration. Preserve all existing fallbacks as well as the
 former primary, and remove exactly the promoted names from the ratchet.
 
-The fixed native Canary set has an additional lookaside-primary contract in
-`tests/test_canary.py`: libical, vulkan-headers, vulkan-loader, and the
-python-typing-inspection perturbation package. Treat their source migration
-as a separate change that also reconciles the Canary's availability contract
-and verifies it on the native runner; do not weaken that test during a bulk
-transport-only migration. Also check candidate hosts against the validator's
-Fedora-host policy before editing: a project's own repository on
+The fixed native Canary set (libical, vulkan-headers, vulkan-loader, and the
+python-typing-inspection perturbation package) must fetch bytes that never
+change, and `tests/test_canary.py` pins that: a Canary primary is either the
+lookaside or a fixed upload (a GitHub release asset or a PyPI sdist) with the
+lookaside in `fallback_urls`. A digest mismatch fails closed without trying a
+fallback, so a Canary primary is never a project mirror like samba.org, nor
+a generated GitHub tag archive, which GitHub can regenerate with different
+bytes; the lookaside only covers outages. libical and
+python-typing-inspection use their release asset and sdist; Khronos
+publishes the Vulkan pair only as tags, so they stay on the lookaside and on
+the ratchet. Also check candidate hosts against the
+validator's Fedora-host policy before editing: a project's own repository on
 `forge.fedoraproject.org` still counts as Fedora infrastructure.
 
 ### A URL-only move still rebuilds the package

@@ -12,14 +12,12 @@ foomatic-db
 kde-filesystem
 kde-settings
 kf5
-libical
 libmpeg2
 libuser
 livesys-scripts
 lsof
 mozc
 noopenh264
-python-typing-inspection
 redhat-menus
 samba
 spandsp
