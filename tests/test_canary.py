@@ -489,11 +489,32 @@ class WorkflowShapeTests(unittest.TestCase):
         self.assertIn("vulkan-headers", spec)
 
     def test_every_pass_shares_one_salt_and_its_own_artifact_prefix(self) -> None:
-        passes = [n for n, j in self.jobs.items() if j.get("uses")]
+        # recipe-build is not a canary pass: it builds the pull request's own
+        # recipes, on production cache keys unless the pipeline changed.
+        passes = [n for n, j in self.jobs.items() if j.get("uses") and n != "recipe-build"]
         prefixes = {self.jobs[n]["with"]["artifact_prefix"] for n in passes}
         self.assertEqual(len(prefixes), len(passes))
         salts = {self.jobs[n]["with"]["cache_salt"] for n in passes}
         self.assertEqual(salts, {"${{ needs.changes.outputs.salt }}"})
+
+    def test_changed_recipes_build_unpublished_and_gate_the_check(self) -> None:
+        build = self.jobs["recipe-build"]
+        self.assertEqual(build["with"]["factory_tag"], "latest")
+        self.assertTrue(build["with"]["skip_publish"])
+        self.assertNotIn("publish_tag", build["with"])
+        # Production keys only when no pipeline path changed: the key does not
+        # cover the build path, so a pipeline PR must not seed main's cache.
+        self.assertEqual(
+            build["with"]["cache_salt"],
+            "${{ needs.changes.outputs.run == 'true' && needs.changes.outputs.salt || '' }}",
+        )
+        self.assertIn("changes", build["needs"])
+        verify = self.jobs["verify-recipes"]
+        self.assertIn("always()", verify["if"])
+        self.assertIn("bump_gate.py decide", verify["steps"][-1]["run"])
+        gate = next(s for s in self.jobs["canary"]["steps"] if s.get("name") == "Decide")["run"]
+        # Judged before the "no pipeline path changed" early pass.
+        self.assertLess(gate.index('"$RECIPES" != success'), gate.index('if [ "$RUN" != true ]'))
 
 
 class BuildStageShapeTests(unittest.TestCase):
