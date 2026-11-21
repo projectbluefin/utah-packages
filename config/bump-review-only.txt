@@ -38,6 +38,9 @@ libfprint
 # libjwt 1.18 moves the soname to libjwt.so.2 (sso-mib-tool links .so.1);
 # Fedora Rawhide stays on 1.12.1. Move it by hand with its consumers.
 libjwt
+# libplist 2.8 drops libplist-2.0.so.4, which gvfs-afc still needs.
+# Upgrade only with a compatible gvfs-afc dependency stack.
+libplist
 microcode_ctl
 plymouth
 ppp

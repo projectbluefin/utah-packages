@@ -51,6 +51,11 @@ checksums, and the fetch time with every answer.
 - Missing from repodata plus missing from Hummingbird means a factory build is
   owed (or an explicit wontfix). Missing from one but present in the other is
   a Utah-side consumption task, not a build.
+- `nothing provides <lib>.so.N` means no enabled, unfiltered package
+  provides that exact SONAME. Check repository filters and the published
+  `Provides`. If a library now ships `.so.M` but its consumers still
+  require `.so.N`, rebuild the consumers in the same publication or hold
+  the library update. Naming the library in `[utah]` does not add a provider.
 - Utah repo `excludepkgs`/`includepkgs` filters can hide published names
   (`grub2*` today). A name that fails the static repo filter is not
   consumable no matter what the metadata says.
