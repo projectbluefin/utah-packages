@@ -145,7 +145,7 @@ import. Two cases from the #1051 drift batch:
 
 - A generated Source0 (`generate` in the lock). intel-media-driver-free
   26.2.4 -> 26.3.5: add the tag archive's SHA-512 to
-  `INTEL_MEDIA_INPUT_SHA512` in `tools/generated_sources.py`, run
+  `INTEL_MEDIA_INPUT_SHA512` in `tools/generated_sources_common.py`, run
   `python3 tools/generated_sources.py <pkg> packages/<pkg> <out>` twice (the
   digests must agree), and pin that digest in `sources` and the lock
   (`metadata_for()` gives the `version`, `filename` and `generate` fields).
