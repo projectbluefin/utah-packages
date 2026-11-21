@@ -421,7 +421,11 @@ class MainTests(unittest.TestCase):
             (utah / "RPM-GPG-KEY-redhat-release-2").write_text("KEY\n")
             (utah / "install-packages.py").write_text(
                 "def install_repos(repos_dir):\n"
-                "    return sorted(p.stem for p in repos_dir.glob('*.repo'))\n")
+                "    return sorted(p.stem for p in repos_dir.glob('*.repo'))\n"
+                "def swaps(path):\n"
+                "    return {'coreutils-single': 'uutils-coreutils-replace'}\n"
+                "def installed(names):\n"
+                "    return list(names)\n")
             (system / "etc" / "yum.repos.d").mkdir(parents=True)
             real_path, real_copy = uis.Path, shutil.copy
 
@@ -431,8 +435,8 @@ class MainTests(unittest.TestCase):
 
             calls = []
 
-            def resolve(packages, repos):
-                calls.append((packages, repos))
+            def resolve(packages, repos, swaps, removals):
+                calls.append((packages, repos, swaps, removals))
                 return {"requested": 2, "resolved": False, "unresolved": {"libgphoto2": "why"}}
 
             with mock.patch.object(uis, "Path", side_effect=lambda p: real_path(rooted(p))), \
@@ -442,7 +446,9 @@ class MainTests(unittest.TestCase):
                 code, out = self.run_main(["resolve", "--dir", str(utah),
                                            "--report", str(root / "report.json")])
             self.assertEqual(code, 0)
-            self.assertEqual(calls, [(["fish", "libgphoto2"], ("hummingbird", "utah-packages"))])
+            self.assertEqual(calls, [(["fish", "libgphoto2"], ("hummingbird", "utah-packages"),
+                                      {"coreutils-single": "uutils-coreutils-replace"},
+                                      ("coreutils-single",))])
             self.assertEqual(sorted(p.name for p in (system / "etc" / "yum.repos.d").iterdir()),
                              ["hummingbird.repo", "utah-packages.repo"])
             self.assertEqual(

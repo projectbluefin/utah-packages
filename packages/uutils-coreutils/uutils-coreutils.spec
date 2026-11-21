@@ -138,6 +138,8 @@ Requires:       gnu-env
 # versioned Conflicts, and util-linux has `Conflicts: coreutils < 8.20`.
 Provides:       coreutils = 9.12
 Conflicts:      coreutils-single
+# This package owns %{_bindir}/cp again; gnu-cp, which briefly held it, is gone.
+Obsoletes:      gnu-cp < 9.12-1
 
 %description    replace
 Links the GNU coreutils program names in %{_bindir} to uutils-coreutils, so
