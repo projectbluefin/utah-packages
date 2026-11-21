@@ -391,6 +391,23 @@ SHA-512, so the digest is unchanged and the Fedora lookaside now lives in
   `github.com/mpeg5/{xevd,xeve}` archives (the recipe's gen script strips
   `src_main` and repacks), so no single download serves the locked bytes; they
   need a generator, not a URL re-point.
+- `kde-filesystem` and `kf5` lock single files (`teamnames`, `macros.kf5`)
+  that exist only in Fedora dist-git, with no upstream release. Both are
+  already pinned to a fixed dist-git commit (`raw/<commit>/f/...`), not
+  `raw/rawhide`, so the bytes cannot move under the lock; they stay.
+- `redhat-menus` is maintained inside Fedora: its spec's `Source0` is a bare
+  `%{name}-%{version}.tar.gz` and its `URL` is `www.redhat.com`, so the
+  lookaside is the only publisher.
+- `samba` — `download.samba.org/pub/samba/rc/` serves only
+  `samba-4.25.0rc1.tar.gz` (plus a `.tar.asc` signature over the
+  uncompressed tar); the locked `.tar.xz` is Fedora's recompression, so
+  re-pointing changes `filename` and digest and is a version bump, not a
+  transport-only move. samba.org has also served a GitHub runner bytes that
+  did not match the lock (see `canary.yml`).
+- `vulkan-headers` and `vulkan-loader` match Khronos's generated
+  `archive/vulkan-sdk-<version>` tag archives (verified 2026-11), but they
+  are Canary members, and a generated tag archive is not a fixed upload, so
+  they stay on the lookaside per the Canary contract above.
 
 ### Fork Canary approval is not a source-integrity failure
 
