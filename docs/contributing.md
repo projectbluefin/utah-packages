@@ -48,8 +48,10 @@ three siblings: `generated_sources_common.py` (reachability, recipe parsing,
 hashing), `generated_sources_archives.py` (rewrites of one upstream archive)
 and `generated_sources_vendored.py` (pinned files, OCI blobs, vendored Cargo
 trees, git archives). Put a new generator in the sibling that fits, register it
-in `generated_sources.py`, and in tests patch `_fetch` on the module that calls
-it, not on `generated_sources`.
+in `generated_sources.py`. In tests, patch `_fetch` and module-level pins (such
+as `GSTREAMER_PLUGINS_RS_REMOTE` or `GSTREAMER_PLUGINS_RS_COMMITS`) on the
+module that reads them, not on the `generated_sources` re-export, which the
+generators never consult.
 
 The recipe-set agreement gate compares the package names in `packages/`,
 `.packit.yaml`, and `config/upstream-sources.json`; no document quotes

@@ -112,7 +112,7 @@ build failure the author can fix.
 
 Recipe imports can still need this proof when they add source-generation
 support under `tools/`, even if the change only registers a new package in
-`GIT_ARCHIVE_SOURCES` in `tools/generated_sources.py`. That is a pipeline
+`GIT_ARCHIVE_SOURCES` in `tools/generated_sources_vendored.py`. That is a pipeline
 change; the recipe-inventory exception does not cover it. Inspect the actual
 pull request's files against its upstream merge base, not a fork's possibly
 stale `main`, to identify the triggering path.
