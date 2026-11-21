@@ -270,6 +270,17 @@ Version that Provides (the GNU release Hummingbird ships): an unversioned
 Provides also matches every versioned `Conflicts:`, and util-linux has
 `Conflicts: coreutils < 8.20`. For the same reason `gnu-env` conflicts with
 the arch-qualified `coreutils%{?_isa}`, which only GNU's packages provide.
+`cp` is linked to uutils like every other program, as on Dakota. uutils
+0.7.0's `cp -p` copied the source's POSIX ACL and failed with EOPNOTSUPP on a
+filesystem without ACLs, so bootupd's `cp -rp` onto the vfat ESP failed every
+Utah bootc install and `cp` was GNU's for a while (a `gnu-cp` package). The
+recipe carries uutils 0.10.0, whose ACL copy is best-effort
+(uutils/coreutils#13626), so `gnu-cp` is retired. Before dropping a
+GNU program from the list, check the image's callers that write to a vfat or
+other ACL-less filesystem, not only the shell. Bump the `%autorelease -b`
+base with every change to the replacement's file list, as #1245 did: the new
+build's EVR has to sort above the published one, or images keep the old file
+list.
 `bluefin/sudo-rs.bst` overwrites C sudo's `/usr/bin/sudo`, but C sudo stays
 installed for its PAM stacks and sudoers. It is protected in dnf too, so Utah
 makes that swap in its image build instead.

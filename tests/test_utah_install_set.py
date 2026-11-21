@@ -133,6 +133,56 @@ class VerdictTests(unittest.TestCase):
         self.assertEqual(list(report["unresolved"]), ["(the set together)"])
 
 
+class SwapTests(unittest.TestCase):
+    """Utah removes coreutils-single in the same transaction that installs
+    uutils-coreutils-replace; the check has to do the same (#1255, #1256)."""
+
+    CONFLICT = "installed package coreutils-single-9.12-1.1.hum1.x86_64 conflicts with coreutils-single"
+
+    def test_removals_become_a_dnf5_do_transaction(self) -> None:
+        self.assertEqual(uis.transaction(["a", "b"]), ["install", "a", "b"])
+        self.assertEqual(
+            uis.transaction(["a", "b"], ("coreutils-single",)),
+            ["do", "--action=install", "a", "b", "--action=remove", "coreutils-single"])
+
+    def test_the_whole_set_is_resolved_with_the_swap(self) -> None:
+        calls = []
+
+        def attempt(packages, repos, removals=()):
+            calls.append((list(packages), removals))
+            return True, "Transaction Summary:\n"
+        with mock.patch.object(uis, "attempt", side_effect=attempt):
+            report = uis.resolve(["gnu-env", "uutils-coreutils-replace"], ("utah-packages",),
+                                 {"coreutils-single": "uutils-coreutils-replace"},
+                                 ("coreutils-single",))
+        self.assertTrue(report["resolved"])
+        self.assertEqual(calls, [(["gnu-env", "uutils-coreutils-replace"], ("coreutils-single",))])
+
+    def test_a_package_that_conflicts_alone_is_retried_with_the_swap(self) -> None:
+        def attempt(packages, repos, removals=()):
+            if len(packages) > 2:
+                return False, "nothing provides libexif.so.12"
+            if packages == ["libgphoto2"]:
+                return False, "nothing provides libexif.so.12"
+            if removals:
+                return packages != ["libgphoto2", "uutils-coreutils-replace"], ""
+            return packages != ["gnu-env"], self.CONFLICT
+        with mock.patch.object(uis, "attempt", side_effect=attempt):
+            report = uis.resolve(["gnu-env", "libgphoto2", "fish"], ("utah-packages",),
+                                 {"coreutils-single": "uutils-coreutils-replace"},
+                                 ("coreutils-single",))
+        self.assertEqual(list(report["unresolved"]), ["libgphoto2"])
+
+    def test_a_swap_does_not_hide_a_real_gap(self) -> None:
+        def attempt(packages, repos, removals=()):
+            return "libgphoto2" not in packages, "nothing provides libexif.so.12"
+        with mock.patch.object(uis, "attempt", side_effect=attempt):
+            report = uis.resolve(["gnu-env", "libgphoto2"], ("utah-packages",),
+                                 {"coreutils-single": "uutils-coreutils-replace"},
+                                 ("coreutils-single",))
+        self.assertEqual(list(report["unresolved"]), ["libgphoto2"])
+
+
 class AttemptTests(unittest.TestCase):
     """attempt() is the verdict: dnf --assumeno exits 1 on a valid transaction."""
 
@@ -371,7 +421,11 @@ class MainTests(unittest.TestCase):
             (utah / "RPM-GPG-KEY-redhat-release-2").write_text("KEY\n")
             (utah / "install-packages.py").write_text(
                 "def install_repos(repos_dir):\n"
-                "    return sorted(p.stem for p in repos_dir.glob('*.repo'))\n")
+                "    return sorted(p.stem for p in repos_dir.glob('*.repo'))\n"
+                "def swaps(path):\n"
+                "    return {'coreutils-single': 'uutils-coreutils-replace'}\n"
+                "def installed(names):\n"
+                "    return list(names)\n")
             (system / "etc" / "yum.repos.d").mkdir(parents=True)
             real_path, real_copy = uis.Path, shutil.copy
 
@@ -381,8 +435,8 @@ class MainTests(unittest.TestCase):
 
             calls = []
 
-            def resolve(packages, repos):
-                calls.append((packages, repos))
+            def resolve(packages, repos, swaps, removals):
+                calls.append((packages, repos, swaps, removals))
                 return {"requested": 2, "resolved": False, "unresolved": {"libgphoto2": "why"}}
 
             with mock.patch.object(uis, "Path", side_effect=lambda p: real_path(rooted(p))), \
@@ -392,7 +446,9 @@ class MainTests(unittest.TestCase):
                 code, out = self.run_main(["resolve", "--dir", str(utah),
                                            "--report", str(root / "report.json")])
             self.assertEqual(code, 0)
-            self.assertEqual(calls, [(["fish", "libgphoto2"], ("hummingbird", "utah-packages"))])
+            self.assertEqual(calls, [(["fish", "libgphoto2"], ("hummingbird", "utah-packages"),
+                                      {"coreutils-single": "uutils-coreutils-replace"},
+                                      ("coreutils-single",))])
             self.assertEqual(sorted(p.name for p in (system / "etc" / "yum.repos.d").iterdir()),
                              ["hummingbird.repo", "utah-packages.repo"])
             self.assertEqual(
