@@ -49,6 +49,13 @@ are tested rather than restated in shell:
         and main has moved on. Otherwise exit 1 and say why. It decides only
         whether to gate again; the gate still decides whether to merge.
 
+    bump_gate.py changed --base REV --head REV
+        print a JSON array of the recipes any pull request must build before
+        it merges (canary.yml, job recipes): those whose lock entry moved,
+        whose `sources` file changed, or whose spec's Version: changed, and
+        that still have a recipe at REV head. Unlike plan, it refuses no
+        path: it names what to build, not what may merge itself (#1270).
+
 Fail closed throughout: anything the gate cannot account for -- a missing
 output, a skipped build, a package that was never selected -- is a reason
 not to merge.
@@ -475,6 +482,33 @@ def _cli_plan(args: argparse.Namespace) -> int:
     return 0
 
 
+def _versions(text: str | None) -> list[str]:
+    """The Version: lines of a spec, so a change to one is a version change."""
+    return [line.split(":", 1)[1].strip() for line in (text or "").splitlines()
+            if line.startswith("Version:")]
+
+
+def changed(base: str, head: str) -> list[str]:
+    """Recipes whose version or source bytes moved between base and head."""
+    names = moved(locks_by_name(_lock_at(base)), locks_by_name(_lock_at(head)))
+    for path in _git("diff", "--name-only", base, head).splitlines():
+        parts = path.split("/")
+        if parts[0] != "packages" or len(parts) != 3:
+            continue
+        if parts[2] == "sources" or (parts[2].endswith(".spec")
+                                     and _versions(_show(base, path)) != _versions(_show(head, path))):
+            names.add(parts[1])
+    present = {line.split("/")[1] for line in
+               _git("ls-tree", "-r", "--name-only", head, "--", "packages/").splitlines()
+               if line.count("/") >= 2}
+    return sorted(names & present)
+
+
+def _cli_changed(args: argparse.Namespace) -> int:
+    print(json.dumps(changed(args.base, args.head), separators=(",", ":")))
+    return 0
+
+
 def _cli_decide(args: argparse.Namespace) -> int:
     if args.holds_only:
         result = holds_only_verdict(args.bumped, args.result)
@@ -555,7 +589,12 @@ def main(argv: list[str] | None = None) -> int:
     requeue_cmd.add_argument("--pull", type=Path, required=True)
     requeue_cmd.add_argument("--runs", type=Path, required=True)
     requeue_cmd.add_argument("--behind", type=int, required=True)
+    changed_cmd = commands.add_parser("changed")
+    changed_cmd.add_argument("--base", required=True)
+    changed_cmd.add_argument("--head", required=True)
     args = parser.parse_args(argv)
+    if args.command == "changed":
+        return _cli_changed(args)
     if args.command == "plan":
         return _cli_plan(args)
     if args.command == "decide":

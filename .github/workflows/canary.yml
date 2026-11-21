@@ -501,9 +501,96 @@ jobs:
             --perturbed python-typing-inspection \
             ${{ hashFiles('locks/**/buildroot_lock.json') != '' && '--locks locks' || '' }} >> "$GITHUB_STEP_SUMMARY"
 
+  # The fixed canary set proves the pipeline, not the recipes a pull request
+  # changes: #1262 moved uutils-coreutils to 0.10.0 with every check green,
+  # and the first build of it was the push run on main, which failed (#1270).
+  # So every pull request also builds the recipes whose version or source
+  # bytes it moves (tools/bump_gate.py changed), against the published
+  # latest and publishing nothing -- the bump gate's build, for any author.
+  # The daily bump branches are skipped: their own gate builds them, and
+  # waits on this check. A fork pull request cannot push the package cache,
+  # so it gets no build here; it is not merged on recipe changes without one.
+  recipes:
+    needs: changes
+    if: github.event_name != 'merge_group' && needs.changes.outputs.fork != 'true'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      packages: ${{ steps.changed.outputs.packages }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+      - name: Name the recipes this change moves
+        id: changed
+        env:
+          BRANCH: ${{ github.head_ref || github.ref_name }}
+          BASE_REF: ${{ github.event.pull_request.base.ref || 'main' }}
+        run: |
+          set -euo pipefail
+          case "$BRANCH" in
+            bump/upstream-sources|bump/rawhide-imports)
+              echo "packages=[]" >> "$GITHUB_OUTPUT"
+              echo "the bump gate builds $BRANCH"
+              exit 0
+              ;;
+          esac
+          git fetch --quiet origin "$BASE_REF"
+          base=$(git merge-base "origin/$BASE_REF" HEAD)
+          packages=$(python3 tools/bump_gate.py changed --base "$base" --head HEAD)
+          echo "packages=$packages" >> "$GITHUB_OUTPUT"
+          echo "recipes to build: $packages"
+
+  recipe-build:
+    needs: recipes
+    if: needs.recipes.outputs.packages != '' && needs.recipes.outputs.packages != '[]'
+    uses: ./.github/workflows/rebuild-rpms.yml
+    with:
+      packages: ${{ needs.recipes.outputs.packages }}
+      factory_tag: latest
+      skip_publish: true
+      artifact_prefix: gate-
+
+  verify-recipes:
+    needs: [changes, recipes, recipe-build]
+    if: ${{ always() && github.event_name != 'merge_group' && needs.changes.outputs.fork != 'true' }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      # Fail closed: a plan that did not run, a changed recipe that was not
+      # selected, or one that did not build, all keep the change out.
+      - name: Every changed recipe built
+        env:
+          PLAN: ${{ needs.recipes.result }}
+          PACKAGES: ${{ needs.recipes.outputs.packages }}
+          BUILD_LIST: ${{ needs.recipe-build.outputs.build_list }}
+          FAILED: ${{ needs.recipe-build.outputs.failed }}
+          INFRA_FAILED: ${{ needs.recipe-build.outputs.infra_failed }}
+          RESULT: ${{ needs.recipe-build.result }}
+          SHA: ${{ github.sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          if [ "$PLAN" != success ]; then
+            echo "::error title=recipe build::could not name the changed recipes (job ${PLAN})" >&2
+            exit 1
+          fi
+          if [ "$PACKAGES" = "[]" ]; then
+            echo "no recipe version or source changed; nothing to build"
+            exit 0
+          fi
+          python3 tools/bump_gate.py decide --bumped "$PACKAGES" \
+            --build-list "$BUILD_LIST" --failed "$FAILED" --infra-failed "${INFRA_FAILED:-[]}" \
+            --result "$RESULT" --sha "$SHA" --run-url "$RUN_URL" \
+            --comment "$RUNNER_TEMP/comment.md" --failed-output "$RUNNER_TEMP/failed.json" \
+            --hold-output "$RUNNER_TEMP/hold.json"
+
   canary:
     name: Canary
-    needs: [changes, pass1, verify-publish, pass2, pass3, verify-cache, pass4, verify-failure, pass5, verify-incremental, verify-hermetic, pass6, verify-lane]
+    needs: [changes, pass1, verify-publish, pass2, pass3, verify-cache, pass4, verify-failure, pass5, verify-incremental, verify-hermetic, pass6, verify-lane, recipes, recipe-build, verify-recipes]
     if: always()
     runs-on: ubuntu-24.04
     permissions:
@@ -534,6 +621,7 @@ jobs:
           RUN: ${{ needs.changes.outputs.run }}
           FORK: ${{ needs.changes.outputs.fork }}
           RESULTS: ${{ toJSON(needs) }}
+          RECIPES: ${{ needs.verify-recipes.result }}
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
           PR: ${{ github.event.pull_request.number || inputs.pr }}
@@ -551,6 +639,11 @@ jobs:
             echo "::error::this merge group is not proven by the queued pull request's Canary (the changes job says why). A pull request that changes the pipeline must be up to date with every pipeline change ahead of it: update its branch so its Canary runs again, then queue it again" >&2
             exit 1
           fi
+          # The changed recipes must build whether or not the pipeline moved.
+          if [ "$FORK" != true ] && [ "$RECIPES" != success ]; then
+            echo "::error::the recipes this pull request changes did not all build (job verify-recipes: ${RECIPES}); see that job for which and why" >&2
+            exit 1
+          fi
           if [ "$RUN" != true ]; then
             echo "no pipeline path changed; nothing to prove"
             exit 0
@@ -564,6 +657,7 @@ jobs:
             exit 1
           fi
           echo "$RESULTS" | jq -r 'to_entries[] | "\(.key): \(.value.result)"'
-          # pass4 fails on purpose; verify-failure is what judges it.
-          failed=$(echo "$RESULTS" | jq -r '[to_entries[] | select(.key != "pass4" and .value.result != "success")] | length')
+          # pass4 fails on purpose; verify-failure is what judges it. The
+          # recipe jobs were judged above by verify-recipes.
+          failed=$(echo "$RESULTS" | jq -r '[to_entries[] | select(.key != "pass4" and .key != "recipes" and .key != "recipe-build" and .key != "verify-recipes" and .value.result != "success")] | length')
           test "$failed" -eq 0

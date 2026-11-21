@@ -281,9 +281,10 @@ Fixing only the ACL copy is not enough: the xattr copy fails next. 0.10.0
 itself does not build here: its generated BuildRequires want crate releases
 neither Fedora nor the factory packages (parse_datetime 0.15, phf 0.14, sm3
 0.5, string-interner 0.20, uutils_term_grid 0.8), and the hermetic lock
-resolve fails. A Canary that does not list the recipe never builds it, so
-dispatch `rebuild-rpms.yml` with `packages` on the branch before merging a
-uutils version bump. Before dropping a
+resolve fails. That merged unbuilt because Canary built only its fixed set;
+Canary now also builds every recipe whose `Version:`, `sources` or lock entry
+a pull request moves (jobs `recipes`, `recipe-build`, `verify-recipes`,
+#1270), so a bump like that turns the required check red. Before dropping a
 GNU program from the list, check the image's callers that write to a vfat or
 other ACL-less filesystem, not only the shell. Bump the `%autorelease -b`
 base with every change to the replacement's file list, as #1245 did: the new
