@@ -1088,12 +1088,12 @@
     },
     {
       "name": "flex",
-      "version": "2.6.4",
-      "url": "https://github.com/westes/flex/releases/download/v2.6.4/flex-2.6.4.tar.gz",
-      "filename": "flex-2.6.4.tar.gz",
-      "sha512": "e9785f3d620a204b7d20222888917dc065c2036cae28667065bf7862dfa1b25235095a12fd04efdbd09bfd17d3452e6b9ef953a8c1137862ff671c97132a082e",
+      "version": "2.7.3",
+      "url": "https://github.com/westes/flex/releases/download/v2.7.3/flex-2.7.3.tar.gz",
+      "filename": "flex-2.7.3.tar.gz",
+      "sha512": "5cd1f63485994957f04a51f3c27726444e774ddb85fb65db69b7bd678e312ba958f467513323efbcf6db55f470afca90657dee9368fbf598b9796a2b9b87ce5c",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/flex/flex-2.6.4.tar.gz/sha512/e9785f3d620a204b7d20222888917dc065c2036cae28667065bf7862dfa1b25235095a12fd04efdbd09bfd17d3452e6b9ef953a8c1137862ff671c97132a082e/flex-2.6.4.tar.gz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/flex/flex-2.7.3.tar.gz/sha512/5cd1f63485994957f04a51f3c27726444e774ddb85fb65db69b7bd678e312ba958f467513323efbcf6db55f470afca90657dee9368fbf598b9796a2b9b87ce5c/flex-2.7.3.tar.gz"
       ]
     },
     {
@@ -1890,10 +1890,10 @@
     },
     {
       "name": "grpc",
-      "version": "1.75.1",
-      "url": "https://github.com/grpc/grpc/archive/v1.75.1/grpc-1.75.1.tar.gz",
-      "filename": "grpc-1.75.1.tar.gz",
-      "sha512": "ffc3fde817f60e151cb2d2c0980485faf15270c12f2ec5f1228ef595d019ddf3c5e977f974cb8d5911010e0083652edddade1e999155a2fa2e72c3fd3a1aefb2"
+      "version": "1.85.4",
+      "url": "https://github.com/grpc/grpc/archive/v1.85.4/grpc-1.85.4.tar.gz",
+      "filename": "grpc-1.85.4.tar.gz",
+      "sha512": "5bdfa6c13a3eb7da1e50ce8b3d6bdaeb915b3065865f4b13edc6175933b117c807f82f24bb9d6a62c08f559daa2578a8193b6dbc77767084a44458ced0ab793b"
     },
     {
       "name": "grub2",
