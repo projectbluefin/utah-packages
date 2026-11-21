@@ -12,7 +12,7 @@
 %global __strip /bin/true
 
 Name:           umotd
-Version:        0.3.3
+Version:        0.4.1
 Release:        1%{?dist}
 Summary:        Translatable message of the day for Universal Blue systems
 
@@ -46,5 +46,8 @@ test "$(%{buildroot}%{_bindir}/umotd version)" = "%{version}"
 %{_bindir}/umotd
 
 %changelog
+* Fri Nov 20 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 0.4.1-1
+- Update to 0.4.1
+
 * Mon Nov 16 2026 Utah Packages <packages@projectbluefin.io> - 0.3.3-1
 - Initial recipe: Dakota's umotd release binary (bluefin/umotd.bst)

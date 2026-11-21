@@ -1,5 +1,5 @@
 Name:       ibus-typing-booster
-Version:    2.31.4
+Version:    2.31.5
 Release:    %autorelease
 Summary:    A completion input method
 License:    GPL-3.0-or-later AND Apache-2.0

@@ -7,8 +7,8 @@
 
 Name:           ntfs-3g
 Epoch:          2
-Version:        2026.7.7
-Release:        2%{?dist}
+Version:        2026.9.28
+Release:        1%{?dist}
 Summary:        Linux NTFS userspace driver
 License:        GPL-2.0-or-later
 URL:            https://github.com/tuxera/ntfs-3g
@@ -196,6 +196,9 @@ rm -rf %{buildroot}%{_defaultdocdir}/%{name}/README
 %exclude %{_mandir}/man8/ntfs-3g*
 
 %changelog
+* Fri Nov 20 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 2:2026.9.28-1
+- Update to 2026.9.28
+
 * Thu Aug 27 2026 Tom Callaway <spot@fedoraproject.org> - 2:2026.7.7-2
 - rebuild for side tag
 

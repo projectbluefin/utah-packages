@@ -1,6 +1,6 @@
 Summary: Collection of performance monitoring tools for Linux
 Name: sysstat
-Version: 12.8.0
+Version: 12.8.1
 Release: 1%{?dist}
 License: GPL-2.0-or-later
 
@@ -115,6 +115,9 @@ fi
 %{_tmpfilesdir}/%{name}.conf
 
 %changelog
+* Fri Nov 20 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 12.8.1-1
+- Update to 12.8.1
+
 * Mon Aug 31 2026 Lukáš Zaoral <lzaoral@redhat.com> - 12.8.0-1
 - rebase to the latest upstream release (rhbz#2525663)
 

@@ -291,7 +291,7 @@
       "parity_note": null,
       "recipe": "packages/gstreamer1-plugins-good",
       "stage": 3,
-      "version": "1.28.6",
+      "version": "1.28.9",
       "nevra": null,
       "recipe_provenance": "https://src.fedoraproject.org/rpms/gstreamer1-plugins-good.git"
     },
@@ -306,7 +306,7 @@
       "parity_note": null,
       "recipe": "packages/gstreamer1-plugins-base",
       "stage": 0,
-      "version": "1.28.6",
+      "version": "1.28.9",
       "nevra": null,
       "recipe_provenance": "https://src.fedoraproject.org/rpms/gstreamer1-plugins-base.git"
     },
