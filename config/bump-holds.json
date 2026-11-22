@@ -152,6 +152,10 @@
       "version": "2.3.2",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/40833963568"
     },
+    "python-argcomplete": {
+      "version": "3.8.0",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/45032947442"
+    },
     "python-dns": {
       "version": "2.9.2",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/43358822069"
