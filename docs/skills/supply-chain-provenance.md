@@ -409,6 +409,14 @@ SHA-512, so the digest is unchanged and the Fedora lookaside now lives in
   are Canary members, which `tests/test_canary.py` keeps on the lookaside, and
   a generated tag archive can change bytes, so it is not a safe Canary
   primary; they stay.
+- `libical` (the third Canary member) and `python-typing-inspection` (the
+  recipe Canary's pass3 perturbs, `tools/canary.py` `PERTURBED`) are pinned
+  to the lookaside by the same test. Their upstream copies do match the
+  locked SHA-512 (2026-11): libical's GitHub release asset
+  `releases/download/v3.0.20/libical-3.0.20.tar.gz` and the PyPI sdist
+  `typing_inspection-0.4.4.tar.gz`. They stay until an owner moves the
+  Canary off the lookaside; until then the Canary set is the floor of the
+  ratchet, not unfinished migration work.
 
 ### Fork Canary approval is not a source-integrity failure
 
