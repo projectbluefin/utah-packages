@@ -47,12 +47,12 @@
     },
     {
       "customType": "regex",
-      "description": "Container images named inside a workflow run: script. Renovate's docker manager reads Dockerfiles, container: and services:, none of which covers an image passed to docker run in a shell line -- so these pins were tracked by nothing and rotted twice in a week, each time taking every job in the run down with exit 125 before a line of its script ran (quay.io/fedora/fedora, and quay.io/packit/packit on two separate digests). The tag is written alongside the digest so this can resolve what to track: fedora follows :44, not :latest.",
+      "description": "Container images named inside a workflow run: script or env: value. Renovate's docker manager reads Dockerfiles, container: and services:, none of which covers an image passed to docker run in a shell line -- so these pins were tracked by nothing and rotted twice in a week, each time taking every job in the run down with exit 125 before a line of its script ran (quay.io/fedora/fedora, and quay.io/packit/packit on two separate digests). The tag is written alongside the digest so this can resolve what to track: fedora follows :44, not :latest. registry.access.redhat.com carries the Red Hat Hardened Images (hi/), tracked the same way.",
       "managerFilePatterns": [
         "/^\\.github/workflows/.+\\.ya?ml$/"
       ],
       "matchStrings": [
-        "(?<depName>quay\\.io/[^:@\\s]+):(?<currentValue>[^@\\s]+)@(?<currentDigest>sha256:[a-f0-9]{64})"
+        "(?<depName>(?:quay\\.io|registry\\.access\\.redhat\\.com)/[^:@\\s]+):(?<currentValue>[^@\\s]+)@(?<currentDigest>sha256:[a-f0-9]{64})"
       ],
       "datasourceTemplate": "docker",
       "depTypeTemplate": "build-root-image"

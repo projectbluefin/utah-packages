@@ -271,11 +271,19 @@ Provides also matches every versioned `Conflicts:`, and util-linux has
 `Conflicts: coreutils < 8.20`. For the same reason `gnu-env` conflicts with
 the arch-qualified `coreutils%{?_isa}`, which only GNU's packages provide.
 `cp` is linked to uutils like every other program, as on Dakota. uutils
-0.7.0's `cp -p` copied the source's POSIX ACL and failed with EOPNOTSUPP on a
-filesystem without ACLs, so bootupd's `cp -rp` onto the vfat ESP failed every
-Utah bootc install and `cp` was GNU's for a while (a `gnu-cp` package). The
-recipe carries uutils 0.10.0, whose ACL copy is best-effort
-(uutils/coreutils#13626), so `gnu-cp` is retired. Before dropping a
+0.7.0's `cp -p` copied the source's POSIX ACL, then every xattr, and failed
+with EOPNOTSUPP on a filesystem without them, so bootupd's `cp -rp` onto the
+vfat ESP failed every Utah bootc install and `cp` was GNU's for a while (a
+`gnu-cp` package). The recipe carries 0.10.0's behaviour on 0.7.0 as
+`coreutils-cp-preserve-vfat.diff` (best-effort ACL copy,
+uutils/coreutils#13626; no xattrs in `-p`, #9704), so `gnu-cp` is retired.
+Fixing only the ACL copy is not enough: the xattr copy fails next. 0.10.0
+itself does not build here: its generated BuildRequires want crate releases
+neither Fedora nor the factory packages (parse_datetime 0.15, phf 0.14, sm3
+0.5, string-interner 0.20, uutils_term_grid 0.8), and the hermetic lock
+resolve fails. A Canary that does not list the recipe never builds it, so
+dispatch `rebuild-rpms.yml` with `packages` on the branch before merging a
+uutils version bump. Before dropping a
 GNU program from the list, check the image's callers that write to a vfat or
 other ACL-less filesystem, not only the shell. Bump the `%autorelease -b`
 base with every change to the replacement's file list, as #1245 did: the new

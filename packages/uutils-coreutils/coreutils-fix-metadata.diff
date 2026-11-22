@@ -1,48 +1,63 @@
 diff -Naur a/Cargo.toml b/Cargo.toml
---- a/Cargo.toml
-+++ b/Cargo.toml
-@@ -413,7 +413,6 @@
- ctrlc = { version = "3.5.2", features = ["termination"] }
- data-encoding = "2.6"
- data-encoding-macro = "0.1.15"
--divan = { package = "codspeed-divan-compat", version = "5.0.0" }
+--- a/Cargo.toml	2026-03-08 12:06:05.000000000 +0000
++++ b/Cargo.toml	2026-11-05 20:33:52.213117286 +0000
+@@ -374,12 +374,11 @@
+ byteorder = "1.5.0"
+ clap = { version = "4.5", features = ["wrap_help", "cargo", "color"] }
+ clap_complete = "4.4"
+-clap_mangen = "0.2"
++clap_mangen = "0.3"
+ compare = "0.1.0"
+ crossterm = { version = "0.29.0", default-features = false }
+ ctor = "0.6.0"
+ ctrlc = { version = "3.4.7", features = ["termination"] }
+-divan = { package = "codspeed-divan-compat", version = "4.0.5" }
  dns-lookup = { version = "3.0.0" }
- dunce = "1.0.4"
- exacl = "0.13.0"
-@@ -445,7 +444,7 @@
+ exacl = "0.12.0"
+ file_diff = "1.0.0"
+@@ -410,7 +409,7 @@
  memmap2 = "0.9.4"
- nix = { version = "0.31.3", default-features = false }
+ nix = { version = "0.30", default-features = false }
  nom = "8.0.0"
--notify = { version = "8.2.0", features = ["macos_kqueue"] }
+-notify = { version = "=8.2.0", features = ["macos_kqueue"] }
 +notify = { version = "8.2.0" }
  num-bigint = "0.4.4"
  num-prime = "0.5.0"
  num-traits = "0.2.19"
-@@ -487,7 +486,7 @@
+@@ -430,7 +429,7 @@
+ rust-ini = "0.21.0"
+ same-file = "1.0.6"
+ self_cell = "1.0.4"
+-selinux = "=0.6.0"
++selinux = "0.6.0"
+ string-interner = "0.19.0"
+ tempfile = "3.15.0"
+ terminal_size = "0.4.0"
+@@ -445,7 +444,7 @@
+ winapi-util = "0.1.8"
  windows-sys = { version = "0.61.0", default-features = false }
  xattr = "1.3.1"
- z85 = "3.0.5"
 -zip = { version = "8.0.0", default-features = false, features = ["deflate"] }
 +zip = { version = "9.0.0", default-features = false, features = ["deflate"] }
  
  hex = "0.4.3"
- md-5 = "0.11.0"
+ md-5 = "0.10.6"
 diff -Naur a/src/uu/b2sum/Cargo.toml b/src/uu/b2sum/Cargo.toml
---- a/src/uu/b2sum/Cargo.toml
-+++ b/src/uu/b2sum/Cargo.toml
-@@ -28,7 +28,7 @@
+--- a/src/uu/b2sum/Cargo.toml	2026-03-08 12:06:05.000000000 +0000
++++ b/src/uu/b2sum/Cargo.toml	2026-11-05 20:33:45.248002511 +0000
+@@ -30,7 +30,7 @@
  fluent = { workspace = true }
  
  [dev-dependencies]
 -uucore = { workspace = true, features = ["benchmark"] }
 +uucore = { workspace = true }
  
- [lints]
- workspace = true
+ [[bin]]
+ name = "b2sum"
 diff -Naur a/src/uu/base64/Cargo.toml b/src/uu/base64/Cargo.toml
---- a/src/uu/base64/Cargo.toml
-+++ b/src/uu/base64/Cargo.toml
-@@ -23,9 +23,8 @@
+--- a/src/uu/base64/Cargo.toml	2026-03-08 12:06:05.000000000 +0000
++++ b/src/uu/base64/Cargo.toml	2026-11-05 20:33:45.248224224 +0000
+@@ -25,14 +25,9 @@
  fluent = { workspace = true }
  
  [dev-dependencies]
@@ -51,50 +66,25 @@ diff -Naur a/src/uu/base64/Cargo.toml b/src/uu/base64/Cargo.toml
 -uucore = { workspace = true, features = ["benchmark"] }
 +uucore = { workspace = true }
  
- [lints]
- workspace = true
-@@ -34,6 +33,3 @@
+ [[bin]]
  name = "base64"
  path = "src/main.rs"
- 
+-
 -[[bench]]
 -name = "base64_bench"
 -harness = false
-diff -Naur a/src/uu/cat/Cargo.toml b/src/uu/cat/Cargo.toml
---- a/src/uu/cat/Cargo.toml
-+++ b/src/uu/cat/Cargo.toml
-@@ -24,9 +24,8 @@
+diff -Naur a/src/uu/cksum/Cargo.toml b/src/uu/cksum/Cargo.toml
+--- a/src/uu/cksum/Cargo.toml	2026-03-08 12:06:05.000000000 +0000
++++ b/src/uu/cksum/Cargo.toml	2026-11-05 20:33:45.248392207 +0000
+@@ -30,13 +30,9 @@
  fluent = { workspace = true }
  
  [dev-dependencies]
 -divan = { workspace = true }
- tempfile = { workspace = true }
 -uucore = { workspace = true, features = ["benchmark"] }
 +uucore = { workspace = true }
  
- [target.'cfg(windows)'.dependencies]
- winapi-util = { workspace = true }
-@@ -42,6 +41,3 @@
- name = "cat"
- path = "src/main.rs"
- 
--[[bench]]
--name = "cat_bench"
--harness = false
-diff -Naur a/src/uu/cksum/Cargo.toml b/src/uu/cksum/Cargo.toml
---- a/src/uu/cksum/Cargo.toml
-+++ b/src/uu/cksum/Cargo.toml
-@@ -31,8 +31,7 @@
- openssl = ["uucore/openssl"]
- 
- [dev-dependencies]
--divan = { workspace = true }
--uucore = { workspace = true, features = ["benchmark"] }
-+uucore = { workspace = true }
- 
- [lints]
- workspace = true
-@@ -41,6 +40,3 @@
+ [[bin]]
  name = "cksum"
  path = "src/main.rs"
  
@@ -102,9 +92,9 @@ diff -Naur a/src/uu/cksum/Cargo.toml b/src/uu/cksum/Cargo.toml
 -name = "cksum_bench"
 -harness = false
 diff -Naur a/src/uu/cp/Cargo.toml b/src/uu/cp/Cargo.toml
---- a/src/uu/cp/Cargo.toml
-+++ b/src/uu/cp/Cargo.toml
-@@ -54,13 +54,8 @@
+--- a/src/uu/cp/Cargo.toml	2026-03-08 12:06:05.000000000 +0000
++++ b/src/uu/cp/Cargo.toml	2026-11-05 20:33:45.248704952 +0000
+@@ -48,13 +48,8 @@
  path = "src/main.rs"
  
  [dev-dependencies]
@@ -120,9 +110,9 @@ diff -Naur a/src/uu/cp/Cargo.toml b/src/uu/cp/Cargo.toml
  [features]
  feat_selinux = ["selinux", "uucore/selinux"]
 diff -Naur a/src/uu/csplit/Cargo.toml b/src/uu/csplit/Cargo.toml
---- a/src/uu/csplit/Cargo.toml
-+++ b/src/uu/csplit/Cargo.toml
-@@ -27,13 +27,9 @@
+--- a/src/uu/csplit/Cargo.toml	2026-03-08 12:06:05.000000000 +0000
++++ b/src/uu/csplit/Cargo.toml	2026-11-05 20:33:45.248881414 +0000
+@@ -30,10 +30,6 @@
  path = "src/main.rs"
  
  [dev-dependencies]
@@ -131,16 +121,13 @@ diff -Naur a/src/uu/csplit/Cargo.toml b/src/uu/csplit/Cargo.toml
 -uucore = { workspace = true, features = ["benchmark"] }
 +uucore = { workspace = true }
  
- [lints]
- workspace = true
- 
 -[[bench]]
 -name = "csplit_bench"
 -harness = false
 diff -Naur a/src/uu/cut/Cargo.toml b/src/uu/cut/Cargo.toml
---- a/src/uu/cut/Cargo.toml
-+++ b/src/uu/cut/Cargo.toml
-@@ -23,8 +23,7 @@
+--- a/src/uu/cut/Cargo.toml	2026-03-08 12:06:05.000000000 +0000
++++ b/src/uu/cut/Cargo.toml	2026-11-05 20:33:45.249044307 +0000
+@@ -26,13 +26,9 @@
  fluent = { workspace = true }
  
  [dev-dependencies]
@@ -148,9 +135,7 @@ diff -Naur a/src/uu/cut/Cargo.toml b/src/uu/cut/Cargo.toml
 -uucore = { workspace = true, features = ["benchmark"] }
 +uucore = { workspace = true }
  
- [lints]
- workspace = true
-@@ -33,6 +32,3 @@
+ [[bin]]
  name = "cut"
  path = "src/main.rs"
  
@@ -158,9 +143,9 @@ diff -Naur a/src/uu/cut/Cargo.toml b/src/uu/cut/Cargo.toml
 -name = "cut_bench"
 -harness = false
 diff -Naur a/src/uu/date/Cargo.toml b/src/uu/date/Cargo.toml
---- a/src/uu/date/Cargo.toml
-+++ b/src/uu/date/Cargo.toml
-@@ -54,13 +54,9 @@
+--- a/src/uu/date/Cargo.toml	2026-03-08 12:06:05.000000000 +0000
++++ b/src/uu/date/Cargo.toml	2026-11-05 20:33:45.249211089 +0000
+@@ -57,10 +57,6 @@
  path = "src/main.rs"
  
  [dev-dependencies]
@@ -168,17 +153,14 @@ diff -Naur a/src/uu/date/Cargo.toml b/src/uu/date/Cargo.toml
  tempfile = { workspace = true }
 -uucore = { workspace = true, features = ["benchmark"] }
 +uucore = { workspace = true }
- 
- [lints]
- workspace = true
  
 -[[bench]]
 -name = "date_bench"
 -harness = false
 diff -Naur a/src/uu/dd/Cargo.toml b/src/uu/dd/Cargo.toml
---- a/src/uu/dd/Cargo.toml
-+++ b/src/uu/dd/Cargo.toml
-@@ -35,13 +35,9 @@
+--- a/src/uu/dd/Cargo.toml	2026-03-08 12:06:05.000000000 +0000
++++ b/src/uu/dd/Cargo.toml	2026-11-05 20:33:45.249370622 +0000
+@@ -40,10 +40,6 @@
  path = "src/main.rs"
  
  [dev-dependencies]
@@ -187,16 +169,13 @@ diff -Naur a/src/uu/dd/Cargo.toml b/src/uu/dd/Cargo.toml
 -uucore = { workspace = true, features = ["benchmark"] }
 +uucore = { workspace = true }
  
- [lints]
- workspace = true
- 
 -[[bench]]
 -name = "dd_bench"
 -harness = false
 diff -Naur a/src/uu/df/Cargo.toml b/src/uu/df/Cargo.toml
---- a/src/uu/df/Cargo.toml
-+++ b/src/uu/df/Cargo.toml
-@@ -23,9 +23,8 @@
+--- a/src/uu/df/Cargo.toml	2026-03-08 12:06:05.000000000 +0000
++++ b/src/uu/df/Cargo.toml	2026-11-05 20:33:45.249543304 +0000
+@@ -26,14 +26,10 @@
  fluent = { workspace = true }
  
  [dev-dependencies]
@@ -205,9 +184,7 @@ diff -Naur a/src/uu/df/Cargo.toml b/src/uu/df/Cargo.toml
 -uucore = { workspace = true, features = ["benchmark"] }
 +uucore = { workspace = true }
  
- [target.'cfg(unix)'.dependencies]
- rustix = { workspace = true, features = ["fs"] }
-@@ -40,6 +39,3 @@
+ [[bin]]
  name = "df"
  path = "src/main.rs"
  
@@ -215,9 +192,9 @@ diff -Naur a/src/uu/df/Cargo.toml b/src/uu/df/Cargo.toml
 -name = "df_bench"
 -harness = false
 diff -Naur a/src/uu/du/Cargo.toml b/src/uu/du/Cargo.toml
---- a/src/uu/du/Cargo.toml
-+++ b/src/uu/du/Cargo.toml
-@@ -45,13 +45,9 @@
+--- a/src/uu/du/Cargo.toml	2026-03-08 12:06:05.000000000 +0000
++++ b/src/uu/du/Cargo.toml	2026-11-05 20:33:45.249704207 +0000
+@@ -47,10 +47,6 @@
  path = "src/main.rs"
  
  [dev-dependencies]
@@ -225,35 +202,15 @@ diff -Naur a/src/uu/du/Cargo.toml b/src/uu/du/Cargo.toml
  tempfile = { workspace = true }
 -uucore = { workspace = true, features = ["benchmark"] }
 +uucore = { workspace = true }
- 
- [lints]
- workspace = true
  
 -[[bench]]
 -name = "du_bench"
 -harness = false
-diff -Naur a/src/uu/echo/Cargo.toml b/src/uu/echo/Cargo.toml
---- a/src/uu/echo/Cargo.toml
-+++ b/src/uu/echo/Cargo.toml
-@@ -26,12 +26,8 @@
- path = "src/main.rs"
- 
- [dev-dependencies]
--divan = { workspace = true }
--uucore = { workspace = true, features = ["benchmark"] }
-+uucore = { workspace = true }
- 
- [lints]
- workspace = true
- 
--[[bench]]
--name = "echo_bench"
--harness = false
 diff -Naur a/src/uu/expand/Cargo.toml b/src/uu/expand/Cargo.toml
---- a/src/uu/expand/Cargo.toml
-+++ b/src/uu/expand/Cargo.toml
-@@ -23,9 +23,8 @@
- uucore = { workspace = true }
+--- a/src/uu/expand/Cargo.toml	2026-03-08 12:06:05.000000000 +0000
++++ b/src/uu/expand/Cargo.toml	2026-11-05 20:33:45.249922310 +0000
+@@ -26,14 +26,9 @@
+ fluent = { workspace = true }
  
  [dev-dependencies]
 -divan = { workspace = true }
@@ -261,39 +218,17 @@ diff -Naur a/src/uu/expand/Cargo.toml b/src/uu/expand/Cargo.toml
 -uucore = { workspace = true, features = ["benchmark"] }
 +uucore = { workspace = true }
  
- [lints]
- workspace = true
-@@ -34,6 +33,3 @@
+ [[bin]]
  name = "expand"
  path = "src/main.rs"
- 
+-
 -[[bench]]
 -name = "expand_bench"
 -harness = false
-diff -Naur a/src/uu/expr/Cargo.toml b/src/uu/expr/Cargo.toml
---- a/src/uu/expr/Cargo.toml
-+++ b/src/uu/expr/Cargo.toml
-@@ -25,8 +25,7 @@
- fluent = { workspace = true }
- 
- [dev-dependencies]
--divan = { workspace = true }
--uucore = { workspace = true, features = ["benchmark"] }
-+uucore = { workspace = true }
- 
- [lints]
- workspace = true
-@@ -35,6 +34,3 @@
- name = "expr"
- path = "src/main.rs"
- 
--[[bench]]
--name = "expr_bench"
--harness = false
 diff -Naur a/src/uu/factor/Cargo.toml b/src/uu/factor/Cargo.toml
---- a/src/uu/factor/Cargo.toml
-+++ b/src/uu/factor/Cargo.toml
-@@ -24,8 +24,7 @@
+--- a/src/uu/factor/Cargo.toml	2026-03-08 12:06:05.000000000 +0000
++++ b/src/uu/factor/Cargo.toml	2026-11-05 20:33:45.250103493 +0000
+@@ -31,12 +31,8 @@
  path = "src/main.rs"
  
  [dev-dependencies]
@@ -301,19 +236,16 @@ diff -Naur a/src/uu/factor/Cargo.toml b/src/uu/factor/Cargo.toml
 -uucore = { workspace = true, features = ["benchmark"] }
 +uucore = { workspace = true }
  
- [lints]
- workspace = true
-@@ -34,6 +33,3 @@
+ [lib]
  path = "src/factor.rs"
- doctest = false
  
 -[[bench]]
 -name = "factor_bench"
 -harness = false
 diff -Naur a/src/uu/false/Cargo.toml b/src/uu/false/Cargo.toml
---- a/src/uu/false/Cargo.toml
-+++ b/src/uu/false/Cargo.toml
-@@ -27,12 +27,8 @@
+--- a/src/uu/false/Cargo.toml	2026-03-08 12:06:05.000000000 +0000
++++ b/src/uu/false/Cargo.toml	2026-11-05 20:33:45.250271915 +0000
+@@ -29,9 +29,5 @@
  path = "src/main.rs"
  
  [dev-dependencies]
@@ -321,16 +253,13 @@ diff -Naur a/src/uu/false/Cargo.toml b/src/uu/false/Cargo.toml
 -uucore = { workspace = true, features = ["benchmark"] }
 +uucore = { workspace = true }
  
- [lints]
- workspace = true
- 
 -[[bench]]
 -name = "false_bench"
 -harness = false
 diff -Naur a/src/uu/fold/Cargo.toml b/src/uu/fold/Cargo.toml
---- a/src/uu/fold/Cargo.toml
-+++ b/src/uu/fold/Cargo.toml
-@@ -23,9 +23,8 @@
+--- a/src/uu/fold/Cargo.toml	2026-03-08 12:06:05.000000000 +0000
++++ b/src/uu/fold/Cargo.toml	2026-11-05 20:33:45.250433868 +0000
+@@ -25,14 +25,10 @@
  unicode-width = { workspace = true }
  
  [dev-dependencies]
@@ -339,9 +268,7 @@ diff -Naur a/src/uu/fold/Cargo.toml b/src/uu/fold/Cargo.toml
 -uucore = { workspace = true, features = ["benchmark"] }
 +uucore = { workspace = true }
  
- [lints]
- workspace = true
-@@ -34,6 +33,3 @@
+ [[bin]]
  name = "fold"
  path = "src/main.rs"
  
@@ -349,28 +276,20 @@ diff -Naur a/src/uu/fold/Cargo.toml b/src/uu/fold/Cargo.toml
 -name = "fold_bench"
 -harness = false
 diff -Naur a/src/uu/hostname/Cargo.toml b/src/uu/hostname/Cargo.toml
---- a/src/uu/hostname/Cargo.toml
-+++ b/src/uu/hostname/Cargo.toml
-@@ -38,14 +38,9 @@
- name = "hostname"
- path = "src/main.rs"
+--- a/src/uu/hostname/Cargo.toml	2026-03-08 12:06:05.000000000 +0000
++++ b/src/uu/hostname/Cargo.toml	2026-11-05 20:33:45.250605000 +0000
+@@ -45,6 +45,5 @@
+ harness = false
  
--[[bench]]
--name = "hostname_bench"
--harness = false
--
  [dev-dependencies]
 -divan = { workspace = true }
  tempfile = { workspace = true }
 -uucore = { workspace = true, features = ["benchmark"] }
 +uucore = { workspace = true }
- 
- [lints]
- workspace = true
 diff -Naur a/src/uu/join/Cargo.toml b/src/uu/join/Cargo.toml
---- a/src/uu/join/Cargo.toml
-+++ b/src/uu/join/Cargo.toml
-@@ -28,13 +28,9 @@
+--- a/src/uu/join/Cargo.toml	2026-03-08 12:06:05.000000000 +0000
++++ b/src/uu/join/Cargo.toml	2026-11-05 20:33:45.250769893 +0000
+@@ -30,10 +30,6 @@
  path = "src/main.rs"
  
  [dev-dependencies]
@@ -378,17 +297,14 @@ diff -Naur a/src/uu/join/Cargo.toml b/src/uu/join/Cargo.toml
  tempfile = { workspace = true }
 -uucore = { workspace = true, features = ["benchmark"] }
 +uucore = { workspace = true }
- 
- [lints]
- workspace = true
  
 -[[bench]]
 -name = "join_bench"
 -harness = false
 diff -Naur a/src/uu/ls/Cargo.toml b/src/uu/ls/Cargo.toml
---- a/src/uu/ls/Cargo.toml
-+++ b/src/uu/ls/Cargo.toml
-@@ -53,13 +53,8 @@
+--- a/src/uu/ls/Cargo.toml	2026-03-08 12:06:05.000000000 +0000
++++ b/src/uu/ls/Cargo.toml	2026-11-05 20:33:45.250940145 +0000
+@@ -51,13 +51,8 @@
  path = "src/main.rs"
  
  [dev-dependencies]
@@ -404,21 +320,21 @@ diff -Naur a/src/uu/ls/Cargo.toml b/src/uu/ls/Cargo.toml
  [features]
  feat_selinux = ["selinux", "uucore/selinux"]
 diff -Naur a/src/uu/md5sum/Cargo.toml b/src/uu/md5sum/Cargo.toml
---- a/src/uu/md5sum/Cargo.toml
-+++ b/src/uu/md5sum/Cargo.toml
-@@ -31,7 +31,7 @@
- openssl = ["uucore/openssl"]
+--- a/src/uu/md5sum/Cargo.toml	2026-03-08 12:06:05.000000000 +0000
++++ b/src/uu/md5sum/Cargo.toml	2026-11-05 20:33:45.251112358 +0000
+@@ -30,7 +30,7 @@
+ fluent = { workspace = true }
  
  [dev-dependencies]
 -uucore = { workspace = true, features = ["benchmark"] }
 +uucore = { workspace = true }
  
- [lints]
- workspace = true
+ [[bin]]
+ name = "md5sum"
 diff -Naur a/src/uu/mv/Cargo.toml b/src/uu/mv/Cargo.toml
---- a/src/uu/mv/Cargo.toml
-+++ b/src/uu/mv/Cargo.toml
-@@ -53,13 +53,9 @@
+--- a/src/uu/mv/Cargo.toml	2026-03-08 12:06:05.000000000 +0000
++++ b/src/uu/mv/Cargo.toml	2026-11-05 20:33:45.251318111 +0000
+@@ -51,10 +51,6 @@
  path = "src/main.rs"
  
  [dev-dependencies]
@@ -427,16 +343,13 @@ diff -Naur a/src/uu/mv/Cargo.toml b/src/uu/mv/Cargo.toml
 -uucore = { workspace = true, features = ["benchmark"] }
 +uucore = { workspace = true }
  
- [lints]
- workspace = true
- 
 -[[bench]]
 -name = "mv_bench"
 -harness = false
 diff -Naur a/src/uu/nl/Cargo.toml b/src/uu/nl/Cargo.toml
---- a/src/uu/nl/Cargo.toml
-+++ b/src/uu/nl/Cargo.toml
-@@ -23,9 +23,8 @@
+--- a/src/uu/nl/Cargo.toml	2026-03-08 12:06:05.000000000 +0000
++++ b/src/uu/nl/Cargo.toml	2026-11-05 20:33:45.251563215 +0000
+@@ -26,14 +26,10 @@
  fluent = { workspace = true }
  
  [dev-dependencies]
@@ -445,9 +358,7 @@ diff -Naur a/src/uu/nl/Cargo.toml b/src/uu/nl/Cargo.toml
 -uucore = { workspace = true, features = ["benchmark"] }
 +uucore = { workspace = true }
  
- [lints]
- workspace = true
-@@ -34,6 +33,3 @@
+ [[bin]]
  name = "nl"
  path = "src/main.rs"
  
@@ -455,9 +366,9 @@ diff -Naur a/src/uu/nl/Cargo.toml b/src/uu/nl/Cargo.toml
 -name = "nl_bench"
 -harness = false
 diff -Naur a/src/uu/numfmt/Cargo.toml b/src/uu/numfmt/Cargo.toml
---- a/src/uu/numfmt/Cargo.toml
-+++ b/src/uu/numfmt/Cargo.toml
-@@ -27,8 +27,7 @@
+--- a/src/uu/numfmt/Cargo.toml	2026-03-08 12:06:05.000000000 +0000
++++ b/src/uu/numfmt/Cargo.toml	2026-11-05 20:33:45.251746667 +0000
+@@ -26,13 +26,9 @@
  memchr = { workspace = true }
  
  [dev-dependencies]
@@ -465,9 +376,7 @@ diff -Naur a/src/uu/numfmt/Cargo.toml b/src/uu/numfmt/Cargo.toml
 -uucore = { workspace = true, features = ["benchmark"] }
 +uucore = { workspace = true }
  
- [lints]
- workspace = true
-@@ -37,6 +36,3 @@
+ [[bin]]
  name = "numfmt"
  path = "src/main.rs"
  
@@ -475,9 +384,9 @@ diff -Naur a/src/uu/numfmt/Cargo.toml b/src/uu/numfmt/Cargo.toml
 -name = "numfmt_bench"
 -harness = false
 diff -Naur a/src/uu/rm/Cargo.toml b/src/uu/rm/Cargo.toml
---- a/src/uu/rm/Cargo.toml
-+++ b/src/uu/rm/Cargo.toml
-@@ -36,13 +36,9 @@
+--- a/src/uu/rm/Cargo.toml	2026-03-08 12:06:05.000000000 +0000
++++ b/src/uu/rm/Cargo.toml	2026-11-05 20:33:45.251910810 +0000
+@@ -39,9 +39,8 @@
  path = "src/main.rs"
  
  [dev-dependencies]
@@ -486,16 +395,12 @@ diff -Naur a/src/uu/rm/Cargo.toml b/src/uu/rm/Cargo.toml
 -uucore = { workspace = true, features = ["benchmark"] }
 +uucore = { workspace = true }
  
- [lints]
- workspace = true
- 
--[[bench]]
--name = "rm_bench"
--harness = false
+ [[bench]]
+ name = "rm_bench"
 diff -Naur a/src/uu/seq/Cargo.toml b/src/uu/seq/Cargo.toml
---- a/src/uu/seq/Cargo.toml
-+++ b/src/uu/seq/Cargo.toml
-@@ -37,12 +37,8 @@
+--- a/src/uu/seq/Cargo.toml	2026-03-08 12:06:05.000000000 +0000
++++ b/src/uu/seq/Cargo.toml	2026-11-05 20:33:45.252072382 +0000
+@@ -40,9 +40,5 @@
  path = "src/main.rs"
  
  [dev-dependencies]
@@ -503,76 +408,73 @@ diff -Naur a/src/uu/seq/Cargo.toml b/src/uu/seq/Cargo.toml
 -uucore = { workspace = true, features = ["benchmark"] }
 +uucore = { workspace = true }
  
- [lints]
- workspace = true
- 
 -[[bench]]
 -name = "seq_bench"
 -harness = false
 diff -Naur a/src/uu/sha1sum/Cargo.toml b/src/uu/sha1sum/Cargo.toml
---- a/src/uu/sha1sum/Cargo.toml
-+++ b/src/uu/sha1sum/Cargo.toml
-@@ -31,7 +31,7 @@
- openssl = ["uucore/openssl"]
+--- a/src/uu/sha1sum/Cargo.toml	2026-03-08 12:06:05.000000000 +0000
++++ b/src/uu/sha1sum/Cargo.toml	2026-11-05 20:33:45.252235575 +0000
+@@ -30,7 +30,7 @@
+ fluent = { workspace = true }
  
  [dev-dependencies]
 -uucore = { workspace = true, features = ["benchmark"] }
 +uucore = { workspace = true }
  
- [lints]
- workspace = true
+ [[bin]]
+ name = "sha1sum"
 diff -Naur a/src/uu/sha224sum/Cargo.toml b/src/uu/sha224sum/Cargo.toml
---- a/src/uu/sha224sum/Cargo.toml
-+++ b/src/uu/sha224sum/Cargo.toml
-@@ -31,7 +31,7 @@
- openssl = ["uucore/openssl"]
+--- a/src/uu/sha224sum/Cargo.toml	2026-03-08 12:06:05.000000000 +0000
++++ b/src/uu/sha224sum/Cargo.toml	2026-11-05 20:33:45.252407097 +0000
+@@ -30,7 +30,7 @@
+ fluent = { workspace = true }
  
  [dev-dependencies]
 -uucore = { workspace = true, features = ["benchmark"] }
 +uucore = { workspace = true }
  
- [lints]
- workspace = true
+ [[bin]]
+ name = "sha224sum"
 diff -Naur a/src/uu/sha256sum/Cargo.toml b/src/uu/sha256sum/Cargo.toml
---- a/src/uu/sha256sum/Cargo.toml
-+++ b/src/uu/sha256sum/Cargo.toml
-@@ -31,7 +31,7 @@
- openssl = ["uucore/openssl"]
+--- a/src/uu/sha256sum/Cargo.toml	2026-03-08 12:06:05.000000000 +0000
++++ b/src/uu/sha256sum/Cargo.toml	2026-11-05 20:33:45.252572330 +0000
+@@ -30,7 +30,7 @@
+ fluent = { workspace = true }
  
  [dev-dependencies]
 -uucore = { workspace = true, features = ["benchmark"] }
 +uucore = { workspace = true }
  
- [lints]
- workspace = true
+ [[bin]]
+ name = "sha256sum"
 diff -Naur a/src/uu/sha384sum/Cargo.toml b/src/uu/sha384sum/Cargo.toml
---- a/src/uu/sha384sum/Cargo.toml
-+++ b/src/uu/sha384sum/Cargo.toml
-@@ -31,7 +31,7 @@
- openssl = ["uucore/openssl"]
+--- a/src/uu/sha384sum/Cargo.toml	2026-03-08 12:06:05.000000000 +0000
++++ b/src/uu/sha384sum/Cargo.toml	2026-11-05 20:33:45.252769993 +0000
+@@ -30,7 +30,7 @@
+ fluent = { workspace = true }
  
  [dev-dependencies]
 -uucore = { workspace = true, features = ["benchmark"] }
 +uucore = { workspace = true }
  
- [lints]
- workspace = true
+ [[bin]]
+ name = "sha384sum"
 diff -Naur a/src/uu/sha512sum/Cargo.toml b/src/uu/sha512sum/Cargo.toml
---- a/src/uu/sha512sum/Cargo.toml
-+++ b/src/uu/sha512sum/Cargo.toml
-@@ -31,7 +31,7 @@
- openssl = ["uucore/openssl"]
+--- a/src/uu/sha512sum/Cargo.toml	2026-03-08 12:06:05.000000000 +0000
++++ b/src/uu/sha512sum/Cargo.toml	2026-11-05 20:33:45.252945345 +0000
+@@ -30,7 +30,7 @@
+ fluent = { workspace = true }
  
  [dev-dependencies]
 -uucore = { workspace = true, features = ["benchmark"] }
 +uucore = { workspace = true }
  
- [lints]
- workspace = true
+ [[bin]]
+ name = "sha512sum"
 diff -Naur a/src/uu/shuf/Cargo.toml b/src/uu/shuf/Cargo.toml
---- a/src/uu/shuf/Cargo.toml
-+++ b/src/uu/shuf/Cargo.toml
-@@ -29,13 +29,8 @@
+--- a/src/uu/shuf/Cargo.toml	2026-03-08 12:06:05.000000000 +0000
++++ b/src/uu/shuf/Cargo.toml	2026-11-05 20:33:45.253103568 +0000
+@@ -32,10 +32,5 @@
  name = "shuf"
  path = "src/main.rs"
  
@@ -584,14 +486,11 @@ diff -Naur a/src/uu/shuf/Cargo.toml b/src/uu/shuf/Cargo.toml
 -divan = { workspace = true }
 -uucore = { workspace = true, features = ["benchmark"] }
 +uucore = { workspace = true }
- 
- [lints]
- workspace = true
 diff -Naur a/src/uu/sort/Cargo.toml b/src/uu/sort/Cargo.toml
---- a/src/uu/sort/Cargo.toml
-+++ b/src/uu/sort/Cargo.toml
-@@ -54,10 +54,8 @@
- libc = { workspace = true }
+--- a/src/uu/sort/Cargo.toml	2026-03-08 12:06:05.000000000 +0000
++++ b/src/uu/sort/Cargo.toml	2026-11-05 20:33:45.253282481 +0000
+@@ -53,10 +53,8 @@
+ nix = { workspace = true, features = ["resource"] }
  
  [dev-dependencies]
 -divan = { workspace = true }
@@ -601,7 +500,7 @@ diff -Naur a/src/uu/sort/Cargo.toml b/src/uu/sort/Cargo.toml
    "fs",
    "parser-size",
    "version-cmp",
-@@ -72,22 +70,3 @@
+@@ -67,18 +65,3 @@
  name = "sort"
  path = "src/main.rs"
  
@@ -618,16 +517,12 @@ diff -Naur a/src/uu/sort/Cargo.toml b/src/uu/sort/Cargo.toml
 -harness = false
 -
 -[[bench]]
--name = "sort_bench_merge"
--harness = false
--
--[[bench]]
 -name = "sort_locale_de_bench"
 -harness = false
 diff -Naur a/src/uu/split/Cargo.toml b/src/uu/split/Cargo.toml
---- a/src/uu/split/Cargo.toml
-+++ b/src/uu/split/Cargo.toml
-@@ -28,13 +28,9 @@
+--- a/src/uu/split/Cargo.toml	2026-03-08 12:06:05.000000000 +0000
++++ b/src/uu/split/Cargo.toml	2026-11-05 20:33:45.253448973 +0000
+@@ -30,10 +30,6 @@
  path = "src/main.rs"
  
  [dev-dependencies]
@@ -636,91 +531,27 @@ diff -Naur a/src/uu/split/Cargo.toml b/src/uu/split/Cargo.toml
 -uucore = { workspace = true, features = ["benchmark"] }
 +uucore = { workspace = true }
  
- [lints]
- workspace = true
- 
 -[[bench]]
 -name = "split_bench"
 -harness = false
-diff -Naur a/src/uu/tee/Cargo.toml b/src/uu/tee/Cargo.toml
---- a/src/uu/tee/Cargo.toml
-+++ b/src/uu/tee/Cargo.toml
-@@ -23,8 +23,7 @@
- fluent = { workspace = true }
- 
- [dev-dependencies]
--divan = { workspace = true }
--uucore = { workspace = true, features = ["benchmark"] }
-+uucore = { workspace = true }
- 
- [target.'cfg(any(target_os = "linux", target_os = "android"))'.dependencies]
- rustix = { workspace = true, features = ["pipe"] }
-@@ -37,6 +36,3 @@
- name = "tee"
- path = "src/main.rs"
- 
--[[bench]]
--name = "tee_bench"
--harness = false
-diff -Naur a/src/uu/timeout/Cargo.toml b/src/uu/timeout/Cargo.toml
---- a/src/uu/timeout/Cargo.toml
-+++ b/src/uu/timeout/Cargo.toml
-@@ -30,12 +30,8 @@
- path = "src/main.rs"
- 
- [dev-dependencies]
--divan = { workspace = true }
--uucore = { workspace = true, features = ["benchmark"] }
-+uucore = { workspace = true }
- 
- [lints]
- workspace = true
- 
--[[bench]]
--name = "timeout_bench"
--harness = false
-diff -Naur a/src/uu/tr/Cargo.toml b/src/uu/tr/Cargo.toml
---- a/src/uu/tr/Cargo.toml
-+++ b/src/uu/tr/Cargo.toml
-@@ -24,9 +24,8 @@
- bytecount = { workspace = true, features = ["runtime-dispatch-simd"] }
- 
- [dev-dependencies]
--divan = { workspace = true }
- rustix = { workspace = true, features = ["stdio", "fs"] }
--uucore = { workspace = true, features = ["benchmark"] }
-+uucore = { workspace = true }
- 
- [lints]
- workspace = true
-@@ -35,6 +34,3 @@
- name = "tr"
- path = "src/main.rs"
- 
--[[bench]]
--name = "tr_bench"
--harness = false
 diff -Naur a/src/uu/true/Cargo.toml b/src/uu/true/Cargo.toml
---- a/src/uu/true/Cargo.toml
-+++ b/src/uu/true/Cargo.toml
-@@ -26,12 +26,8 @@
+--- a/src/uu/true/Cargo.toml	2026-03-08 12:06:05.000000000 +0000
++++ b/src/uu/true/Cargo.toml	2026-11-05 20:33:45.253616036 +0000
+@@ -28,9 +28,5 @@
  path = "src/main.rs"
  
  [dev-dependencies]
 -divan = { workspace = true }
 -uucore = { workspace = true, features = ["benchmark"] }
 +uucore = { workspace = true }
- 
- [lints]
- workspace = true
  
 -[[bench]]
 -name = "true_bench"
 -harness = false
 diff -Naur a/src/uu/tsort/Cargo.toml b/src/uu/tsort/Cargo.toml
---- a/src/uu/tsort/Cargo.toml
-+++ b/src/uu/tsort/Cargo.toml
-@@ -33,12 +33,8 @@
+--- a/src/uu/tsort/Cargo.toml	2026-03-08 12:06:05.000000000 +0000
++++ b/src/uu/tsort/Cargo.toml	2026-11-05 20:33:45.253778278 +0000
+@@ -35,9 +35,5 @@
  path = "src/main.rs"
  
  [dev-dependencies]
@@ -728,17 +559,14 @@ diff -Naur a/src/uu/tsort/Cargo.toml b/src/uu/tsort/Cargo.toml
 -uucore = { workspace = true, features = ["benchmark"] }
 +uucore = { workspace = true }
  
- [lints]
- workspace = true
- 
 -[[bench]]
 -name = "tsort_bench"
 -harness = false
 diff -Naur a/src/uu/unexpand/Cargo.toml b/src/uu/unexpand/Cargo.toml
---- a/src/uu/unexpand/Cargo.toml
-+++ b/src/uu/unexpand/Cargo.toml
-@@ -23,9 +23,8 @@
- uucore = { workspace = true }
+--- a/src/uu/unexpand/Cargo.toml	2026-03-08 12:06:05.000000000 +0000
++++ b/src/uu/unexpand/Cargo.toml	2026-11-05 20:33:45.253958041 +0000
+@@ -25,14 +25,9 @@
+ fluent = { workspace = true }
  
  [dev-dependencies]
 -divan = { workspace = true }
@@ -746,19 +574,17 @@ diff -Naur a/src/uu/unexpand/Cargo.toml b/src/uu/unexpand/Cargo.toml
 -uucore = { workspace = true, features = ["benchmark"] }
 +uucore = { workspace = true }
  
- [lints]
- workspace = true
-@@ -34,6 +33,3 @@
+ [[bin]]
  name = "unexpand"
  path = "src/main.rs"
- 
+-
 -[[bench]]
 -name = "unexpand_bench"
 -harness = false
 diff -Naur a/src/uu/uniq/Cargo.toml b/src/uu/uniq/Cargo.toml
---- a/src/uu/uniq/Cargo.toml
-+++ b/src/uu/uniq/Cargo.toml
-@@ -22,8 +22,7 @@
+--- a/src/uu/uniq/Cargo.toml	2026-03-08 12:06:05.000000000 +0000
++++ b/src/uu/uniq/Cargo.toml	2026-11-05 20:33:45.254110443 +0000
+@@ -24,13 +24,9 @@
  fluent = { workspace = true }
  
  [dev-dependencies]
@@ -766,9 +592,7 @@ diff -Naur a/src/uu/uniq/Cargo.toml b/src/uu/uniq/Cargo.toml
 -uucore = { workspace = true, features = ["benchmark", "parser"] }
 +uucore = { workspace = true, features = ["parser"] }
  
- [lints]
- workspace = true
-@@ -32,6 +31,3 @@
+ [[bin]]
  name = "uniq"
  path = "src/main.rs"
  
@@ -776,10 +600,10 @@ diff -Naur a/src/uu/uniq/Cargo.toml b/src/uu/uniq/Cargo.toml
 -name = "uniq_bench"
 -harness = false
 diff -Naur a/src/uu/wc/Cargo.toml b/src/uu/wc/Cargo.toml
---- a/src/uu/wc/Cargo.toml
-+++ b/src/uu/wc/Cargo.toml
-@@ -34,9 +34,8 @@
- rustix = { workspace = true, features = ["fs"] }
+--- a/src/uu/wc/Cargo.toml	2026-03-08 12:06:05.000000000 +0000
++++ b/src/uu/wc/Cargo.toml	2026-11-05 20:33:45.254296166 +0000
+@@ -36,14 +36,10 @@
+ nix = { workspace = true }
  
  [dev-dependencies]
 -divan = { workspace = true }
@@ -787,9 +611,7 @@ diff -Naur a/src/uu/wc/Cargo.toml b/src/uu/wc/Cargo.toml
 -uucore = { workspace = true, features = ["benchmark"] }
 +uucore = { workspace = true }
  
- [lints]
- workspace = true
-@@ -45,6 +44,3 @@
+ [[bin]]
  name = "wc"
  path = "src/main.rs"
  
@@ -797,11 +619,11 @@ diff -Naur a/src/uu/wc/Cargo.toml b/src/uu/wc/Cargo.toml
 -name = "wc_bench"
 -harness = false
 diff -Naur a/src/uucore/Cargo.toml b/src/uucore/Cargo.toml
---- a/src/uucore/Cargo.toml
-+++ b/src/uucore/Cargo.toml
+--- a/src/uucore/Cargo.toml	2026-03-08 12:06:05.000000000 +0000
++++ b/src/uucore/Cargo.toml	2026-11-05 20:33:45.255392312 +0000
 @@ -50,10 +50,6 @@
- uucore_procs = { workspace = true }
- z85 = { workspace = true, optional = true }
+ libc = { workspace = true, optional = true }
+ os_display = "0.1.3"
  
 -# Benchmark dependencies (optional)
 -divan = { workspace = true, optional = true }
@@ -810,11 +632,8 @@ diff -Naur a/src/uucore/Cargo.toml b/src/uucore/Cargo.toml
  digest = { workspace = true, optional = true }
  hex = { workspace = true, optional = true }
  memchr = { workspace = true, optional = true }
-@@ -220,7 +216,6 @@
+@@ -203,4 +199,3 @@
  tty = []
  time = ["jiff"]
  uptime = ["jiff", "libc", "windows-sys", "utmpx", "utmp-classic"]
 -benchmark = ["divan", "itertools", "tempfile"]
- 
- [lints]
- workspace = true

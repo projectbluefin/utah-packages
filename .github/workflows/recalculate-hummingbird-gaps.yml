@@ -24,6 +24,13 @@ jobs:
       # BASE_IMAGE), so the parity report measures the image Utah consumes.
       # Re-pin when that contract is bumped.
       HUMMINGBIRD_IMAGE: quay.io/hummingbird-community/bootc-os@sha256:c5539f9ed4d93aab6bd41e4f5aef8ab83055f3f9e855a47b69fadb7420d0d1df
+      # Red Hat Hardened Image builder variant: Hummingbird's own dnf5 (repoquery
+      # built in) in a signed, Red Hat-supported image, replacing an unpinned
+      # fedora:rawhide that had to install dnf-plugins-core -- through this
+      # repo file, whose gpgkey path that container never mounted -- before it
+      # could ask the question. The repository it queries is Hummingbird's, so
+      # Hummingbird's image is the natural client. Renovate moves the digest.
+      REPOQUERY_IMAGE: registry.access.redhat.com/hi/core-runtime:latest-builder@sha256:22cd80ee366f38ec3f684cebbe002424c31d71e4f0378bb5aafb854928c1178c
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Pull Hummingbird image and inspect installed RPMs
@@ -31,15 +38,31 @@ jobs:
           mkdir -p reports
           podman pull "$HUMMINGBIRD_IMAGE"
           podman run --rm --entrypoint rpm "$HUMMINGBIRD_IMAGE" -qa --qf '%{NAME}\n' | sort -u > reports/hummingbird-image-packages.txt
+      - name: Verify the Red Hat Hardened Image signature
+        run: |
+          # Same cosign release and checksum as canary.yml and publish-repository.yml.
+          curl -fsSL https://github.com/sigstore/cosign/releases/download/v2.4.1/cosign-linux-amd64 -o "$RUNNER_TEMP/cosign"
+          echo "8b24b946dd5809c6bd93de08033bcf6bc0ed7d336b7785787c080f574b89249b  $RUNNER_TEMP/cosign" | sha256sum -c -
+          chmod 0755 "$RUNNER_TEMP/cosign"
+          # Red Hat signs registry.access.redhat.com/hi/ with release key 3,
+          # pinned in config/redhat-hardened-images.pub. Red Hat does not
+          # upload these signatures to Rekor, so its documented check skips
+          # the transparency log; the key is what is verified.
+          "$RUNNER_TEMP/cosign" verify --key config/redhat-hardened-images.pub \
+            --insecure-ignore-tlog "$REPOQUERY_IMAGE" >/dev/null
       - name: Query the live Hummingbird RPM repository
         run: |
+          set -o pipefail
+          # The mount replaces the image's own hummingbird.repo with the
+          # factory's (same baseurl, plus its excludepkgs). repoquery reads no
+          # key, and stdout carries only the names, so nothing is mounted for
+          # the output and the image keeps its non-root default user.
           podman run --rm \
             -v "$PWD/config/hummingbird.repo:/etc/yum.repos.d/hummingbird.repo:ro,Z" \
-            -v "$PWD/reports:/reports:Z" \
-            fedora:rawhide bash -exc '
-              dnf -y install dnf-plugins-core
-              dnf repoquery --repo tunaos-hummingbird --qf "%{name}" | sort -u > /reports/hummingbird-repo-packages.txt
-            '
+            "$REPOQUERY_IMAGE" \
+            dnf repoquery --repo public-hummingbird-x86_64-rpms --qf '%{name}\n' \
+            | sort -u > reports/hummingbird-repo-packages.txt
+          test -s reports/hummingbird-repo-packages.txt
       - name: Recalculate Bluefin parity gaps
         run: |
           python3 tools/recalculate_hummingbird_gaps.py \

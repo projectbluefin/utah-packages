@@ -34,6 +34,43 @@ When repairing container guidance, check both `AGENTS.md` and the execution
 environment section of [`contributing.md`](../contributing.md) so the same
 obsolete single-container rule does not survive in a second entry point.
 
+### Red Hat Hardened Images: where they fit and where they do not
+
+Red Hat publishes Hummingbird-built images, signed and free, at
+`registry.access.redhat.com/hi/<name>` (catalog: <https://images.redhat.com>,
+API in [`.agents/skills/hummingbird`](../../.agents/skills/hummingbird/SKILL.md)).
+`:latest` is distroless (no shell, no dnf, UID 65532); `:latest-builder` adds
+bash and dnf5. Use one when the job only needs what the image carries, and pin
+it `tag@sha256:` so the `build-root-image` Renovate manager (which matches
+`quay.io` and `registry.access.redhat.com` in workflows) moves the digest;
+`tools/check_build_container_pinning.py` fails a bare tag on either registry.
+Verify it before use with the pinned key,
+`cosign verify --key config/redhat-hardened-images.pub --insecure-ignore-tlog`
+(Red Hat release key 3; Red Hat does not log these signatures in Rekor). The
+key stays out of `config/keys/`, which holds exactly the RPM keys
+`tools/mock_config.py` lists.
+
+[`recalculate-hummingbird-gaps.yml`](../../.github/workflows/recalculate-hummingbird-gaps.yml)
+asks the Hummingbird RPM repository for its package names in
+`hi/core-runtime:latest-builder`: dnf5 has `repoquery` built in, so nothing
+is installed at runtime, and the names go to stdout so the image keeps its
+non-root user (a bind-mounted output directory is not writable by UID 65532
+under rootless podman). Its unpinned `fedora:rawhide` predecessor had to
+`dnf install dnf-plugins-core` through `config/hummingbird.repo`, whose
+`gpgkey` it never mounted, and queried a repository id (`tunaos-hummingbird`)
+the file no longer defines; the job failed every run.
+
+No RHHI image replaces the others, so do not swap them:
+
+| Image | Why it stays |
+| --- | --- |
+| `ghcr.io/projectbluefin/utah-buildroot` (`fedora:44` mirror), also mock's bootstrap image | The build root is Fedora 44 paired with the Hummingbird repo, as Hummingbird pairs them in `images/variables.yml`; RHHI has no RPM build root, and a runtime image is not one |
+| `quay.io/packit/packit` | Packit and its SRPM toolchain; RHHI has no packit image |
+| `quay.io/hummingbird-community/bootc-os` (gap report, runtime contract, publish fallback base) | The bootc base Utah consumes; community image, not in `/hi` |
+| `fedora:rawhide` in `detect-rawhide-updates.yml`, `import-bluefin-rawhide.yml` | They query Fedora Rawhide's own repositories; RHHI images carry only Hummingbird's |
+| `fedora:rawhide` in `bootstrap-direct-sources.yml` | `rpmspec` over Fedora recipes needs `rpm-build` with Fedora's macros, which no RHHI image ships |
+| cosign (canary, publish, `load-factory-repo`) | A checksum-pinned v2.4.1 release binary, not an image; RHHI's `cosign` is v3, whose signing defaults (bundle format) are a separate decision for the signature Utah verifies |
+
 ## The buildroot lock
 
 [`config/buildroot-lock.json`](../../config/buildroot-lock.json) is the
