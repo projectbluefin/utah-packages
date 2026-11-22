@@ -14,7 +14,7 @@
 %global __strip /bin/true
 
 Name:           uupd
-Version:        1.5.7
+Version:        1.5.8
 Release:        1%{?dist}
 Summary:        Universal Blue unattended system, Flatpak, Homebrew and distrobox updater
 
@@ -51,6 +51,9 @@ test "$(./uupd --version)" = "uupd version %{version}"
 %{_bindir}/uupd
 
 %changelog
+* Sun Nov 22 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 1.5.8-1
+- Update to 1.5.8
+
 * Fri Nov 20 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 1.5.7-1
 - Update to 1.5.7
 
