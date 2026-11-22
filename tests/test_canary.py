@@ -439,9 +439,12 @@ class WorkflowShapeTests(unittest.TestCase):
         members = json.loads(self.workflow["env"]["CANARY_SET"]) + ["python-typing-inspection"]
         for name in members:
             with self.subTest(name=name):
+                lookaside = "https://src.fedoraproject.org/repo/pkgs/"
+                urls = [locks[name]["url"], *locks[name].get("fallback_urls", [])]
                 self.assertTrue(
-                    locks[name]["url"].startswith("https://src.fedoraproject.org/repo/pkgs/"),
-                    "a canary must not depend on a flaky upstream host",
+                    any(url.startswith(lookaside) for url in urls),
+                    "a canary must not depend on a flaky upstream host: "
+                    "the lookaside must be the url or a fallback",
                 )
 
     def test_it_runs_on_every_pull_request_and_the_gate_always_reports(self) -> None:
