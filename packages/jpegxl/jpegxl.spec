@@ -4,8 +4,11 @@
 # developper recommendation
 %global toolchain clang
 
-# Uncomment for special build to rebuild aom on bumped soname.
-#global new_soname 1
+# Utah (issue #1192): compat build for the 0.11 -> 0.12 soname move. The new
+# libjxl ships the old .so.0.11* beside .so.0.12* so the published
+# glycin-loaders (which needs libjxl.so.0.11) keeps resolving while consumers
+# rebuild against the new soname. Drop this once every consumer links 0.12.
+%global new_soname 1
 %global sover_old 0.11
 %global sover 0.12
 
