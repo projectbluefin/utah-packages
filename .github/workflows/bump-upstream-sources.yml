@@ -180,6 +180,40 @@ jobs:
           path: work/reports/
           if-no-files-found: ignore
 
+      # The steps above take over an hour, and this run started from main as
+      # it was then. create-pull-request builds the PR branch on that same
+      # commit: it only fetches the base again when the working base differs
+      # from it. If main changed a workflow file in the meantime (Renovate
+      # bumps the core-runtime digest in recalculate-hummingbird-gaps.yml
+      # several times a day), the branch carries the older workflow, and
+      # GitHub refuses a GITHUB_TOKEN push that "updates" a workflow, so no
+      # PR opens (runs 44994964065 and 45127407515). Move the bump onto the
+      # newest main first. Only the add-paths below are carried over; keep
+      # the two lists in step. If the newest main changed the same lines, the
+      # restore conflicts and the run fails here, as it would have at the push.
+      - name: Move the bump onto the newest main
+        env:
+          BASE: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          paths=(config/upstream-sources.json config/fedora-primary-sources.txt config/bump-holds.json reports/multimedia-closure.json packages/)
+          git fetch --no-tags --depth=1 origin "+refs/heads/${BASE}:refs/remotes/origin/${BASE}"
+          if [ "$(git rev-parse HEAD)" = "$(git rev-parse "origin/${BASE}")" ]; then
+            echo "${BASE} has not moved since this run started."
+            exit 0
+          fi
+          echo "${BASE} moved from $(git rev-parse --short HEAD) to $(git rev-parse --short "origin/${BASE}"); carrying the bump over."
+          changed="$(git status --porcelain -- "${paths[@]}")"
+          if [ -n "$changed" ]; then
+            git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+              stash push --include-untracked -- "${paths[@]}"
+          fi
+          git reset --hard "origin/${BASE}"
+          if [ -n "$changed" ] && ! git stash pop; then
+            echo "::error::The newest ${BASE} changed the same lines as this bump; nothing to open today."
+            exit 1
+          fi
+
       - name: Open reviewable update
         id: cpr
         uses: peter-evans/create-pull-request@3ffccacd46053766916f087ce41d627c0b8cf2d1 # v8
