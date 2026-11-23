@@ -192,6 +192,7 @@ jobs:
       # the two lists in step. If the newest main changed the same lines, the
       # restore conflicts and the run fails here, as it would have at the push.
       - name: Move the bump onto the newest main
+        id: move
         env:
           BASE: ${{ github.ref_name }}
         run: |
@@ -213,6 +214,22 @@ jobs:
             echo "::error::The newest ${BASE} changed the same lines as this bump; nothing to open today."
             exit 1
           fi
+          if [ -n "$changed" ]; then
+            echo "moved=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # A clean restore can still clash in meaning with the newest main (a
+      # newer test, validate.py rule or codec recipe). The tree the PR will
+      # carry is no longer the one "Validate the result" checked, and the PR
+      # body says these gates passed. Rebuild the closure report on it and
+      # run the same gates again; skipped when main did not move.
+      - name: Validate the bump on the newest main
+        if: steps.move.outputs.moved == 'true'
+        run: |
+          python3 tools/multimedia_closure.py --output reports/multimedia-closure.json
+          python3 -m unittest discover -s tests -q
+          python3 tools/validate.py
+          python3 tools/check_workflow_quoting.py
 
       - name: Open reviewable update
         id: cpr

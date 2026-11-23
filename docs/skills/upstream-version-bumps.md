@@ -522,7 +522,11 @@ Constraints that shaped it, so they are not rediscovered:
   44994964065 and 45127407515). The step "Move the bump onto the newest
   main" fetches main, stashes only the `add-paths`, resets onto it and
   restores them; keep its path list equal to `add-paths`. A conflict with
-  the newest main fails the run there. Keep the push on `GITHUB_TOKEN`
+  the newest main fails the run there. When main moved, the next step
+  rebuilds the multimedia closure report and reruns the unit tests,
+  `tools/validate.py` and the quoting check on the moved tree, so the PR
+  body's "verified before this PR was opened" holds for the branch that is
+  pushed. Keep the push on `GITHUB_TOKEN`
   rather than an App token with workflow rights: branch-side work uses
   `GITHUB_TOKEN` by design (first constraint above).
 - A `target-cycle` (GNOME-next) run is never gated; it stays a human merge.
