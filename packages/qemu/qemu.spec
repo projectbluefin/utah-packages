@@ -417,9 +417,12 @@ Version: 11.1.3
 %global rcstr -%{rcver}
 Release: %autorelease -p -e %{rcver}
 %else
-# Utah: -b 3 so the build without the features above sorts above the
-# published bundled-firmware build, 2
-Release: %autorelease -b 3
+# Utah: -b 4 so the rebuild against Hummingbird's libcbor 0.15 sorts above
+# the published build, 3, which needs libcbor.so.0.14 and so conflicts with
+# Hummingbird's libfido2/fido2-tools 1.17.0-8.1 in Utah's install set.
+# (-b 3 was the build without the features above; -b 2 the bundled-firmware
+# build.)
+Release: %autorelease -b 4
 %endif
 
 Epoch: 2
