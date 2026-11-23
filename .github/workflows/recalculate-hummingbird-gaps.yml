@@ -30,7 +30,7 @@ jobs:
       # repo file, whose gpgkey path that container never mounted -- before it
       # could ask the question. The repository it queries is Hummingbird's, so
       # Hummingbird's image is the natural client. Renovate moves the digest.
-      REPOQUERY_IMAGE: registry.access.redhat.com/hi/core-runtime:latest-builder@sha256:3d625fad86d7259f9f04dfa83a876771a62e5de7ae7bd65fa4a3ad572d50c717
+      REPOQUERY_IMAGE: registry.access.redhat.com/hi/core-runtime:latest-builder@sha256:3f42474b6433b58659076dd80a96d93bb9b124aa3d79a244d1dbb0282fbe71e9
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Pull Hummingbird image and inspect installed RPMs
