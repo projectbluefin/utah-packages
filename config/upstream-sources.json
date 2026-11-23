@@ -413,10 +413,10 @@
     },
     {
       "name": "bluefin-docs",
-      "version": "26.11.3",
-      "url": "https://github.com/projectbluefin/documentation/releases/download/26.11.3/bluefin.pdf",
-      "filename": "bluefin-docs-26.11.3.pdf",
-      "sha512": "5ba1a61538986c809e9ee5600c04f17be4270572f4a02fce46b4e328e25bd2ea6257a4ff38a37482431452b765ffb8529c57d1db530767e4a252a6dfc99e1e9c"
+      "version": "26.11.4",
+      "url": "https://github.com/projectbluefin/documentation/releases/download/26.11.4/bluefin.pdf",
+      "filename": "bluefin-docs-26.11.4.pdf",
+      "sha512": "a1a53c36e57fdbbd0757f97ae4463c28baf166fc30a50de4a203ba2a275de6b115bfdecb3f7aeef9885c849b2e787bfd3a37d602cb647048616e3c0e1dfdd007"
     },
     {
       "name": "bluefin-wallpapers",
@@ -1779,10 +1779,10 @@
     },
     {
       "name": "gnome-user-docs",
-      "version": "51.0",
-      "url": "https://download.gnome.org/sources/gnome-user-docs/51/gnome-user-docs-51.0.tar.xz",
-      "filename": "gnome-user-docs-51.0.tar.xz",
-      "sha512": "bddcc78dfb96af899e684eb64064a6841a77a9adab3dba5ca67b7ce263edd0a5a54e78d84ba68e4e073a50b368a4107bdf0c48955be0daee5539e1e7d2d91eeb"
+      "version": "51.2",
+      "url": "https://download.gnome.org/sources/gnome-user-docs/51/gnome-user-docs-51.2.tar.xz",
+      "filename": "gnome-user-docs-51.2.tar.xz",
+      "sha512": "ed14b4e3c3df718a0859d646edf7aab772db2540cdc8633e4cdd0dfd424073ead0bb6889cb6bb318e4666993d30120a2102145b72b174186192c6426301e2615"
     },
     {
       "name": "gnome-user-share",
@@ -2409,12 +2409,12 @@
     },
     {
       "name": "ibus-m17n",
-      "version": "1.4.41",
-      "url": "https://github.com/ibus/ibus-m17n/releases/download/1.4.41/ibus-m17n-1.4.41.tar.gz",
-      "filename": "ibus-m17n-1.4.41.tar.gz",
-      "sha512": "353685a6a0a466ebc5ce72fd1080c7f683b9318dc385339c45600b04accdcffd4d5fbe855704ce1beb23283588ef7c22ed42d8de5766fff46957b66d24f9ad24",
+      "version": "1.4.42",
+      "url": "https://github.com/ibus/ibus-m17n/releases/download/1.4.42/ibus-m17n-1.4.42.tar.gz",
+      "filename": "ibus-m17n-1.4.42.tar.gz",
+      "sha512": "4ee54f279511bc917c894954afff8d2da65fa3cc61425bdb57f15d6dd70bbf5df6a1f30812c49ec584cfb88924109d6500cc21733f49f442baf212578bcd777d",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/ibus-m17n/ibus-m17n-1.4.41.tar.gz/sha512/353685a6a0a466ebc5ce72fd1080c7f683b9318dc385339c45600b04accdcffd4d5fbe855704ce1beb23283588ef7c22ed42d8de5766fff46957b66d24f9ad24/ibus-m17n-1.4.41.tar.gz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/ibus-m17n/ibus-m17n-1.4.42.tar.gz/sha512/4ee54f279511bc917c894954afff8d2da65fa3cc61425bdb57f15d6dd70bbf5df6a1f30812c49ec584cfb88924109d6500cc21733f49f442baf212578bcd777d/ibus-m17n-1.4.42.tar.gz"
       ]
     },
     {
@@ -5421,10 +5421,10 @@
     },
     {
       "name": "orca",
-      "version": "51.1",
-      "url": "https://download.gnome.org/sources/orca/51/orca-51.1.tar.xz",
-      "filename": "orca-51.1.tar.xz",
-      "sha512": "9a392636728624f04dc8fe37f0644b01fb8139e93ce73c5225f0c29c79a70e9b60dd4beed099558aeaf89f910b2ab867fef59e5b5db3ba8665d4110edfaeb5e1",
+      "version": "51.2",
+      "url": "https://download.gnome.org/sources/orca/51/orca-51.2.tar.xz",
+      "filename": "orca-51.2.tar.xz",
+      "sha512": "11a79e549ade81b7f7a3d0c82a79e404eecd05b3a1f2f4b5194271631f249f256886740163c559f0fc26a30225b39beafe5e5c1ce5d34236dc57a97c582c787c",
       "stage": 1
     },
     {
@@ -7348,10 +7348,10 @@
     },
     {
       "name": "uupd",
-      "version": "1.5.7",
-      "url": "https://github.com/ublue-os/uupd/releases/download/v1.5.7/uupd_Linux_x86_64.tar.gz",
-      "filename": "uupd-1.5.7-x86_64.tar.gz",
-      "sha512": "cc3e529c032a09fa117b6b69b9e80cb81948b7f4e3ce8983f847efd6e6f1880562832aadcd665573e786ade53828263cd26ac4bc4e00c4cddae2576ba138a7bf"
+      "version": "1.5.8",
+      "url": "https://github.com/ublue-os/uupd/releases/download/v1.5.8/uupd_Linux_x86_64.tar.gz",
+      "filename": "uupd-1.5.8-x86_64.tar.gz",
+      "sha512": "e2838162519686eed01bd1dd4812edcf624ff24f98d410ce7c24cb26ac34bcfceec5802ae14c64ba9644d85f8a7c1099dbad2c00967b2e2aea28830203241e70"
     },
     {
       "name": "uutils-coreutils",

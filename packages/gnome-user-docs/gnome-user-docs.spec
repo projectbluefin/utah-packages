@@ -1,5 +1,5 @@
 Name:           gnome-user-docs
-Version:        51.0
+Version:        51.2
 Release:        %autorelease
 Summary:        GNOME User Documentation
 
