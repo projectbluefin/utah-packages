@@ -19,8 +19,11 @@ name: Refresh the build-root mirror
 on:
   workflow_dispatch:
   schedule:
-    # Monday 04:23 UTC: before the daily 06:41 rebuild, off the top of the hour.
-    - cron: '23 4 * * 1'
+    # Saturday 04:23 UTC, the day before the Sunday 01:23 UTC full run. A root
+    # move changes every cache key, so the refresh PR is held and merged just
+    # before that run: one cold rebuild covers the move and the weekly full
+    # run instead of paying twice (docs/architecture.md, #1207).
+    - cron: '23 4 * * 6'
 
 permissions:
   contents: read
@@ -114,4 +117,6 @@ jobs:
 
             Merging this moves every factory build to the new root, which
             changes every package cache key, so the next run rebuilds cold
-            once. Batch it with other root-wide changes where possible.
+            once. Merge just before the Sunday 01:23 UTC full run, so the
+            move and the weekly full run share one cold rebuild. Do not
+            merge it earlier in the week.

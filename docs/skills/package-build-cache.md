@@ -200,6 +200,12 @@ perturbation correctly hits the previous cache, contradicting the test that the
 perturbed recipe must compile. Keep baseline cache namespaces stable, change
 only the deliberate perturbation, and execute both workflow bodies in tests.
 
+Batch the root move with the weekly full run. `refresh-buildroot.yml` opens
+its pin PR on Saturday 04:23 UTC and the rule is to merge it just before the
+Sunday 01:23 UTC full run (#1207). A move on its own day costs one cold rebuild
+and the weekly full run costs another; together they cost one. `tests/test_buildroot_schedule.py` holds the ordering. The key already carries the new
+root digest, so this batches work without weakening identity.
+
 Canary multi-pass cache verification (`canary.py verify-cache`) expects cache
 hits for unchanged packages in pass 2 and pass 3. When upstream Hummingbird RPM
 repositories update while the canary is in flight, resolved buildroot package
