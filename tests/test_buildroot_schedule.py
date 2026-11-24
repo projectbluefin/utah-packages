@@ -40,10 +40,12 @@ class BuildrootScheduleTests(unittest.TestCase):
         self.assertEqual(refresh_day, (parse(weekly[0])[0] - 1) % 7)
 
     def test_the_refresh_pr_tells_the_reader_when_to_merge(self) -> None:
-        body = (WORKFLOWS / "refresh-buildroot.yml").read_text()
-        self.assertIn("Sunday", body)
-        self.assertIn("01:23", body)
+        text = (WORKFLOWS / "refresh-buildroot.yml").read_text()
+        body = text.split("body: |", 1)[1]
+        self.assertIn("Merge on Saturday", body)
+        self.assertIn("Sunday 01:23 UTC", body)
+        self.assertIn("writes the cache", body)
 
     def test_the_timing_rule_is_written_down(self) -> None:
         architecture = (ROOT / "docs" / "architecture.md").read_text()
-        self.assertIn("just before the Sunday full run", architecture)
+        self.assertIn("before the Sunday full run", architecture)

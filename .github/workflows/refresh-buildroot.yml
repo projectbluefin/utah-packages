@@ -19,10 +19,11 @@ name: Refresh the build-root mirror
 on:
   workflow_dispatch:
   schedule:
-    # Saturday 04:23 UTC, the day before the Sunday 01:23 UTC full run. A root
-    # move changes every cache key, so the refresh PR is held and merged just
-    # before that run: one cold rebuild covers the move and the weekly full
-    # run instead of paying twice (docs/architecture.md, #1207).
+    # Saturday 04:23 UTC, early in the day. Merging the pin starts a push run
+    # (config/** is a trigger path) that is the week's one cold rebuild and
+    # writes the cache (#1213). Merge later on Saturday, once that run has
+    # finished: merging just before Sunday 01:23 UTC queues the full run
+    # behind the push run, where the 03:17 daily cron replaces it (#1207).
     - cron: '23 4 * * 6'
 
 permissions:
@@ -116,7 +117,8 @@ jobs:
             - mirror: `${{ steps.mirror.outputs.pin }}`
 
             Merging this moves every factory build to the new root, which
-            changes every package cache key, so the next run rebuilds cold
-            once. Merge just before the Sunday 01:23 UTC full run, so the
-            move and the weekly full run share one cold rebuild. Do not
-            merge it earlier in the week.
+            changes every package cache key. The push run the merge starts
+            rebuilds every package cold once and writes the cache (#1213).
+            Merge on Saturday, early enough for that run to finish before
+            the Sunday 01:23 UTC full run, which then reads the cache
+            instead of compiling. Do not merge it earlier in the week.
