@@ -583,6 +583,31 @@
       "factory_version": "2.3.2",
       "dakota_version": null
     },
+    "bluefin/umotd.bst": {
+      "verdict": "factory-ahead",
+      "reason": "Same projectbluefin/umotd upstream: Dakota installs the v0.3.3 release asset, while the factory repackages the v0.4.1 asset released 2026-10-25. Keep the newer release.",
+      "factory_version": "0.4.1",
+      "dakota_version": "0.3.3"
+    },
+    "bluefin/uwelcome.bst": {
+      "verdict": "factory-ahead",
+      "reason": "Same projectbluefin/uwelcome upstream: Dakota installs the v0.4.1 release asset, while the factory repackages the v0.5.1 asset released 2026-11-09. Keep the newer release.",
+      "factory_version": "0.5.1",
+      "dakota_version": "0.4.1"
+    },
+    "freedesktop-sdk.bst:components/_private/bpf.bst": {
+      "verdict": "false-positive",
+      "reason": "Dakota's 7.3 is the Linux kernel tag the element takes bpftool from; that kernel ships libbpf 1.8 and builds bpftool 7.8.0, so the factory's standalone bpftool 7.8.1 is the same release line, not five minors ahead.",
+      "factory_version": "7.8.1",
+      "dakota_version": "7.3"
+    },
+    "freedesktop-sdk.bst:components/_private/gnu-efi.bst": {
+      "verdict": "tracked",
+      "reason": "Genuinely behind: Dakota's ncroxon/gnu-efi 4.0.4 is the same upstream as the factory's SourceForge 3.0.18, which Fedora Rawhide still ships. #1051 tracks the coordinated move and the rewrite of the SourceForge lock.",
+      "issue": "#1051",
+      "factory_version": "3.0.18",
+      "dakota_version": "4.0.4"
+    },
     "freedesktop-sdk.bst:components/dictionaries.bst": {
       "verdict": "false-positive",
       "reason": "another upstream: Fedora's hunspell-en builds the en-wl/wordlist (SCOWL) release 2026.02.25; Dakota's dictionaries.bst builds LibreOffice's dictionaries repository at libreoffice-26.8.2.2",
@@ -601,6 +626,12 @@
       "factory_version": "4.0",
       "dakota_version": "20240504"
     },
+    "freedesktop-sdk.bst:components/frei0r.bst": {
+      "verdict": "factory-ahead",
+      "reason": "Both build dyne/frei0r; Dakota pins tag v3.6.0 while Fedora Rawhide and the factory ship 3.7.1.",
+      "factory_version": "3.7.1",
+      "dakota_version": "3.6.0"
+    },
     "freedesktop-sdk.bst:components/geoclue-libs.bst": {
       "verdict": "same-version",
       "reason": "a filter of _private/geoclue-base.bst, which pins tag 2.8.2",
@@ -613,11 +644,25 @@
       "factory_version": "2.8.2",
       "dakota_version": null
     },
+    "freedesktop-sdk.bst:components/gflags.bst": {
+      "verdict": "tracked",
+      "reason": "Genuinely behind: Dakota pins v2.3.1 while Fedora Rawhide and the factory are at 2.2.2. A 2.3.1 bump is held after a failed build (config/bump-holds.json, run 44765133559); #1051 tracks the move.",
+      "issue": "#1051",
+      "factory_version": "2.2.2",
+      "dakota_version": "2.3.1"
+    },
     "freedesktop-sdk.bst:components/glslang.bst": {
       "verdict": "same-version",
       "reason": "glslang tag 16.4.0 and vulkan-sdk-1.4.357.0 are the same commit (168d452); the factory's Source0 is that SDK tag, and the SBOM reads the SDK version",
       "factory_version": "16.4.0",
       "dakota_version": "1.4.357"
+    },
+    "freedesktop-sdk.bst:components/grpc.bst": {
+      "verdict": "tracked",
+      "reason": "Dakota pins grpc v1.84.1 while the factory recipe is at 1.75.1; the rebuild waits on the protobuf decision in #1136, because grpc cannot resolve python3dist(protobuf) >= 6.31.1 until that lands.",
+      "issue": "#1136",
+      "factory_version": "1.75.1",
+      "dakota_version": "1.84.1"
     },
     "freedesktop-sdk.bst:components/hicolor-icon-theme.bst": {
       "verdict": "factory-ahead",
@@ -631,12 +676,31 @@
       "factory_version": "0.413",
       "dakota_version": "0.412"
     },
+    "freedesktop-sdk.bst:components/lcms.bst": {
+      "verdict": "factory-ahead",
+      "reason": "Same Little-CMS upstream: Dakota pins tag 2.19.1 while the factory carries 2.20 from Fedora Rawhide via #1132. Keep the newer release.",
+      "factory_version": "2.20",
+      "dakota_version": "2.19.1"
+    },
+    "freedesktop-sdk.bst:components/open-iscsi.bst": {
+      "verdict": "false-positive",
+      "reason": "Fedora's RPM Version prefixes upstream open-iscsi 2.1.13 with a legacy '6.'; both sides build the same tag 40f6b29, so 6.2.1.13 is not a newer release line than Dakota's 2.1.13.",
+      "factory_version": "6.2.1.13",
+      "dakota_version": "2.1.13"
+    },
     "freedesktop-sdk.bst:components/protobuf.bst": {
       "verdict": "tracked",
       "reason": "Hummingbird already ships protobuf 36.2; the factory's 33.6 recipe is pinned by libphonenumber (libprotobuf.so.33.6.0) and coupled to abseil-cpp and criu: retire the recipe or rebuild it at 36.2",
       "issue": "#1136",
       "factory_version": "33.6",
       "dakota_version": "36.2"
+    },
+    "freedesktop-sdk.bst:components/python3-grpcio.bst": {
+      "verdict": "tracked",
+      "reason": "This element shares the grpc-source.yml pin of v1.84.1; the factory's 1.75.1 Python subpackages are blocked on the protobuf decision in #1136, which also decides whether python3-grpcio is built at all.",
+      "issue": "#1136",
+      "factory_version": "1.75.1",
+      "dakota_version": "1.84.1"
     },
     "freedesktop-sdk.bst:components/python3-pil.bst": {
       "verdict": "factory-ahead",
@@ -668,6 +732,13 @@
       "factory_version": "2026.09.03",
       "dakota_version": "2023.0.9"
     },
+    "freedesktop-sdk.bst:components/xorg-font-util.bst": {
+      "verdict": "tracked",
+      "reason": "The RPM Version 7.5 is a frozen umbrella number, not a release line comparable to Dakota's font-util 1.4.2. The recipe's real source is font-util 1.4.1, so there is a genuine one-patch gap to 1.4.2, tracked in #1051.",
+      "issue": "#1051",
+      "factory_version": "7.5",
+      "dakota_version": "1.4.2"
+    },
     "freedesktop-sdk.bst:components/xwayland.bst": {
       "verdict": "factory-ahead",
       "reason": "Fedora Rawhide ships the 26.1 release candidates (26.0.99.904); freedesktop-sdk 26.08 pins 24.1.14",
@@ -685,6 +756,13 @@
       "reason": "Fedora Rawhide ships 1.9; gnome-build-meta pins 1.8",
       "factory_version": "1.9",
       "dakota_version": "1.8"
+    },
+    "gnome-build-meta.bst:core-deps/libplist.bst": {
+      "verdict": "tracked",
+      "reason": "The factory holds 2.7.0 because 2.8 moves libplist-2.0.so.4 to .so.12 and breaks gvfs-afc and the libimobiledevice stack (#1227); #1231 records the hold and the coordinated move with consumers.",
+      "issue": "#1231",
+      "factory_version": "2.7.0",
+      "dakota_version": "2.8.0"
     },
     "gnome-build-meta.bst:core-deps/libtatsu.bst": {
       "verdict": "factory-ahead",
