@@ -1,7 +1,7 @@
 %global require_ibus_version 1.4.0
 
 Name:       ibus-m17n
-Version:    1.4.41
+Version:    1.4.42
 Release:    %autorelease
 Summary:    The M17N engine for IBus platform
 License:    GPL-2.0-or-later

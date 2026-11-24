@@ -391,6 +391,32 @@ SHA-512, so the digest is unchanged and the Fedora lookaside now lives in
   `github.com/mpeg5/{xevd,xeve}` archives (the recipe's gen script strips
   `src_main` and repacks), so no single download serves the locked bytes; they
   need a generator, not a URL re-point.
+- `kde-filesystem` and `kf5` lock single files (`teamnames`, `macros.kf5`)
+  that exist only in Fedora dist-git, with no upstream release. Both are
+  already pinned to a fixed dist-git commit (`raw/<commit>/f/...`), not
+  `raw/rawhide`, so the bytes cannot move under the lock; they stay.
+- `redhat-menus` is maintained inside Fedora: its spec's `Source0` is a bare
+  `%{name}-%{version}.tar.gz` and its `URL` is `www.redhat.com`, so the
+  lookaside is the only publisher.
+- `samba` — `download.samba.org/pub/samba/rc/` serves only
+  `samba-4.25.0rc1.tar.gz` (plus a `.tar.asc` signature over the
+  uncompressed tar); the locked `.tar.xz` is Fedora's recompression, so
+  re-pointing changes `filename` and digest and is a version bump, not a
+  transport-only move. samba.org has also served a GitHub runner bytes that
+  did not match the lock (see `canary.yml`).
+- `vulkan-headers` and `vulkan-loader` match Khronos's generated
+  `archive/vulkan-sdk-<version>` tag archives (verified 2026-11), but they
+  are Canary members, which `tests/test_canary.py` keeps on the lookaside, and
+  a generated tag archive can change bytes, so it is not a safe Canary
+  primary; they stay.
+- `libical` (the third Canary member) and `python-typing-inspection` (the
+  recipe Canary's pass3 perturbs, `tools/canary.py` `PERTURBED`) are pinned
+  to the lookaside by the same test. Their upstream copies do match the
+  locked SHA-512 (2026-11): libical's GitHub release asset
+  `releases/download/v3.0.20/libical-3.0.20.tar.gz` and the PyPI sdist
+  `typing_inspection-0.4.4.tar.gz`. They stay until an owner moves the
+  Canary off the lookaside; until then the Canary set is the floor of the
+  ratchet, not unfinished migration work.
 
 ### Fork Canary approval is not a source-integrity failure
 

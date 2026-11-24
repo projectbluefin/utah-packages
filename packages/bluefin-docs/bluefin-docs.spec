@@ -7,7 +7,7 @@
 # Documentation entry opens that path with Papers.
 
 Name:           bluefin-docs
-Version:        26.11.3
+Version:        26.11.4
 Release:        1%{?dist}
 Summary:        Offline Bluefin documentation
 
@@ -37,6 +37,9 @@ test "$(head -c 5 %{buildroot}%{_datadir}/doc/bluefin/bluefin.pdf)" = "%%PDF-"
 %{_datadir}/doc/bluefin/bluefin.pdf
 
 %changelog
+* Sun Nov 22 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 26.11.4-1
+- Update to 26.11.4
+
 * Fri Nov 20 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 26.11.3-1
 - Update to 26.11.3
 
