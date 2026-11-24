@@ -680,6 +680,24 @@ the body already hashes to its pinned SHA-512: then it is the pinned file,
 whatever its name says (vvdec's lookaside `bitstreams.tar.xz` is a bzip2
 tarball, made with `tar -cvjf`).
 
+A certificate failure is fatal for the URL, never trusted: the next configured
+URL is fetched over verified TLS and must still match the pinned SHA-512, and
+only when none serves the file is the package `rejected`. A primary that
+redirects to a rotating mirror pool, such as `mirrors.ctan.org`, therefore
+needs one or more fixed mirrors in `fallback_urls`, each checked against the
+pinned digest before it is added: one pool mirror with a bad certificate
+rejected `tex-gyre-fonts` and stopped the daily bump (#1280).
+
+A `SHA-512 mismatch` with the same "got" on every run is not proof that
+upstream re-rolled a tarball. Before re-pinning, verify the locked bytes
+against the project's own signature or checksum and what other distributions
+record. `v4l-utils` 1.32.0 was rejected that way twice before the
+`ARCHIVE_MAGIC` check (#1016) existed; the locked `5bf24c28…` is the release
+Gregor Jasny signed (`05D0169C26E41593418129DF199A64FADFB500FF`, signature in
+Debian's `v4l-utils_1.32.0.orig.tar.xz.asc`) and the digest Gentoo, Alpine
+and Arch pin, while linuxtv.org answers with an Anubis page, so the lookaside
+fallback serves it. Leave such a lock alone (#1280).
+
 ## The scheduled verification run is never cancelled
 
 `.github/workflows/source-pipeline.yml` runs every two hours over every lock;
