@@ -16,7 +16,9 @@
 #
 # Environment: PACKAGE, FACTORY_REPO, DIST_BUMP, BUILDROOT_ICU77,
 # BOOTSTRAP_IMAGE (the pinned build root, from config/buildroot-image),
-# HERMETIC_NET_ATTEMPTS (how many times each online step may run, default 3).
+# HERMETIC_NET_ATTEMPTS (how many times each online step may run, default 3),
+# HERMETIC_NET_RETRY_BASE (first retry delay in seconds, default 5; each
+# later attempt triples it, as tools/dnf_backoff.sh does on the other lane).
 #
 # Outputs under /work/hermetic: mock.cfg and mock.cfg.sha256, the lockfile
 # lock/buildroot_lock.json with the SRPM mock built beside it, repo/ (build
@@ -40,7 +42,8 @@ mkdir -p "$H" /work/cache /work/result /work/reports
 # (#287) with nothing wrong in the package. Retry them; the offline build
 # itself is never retried here, its %check retry is separate and deliberate.
 NET_ATTEMPTS=${HERMETIC_NET_ATTEMPTS:-3}
-NET_RETRY_PAUSE=15
+NET_RETRY_BASE=${HERMETIC_NET_RETRY_BASE:-5}
+NET_RETRY_FACTOR=3
 
 # Run one online step up to NET_ATTEMPTS times: `online <label> <cleanup>
 # <command...>`. cleanup runs before every retry so a half-fetched result
@@ -65,6 +68,7 @@ online() {
   label=$1 cleanup=$2
   shift 2
   attempt=1
+  delay=$NET_RETRY_BASE
   mkdir -p "$REPORT_DIR"
   log=$REPORT_DIR/online.log
   : > "$log"
@@ -81,9 +85,10 @@ online() {
       fi
       return "$status"
     fi
-    echo "::warning title=$label retry::$PACKAGE: $label failed (exit $status); attempt $((attempt + 1)) of $NET_ATTEMPTS in ${NET_RETRY_PAUSE}s"
-    sleep "$NET_RETRY_PAUSE"
+    echo "::warning title=$label retry::$PACKAGE: $label failed (exit $status); attempt $((attempt + 1)) of $NET_ATTEMPTS in ${delay}s"
+    sleep "$delay"
     $cleanup
+    delay=$((delay * NET_RETRY_FACTOR))
     attempt=$((attempt + 1))
   done
 }
