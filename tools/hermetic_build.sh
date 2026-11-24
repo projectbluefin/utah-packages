@@ -16,7 +16,7 @@
 #
 # Environment: PACKAGE, FACTORY_REPO, DIST_BUMP, BUILDROOT_ICU77,
 # BOOTSTRAP_IMAGE (the pinned build root, from config/buildroot-image),
-# HERMETIC_NET_ATTEMPTS (how many times each online step may run, default 3),
+# HERMETIC_NET_ATTEMPTS (how many times each online step may run, default 4),
 # HERMETIC_NET_RETRY_BASE (first retry delay in seconds, default 5; each
 # later attempt triples it, as tools/dnf_backoff.sh does on the other lane).
 #
@@ -41,7 +41,7 @@ mkdir -p "$H" /work/cache /work/result /work/reports
 # short read there took down mdadm, setxkbmap and dmidecode in one run
 # (#287) with nothing wrong in the package. Retry them; the offline build
 # itself is never retried here, its %check retry is separate and deliberate.
-NET_ATTEMPTS=${HERMETIC_NET_ATTEMPTS:-3}
+NET_ATTEMPTS=${HERMETIC_NET_ATTEMPTS:-4}
 NET_RETRY_BASE=${HERMETIC_NET_RETRY_BASE:-5}
 NET_RETRY_FACTOR=3
 

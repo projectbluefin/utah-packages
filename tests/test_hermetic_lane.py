@@ -158,7 +158,9 @@ class HermeticLaneTests(unittest.TestCase):
         script = SCRIPT.read_text()
         start = script.index("NET_ATTEMPTS=")
         end = script.index("render_config() {")
-        helper = script[start:end].replace("sleep \"$NET_RETRY_PAUSE\"", "true")
+        helper = script[start:end]
+        self.assertIn('sleep "$delay"', helper)
+        helper = helper.replace('sleep "$delay"', "true")
         with tempfile.TemporaryDirectory() as directory:
             counter = Path(directory) / "count"
             reports = Path(directory) / "reports"
@@ -177,13 +179,13 @@ echo "attempts=$(cat {counter}) cleanups=$cleanups"
                                     capture_output=True, text=True)
             self.assertEqual(passes.returncode, 0, passes.stdout + passes.stderr)
             self.assertIn("attempts=2 cleanups=1", passes.stdout)
-            self.assertIn("::warning title=probe retry::probe: probe failed (exit 1); attempt 2 of 3", passes.stdout)
+            self.assertIn("::warning title=probe retry::probe: probe failed (exit 1); attempt 2 of 4 in 5s", passes.stdout)
             counter.unlink()
             gives_up = subprocess.run(["bash", "-c", probe], env={"PASS_ON": "9", "PATH": "/usr/bin:/bin"},
                                       capture_output=True, text=True)
             self.assertEqual(gives_up.returncode, 1, gives_up.stdout + gives_up.stderr)
-            self.assertEqual(counter.read_text().strip(), "3")
-            self.assertIn("::error title=probe failed::probe: probe failed 3 times (last exit 1)", gives_up.stdout)
+            self.assertEqual(counter.read_text().strip(), "4")
+            self.assertIn("::error title=probe failed::probe: probe failed 4 times (last exit 1)", gives_up.stdout)
             self.assertFalse((reports / "infra-failure").exists())
             counter.unlink()
             early_outage = (

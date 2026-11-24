@@ -201,7 +201,8 @@ class MaterializeTests(unittest.TestCase):
                         ) -> tuple[subprocess.CompletedProcess, Path]:
         script = SCRIPT.read_text()
         helper = script[script.index("NET_ATTEMPTS="):script.index("render_config() {")]
-        helper = helper.replace('sleep "$NET_RETRY_PAUSE"', "true")
+        assert 'sleep "$delay"' in helper, "online() sleep line moved; update the stub"
+        helper = helper.replace('sleep "$delay"', "true")
         helper += script[script.index("redirect_fedora_urls() {"):script.index("materialize() {")]
         materialize = script[script.index("materialize() {"):script.index("build() {")]
         materialize = materialize.replace("/tools/", f"{ROOT}/tools/")

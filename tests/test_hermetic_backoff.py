@@ -24,7 +24,13 @@ def online_source() -> str:
     return found.group(0)
 
 
-def run(failures: int, attempts: int = 3, output: str = "DOWN") -> tuple:
+def default_attempts() -> int:
+    found = re.search(r"NET_ATTEMPTS=\$\{HERMETIC_NET_ATTEMPTS:-(\d+)\}", SCRIPT.read_text())
+    assert found, "hermetic_build.sh no longer declares a retry default"
+    return int(found.group(1))
+
+
+def run(failures: int, attempts: int | None = 3, output: str = "DOWN") -> tuple:
     """Source online() and retry a step that fails `failures` times.
 
     Returns the exit code, the waits it slept, the number of attempts, the
@@ -46,10 +52,9 @@ def run(failures: int, attempts: int = 3, output: str = "DOWN") -> tuple:
             "}\n"
             f"cleanup() {{ echo x >> {cleanups}; }}\n"
             "PACKAGE=demo\n"
-            "NET_RETRY_PAUSE=15\n"
             "NET_RETRY_BASE=5\n"
             "NET_RETRY_FACTOR=3\n"
-            f"NET_ATTEMPTS={attempts}\n"
+            f"NET_ATTEMPTS={default_attempts() if attempts is None else attempts}\n"
             f"REPORT_DIR={work}/reports\n"
             "online 'lock fetch' cleanup fake_step\n"
         )
@@ -81,6 +86,13 @@ class HermeticBackoffTests(unittest.TestCase):
         self.assertEqual(attempts, 4)
         self.assertEqual(cleanups, 3)
         self.assertEqual(marker, "lock fetch")
+
+    def test_the_default_retry_count_reaches_the_last_wait(self) -> None:
+        code, waits, attempts, cleanups, marker = run(failures=10, attempts=None)
+        self.assertNotEqual(code, 0)
+        self.assertEqual(attempts, 4)
+        self.assertEqual(waits, ["5", "15", "45"])
+        self.assertEqual(cleanups, 3)
 
     def test_a_dependency_error_is_not_an_outage(self) -> None:
         code, waits, attempts, cleanups, marker = run(
