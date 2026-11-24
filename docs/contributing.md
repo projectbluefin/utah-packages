@@ -38,9 +38,20 @@ repacked them by hand: `gpm` removes `doc/specs` from the upstream release for
 licensing reasons, and only Fedora's lookaside cache holds that hand-made
 tarball. No upstream URL serves those bytes. Do not lock the lookaside copy as
 `url`; add a deterministic transformation from the SHA-512-pinned upstream release to
-`tools/generated_sources.py`, lock it as a `generate` entry, and repin
+the generators, lock it as a `generate` entry, and repin
 `packages/<name>/sources` to the generated digest. Diff the unpacked tree
 against Fedora's archive first: for `gpm` they are identical.
+
+`tools/generated_sources.py` is the entry point (the `METADATA`/`GENERATORS`
+registries and the CLI) and re-exports every generator name. The code lives in
+three siblings: `generated_sources_common.py` (reachability, recipe parsing,
+hashing), `generated_sources_archives.py` (rewrites of one upstream archive)
+and `generated_sources_vendored.py` (pinned files, OCI blobs, vendored Cargo
+trees, git archives). Put a new generator in the sibling that fits, register it
+in `generated_sources.py`. In tests, patch `_fetch` and module-level pins (such
+as `GSTREAMER_PLUGINS_RS_REMOTE` or `GSTREAMER_PLUGINS_RS_COMMITS`) on the
+module that reads them, not on the `generated_sources` re-export, which the
+generators never consult.
 
 The recipe-set agreement gate compares the package names in `packages/`,
 `.packit.yaml`, and `config/upstream-sources.json`; no document quotes
