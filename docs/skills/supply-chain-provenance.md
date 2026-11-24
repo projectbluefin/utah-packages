@@ -468,6 +468,34 @@ When a primary host dies:
 - Leave the recipe's `Source:` line alone: the spec is Fedora's, and the build
   stages sources from the lock, not from the spec URL.
 
+### An expired certificate is a dead host with a fatal first URL
+
+`bitmath.org`'s Let's Encrypt certificate expired on 2026-11-24, so the daily
+bump's re-verify rejected `mtdev` and no bump PR opened. The primary failed
+with `SSL: CERTIFICATE_VERIFY_FAILED`, and the only fallback was a Fedora
+lookaside path for a file Fedora never uploaded — `rpms/mtdev` packages
+1.1.6 — so it answered 404. A certificate failure stays fatal for the URL it
+happens on: those bytes are never trusted. It is not fatal for the lock. The
+next configured URL is fetched over verified TLS and still has to match the
+pinned SHA-512, so a lock whose fallback serves those bytes is accepted
+while the primary's certificate is still expired.
+
+Two things that fix needs:
+
+- A fallback has to be a URL that serves the pinned bytes today. The Fedora
+  lookaside holds only what Fedora packaged, so a version Fedora never built
+  has no lookaside object: the lookaside is not the fallback that always
+  works. `mtdev` 1.1.7 lives on the BLFS conglomerate mirror at
+  `ftp.osuosl.org`, whose bytes hash to the locked
+  `e6174a38cf67a7f12a3b91e4e27bf74a18d6b40a956950ebb748b0ff87092333daa07e647b26038a5a533f8c48e845d649848e6ba99ea009ab87fd96ed188152`.
+  Download the mirror's file and hash it before locking it in: the primary
+  stays on the project's own host, and the mirror is only there so the bytes
+  stay reachable.
+- `rebuilt_fallback()` rewrites a lookaside fallback into the new digest;
+  any other mirror only has its version swapped. The swapped path has to
+  exist for the next release as well, and a mirror that carries one version
+  of a tarball does not carry the next.
+
 ## A source with no release archive: pin the tag's commit
 
 Some projects tag source revisions without publishing release files.
