@@ -16,7 +16,7 @@ import tarfile
 import unittest
 from unittest.mock import patch
 
-from tools import generated_sources
+from tools import generated_sources, generated_sources_vendored
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -918,7 +918,7 @@ class PrefixdevnameVendorTests(unittest.TestCase):
             (package / "prefixdevname.spec").write_text(f"Version: {self.VERSION}\n")
             with patch.dict(generated_sources.PREFIXDEVNAME_INPUT_SHA512,
                             {self.VERSION: hashlib.sha512(archive).hexdigest()}), \
-                    patch.object(generated_sources, "_fetch", side_effect=downloads.__getitem__):
+                    patch.object(generated_sources_vendored, "_fetch", side_effect=downloads.__getitem__):
                 output = generated_sources._prefixdevname_generate(package, package)
             with tarfile.open(output, mode="r:xz") as result:
                 self.assertEqual(result.extractfile(f"{self.TOP}/A/Cargo.lock").read(), b"not valid TOML")

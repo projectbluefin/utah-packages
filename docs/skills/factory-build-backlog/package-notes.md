@@ -58,7 +58,7 @@ archive bytes against the pin before you lock a source.
 
 `libslirp` and `librtmp` (source `rtmpdump`) have no release file, so their
 locks are `generate` entries in `GIT_ARCHIVE_SOURCES`
-(`tools/generated_sources.py`): fetch the tag, check that it still resolves
+(`tools/generated_sources_vendored.py`): fetch the tag, check that it still resolves
 to the pinned commit, and `git archive --format=tar --prefix=<name>-<version>/`.
 To find out how Fedora made such a tarball, decompress its lookaside copy and
 compare the raw tar with `git archive`. Then try each compressor setting.
