@@ -30,6 +30,15 @@ fprintd
 fuse
 fwupd
 gdm
+# These run as root or handle login. An Anitya feed on their upstream primary
+# makes a same-major release an unattended, self-merging bump (#1189), so keep
+# them on the review list even though the bytes are versioned in the URL.
+dnsmasq
+libvirt
+pam-u2f
+pam_yubico
+qemu
+rpcbind
 # The bootloader: a bad release, or replaced bytes, can leave a machine
 # unbootable. Its release-monitoring.org feed makes every 2.x a same-major update.
 grub2

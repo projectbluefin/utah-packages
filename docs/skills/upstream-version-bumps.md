@@ -152,11 +152,13 @@ the reference when Fedora has one. Seen so far:
   exact-name API (`/api/v2/projects/?name=<rpm>`) and add
   `feed: https://release-monitoring.org/project/<id>` only when Anitya's
   current version equals the lock's version. The same name alone is not
-  evidence; a generic name can name a different project. An Anitya feed stays
-  review-only even for a named package, because it lists versions and not
-  downloads: it makes a release visible without claiming where the new
-  tarball lives (#1189). Locks with no primary URL (`generate` entries) stay
-  out of such a batch: Anitya lists versions but supplies no tarball to move.
+  evidence; a generic name can name a different project. An Anitya feed lists
+  versions, not downloads. On a lookaside primary it stays review-only, but on
+  an upstream primary that carries its version a same-major release is derived
+  and applied unattended, so check `config/bump-review-only.txt` first. A
+  package that runs as root or handles login belongs on that list before its
+  feed lands (#1189). Locks with no primary URL (`generate` entries) stay out
+  of such a batch: Anitya lists versions but supplies no tarball to move.
   `tests/test_feed_coverage.py` holds the fed set.
 - A suffixed lock is compared by its numeric prefix (`newer()`): a
   prerelease suffix (`rc`, `alpha`, `beta`, `pre`, `dev`) sits below it, any
