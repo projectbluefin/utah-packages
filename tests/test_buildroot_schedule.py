@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """The build-root refresh is batched with the Sunday full rebuild (#1207).
 
-A build-root move changes every package's cache key. If the refresh lands on
-its own, the week pays one cold rebuild for the move and another for the
-weekly full run. The decided rule is to open the refresh PR just before the
-Sunday full run so one cold rebuild covers both.
+A build-root move changes every package's cache key, so the push run that
+merging the pin starts rebuilds every package cold once and writes the cache
+(#1213). The decided rule is to open the refresh PR on Saturday and merge it
+early enough for that run to finish before the Sunday full run, which then
+reads the cache instead of compiling.
 """
 
 from pathlib import Path
