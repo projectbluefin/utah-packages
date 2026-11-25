@@ -1,4 +1,4 @@
-%global font_util 1.4.1
+%global font_util 1.4.2
 
 # Must be kept in sync with xorg-x11-fonts!
 %global _x11fontdir %{_datadir}/X11/fonts
@@ -7,7 +7,7 @@ Summary:    X.Org X11 font utilities
 Name:       xorg-x11-font-utils
 Epoch:      1
 Version:    7.5
-Release:    64%{?dist}
+Release:      65%{?dist}
 License:    MIT AND BSD-2-Clause AND MIT-open-group AND Unicode-3.0
 URL:        http://www.x.org
 
@@ -64,6 +64,9 @@ find $RPM_BUILD_ROOT -name bdftruncate\* -print0 | xargs -0 rm -f
 %{_x11fontdir}/util/map-*
 
 %changelog
+* Wed Nov 25 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 1:7.5-65
+- font-utils 1.4.2
+
 * Fri Jul 17 2026 Fedora Release Engineering <releng@fedoraproject.org> - 1:7.5-64
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_45_Mass_Rebuild
 
