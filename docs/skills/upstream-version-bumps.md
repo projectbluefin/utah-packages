@@ -510,6 +510,25 @@ Constraints that shaped it, so they are not rediscovered:
   everything again. It never merges, enqueues or mints the App token, and
   runs only main's code. Any other drop, or a branch already up to date
   with main, is left for a person or the next daily bump.
+- The daily PR branch is built on the newest main, not the main the run
+  started from. The bump takes over an hour, and
+  `peter-evans/create-pull-request` builds the branch on the commit the run
+  checked out (it fetches the base again only when the working base differs
+  from it). When main changed a workflow file meanwhile (Renovate bumps the
+  core-runtime digest in `recalculate-hummingbird-gaps.yml` several times a
+  day), the branch carried the older workflow and GitHub refused the
+  `GITHUB_TOKEN` push ("refusing to allow a GitHub App to create or update
+  workflow … without `workflows` permission"), so no PR opened (runs
+  44994964065 and 45127407515). The step "Move the bump onto the newest
+  main" fetches main, stashes only the `add-paths`, resets onto it and
+  restores them; keep its path list equal to `add-paths`. A conflict with
+  the newest main fails the run there. When main moved, the next step
+  rebuilds the multimedia closure report and reruns the unit tests,
+  `tools/validate.py` and the quoting check on the moved tree, so the PR
+  body's "verified before this PR was opened" holds for the branch that is
+  pushed. Keep the push on `GITHUB_TOKEN`
+  rather than an App token with workflow rights: branch-side work uses
+  `GITHUB_TOKEN` by design (first constraint above).
 - A `target-cycle` (GNOME-next) run is never gated; it stays a human merge.
 - GitHub does create `pull_request` runs for the bot-opened PR, parked in
   `action_required`; their pending `Canary` blocked the first gated merge
