@@ -33,8 +33,8 @@
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/44765133559"
     },
     "flex": {
-      "version": "2.7.3",
-      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/44881585786"
+      "version": "2.7.9",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/45569315364"
     },
     "fribidi": {
       "version": "1.0.18",
@@ -55,6 +55,10 @@
     "gnome-keyring": {
       "version": "51.1",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/42773931857"
+    },
+    "gnome-remote-desktop": {
+      "version": "51.1",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/45569315364"
     },
     "grpc": {
       "version": "1.85.4",
@@ -177,8 +181,8 @@
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/44765133559"
     },
     "simdutf": {
-      "version": "9.4.0",
-      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/44765133559"
+      "version": "9.5.0",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/45569315364"
     },
     "snowball": {
       "version": "3.2.0",
@@ -203,6 +207,10 @@
     "taglib": {
       "version": "2.3.2",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/44765133559"
+    },
+    "tomlplusplus": {
+      "version": "3.5.1",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/45569315364"
     },
     "udisks2": {
       "version": "2.12.0",

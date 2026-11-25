@@ -678,6 +678,43 @@ class UnavailableSourceTests(unittest.TestCase):
                     fetch("https://mitm.example/x", destination)
             self.assertNotIsInstance(raised.exception, UnavailableSource)
 
+    def test_a_certificate_failure_on_the_primary_is_served_by_a_verified_mirror(self) -> None:
+        """mirrors.ctan.org redirects to a random mirror, some with a bad certificate (#1280).
+
+        The bad certificate is never trusted: the next configured URL is fetched
+        over verified TLS and its bytes still have to match the pinned digest.
+        """
+        payload = b"PK\x03\x04" + b"fonts"
+        for mirror_serves, code, result in (
+            (True, 0, "accepted"),
+            (False, 1, "rejected"),
+        ):
+            with self.subTest(mirror_serves=mirror_serves), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+
+                def fake_urlopen(request, timeout=None):
+                    if "mirror" in request.full_url and mirror_serves:
+                        return io.BytesIO(payload)
+                    raise urllib.error.URLError(ssl.SSLCertVerificationError("certificate verify failed"))
+
+                with patch("tools.source_pipeline.urllib.request.urlopen", side_effect=fake_urlopen), \
+                        patch("tools.source_pipeline.time.sleep"):
+                    exit_code, output = self._run(root, [{
+                        "name": "demo",
+                        "url": "https://pool.example/demo.zip",
+                        "fallback_urls": ["https://mirror.example/demo.zip"],
+                        "filename": "demo.zip",
+                        "sha512": hashlib.sha512(payload).hexdigest(),
+                    }])
+                self.assertEqual(exit_code, code, output)
+                report = json.loads((root / "reports" / "demo.json").read_text())
+                self.assertEqual(report["result"], result)
+                if mirror_serves:
+                    self.assertEqual(report["resolved_url"], "https://mirror.example/demo.zip")
+                else:
+                    self.assertIn("certificate verify failed", report["error"])
+                    self.assertEqual(json.loads((root / "reports" / "unavailable.json").read_text()), [])
+
     def test_a_missing_primary_with_a_dead_mirror_fails_the_run(self) -> None:
         """A 404 is actionable even if the mirror is also down."""
         with tempfile.TemporaryDirectory() as directory:
