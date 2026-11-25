@@ -785,8 +785,11 @@ def apply_junction_queues(roots: dict[str, Path], work: Path) -> tuple[dict[str,
                         ignore=shutil.ignore_patterns(".git"))
         for name in files:
             # stderr reaches the log: a queue patch that no longer applies
-            # fails the import with git's own message.
-            subprocess.run(["git", "apply", str(dakota / name)], cwd=copy, check=True)
+            # fails the import with git's own message. The path is resolved to
+            # an absolute path because git applies it from the copied checkout
+            # (cwd=copy): a relative path would be looked up there, not in
+            # Dakota, and fail with "no such file".
+            subprocess.run(["git", "apply", str((dakota / name).resolve())], cwd=copy, check=True)
         patched[project] = copy
         queues[project] = [{"patch": name, "files": _patched_files((dakota / name).read_text())}
                            for name in files]
@@ -1822,6 +1825,10 @@ def main(argv=None) -> int:
             print(f"error: --import-build-facts needs a checkout of {', '.join(missing)}",
                   file=sys.stderr)
             return 2
+        # Resolve the checked-out project paths to absolute ones before any
+        # cwd= call, so a relative path handed by the workflow can never
+        # resolve inside the copied checkout later.
+        dirs = {project: path.resolve() for project, path in dirs.items()}
         write_build_facts(args.build_facts, import_build_facts(pin, records, dirs))
         print(f"build facts written: {args.build_facts}")
 
