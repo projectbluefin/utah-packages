@@ -1,7 +1,7 @@
 %global lib_ver 37.0.0
 %global so_ver 37
 Name:		simdutf
-Version:	9.5.0
+Version:	9.3.3
 Release:	%autorelease
 Summary:	Unicode validation and transcoding at billions of characters per second
 

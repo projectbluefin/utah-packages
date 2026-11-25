@@ -1,7 +1,7 @@
 %bcond_without check
 
 Name:           tomlplusplus
-Version:        3.5.1
+Version:        3.4.0
 Release:        %autorelease
 Summary:        Header-only TOML config file parser and serializer for C++17
 License:        MIT

@@ -1088,12 +1088,12 @@
     },
     {
       "name": "flex",
-      "version": "2.7.9",
-      "url": "https://github.com/westes/flex/releases/download/v2.7.9/flex-2.7.9.tar.gz",
-      "filename": "flex-2.7.9.tar.gz",
-      "sha512": "1d22060dcda2557197d18a11c5fbc543d82611353c7f41f9ab986e78c9be8effc4b06a0686f736eb1aca30244979989b960007be16f203f655fde82a34a1a3c7",
+      "version": "2.6.4",
+      "url": "https://github.com/westes/flex/releases/download/v2.6.4/flex-2.6.4.tar.gz",
+      "filename": "flex-2.6.4.tar.gz",
+      "sha512": "e9785f3d620a204b7d20222888917dc065c2036cae28667065bf7862dfa1b25235095a12fd04efdbd09bfd17d3452e6b9ef953a8c1137862ff671c97132a082e",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/flex/flex-2.7.9.tar.gz/sha512/1d22060dcda2557197d18a11c5fbc543d82611353c7f41f9ab986e78c9be8effc4b06a0686f736eb1aca30244979989b960007be16f203f655fde82a34a1a3c7/flex-2.7.9.tar.gz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/flex/flex-2.6.4.tar.gz/sha512/e9785f3d620a204b7d20222888917dc065c2036cae28667065bf7862dfa1b25235095a12fd04efdbd09bfd17d3452e6b9ef953a8c1137862ff671c97132a082e/flex-2.6.4.tar.gz"
       ]
     },
     {
@@ -1584,10 +1584,10 @@
     },
     {
       "name": "gnome-remote-desktop",
-      "version": "51.1",
-      "url": "https://download.gnome.org/sources/gnome-remote-desktop/51/gnome-remote-desktop-51.1.tar.xz",
-      "filename": "gnome-remote-desktop-51.1.tar.xz",
-      "sha512": "503e7fce5181915a9aaede8161906b70b4eda374442488ab2ee8ec8136008b3a6547898a62b1c2d536ba324bf04feb1786db06be55c47c164c95332a7136ace1"
+      "version": "51.0",
+      "url": "https://download.gnome.org/sources/gnome-remote-desktop/51/gnome-remote-desktop-51.0.tar.xz",
+      "filename": "gnome-remote-desktop-51.0.tar.xz",
+      "sha512": "c1eb12180dc52d15456ea3b59a5fd7b3a862d0ed03434197b825debeed474dfa046a5ed5dca25fc0a0c15cca11d5a1febee9b0d227465103971ddc7753f485e5"
     },
     {
       "name": "gnome-rounded-blur",
@@ -6652,12 +6652,12 @@
     },
     {
       "name": "simdutf",
-      "version": "9.5.0",
-      "url": "https://github.com/simdutf/simdutf/archive/v9.5.0/simdutf-9.5.0.tar.gz",
-      "filename": "simdutf-9.5.0.tar.gz",
-      "sha512": "47513afa7c4a3fa4ccef14a040143dda03d63c9dd2232df06663993972fd5d2747c16f33c05bdbb567adf1cf94fa626ae5f3d08a6f4ffc1bcf76ebbcf06b0409",
+      "version": "9.3.3",
+      "url": "https://github.com/simdutf/simdutf/archive/v9.3.3/simdutf-9.3.3.tar.gz",
+      "filename": "simdutf-9.3.3.tar.gz",
+      "sha512": "3639f51386f14178fa6681d5c305fb21acb57a45c3dc95c78bfc27e796f714ea8f1d1bba84fd1027f7763e4fe53735bdfb68cd04ae8c2e34fa512dd1bc4e7318",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/simdutf/simdutf-9.5.0.tar.gz/sha512/47513afa7c4a3fa4ccef14a040143dda03d63c9dd2232df06663993972fd5d2747c16f33c05bdbb567adf1cf94fa626ae5f3d08a6f4ffc1bcf76ebbcf06b0409/simdutf-9.5.0.tar.gz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/simdutf/simdutf-9.3.3.tar.gz/sha512/3639f51386f14178fa6681d5c305fb21acb57a45c3dc95c78bfc27e796f714ea8f1d1bba84fd1027f7763e4fe53735bdfb68cd04ae8c2e34fa512dd1bc4e7318/simdutf-9.3.3.tar.gz"
       ]
     },
     {
@@ -7134,10 +7134,10 @@
     },
     {
       "name": "tomlplusplus",
-      "version": "3.5.1",
-      "url": "https://github.com/marzer/tomlplusplus/archive/v3.5.1/tomlplusplus-3.5.1.tar.gz",
-      "filename": "tomlplusplus-3.5.1.tar.gz",
-      "sha512": "a06b9c28559e34baf75d58457ef7b65ef092aee2240374b5abfe9c30ee64f5801ec3eeb4ab72238f7850b3ad981c9843a9c79b3b921cf816a2404d1cc3e7ee44"
+      "version": "3.4.0",
+      "url": "https://github.com/marzer/tomlplusplus/archive/v3.4.0/tomlplusplus-3.4.0.tar.gz",
+      "filename": "tomlplusplus-3.4.0.tar.gz",
+      "sha512": "c227fc8147c9459b29ad24002aaf6ab2c42fac22ea04c1c52b283a0172581ccd4527b33c1931e0ef0d1db6b6a53f9e9882c6d4231c7f3494cf070d0220741aa5"
     },
     {
       "name": "toolbox",
