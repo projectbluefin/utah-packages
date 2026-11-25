@@ -13,7 +13,7 @@
 %global vncserver_version 0.9.11-7
 
 Name:           gnome-remote-desktop
-Version:        51.0
+Version:        51.1
 Release:        %autorelease
 Summary:        GNOME Remote Desktop screen share service
 

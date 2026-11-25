@@ -32,10 +32,6 @@
       "version": "2.4.2",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/44765133559"
     },
-    "flex": {
-      "version": "2.7.3",
-      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/44881585786"
-    },
     "fribidi": {
       "version": "1.0.18",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/43358822069"
@@ -174,10 +170,6 @@
     },
     "rust-just": {
       "version": "1.59.0",
-      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/44765133559"
-    },
-    "simdutf": {
-      "version": "9.4.0",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/44765133559"
     },
     "snowball": {
