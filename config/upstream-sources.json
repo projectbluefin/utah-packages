@@ -1329,10 +1329,10 @@
     },
     {
       "name": "gflags",
-      "version": "2.2.2",
-      "url": "https://github.com/gflags/gflags/archive/v2.2.2/gflags-2.2.2.tar.gz",
-      "filename": "gflags-2.2.2.tar.gz",
-      "sha512": "98c4703aab24e81fe551f7831ab797fb73d0f7dfc516addb34b9ff6d0914e5fd398207889b1ae555bac039537b1d4677067dae403b64903577078d99c1bdb447"
+      "version": "2.3.1",
+      "url": "https://github.com/gflags/gflags/archive/v2.3.1/gflags-2.3.1.tar.gz",
+      "filename": "gflags-2.3.1.tar.gz",
+      "sha512": "fb8d90848ff846d0e67d3b8381699c9f0a0ea88ab77f1bd84beffc1c23639a676238cbdb27542cbe91e30dfd7e1624556a49386eac25bd5a0ef5317ed662019e"
     },
     {
       "name": "ghostscript",

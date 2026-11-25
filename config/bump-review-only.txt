@@ -30,6 +30,10 @@ fprintd
 fuse
 fwupd
 gdm
+# gflags 2.3 moves the soname to libgflags.so.2.3 (glog, librime and jpegxl
+# link libgflags.so.2.2), and every minor release moves it again. Move it by
+# hand with its consumers.
+gflags
 # The bootloader: a bad release, or replaced bytes, can leave a machine
 # unbootable. Its release-monitoring.org feed makes every 2.x a same-major update.
 grub2
