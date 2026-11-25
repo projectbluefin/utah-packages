@@ -684,7 +684,7 @@ Left stuck, with the reason:
   nanosleep patch still apply. That is a recipe change for a reviewer, not
   a hand bump.
 
-### Hand version moves (2026-11-06)
+### Hand version moves (2026-11-06, 2026-11-25)
 
 Each move is a separate commit with an upstream primary, a SHA-512 lock, the
 lookaside fallback in `planned_entry`'s form, and the spec's `Version:` and
@@ -714,6 +714,18 @@ lookaside fallback in `planned_entry`'s form, and the spec's `Version:` and
   soname) did not move. Retire `dist_bump` and its `rebuild_reason`.
 - `webkitgtk`'s version-bound `.asc` still makes `check_bumpable()` refuse
   its next release, so each webkitgtk move stays a hand move like this one.
+- **gnu-efi 3.0.18 -> 4.0.4.** Upstream moved from SourceForge to
+  `github.com/ncroxon/gnu-efi` and attaches no release asset, so the
+  payload is the tag archive
+  (`.../archive/4.0.4/gnu-efi-4.0.4.tar.gz`), pinned like any other
+  primary, and the recipe's provenance flips from a Rawhide import to
+  `branch: upstream`. The release also rewrote the build: one top-level
+  `make` now builds the library, the headers, the EFI runtime and the
+  sample applications, `VERSION=` overrides the tree's own stale `4.0.3`
+  in `gnu-efi.pc`, and upstream states the terms of each directory in its
+  `LICENSE`, so the recipe installs those texts. Both carried patches go:
+  `0049` is upstreamed (4.0.4 already passes `objcopy --output-target`)
+  and `0048` was never applied.
 
 ### Locks left without a feed
 

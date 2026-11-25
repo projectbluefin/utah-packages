@@ -1793,10 +1793,10 @@
     },
     {
       "name": "gnu-efi",
-      "version": "3.0.18",
-      "url": "https://sourceforge.net/projects/gnu-efi/files/gnu-efi-3.0.18.tar.bz2",
-      "filename": "gnu-efi-3.0.18.tar.bz2",
-      "sha512": "39f9fa14b880441a94a04400ff8850efdd9474929e5501dfd05af06e7747b4d0f7cb742ac811c7026cf52d00508efb73018be4d61d63a1211de0cd931cbc473d"
+      "version": "4.0.4",
+      "url": "https://github.com/ncroxon/gnu-efi/archive/4.0.4/gnu-efi-4.0.4.tar.gz",
+      "filename": "gnu-efi-4.0.4.tar.gz",
+      "sha512": "4ed273ef8203f1b2fd90855821576523b070236911a26199eec220f1bad34f63759a32b06f11a681e532a2c793339d9e66bcb90e5cde5de02d8842a40c471a06"
     },
     {
       "name": "gnu-env",
