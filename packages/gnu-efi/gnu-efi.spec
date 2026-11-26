@@ -6,7 +6,7 @@ Epoch: 1
 Version: 4.0.4
 Release: %autorelease
 Summary: Development Libraries and headers for EFI
-License: (GPL-2.0-or-later OR BSD-3-Clause) AND BSD-3-Clause-Patent AND LGPL-3.0-or-later
+License: BSD-3-Clause AND (GPL-2.0-or-later OR BSD-3-Clause) AND BSD-3-Clause-Patent AND LGPL-3.0-or-later
 URL: https://github.com/ncroxon/gnu-efi
 
 # Upstream moved from SourceForge to GitHub and attaches no release asset to
