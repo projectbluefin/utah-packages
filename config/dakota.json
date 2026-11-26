@@ -800,6 +800,12 @@
       "factory_version": "1.8.7",
       "dakota_version": null
     },
+    "gnome-build-meta.bst:gnomeos-deps/noise-suppression-for-voice.bst": {
+      "verdict": "factory-ahead",
+      "reason": "Same werman/noise-suppression-for-voice upstream: Dakota pins v1.21 while the factory lock tracks the upstream v1.22 release. Keep the newer release.",
+      "factory_version": "1.22",
+      "dakota_version": "1.21"
+    },
     "gnome-build-meta.bst:gnomeos-deps/thermald.bst": {
       "verdict": "false-positive",
       "reason": "gnome-build-meta's ref reads v2.15.10, but its commit 88369b4 is intel/thermal_daemon tag v2.5.10; the factory's 2.5.13 (Fedora Rawhide's) is newer",
