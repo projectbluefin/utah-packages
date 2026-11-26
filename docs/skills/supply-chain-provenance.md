@@ -563,6 +563,15 @@ missing. kernel.org signs only `sha256sums.asc`: check the archive against
 its line there before pinning the SHA-512. Moving to a newer kernel is the
 spec `Version:` plus a `HYPERV_KERNEL_INPUT_SHA512` entry.
 
+Every new generator ships with generate-step tests in
+`tests/test_generated_sources_generate.py`, not only transform tests: an
+unpinned version fails before any download, a download whose SHA-512 does not
+match fails with nothing written, and the pinned input produces the named
+target. A generator that fetches one pinned archive subclasses
+`SinglePinGenerateCases` there and supplies the URL, pin table, target name and
+a synthetic archive. The transform tests alone leave the pin check unexecuted,
+so a refactor that drops it would still pass CI.
+
 Rust vendor generators must read the release root's exact lock path, not
 the first archive member ending in `Cargo.lock`. For `prefixdevname`, both
 dependency downloads and repacking use `prefixdevname-<version>/Cargo.lock`;
