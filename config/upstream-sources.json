@@ -4220,10 +4220,10 @@
     },
     {
       "name": "librime",
-      "version": "1.17.0",
-      "url": "https://github.com/rime/librime/archive/1.17.0.tar.gz#/librime-1.17.0.tar.gz",
-      "filename": "librime-1.17.0.tar.gz",
-      "sha512": "0d4a689c5efdf2589d63118d72833329259d5b1ce48eea6590c5317d88b22281b933663df1cf858cad36dd48745be11d117d8ff5fac4813c2e49aca6282eaa44"
+      "version": "1.18.0",
+      "url": "https://github.com/rime/librime/archive/1.18.0.tar.gz#/librime-1.18.0.tar.gz",
+      "filename": "librime-1.18.0.tar.gz",
+      "sha512": "bdf4723af9650fee7a73950b24e890335080496d37dacdd185d3ae548b1ae969ed564e65205c0b8ba8bc96a87e9f00aa245104b79559ad8b5ed34b0e802864c0"
     },
     {
       "name": "librist",
@@ -4400,14 +4400,14 @@
     },
     {
       "name": "libtevent",
-      "version": "0.17.2",
-      "url": "https://www.samba.org/ftp/tevent/tevent-0.17.2.tar.gz",
-      "filename": "tevent-0.17.2.tar.gz",
+      "version": "0.17.3",
+      "url": "https://www.samba.org/ftp/tevent/tevent-0.17.3.tar.gz",
+      "filename": "tevent-0.17.3.tar.gz",
       "feed": "https://release-monitoring.org/project/1736",
-      "sha512": "23b8a8e4251d3a88e9bbb78134787280047e631393ab668fa34ab69986be72046506f9766b6b82f7ff6ce38412d7198665120312f98b9fe5428a662efc16b59b",
+      "sha512": "127be908394c066121e9b0eee939a68f14a957fd0045056985dddde32a5986d1b20f7a73ceac737f0e44bfb10f0e4abf5d3faeb339006dffb3a83c414f36de1f",
       "stage": 1,
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/libtevent/tevent-0.17.2.tar.gz/sha512/23b8a8e4251d3a88e9bbb78134787280047e631393ab668fa34ab69986be72046506f9766b6b82f7ff6ce38412d7198665120312f98b9fe5428a662efc16b59b/tevent-0.17.2.tar.gz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libtevent/tevent-0.17.3.tar.gz/sha512/127be908394c066121e9b0eee939a68f14a957fd0045056985dddde32a5986d1b20f7a73ceac737f0e44bfb10f0e4abf5d3faeb339006dffb3a83c414f36de1f/tevent-0.17.3.tar.gz"
       ]
     },
     {
@@ -5209,10 +5209,10 @@
     },
     {
       "name": "nvme-cli",
-      "version": "3.1",
-      "url": "https://github.com/linux-nvme/nvme-cli/archive/v3.1/nvme-cli-3.1.tar.gz",
-      "filename": "nvme-cli-3.1.tar.gz",
-      "sha512": "980a806125c75313aefe6f24aef13b850d69893407fc5ccf549b74829b1622efdb8f28f794dff6f7b258bb2a8dcd16c7fcf457a427a04eaa558ff38c954ed2e5"
+      "version": "3.3",
+      "url": "https://github.com/linux-nvme/nvme-cli/archive/v3.3/nvme-cli-3.3.tar.gz",
+      "filename": "nvme-cli-3.3.tar.gz",
+      "sha512": "90d1ab14f5005c7e6921539001b786f01f215dad63aaf9d3ce1e604b7058331f7ffcb054938584a0c9094531362f7691b9576c72a31325b29d02ae03c5001b54"
     },
     {
       "name": "nvtop",

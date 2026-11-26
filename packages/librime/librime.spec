@@ -1,5 +1,5 @@
 Name:           librime
-Version:        1.17.0
+Version:        1.18.0
 Release:        1%{?dist}
 Summary:        Rime Input Method Engine Library
 
@@ -132,6 +132,9 @@ popd
 
 
 %changelog
+* Thu Nov 26 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 1.18.0-1
+- Update to 1.18.0
+
 * Fri Nov 20 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 1.17.0-1
 - Update to 1.17.0
 

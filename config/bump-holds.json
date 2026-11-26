@@ -140,10 +140,6 @@
       "version": "140.17.0",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/44765133559"
     },
-    "nvme-cli": {
-      "version": "3.2",
-      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/44765133559"
-    },
     "openjph": {
       "version": "0.33.0",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/42773931857"
