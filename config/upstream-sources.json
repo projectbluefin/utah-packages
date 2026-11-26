@@ -4716,7 +4716,10 @@
       "version": "0.28.0",
       "url": "https://download.drobilla.net/lilv-0.28.0.tar.xz",
       "filename": "lilv-0.28.0.tar.xz",
-      "sha512": "754c9996670235766b84e416bbcb5352a7376e86f7fa373f9428125552294a5d6b032a363ea51fbbf81b88c8f2e47b3566a07bf0992e6e6ebd1bbf31651d9024"
+      "sha512": "754c9996670235766b84e416bbcb5352a7376e86f7fa373f9428125552294a5d6b032a363ea51fbbf81b88c8f2e47b3566a07bf0992e6e6ebd1bbf31651d9024",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/lilv/lilv-0.28.0.tar.xz/sha512/754c9996670235766b84e416bbcb5352a7376e86f7fa373f9428125552294a5d6b032a363ea51fbbf81b88c8f2e47b3566a07bf0992e6e6ebd1bbf31651d9024/lilv-0.28.0.tar.xz"
+      ]
     },
     {
       "name": "linux-atm",
@@ -6714,7 +6717,10 @@
       "version": "0.16.22",
       "url": "https://download.drobilla.net/sord-0.16.22.tar.xz",
       "filename": "sord-0.16.22.tar.xz",
-      "sha512": "3821500f810e3b1cdbd763db419445c931d8b61de571f475646f11a5740c521c93c47ecab2e81a580a0d94bf432faa0de78fe3be1138c87bf9baca8fe23bb0cd"
+      "sha512": "3821500f810e3b1cdbd763db419445c931d8b61de571f475646f11a5740c521c93c47ecab2e81a580a0d94bf432faa0de78fe3be1138c87bf9baca8fe23bb0cd",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/sord/sord-0.16.22.tar.xz/sha512/3821500f810e3b1cdbd763db419445c931d8b61de571f475646f11a5740c521c93c47ecab2e81a580a0d94bf432faa0de78fe3be1138c87bf9baca8fe23bb0cd/sord-0.16.22.tar.xz"
+      ]
     },
     {
       "name": "sos",
@@ -6854,7 +6860,10 @@
       "version": "0.6.22",
       "url": "https://download.drobilla.net/sratom-0.6.22.tar.xz",
       "filename": "sratom-0.6.22.tar.xz",
-      "sha512": "bb3a46e88faf1596d2f10ac9d22f063e52f7c068a0712b0234168346727f179ea236280dae89e4136e97c243d0815444af1dcc6b86d70b99f5f88008481288b0"
+      "sha512": "bb3a46e88faf1596d2f10ac9d22f063e52f7c068a0712b0234168346727f179ea236280dae89e4136e97c243d0815444af1dcc6b86d70b99f5f88008481288b0",
+      "fallback_urls": [
+        "https://src.fedoraproject.org/repo/pkgs/rpms/sratom/sratom-0.6.22.tar.xz/sha512/bb3a46e88faf1596d2f10ac9d22f063e52f7c068a0712b0234168346727f179ea236280dae89e4136e97c243d0815444af1dcc6b86d70b99f5f88008481288b0/sratom-0.6.22.tar.xz"
+      ]
     },
     {
       "name": "srt",
