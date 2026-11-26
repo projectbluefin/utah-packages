@@ -4220,10 +4220,10 @@
     },
     {
       "name": "librime",
-      "version": "1.18.0",
-      "url": "https://github.com/rime/librime/archive/1.18.0.tar.gz#/librime-1.18.0.tar.gz",
-      "filename": "librime-1.18.0.tar.gz",
-      "sha512": "bdf4723af9650fee7a73950b24e890335080496d37dacdd185d3ae548b1ae969ed564e65205c0b8ba8bc96a87e9f00aa245104b79559ad8b5ed34b0e802864c0"
+      "version": "1.17.0",
+      "url": "https://github.com/rime/librime/archive/1.17.0.tar.gz#/librime-1.17.0.tar.gz",
+      "filename": "librime-1.17.0.tar.gz",
+      "sha512": "0d4a689c5efdf2589d63118d72833329259d5b1ce48eea6590c5317d88b22281b933663df1cf858cad36dd48745be11d117d8ff5fac4813c2e49aca6282eaa44"
     },
     {
       "name": "librist",
@@ -5209,10 +5209,10 @@
     },
     {
       "name": "nvme-cli",
-      "version": "3.3",
-      "url": "https://github.com/linux-nvme/nvme-cli/archive/v3.3/nvme-cli-3.3.tar.gz",
-      "filename": "nvme-cli-3.3.tar.gz",
-      "sha512": "90d1ab14f5005c7e6921539001b786f01f215dad63aaf9d3ce1e604b7058331f7ffcb054938584a0c9094531362f7691b9576c72a31325b29d02ae03c5001b54"
+      "version": "3.1",
+      "url": "https://github.com/linux-nvme/nvme-cli/archive/v3.1/nvme-cli-3.1.tar.gz",
+      "filename": "nvme-cli-3.1.tar.gz",
+      "sha512": "980a806125c75313aefe6f24aef13b850d69893407fc5ccf549b74829b1622efdb8f28f794dff6f7b258bb2a8dcd16c7fcf457a427a04eaa558ff38c954ed2e5"
     },
     {
       "name": "nvtop",
