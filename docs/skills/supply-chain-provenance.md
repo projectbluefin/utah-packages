@@ -168,6 +168,16 @@ Retries retain verified RPMs and rebuild the derived repository metadata and
 bootstrap image. Mock accepts an existing output repository, but its image
 sync refuses to overwrite an existing bootstrap image directory.
 
+A step that repairs the repository before the check runs must never raise.
+`unwrap_gzip_rpms` undoes a `Content-Encoding: gzip` that an edge kept, and
+a gzip stream whose deflate data is corrupt raises `zlib.error` -- neither
+`OSError` nor `EOFError`. Uncaught, it ended the fetch before
+`verify_hermetic_repo.py` ran, so the file that could not be decoded was never
+removed and every retry fetched the same corrupt RPM again (#1323). A file
+such a step cannot decode is left exactly as it is: the verifier rejects it,
+the retry drops it, and the next attempt brings a good copy. Catch the
+decoder's own errors there, and let the verifier judge the bytes.
+
 When changing fetch retries, preserve the regression tests for three boundaries:
 only lock resolution and network fetch are retried; Fedora retries use Fedora's
 redirector, not a private mirror list; and whole-lock verification runs after
@@ -468,6 +478,34 @@ When a primary host dies:
 - Leave the recipe's `Source:` line alone: the spec is Fedora's, and the build
   stages sources from the lock, not from the spec URL.
 
+### An expired certificate is a dead host with a fatal first URL
+
+`bitmath.org`'s Let's Encrypt certificate expired on 2026-11-24, so the daily
+bump's re-verify rejected `mtdev` and no bump PR opened. The primary failed
+with `SSL: CERTIFICATE_VERIFY_FAILED`, and the only fallback was a Fedora
+lookaside path for a file Fedora never uploaded — `rpms/mtdev` packages
+1.1.6 — so it answered 404. A certificate failure stays fatal for the URL it
+happens on: those bytes are never trusted. It is not fatal for the lock. The
+next configured URL is fetched over verified TLS and still has to match the
+pinned SHA-512, so a lock whose fallback serves those bytes is accepted
+while the primary's certificate is still expired.
+
+Two things that fix needs:
+
+- A fallback has to be a URL that serves the pinned bytes today. The Fedora
+  lookaside holds only what Fedora packaged, so a version Fedora never built
+  has no lookaside object: the lookaside is not the fallback that always
+  works. `mtdev` 1.1.7 lives on the BLFS conglomerate mirror at
+  `ftp.osuosl.org`, whose bytes hash to the locked
+  `e6174a38cf67a7f12a3b91e4e27bf74a18d6b40a956950ebb748b0ff87092333daa07e647b26038a5a533f8c48e845d649848e6ba99ea009ab87fd96ed188152`.
+  Download the mirror's file and hash it before locking it in: the primary
+  stays on the project's own host, and the mirror is only there so the bytes
+  stay reachable.
+- `rebuilt_fallback()` rewrites a lookaside fallback into the new digest;
+  any other mirror only has its version swapped. The swapped path has to
+  exist for the next release as well, and a mirror that carries one version
+  of a tarball does not carry the next.
+
 ## A source with no release archive: pin the tag's commit
 
 Some projects tag source revisions without publishing release files.
@@ -534,6 +572,15 @@ snapshot, which still builds at v7.3.1), and fails if any of them is
 missing. kernel.org signs only `sha256sums.asc`: check the archive against
 its line there before pinning the SHA-512. Moving to a newer kernel is the
 spec `Version:` plus a `HYPERV_KERNEL_INPUT_SHA512` entry.
+
+Every new generator ships with generate-step tests in
+`tests/test_generated_sources_generate.py`, not only transform tests: an
+unpinned version fails before any download, a download whose SHA-512 does not
+match fails with nothing written, and the pinned input produces the named
+target. A generator that fetches one pinned archive subclasses
+`SinglePinGenerateCases` there and supplies the URL, pin table, target name and
+a synthetic archive. The transform tests alone leave the pin check unexecuted,
+so a refactor that drops it would still pass CI.
 
 Rust vendor generators must read the release root's exact lock path, not
 the first archive member ending in `Cargo.lock`. For `prefixdevname`, both

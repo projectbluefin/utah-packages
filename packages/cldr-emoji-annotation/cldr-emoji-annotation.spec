@@ -22,6 +22,9 @@ Source0:    https://github.com/unicode-org/cldr/archive/refs/tags/%{tag_version}
 #Patch0:     %%{name}-HEAD.patch
 BuildRequires: autoconf
 BuildRequires: automake
+# Utah: %%check runs xmllint, which Fedora's build root happens to carry and
+# a clean Hummingbird mock root does not.
+BuildRequires: /usr/bin/xmllint
 BuildArch:  noarch
 Requires:  %{name}-dtd
 

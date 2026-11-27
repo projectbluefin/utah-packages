@@ -1,5 +1,5 @@
 Name:           libtsm
-Version:        4.8.0
+Version:        4.8.1
 Release:        %autorelease
 Summary:        DEC-VT terminal emulator state machine
 License:        MIT AND LGPL-2.1-or-later
