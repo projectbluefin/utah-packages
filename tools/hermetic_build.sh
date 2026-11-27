@@ -237,9 +237,16 @@ PY
 # that RPM. Nothing is trusted for it -- verify_hermetic_repo.py still checks
 # every file's SIGMD5 against the lock -- and createrepo_c, which failed on
 # the encoded file, runs again on the next attempt with nothing left to fetch.
+#
+# A file whose gzip stream is itself corrupt cannot be unwrapped: zlib raises
+# zlib.error, which is neither OSError nor EOFError. Letting that out of this
+# step stopped the fetch before verify_hermetic_repo.py ran, so the file that
+# could not be decoded was never removed and every retry fetched it again.
+# An undecodable file is left exactly as it is: the verifier rejects it and
+# the retry drops it.
 unwrap_gzip_rpms() {
   python3 - "$1" <<'PY'
-import gzip, sys
+import gzip, sys, zlib
 from pathlib import Path
 for rpm in sorted(Path(sys.argv[1]).glob("*.rpm")):
     with rpm.open("rb") as handle:
@@ -247,7 +254,7 @@ for rpm in sorted(Path(sys.argv[1]).glob("*.rpm")):
             continue
     try:
         body = gzip.decompress(rpm.read_bytes())
-    except (OSError, EOFError):
+    except (OSError, EOFError, zlib.error):
         continue
     if body[:4] != b"\xed\xab\xee\xdb":
         continue
