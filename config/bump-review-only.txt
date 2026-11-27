@@ -33,8 +33,13 @@ gdm
 # These run as root or handle login. An Anitya feed on their upstream primary
 # makes a same-major release an unattended, self-merging bump (#1189), so keep
 # them on the review list even though the bytes are versioned in the URL.
+cifs-utils
 dnsmasq
+iwd
+ipset
 libvirt
+oath-toolkit
+openconnect
 pam-u2f
 pam_yubico
 qemu
