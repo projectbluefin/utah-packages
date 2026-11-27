@@ -168,6 +168,16 @@ Retries retain verified RPMs and rebuild the derived repository metadata and
 bootstrap image. Mock accepts an existing output repository, but its image
 sync refuses to overwrite an existing bootstrap image directory.
 
+A step that repairs the repository before the check runs must never raise.
+`unwrap_gzip_rpms` undoes a `Content-Encoding: gzip` that an edge kept, and
+a gzip stream whose deflate data is corrupt raises `zlib.error` -- neither
+`OSError` nor `EOFError`. Uncaught, it ended the fetch before
+`verify_hermetic_repo.py` ran, so the file that could not be decoded was never
+removed and every retry fetched the same corrupt RPM again (#1323). A file
+such a step cannot decode is left exactly as it is: the verifier rejects it,
+the retry drops it, and the next attempt brings a good copy. Catch the
+decoder's own errors there, and let the verifier judge the bytes.
+
 When changing fetch retries, preserve the regression tests for three boundaries:
 only lock resolution and network fetch are retried; Fedora retries use Fedora's
 redirector, not a private mirror list; and whole-lock verification runs after

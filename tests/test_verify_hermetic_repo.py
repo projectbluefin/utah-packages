@@ -198,6 +198,7 @@ class MaterializeTests(unittest.TestCase):
 
     def run_materialize(self, serve: dict[str, str], local: list[dict], remote: list[dict],
                         attempts: int = 2, first_bad: str | None = None,
+                        first_serve: dict[str, str] | None = None,
                         ) -> tuple[subprocess.CompletedProcess, Path]:
         script = SCRIPT.read_text()
         helper = script[script.index("NET_ATTEMPTS="):script.index("render_config() {")]
@@ -215,6 +216,8 @@ class MaterializeTests(unittest.TestCase):
         (bin_dir / "createrepo_c").write_text("#!/bin/sh\nexit 0\n")
         # Stand-in for mock-hermetic-repo: "downloads" every locked URL from
         # SERVE (url -> file), the way any mirror or redirect could answer.
+        # FIRST (url -> file) answers the first attempt instead, so a mirror
+        # that serves one bad copy and then a good one can be replayed.
         (bin_dir / "mock-hermetic-repo").write_text(f"""#!/bin/sh
 attempt=$(grep -c fetch {directory}/fetches 2>/dev/null || true)
 echo fetch >> {directory}/fetches
@@ -222,6 +225,7 @@ exec {sys.executable} -c '
 import json, shutil, sys, os
 lock, out, attempt, first_bad = sys.argv[1], sys.argv[2], sys.argv[4], sys.argv[5]
 serve = json.load(open(sys.argv[3]))
+first = json.load(open(sys.argv[6]))
 os.makedirs(out, exist_ok=True)
 bad = False
 for r in json.load(open(lock))["buildroot"]["rpms"]:
@@ -233,16 +237,20 @@ for r in json.load(open(lock))["buildroot"]["rpms"]:
             rpm.write("not an RPM")
         bad = True
     else:
-        shutil.copy(serve[r["url"]], dest)
+        source = serve[r["url"]]
+        if attempt == "" and r["url"] in first:
+            source = first[r["url"]]
+        shutil.copy(source, dest)
 if bad:
     sys.exit("createrepo_c: rpmReadPackageFile() error")
 os.makedirs(os.path.join(out, "repodata"), exist_ok=True)
 os.makedirs(os.path.join(out, "registry.example/fedora"))
-' "$2" "$4" {directory}/serve.json "$attempt" "{first_bad or ""}"
+' "$2" "$4" {directory}/serve.json "$attempt" "{first_bad or ""}" {directory}/serve_first.json
 """)
         for tool in ("createrepo_c", "mock-hermetic-repo"):
             (bin_dir / tool).chmod(0o755)
         (directory / "serve.json").write_text(json.dumps(serve))
+        (directory / "serve_first.json").write_text(json.dumps(first_serve or {}))
         probe = f"""
 set -euo pipefail
 PACKAGE=probe
@@ -303,6 +311,32 @@ materialize
         self.assertEqual((directory / "requests").read_text().splitlines(),
                          [self.good["url"], other["url"], other["url"]])
         self.assertIn("hermetic repository: 2 RPMs", result.stdout)
+
+    def test_a_corrupt_gzip_encoded_rpm_is_rejected_and_refetched(self) -> None:
+        # A gzip-wrapped RPM whose deflate data is corrupt raises zlib.error.
+        # Uncaught in the unwrap step, it stopped the fetch before this check
+        # ran, so the file was never removed and every retry fetched the same
+        # corrupt bytes again (#1323). The verifier rejects it, the retry drops
+        # it, and the next attempt brings a good copy.
+        import gzip
+        import zlib
+
+        corrupt = bytearray(gzip.compress(Path(self.mirror / "zip.good").read_bytes()))
+        # The gzip header is ten bytes; this is inside the deflate stream.
+        corrupt[12:20] = bytes(byte ^ 0xFF for byte in corrupt[12:20])
+        with self.assertRaises(zlib.error):
+            gzip.decompress(bytes(corrupt))
+        (self.mirror / "zip.corrupt").write_bytes(bytes(corrupt))
+        result, directory = self.run_materialize(
+            {self.good["url"]: str(self.mirror / "zip.good")}, [], [self.good], attempts=2,
+            first_serve={self.good["url"]: str(self.mirror / "zip.corrupt")})
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        # The corrupt copy was named by the check, not by a traceback, and the
+        # retry fetched the file again.
+        self.assertIn("zip-1.0-1.hum1.x86_64.rpm: cannot read as an RPM", result.stdout)
+        self.assertNotIn("Traceback", result.stderr)
+        self.assertEqual((directory / "fetches").read_text().count("fetch"), 2)
+        self.assertIn("hermetic repository: 1 RPMs", result.stdout)
 
     def test_a_verification_retry_recreates_the_bootstrap_image(self) -> None:
         zip_rpm = "zip-1.0-1.hum1.x86_64.rpm"
