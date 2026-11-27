@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import copy
 import json
+import os
 import tempfile
 import unittest
 from pathlib import Path
@@ -256,6 +257,7 @@ class ImportTests(unittest.TestCase):
         self._tmp = tempfile.TemporaryDirectory()
         self.tmp = Path(self._tmp.name)
         self.roots = projects(self.tmp)
+        self._original_cwd = Path.cwd()
 
     def tearDown(self) -> None:
         self._tmp.cleanup()
@@ -283,6 +285,22 @@ class ImportTests(unittest.TestCase):
             "patch": "patches/freedesktop-sdk-dakota/0001-ffmpeg-all-codecs.patch",
             "files": ["elements/components/ffmpeg.bst"]}])
         self.assertNotIn("gnome-build-meta", queues)
+
+    def test_junction_queue_applies_from_relative_roots(self) -> None:
+        # The workflow hands --dakota-dir as a relative path; git apply runs
+        # from the copied checkout (cwd=copy), so a relative patch path would
+        # be looked up there and fail. The patch must resolve against the
+        # real checkout, not the copy.
+        os.chdir(self.tmp)
+        try:
+            relative = {name: Path(name) for name in self.roots}
+            roots, queues = apply_junction_queues(relative, self.tmp / "work")
+            self.assertIn("--enable-decoders",
+                          (roots["freedesktop-sdk"] / "elements/components/ffmpeg.bst").read_text())
+            self.assertEqual(queues["freedesktop-sdk"][0]["patch"],
+                             "patches/freedesktop-sdk-dakota/0001-ffmpeg-all-codecs.patch")
+        finally:
+            os.chdir(self._original_cwd)
 
     def test_element_facts(self) -> None:
         gdm = element_facts(record("gnome-build-meta.bst:core/gdm.bst"), self.roots)
