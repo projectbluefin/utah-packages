@@ -185,6 +185,14 @@ request's own fork and branch, which GitHub records; the commit's own dates are
 set by its author and are not used. Only approve a fork pull request once you would have pressed the
 button for it; to approve without starting Canary, add `hold` first.
 
+GitHub can refuse to copy an approved fork head when it carries an older
+workflow file, even if the pull request itself changes nothing under `.github/`
+(#1309). Being behind `main` does not always cause a refusal; inspect the
+push's `remote rejected` message rather than predicting it. The copy workflow
+comments once per refused head, stays failed, and asks the author to merge
+`main`; a clean merge keeps the approval and the scheduler can dispatch the new
+head. Other push failures do not imply this remedy.
+
 An Approve also covers a later head that only merged `main` into the approved
 commit. When `main` changes a pipeline path, every fork branch has to merge it
 and run Canary again, and asking each maintainer to approve again after every

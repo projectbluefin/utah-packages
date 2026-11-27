@@ -35,6 +35,8 @@
 # Pull requests that change .github/ are refused: a push with GITHUB_TOKEN may
 # not carry workflow changes, and those workflows hold this repository's
 # credentials, so a maintainer must push those by hand.
+# Even without a .github/ change, GitHub can refuse a copy carrying an older
+# workflow than main. Tell the author to merge main; do not dispatch that head.
 name: Canary for a fork pull request
 # canary-fork-on-approve.yml reads this to see which heads already have a run.
 run-name: "Canary for fork pull request #${{ inputs.pr }} at ${{ inputs.head_sha }}"
@@ -118,6 +120,8 @@ jobs:
         env:
           PR: ${{ inputs.pr }}
           HEAD_SHA: ${{ inputs.head_sha }}
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
         run: |
           set -euo pipefail
           # The pull request's head ref lives in this repository's network, so
@@ -125,7 +129,24 @@ jobs:
           # anything from it.
           git fetch --no-tags --depth=1 origin "refs/pull/${PR}/head"
           test "$(git rev-parse FETCH_HEAD)" = "$HEAD_SHA"
-          git push --force origin "${HEAD_SHA}:refs/heads/canary/pr-${PR}"
+          rc=0
+          git push --force origin "${HEAD_SHA}:refs/heads/canary/pr-${PR}" 2> push-stderr.txt || rc=$?
+          cat push-stderr.txt >&2
+          if [ "$rc" -eq 0 ]; then
+            exit 0
+          fi
+          path=$(python3 -c 'import sys; from tools.fork_canary import refused_workflow; print(refused_workflow(sys.stdin.read()) or "")' < push-stderr.txt)
+          if [ -n "$path" ]; then
+            echo "::error title=fork canary::GitHub refused the workflow copy; merge main into the branch"
+            marker="<!-- fork-canary-workflow-refusal:${HEAD_SHA} -->"
+            gh api --paginate "repos/$REPOSITORY/issues/$PR/comments?per_page=100" \
+              --jq '.[] | .body' > comments.txt
+            if ! grep -Fq "$marker" comments.txt; then
+              printf -v body '%s\n\n%s' "$marker" "The copy for head \`${HEAD_SHA}\` was refused. \`main\` changed \`${path}\` after this branch was last updated, and GitHub does not let this workflow copy a branch with an older copy of a workflow file. Please merge \`main\` into your branch. A clean merge needs no new review, and Canary will start by itself within 15 minutes."
+              gh pr comment "$PR" -R "$REPOSITORY" --body "$body"
+            fi
+          fi
+          exit "$rc"
       - name: Dispatch Canary on the copy
         id: dispatch
         if: steps.check.outputs.action == 'copy'

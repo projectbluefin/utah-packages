@@ -69,6 +69,16 @@ def branch_for(pr: int) -> str:
     return f"{BRANCH_PREFIX}{pr}"
 
 
+def refused_workflow(stderr: str) -> str | None:
+    """Find the workflow named in a remote workflow-permission refusal."""
+    for line in stderr.splitlines():
+        if "remote rejected" in line and all(word in line for word in ("without", "workflows", "permission")):
+            match = re.search(r"\.github/workflows/[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)*", line)
+            if match:
+                return match.group()
+    return None
+
+
 def decide(pr: dict, files: list[str], repository: str, reviewed_sha: str) -> str:
     """Return ``copy`` or ``skip``; raise ``Refused`` with the reason otherwise."""
     if not FULL_SHA.fullmatch(reviewed_sha):
