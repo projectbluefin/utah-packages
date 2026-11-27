@@ -176,22 +176,6 @@ class AssembleTests(unittest.TestCase):
             ])
 
 
-class ArtifactPatternTests(unittest.TestCase):
-    def test_a_publication_downloads_only_the_waves_it_covers(self):
-        from fnmatch import fnmatch
-
-        from tools.publish_gate import artifact_pattern
-
-        self.assertEqual(artifact_pattern("", "p1-"), "p1-rpm-*")
-        self.assertEqual(artifact_pattern("0", ""), "rpm-s0-*")
-        self.assertEqual(artifact_pattern("2", ""), "rpm-s{0,1,2}-*")
-        # download-artifact expands the braces; check the expansion by hand.
-        expanded = ["rpm-s0-*", "rpm-s1-*", "rpm-s2-*"]
-        for name, covered in (("rpm-s1-libass", True), ("rpm-s10-gtk4", False),
-                              ("rpm-s3-webkitgtk", False)):
-            self.assertEqual(any(fnmatch(name, p) for p in expanded), covered, name)
-
-
 class BootstrapTests(unittest.TestCase):
     def test_a_bootstrap_build_never_replaces_the_real_package(self):
         from tools.publish_gate import publishable

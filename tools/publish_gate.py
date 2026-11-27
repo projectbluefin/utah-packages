@@ -730,19 +730,6 @@ def _cli_report(args: argparse.Namespace) -> int:
     return 0
 
 
-def artifact_pattern(wave: str, prefix: str) -> str:
-    """download-artifact pattern for the RPMs of waves 0..wave (all if empty).
-
-    Brace alternation needs two members to expand, so wave 0 is spelled out.
-    """
-    if wave == "":
-        return f"{prefix}rpm-*"
-    last = int(wave)
-    if last == 0:
-        return f"{prefix}rpm-s0-*"
-    return f"{prefix}rpm-s{{{','.join(str(n) for n in range(last + 1))}}}-*"
-
-
 def artifact_names(stage_map: dict[str, int], prefix: str, *,
                    through: int | None = None, below: int | None = None) -> list[str]:
     """Exact `rpm-s<wave>-<package>` names for tools/fetch-artifacts/fetch.mjs.
@@ -804,9 +791,6 @@ def main(argv: list[str] | None = None) -> int:
                            help="last wave covered; empty for every wave")
     names_cmd.add_argument("--below", default="",
                            help="only waves before this one")
-    pattern_cmd = commands.add_parser("pattern")
-    pattern_cmd.add_argument("--wave", default="")
-    pattern_cmd.add_argument("--prefix", default="")
     args = parser.parse_args(argv)
     if args.command == "names":
         print(json.dumps(artifact_names(
@@ -814,9 +798,6 @@ def main(argv: list[str] | None = None) -> int:
             through=int(args.through) if args.through != "" else None,
             below=int(args.below) if args.below != "" else None,
         ), separators=(",", ":")))
-        return 0
-    if args.command == "pattern":
-        print(f"pattern={artifact_pattern(args.wave, args.prefix)}")
         return 0
     if args.command == "report":
         return _cli_report(args)
