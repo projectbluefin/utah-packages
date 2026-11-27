@@ -1088,12 +1088,12 @@
     },
     {
       "name": "flex",
-      "version": "2.7.10",
-      "url": "https://github.com/westes/flex/releases/download/v2.7.10/flex-2.7.10.tar.gz",
-      "filename": "flex-2.7.10.tar.gz",
-      "sha512": "6d0e26fea44f3c0b987317d5723605f5dbf3485c7a38b343767535c2e9cb9783f56a77305ccc8e7de0bf6cc0769152378df8d0ebd9cd8bc96ce16caa934aa3ea",
+      "version": "2.6.4",
+      "url": "https://github.com/westes/flex/releases/download/v2.6.4/flex-2.6.4.tar.gz",
+      "filename": "flex-2.6.4.tar.gz",
+      "sha512": "e9785f3d620a204b7d20222888917dc065c2036cae28667065bf7862dfa1b25235095a12fd04efdbd09bfd17d3452e6b9ef953a8c1137862ff671c97132a082e",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/flex/flex-2.7.10.tar.gz/sha512/6d0e26fea44f3c0b987317d5723605f5dbf3485c7a38b343767535c2e9cb9783f56a77305ccc8e7de0bf6cc0769152378df8d0ebd9cd8bc96ce16caa934aa3ea/flex-2.7.10.tar.gz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/flex/flex-2.6.4.tar.gz/sha512/e9785f3d620a204b7d20222888917dc065c2036cae28667065bf7862dfa1b25235095a12fd04efdbd09bfd17d3452e6b9ef953a8c1137862ff671c97132a082e/flex-2.6.4.tar.gz"
       ]
     },
     {
@@ -3255,12 +3255,12 @@
     },
     {
       "name": "libcue",
-      "version": "2.4.4",
-      "url": "https://github.com/lipnitsk/libcue/archive/v2.4.4/libcue-2.4.4.tar.gz",
-      "filename": "libcue-2.4.4.tar.gz",
-      "sha512": "c080905dda6dd3f7d8b548bd134bffb58a7a18850b6b66500b3f25bac6235d297e9c87418b6ccc56a84a2b8d1d9a465fe94898e082f1d3665cd41735d4161b1c",
+      "version": "2.3.0",
+      "url": "https://github.com/lipnitsk/libcue/archive/v2.3.0/libcue-2.3.0.tar.gz",
+      "filename": "libcue-2.3.0.tar.gz",
+      "sha512": "fe2c39cc9794ac36c0706405e0432bab23228d343ba4e3395220d5b2a2ebf8b3c97e71d76a628f9144977c0dd56636f78d0c2d1f9f2b0d4068a837a258f035b6",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/libcue/libcue-2.4.4.tar.gz/sha512/c080905dda6dd3f7d8b548bd134bffb58a7a18850b6b66500b3f25bac6235d297e9c87418b6ccc56a84a2b8d1d9a465fe94898e082f1d3665cd41735d4161b1c/libcue-2.4.4.tar.gz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libcue/libcue-2.3.0.tar.gz/sha512/fe2c39cc9794ac36c0706405e0432bab23228d343ba4e3395220d5b2a2ebf8b3c97e71d76a628f9144977c0dd56636f78d0c2d1f9f2b0d4068a837a258f035b6/libcue-2.3.0.tar.gz"
       ]
     },
     {
@@ -6040,10 +6040,10 @@
     },
     {
       "name": "python-httpx",
-      "version": "0.29.0",
-      "url": "https://github.com/encode/httpx/archive/0.29.0/httpx-0.29.0.tar.gz",
-      "filename": "httpx-0.29.0.tar.gz",
-      "sha512": "cbbfe646ee9ac10c0263c47c9a2d9890bbb62a886b9fab80a40ccbcbe91ca576b61be169051abf4f09774c5150e45fd9ad9b85499bf4723a6307fdbdabd084c6"
+      "version": "0.28.1",
+      "url": "https://github.com/encode/httpx/archive/0.28.1/httpx-0.28.1.tar.gz",
+      "filename": "httpx-0.28.1.tar.gz",
+      "sha512": "5571957a3516533f1c1e76f311316811f6365e192d19ebae10c9ab0d0c4094d811063fd2be2995f3b6a41d6899a7882f27265badecf238a4f7903f976136d3ba"
     },
     {
       "name": "python-jaraco-classes",
