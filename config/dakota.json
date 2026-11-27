@@ -5,11 +5,11 @@
     "url": "https://github.com/projectbluefin/dakota",
     "docs": "Utah's parity target: GNOME OS built with BuildStream on gnome-build-meta and freedesktop-sdk. The element snapshot (config/dakota-elements.tsv) is the SBOM of this revision's publish run, joined with file ownership measured in the image below.",
     "branch": "testing",
-    "revision": "bf271777da1808627f775f1d8816db2a89a931ea",
-    "publish_run": 43552592054,
-    "sbom": "projectbluefin/dakota publish.yml run 43552592054, artifact sbom-dakota",
+    "revision": "91e2a21c55a3c9fd24f27244ab1682351e12de20",
+    "publish_run": 45540959495,
+    "sbom": "projectbluefin/dakota publish.yml run 45540959495, artifact sbom-dakota",
     "image": "ghcr.io/projectbluefin/dakota:testing",
-    "image_digest": "sha256:3f9d062f3b2a717592496ae0bfecd9520808bceac094789c2e0161a7b0253c06",
+    "image_digest": "sha256:e79a11f5572c14080611e9367c813f4950f7963ac687d165be157be7cecbaaa0",
     "junctions": {
       "gnome-build-meta.bst": "gnome-51 51.1-36-g8a89846df11e86cee57c728a86a247e61d604b84",
       "freedesktop-sdk.bst": "freedesktop-sdk-26.08.4-0-g114ae909ec9881958bd507c8b4414aa33f758d2b"
@@ -768,8 +768,8 @@
       "evidence": null
     },
     "bluefin/bluefin-docs.bst": {
-      "disposition": "new-spec",
-      "rpm": null,
+      "disposition": "factory",
+      "rpm": "bluefin-docs",
       "fedora": null,
       "hummingbird": false,
       "evidence": null
@@ -789,15 +789,15 @@
       "evidence": null
     },
     "bluefin/brew-tarball.bst": {
-      "disposition": "new-spec",
-      "rpm": null,
+      "disposition": "factory",
+      "rpm": "brew-tarball",
       "fedora": null,
       "hummingbird": false,
       "evidence": null
     },
     "bluefin/brew.bst": {
-      "disposition": "new-spec",
-      "rpm": null,
+      "disposition": "factory",
+      "rpm": "brew",
       "fedora": null,
       "hummingbird": false,
       "evidence": null
@@ -810,8 +810,8 @@
       "evidence": "rawhide source; dist-git rpms/printer-driver-brlaser exists"
     },
     "bluefin/chairlift.bst": {
-      "disposition": "new-spec",
-      "rpm": null,
+      "disposition": "factory",
+      "rpm": "chairlift",
       "fedora": null,
       "hummingbird": false,
       "evidence": null
@@ -830,6 +830,13 @@
       "hummingbird": false,
       "evidence": null,
       "subpackage": "dakota-config-composefs-loop-udisks-ignore"
+    },
+    "bluefin/ddcutil.bst": {
+      "disposition": "factory",
+      "rpm": "ddcutil",
+      "fedora": "ddcutil",
+      "hummingbird": false,
+      "evidence": "rawhide source; dist-git rpms/ddcutil exists"
     },
     "bluefin/deps.bst": {
       "disposition": "not-applicable",
@@ -911,7 +918,7 @@
       "evidence": null
     },
     "bluefin/glog.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "glog",
       "fedora": "glog",
       "hummingbird": false,
@@ -939,7 +946,7 @@
       "evidence": "rawhide source; dist-git rpms/gnome-shell-extensions exists"
     },
     "bluefin/gtk4-layer-shell.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "gtk4-layer-shell",
       "fedora": "gtk4-layer-shell",
       "hummingbird": false,
@@ -960,7 +967,7 @@
       "evidence": "rawhide source; dist-git rpms/hyperv-daemons exists"
     },
     "bluefin/ibus-rime.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "ibus-rime",
       "fedora": "ibus-rime",
       "hummingbird": false,
@@ -1002,14 +1009,14 @@
       "evidence": null
     },
     "bluefin/leveldb.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "leveldb",
       "fedora": "leveldb",
       "hummingbird": false,
       "evidence": "rawhide source; dist-git rpms/leveldb exists"
     },
     "bluefin/librime.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "librime",
       "fedora": "librime",
       "hummingbird": false,
@@ -1044,7 +1051,7 @@
       "evidence": null
     },
     "bluefin/marisa-trie.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "marisa",
       "fedora": "marisa",
       "hummingbird": false,
@@ -1065,14 +1072,14 @@
       "evidence": "rawhide source; dist-git rpms/nautilus-python exists"
     },
     "bluefin/nerd-fonts-symbols.bst": {
-      "disposition": "new-spec",
-      "rpm": null,
+      "disposition": "factory",
+      "rpm": "nerd-fonts-symbols",
       "fedora": null,
       "hummingbird": false,
       "evidence": null
     },
     "bluefin/nethogs.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "nethogs",
       "fedora": "nethogs",
       "hummingbird": false,
@@ -1101,7 +1108,7 @@
       "evidence": "rawhide source; dist-git rpms/nfs-utils exists"
     },
     "bluefin/nicstat.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "nicstat",
       "fedora": "nicstat",
       "hummingbird": false,
@@ -1129,11 +1136,18 @@
       "evidence": "rawhide source; dist-git rpms/open-vm-tools exists"
     },
     "bluefin/opencc.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "opencc",
       "fedora": "opencc",
       "hummingbird": false,
       "evidence": "rawhide source; dist-git rpms/opencc exists"
+    },
+    "bluefin/pam-u2f.bst": {
+      "disposition": "factory",
+      "rpm": "pam-u2f",
+      "fedora": "pam-u2f",
+      "hummingbird": false,
+      "evidence": "rawhide source; dist-git rpms/pam-u2f exists"
     },
     "bluefin/plymouth-bluefin-theme.bst": {
       "disposition": "not-applicable",
@@ -1185,49 +1199,49 @@
       "evidence": null
     },
     "bluefin/shell-extensions/app-indicators.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "gnome-shell-extension-appindicator",
       "fedora": "gnome-shell-extension-appindicator",
       "hummingbird": false,
       "evidence": "rawhide source; dist-git rpms/gnome-shell-extension-appindicator exists"
     },
     "bluefin/shell-extensions/bazaar-companion.bst": {
-      "disposition": "new-spec",
-      "rpm": null,
+      "disposition": "factory",
+      "rpm": "gnome-shell-extension-bazaar-companion",
       "fedora": null,
       "hummingbird": false,
       "evidence": null
     },
     "bluefin/shell-extensions/blur-my-shell.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "gnome-shell-extension-blur-my-shell",
       "fedora": "gnome-shell-extension-blur-my-shell",
       "hummingbird": false,
       "evidence": "rawhide source; dist-git rpms/gnome-shell-extension-blur-my-shell exists"
     },
     "bluefin/shell-extensions/budslink-companion.bst": {
-      "disposition": "new-spec",
-      "rpm": null,
+      "disposition": "factory",
+      "rpm": "gnome-shell-extension-budslink-companion",
       "fedora": null,
       "hummingbird": false,
       "evidence": null
     },
     "bluefin/shell-extensions/caffeine.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "gnome-shell-extension-caffeine",
       "fedora": "gnome-shell-extension-caffeine",
       "hummingbird": false,
       "evidence": "rawhide source; dist-git rpms/gnome-shell-extension-caffeine exists"
     },
     "bluefin/shell-extensions/custom-command-menu.bst": {
-      "disposition": "new-spec",
-      "rpm": null,
+      "disposition": "factory",
+      "rpm": "gnome-shell-extension-custom-command-menu",
       "fedora": null,
       "hummingbird": false,
       "evidence": null
     },
     "bluefin/shell-extensions/dash-to-dock.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "gnome-shell-extension-dash-to-dock",
       "fedora": "gnome-shell-extension-dash-to-dock",
       "hummingbird": false,
@@ -1241,15 +1255,15 @@
       "evidence": null
     },
     "bluefin/shell-extensions/fuzzy-application-search.bst": {
-      "disposition": "new-spec",
-      "rpm": null,
+      "disposition": "factory",
+      "rpm": "gnome-shell-extension-fuzzy-application-search",
       "fedora": null,
       "hummingbird": false,
       "evidence": null
     },
     "bluefin/shell-extensions/gradia-capture.bst": {
-      "disposition": "new-spec",
-      "rpm": null,
+      "disposition": "factory",
+      "rpm": "gnome-shell-extension-gradia-capture",
       "fedora": null,
       "hummingbird": false,
       "evidence": null
@@ -1269,36 +1283,36 @@
       "evidence": null
     },
     "bluefin/shell-extensions/quicksettings-audio-devices-hider.bst": {
-      "disposition": "new-spec",
-      "rpm": null,
+      "disposition": "factory",
+      "rpm": "gnome-shell-extension-quicksettings-audio-devices-hider",
       "fedora": null,
       "hummingbird": false,
       "evidence": null
     },
     "bluefin/shell-extensions/quicksettings-audio-devices-renamer.bst": {
-      "disposition": "new-spec",
-      "rpm": null,
+      "disposition": "factory",
+      "rpm": "gnome-shell-extension-quicksettings-audio-devices-renamer",
       "fedora": null,
       "hummingbird": false,
       "evidence": null
     },
     "bluefin/shell-extensions/syncthing-toggle.bst": {
-      "disposition": "new-spec",
-      "rpm": null,
+      "disposition": "factory",
+      "rpm": "gnome-shell-extension-syncthing-toggle",
       "fedora": null,
       "hummingbird": false,
       "evidence": null
     },
     "bluefin/shell-extensions/tailscale-qs.bst": {
-      "disposition": "new-spec",
-      "rpm": null,
+      "disposition": "factory",
+      "rpm": "gnome-shell-extension-tailscale-qs",
       "fedora": null,
       "hummingbird": false,
       "evidence": null
     },
     "bluefin/shell-extensions/tilingshell.bst": {
-      "disposition": "new-spec",
-      "rpm": null,
+      "disposition": "factory",
+      "rpm": "gnome-shell-extension-tilingshell",
       "fedora": null,
       "hummingbird": false,
       "evidence": null
@@ -1340,7 +1354,7 @@
       "evidence": null
     },
     "bluefin/syncthing.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "syncthing",
       "fedora": "syncthing",
       "hummingbird": false,
@@ -1369,21 +1383,21 @@
       "evidence": "rawhide source; dist-git rpms/tailscale exists"
     },
     "bluefin/tealdeer.bst": {
-      "disposition": "new-spec",
-      "rpm": null,
+      "disposition": "factory",
+      "rpm": "tealdeer",
       "fedora": null,
       "hummingbird": false,
       "evidence": null
     },
     "bluefin/tiptop.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "tiptop",
       "fedora": "tiptop",
       "hummingbird": false,
       "evidence": "rawhide source; dist-git rpms/tiptop exists"
     },
     "bluefin/trace-cmd.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "trace-cmd",
       "fedora": "trace-cmd",
       "hummingbird": false,
@@ -1398,8 +1412,8 @@
       "subpackage": "dakota-config-udev-groups"
     },
     "bluefin/umotd.bst": {
-      "disposition": "new-spec",
-      "rpm": null,
+      "disposition": "factory",
+      "rpm": "umotd",
       "fedora": null,
       "hummingbird": false,
       "evidence": null
@@ -1427,8 +1441,8 @@
       "subpackage": "dakota-config-user-avatars"
     },
     "bluefin/uupd.bst": {
-      "disposition": "new-spec",
-      "rpm": null,
+      "disposition": "factory",
+      "rpm": "uupd",
       "fedora": null,
       "hummingbird": false,
       "evidence": null
@@ -1441,14 +1455,14 @@
       "evidence": "rawhide source; dist-git rpms/uutils-coreutils exists"
     },
     "bluefin/uwelcome.bst": {
-      "disposition": "new-spec",
-      "rpm": null,
+      "disposition": "factory",
+      "rpm": "uwelcome",
       "fedora": null,
       "hummingbird": false,
       "evidence": null
     },
     "bluefin/virtiofsd.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "virtiofsd",
       "fedora": "virtiofsd",
       "hummingbird": false,
@@ -1498,14 +1512,14 @@
       "evidence": "rawhide source; dist-git rpms/xdg-terminal-exec exists"
     },
     "bluefin/yaml-cpp.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "yaml-cpp",
       "fedora": "yaml-cpp",
       "hummingbird": false,
       "evidence": "rawhide source; dist-git rpms/yaml-cpp exists"
     },
     "bluefin/ydotool.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "ydotool",
       "fedora": "ydotool",
       "hummingbird": false,
@@ -1615,7 +1629,7 @@
       "rpm": "automake",
       "fedora": "automake",
       "hummingbird": true,
-      "evidence": "rawhide source; dist-git unreachable"
+      "evidence": "rawhide source; dist-git rpms/automake exists"
     },
     "freedesktop-sdk.bst:bootstrap/base-sdk/binary-seed-x86_64.bst": {
       "disposition": "not-applicable",
@@ -2059,7 +2073,7 @@
       "evidence": "rawhide source; dist-git rpms/bluez exists"
     },
     "freedesktop-sdk.bst:components/_private/bpf.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "bpftool",
       "fedora": "bpftool",
       "hummingbird": false,
@@ -2150,14 +2164,14 @@
       "evidence": "rawhide source; dist-git rpms/git exists"
     },
     "freedesktop-sdk.bst:components/_private/gnu-efi.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "gnu-efi",
       "fedora": "gnu-efi",
       "hummingbird": false,
       "evidence": "rawhide source; dist-git rpms/gnu-efi exists"
     },
     "freedesktop-sdk.bst:components/_private/libsmbios.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "libsmbios",
       "fedora": "libsmbios",
       "hummingbird": false,
@@ -2346,7 +2360,7 @@
       "evidence": "rawhide source; dist-git rpms/alsa-lib exists"
     },
     "freedesktop-sdk.bst:components/alsa-plugins.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "alsa-plugins",
       "fedora": "alsa-plugins",
       "hummingbird": false,
@@ -2455,7 +2469,7 @@
       "rpm": "automake",
       "fedora": "automake",
       "hummingbird": true,
-      "evidence": "rawhide source; dist-git unreachable"
+      "evidence": "rawhide source; dist-git rpms/automake exists"
     },
     "freedesktop-sdk.bst:components/avahi-gobject.bst": {
       "disposition": "hummingbird",
@@ -2808,7 +2822,7 @@
       "evidence": "rawhide source; dist-git rpms/elfutils exists"
     },
     "freedesktop-sdk.bst:components/dejavu-fonts.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "dejavu-fonts",
       "fedora": "dejavu-fonts",
       "hummingbird": false,
@@ -2885,7 +2899,7 @@
       "evidence": "rawhide source; dist-git rpms/doxygen exists"
     },
     "freedesktop-sdk.bst:components/dtc.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "dtc",
       "fedora": "dtc",
       "hummingbird": false,
@@ -2941,7 +2955,7 @@
       "evidence": "rawhide source; dist-git rpms/ell exists"
     },
     "freedesktop-sdk.bst:components/erofs-utils.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "erofs-utils",
       "fedora": "erofs-utils",
       "hummingbird": false,
@@ -3018,7 +3032,7 @@
       "evidence": "rawhide source; dist-git rpms/findutils exists"
     },
     "freedesktop-sdk.bst:components/flatpak-builder.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "flatpak-builder",
       "fedora": "flatpak-builder",
       "hummingbird": false,
@@ -3074,7 +3088,7 @@
       "evidence": "rawhide source; dist-git rpms/freetype exists"
     },
     "freedesktop-sdk.bst:components/frei0r.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "frei0r-plugins",
       "fedora": "frei0r-plugins",
       "hummingbird": false,
@@ -3186,7 +3200,7 @@
       "evidence": "rawhide source; dist-git rpms/gettext exists"
     },
     "freedesktop-sdk.bst:components/gflags.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "gflags",
       "fedora": "gflags",
       "hummingbird": false,
@@ -3249,7 +3263,7 @@
       "evidence": null
     },
     "freedesktop-sdk.bst:components/gnu-free-fonts.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "gnu-free-fonts",
       "fedora": "gnu-free-fonts",
       "hummingbird": false,
@@ -3284,14 +3298,14 @@
       "evidence": null
     },
     "freedesktop-sdk.bst:components/google-crosextra-caladea.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "google-crosextra-caladea-fonts",
       "fedora": "google-crosextra-caladea-fonts",
       "hummingbird": false,
       "evidence": "rawhide source; dist-git rpms/google-crosextra-caladea-fonts exists"
     },
     "freedesktop-sdk.bst:components/google-crosextra-carlito.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "google-carlito-fonts",
       "fedora": "google-carlito-fonts",
       "hummingbird": false,
@@ -3340,7 +3354,7 @@
       "evidence": "rawhide source; dist-git rpms/groff exists"
     },
     "freedesktop-sdk.bst:components/grpc.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "grpc",
       "fedora": "grpc",
       "hummingbird": false,
@@ -3375,8 +3389,8 @@
       "evidence": "rawhide source; dist-git rpms/gstreamer1-plugins-good exists"
     },
     "freedesktop-sdk.bst:components/gstreamer-plugins-rs.bst": {
-      "disposition": "new-spec",
-      "rpm": null,
+      "disposition": "factory",
+      "rpm": "gstreamer-plugins-rs",
       "fedora": null,
       "hummingbird": false,
       "evidence": null
@@ -3585,7 +3599,7 @@
       "evidence": "rawhide source; dist-git rpms/kmod exists"
     },
     "freedesktop-sdk.bst:components/ladspa-sdk.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "ladspa",
       "fedora": "ladspa",
       "hummingbird": false,
@@ -3781,7 +3795,7 @@
       "evidence": "rawhide source; dist-git rpms/libepoxy exists"
     },
     "freedesktop-sdk.bst:components/liberation-fonts.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "liberation-fonts",
       "fedora": "liberation-fonts",
       "hummingbird": false,
@@ -3935,7 +3949,7 @@
       "evidence": "rawhide source; dist-git rpms/libmbim exists"
     },
     "freedesktop-sdk.bst:components/libmicrohttpd.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "libmicrohttpd",
       "fedora": "libmicrohttpd",
       "hummingbird": false,
@@ -4019,7 +4033,7 @@
       "evidence": "rawhide source; dist-git rpms/libogg exists"
     },
     "freedesktop-sdk.bst:components/libp11.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "openssl-pkcs11",
       "fedora": "openssl-pkcs11",
       "hummingbird": false,
@@ -4348,7 +4362,7 @@
       "evidence": "rawhide source; dist-git rpms/lz4 exists"
     },
     "freedesktop-sdk.bst:components/lzip.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "lzip",
       "fedora": "lzip",
       "hummingbird": false,
@@ -4488,7 +4502,7 @@
       "evidence": "rawhide source NetworkManager (case-folded from networkmanager); dist-git rpms/NetworkManager exists"
     },
     "freedesktop-sdk.bst:components/newt.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "newt",
       "fedora": "newt",
       "hummingbird": false,
@@ -4551,14 +4565,14 @@
       "evidence": null
     },
     "freedesktop-sdk.bst:components/open-iscsi.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "iscsi-initiator-utils",
       "fedora": "iscsi-initiator-utils",
       "hummingbird": false,
       "evidence": "rawhide source; dist-git rpms/iscsi-initiator-utils exists"
     },
     "freedesktop-sdk.bst:components/open-isns.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "isns-utils",
       "fedora": "isns-utils",
       "hummingbird": false,
@@ -4572,7 +4586,7 @@
       "evidence": "rawhide source; dist-git rpms/openal-soft exists"
     },
     "freedesktop-sdk.bst:components/opencl.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "ocl-icd",
       "fedora": "ocl-icd",
       "hummingbird": false,
@@ -4614,7 +4628,7 @@
       "evidence": "rawhide source; dist-git rpms/opus exists"
     },
     "freedesktop-sdk.bst:components/opusfile.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "opusfile",
       "fedora": "opusfile",
       "hummingbird": false,
@@ -4891,7 +4905,7 @@
       "rpm": "popt",
       "fedora": "popt",
       "hummingbird": true,
-      "evidence": "rawhide source; dist-git unreachable"
+      "evidence": "rawhide source; dist-git rpms/popt exists"
     },
     "freedesktop-sdk.bst:components/procps.bst": {
       "disposition": "hummingbird",
@@ -4964,11 +4978,11 @@
       "evidence": null
     },
     "freedesktop-sdk.bst:components/python3-blessings.bst": {
-      "disposition": "new-spec",
-      "rpm": null,
-      "fedora": null,
+      "disposition": "factory",
+      "rpm": "python-blessings",
+      "fedora": "python-blessings",
       "hummingbird": false,
-      "evidence": null
+      "evidence": "rawhide binary python3-blessings; dist-git rpms/python-blessings exists"
     },
     "freedesktop-sdk.bst:components/python3-build.bst": {
       "disposition": "not-applicable",
@@ -5069,7 +5083,7 @@
       "evidence": "rawhide binary python3-flit-core; dist-git rpms/python-flit-core exists"
     },
     "freedesktop-sdk.bst:components/python3-grpcio.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "grpc",
       "fedora": "grpc",
       "hummingbird": false,
@@ -5615,28 +5629,28 @@
       "evidence": "rawhide source; dist-git rpms/sdl2-compat exists"
     },
     "freedesktop-sdk.bst:components/sdl3-image.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "SDL3_image",
       "fedora": "SDL3_image",
       "hummingbird": false,
       "evidence": "rawhide source; dist-git rpms/SDL3_image exists"
     },
     "freedesktop-sdk.bst:components/sdl3-mixer.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "SDL3_mixer",
       "fedora": "SDL3_mixer",
       "hummingbird": false,
       "evidence": "rawhide source; dist-git rpms/SDL3_mixer exists"
     },
     "freedesktop-sdk.bst:components/sdl3-net.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "SDL3_net",
       "fedora": "SDL3_net",
       "hummingbird": false,
       "evidence": "rawhide source; dist-git rpms/SDL3_net exists"
     },
     "freedesktop-sdk.bst:components/sdl3-ttf.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "SDL3_ttf",
       "fedora": "SDL3_ttf",
       "hummingbird": false,
@@ -5720,7 +5734,7 @@
       "evidence": "rawhide source; dist-git rpms/speex exists"
     },
     "freedesktop-sdk.bst:components/speexdsp.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "speexdsp",
       "fedora": "speexdsp",
       "hummingbird": false,
@@ -5762,7 +5776,7 @@
       "evidence": "rawhide source; dist-git rpms/squashfs-tools exists"
     },
     "freedesktop-sdk.bst:components/steam-devices.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "steam-devices",
       "fedora": "steam-devices",
       "hummingbird": false,
@@ -5801,7 +5815,7 @@
       "rpm": "svt-av1",
       "fedora": "svt-av1",
       "hummingbird": true,
-      "evidence": "rawhide source; dist-git unreachable"
+      "evidence": "rawhide source; dist-git rpms/svt-av1 exists"
     },
     "freedesktop-sdk.bst:components/swig.bst": {
       "disposition": "not-applicable",
@@ -5839,8 +5853,8 @@
       "evidence": "rawhide source; dist-git rpms/tar exists"
     },
     "freedesktop-sdk.bst:components/tex-gyre-fonts.bst": {
-      "disposition": "new-spec",
-      "rpm": null,
+      "disposition": "factory",
+      "rpm": "tex-gyre-fonts",
       "fedora": null,
       "hummingbird": false,
       "evidence": null
@@ -5853,7 +5867,7 @@
       "evidence": "rawhide source; dist-git rpms/texinfo exists"
     },
     "freedesktop-sdk.bst:components/tomlplusplus.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "tomlplusplus",
       "fedora": "tomlplusplus",
       "hummingbird": false,
@@ -6035,7 +6049,7 @@
       "evidence": "rawhide source; dist-git rpms/which exists"
     },
     "freedesktop-sdk.bst:components/wildmidi.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "wildmidi",
       "fedora": "wildmidi",
       "hummingbird": false,
@@ -6168,7 +6182,7 @@
       "evidence": "rawhide source; dist-git rpms/xkeyboard-config exists"
     },
     "freedesktop-sdk.bst:components/xorg-font-util.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "xorg-x11-font-utils",
       "fedora": "xorg-x11-font-utils",
       "hummingbird": false,
@@ -6917,7 +6931,7 @@
       "evidence": "rawhide source; dist-git rpms/gst-editing-services exists"
     },
     "gnome-build-meta.bst:core-deps/gupnp-av.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "gupnp-av",
       "fedora": "gupnp-av",
       "hummingbird": false,
@@ -7057,8 +7071,8 @@
       "evidence": "rawhide source; dist-git rpms/libgsf exists"
     },
     "gnome-build-meta.bst:core-deps/libgsystemservice.bst": {
-      "disposition": "new-spec",
-      "rpm": null,
+      "disposition": "factory",
+      "rpm": "libgsystemservice",
       "fedora": null,
       "hummingbird": false,
       "evidence": null
@@ -7502,7 +7516,7 @@
       "rpm": "xdg-desktop-portal-gnome",
       "fedora": "xdg-desktop-portal-gnome",
       "hummingbird": false,
-      "evidence": "rawhide source; dist-git HEAD 404"
+      "evidence": "rawhide source; dist-git rpms/xdg-desktop-portal-gnome exists"
     },
     "gnome-build-meta.bst:core-deps/xdg-desktop-portal-gtk.bst": {
       "disposition": "factory",
@@ -7554,7 +7568,7 @@
       "evidence": null
     },
     "gnome-build-meta.bst:core/baobab.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "baobab",
       "fedora": "baobab",
       "hummingbird": false,
@@ -7792,14 +7806,14 @@
       "evidence": "rawhide source; dist-git rpms/rygel exists"
     },
     "gnome-build-meta.bst:core/sushi.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "sushi",
       "fedora": "sushi",
       "hummingbird": false,
       "evidence": "rawhide source; dist-git rpms/sushi exists"
     },
     "gnome-build-meta.bst:core/sysprof-app.bst": {
-      "disposition": "hummingbird",
+      "disposition": "factory",
       "rpm": "sysprof",
       "fedora": "sysprof",
       "hummingbird": true,
@@ -7835,8 +7849,8 @@
       "evidence": "rawhide source; dist-git rpms/accountsservice exists"
     },
     "gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/android-udev-rules.bst": {
-      "disposition": "new-spec",
-      "rpm": null,
+      "disposition": "factory",
+      "rpm": "android-udev-rules",
       "fedora": null,
       "hummingbird": false,
       "evidence": null
@@ -7891,7 +7905,7 @@
       "evidence": "rawhide binary just; dist-git rpms/rust-just exists"
     },
     "gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/libcacard.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "libcacard",
       "fedora": "libcacard",
       "hummingbird": false,
@@ -7940,7 +7954,7 @@
       "evidence": "rawhide source; dist-git rpms/mokutil exists"
     },
     "gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/nss-mdns.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "nss-mdns",
       "fedora": "nss-mdns",
       "hummingbird": false,
@@ -8010,7 +8024,7 @@
       "evidence": "rawhide source; dist-git rpms/qemu exists"
     },
     "gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/rpcsvc-proto.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "rpcsvc-proto",
       "fedora": "rpcsvc-proto",
       "hummingbird": false,
@@ -8059,7 +8073,7 @@
       "evidence": "rawhide source; dist-git rpms/spice-vdagent exists"
     },
     "gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/spice.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "spice",
       "fedora": "spice",
       "hummingbird": false,
@@ -8073,14 +8087,14 @@
       "evidence": "rawhide source; dist-git rpms/toolbox exists"
     },
     "gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/usbredir.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "usbredir",
       "fedora": "usbredir",
       "hummingbird": false,
       "evidence": "rawhide source; dist-git rpms/usbredir exists"
     },
     "gnome-build-meta.bst:freedesktop-sdk-extra.bst:components/virglrenderer.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "virglrenderer",
       "fedora": "virglrenderer",
       "hummingbird": false,
@@ -8143,14 +8157,14 @@
       "evidence": "rawhide source; dist-git rpms/anthy exists"
     },
     "gnome-build-meta.bst:gnomeos-deps/bindfs.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "bindfs",
       "fedora": "bindfs",
       "hummingbird": false,
       "evidence": "rawhide source; dist-git rpms/bindfs exists"
     },
     "gnome-build-meta.bst:gnomeos-deps/bpftop.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "bpftop",
       "fedora": "bpftop",
       "hummingbird": false,
@@ -8320,8 +8334,8 @@
       "evidence": "rawhide source; dist-git rpms/libpinyin exists"
     },
     "gnome-build-meta.bst:gnomeos-deps/libssc.bst": {
-      "disposition": "new-spec",
-      "rpm": null,
+      "disposition": "factory",
+      "rpm": "libssc",
       "fedora": null,
       "hummingbird": false,
       "evidence": null
@@ -8377,8 +8391,8 @@
       "evidence": null
     },
     "gnome-build-meta.bst:gnomeos-deps/noise-suppression-for-voice.bst": {
-      "disposition": "new-spec",
-      "rpm": null,
+      "disposition": "factory",
+      "rpm": "noise-suppression-for-voice",
       "fedora": null,
       "hummingbird": false,
       "evidence": null
@@ -8412,8 +8426,8 @@
       "evidence": "rawhide source; dist-git rpms/openvpn exists"
     },
     "gnome-build-meta.bst:gnomeos-deps/pam-pkcs11.bst": {
-      "disposition": "new-spec",
-      "rpm": null,
+      "disposition": "factory",
+      "rpm": "pam_pkcs11",
       "fedora": null,
       "hummingbird": false,
       "evidence": null
@@ -8423,7 +8437,7 @@
       "rpm": "pam_wrapper",
       "fedora": "pam_wrapper",
       "hummingbird": false,
-      "evidence": "rawhide source; dist-git unreachable"
+      "evidence": "rawhide source; dist-git rpms/pam_wrapper exists"
     },
     "gnome-build-meta.bst:gnomeos-deps/pcrlock-config.bst": {
       "disposition": "structural",
@@ -8659,7 +8673,7 @@
       "evidence": "rawhide source; dist-git rpms/ibus exists"
     },
     "gnome-build-meta.bst:sdk-deps/libpanel.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "libpanel",
       "fedora": "libpanel",
       "hummingbird": false,
@@ -8743,14 +8757,14 @@
       "evidence": "rawhide source; dist-git rpms/enchant2 exists"
     },
     "gnome-build-meta.bst:sdk/fcitx5-gtk.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "fcitx5-gtk",
       "fedora": "fcitx5-gtk",
       "hummingbird": false,
       "evidence": "rawhide source; dist-git rpms/fcitx5-gtk exists"
     },
     "gnome-build-meta.bst:sdk/gcab.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "gcab",
       "fedora": "gcab",
       "hummingbird": false,
@@ -8834,7 +8848,7 @@
       "evidence": "rawhide source; dist-git rpms/gssproxy exists"
     },
     "gnome-build-meta.bst:sdk/gst-plugin-gtk4.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "rust-gst-plugin-gtk4",
       "fedora": "rust-gst-plugin-gtk4",
       "hummingbird": false,
@@ -8974,8 +8988,8 @@
       "evidence": "rawhide source; dist-git rpms/libsoup3 exists"
     },
     "gnome-build-meta.bst:sdk/ministream.bst": {
-      "disposition": "new-spec",
-      "rpm": null,
+      "disposition": "factory",
+      "rpm": "ministream",
       "fedora": null,
       "hummingbird": false,
       "evidence": null
@@ -9051,7 +9065,7 @@
       "evidence": "rawhide source; dist-git rpms/webkitgtk exists"
     },
     "gnome-build-meta.bst:sdk/woff2.bst": {
-      "disposition": "fedora-importable",
+      "disposition": "factory",
       "rpm": "woff2",
       "fedora": "woff2",
       "hummingbird": false,
