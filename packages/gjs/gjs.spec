@@ -3,7 +3,7 @@
 %global mozjs140_version 140.13.0
 
 Name:           gjs
-Version:        1.90.1
+Version:        1.90.2
 Release:        %autorelease
 Summary:        Javascript Bindings for GNOME
 
