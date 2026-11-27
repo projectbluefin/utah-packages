@@ -29,7 +29,18 @@ from unittest.mock import patch
 
 from tools import generated_sources, generated_sources_archives, generated_sources_vendored
 
-from tests.test_generated_sources import build_fpaste_archive, build_gpm_archive, build_input_archive, build_openal_soft_archive, build_sevenzip_archive, read_archive
+from tests import test_generated_sources
+from tests.test_generated_sources import (
+    build_fpaste_archive,
+    build_freerdp_archive,
+    build_gpm_archive,
+    build_hplip_archive,
+    build_input_archive,
+    build_kernel_archive,
+    build_openal_soft_archive,
+    build_sevenzip_archive,
+    read_archive,
+)
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -219,6 +230,186 @@ class FpasteGenerateTests(PackageDirMixin, unittest.TestCase):
         self.assertEqual(target.name, f"fpaste-{self.VERSION}.tar.gz")
         self.assertEqual(target.read_bytes(), generated_sources._fpaste_transform(self.payload, self.VERSION))
         self.assertEqual([url for url, _, _ in fetch.requests], [self.URL])
+
+
+class SinglePinGenerateCases:
+    """Shared cases for generators that download one SHA-512-pinned archive.
+
+    Subclasses name the package, the spec, the pin table, the upstream URL,
+    the target filename and a synthetic upstream archive their transform
+    accepts. A tampered or re-rolled download must stop the generator before
+    it writes anything, and an unpinned version must stop it before it
+    downloads anything.
+    """
+
+    PACKAGE = ""
+    SPEC = ""
+    VERSION = ""
+    UNPINNED = "99.0.0"
+    UNPINNED_MESSAGE = ""
+
+    def setUp(self):
+        super().setUp()
+        self.write_spec(self.SPEC, self.VERSION)
+        self.payload = self.build_payload()
+
+    def test_an_unpinned_version_fails_before_any_download(self):
+        self.write_spec(self.SPEC, self.UNPINNED)
+        fetch = UrlopenRecorder({})
+        with patch.object(urllib.request, "urlopen", fetch):
+            with self.assertRaisesRegex(RuntimeError, self.UNPINNED_MESSAGE):
+                generated_sources.generate(self.PACKAGE, self.package_dir, self.out_dir)
+        self.assertEqual(fetch.requests, [])
+
+    def test_a_rerolled_upstream_archive_fails_closed_and_writes_nothing(self):
+        fetch = UrlopenRecorder({self.url(): self.payload})
+        with patch.object(urllib.request, "urlopen", fetch):
+            with self.assertRaisesRegex(RuntimeError, f"input archive mismatch for {self.url()}"):
+                generated_sources.generate(self.PACKAGE, self.package_dir, self.out_dir)
+        self.assertEqual(list(self.out_dir.iterdir()), [])
+
+    def test_the_pinned_archive_is_transformed_into_the_named_target(self):
+        fetch = UrlopenRecorder({self.url(): self.payload})
+        with patch.object(urllib.request, "urlopen", fetch), \
+                patch.dict(self.pins(), {self.VERSION: sha512(self.payload)}):
+            target = generated_sources.generate(self.PACKAGE, self.package_dir, self.out_dir)
+        self.assertEqual(target, self.out_dir / self.target_name())
+        self.assertEqual(target.read_bytes(), self.transform(self.payload, self.VERSION))
+        self.assertEqual([url for url, _, _ in fetch.requests], [self.url()])
+
+
+class HypervGenerateTests(SinglePinGenerateCases, PackageDirMixin, unittest.TestCase):
+    PACKAGE = "hyperv-daemons"
+    SPEC = "hyperv-daemons.spec"
+    VERSION = "7.3.1"
+    UNPINNED_MESSAGE = "no pinned input SHA-512 for linux 99.0.0"
+
+    def build_payload(self) -> bytes:
+        return build_kernel_archive(self.VERSION)
+
+    def url(self) -> str:
+        return f"https://cdn.kernel.org/pub/linux/kernel/v7.x/linux-{self.VERSION}.tar.xz"
+
+    def pins(self) -> dict:
+        return generated_sources_archives.HYPERV_KERNEL_INPUT_SHA512
+
+    def target_name(self) -> str:
+        return f"tools-hv-{self.VERSION}.tar.xz"
+
+    def transform(self, payload: bytes, version: str) -> bytes:
+        return generated_sources_archives._hyperv_transform(payload, version)
+
+
+class HplipGenerateTests(SinglePinGenerateCases, PackageDirMixin, unittest.TestCase):
+    PACKAGE = "hplip"
+    SPEC = "hplip.spec"
+    VERSION = "3.26.6"
+    UNPINNED_MESSAGE = "no pinned input SHA-512 for hplip 99.0.0"
+
+    def build_payload(self) -> bytes:
+        return build_hplip_archive(self.VERSION)
+
+    def url(self) -> str:
+        return f"https://downloads.sourceforge.net/project/hplip/hplip/{self.VERSION}/hplip-{self.VERSION}.tar.gz"
+
+    def pins(self) -> dict:
+        return generated_sources_archives.HPLIP_INPUT_SHA512
+
+    def target_name(self) -> str:
+        return f"hplip-{self.VERSION}-repack.tar.gz"
+
+    def transform(self, payload: bytes, version: str) -> bytes:
+        return generated_sources_archives._hplip_transform(payload, version)
+
+
+class FreerdpGenerateTests(SinglePinGenerateCases, PackageDirMixin, unittest.TestCase):
+    PACKAGE = "freerdp"
+    SPEC = "freerdp.spec"
+    VERSION = "3.32.2"
+    UNPINNED_MESSAGE = "no pinned input SHA-512 for freerdp 99.0.0"
+
+    def build_payload(self) -> bytes:
+        return build_freerdp_archive(self.VERSION)
+
+    def url(self) -> str:
+        return f"https://github.com/FreeRDP/FreeRDP/archive/{self.VERSION}/FreeRDP-{self.VERSION}.tar.gz"
+
+    def pins(self) -> dict:
+        return generated_sources_archives.FREERDP_INPUT_SHA512
+
+    def target_name(self) -> str:
+        return f"FreeRDP-{self.VERSION}-repack.tar.gz"
+
+    def transform(self, payload: bytes, version: str) -> bytes:
+        return generated_sources_archives._freerdp_transform(payload, version)
+
+
+class JpegxlGenerateTests(PackageDirMixin, unittest.TestCase):
+    """jpegxl pins the release archive and every submodule archive it fills in."""
+
+    VERSION = "0.12.0"
+    URL = f"https://github.com/libjxl/libjxl/archive/v{VERSION}/jpegxl-{VERSION}.tar.gz"
+    SJPEG_REMOTE = "https://github.com/webmproject/sjpeg"
+    SKCMS_REMOTE = "https://github.com/google/skcms"
+
+    def setUp(self):
+        super().setUp()
+        self.write_spec("jpegxl.spec", self.VERSION)
+        # Reuse the transform tests' synthetic archives; reaching the class
+        # through its module keeps pytest from collecting it a second time.
+        archives = test_generated_sources.JpegxlTransformTests()
+        self.release = archives.release()
+        self.submodules = archives.submodules()
+        self.sjpeg_commit, self.sjpeg = self.submodules["third_party/sjpeg"]
+        self.skcms_commit, self.skcms = self.submodules["third_party/skcms"]
+        self.sjpeg_url = f"{self.SJPEG_REMOTE}/archive/{self.sjpeg_commit}.tar.gz"
+        self.skcms_url = f"{self.SKCMS_REMOTE}/archive/{self.skcms_commit}.tar.gz"
+        self.payloads = {self.URL: self.release, self.sjpeg_url: self.sjpeg, self.skcms_url: self.skcms}
+
+    def pins(self, sjpeg_pin: str | None = None) -> dict:
+        return {
+            "sha512": sha512(self.release),
+            "submodules": {
+                "third_party/sjpeg": (self.SJPEG_REMOTE, self.sjpeg_commit, sjpeg_pin or sha512(self.sjpeg)),
+                "third_party/skcms": (self.SKCMS_REMOTE, self.skcms_commit, sha512(self.skcms)),
+            },
+        }
+
+    def test_an_unpinned_version_fails_before_any_download(self):
+        self.write_spec("jpegxl.spec", "0.99.0")
+        fetch = UrlopenRecorder({})
+        with patch.object(urllib.request, "urlopen", fetch):
+            with self.assertRaisesRegex(RuntimeError, "no pinned inputs for jpegxl 0.99.0"):
+                generated_sources.generate("jpegxl", self.package_dir, self.out_dir)
+        self.assertEqual(fetch.requests, [])
+
+    def test_a_rerolled_release_archive_fails_before_fetching_submodules(self):
+        fetch = UrlopenRecorder(self.payloads)
+        with patch.object(urllib.request, "urlopen", fetch):
+            with self.assertRaisesRegex(RuntimeError, f"input archive mismatch for {self.URL}"):
+                generated_sources.generate("jpegxl", self.package_dir, self.out_dir)
+        self.assertEqual([url for url, _, _ in fetch.requests], [self.URL])
+        self.assertEqual(list(self.out_dir.iterdir()), [])
+
+    def test_a_rerolled_submodule_archive_fails_closed_and_writes_nothing(self):
+        fetch = UrlopenRecorder(self.payloads)
+        with patch.object(urllib.request, "urlopen", fetch), \
+                patch.dict(generated_sources_archives.JPEGXL_INPUTS, {self.VERSION: self.pins(sjpeg_pin="0" * 128)}):
+            with self.assertRaisesRegex(RuntimeError, f"input archive mismatch for {self.sjpeg_url}"):
+                generated_sources.generate("jpegxl", self.package_dir, self.out_dir)
+        self.assertEqual(list(self.out_dir.iterdir()), [])
+
+    def test_the_pinned_archives_are_combined_into_the_named_target(self):
+        fetch = UrlopenRecorder(self.payloads)
+        with patch.object(urllib.request, "urlopen", fetch), \
+                patch.dict(generated_sources_archives.JPEGXL_INPUTS, {self.VERSION: self.pins()}):
+            target = generated_sources.generate("jpegxl", self.package_dir, self.out_dir)
+        self.assertEqual(target, self.out_dir / f"jpegxl-{self.VERSION}.tar.xz")
+        self.assertEqual(
+            target.read_bytes(),
+            generated_sources_archives._jpegxl_transform(self.release, self.submodules, self.VERSION),
+        )
+        self.assertEqual([url for url, _, _ in fetch.requests], [self.URL, self.sjpeg_url, self.skcms_url])
 
 
 class BluefinArtworkGenerateTests(PackageDirMixin, unittest.TestCase):
