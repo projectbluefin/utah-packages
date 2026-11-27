@@ -2,7 +2,7 @@
 # nor the factory. Stage 0 so ppp (stage 1) can link it.
 Name:     libpcap
 Epoch:    14
-Version:  1.11.0
+Version:  1.11.1
 Release:  1%{?dist}
 Summary:  A system-independent interface for user-level packet capture
 License:  ISC AND BSD-2-Clause AND BSD-3-Clause AND BSD-4-Clause-UC
@@ -97,6 +97,9 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/libpcap.a
 %{_mandir}/man5/pcap*.5*
 
 %changelog
+* Wed Nov 25 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 14:1.11.1-1
+- Update to 1.11.1
+
 * Mon Nov 16 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 14:1.11.0-1
 - Update to 1.11.0
 - Drop the unverified detached signature Source1
