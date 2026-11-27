@@ -1,8 +1,8 @@
 {
  "schema": 1,
- "dakota_revision": "bf271777da1808627f775f1d8816db2a89a931ea",
+ "dakota_revision": "91e2a21c55a3c9fd24f27244ab1682351e12de20",
  "refs": {
-  "dakota": "bf271777da1808627f775f1d8816db2a89a931ea",
+  "dakota": "91e2a21c55a3c9fd24f27244ab1682351e12de20",
   "gnome-build-meta": "8a89846df11e86cee57c728a86a247e61d604b84",
   "freedesktop-sdk": "114ae909ec9881958bd507c8b4414aa33f758d2b",
   "freedesktop-sdk-extra": "7825d44d436a51dcbf7d226904348e810c63bf75"
@@ -108,6 +108,12 @@
   },
   "bluefin/composefs-loop-udisks-ignore.bst": {
    "kind": "manual"
+  },
+  "bluefin/ddcutil.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--disable-build-timestamp"
+   }
   },
   "bluefin/distrobox.bst": {
    "kind": "manual"
@@ -289,6 +295,12 @@
     "cmake-local": "-DUSE_SYSTEM_MARISA=ON -DLIB_INSTALL_DIR=%{libdir} -DENABLE_GTEST=OFF -DBUILD_DOCUMENTATION=OFF"
    }
   },
+  "bluefin/pam-u2f.bst": {
+   "kind": "autotools",
+   "options": {
+    "conf-local": "--with-pam-dir=%{libdir}/security --disable-man"
+   }
+  },
   "bluefin/plymouth-bluefin-theme.bst": {
    "kind": "manual"
   },
@@ -369,19 +381,12 @@
     {
      "path": "patches/shell-extensions/tailscale-setup.patch",
      "subject": "Provide Tailscale setup and recover from unavailable or unauthorized daemon",
-     "hunks": "6bb67b782c8fdf1f"
+     "hunks": "3e74750b7104b6fd"
     }
    ]
   },
   "bluefin/shell-extensions/tilingshell.bst": {
-   "kind": "manual",
-   "patches": [
-    {
-     "path": "patches/tilingshell/0001-gnome-51-support.patch",
-     "subject": "GNOME 51 support: fractional scaling detection without the removed org.gnome.mutter experimental-features key",
-     "hunks": "d2bd5491569005d0"
-    }
-   ]
+   "kind": "manual"
   },
   "bluefin/signed-efi.bst": {
    "kind": "manual",
