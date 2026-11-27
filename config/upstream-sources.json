@@ -1088,12 +1088,12 @@
     },
     {
       "name": "flex",
-      "version": "2.6.4",
-      "url": "https://github.com/westes/flex/releases/download/v2.6.4/flex-2.6.4.tar.gz",
-      "filename": "flex-2.6.4.tar.gz",
-      "sha512": "e9785f3d620a204b7d20222888917dc065c2036cae28667065bf7862dfa1b25235095a12fd04efdbd09bfd17d3452e6b9ef953a8c1137862ff671c97132a082e",
+      "version": "2.7.10",
+      "url": "https://github.com/westes/flex/releases/download/v2.7.10/flex-2.7.10.tar.gz",
+      "filename": "flex-2.7.10.tar.gz",
+      "sha512": "6d0e26fea44f3c0b987317d5723605f5dbf3485c7a38b343767535c2e9cb9783f56a77305ccc8e7de0bf6cc0769152378df8d0ebd9cd8bc96ce16caa934aa3ea",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/flex/flex-2.6.4.tar.gz/sha512/e9785f3d620a204b7d20222888917dc065c2036cae28667065bf7862dfa1b25235095a12fd04efdbd09bfd17d3452e6b9ef953a8c1137862ff671c97132a082e/flex-2.6.4.tar.gz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/flex/flex-2.7.10.tar.gz/sha512/6d0e26fea44f3c0b987317d5723605f5dbf3485c7a38b343767535c2e9cb9783f56a77305ccc8e7de0bf6cc0769152378df8d0ebd9cd8bc96ce16caa934aa3ea/flex-2.7.10.tar.gz"
       ]
     },
     {
@@ -1366,13 +1366,13 @@
     },
     {
       "name": "gjs",
-      "version": "1.90.1",
-      "url": "https://download.gnome.org/sources/gjs/1.90/gjs-1.90.1.tar.xz",
-      "filename": "gjs-1.90.1.tar.xz",
-      "sha512": "1a0da3a65353297d226258e9b041de5da792f0d0df79902828ef8db7802a09c9f993e24c000021220e09b9a1bcd2f2d1d61e9ad3d69c8a062b243f878e654453",
+      "version": "1.90.2",
+      "url": "https://download.gnome.org/sources/gjs/1.90/gjs-1.90.2.tar.xz",
+      "filename": "gjs-1.90.2.tar.xz",
+      "sha512": "3387dd747d2360597b195e7e39a090eaa5a374550e8d6a04e1ee0e25a631a947b1ec1eeef48ae5125ce9e98c9fc55b51512968c8f507d255509c9aa3f12b0e05",
       "stage": 7,
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/gjs/gjs-1.90.1.tar.xz/sha512/1a0da3a65353297d226258e9b041de5da792f0d0df79902828ef8db7802a09c9f993e24c000021220e09b9a1bcd2f2d1d61e9ad3d69c8a062b243f878e654453/gjs-1.90.1.tar.xz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/gjs/gjs-1.90.2.tar.xz/sha512/3387dd747d2360597b195e7e39a090eaa5a374550e8d6a04e1ee0e25a631a947b1ec1eeef48ae5125ce9e98c9fc55b51512968c8f507d255509c9aa3f12b0e05/gjs-1.90.2.tar.xz"
       ]
     },
     {
@@ -3255,12 +3255,12 @@
     },
     {
       "name": "libcue",
-      "version": "2.3.0",
-      "url": "https://github.com/lipnitsk/libcue/archive/v2.3.0/libcue-2.3.0.tar.gz",
-      "filename": "libcue-2.3.0.tar.gz",
-      "sha512": "fe2c39cc9794ac36c0706405e0432bab23228d343ba4e3395220d5b2a2ebf8b3c97e71d76a628f9144977c0dd56636f78d0c2d1f9f2b0d4068a837a258f035b6",
+      "version": "2.4.4",
+      "url": "https://github.com/lipnitsk/libcue/archive/v2.4.4/libcue-2.4.4.tar.gz",
+      "filename": "libcue-2.4.4.tar.gz",
+      "sha512": "c080905dda6dd3f7d8b548bd134bffb58a7a18850b6b66500b3f25bac6235d297e9c87418b6ccc56a84a2b8d1d9a465fe94898e082f1d3665cd41735d4161b1c",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/libcue/libcue-2.3.0.tar.gz/sha512/fe2c39cc9794ac36c0706405e0432bab23228d343ba4e3395220d5b2a2ebf8b3c97e71d76a628f9144977c0dd56636f78d0c2d1f9f2b0d4068a837a258f035b6/libcue-2.3.0.tar.gz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libcue/libcue-2.4.4.tar.gz/sha512/c080905dda6dd3f7d8b548bd134bffb58a7a18850b6b66500b3f25bac6235d297e9c87418b6ccc56a84a2b8d1d9a465fe94898e082f1d3665cd41735d4161b1c/libcue-2.4.4.tar.gz"
       ]
     },
     {
@@ -3564,10 +3564,10 @@
     },
     {
       "name": "libgsf",
-      "version": "1.14.60",
-      "url": "https://download.gnome.org/sources/libgsf/1.14/libgsf-1.14.60.tar.xz",
-      "filename": "libgsf-1.14.60.tar.xz",
-      "sha512": "cf750d84a15daa5450d61d800d2283d88627be98382997cfa417c0cdbcbdf0f40cdd0397b7100a5c6bdc2346cb860b6bde9237c56514aaa532ac86a9e33a5b26"
+      "version": "1.14.61",
+      "url": "https://download.gnome.org/sources/libgsf/1.14/libgsf-1.14.61.tar.xz",
+      "filename": "libgsf-1.14.61.tar.xz",
+      "sha512": "cd055f4d55c775ef95555bf603181dd9ea97bba55f9258130a23ed5e69b84efb9479c96f49d9b2151aa8adb5717093d7e1243288805da674bbef4498e665dd8a"
     },
     {
       "name": "libgsystemservice",
@@ -4400,14 +4400,14 @@
     },
     {
       "name": "libtevent",
-      "version": "0.17.3",
-      "url": "https://www.samba.org/ftp/tevent/tevent-0.17.3.tar.gz",
-      "filename": "tevent-0.17.3.tar.gz",
+      "version": "0.17.4",
+      "url": "https://www.samba.org/ftp/tevent/tevent-0.17.4.tar.gz",
+      "filename": "tevent-0.17.4.tar.gz",
       "feed": "https://release-monitoring.org/project/1736",
-      "sha512": "127be908394c066121e9b0eee939a68f14a957fd0045056985dddde32a5986d1b20f7a73ceac737f0e44bfb10f0e4abf5d3faeb339006dffb3a83c414f36de1f",
+      "sha512": "51ed2d29f1966adeaaa12a4e54a218cc908a23780aab1b25b532521b413ffe2e77aec1fec42a8672b3e718d5776e82d0e70c6ce7b1c02568344770f78db09af2",
       "stage": 1,
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/libtevent/tevent-0.17.3.tar.gz/sha512/127be908394c066121e9b0eee939a68f14a957fd0045056985dddde32a5986d1b20f7a73ceac737f0e44bfb10f0e4abf5d3faeb339006dffb3a83c414f36de1f/tevent-0.17.3.tar.gz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/libtevent/tevent-0.17.4.tar.gz/sha512/51ed2d29f1966adeaaa12a4e54a218cc908a23780aab1b25b532521b413ffe2e77aec1fec42a8672b3e718d5776e82d0e70c6ce7b1c02568344770f78db09af2/tevent-0.17.4.tar.gz"
       ]
     },
     {
@@ -4448,10 +4448,10 @@
     },
     {
       "name": "libtsm",
-      "version": "4.8.0",
-      "url": "https://github.com/kmscon/libtsm/archive/v4.8.0/libtsm-4.8.0.tar.gz",
-      "filename": "libtsm-4.8.0.tar.gz",
-      "sha512": "cd40679eb25ade1505dbf7eca8d032ae5dc57b92be4f3a7ea4be79b68d2988bb6f8ba202d0bdf4b4dc76b7c743bc54ecc315b24e29b055cbfed9aefb29a653f6"
+      "version": "4.8.1",
+      "url": "https://github.com/kmscon/libtsm/archive/v4.8.1/libtsm-4.8.1.tar.gz",
+      "filename": "libtsm-4.8.1.tar.gz",
+      "sha512": "6e2eca579b43e2536bfd766ddfdc3757dfe87a834f0c3d2b52f1a4ef5250891bfd4ab29a6cff62a171a07265ef064e77b4ae5eb1b9027975e8ef8b794281ee8a"
     },
     {
       "name": "libudfread",
@@ -5632,21 +5632,21 @@
     {
       "name": "pipewire",
       "stage": 6,
-      "version": "1.6.11",
-      "url": "https://gitlab.freedesktop.org/pipewire/pipewire/-/archive/1.6.11/pipewire-1.6.11.tar.gz",
-      "filename": "pipewire-1.6.11.tar.gz",
+      "version": "1.6.12",
+      "url": "https://gitlab.freedesktop.org/pipewire/pipewire/-/archive/1.6.12/pipewire-1.6.12.tar.gz",
+      "filename": "pipewire-1.6.12.tar.gz",
       "feed": "https://gitlab.freedesktop.org/pipewire/pipewire/-/archive/1.6.9/pipewire-1.6.9.tar.gz",
-      "sha512": "61db8c92d7d250048b4a091ff8672a29ac7ac699f930978510bbdb48e250b2c92bf26d9970703639f4bc1fea2c384b5e76fb5538c3bbb640399d8dd420644b0e",
+      "sha512": "4dc757e8d7538f5d7845f85ba2267943c849f4acec4af049127f2f690b0a97b6c81802277782d548b9143511b4b24732e61bcdd867d0fc10fe7196b8eb999533",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/pipewire/pipewire-1.6.11.tar.gz/sha512/61db8c92d7d250048b4a091ff8672a29ac7ac699f930978510bbdb48e250b2c92bf26d9970703639f4bc1fea2c384b5e76fb5538c3bbb640399d8dd420644b0e/pipewire-1.6.11.tar.gz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/pipewire/pipewire-1.6.12.tar.gz/sha512/4dc757e8d7538f5d7845f85ba2267943c849f4acec4af049127f2f690b0a97b6c81802277782d548b9143511b4b24732e61bcdd867d0fc10fe7196b8eb999533/pipewire-1.6.12.tar.gz"
       ]
     },
     {
       "name": "pipewire-libs-extra",
-      "version": "1.6.11",
-      "url": "https://gitlab.freedesktop.org/pipewire/pipewire/-/archive/1.6.11/pipewire-1.6.11.tar.gz",
-      "filename": "pipewire-1.6.11.tar.gz",
-      "sha512": "61db8c92d7d250048b4a091ff8672a29ac7ac699f930978510bbdb48e250b2c92bf26d9970703639f4bc1fea2c384b5e76fb5538c3bbb640399d8dd420644b0e",
+      "version": "1.6.12",
+      "url": "https://gitlab.freedesktop.org/pipewire/pipewire/-/archive/1.6.12/pipewire-1.6.12.tar.gz",
+      "filename": "pipewire-1.6.12.tar.gz",
+      "sha512": "4dc757e8d7538f5d7845f85ba2267943c849f4acec4af049127f2f690b0a97b6c81802277782d548b9143511b4b24732e61bcdd867d0fc10fe7196b8eb999533",
       "stage": 6
     },
     {
@@ -6040,10 +6040,10 @@
     },
     {
       "name": "python-httpx",
-      "version": "0.28.1",
-      "url": "https://github.com/encode/httpx/archive/0.28.1/httpx-0.28.1.tar.gz",
-      "filename": "httpx-0.28.1.tar.gz",
-      "sha512": "5571957a3516533f1c1e76f311316811f6365e192d19ebae10c9ab0d0c4094d811063fd2be2995f3b6a41d6899a7882f27265badecf238a4f7903f976136d3ba"
+      "version": "0.29.0",
+      "url": "https://github.com/encode/httpx/archive/0.29.0/httpx-0.29.0.tar.gz",
+      "filename": "httpx-0.29.0.tar.gz",
+      "sha512": "cbbfe646ee9ac10c0263c47c9a2d9890bbb62a886b9fab80a40ccbcbe91ca576b61be169051abf4f09774c5150e45fd9ad9b85499bf4723a6307fdbdabd084c6"
     },
     {
       "name": "python-jaraco-classes",
@@ -7074,10 +7074,10 @@
     },
     {
       "name": "tesseract",
-      "version": "5.5.4",
-      "url": "https://github.com/tesseract-ocr/tesseract/archive/5.5.4/tesseract-5.5.4.tar.gz",
-      "filename": "tesseract-5.5.4.tar.gz",
-      "sha512": "c1dd838f8c9cbba585d969c1c5edba52d1aa77dac2057775271f5bb8e22c0550f723d1de362e15263e2c540ae1175b08bff36c5a545dd5f84906c468036b4556"
+      "version": "5.5.5",
+      "url": "https://github.com/tesseract-ocr/tesseract/archive/5.5.5/tesseract-5.5.5.tar.gz",
+      "filename": "tesseract-5.5.5.tar.gz",
+      "sha512": "550ec98393e213b49e530e5f3c5f0153c85eeb2bc885d1453320e13aecd37eec2b9260bb411bc78b76592c9ca8c39c35f765bebe04336bc5d1e3eb4b3fc258bb"
     },
     {
       "name": "tesseract-tessdata",
