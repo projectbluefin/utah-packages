@@ -2,6 +2,7 @@
 
 import contextlib
 import hashlib
+import http.client
 import io
 import json
 import os
@@ -793,6 +794,16 @@ class PlanTests(unittest.TestCase):
         self.assertEqual(len(proposals), 1)
         self.assertIn("error", proposals[0])
 
+    def test_a_cut_off_module_index_is_reported_not_raised(self) -> None:
+        # read() raises IncompleteRead when the server closes the connection
+        # early. It is not an OSError, so it needs its own place in the handler.
+        def cut_off(request, timeout=None):
+            raise http.client.IncompleteRead(b"[", 1000)
+
+        proposals = plan(ROOT, only="gnome-shell", opener=cut_off)
+        self.assertEqual(len(proposals), 1)
+        self.assertIn("IncompleteRead", proposals[0]["error"])
+
     def test_coverage_notes_do_not_include_tracked_or_unselected_locks(self) -> None:
         entries = [
             dict(LOOKASIDE_NAUTILUS),
@@ -1344,6 +1355,24 @@ class MainApplyTests(unittest.TestCase):
         self.assertEqual(applied.call_count, 2)
         self.assertIn("skipped broken", err)
 
+    def test_a_cut_off_download_skips_only_that_package(self) -> None:
+        # A release file sent in chunks and cut off part-way raises
+        # IncompleteRead out of apply(), before apply() has written anything.
+        proposals = [
+            {"kind": "update", "name": "broken", "current": "1.0", "latest": "1.1"},
+            {"kind": "update", "name": "fine", "current": "2.0", "latest": "2.1"},
+        ]
+
+        def side_effect(root, bump):
+            if bump["name"] == "broken":
+                raise http.client.IncompleteRead(b"", 1000)
+            return {}
+
+        code, applied, err, _ = self.run_main(proposals, side_effect)
+        self.assertEqual(code, 0)
+        self.assertEqual(applied.call_count, 2)
+        self.assertIn("skipped broken", err)
+
     def test_fails_when_nothing_could_be_applied(self) -> None:
         proposals = [{"kind": "update", "name": "broken", "current": "1.0", "latest": "1.1"}]
 
@@ -1670,6 +1699,14 @@ class ForgeProposalTests(unittest.TestCase):
         p = forge_proposal("ddcutil", self.ENTRY, self.FEED, opener=broken)
         self.assertIn("error", p)
         self.assertIn("ddcutil", p["error"])
+
+    def test_a_cut_off_forge_answer_is_reported_and_not_fatal(self):
+        def cut_off(request, timeout=None):
+            raise http.client.IncompleteRead(b"[", 1000)
+
+        p = forge_proposal("ddcutil", self.ENTRY, self.FEED, opener=cut_off)
+        self.assertIn("error", p)
+        self.assertIn("IncompleteRead", p["error"])
 
     def test_a_suffixed_lock_is_compared_by_its_numeric_prefix(self):
         # 2.13b171 is a build after 2.13, a ^git snapshot comes after its
