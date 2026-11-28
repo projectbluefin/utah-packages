@@ -57,7 +57,7 @@
 
 Summary: A dynamic adaptive system tuning daemon
 Name: tuned
-Version: 2.28.0
+Version: 2.29.0
 Release: 1%{?prerel1}%{?git_suffix:.%{git_suffix}}%{?dist}
 License: GPL-2.0-or-later AND CC-BY-SA-3.0
 %if 0%{?git_commit:1}
@@ -658,6 +658,9 @@ fi
 %config(noreplace) %{_sysconfdir}/tuned/ppd.conf
 
 %changelog
+* Sat Nov 28 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 2.29.0
+- Update to 2.29.0
+
 * Thu Sep 10 2026 Jaroslav Škarvada <jskarvad@redhat.com> - 2.28.0-1
 - new release
   - rebased tuned to latest upstream

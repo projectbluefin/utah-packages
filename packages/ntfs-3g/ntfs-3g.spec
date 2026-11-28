@@ -7,7 +7,7 @@
 
 Name:           ntfs-3g
 Epoch:          2
-Version:        2026.9.28
+Version:        2026.11.23
 Release:        1%{?dist}
 Summary:        Linux NTFS userspace driver
 License:        GPL-2.0-or-later
@@ -196,6 +196,9 @@ rm -rf %{buildroot}%{_defaultdocdir}/%{name}/README
 %exclude %{_mandir}/man8/ntfs-3g*
 
 %changelog
+* Sat Nov 28 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 2:2026.11.23-1
+- Update to 2026.11.23
+
 * Fri Nov 20 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 2:2026.9.28-1
 - Update to 2026.9.28
 

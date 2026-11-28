@@ -917,14 +917,14 @@
     },
     {
       "name": "evolution-data-server",
-      "version": "3.62.1",
-      "url": "https://download.gnome.org/sources/evolution-data-server/3.62/evolution-data-server-3.62.1.tar.xz",
-      "filename": "evolution-data-server-3.62.1.tar.xz",
+      "version": "3.62.2",
+      "url": "https://download.gnome.org/sources/evolution-data-server/3.62/evolution-data-server-3.62.2.tar.xz",
+      "filename": "evolution-data-server-3.62.2.tar.xz",
       "feed": "https://download.gnome.org/sources/evolution-data-server/3.61/evolution-data-server-3.61.3.tar.xz",
-      "sha512": "dd204d69f365f702e3c2207cdbb1cccfb33adc6f46088338ce6b1c2343e80dc0160449f11c7ffc33a23d590a5bc4a8b7b3e67c8bad3351e81409471e24df9df9",
+      "sha512": "77c4ff0b11f85ba4dbb6efc05076b293bf04fcbd220d298dd0c20a17fc12e900653e9aa5ffab5ce71223f5b6a82b7214cb01c391b260651d9a37c5674e850675",
       "stage": 9,
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/evolution-data-server/evolution-data-server-3.62.1.tar.xz/sha512/dd204d69f365f702e3c2207cdbb1cccfb33adc6f46088338ce6b1c2343e80dc0160449f11c7ffc33a23d590a5bc4a8b7b3e67c8bad3351e81409471e24df9df9/evolution-data-server-3.62.1.tar.xz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/evolution-data-server/evolution-data-server-3.62.2.tar.xz/sha512/77c4ff0b11f85ba4dbb6efc05076b293bf04fcbd220d298dd0c20a17fc12e900653e9aa5ffab5ce71223f5b6a82b7214cb01c391b260651d9a37c5674e850675/evolution-data-server-3.62.2.tar.xz"
       ]
     },
     {
@@ -981,12 +981,12 @@
     },
     {
       "name": "fastfetch",
-      "version": "2.70.0",
-      "url": "https://github.com/fastfetch-cli/fastfetch/archive/2.70.0/fastfetch-2.70.0.tar.gz",
-      "filename": "fastfetch-2.70.0.tar.gz",
-      "sha512": "72843e7a411bc2d6f32bd1b8800758b6a3f4e3519b6a044134c578fed0a6345ce35b6001ceffcdf2bd5b5ac6dd9c27e0662a051439f57a17fd4145657b2da571",
+      "version": "2.72.0",
+      "url": "https://github.com/fastfetch-cli/fastfetch/archive/2.72.0/fastfetch-2.72.0.tar.gz",
+      "filename": "fastfetch-2.72.0.tar.gz",
+      "sha512": "155cd0a3ceddb76ef2036640314e2b57c5184bc9379afbbc5764d5d041983c65849bb8ca6a5a096ffe34603c9a21f4571332d4514f0bb1e30347d56f7d3fad13",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/fastfetch/fastfetch-2.70.0.tar.gz/sha512/72843e7a411bc2d6f32bd1b8800758b6a3f4e3519b6a044134c578fed0a6345ce35b6001ceffcdf2bd5b5ac6dd9c27e0662a051439f57a17fd4145657b2da571/fastfetch-2.70.0.tar.gz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/fastfetch/fastfetch-2.72.0.tar.gz/sha512/155cd0a3ceddb76ef2036640314e2b57c5184bc9379afbbc5764d5d041983c65849bb8ca6a5a096ffe34603c9a21f4571332d4514f0bb1e30347d56f7d3fad13/fastfetch-2.72.0.tar.gz"
       ]
     },
     {
@@ -1088,12 +1088,12 @@
     },
     {
       "name": "flex",
-      "version": "2.6.4",
-      "url": "https://github.com/westes/flex/releases/download/v2.6.4/flex-2.6.4.tar.gz",
-      "filename": "flex-2.6.4.tar.gz",
-      "sha512": "e9785f3d620a204b7d20222888917dc065c2036cae28667065bf7862dfa1b25235095a12fd04efdbd09bfd17d3452e6b9ef953a8c1137862ff671c97132a082e",
+      "version": "2.7.11",
+      "url": "https://github.com/westes/flex/releases/download/v2.7.11/flex-2.7.11.tar.gz",
+      "filename": "flex-2.7.11.tar.gz",
+      "sha512": "5d8163cd62f5083e8228e3fda5e5832f1809fab740d77e7beec95a0e6f350f52632c788a9beed36d8db6c5c65f7df7061e30df760f0f0201f9b5be8742622995",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/flex/flex-2.6.4.tar.gz/sha512/e9785f3d620a204b7d20222888917dc065c2036cae28667065bf7862dfa1b25235095a12fd04efdbd09bfd17d3452e6b9ef953a8c1137862ff671c97132a082e/flex-2.6.4.tar.gz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/flex/flex-2.7.11.tar.gz/sha512/5d8163cd62f5083e8228e3fda5e5832f1809fab740d77e7beec95a0e6f350f52632c788a9beed36d8db6c5c65f7df7061e30df760f0f0201f9b5be8742622995/flex-2.7.11.tar.gz"
       ]
     },
     {
@@ -5193,13 +5193,13 @@
     },
     {
       "name": "ntfs-3g",
-      "version": "2026.9.28",
-      "url": "https://tuxera.com/opensource/ntfs-3g_ntfsprogs-2026.9.28.tgz",
-      "filename": "ntfs-3g_ntfsprogs-2026.9.28.tgz",
+      "version": "2026.11.23",
+      "url": "https://tuxera.com/opensource/ntfs-3g_ntfsprogs-2026.11.23.tgz",
+      "filename": "ntfs-3g_ntfsprogs-2026.11.23.tgz",
       "feed": "https://release-monitoring.org/project/2504",
-      "sha512": "9300d38e3dc790506f7d5a14c0c5fb4ff567d6acaaaca7f4a3c3a24beb01c54145135be61363302590d9c65cf26c338d57cf7eb1757c785f5d3586335bc3480f",
+      "sha512": "dff57ca33edbfac9f77decee79bc763602244f84ba5a5f2b17003c8436bb1b9f8530bc549e82df031721b9cc05bd0ee048d57af3ce3688f9ee1c3c215ad5dddd",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/ntfs-3g/ntfs-3g_ntfsprogs-2026.9.28.tgz/sha512/9300d38e3dc790506f7d5a14c0c5fb4ff567d6acaaaca7f4a3c3a24beb01c54145135be61363302590d9c65cf26c338d57cf7eb1757c785f5d3586335bc3480f/ntfs-3g_ntfsprogs-2026.9.28.tgz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/ntfs-3g/ntfs-3g_ntfsprogs-2026.11.23.tgz/sha512/dff57ca33edbfac9f77decee79bc763602244f84ba5a5f2b17003c8436bb1b9f8530bc549e82df031721b9cc05bd0ee048d57af3ce3688f9ee1c3c215ad5dddd/ntfs-3g_ntfsprogs-2026.11.23.tgz"
       ],
       "stage": 1
     },
@@ -7150,12 +7150,12 @@
     },
     {
       "name": "toolbox",
-      "version": "0.3",
-      "url": "https://github.com/containers/toolbox/releases/download/0.3/toolbox-0.3-vendored.tar.xz",
-      "filename": "toolbox-0.3-vendored.tar.xz",
-      "sha512": "e464aba1c40b37b0ed027a560a0685e5dc8f07684d33d0e2bac5f0ba8c2b2c2a4c585db8847b23bd0753e33d37e3e88c87ab71d3999c3afedf315717f468c0ba",
+      "version": "0.4",
+      "url": "https://github.com/containers/toolbox/releases/download/0.4/toolbox-0.4-vendored.tar.xz",
+      "filename": "toolbox-0.4-vendored.tar.xz",
+      "sha512": "abb98830ad11b45cabd256a52e25c582f5b9b38542b4fc84015a2b1adfa46af2e91fc103e9ded879195f1fee03a83d0cce15f9131d90e1b21c59a4b324a7d67d",
       "fallback_urls": [
-        "https://src.fedoraproject.org/repo/pkgs/rpms/toolbox/toolbox-0.3-vendored.tar.xz/sha512/e464aba1c40b37b0ed027a560a0685e5dc8f07684d33d0e2bac5f0ba8c2b2c2a4c585db8847b23bd0753e33d37e3e88c87ab71d3999c3afedf315717f468c0ba/toolbox-0.3-vendored.tar.xz"
+        "https://src.fedoraproject.org/repo/pkgs/rpms/toolbox/toolbox-0.4-vendored.tar.xz/sha512/abb98830ad11b45cabd256a52e25c582f5b9b38542b4fc84015a2b1adfa46af2e91fc103e9ded879195f1fee03a83d0cce15f9131d90e1b21c59a4b324a7d67d/toolbox-0.4-vendored.tar.xz"
       ]
     },
     {
@@ -7217,10 +7217,10 @@
     },
     {
       "name": "tuned",
-      "version": "2.28.0",
-      "url": "https://github.com/redhat-performance/tuned/archive/v2.28.0/tuned-2.28.0.tar.gz",
-      "filename": "tuned-2.28.0.tar.gz",
-      "sha512": "3bdefbcc45afa651eecf5d59625babd83d5bed73594eb1db17e56edd0f1a25d60f346e7cb7bb8061a98833b228440e14730126b7f9b9ac5c97841d068574b27f"
+      "version": "2.29.0",
+      "url": "https://github.com/redhat-performance/tuned/archive/v2.29.0/tuned-2.29.0.tar.gz",
+      "filename": "tuned-2.29.0.tar.gz",
+      "sha512": "a1a270eed5b79129be3b73c7971b574e5032ef3c772b10807e43a5311b3f876abc92c40bc4731e1df6fb7506c50e644db088b1f45a8e2d919bf0799d2bcd2a53"
     },
     {
       "name": "twolame",
