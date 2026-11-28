@@ -29,12 +29,16 @@ proves:
 from __future__ import annotations
 
 import gzip
+import http.client
 import io
 import json
-from contextlib import redirect_stdout
+from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
+import urllib.error
+from xml.etree import ElementTree
 from xml.sax.saxutils import quoteattr
 
 from tools.publish_holdback import (
@@ -374,6 +378,50 @@ class Run44224171778Tests(unittest.TestCase):
         self.assertEqual(result["withheld"]["gdm"], [
             "gdm-1:51.0-2.hum1.bfin.x86_64 needs pam_oo7, which nothing provides"])
         self.assertIn("built against gdm", result["withheld"]["sssd"][0])
+
+
+class HummingbirdUnreadableTests(unittest.TestCase):
+    """Hummingbird's metadata cannot be read: nothing is held back.
+
+    publish-repository.yml promises this: the consumer transaction then
+    decides the publication alone. Any other failure must still fail it.
+    """
+
+    def run_without_external(self, **fetch):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            # No repodata: read_primary() returns None for both repositories,
+            # so the only fetch_primary call is the one for Hummingbird.
+            (tmp / "seed").mkdir()
+            (tmp / "built").mkdir()
+            output = tmp / "withheld.json"
+            argv = ["--seed", str(tmp / "seed"), "--built", str(tmp / "built"),
+                    "--install-all", "--output", str(output)]
+            with patch("tools.rebuild_matrix.fetch_primary", **fetch), \
+                    redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()) as err:
+                code = main(argv)
+            return code, json.loads(output.read_text()), err.getvalue()
+
+    def test_an_unreachable_hummingbird_holds_nothing(self):
+        code, result, err = self.run_without_external(
+            side_effect=urllib.error.URLError("down"))
+        self.assertEqual(code, 0)
+        self.assertEqual(result, {"withheld": {}})
+        self.assertIn("hold-back not decided", err)
+
+    def test_a_cut_off_download_holds_nothing(self):
+        # packages.redhat.com stalls mid-download under load; a connection
+        # closed early makes read() raise IncompleteRead, not an OSError.
+        code, result, err = self.run_without_external(
+            side_effect=http.client.IncompleteRead(b"", 100))
+        self.assertEqual(code, 0)
+        self.assertEqual(result, {"withheld": {}})
+        self.assertIn("hold-back not decided", err)
+
+    def test_a_listing_that_does_not_parse_still_fails(self):
+        # Only an unreadable Hummingbird fails open; a bad listing is a bug.
+        with self.assertRaises(ElementTree.ParseError):
+            self.run_without_external(return_value=b"<metadata")
 
 
 if __name__ == "__main__":

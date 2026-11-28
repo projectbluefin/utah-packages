@@ -67,6 +67,7 @@ as before.
 from __future__ import annotations
 
 import argparse
+import http.client
 import json
 import re
 import sys
@@ -386,7 +387,9 @@ def main(argv: list[str] | None = None) -> int:
 
         try:
             external_primary = fetch_primary(hummingbird_baseurl(ROOT / "config" / "hummingbird.repo"))
-        except OSError as error:  # URLError is an OSError: availability, not correctness
+        # URLError is an OSError, and a download cut off part-way raises
+        # IncompleteRead: both are availability, not correctness.
+        except (OSError, http.client.IncompleteRead) as error:
             # Without Hummingbird's provides every build would look broken.
             # Hold nothing, and let the transaction decide alone, as it did
             # before this existed. Only this fails open; a bug below does not.
