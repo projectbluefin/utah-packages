@@ -33,17 +33,35 @@ jobs:
         run: |
           git fetch origin "$SOURCE_REF"
           git worktree add ../candidate FETCH_HEAD
+          # The factory's own Fedora build root, pulled by its digest: rpmspec
+          # evaluates these recipes with the Fedora macros they are built
+          # with. An unpinned fedora:rawhide moved under every dispatch, and a
+          # quay.io rawhide digest is garbage-collected within hours
+          # (docs/skills/repeated-mistakes.md section 7); the mirror is never
+          # pruned, and refresh-buildroot.yml moves its pin.
+          BUILDROOT_IMAGE=$(python3 tools/buildroot_pin.py get)
+          tag="${BUILDROOT_IMAGE%@*}"
+          image="${tag%:*}@${BUILDROOT_IMAGE##*@}"
+          docker pull "$image"
+          # config/ is mounted whole so hummingbird.repo's gpgkey paths
+          # (file:///repos/keys/...) resolve, as in every job that reads it.
           docker run --rm \
             -v "$PWD/tools:/tools:ro,Z" \
-            -v "$PWD/config/hummingbird.repo:/etc/yum.repos.d/hummingbird.repo:ro,Z" \
-            -v "$PWD/config/hummingbird-provided-sources.json:/config/hummingbird-provided-sources.json:ro,Z" \
+            -v "$PWD/config:/repos:ro,Z" \
             -v "$PWD/../candidate:/workspace:Z" \
-            -w /workspace fedora:rawhide bash -exc '
-              dnf -y install dnf-plugins-core python3 rpm-build
-              dnf repoquery --repo tunaos-hummingbird --qf "%{name}" | sort -u > reports/hummingbird-provided-packages.txt
+            -w /workspace "$image" bash -exc '
+              set -o pipefail
+              # Fedora first, so rpm-build and its macros come from Fedora,
+              # not from the Hummingbird builds the repo file prefers.
+              dnf -y install python3 rpm-build
+              cp /repos/hummingbird.repo /etc/yum.repos.d/
+              # dnf5 has repoquery built in; --qf needs its own newline.
+              dnf repoquery --repo public-hummingbird-x86_64-rpms --qf "%{name}\n" \
+                | sort -u > reports/hummingbird-provided-packages.txt
+              test -s reports/hummingbird-provided-packages.txt
               python3 /tools/bootstrap_upstream_sources.py \
                 --provided-packages reports/hummingbird-provided-packages.txt \
-                --provided-sources /config/hummingbird-provided-sources.json
+                --provided-sources /repos/hummingbird-provided-sources.json
             '
           git -C ../candidate switch -c "$BRANCH"
           git -C ../candidate add config/upstream-sources.json reports/direct-source-bootstrap.json reports/hummingbird-provided-packages.txt
