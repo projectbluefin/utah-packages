@@ -429,8 +429,9 @@ expects. When upstream no longer serves the bytes (a GitHub release with no
 assets, a rolling `openprinting.org` snapshot, a dead FTP host or pagure
 archive), keep the upstream URL as the primary `url` and put Fedora's lookaside
 URL in `fallback_urls`: `tools/source_pipeline.py` tries the fallbacks after
-the primary fails, and `tools/validate.py` rejects a Fedora primary `url` for
-any name outside the shrink-only `config/fedora-primary-sources.txt` ratchet
+the primary fails, and `tools/validate.py` rejects Fedora-hosted primary source
+fields (`url`, `url_template`, `sha256_url`, and `signature_url`) for any name
+outside the shrink-only `config/fedora-primary-sources.txt` ratchet
 (`fedora-workstation-backgrounds` is locked this way). Lock the lookaside URL
 as primary and add the name to that ratchet only when no upstream URL for the
 archive ever existed. When the archive is a subset that Fedora cut by hand from
