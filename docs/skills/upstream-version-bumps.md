@@ -755,6 +755,12 @@ versions that cannot be compared with the lock's (enca's revival fork,
 libappindicator's Ubuntu snapshot, libisoburn and libisofs `.pl02`, mozc,
 spandsp date snapshots, fxload `2008_10_13`, and Vulkan headers/loader, whose
 tags mix spec `v1.4.365` with SDK `vulkan-sdk-1.4.350.0`).
+- xorg-x11-font-utils' lock names the x11-utils release (7.5) while its
+  payload is the bundled font-util tarball, so the two versions cannot be
+  compared and the tool leaves it alone. Moving the bundled source is a hand
+  move: `%global font_util` and the `Release:` counter change, the RPM
+  `Version:` does not, and the lock's URL, file name and digest move with the
+  tarball (font-util 1.4.1 -> 1.4.2 in 7.5-65).
 - A `--package` dispatch that proposes a relock — a move that also shifts the
   primary URL — writes to `bump/upstream-sources-relock-<pkg>` instead of
   the daily branch and stays human-merged. Writing it to the daily branch
