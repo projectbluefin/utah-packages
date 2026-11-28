@@ -19,10 +19,10 @@
 
 Name:           chairlift
 Version:        26.11.9
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Privileged helper, polkit actions and schemas for ChairLift
 
-License:        GPL-3.0-only
+License:        GPL-3.0-or-later
 URL:            https://github.com/projectbluefin/chairlift
 Source0:        %{url}/releases/download/v%{version}/chairlift_%{version}_linux_amd64.tar.gz#/chairlift-%{version}-x86_64.tar.gz
 
@@ -67,6 +67,9 @@ grep -q '<annotate key="org.freedesktop.policykit.exec.path">%{_bindir}/chairlif
 %{_datadir}/glib-2.0/schemas/io.projectbluefin.chairlift.firstrun.gschema.xml
 
 %changelog
+* Sat Nov 28 2026 Utah Packages <packages@projectbluefin.io> - 26.11.9-2
+- Declare the license as GPL-3.0-or-later, as upstream's README and About dialog state
+
 * Fri Nov 20 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 26.11.9-1
 - Update to 26.11.9
 
