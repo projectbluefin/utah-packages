@@ -7,7 +7,7 @@
 %endif
 
 Name:          tesseract
-Version:       5.5.4
+Version:       5.5.5
 Release:       1%{?dist}
 Summary:       Raw OCR Engine
 
@@ -275,6 +275,9 @@ cp -a doc/*.5 %{buildroot}%{_mandir}/man5/
 
 
 %changelog
+* Fri Nov 27 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 5.5.5-1
+- Update to 5.5.5
+
 * Wed Oct 28 2026 Sandro Mani <manisandro@gmail.com> - 5.5.4-1
 - Update to 5.5.4
 

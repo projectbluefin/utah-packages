@@ -8,8 +8,9 @@ bluefin/brew-tarball.bst	brew-tarball	yes	docker	sha256:130848582eed433e85af6fa8
 bluefin/brew.bst	brew	yes	git_repo	550a03e3d5f600282c8b4c73060bb830c91c1f74	https://github.com/ublue-os/brew.git	0	10	0	5	0
 bluefin/brlaser.bst	brlaser	yes	git_repo	23117fe9e0266396e4791cdae84d979928aed135	https://github.com/pdewacht/brlaser.git	0	2	0	0	0
 bluefin/chairlift.bst	chairlift	yes	tar	26.11.2	https://github.com/projectbluefin/chairlift/releases/download/v26.11.2/chairlift_26.11.2_linux_amd64.tar.gz	0	5	0	0	1
-bluefin/common.bst	common	yes	git_module+git_repo+local+patch+remote	2026.11	https://github.com/projectbluefin/common.git	4	247	3	18	10
+bluefin/common.bst	common	yes	git_module+git_repo+local+patch+remote	2026.11	https://github.com/projectbluefin/common.git	4	249	3	18	10
 bluefin/composefs-loop-udisks-ignore.bst	composefs-loop-udisks-ignore	yes	local			0	1	0	0	0
+bluefin/ddcutil.bst	ddcutil	yes	git_repo	3.0.2	https://github.com/rockowitz/ddcutil.git	0	10	0	0	1
 bluefin/deps.bst	deps	no				0	0	0	0	0
 bluefin/distrobox.bst	distrobox	yes	git_repo+go_module+local	1.8.2	https://github.com/89luca89/distrobox.git	0	2	0	0	0
 bluefin/efibootmgr.bst	efibootmgr	yes	git_repo	c3f9f0534e32158f62c43564036878b93b9e0fd6	https://github.com/rhboot/efibootmgr.git	0	4	0	0	2
@@ -53,6 +54,7 @@ bluefin/nspawn.bst	nspawn	yes	cargo2+git_repo	1.5.1	https://github.com/nspawn/ns
 bluefin/oo7-passwd-pam.bst	oo7-passwd-pam	yes				0	1	0	0	0
 bluefin/open-vm-tools.bst	open-vm-tools	yes	patch+tar	13.1.0	https://github.com/vmware/open-vm-tools/releases/download/stable-13.1.0/open-vm-tools-13.1.0-25218885.tar.gz	1	49	0	1	10
 bluefin/opencc.bst	opencc	yes	git_repo	025f371dc76b598d77384fbdab90c937471844d8	https://github.com/BYVoid/OpenCC.git	0	50	0	0	3
+bluefin/pam-u2f.bst	pam-u2f	yes	tar	1.4.0	https://developers.yubico.com/pam-u2f/Releases/pam_u2f-1.4.0.tar.gz	0	4	0	0	1
 bluefin/plymouth-bluefin-theme.bst	plymouth-bluefin-theme	yes	local			0	3	0	0	0
 bluefin/powertop.bst	powertop	yes	tar	2.16.1	https://github.com/fenrus75/powertop/archive/refs/tags/v2.16.1.tar.gz	0	15	0	0	1
 bluefin/qemu-guest-agent.bst	qemu-guest-agent	yes				0	2	0	1	0
@@ -75,8 +77,8 @@ bluefin/shell-extensions/power-status-color.bst	power-status-color	yes	git_repo	
 bluefin/shell-extensions/quicksettings-audio-devices-hider.bst	quicksettings-audio-devices-hider	yes	zip	217082e049572ae54bc90bc09240f896e25f4a2609e0c0aa4b7133bed46d935d	https://extensions.gnome.org/download-extension/quicksettings-audio-devices-hider@marcinjahn.com.shell-extension.zip?version_tag=69924	0	6	0	0	0
 bluefin/shell-extensions/quicksettings-audio-devices-renamer.bst	quicksettings-audio-devices-renamer	yes	zip	a4f33897983376a23c5de69d6a008d1451afcc05cd7ce3b56630bd739c095a2e	https://extensions.gnome.org/download-extension/quicksettings-audio-devices-renamer@marcinjahn.com.shell-extension.zip?version_tag=69925	0	6	0	0	0
 bluefin/shell-extensions/syncthing-toggle.bst	syncthing-toggle	yes	git_repo	baa802a45d7aaa514ad02e3b91076546bfa034d9	https://github.com/projectbluefin/bluefin-bling.git	0	12	0	0	0
-bluefin/shell-extensions/tailscale-qs.bst	tailscale-qs	yes	git_repo+patch	7feced3f4b9bdf3ae775b203ca023ffbca2b29cb	https://github.com/tailscale-qs/tailscale-gnome-qs.git	1	7	0	0	0
-bluefin/shell-extensions/tilingshell.bst	tilingshell	yes	patch+zip	0a9f2b26de65294f53350d74089a3dae9376642784a722e98fc8d78fcc470a35	https://extensions.gnome.org/download-extension/tilingshell@ferrarodomenico.com.shell-extension.zip?version_tag=70233	1	94	0	0	0
+bluefin/shell-extensions/tailscale-qs.bst	tailscale-qs	yes	git_repo+patch	3efe7313f6b67cfb7681beea748693b9554a4ff7	https://github.com/tailscale-qs/tailscale-gnome-qs.git	1	7	0	0	0
+bluefin/shell-extensions/tilingshell.bst	tilingshell	yes	zip	17ab42f990d9b55f66009f50089ca172c62d206b03d0534ac5d9b63cf44e1cd1	https://extensions.gnome.org/download-extension/tilingshell@ferrarodomenico.com.shell-extension.zip?version_tag=76684	0	94	0	0	0
 bluefin/signed-efi.bst	signed-efi	yes	local			0	3	0	0	0
 bluefin/signed-modules.bst	signed-modules	yes	local			0	4356	0	0	0
 bluefin/sudo-linuxbrew-path.bst	sudo-linuxbrew-path	yes				0	1	0	0	0

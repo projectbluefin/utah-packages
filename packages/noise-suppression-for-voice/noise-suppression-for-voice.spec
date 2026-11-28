@@ -12,7 +12,7 @@
 # plugin formats that are off.
 
 Name:           noise-suppression-for-voice
-Version:        1.21
+Version:        1.22
 Release:        1%{?dist}
 Summary:        Real-time noise suppression LADSPA plugin based on RNNoise
 
@@ -59,5 +59,8 @@ ctest --test-dir %{__cmake_builddir}/src/common --output-on-failure
 %{_libdir}/ladspa/librnnoise_ladspa.so
 
 %changelog
+* Wed Nov 25 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 1.22-1
+- Update to 1.22
+
 * Mon Nov 16 2026 Utah Packages <packages@projectbluefin.io> - 1.21-1
 - Initial recipe from gnome-build-meta gnomeos-deps/noise-suppression-for-voice.bst
