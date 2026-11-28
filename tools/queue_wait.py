@@ -36,6 +36,7 @@ run has hundreds of jobs, and the later stages are where long poles queue.
 from __future__ import annotations
 
 import argparse
+import http.client
 import json
 import math
 import os
@@ -340,7 +341,7 @@ def _http_get_json(url: str, token: str) -> dict:
         except urllib.error.HTTPError as error:
             if delay is None or error.code not in RETRYABLE_STATUS:
                 raise
-        except (urllib.error.URLError, TimeoutError):
+        except (urllib.error.URLError, TimeoutError, ConnectionError, http.client.IncompleteRead):
             if delay is None:
                 raise
         time.sleep(delay)
@@ -512,7 +513,7 @@ def main() -> int:
         # alert (exit 1).
         print(_describe_http_error(error), file=sys.stderr)
         return 2
-    except urllib.error.URLError as error:
+    except (urllib.error.URLError, TimeoutError, ConnectionError, http.client.IncompleteRead) as error:
         print(f"could not reach the Actions API: {error}", file=sys.stderr)
         return 2
 

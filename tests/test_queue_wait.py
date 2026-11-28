@@ -11,6 +11,7 @@ run is reported as a gap rather than a zero wait.
 """
 
 import argparse
+import http.client
 import json
 import urllib.error
 import unittest
@@ -395,6 +396,16 @@ class MainHttpErrorTests(unittest.TestCase):
         self.assertEqual(code, 2)
         self.assertIn("token", msg)
 
+    def test_connection_failures_exit_2(self):
+        # Without a handler these end in a traceback, which exits 1: the
+        # status kept for the threshold alert.
+        for error in (ConnectionResetError("reset"), TimeoutError("timed out"),
+                      http.client.IncompleteRead(b"", 554674)):
+            with self.subTest(error=type(error).__name__):
+                code, msg = self._run(error)
+                self.assertEqual(code, 2)
+                self.assertIn("could not reach the Actions API", msg)
+
 
 class HttpRetryTests(unittest.TestCase):
     """Transient 5xx/connection errors are retried; auth, rate limit and 404 are not."""
@@ -437,6 +448,39 @@ class HttpRetryTests(unittest.TestCase):
         result, calls, _ = self._call([urllib.error.URLError("reset"), TimeoutError(), "ok"])
         self.assertEqual(result, {"jobs": []})
         self.assertEqual(calls, 3)
+
+    def test_dropped_connection_is_retried(self):
+        # An error raised while the response is read is not wrapped in
+        # URLError, so it reaches the retry loop as a bare ConnectionError.
+        result, calls, sleep = self._call(
+            [ConnectionResetError("reset"), http.client.RemoteDisconnected("closed"), "ok"]
+        )
+        self.assertEqual(result, {"jobs": []})
+        self.assertEqual(calls, 3)
+        self.assertEqual([c.args[0] for c in sleep.call_args_list], [2, 4])
+
+    def test_persistent_dropped_connection_raises_after_last_attempt(self):
+        calls = []
+
+        def _urlopen(*_a, **_k):
+            calls.append(1)
+            raise ConnectionResetError("reset")
+
+        with patch.object(qw.urllib.request, "urlopen", side_effect=_urlopen), \
+             patch.object(qw.time, "sleep") as sleep, \
+             self.assertRaises(ConnectionResetError):
+            qw._http_get_json("https://api.github.com/x", "tok")
+        self.assertEqual(len(calls), 4)
+        self.assertEqual([c.args[0] for c in sleep.call_args_list], [2, 4, 8])
+
+    def test_response_cut_short_is_retried(self):
+        # Seen in the daily run four times in November 2026: GitHub closed
+        # the connection part-way through a page and read() raised
+        # IncompleteRead, which is neither a URLError nor an OSError.
+        result, calls, sleep = self._call([http.client.IncompleteRead(b"", 554674), "ok"])
+        self.assertEqual(result, {"jobs": []})
+        self.assertEqual(calls, 2)
+        sleep.assert_called_once_with(2)
 
     def test_persistent_5xx_raises_after_last_attempt_with_same_message(self):
         calls = []
