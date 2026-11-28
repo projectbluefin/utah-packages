@@ -939,6 +939,20 @@ class BumpWorkflowTests(unittest.TestCase):
         # human merge, never an automatic one.
         self.assertEqual(disallowed(paths), ["config/fedora-primary-sources.txt"])
 
+    def test_the_carry_over_list_matches_the_add_paths(self) -> None:
+        # "Move the bump onto the newest main" stashes only its own paths=(...)
+        # list and then resets onto main; create-pull-request commits
+        # add-paths. A path in add-paths that the stash does not carry is
+        # dropped from the bump on any day main moved during the run.
+        workflow = yaml.safe_load((WORKFLOWS / "bump-upstream-sources.yml").read_text())
+        steps = workflow["jobs"]["bump"]["steps"]
+        move = next(s for s in steps if s.get("id") == "move")
+        cpr = next(s for s in steps if s.get("id") == "cpr")
+        lists = [line.strip() for line in move["run"].splitlines() if line.strip().startswith("paths=(")]
+        self.assertEqual(len(lists), 1, lists)
+        self.assertTrue(lists[0].endswith(")"), lists[0])
+        carried = lists[0][len("paths=("):-1].split()
+        self.assertEqual(sorted(carried), sorted(cpr["with"]["add-paths"].split()))
 
 
 class ParkedRunTests(unittest.TestCase):
