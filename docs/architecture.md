@@ -262,6 +262,12 @@ The full rationale and invariants are in
 | weekly, Sunday `01:23 UTC` | everything, against the cache |
 | dispatch | the same as daily, or everything with `full` |
 
+`refresh-buildroot.yml` opens the build-root pin PR on Saturday 04:23 UTC.
+The rule is to merge it on Saturday, early enough for the merge's push run to
+finish before the Sunday full run. That push run is the week's one cold rebuild,
+and it writes the cache the full run then reads (#1213). Holding the PR for the
+rest of the week is deliberate (#1207).
+
 What changed is read from the `org.projectbluefin.factory.state` label on the
 published image: the input digest of every build in it -- recipe files,
 inventory entry, build-root pin and Hummingbird repository. A git diff from
