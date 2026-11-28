@@ -22,13 +22,18 @@ BUILD_STAGE = ROOT / ".github" / "workflows" / "build-stage.yml"
 # prepare pulled once for the whole run, because pulling a pinned digest per
 # job raced quay garbage-collecting it and lost mid-run.
 REBUILD = ROOT / ".github" / "workflows" / "rebuild-rpms.yml"
+# The container lane builds with tools/build_container.sh. build-stage.yml
+# keeps its own copy of the same root in the "Resolve the package cache key"
+# step. Both copies must agree with the mock root.
+BUILD_CONTAINER = ROOT / "tools" / "build_container.sh"
+CONTAINER_ROOTS = (BUILD_STAGE, BUILD_CONTAINER)
 
 
-def workflow_list(variable: str) -> tuple[str, ...]:
-    """The comma-separated value the container path assigns to a shell name."""
-    text = BUILD_STAGE.read_text()
+def workflow_list(variable: str, path: Path = BUILD_STAGE) -> tuple[str, ...]:
+    """The comma-separated value a container-lane file first assigns to a shell name."""
+    text = path.read_text()
     match = re.search(rf'^\s*{variable}="([^"]*)"', text, re.MULTILINE)
-    assert match, f"{variable} is not set in {BUILD_STAGE.name}"
+    assert match, f"{variable} is not set in {path.name}"
     return tuple(name for name in match.group(1).split(",") if name)
 
 
@@ -42,10 +47,16 @@ class PolicyAgreementTests(unittest.TestCase):
     """
 
     def test_hummingbird_precedence_list_matches_the_container(self) -> None:
-        self.assertEqual(workflow_list("HB_EXCLUDE"), HUMMINGBIRD_WINS)
+        for path in CONTAINER_ROOTS:
+            with self.subTest(path=path.name):
+                self.assertEqual(workflow_list("HB_EXCLUDE", path), HUMMINGBIRD_WINS)
 
     def test_hummingbird_repo_exclusion_matches_the_container(self) -> None:
-        self.assertEqual(workflow_list("HB_REPO_EXCLUDE"), HUMMINGBIRD_REPO_EXCLUDE)
+        for path in CONTAINER_ROOTS:
+            with self.subTest(path=path.name):
+                self.assertEqual(
+                    workflow_list("HB_REPO_EXCLUDE", path), HUMMINGBIRD_REPO_EXCLUDE
+                )
 
     def test_both_roots_wait_out_a_stalled_hummingbird_download(self) -> None:
         # dnf's default aborts a transfer under 1000 B/s for 30 s; with one
@@ -161,11 +172,15 @@ class RepositoryPrecedenceTests(unittest.TestCase):
         found = self.priorities(
             render(factory_repo="file:///work/factory", stages_dir="/work/prior")
         )
-        text = BUILD_STAGE.read_text()
-        stages = re.search(r"\[stages\].*?priority=(\d+)", text, re.DOTALL)
-        factory = re.search(r"\[factory\].*?priority=(\d+)", text, re.DOTALL)
-        self.assertEqual(int(stages.group(1)), found["stages"])
-        self.assertEqual(int(factory.group(1)), found["factory"])
+        for path in CONTAINER_ROOTS:
+            with self.subTest(path=path.name):
+                text = path.read_text()
+                stages = re.search(r"\[stages\].*?priority=(\d+)", text, re.DOTALL)
+                factory = re.search(r"\[factory\].*?priority=(\d+)", text, re.DOTALL)
+                self.assertIsNotNone(stages, f"no [stages] priority in {path.name}")
+                self.assertIsNotNone(factory, f"no [factory] priority in {path.name}")
+                self.assertEqual(int(stages.group(1)), found["stages"])
+                self.assertEqual(int(factory.group(1)), found["factory"])
 
 
 class BestTests(unittest.TestCase):
