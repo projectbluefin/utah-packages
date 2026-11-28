@@ -147,6 +147,19 @@ the reference when Fedora has one. Seen so far:
   non-draft release at all. If a project's releases lag its real versions,
   give the lock an Anitya `feed` rather than reading tags again. Do not
   build an interim tag; leave the lock where it is.
+- A lock with no forge URL, no GNOME module and no explicit feed is skipped by
+  `candidates()`: the daily scan cannot see releases for it. Query Anitya's
+  exact-name API (`/api/v2/projects/?name=<rpm>`) and add
+  `feed: https://release-monitoring.org/project/<id>` only when Anitya's
+  current version equals the lock's version. The same name alone is not
+  evidence; a generic name can name a different project. An Anitya feed lists
+  versions, not downloads. On a lookaside primary it stays review-only, but on
+  an upstream primary that carries its version a same-major release is derived
+  and applied unattended, so check `config/bump-review-only.txt` first. A
+  package that runs as root or handles login belongs on that list before its
+  feed lands (#1189). Locks with no primary URL (`generate` entries) stay out
+  of such a batch: Anitya lists versions but supplies no tarball to move.
+  `tests/test_feed_coverage.py` holds the fed set.
 - A suffixed lock is compared by its numeric prefix (`newer()`): a
   prerelease suffix (`rc`, `alpha`, `beta`, `pre`, `dev`) sits below it, any
   other suffix above. Without that, `version_key` read `2.13b171` (a build
