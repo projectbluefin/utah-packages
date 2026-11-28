@@ -90,6 +90,7 @@ from __future__ import annotations
 import argparse
 from email.utils import formatdate
 import hashlib
+import http.client
 import json
 import os
 import re
@@ -1013,7 +1014,7 @@ def forge_proposal(name: str, entry: dict, feed: dict, opener=urllib.request.url
     fetch = anitya_versions if feed["forge"] == "anitya" else forge_versions
     try:
         available = fetch(feed, opener=opener)
-    except (urllib.error.URLError, OSError, ValueError, KeyError, IndexError) as error:
+    except (urllib.error.URLError, OSError, http.client.IncompleteRead, ValueError, KeyError, IndexError) as error:
         return {"name": name, "error": f"{label}: {error}"}
 
     current = entry["version"]
@@ -1214,7 +1215,7 @@ def plan(
         module = feed["module"]
         try:
             available = releases(module, opener=opener)
-        except (urllib.error.URLError, OSError, ValueError, KeyError, IndexError) as error:
+        except (urllib.error.URLError, OSError, http.client.IncompleteRead, ValueError, KeyError, IndexError) as error:
             proposals.append({"name": name, "error": f"{module}: {error}"})
             continue
         current = tarball_version(entry["version"])
@@ -1483,7 +1484,7 @@ def main() -> int:
             # must not discard every other bump the run already proved safe.
             try:
                 apply(args.root, bump)
-            except (urllib.error.URLError, OSError, ValueError) as error:
+            except (urllib.error.URLError, OSError, http.client.IncompleteRead, ValueError) as error:
                 print(f"skipped {bump['name']}: {error}", file=sys.stderr)
                 continue
             applied += 1
