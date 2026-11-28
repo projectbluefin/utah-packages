@@ -31,6 +31,21 @@ def pr(**over):
     return base
 
 
+class RefusedWorkflowTests(unittest.TestCase):
+    def test_workflow_permission_refusal_names_the_path(self):
+        stderr = (" ! [remote rejected] d502c68 -> canary/pr-1309 "
+                  "(refusing to allow a GitHub App to create or update workflow "
+                  ".github/workflows/recalculate-hummingbird-gaps.yml without workflows permission)\n")
+        self.assertEqual(fork_canary.refused_workflow(stderr), ".github/workflows/recalculate-hummingbird-gaps.yml")
+
+    def test_other_failures_do_not_suggest_merging_main(self):
+        for stderr in ("", "! [rejected] main -> main (non-fast-forward)",
+                       "fatal: unable to access: network failure",
+                       "without workflows permission\n! [remote rejected] unrelated"):
+            with self.subTest(stderr=stderr):
+                self.assertIsNone(fork_canary.refused_workflow(stderr))
+
+
 class DecideTests(unittest.TestCase):
     def test_a_reviewed_fork_pull_request_is_copied(self):
         self.assertEqual(fork_canary.decide(pr(), ["packages/foo/foo.spec"], REPO, REVIEWED), "copy")
