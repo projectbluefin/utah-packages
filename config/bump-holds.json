@@ -25,16 +25,16 @@
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/44765133559"
     },
     "fastfetch": {
-      "version": "2.71.0",
-      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/43358822069"
+      "version": "2.72.0",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/46121433043"
     },
     "ffmpegthumbnailer": {
       "version": "2.4.2",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/44765133559"
     },
     "flex": {
-      "version": "2.7.10",
-      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/45959567388"
+      "version": "2.7.11",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/46121433043"
     },
     "fribidi": {
       "version": "1.0.18",
@@ -144,6 +144,10 @@
       "version": "140.17.0",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/44765133559"
     },
+    "ntfs-3g": {
+      "version": "2026.11.23",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/46121433043"
+    },
     "nvme-cli": {
       "version": "3.3",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/45777815860"
@@ -219,6 +223,14 @@
     "tomlplusplus": {
       "version": "3.5.1",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/45569315364"
+    },
+    "toolbox": {
+      "version": "0.4",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/46121433043"
+    },
+    "tuned": {
+      "version": "2.29.0",
+      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/46121433043"
     },
     "udisks2": {
       "version": "2.12.0",
