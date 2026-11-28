@@ -9,10 +9,10 @@ lost precedence to, or nothing at all. Getting that wrong is silent: the
 workflow still succeeds and the wrong sentence is what a maintainer reads.
 
 ``summary`` had no test at all, ``render_report`` was exercised for two of its
-four publication outcomes, and ``main``'s ``report``/``marker``/``pattern``
-dispatch was never driven. These cases cover the rendering decisions and the
-command line the workflow calls, using no RPMs and no rpm(8): every function
-here is pure apart from the files ``report`` writes.
+four publication outcomes, and ``main``'s ``report``/``marker`` dispatch was
+never driven. These cases cover the rendering decisions and the command line
+the workflow calls, using no RPMs and no rpm(8): every function here is pure
+apart from the files ``report`` writes.
 """
 
 from __future__ import annotations
@@ -26,7 +26,6 @@ from pathlib import Path
 
 from tools.publish_gate import (
     Assembly,
-    artifact_pattern,
     failed_marker,
     verdict_marker,
     main,
@@ -229,27 +228,8 @@ class FailedMarkerTests(unittest.TestCase):
         self.assertEqual(failed_marker(body), ["fish"])
 
 
-class ArtifactPatternTests(unittest.TestCase):
-    """``artifact_pattern`` -- the download-artifact glob per wave."""
-
-    def test_an_empty_wave_downloads_every_rpm_artifact(self) -> None:
-        self.assertEqual(artifact_pattern("", "utah-"), "utah-rpm-*")
-
-    def test_wave_zero_is_spelled_out_because_brace_alternation_needs_two(self) -> None:
-        self.assertEqual(artifact_pattern("0", ""), "rpm-s0-*")
-
-    def test_a_later_wave_expands_to_every_wave_up_to_and_including_it(self) -> None:
-        self.assertEqual(artifact_pattern("3", ""), "rpm-s{0,1,2,3}-*")
-
-
 class CommandLineTests(unittest.TestCase):
     """``main`` -- the subcommands rebuild-rpms.yml actually runs."""
-
-    def test_pattern_prints_a_github_output_assignment(self) -> None:
-        out = io.StringIO()
-        with redirect_stdout(out):
-            self.assertEqual(main(["pattern", "--wave", "2", "--prefix", "utah-"]), 0)
-        self.assertEqual(out.getvalue(), "pattern=utah-rpm-s{0,1,2}-*\n")
 
     def test_marker_prints_the_failed_list_as_compact_json(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
