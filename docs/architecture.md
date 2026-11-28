@@ -303,14 +303,23 @@ the pipeline and not on a flaky upstream host.
 
 The cache is salted with a digest of the build path (`tools/canary.py
 salt`), so a change to how packages are compiled compiles for real in
-`pass1`, and any other change reuses the previous canary's builds. Canary
-entries never share a key with production ones: an empty salt leaves the
-production key unchanged, which `tests/test_package_cache_key.py` asserts.
+`pass1`, and any other change reuses the previous canary's builds. Entries
+from the canary passes never share a key with production ones: an empty salt
+leaves the production key unchanged, which `tests/test_package_cache_key.py`
+asserts. `recipe-build` (below) is the exception on purpose: for a pull
+request that changes no pipeline path it builds on production keys, so
+`main` restores those builds after merge; one that changes the pipeline gets
+the canary salt, because the key does not cover the build path.
 
 It runs on every pull request and on every merge queue group. The `Canary`
-job is the required check and passes without building anything when no
-pipeline path changed (`.github/workflows/`, `.github/actions/`, `tools/`,
-`config/`, `Containerfile*`). Do not dispatch a full run to prove a pipeline
+job is the required check. It runs the passes above only when a pipeline path
+changed (`.github/workflows/`, `.github/actions/`, `tools/`, `config/`,
+`Containerfile*`). On every same-repository pull request it also builds the
+recipes whose `Version:`, `sources` or lock entry moved (`recipes`,
+`recipe-build`, `verify-recipes`; `tools/bump_gate.py changed`) against
+`latest` without publishing, and fails if any of them does not build (#1270).
+The daily bump pull requests skip that build when the bot opened them, since
+their own gate builds them. Do not dispatch a full run to prove a pipeline
 change before the canary is green on it.
 
 A merge queue group (`merge_group`) never builds: every build pushes a

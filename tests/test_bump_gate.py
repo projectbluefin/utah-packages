@@ -323,6 +323,31 @@ class CommandLineTests(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertEqual(json.loads(out), {"packages": ["glib2"], "holds_only": False})
 
+    def changed(self, head: str) -> list[str]:
+        out = io.StringIO()
+        with mock.patch.object(bump_gate, "ROOT", self.tmp), redirect_stdout(out):
+            self.assertEqual(bump_gate.main(["changed", "--base", self.base, "--head", head]), 0)
+        return json.loads(out.getvalue())
+
+    def test_changed_names_a_spec_version_move_with_no_lock_change(self) -> None:
+        # #1262: a hand-written recipe bump, whatever else the diff carries.
+        (self.tmp / "packages" / "glib2" / "glib2.spec").write_text("Version: 2.88.0\n")
+        (self.tmp / "tools").mkdir()
+        (self.tmp / "tools" / "x.py").write_text("")
+        self.assertEqual(self.changed(self.commit()), ["glib2"])
+
+    def test_changed_names_a_sources_change(self) -> None:
+        (self.tmp / "packages" / "glib2" / "sources").write_text("SHA512 (g.tar) = 1\n")
+        self.assertEqual(self.changed(self.commit()), ["glib2"])
+
+    def test_changed_ignores_recipe_edits_that_keep_the_version(self) -> None:
+        (self.tmp / "packages" / "glib2" / "glib2.spec").write_text("Version: 2.86.0\n# tidy\n")
+        self.assertEqual(self.changed(self.commit()), [])
+
+    def test_changed_names_only_locks_with_a_recipe(self) -> None:
+        self.write_lock({"glib2": "2.86.1", "gtk4": "4.20.1"})
+        self.assertEqual(self.changed(self.commit()), ["glib2"])
+
     def test_plan_lets_the_holds_file_ride_along(self) -> None:
         self.write_lock({"glib2": "2.86.1", "gtk4": "4.20.0"})
         (self.tmp / HOLDS).write_text(dump_holds({"gtk4": {"version": "4.20.1", "run": "u"}}))
