@@ -10,7 +10,7 @@
 
 
 Name:          toolbox
-Version:       0.4
+Version:       0.3
 
 %global goipath github.com/containers/%{name}
 
@@ -42,7 +42,7 @@ Version:       0.4
 %endif
 %endif
 
-Release:       1%{?dist}
+Release:       7%{?dist}
 Summary:       Tool for interactive command line environments on Linux
 
 License:       Apache-2.0
@@ -197,9 +197,6 @@ install -m0644 %{SOURCE1} %{buildroot}%{_sysconfdir}/containers/%{name}.conf
 
 
 %changelog
-* Sat Nov 28 2026 github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com> - 0.4-1
-- Update to 0.4
-
 * Wed Aug 05 2026 Debarshi Ray <rishi@fedoraproject.org> - 0.3-7
 - Rebuild against shadow-utils-subid ABI version 6.0.0
 
