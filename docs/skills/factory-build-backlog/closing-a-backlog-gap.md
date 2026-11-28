@@ -433,8 +433,11 @@ the primary fails, and `tools/validate.py` rejects a Fedora primary `url` for
 any name outside the shrink-only `config/fedora-primary-sources.txt` ratchet
 (`fedora-workstation-backgrounds` is locked this way). Lock the lookaside URL
 as primary and add the name to that ratchet only when no upstream URL for the
-archive ever existed, as for `hyperv-daemons`, whose `tools-hv` kernel snapshot
-is published only to Fedora's lookaside.
+archive ever existed. When the archive is a subset that Fedora cut by hand from
+a larger upstream release, generate it from the pinned release instead:
+`hyperv-daemons` builds its `tools/hv` source from the stable kernel archive
+this way (see
+[A source with no release and a huge archive](../supply-chain-provenance.md#a-source-with-no-release-and-a-huge-archive-pick-files-pin-each)).
 A runtime `Requires` that resolves only in Fedora (for example
 `libieee1284.so.3` for `sane-backends`) must be imported in the same PR, since
 the published repository is installed from the factory plus Hummingbird alone.
