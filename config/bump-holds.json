@@ -44,10 +44,6 @@
       "version": "2.1.10",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/44765133559"
     },
-    "gflags": {
-      "version": "2.3.1",
-      "run": "https://github.com/projectbluefin/utah-packages/actions/runs/44765133559"
-    },
     "glib-networking": {
       "version": "2.90.1",
       "run": "https://github.com/projectbluefin/utah-packages/actions/runs/40072946213"

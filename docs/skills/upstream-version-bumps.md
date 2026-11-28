@@ -159,6 +159,16 @@ the reference when Fedora has one. Seen so far:
   means drop it, along with anything the spec marks as needed only for it
   (libgphoto2 2.5.34 dropped an `autoreconf`; libmtp 1.1.23 and libheif
   1.23.5 dropped theirs too).
+- A patch that upstream still needs but whose context moved has to be
+  rebased, not dropped. gflags 2.3.1 changed `cmake/package.pc.in` from
+  `bindir=${prefix}/...` to `bindir=${exec_prefix}/...`, so Fedora's
+  `gflags-fix_pkgconfig.patch` stopped matching and the held 2.3.1 build
+  died in `%prep`. A failed forward apply together with a failed reverse
+  apply is how the two are told apart: the reverse apply is clean when
+  upstream took the patch, and the patch is still needed when neither
+  direction applies. Rebase it onto the new file and keep its effect (the
+  `libdir` line the patch fixes), rather than dropping the patch and
+  shipping the `.pc` it corrects.
 - Rawhide at the same version has often already dropped, rebased or added a
   patch (libayatana-appindicator 0.6.0 needed Rawhide's gapi metadata patch
   for its mono bindings).
