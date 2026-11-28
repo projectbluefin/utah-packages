@@ -267,6 +267,16 @@ both.
 or environment fix goes in both, with a test that counts occurrences, or the
 next run finds the lane you forgot.
 
+Network retries agree the same way. `with_backoff` in `tools/dnf_backoff.sh`
+escalates its waits 5, 15, 45 seconds because librepo's own four retries land
+inside one bad minute; `online()` in `tools/hermetic_build.sh` now takes four
+attempts and escalates on the same schedule (#1208). It came from #288 with a
+fixed 15-second pause and three tries, which waited 30 seconds in total; five
+and fifteen wait only 20. Keep four tries so the last one still lands after the
+long pause. `online()` keeps its own cleanup between attempts, because a
+half-fetched root must not count as a whole one. `HERMETIC_NET_RETRY_BASE`
+changes the first delay only.
+
 ## 12. Two tools reading one field have to agree on its empty value
 
 **What happened.** `3b8d574` made `dist_bump.spec_release` return `""` for a
