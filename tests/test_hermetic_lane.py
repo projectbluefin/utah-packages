@@ -323,6 +323,36 @@ echo "attempts=$(cat {counter}) cleanups=$cleanups"
             self.assertEqual((repo / "page-1-1.x86_64.rpm").read_bytes(), page)
             self.assertEqual((repo / "truncated-1-1.x86_64.rpm").read_bytes(), truncated)
 
+    def test_a_corrupt_gzip_encoded_rpm_is_left_for_the_verifier_to_remove(self) -> None:
+        # A gzip stream whose deflate data is corrupt raises zlib.error, which
+        # is neither OSError nor EOFError. Uncaught, it stopped the fetch
+        # before verify_hermetic_repo.py ran, so the file that could not be
+        # decoded was never removed and every retry fetched it again (#1323).
+        import gzip
+        import subprocess
+        import tempfile
+        import zlib
+
+        script = SCRIPT.read_text()
+        start = script.index("unwrap_gzip_rpms() {")
+        helper = script[start:script.index("\n}\n", start) + 3]
+        rpm = b"\xed\xab\xee\xdb" + b"rpm header and payload" * 64
+        corrupt = bytearray(gzip.compress(rpm))
+        # The gzip header is ten bytes; this is inside the deflate stream.
+        corrupt[12:20] = bytes(byte ^ 0xFF for byte in corrupt[12:20])
+        with self.assertRaises(zlib.error):
+            gzip.decompress(bytes(corrupt))
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Path(directory)
+            path = repo / "corrupt-1-1.x86_64.rpm"
+            path.write_bytes(bytes(corrupt))
+            unwrapped = subprocess.run(["bash", "-c", f"set -euo pipefail\n{helper}\nunwrap_gzip_rpms {repo}"],
+                                       capture_output=True, text=True)
+            self.assertEqual(unwrapped.returncode, 0, unwrapped.stdout + unwrapped.stderr)
+            # Nothing was unwrapped, and the file is still there: rejecting it
+            # is the verifier's job, and the retry drops it.
+            self.assertEqual(path.read_bytes(), bytes(corrupt))
+
     def test_mock_config_carries_a_ready_bootstrap_image_only_when_asked(self) -> None:
         plain = render()
         self.assertNotIn("bootstrap_image", plain)
