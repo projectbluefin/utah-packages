@@ -223,6 +223,24 @@ the review under **Stale drift reviews**, as does a review of a row that is now
 aligned. Re-review or delete those entries. utah-packages#1051 is the first
 triage, with the disposition of every row.
 
+The two `Version` strings are not always release lines. Check the element's
+pinned tag against the recipe's real source before judging a row:
+
+- `bpftool` numbers after a Linux kernel tag (Dakota pins kernel `7.3`, whose
+  tools build bpftool `7.8.0`); the factory builds standalone bpftool `7.8.1`.
+- `iscsi-initiator-utils` prefixes upstream open-iscsi `2.1.13` with a legacy
+  `6.`, reading as `6.2.1.13`; both sides build the same commit.
+- `xorg-x11-font-utils` keeps Fedora's frozen umbrella `7.5`, while its
+  `%global font_util` names the real source, `font-util`.
+
+A false-positive comparison can sit on top of a real gap: `7.5` versus
+`font-util` `1.4.2` is not a version race, but the recipe sourced `1.4.1` while
+Dakota pinned `1.4.2`. Record that row as `tracked`, not `false-positive`, so
+the gap stays visible. A behind row with no dedicated issue uses the parity
+issue itself as its tracker (#1051); a held bump in `config/bump-holds.json`
+(gflags 2.3.1 after a failed build) explains why a move stalled but is not a
+decision to drop it.
+
 ## Patches and build options
 
 For every `factory` element the report compares the build facts with the
